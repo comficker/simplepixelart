@@ -1,0 +1,299 @@
+@import "tailwindcss";
+
+@config "../../../tailwind.config.js";
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-border: var(--border);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+}
+
+:root {
+    --background: #FFF;
+    --foreground: oklch(0.145 0 0);
+    --border: #EDEDED;
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0 0 0 / 0.30);
+    --secondary-foreground: oklch(0.205 0 0);
+}
+
+.container {
+    max-width: 800px!important;
+    margin: 0 auto;
+}
+
+body {
+    font-family: "Proto Mono", serif;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+* {
+    @apply border-border;
+}
+
+.icon {
+    mask-repeat: no-repeat;
+    background: currentColor;
+    width: 1em;
+    height: 1em;
+    display: inline-flex;
+}
+
+.h-center {
+    @apply flex items-center;
+}
+
+.v-center {
+    @apply flex justify-center;
+}
+
+.page {
+    @apply space-y-4;
+}
+
+.page section {
+    @apply space-y-2;
+}
+
+.page > section {
+    @apply space-y-2;
+}
+
+.square {
+    position: relative;
+    padding-top: 100%;
+}
+
+.square .inside {
+    @apply absolute inset-0;
+}
+
+.full-size {
+    @apply w-full h-full;
+}
+
+a {
+    @apply underline;
+}
+
+input[type=text] {
+    @apply border outline-none px-2 py-2;
+}
+
+input[type=number] {
+    @apply border outline-none px-2 py-0.5;
+}
+
+.paginator {
+    @apply grid grid-cols-3 text-center;
+}
+
+.paginator > div {
+    @apply flex-1 text-center;
+}
+
+.paginator > a:last-child {
+    @apply justify-end;
+}
+
+.results {
+    @apply grid grid-cols-3 md:grid-cols-6 gap-1 md:gap-2;
+}
+
+.btn {
+    @apply items-center flex gap-1 px-6 py-2;
+}
+
+.btn.primary {
+    @apply border bg-primary text-white;
+}
+
+.btn.secondary {
+    @apply bg-gray-50;
+}
+
+.meta {
+    @apply grid grid-cols-2 md:grid-cols-4;
+}
+
+.meta .item {
+    @apply flex gap-2 items-center;
+}
+
+.tags {
+    @apply flex flex-wrap -mx-2;
+}
+
+.tags .item {
+    @apply p-1 px-2;
+}
+
+h2 {
+    @apply flex items-center text-xs;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+}
+
+.dropdown {
+    overflow: hidden;
+    position: relative;
+}
+
+.dropdown.active {
+    overflow: unset;
+}
+
+.dropdown-trigger {
+    @apply flex items-center justify-center text-yellow-500 cursor-pointer px-2 py-1;
+}
+
+.dropdown .dropdown-menu {
+    @apply bg-background z-10 min-w-52 left-0 border border-border shadow text-left divide-y divide-border;
+    position: absolute;
+    top: calc(100% + 10px);
+    opacity: 0;
+}
+
+.dropdown .drop-item {
+    @apply flex justify-start items-start px-3 py-2 text-sm;
+}
+
+.dropdown.active .dropdown-menu {
+    opacity: 100;
+}
+
+.dropdown.bottom .dropdown-menu {
+    top: unset;
+    bottom: calc(100% + 10px);
+}
+
+[data-sonner-toaster] [data-sonner-toast] {
+    background: white;
+}
+
+[data-sonner-toast][data-styled='true'] {
+    font-size: 14px;
+    font-family: "Stolzl", serif;
+}
+
+.input {
+    @apply py-1;
+
+    border: 1px solid transparent;
+}
+.editable-text {
+    @apply border border-blue-500 outline-none px-2 py-1;
+
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+}
+
+.editor {
+    @apply flex flex-col gap-4;
+
+    --editor-width: 464px;
+    --editor-minimap-size: 80px;
+}
+
+.editor .ctl {
+    @apply flex gap-3 text-xl;
+}
+
+.editor .ctl > div {
+    @apply size-6 cursor-pointer;
+}
+
+.canvas-container {
+    width: var(--editor-width, 464px);
+    height: var(--editor-width, 464px);
+    overflow: auto;
+}
+
+canvas {
+    image-rendering: pixelated;
+}
+
+canvas.brush {
+    cursor: crosshair;
+}
+
+canvas.eraser {
+    cursor: pointer;
+}
+
+canvas.move {
+    cursor: move;
+}
+
+canvas.clear {
+    cursor: pointer;
+}
+
+.mini-map {
+    width: var(--editor-minimap-size, 80px);
+    image-rendering: pixelated;
+}
+
+.tools {
+    @apply grid grid-cols-4 text-xl ;
+}
+
+.tools * {
+    flex: none;
+}
+
+.tools .inside {
+    @apply flex items-center justify-center cursor-pointer;
+}
+
+.tools .square.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.layers {
+    @apply flex flex-col flex-1;
+}
+
+.layers .widget-body {
+    @apply flex-1;
+}
+
+.layers ul {
+    @apply text-xs;
+
+    list-style: none;
+    padding: 0;
+}
+
+.layers li {
+    @apply px-2 py-1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.layers li.active {
+    background-color: #e0e0e0;
+}
+
+.layers li button {
+    margin-left: 8px;
+}
+
+.pixelated {
+    image-rendering: pixelated;
+}

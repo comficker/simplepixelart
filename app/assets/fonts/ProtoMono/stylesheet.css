@@ -1,0 +1,104 @@
+@font-face {
+    font-family: 'Proto Mono';
+    src: url('ProtoMono-Light.eot');
+    src: local('Proto Mono Light'), local('ProtoMono-Light'),
+        url('ProtoMono-Light.eot?#iefix') format('embedded-opentype'),
+        url('ProtoMono-Light.woff2') format('woff2'),
+        url('ProtoMono-Light.woff') format('woff'),
+        url('ProtoMono-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Proto Mono';
+    src: url('ProtoMono-SemiBoldShadow.eot');
+    src: local('Proto Mono Semi Bold Shadow'), local('ProtoMono-SemiBoldShadow'),
+        url('ProtoMono-SemiBoldShadow.eot?#iefix') format('embedded-opentype'),
+        url('ProtoMono-SemiBoldShadow.woff2') format('woff2'),
+        url('ProtoMono-SemiBoldShadow.woff') format('woff'),
+        url('ProtoMono-SemiBoldShadow.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Proto Mono';
+    src: url('ProtoMono-LightShadow.eot');
+    src: local('Proto Mono Light Shadow'), local('ProtoMono-LightShadow'),
+        url('ProtoMono-LightShadow.eot?#iefix') format('embedded-opentype'),
+        url('ProtoMono-LightShadow.woff2') format('woff2'),
+        url('ProtoMono-LightShadow.woff') format('woff'),
+        url('ProtoMono-LightShadow.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Proto Mono';
+    src: url('ProtoMono-RegularShadow.eot');
+    src: local('Proto Mono Regular Shadow'), local('ProtoMono-RegularShadow'),
+        url('ProtoMono-RegularShadow.eot?#iefix') format('embedded-opentype'),
+        url('ProtoMono-RegularShadow.woff2') format('woff2'),
+        url('ProtoMono-RegularShadow.woff') format('woff'),
+        url('ProtoMono-RegularShadow.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Proto Mono';
+    src: url('ProtoMono-Regular.eot');
+    src: local('Proto Mono Regular'), local('ProtoMono-Regular'),
+        url('ProtoMono-Regular.eot?#iefix') format('embedded-opentype'),
+        url('ProtoMono-Regular.woff2') format('woff2'),
+        url('ProtoMono-Regular.woff') format('woff'),
+        url('ProtoMono-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Proto Mono';
+    src: url('ProtoMono-MediumShadow.eot');
+    src: local('Proto Mono Medium Shadow'), local('ProtoMono-MediumShadow'),
+        url('ProtoMono-MediumShadow.eot?#iefix') format('embedded-opentype'),
+        url('ProtoMono-MediumShadow.woff2') format('woff2'),
+        url('ProtoMono-MediumShadow.woff') format('woff'),
+        url('ProtoMono-MediumShadow.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Proto Mono';
+    src: url('ProtoMono-SemiBold.eot');
+    src: local('Proto Mono Semi Bold'), local('ProtoMono-SemiBold'),
+        url('ProtoMono-SemiBold.eot?#iefix') format('embedded-opentype'),
+        url('ProtoMono-SemiBold.woff2') format('woff2'),
+        url('ProtoMono-SemiBold.woff') format('woff'),
+        url('ProtoMono-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Proto Mono';
+    src: url('ProtoMono-Medium.eot');
+    src: local('Proto Mono Medium'), local('ProtoMono-Medium'),
+        url('ProtoMono-Medium.eot?#iefix') format('embedded-opentype'),
+        url('ProtoMono-Medium.woff2') format('woff2'),
+        url('ProtoMono-Medium.woff') format('woff'),
+        url('ProtoMono-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
