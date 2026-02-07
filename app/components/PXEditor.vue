@@ -5,7 +5,7 @@ import DropdownMenu from "~/components/ui/DropdownMenu.vue";
 import CurrentWork from "~/components/CurrentWork.vue";
 import Palette from "~/components/Editor/Palette.vue";
 import Square from "~/components/Square.vue";
-import {drawThumbnail, layers2MapNumbers} from "~/helper/canvas";
+import {drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
 
 interface Rectangle {
   x: number;
@@ -422,102 +422,25 @@ function setupCanvas() {
 }
 
 // ================================================== //
-function findRectangles(layerPixels: { [key: string]: number }): Rectangle[] {
-  const rectangles: Rectangle[] = [];
-  const visited: { [key: string]: boolean } = {}
+function exportFile(type: string) {
+  const a = document.createElement('a');
+  let url = ''
+  switch (type) {
+    case 'svg':
+      url = editorDataToSVG(editorData.value)
+      break
+    case 'json':
+      url = editorDataToJSON(editorData.value)
+      break
+    default:
+      url = canvas.value!.toDataURL()
+      break
 
-  for (let y = 0; y < editorData.value.height; y++) {
-    for (let x = 0; x < editorData.value.width; x++) {
-      if (typeof layerPixels[`${x}_${y}`] == 'undefined' || visited[`${x}_${y}`] || layerPixels[`${x}_${y}`] === -1) continue;
-
-      const colorIndex = layerPixels[`${x}_${y}`];
-      const color = editorData.value.colors[colorIndex!] || '#000';
-
-      // Find the largest rectangle starting from this position
-      let width = 1;
-      let height = 1;
-
-      // Extend width
-      for (let w = x + 1; w < editorData.value.width; w++) {
-        if (layerPixels[`${w}_${y}`] !== colorIndex || visited[`${w}_${y}`]) break;
-        width++;
-      }
-
-      // Extend height, but check if the entire width matches
-      heightLoop: for (let h = y + 1; h < editorData.value.height; h++) {
-        for (let w = 0; w < width; w++) {
-          const nx = x + w;
-          const ny = h;
-          if (ny >= editorData.value.height || layerPixels[`${nx}_${ny}`] !== colorIndex || visited[`${nx}_${ny}`]) {
-            break heightLoop;
-          }
-        }
-        height++;
-      }
-
-      // Mark all pixels in this rectangle as visited
-      for (let dy = 0; dy < height; dy++) {
-        for (let dx = 0; dx < width; dx++) {
-          visited[`${x + dx}_${y + dy}`] = true;
-        }
-      }
-
-      rectangles.push({
-        x: x,
-        y: y,
-        width: width,
-        height: height,
-        color: color
-      });
-    }
   }
-
-  return rectangles;
-}
-
-function exportSVG() {
-  if (!editorData.value) return;
-  const w = editorData.value.width;
-  const h = editorData.value.height;
-  let svgContent = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`;
-  editorData.value.layers.forEach((layer, layerIndex) => {
-    const rectangles = findRectangles(layer.pixels);
-    if (rectangles.length > 0) {
-      svgContent += `<g id="layer-${layerIndex}" class="layer" data-name="${layer.name}">`;
-      rectangles.forEach(rect => {
-        const color = rect.color;
-        svgContent += `<rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}" fill="${color}"/>`;
-      });
-      svgContent += '</g>';
-    }
-  });
-  svgContent += '</svg>';
-
-  const blob = new Blob([svgContent], {type: 'image/svg+xml'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
   a.href = url;
-  a.download = 'SimplePixelArt.svg';
+  a.download = `SimplePixelArt.${type}`;
   a.click();
   URL.revokeObjectURL(url);
-}
-
-function exportJSON() {
-  const blob = new Blob([JSON.stringify(editorData.value, null, 2)], {type: 'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'SimplePixelArt.json';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function exportPNG() {
-  if (!canvas.value) return;
-  const link = document.createElement("a");
-  link.download = "pixel-art.png";
-  link.href = canvas.value.toDataURL();
-  link.click();
 }
 
 // ================================================== //
@@ -564,9 +487,9 @@ watch(() => editorData.value.width + editorData.value.height, () => {
               </div>
               <template #menu>
                 <div class="flex flex-col divide-y">
-                  <div class="btn" @click="exportPNG">Export PNG</div>
-                  <div class="btn" @click="exportSVG()">Export SVG</div>
-                  <div class="btn" @click="exportJSON()">Export JSON</div>
+                  <div class="btn" @click="exportFile('png')">Export PNG</div>
+                  <div class="btn" @click="exportFile('svg')">Export SVG</div>
+                  <div class="btn" @click="exportFile('json')">Export JSON</div>
                 </div>
               </template>
             </DropdownMenu>

@@ -78,10 +78,6 @@ body {
     @apply w-full h-full;
 }
 
-a {
-    @apply underline;
-}
-
 input[type=text] {
     @apply border outline-none px-2 py-2;
 }
@@ -111,7 +107,7 @@ input[type=number] {
 }
 
 .btn.primary {
-    @apply border bg-primary text-white;
+    @apply bg-primary text-white;
 }
 
 .btn.secondary {
@@ -119,7 +115,7 @@ input[type=number] {
 }
 
 .meta {
-    @apply grid grid-cols-2 md:grid-cols-4;
+    @apply grid gap-2 md:grid-cols-3;
 }
 
 .meta .item {
@@ -135,7 +131,7 @@ input[type=number] {
 }
 
 h2 {
-    @apply flex items-center text-xs;
+    @apply flex items-center text-xs text-gray-500;
 }
 
 .no-scrollbar {

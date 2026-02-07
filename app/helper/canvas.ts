@@ -30,42 +30,121 @@ const colorProcessingPool = {
 };
 
 export function layers2MapNumbers(editorData: EditorData): { [key: string]: number } {
-    const { width, height, layers } = editorData;
+    const {width, height, layers} = editorData;
     const mapNumbers: { [key: string]: number } = {};
-    
     for (const layer of [...layers].reverse()) {
         for (const [key, colorIndex] of Object.entries(layer.pixels)) {
             if (colorIndex === undefined || colorIndex === -1) continue;
-            
+
             const [x, y] = key.split('_').map(Number);
             const finalX = x + layer.x;
             const finalY = y + layer.y;
             const finalKey = `${finalX}_${finalY}`;
-            
+
             if (
-                finalX >= 0 && finalX < width && 
-                finalY >= 0 && finalY < height && 
+                finalX >= 0 && finalX < width &&
+                finalY >= 0 && finalY < height &&
                 !(finalKey in mapNumbers)
             ) {
                 mapNumbers[finalKey] = colorIndex;
             }
         }
     }
-    
     return mapNumbers;
 }
 
 export function drawThumbnail(canvas: HTMLCanvasElement, editorData: EditorData, zoom: number = 1): void {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
+
     const results = layers2MapNumbers(editorData);
-    
+
     for (const [key, pixelIndex] of Object.entries(results)) {
         const [x = 0, y = 0] = key.split('_').map(Number);
         ctx.fillStyle = editorData.colors[pixelIndex] ?? '#000000';
         ctx.fillRect(x * zoom, y * zoom, zoom, zoom);
     }
+}
+
+export function findRectangles(editorData: EditorData, layerPixels: { [key: string]: number }): Rectangle[] {
+    const rectangles: Rectangle[] = [];
+    const visited: { [key: string]: boolean } = {}
+
+    for (let y = 0; y < editorData.height; y++) {
+        for (let x = 0; x < editorData.width; x++) {
+            if (typeof layerPixels[`${x}_${y}`] == 'undefined' || visited[`${x}_${y}`] || layerPixels[`${x}_${y}`] === -1) continue;
+
+            const colorIndex = layerPixels[`${x}_${y}`];
+            const color = editorData.colors[colorIndex!] || '#000';
+
+            // Find the largest rectangle starting from this position
+            let width = 1;
+            let height = 1;
+
+            // Extend width
+            for (let w = x + 1; w < editorData.width; w++) {
+                if (layerPixels[`${w}_${y}`] !== colorIndex || visited[`${w}_${y}`]) break;
+                width++;
+            }
+
+            // Extend height, but check if the entire width matches
+            heightLoop: for (let h = y + 1; h < editorData.height; h++) {
+                for (let w = 0; w < width; w++) {
+                    const nx = x + w;
+                    const ny = h;
+                    if (ny >= editorData.height || layerPixels[`${nx}_${ny}`] !== colorIndex || visited[`${nx}_${ny}`]) {
+                        break heightLoop;
+                    }
+                }
+                height++;
+            }
+
+            // Mark all pixels in this rectangle as visited
+            for (let dy = 0; dy < height; dy++) {
+                for (let dx = 0; dx < width; dx++) {
+                    visited[`${x + dx}_${y + dy}`] = true;
+                }
+            }
+
+            rectangles.push({
+                x: x,
+                y: y,
+                width: width,
+                height: height,
+                color: color
+            });
+        }
+    }
+
+    return rectangles;
+}
+
+export function editorDataToSVG(editorData: EditorData) {
+    const w = editorData.width;
+    const h = editorData.height;
+    const results = layers2MapNumbers(editorData);
+    let svgContent = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`;
+    const rectangles = findRectangles(editorData, results);
+    if (rectangles.length > 0) {
+        svgContent += `<g>`;
+        rectangles.forEach(rect => {
+            const color = rect.color;
+            svgContent += `<rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}" fill="${color}"/>`;
+        });
+        svgContent += '</g>';
+    }
+    svgContent += '</svg>';
+
+    const blob = new Blob([svgContent], {type: 'image/svg+xml'});
+    return URL.createObjectURL(blob);
+}
+
+export function editorDataToJSON(editorData: EditorData) {
+    const blob = new Blob([JSON.stringify({
+        colors: editorData.colors,
+        map: layers2MapNumbers(editorData)
+    }, null, 2)], {type: 'application/json'});
+    return URL.createObjectURL(blob);
 }
 
 // Helper functions for optimized image processing
@@ -81,8 +160,8 @@ async function loadImage(dataUrl: string): Promise<HTMLImageElement> {
 
 function findUnusedColor(imageData: ImageData): RGB | null {
     const usedColors = new Set<string>();
-    const { data } = imageData;
-    
+    const {data} = imageData;
+
     // First pass: collect all used colors
     for (let i = 0; i < data.length; i += 4) {
         if (data[i + 3] > 0) { // Only non-transparent pixels
@@ -90,7 +169,7 @@ function findUnusedColor(imageData: ImageData): RGB | null {
             usedColors.add(key);
         }
     }
-    
+
     // Find unused color
     for (let attempts = 0; attempts < TRANSPARENT_COLOR_ATTEMPTS; attempts++) {
         const color: RGB = [
@@ -103,15 +182,15 @@ function findUnusedColor(imageData: ImageData): RGB | null {
             return color;
         }
     }
-    
+
     return null;
 }
 
 function handleTransparency(imageData: ImageData, ctx: CanvasRenderingContext2D): RGB | null {
     const unusedColor = findUnusedColor(imageData);
-    
+
     if (unusedColor) {
-        const { data } = imageData;
+        const {data} = imageData;
         for (let i = 0; i < data.length; i += 4) {
             if (data[i + 3] === 0) {
                 data[i] = unusedColor[0];
@@ -122,25 +201,25 @@ function handleTransparency(imageData: ImageData, ctx: CanvasRenderingContext2D)
         }
         ctx.putImageData(imageData, 0, 0);
     }
-    
+
     return unusedColor;
 }
 
 function calculateLineScore(line: number[], centerIndex: number): number {
     let score = 1;
-    
+
     // Check forward direction
     for (let i = centerIndex + 1; i < line.length; i++) {
         if (line[i] > 0) score++;
         else break;
     }
-    
+
     // Check backward direction
     for (let i = centerIndex - 1; i >= 0; i--) {
         if (line[i] > 0) score++;
         else break;
     }
-    
+
     return score;
 }
 
@@ -149,7 +228,7 @@ function processCellColorsOptimized(ctx: CanvasRenderingContext2D, cells: Array<
 }>): RGB[] {
     const results: RGB[] = [];
     const histogram = colorProcessingPool.histogram;
-    
+
     for (const cell of cells) {
         try {
             // Early bounds checking
@@ -157,50 +236,50 @@ function processCellColorsOptimized(ctx: CanvasRenderingContext2D, cells: Array<
                 results.push([255, 255, 255]);
                 continue;
             }
-            
+
             const imageData = ctx.getImageData(cell.x, cell.y, cell.width, cell.height);
             histogram.clear();
-            
+
             // Optimized histogram building
-            const { data } = imageData;
+            const {data} = imageData;
             for (let i = 0; i < data.length; i += 4) {
                 if (data[i + 3] > 0) {
                     const key = data[i] + ',' + data[i + 1] + ',' + data[i + 2];
                     histogram.set(key, (histogram.get(key) || 0) + 1);
                 }
             }
-            
+
             // Find most common color
             let maxCount = 0;
             let bestColor = '255,255,255';
-            
+
             for (const [color, count] of histogram) {
                 if (count > maxCount) {
                     maxCount = count;
                     bestColor = color;
                 }
             }
-            
+
             const rgb = bestColor.split(',').map(Number) as RGB;
             results.push(rgb);
         } catch (e) {
             results.push([255, 255, 255]);
         }
     }
-    
+
     return results;
 }
 
-export async function dataUrlToSamplesGrid(dataUrl: string): Promise<{ 
-    rgbSamplesGrid: SamplesGrid; 
-    colorThatRepresentsTransparent: RGB | null 
+export async function dataUrlToSamplesGrid(dataUrl: string): Promise<{
+    rgbSamplesGrid: SamplesGrid;
+    colorThatRepresentsTransparent: RGB | null
 }> {
     if (!dataUrl || !dataUrl.startsWith('data:image/')) {
-        return { rgbSamplesGrid: [], colorThatRepresentsTransparent: null };
+        return {rgbSamplesGrid: [], colorThatRepresentsTransparent: null};
     }
-    
+
     let colorThatRepresentsTransparent: RGB | null = null;
-    
+
     try {
         // Optimized image loading
         const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -210,51 +289,51 @@ export async function dataUrlToSamplesGrid(dataUrl: string): Promise<{
             img.src = dataUrl;
             if (img.complete) resolve(img);
         });
-        
+
         // Early return for invalid dimensions
         if (!img.width || !img.height || img.width < 1 || img.height < 1) {
-            return { rgbSamplesGrid: [], colorThatRepresentsTransparent: null };
+            return {rgbSamplesGrid: [], colorThatRepresentsTransparent: null};
         }
-        
-            // Handle small images - optimized path
+
+        // Handle small images - optimized path
         if (img.width < 70 || img.height < 70) {
             const canvas = document.createElement("canvas");
             canvas.width = img.width;
             canvas.height = img.height;
-            const ctx = canvas.getContext("2d", { willReadFrequently: true });
+            const ctx = canvas.getContext("2d", {willReadFrequently: true});
             if (ctx) {
                 ctx.drawImage(img, 0, 0);
                 return test70(ctx);
             }
         }
-        
+
         const canvas = document.createElement("canvas");
         canvas.width = img.width;
         canvas.height = img.height;
-        
+
         // Optimized context options
-        const ctx = canvas.getContext("2d", { 
+        const ctx = canvas.getContext("2d", {
             willReadFrequently: true,
             desynchronized: true
         });
-        
-        if (!ctx) return { rgbSamplesGrid: [], colorThatRepresentsTransparent: null };
-        
+
+        if (!ctx) return {rgbSamplesGrid: [], colorThatRepresentsTransparent: null};
+
         ctx.drawImage(img, 0, 0);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         colorThatRepresentsTransparent = handleTransparency(imageData, ctx);
-        
+
         // Avoid re-encoding if no changes made
-        const processedDataUrl = colorThatRepresentsTransparent 
-            ? canvas.toDataURL('image/png') 
+        const processedDataUrl = colorThatRepresentsTransparent
+            ? canvas.toDataURL('image/png')
             : dataUrl;
-        
+
         const rgbSamplesGrid = await base64ImageUrlToRGBSamplesGrid(processedDataUrl);
-        
-        return { rgbSamplesGrid, colorThatRepresentsTransparent };
+
+        return {rgbSamplesGrid, colorThatRepresentsTransparent};
     } catch (error) {
         console.error('Error processing image in dataUrlToSamplesGrid:', error);
-        return { rgbSamplesGrid: [], colorThatRepresentsTransparent: null };
+        return {rgbSamplesGrid: [], colorThatRepresentsTransparent: null};
     } finally {
         colorProcessingPool.clear();
     }
@@ -262,23 +341,23 @@ export async function dataUrlToSamplesGrid(dataUrl: string): Promise<{
 
 async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid> {
     const img = await loadImage(url);
-    
+
     const canvasIn = imageToCanvas(img);
     const canvasOut = imageToCanvas(img);
     if (!canvasIn || !canvasOut) return [];
-    
-    const ctxIn = canvasIn.getContext("2d", { willReadFrequently: true });
-    const ctxOut = canvasOut.getContext("2d", { willReadFrequently: true });
+
+    const ctxIn = canvasIn.getContext("2d", {willReadFrequently: true});
+    const ctxOut = canvasOut.getContext("2d", {willReadFrequently: true});
     if (!ctxIn || !ctxOut) return [];
-    
+
     const imageDataIn = ctxIn.getImageData(0, 0, canvasIn.width, canvasIn.height);
     const imageDataOut = ctxOut.getImageData(0, 0, canvasOut.width, canvasOut.height);
-    
-    const { width: pixelWidth, height: pixelHeight } = canvasIn;
+
+    const {width: pixelWidth, height: pixelHeight} = canvasIn;
     const gradientData = computeImageDataGradient(imageDataIn, COLOR_DIFFERENCE_THRESHOLD);
-    
+
     // Optimized gradient erosion
-    const pixelsToProcess: Array<{x: number, y: number}> = [];
+    const pixelsToProcess: Array<{ x: number, y: number }> = [];
     for (let y = 0; y < gradientData.length; y++) {
         if (!gradientData[y]) continue;
         for (let x = 0; x < gradientData[y].length; x++) {
@@ -287,25 +366,25 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
             }
         }
     }
-    
+
     for (let iteration = 0; iteration < GRADIENT_EROSION_ITERATIONS; iteration++) {
-        const erasures: Array<{x: number, y: number}> = [];
+        const erasures: Array<{ x: number, y: number }> = [];
         const centerIndex = Math.floor(LINE_LENGTH / 2);
-        
+
         for (const {x, y} of pixelsToProcess) {
             if (gradientData[y][x] === 0) continue;
-            
+
             const {v, h} = extractCardinalLinesAtPoint(gradientData, x, y, LINE_LENGTH);
             const vSum = calculateLineScore(v, centerIndex);
             const hSum = calculateLineScore(h, centerIndex);
-            
+
             if (hSum < MIN_LINE_SCORE && vSum < MIN_LINE_SCORE) {
                 erasures.push({x, y});
             }
         }
-        
+
         if (erasures.length === 0) break;
-        
+
         // Batch erasure
         for (const {x, y} of erasures) {
             gradientData[y][x] = 0;
@@ -319,7 +398,7 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
             const gradient = gradientData[py][px] * 255;
             const pixelIndex = (px + py * pixelWidth) * 4;
             const value = gradient > 0 ? 127 : 0;
-            
+
             imageDataOut.data[pixelIndex] = value;
             imageDataOut.data[pixelIndex + 1] = value;
             imageDataOut.data[pixelIndex + 2] = value;
@@ -334,7 +413,7 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         x2: canvasIn.width / 2,
         y2: canvasIn.height / 2
     };
-    
+
     for (let py = 0; py < pixelHeight; py++) {
         if (!gradientData[py]) continue;
         for (let px = 0; px < pixelWidth; px++) {
@@ -346,7 +425,7 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
             }
         }
     }
-    
+
     crop.x1 = Math.max(0, crop.x1 - CROP_PADDING);
     crop.y1 = Math.max(0, crop.y1 - CROP_PADDING);
 
@@ -374,10 +453,10 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         }
         rowScores[i] = score;
     }
-    
+
     const columnScores: number[] = [];
     if (croppedGradientData.length === 0) return [];
-    
+
     for (let c = 0; c < croppedGradientData[0].length; c++) {
         let streak = 0;
         let score = 0;
@@ -388,11 +467,11 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         }
         columnScores[c] = score;
     }
-    
+
     // Erode scores to remove noise
     const rowScoreSum = rowScores.reduce((a, v) => a + v, 0);
     const columnScoreSum = columnScores.reduce((a, v) => a + v, 0);
-    
+
     let remainingPortion = 1;
     while (remainingPortion > SCORE_EROSION_THRESHOLD) {
         for (let i = 0; i < rowScores.length; i++) {
@@ -400,7 +479,7 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         }
         remainingPortion = rowScores.reduce((a, v) => a + v, 0) / rowScoreSum;
     }
-    
+
     remainingPortion = 1;
     while (remainingPortion > SCORE_EROSION_THRESHOLD) {
         for (let i = 0; i < columnScores.length; i++) {
@@ -433,11 +512,11 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
             }
         }
     }
-    
+
     // Get gap histograms
     const rowGapHist: { [key: string]: number } = {};
     const columnGapHist: { [key: string]: number } = {};
-    
+
     for (const {scores, hist} of [{scores: rowScores, hist: rowGapHist}, {scores: columnScores, hist: columnGapHist}]) {
         let indexOfLastNonZero: number | null = null;
         for (let i = 0; i < scores.length; i++) {
@@ -471,7 +550,7 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         columnGap = Number(Object.entries(columnGapHist).sort((a, b) => b[1] - a[1])[0][0]);
     }
 
-    const gap = Math.abs(rowGap - columnGap) > GRID_GAP_THRESHOLD 
+    const gap = Math.abs(rowGap - columnGap) > GRID_GAP_THRESHOLD
         ? Math.min(rowGap, columnGap)
         : Math.round((rowGap + columnGap) / 2);
 
@@ -511,13 +590,13 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
 
     // Optimized sampling with batch processing
     const samplesGrid: SamplesGrid = [];
-    const cellBounds: Array<{x: number, y: number, width: number, height: number}> = [];
+    const cellBounds: Array<{ x: number, y: number, width: number, height: number }> = [];
     const cellMap = new Map<string, number>();
-    
+
     let lastNonZeroRowIndex = -1;
     let lastNonZeroColumnIndex = -1;
     let rowIndex = 0;
-    
+
     // First pass: collect all cell bounds
     for (let r = 0; r < rowScores.length; r++) {
         if (rowScores[r] > 0 || r === rowScores.length - 1) {
@@ -525,48 +604,48 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
                 lastNonZeroRowIndex = r;
                 continue;
             }
-            
+
             let colIndex = 0;
             lastNonZeroColumnIndex = -1;
-            
+
             for (let c = 0; c < columnScores.length; c++) {
                 if (columnScores[c] > 0 || c === columnScores.length - 1) {
                     if (c - lastNonZeroColumnIndex < CENTER_SAMPLE_RATIO * gap) {
                         lastNonZeroColumnIndex = c;
                         continue;
                     }
-                    
+
                     const cellWidth = c - lastNonZeroColumnIndex;
                     const cellHeight = r - lastNonZeroRowIndex;
                     const centerX = c - (cellWidth / 2);
                     const centerY = r - (cellHeight / 2);
-                    
+
                     const sampleX = Math.round(centerX - (cellWidth * QUARTER_SAMPLE_RATIO));
                     const sampleY = Math.round(centerY - (cellHeight * QUARTER_SAMPLE_RATIO));
                     const sampleWidth = Math.round(cellWidth / 2);
                     const sampleHeight = Math.round(cellHeight / 2);
-                    
+
                     cellBounds.push({
                         x: sampleX,
                         y: sampleY,
                         width: sampleWidth,
                         height: sampleHeight
                     });
-                    
+
                     cellMap.set(`${rowIndex}_${colIndex}`, cellBounds.length - 1);
                     colIndex++;
                     lastNonZeroColumnIndex = c;
                 }
             }
-            
+
             rowIndex++;
             lastNonZeroRowIndex = r;
         }
     }
-    
+
     // Second pass: batch process all cells
     const cellColors = processCellColorsOptimized(ctxOut, cellBounds);
-    
+
     // Third pass: reconstruct grid
     for (let r = 0; r < rowIndex; r++) {
         samplesGrid[r] = [];
@@ -580,15 +659,18 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
     return samplesGrid;
 }
 
-function extractCardinalLinesAtPoint(grid: number[][], cx: number, cy: number, lineLength: number): { v: number[]; h: number[] } {
+function extractCardinalLinesAtPoint(grid: number[][], cx: number, cy: number, lineLength: number): {
+    v: number[];
+    h: number[]
+} {
     if (lineLength % 2 === 0) {
         throw new Error("Line length must be odd");
     }
-    
+
     const radius = Math.floor(lineLength / 2);
     const v: number[] = [];
     const h: number[] = [];
-    
+
     // Horizontal line
     for (let x = cx - radius; x <= cx + radius; x++) {
         const value = (grid[cy] && grid[cy][x] !== undefined) ? grid[cy][x] : 0;
@@ -601,7 +683,7 @@ function extractCardinalLinesAtPoint(grid: number[][], cx: number, cy: number, l
         v.push(value);
     }
 
-    return { v, h };
+    return {v, h};
 }
 
 function imageToCanvas(img: HTMLImageElement): HTMLCanvasElement | null {
@@ -611,7 +693,7 @@ function imageToCanvas(img: HTMLImageElement): HTMLCanvasElement | null {
     canvas.width = img.width;
     canvas.height = img.height;
 
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const ctx = canvas.getContext("2d", {willReadFrequently: true});
     if (!ctx) return null;
 
     ctx.fillStyle = "#ffffff";
@@ -622,7 +704,7 @@ function imageToCanvas(img: HTMLImageElement): HTMLCanvasElement | null {
 }
 
 function computeImageDataGradient(imageData: ImageData, threshold: number): number[][] {
-    const { width: pixelWidth, height: pixelHeight, data } = imageData;
+    const {width: pixelWidth, height: pixelHeight, data} = imageData;
     const gradientData: number[][] = Array(pixelHeight).fill(null).map(() => Array(pixelWidth).fill(0));
 
     // Initialize gradientData grid
@@ -652,81 +734,84 @@ function computeImageDataGradient(imageData: ImageData, threshold: number): numb
             gradientData[py][px] = gradientValue < threshold ? 0 : gradientValue;
         }
     }
-    
+
     return gradientData;
 }
 
 function deltaE(rgbA: RGB, rgbB: RGB): number {
     const labA = rgb2lab(rgbA);
     const labB = rgb2lab(rgbB);
-    
+
     if (!labA || !labB) return 0;
-    
+
     const [lA, aA, bA] = labA;
     const [lB, aB, bB] = labB;
-    
+
     const deltaL = lA - lB;
     const deltaA = aA - aB;
     const deltaB = bA - bB;
-    
+
     const cA = Math.sqrt(aA * aA + bA * bA);
     const cB = Math.sqrt(aB * aB + bB * bB);
     const deltaC = cA - cB;
-    
+
     const deltaH = Math.sqrt(Math.max(0, deltaA * deltaA + deltaB * deltaB - deltaC * deltaC));
-    
+
     const sc = 1.0 + 0.045 * cA;
     const sh = 1.0 + 0.015 * cA;
-    
+
     const deltaLKlsl = deltaL;
     const deltaCkcsc = deltaC / sc;
     const deltaHkhsh = deltaH / sh;
-    
+
     const i = deltaLKlsl * deltaLKlsl + deltaCkcsc * deltaCkcsc + deltaHkhsh * deltaHkhsh;
-    
+
     return Math.sqrt(Math.max(0, i));
 }
 
 function rgb2lab(rgb: RGB): [number, number, number] | null {
     const [rRaw, gRaw, bRaw] = rgb;
-    
+
     if (rRaw === undefined || gRaw === undefined || bRaw === undefined) return null;
-    
+
     let r = rRaw / 255;
     let g = gRaw / 255;
     let b = bRaw / 255;
-    
+
     // Convert RGB to linear RGB
     r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
     g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
     b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
-    
+
     // Convert linear RGB to XYZ
     let x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
     let y = (r * 0.2126 + g * 0.7152 + b * 0.0722);
     let z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
-    
+
     // Convert XYZ to Lab
-    const xyzToLab = (val: number): number => 
+    const xyzToLab = (val: number): number =>
         val > 0.008856 ? Math.pow(val, 1 / 3) : (7.787 * val) + 16 / 116;
-    
+
     x = xyzToLab(x);
     y = xyzToLab(y);
     z = xyzToLab(z);
-    
+
     return [(116 * y) - 16, 500 * (x - y), 200 * (y - z)];
 }
 
-async function test70(ctx: CanvasRenderingContext2D): Promise<{ rgbSamplesGrid: SamplesGrid; colorThatRepresentsTransparent: null }> {
-    const { width, height } = ctx.canvas;
+async function test70(ctx: CanvasRenderingContext2D): Promise<{
+    rgbSamplesGrid: SamplesGrid;
+    colorThatRepresentsTransparent: null
+}> {
+    const {width, height} = ctx.canvas;
     const rgbSamplesGrid: SamplesGrid = [];
-    
+
     for (let y = 0; y < height; y++) {
         const row: RGB[] = [];
         for (let x = 0; x < width; x++) {
             const pixelData = ctx.getImageData(x, y, 1, 1);
             const [r, g, b, a] = pixelData.data;
-            
+
             if (r + g + b + a !== 0) {
                 row.push([r, g, b]);
             } else {
@@ -735,6 +820,6 @@ async function test70(ctx: CanvasRenderingContext2D): Promise<{ rgbSamplesGrid: 
         }
         rgbSamplesGrid.push(row);
     }
-    
-    return { rgbSamplesGrid, colorThatRepresentsTransparent: null };
+
+    return {rgbSamplesGrid, colorThatRepresentsTransparent: null};
 }

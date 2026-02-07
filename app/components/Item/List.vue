@@ -40,15 +40,42 @@ const pagination = computed(() => {
 })
 
 const meta = computed(() => ({
-  title: data.value?.meta.title,
-  desc: data.value?.meta.desc
+  title: data.value?.meta.title || "Pixel Art Gallery - Discover Amazing Creations",
+  desc: data.value?.meta.desc || "Explore thousands of pixel art creations from artists worldwide. Browse by size, style, and tags. Updated daily with new pixel art."
 }))
 
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: "Pixel Art Gallery",
+  description: "Explore thousands of pixel art creations from artists worldwide",
+  url: "https://simplepixelart.com/arts",
+  mainEntity: {
+    "@type": "ItemList",
+    name: "Pixel Art Collection",
+    description: "Curated collection of pixel art from various creators",
+    numberOfItems: "1000+"
+  },
+  publisher: {
+    "@type": "Organization",
+    name: "SimplePixelArt.com",
+    url: "https://simplepixelart.com/"
+  }
+};
+
 if (limit > 6) {
-  useHead({
+  useCustomSeoMeta({
     title: meta.value.title,
-    meta: [{name: "description", content: meta.value.desc}]
-  })
+    description: meta.value.desc,
+    keywords: "pixel art gallery, pixel art collection, pixel art showcase, discover pixel art, pixel art community",
+    canonical: "https://simplepixelart.com/arts",
+    script: [
+      {
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify(structuredData)
+      }
+    ]
+  });
 }
 
 const handleInput = debounce((event: { target: { value: string; }; }) => {
@@ -58,7 +85,7 @@ const handleInput = debounce((event: { target: { value: string; }; }) => {
 
 <template>
   <div class="page">
-    <section v-if="meta.title" class="">
+    <section v-if="limit > 6">
       <h1 class="h-center">
         <span class="icon icon-angle-right"/>
         <span>{{ meta.title }}</span>
@@ -69,12 +96,7 @@ const handleInput = debounce((event: { target: { value: string; }; }) => {
     </section>
     <div v-if="showFilter" class="flex gap-4">
       <nuxt-link to="/editor" class="btn primary">Create</nuxt-link>
-      <input
-          :value="search"
-          class="w-1/3"
-          placeholder="Search..."
-          @input="handleInput"
-      />
+      <input type="text" :value="search" class="w-1/3" placeholder="Search..." @input="handleInput"/>
       <!--<div v-if="limit > 6" class="ml-auto px-2 py-2 border">Order</div>-->
     </div>
     <div v-if="data" class="results">

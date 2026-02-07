@@ -4,11 +4,47 @@ import type {APIResponse, TagSchema} from "~/types";
 
 const {data} = useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {
   params: {
-    page_size: 20
+    page_size: 10
   }
 })
 
 const sizes = ["8x8", "9x9", "10x10", "12x12", "13x13", "16x16", "20x20", "24x24", "32x32", "64x64"];
+
+useCustomSeoMeta({
+  title: "Simple Pixel Art - Create & Discover Pixel Art Online",
+  description: "Create and discover amazing pixel art online. Free pixel art editor with advanced tools, daily updates, and a vibrant community of creators. Start your pixel art journey today!",
+  keywords: "pixel art, pixel editor, pixel art maker, create pixel art, pixel art online, retro art, 8-bit art, pixel drawing",
+  canonical: "https://simplepixelart.com",
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "Simple Pixel Art",
+        description: "Create and discover amazing pixel art online. Free pixel art editor with advanced tools and vibrant community.",
+        url: "https://simplepixelart.com/",
+        potentialAction: {
+          "@type": "CreateAction",
+          target: {
+            "@type": "EntryPoint",
+            urlTemplate: "https://simplepixelart.com/editor"
+          }
+        },
+        mainEntity: {
+          "@type": "CreativeWork",
+          name: "Pixel Art Creator",
+          description: "Online pixel art editor and gallery"
+        },
+        publisher: {
+          "@type": "Organization",
+          name: "SimplePixelArt.com",
+          url: "https://simplepixelart.com/"
+        }
+      })
+    }
+  ]
+});
 </script>
 
 <template>
