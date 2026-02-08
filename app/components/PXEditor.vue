@@ -600,14 +600,17 @@ watch(() => editorData.value.width + editorData.value.height, () => {
             </li>
           </ul>
         </Widget>
-        <Widget title="Info">
+        <Widget title="Info" class="text-xs">
           <div class="font-bold">
             <EditableText v-model="editorData.name" placeholder="Name" @changed="store.saveState()"/>
           </div>
-          <div class="text-xs">
+          <div>
             <EditableText v-model="editorData.desc" placeholder="Description" @changed="store.saveState()"/>
           </div>
-          <div class="text-xs">
+          <div>
+            <EditableText v-model="editorData.id_string" placeholder="id" @changed="store.saveState()"/>
+          </div>
+          <div>
             <TagInput v-model="editorData.tags" placeholder="tags" @changed="store.saveState()"/>
           </div>
         </Widget>

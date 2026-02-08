@@ -113,7 +113,7 @@ const download = (type: string) => {
   if (url) {
     const a = document.createElement('a');
     a.href = url;
-    a.download = `SimplePixelArt.${ext}`;
+    a.download = `[simplepixelart.com]${data.value!.id_string}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
   }
