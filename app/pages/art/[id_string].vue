@@ -18,7 +18,7 @@ const meta = computed(() => {
   }
 
   const url = `${config.public.siteUrl}/art/${data.value.id_string}`
-  const imgSrc = `${config.public.api}/coloring/files/art-original/${data.value.id_string}.png`
+  const imgSrc = `${config.public.api}/coloring/files/art-social/${data.value.id_string}.png`
   const pixelCount = data.value.map_numbers ? Object.keys(data.value.map_numbers).length : 0
   const title = data.value.name
       ? `${data.value.name} - ${data.value.width}x${data.value.height} Pixel Art`
@@ -111,6 +111,7 @@ const download = (type: string) => {
   if (url) {
     const a = document.createElement('a');
     a.href = url;
+    a.target = '_blank';
     a.download = `[simplepixelart.com]${data.value!.id_string}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
@@ -146,7 +147,7 @@ const download = (type: string) => {
             <div class="inside">
               <img
                   id="mainImg"
-                  :src="meta.imgSrc"
+                  :src="`${config.public.api}/coloring/files/art-original/${data!.id_string}.png`"
                   :alt="data.name || `${data.width}x${data.height} Pixel Art`"
                   class="object-contain w-full mx-auto h-full pixelated"
                   loading="eager"
@@ -197,7 +198,7 @@ const download = (type: string) => {
               </button>
               <button
                   class="btn justify-between" title="Download preview pixel art"
-                  @click="download('original')"
+                  @click="download('preview')"
               >
                 <span>Preview</span>
                 <span class="text-gray-500">[600×{{ 600 * data.height / data.width }}]</span>
