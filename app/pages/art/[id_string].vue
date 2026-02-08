@@ -181,7 +181,7 @@ const download = (type: string) => {
           <span class="icon icon-brush"/>
           <span>Remix</span>
         </nuxt-link>
-        <DropdownMenu>
+        <ui-dropdown-menu>
           <button class="btn secondary hover:shadow-lg transition-shadow" :disabled="!data">
             <span class="icon icon-download"/>
             <span>Download</span>
@@ -217,7 +217,7 @@ const download = (type: string) => {
               </button>
             </div>
           </template>
-        </DropdownMenu>
+        </ui-dropdown-menu>
 
       </div>
       <section>

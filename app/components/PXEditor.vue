@@ -468,7 +468,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
           <div class="flex gap-3">
             <button @click="store.resetEditorData">New</button>
             <button @click="store.importImage()">Import</button>
-            <DropdownMenu>
+            <ui-dropdown-menu>
               <div class="item">
                 <span>Export</span>
               </div>
@@ -479,7 +479,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
                   <div class="btn" @click="exportFile('json')">Export JSON</div>
                 </div>
               </template>
-            </DropdownMenu>
+            </ui-dropdown-menu>
           </div>
           <div class="ctl">
             <template v-if="isResizing">
@@ -527,7 +527,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
           </Square>
         </Widget>
         <Widget title="Palette">
-          <Palette/>
+          <editor-palette/>
         </Widget>
       </div>
       <div class="md:w-2/5 flex flex-col gap-3">
