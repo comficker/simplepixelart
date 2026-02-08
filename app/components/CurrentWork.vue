@@ -1,10 +1,6 @@
 <script setup lang="ts">
-import Thumb from "~/components/Thumb.vue";
 import type {APIResponse, EditorData, SharedPage} from "~/types";
-import {ref} from "vue";
-import {useNativeFetch} from "~/composables/useCustomFetch";
 import {getStorageItem, sharedPage2EditorData} from "~/helper/utils";
-import {useAuthStore} from "#build/imports";
 
 const auth = useAuthStore()
 const workspaces = ref<EditorData[]>([])

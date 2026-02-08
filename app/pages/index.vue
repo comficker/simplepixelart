@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import {useAuthFetch} from "~/composables/useCustomFetch";
 import type {APIResponse, TagSchema} from "~/types";
 
 const {data} = useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {

@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import type {SharedPage} from "~/types";
-import {useCustomSeoMeta} from "~/composables/useCustomSeoMeta";
-import DropdownMenu from "~/components/ui/DropdownMenu.vue";
 import {editorDataToJSON, editorDataToSVG} from "~/helper/canvas";
 import {sharedPage2EditorData} from "~/helper/utils";
 

@@ -5,9 +5,6 @@
 .icon-calender {mask-image: url("/icons/calender.svg");}
 .icon-discovery {mask-image: url("/icons/discovery.svg");}
 .icon-trash {mask-image: url("/icons/trash.svg");}
-.icon-plus {mask-image: url("/icons/plus.svg");}
-.icon-adjust {mask-image: url("/icons/adjust.svg");}
-.icon-angle-left {mask-image: url("/icons/angle-left.svg");}
 .icon-check {mask-image: url("/icons/check.svg");}
 .icon-undo {mask-image: url("/icons/undo.svg");}
 .icon-redo {mask-image: url("/icons/redo.svg");}
@@ -24,5 +21,8 @@
 .icon-reflect-vertical {mask-image: url("/icons/reflect-vertical.svg");}
 .icon-flip-h {mask-image: url("/icons/flip-h.svg");}
 .icon-flip-v {mask-image: url("/icons/flip-v.svg");}
+.icon-plus {mask-image: url("/icons/plus.svg");}
+.icon-adjust {mask-image: url("/icons/adjust.svg");}
+.icon-angle-left {mask-image: url("/icons/angle-left.svg");}
 .icon-at {mask-image: url("/icons/at.svg");}
 .icon-home {mask-image: url("/icons/home.svg");}

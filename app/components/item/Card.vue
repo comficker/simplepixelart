@@ -25,9 +25,6 @@
 </template>
 
 <script setup lang="ts">
-import {useRuntimeConfig} from "nuxt/app";
-import {drawThumbnail} from "~/helper/canvas";
-import {computed} from "vue";
 import type {SharedPage} from "~/types";
 
 const {value, isDraw, isAdding, added, showVote} = defineProps<{

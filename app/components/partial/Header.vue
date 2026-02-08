@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import {useAuthStore} from "#build/imports";
-
 const config = useRuntimeConfig()
 const auth = useAuthStore()
 </script>
