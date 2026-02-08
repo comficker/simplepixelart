@@ -15,4 +15,4 @@ User-agent: Bingbot
 Allow: /
 
 # Sitemap location
-Sitemap: https://simplepixelart.com/sitemap.xml
+Sitemap: https://simplepixelart.com/sitemap-index.xml

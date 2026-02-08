@@ -1,19 +1,9 @@
 <script setup lang="ts">
 import {onMounted, ref} from "vue";
-import {cloneDeep} from "@/helper/utils";
 import DropdownMenu from "~/components/ui/DropdownMenu.vue";
-import CurrentWork from "~/components/CurrentWork.vue";
 import Palette from "~/components/Editor/Palette.vue";
 import Square from "~/components/Square.vue";
-import {drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
-
-interface Rectangle {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: string;
-}
+import {drawThumbnail, editorDataToJSON, editorDataToSVG} from "~/helper/canvas";
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
@@ -424,7 +414,7 @@ function setupCanvas() {
 // ================================================== //
 function exportFile(type: string) {
   const a = document.createElement('a');
-  let url = ''
+  let url: string;
   switch (type) {
     case 'svg':
       url = editorDataToSVG(editorData.value)
