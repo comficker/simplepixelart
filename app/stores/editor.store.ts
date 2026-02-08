@@ -283,6 +283,13 @@ export const useEditor = defineStore('editor', () => {
                 historyIndex.value = -1
                 saveState()
             }
+            const layerNames = editorData.value.layers.map(x => x.name)
+            const virIndex = layerNames.indexOf("Virtual")
+            if (virIndex >= 0) {
+                currentLayerIndex.value = virIndex - 1
+                virtualLayer.value = cloneDeep(editorData.value.layers[virIndex]!)
+                mergeVirtualLayer()
+            }
         } catch (error) {
             resetEditorData()
         }
@@ -308,6 +315,7 @@ export const useEditor = defineStore('editor', () => {
                     body: payload
                 })
                 editorData.value.updated = result.updated
+                editorData.value.id_string = result.id_string
             } else {
                 const result = await useNativeFetch<SharedPage>(`/coloring/shared-pages/`, {
                     method: 'POST',

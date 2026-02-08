@@ -11,7 +11,8 @@ async function fetchData() {
       params: {
         user: auth.logged.username,
         full_schema: true,
-        page_size: 6
+        page_size: 6,
+        is_template: true
       }
     })
     workspaces.value = res.results.map(x => sharedPage2EditorData(x))

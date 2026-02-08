@@ -566,6 +566,11 @@ watch(() => editorData.value.width + editorData.value.height, () => {
             </Square>
           </Widget>
           <Widget title="Preview">
+            <template #ctl>
+              <a target="_blank" :href="`/art/${editorData.id_string}`">
+                <span class="icon icon-link"/>
+              </a>
+            </template>
             <Square class="inside">
               <canvas ref="miniMap" class="mini-map"/>
             </Square>
