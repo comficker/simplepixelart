@@ -54,7 +54,7 @@ export default defineNuxtConfig({
             },
             link: [
                 {rel: 'icon', type: 'image/x-icon', href: '/favicon.ico'},
-                {rel: 'apple-touch-icon', href: '/apple-touch-icon.png'},
+                {rel: 'apple-touch-icon', href: '/favicon.png'},
                 {rel: 'canonical', href: 'https://simplepixelart.com'},
                 {rel: 'preconnect', href: 'https://touch.ninosaur.com'},
             ],
