@@ -95,7 +95,7 @@ const handleInput = debounce((event: { target: { value: string; }; }) => {
       </div>
     </section>
     <div v-if="showFilter" class="flex gap-4">
-      <nuxt-link to="/editor" class="btn primary">Create</nuxt-link>
+      <nuxt-link to="/editor" class="btn primary">PX Editor</nuxt-link>
       <input type="text" :value="search" class="w-1/3" placeholder="Search..." @input="handleInput"/>
       <!--<div v-if="limit > 6" class="ml-auto px-2 py-2 border">Order</div>-->
     </div>

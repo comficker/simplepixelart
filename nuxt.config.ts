@@ -97,11 +97,11 @@ export default defineNuxtConfig({
                 
                 // Twitter Card tags
                 {name: 'twitter:card', content: 'summary_large_image'},
-                {name: 'twitter:site', content: '@SimplePixelArt'},
-                {name: 'twitter:creator', content: '@SimplePixelArt'},
+                {name: 'twitter:site', content: '@comficker'},
+                {name: 'twitter:creator', content: '@comficker'},
                 {name: 'twitter:title', content: 'Simple Pixel Art - Create & Discover Pixel Art Online'},
                 {name: 'twitter:description', content: 'Create and discover amazing pixel art online. Free pixel art editor with advanced tools.'},
-                {name: 'twitter:image', content: 'https://simplepixelart.com/twitter-image.jpg'},
+                {name: 'twitter:image', content: 'https://simplepixelart.com/og-image.jpg'},
                 {name: 'twitter:image:alt', content: 'Simple Pixel Art - Create and Discover Pixel Art'},
             ],
             script: process.env.ENV == "dev" ? []: analytics
