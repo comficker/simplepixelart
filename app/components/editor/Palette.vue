@@ -8,7 +8,7 @@ const isModify = ref(false)
 const handleChange = debounce((index: number, event: Event): void => {
   const target = event.target as HTMLInputElement
   if (target && target.value) {
-    store.editorData.colors[index] = target.value
+    store.editorData.colors[index] = target.value.toUpperCase()
     store.saveState()
   }
 }, 300)
