@@ -33,7 +33,7 @@ const {value, isDraw, isAdding, added, showVote} = defineProps<{
 const config = useRuntimeConfig()
 
 const src = computed(() => {
-  return `${config.public.api}/coloring/files/art-original/${value.id_string}.png?force=true`
+  return `${config.public.api}/coloring/files/art-original/${value.id_string}.png`
 })
 const to = computed(() => {
   return isDraw ? `/editor?id=${value.id_string || value.id}` : `/art/${value.id_string}`
