@@ -541,9 +541,9 @@ watch(() => editorData.value.width + editorData.value.height, () => {
                 <Square @click="store.setTool('bucket')" :class="{ active: store.currentTool === 'bucket' }">
                   <span class="icon icon-bucket"/>
                 </Square>
-                <Square @click="store.setTool('eraser')" :class="{ active: store.currentTool === 'eraser' }">
-                  <span class="icon icon-eraser"/>
-                </Square>
+<!--                <Square @click="store.setTool('eraser')" :class="{ active: store.currentTool === 'eraser' }">-->
+<!--                  <span class="icon icon-eraser"/>-->
+<!--                </Square>-->
                 <Square @click="store.setTool('move')" :class="{ active: store.currentTool === 'move' }">
                   <span class="icon icon-move"/>
                 </Square>
@@ -604,6 +604,10 @@ watch(() => editorData.value.width + editorData.value.height, () => {
           </div>
           <div>
             <TagInput v-model="editorData.tags" placeholder="tags" @changed="store.saveState()"/>
+          </div>
+          <div class="h-center gap-2">
+            <ui-switch v-model="editorData.is_public" @change="store.saveState()"/>
+            <span>Is Public?</span>
           </div>
         </Widget>
       </div>

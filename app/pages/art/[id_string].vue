@@ -160,7 +160,7 @@ const download = (type: string) => {
         </div>
         <div class="text-center text-sm text-gray-600 w-full">
           <h1 class="text-2xl">{{ data.name || `${data.width}x${data.height} Pixel Art` }}</h1>
-          <p>{{ data.desc || 'A beautiful pixel art creation.' }}</p>
+          <p class="text-xs">{{ data.desc || 'A beautiful pixel art creation.' }}</p>
           <div class="flex justify-center gap-4 mb-2">
             <span><strong>{{ Object.keys(data.map_numbers).length }}</strong> pixels</span>
           </div>

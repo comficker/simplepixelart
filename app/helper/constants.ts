@@ -26,4 +26,5 @@ export const DEFAULT_EDITOR_DATA: EditorData = {
     layers: cloneDeep(DEFAULT_LAYERS),
     template: null,
     updated: new Date().toISOString(),
+    is_public: false,
 }

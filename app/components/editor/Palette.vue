@@ -29,6 +29,15 @@ const removeColor = () => {
   <div class="palette">
     <div class="wrapper no-scrollbar">
       <div class="items">
+        <div
+            v-if="!isModify"
+            class="item"
+            @click="store.currentColorIndex = -1"
+            :class="{ active: store.currentColorIndex === -1 }"
+            title="Remove color"
+        >
+          <span class="icon icon-eraser"/>
+        </div>
         <template v-if="!isModify">
           <div
               v-for="(color, index) in store.editorData.colors" :key="index"
@@ -104,7 +113,7 @@ input.item {
   @apply sticky right-0 bg-white flex items-center gap-0;
 }
 
-.palette .ctl .item {
+.palette .item {
   @apply size-10 flex items-center justify-center;
 }
 

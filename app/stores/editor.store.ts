@@ -177,7 +177,7 @@ export const useEditor = defineStore('editor', () => {
         editorData.value.width = maxWidth;
         editorData.value.height = pxColor.length;
         editorData.value.layers[0]!.pixels = maps_results;
-        editorData.value.colors = colors;
+        editorData.value.colors = colors.map(x => x.toUpperCase());
         drawTurn.value++;
     }
 
@@ -307,7 +307,8 @@ export const useEditor = defineStore('editor', () => {
                 layers: editorData.value.layers,
                 template: editorData.value.template,
                 id_string: editorData.value.id_string,
-                map_numbers: layers2MapNumbers(editorData.value)
+                map_numbers: layers2MapNumbers(editorData.value),
+                is_public: editorData.value.is_public
             }
             if (editorData.value.id_string) {
                 const result = await useNativeFetch<SharedPage>(`/coloring/shared-pages/${editorData.value.id}/`, {
@@ -451,6 +452,19 @@ export const useEditor = defineStore('editor', () => {
         bucketFill(x, y - 1, rootColorIndex);
     }
 
+    function deletePixelsByColor(targetColorIndex: number) {
+        const pixels = editorData.value.layers[currentLayerIndex.value]!.pixels;
+        let hasChange = false;
+        Object.keys(pixels).forEach((key) => {
+            if (selectionState.value.bounds.active && !checkKeyInSelection(key)) return;
+            if (pixels[key] === targetColorIndex) {
+                delete pixels[key];
+                hasChange = true;
+            }
+        });
+        if (hasChange) saveState();
+    }
+
     function clearCurrentLayer() {
         getContentInBound(true)
         saveState();
@@ -554,6 +568,7 @@ export const useEditor = defineStore('editor', () => {
         saveState,
         checkKeyInSelection,
         bucketFill,
+        deletePixelsByColor,
         save,
         importImage
     }

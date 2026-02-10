@@ -77,6 +77,7 @@ export function sharedPage2EditorData(res: SharedPage, c?: {
     id_string: string;
     template: number | null;
 }): EditorData {
+    const is_public = res.status === 'public';
     return {
         id: res.id,
         id_string: res.id_string,
@@ -94,7 +95,8 @@ export function sharedPage2EditorData(res: SharedPage, c?: {
             y: 0
         }],
         updated: res.updated,
-        ...c
+        ...c,
+        is_public
     }
 }
 

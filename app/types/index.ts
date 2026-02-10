@@ -170,4 +170,5 @@ export interface EditorData {
     layers: Layer[];
     template?: number | null;
     updated: string;
+    is_public: boolean;
 }
