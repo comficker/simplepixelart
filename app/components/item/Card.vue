@@ -59,4 +59,8 @@ const to = computed(() => {
 .card-title h4 {
   @apply truncate;
 }
+
+.card .size-full {
+  @apply object-contain;
+}
 </style>

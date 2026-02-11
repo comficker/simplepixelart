@@ -49,7 +49,7 @@ onMounted(() => {
     <div class="results">
       <div v-for="item in workspaces" class="card">
         <div class="square">
-          <nuxt-link class="inside" :to="`/editor?id=${item.id}`">
+          <nuxt-link class="inside p-2" :to="`/editor?id=${item.id}`">
             <Thumb :data="item"/>
           </nuxt-link>
           <div class="absolute bottom-2 right-2 cursor-pointer" @click="destroy(item)">
