@@ -65,33 +65,22 @@ useCustomSeoMeta({
         </nuxt-link>
       </div>
     </section>
-    <client-only>
-      <CurrentWork/>
-    </client-only>
     <Widget title="New">
       <item-list :limit="6"/>
     </Widget>
-    <section>
-      <h2>
-        <span class="icon icon-angle-right"/>
-        <span>Tags:</span>
-      </h2>
+    <Widget title="Tags:">
       <div class="tags">
         <div class="item" v-for="item in data?.results" :key="item.id">
           <nuxt-link :to="`/arts/${item.id_string}`">{{ item.title }}</nuxt-link>
         </div>
       </div>
-    </section>
-    <section>
-      <h2>
-        <span class="icon icon-angle-right"/>
-        <span>Sizes:</span>
-      </h2>
+    </Widget>
+    <Widget title="Sizes:">
       <div class="tags">
         <div class="item" v-for="item in sizes" :key="item">
           <nuxt-link :to="`/arts/size-${item}`">{{ item }}</nuxt-link>
         </div>
       </div>
-    </section>
+    </Widget>
   </div>
 </template>

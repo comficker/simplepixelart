@@ -123,12 +123,17 @@ input[type=number] {
 }
 
 .tags {
-    @apply flex flex-wrap -mx-2;
+    @apply flex flex-wrap -mx-2 px-2;
 }
 
 .tags .item {
-    @apply p-1 px-2;
+    @apply p-1;
 }
+
+.tags .item a {
+    @apply p-1 py-0.5 bg-gray-100;
+}
+
 
 h2 {
     @apply flex items-center text-xs text-gray-500;

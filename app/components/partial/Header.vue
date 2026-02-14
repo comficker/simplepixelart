@@ -11,9 +11,12 @@ const auth = useAuthStore()
           <span>Home</span>
         </nuxt-link>
       </div>
-      <div>
-        <div class="logout" v-if="auth.isLogged" @click="auth.logout()">Logout</div>
-        <a v-else :href="`${config.public.api}/auth/google`">Login with Google</a>
+      <div class="menu">
+        <nuxt-link to="/work" class="item">
+          <span>Your work</span>
+        </nuxt-link>
+        <div class="item" v-if="auth.isLogged" @click="auth.logout()">Logout</div>
+        <a class="item" v-else :href="`${config.public.api}/auth/google`">Login with Google</a>
       </div>
     </div>
   </header>
