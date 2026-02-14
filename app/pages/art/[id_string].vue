@@ -19,6 +19,7 @@ const meta = computed(() => {
 
   const url = `${config.public.siteUrl}/art/${data.value.id_string}`
   const imgSrc = `${config.public.api}/coloring/files/art-social/${data.value.id_string}.png`
+  const imgSrcOrigin = `${config.public.api}/coloring/files/art-preview/${data.value.id_string}.png`
   const pixelCount = data.value.map_numbers ? Object.keys(data.value.map_numbers).length : 0
   const title = data.value.name
       ? `${data.value.name} - ${data.value.width}x${data.value.height} Pixel Art`
@@ -32,6 +33,7 @@ const meta = computed(() => {
     title,
     desc,
     imgSrc,
+    imgSrcOrigin,
     author: data.value.user?.username,
     width: data.value.width,
     height: data.value.height,
@@ -182,7 +184,7 @@ const download = (type: string) => {
           <span class="icon icon-brush"/>
           <span>Remix</span>
         </nuxt-link>
-        <ui-dropdown-menu>
+       <ui-dropdown-menu>
           <button class="btn secondary hover:shadow-lg transition-shadow" :disabled="!data">
             <span class="icon icon-download"/>
             <span>Download</span>
@@ -216,11 +218,11 @@ const download = (type: string) => {
                   class="btn" title="Download JSON pixel art"
                   @click="download('json')">JSON
               </button>
-            </div>
+           </div>
           </template>
         </ui-dropdown-menu>
-
-      </div>
+        <SocialSharing :meta="meta" />
+       </div>
       <section>
         <h2>
           <span class="icon icon-angle-right"/>

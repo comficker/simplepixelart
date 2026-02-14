@@ -127,11 +127,11 @@ input[type=number] {
 }
 
 .tags .item {
-    @apply p-1;
+    @apply p-1 inline-flex;
 }
 
 .tags .item a {
-    @apply p-1 py-0.5 bg-gray-100;
+    @apply p-1 py-0.5 bg-gray-100 text-xs;
 }
 
 
