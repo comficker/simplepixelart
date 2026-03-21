@@ -61,7 +61,7 @@ export default defineNuxtConfig({
             meta: [
                 {
                     name: 'viewport',
-                    content: 'width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1, minimum-scale=1.0'
+                    content: 'width=device-width, initial-scale=1.0'
                 },
                 {
                     name: 'description',

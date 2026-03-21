@@ -1,11 +1,11 @@
 <template>
   <div class="main-wrapper">
     <PartialHeader/>
-    <div class="main">
+    <main class="main">
       <div class="container">
         <NuxtPage/>
       </div>
-    </div>
+    </main>
     <PartialFooter/>
   </div>
 </template>

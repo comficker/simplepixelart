@@ -12,7 +12,10 @@ const auth = useAuthStore()
         </nuxt-link>
       </div>
       <div class="menu">
-        <nuxt-link to="/work" class="item">
+        <nuxt-link to="/arts" class="item">
+          <span>Gallery</span>
+        </nuxt-link>
+<nuxt-link to="/work" class="item">
           <span>Your work</span>
         </nuxt-link>
         <div class="item" v-if="auth.isLogged" @click="auth.logout()">Logout</div>

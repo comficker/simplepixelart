@@ -336,8 +336,14 @@ export const useEditor = defineStore('editor', () => {
             localStorage.setItem('workspaces', JSON.stringify(localWS.value))
         }
 
-        if (auth.isLogged) await save2Cloud();
-        else save2Local();
+        if (auth.isLogged) {
+            try {
+                await save2Cloud();
+            } catch (e) {
+                console.error('Failed to save to cloud, falling back to local:', e);
+                save2Local();
+            }
+        } else save2Local();
         histories.value = {
             [editorData.value.id.toString()]: {
                 data: cloneDeep(history.value),

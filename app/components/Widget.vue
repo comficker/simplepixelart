@@ -5,7 +5,7 @@ defineProps<{ title?: string }>()
 <template>
   <div class="widget">
     <div class="widget-head">
-      <h4 v-if="title" class="title">{{ title }}</h4>
+      <h2 v-if="title" class="title">{{ title }}</h2>
       <slot name="ctl" v-if="$slots.ctl"/>
     </div>
     <div class="widget-body">
@@ -26,12 +26,12 @@ defineProps<{ title?: string }>()
   font-size: 10px;
 }
 
-.widget h4 {
+.widget h2 {
   @apply flex justify-between items-center;
 }
 
 .widget-head .title {
-  @apply px-4 py-0.5 rounded-t bg-gray-200;
+  @apply px-4 py-0.5 rounded-t bg-gray-200 text-gray-800;
 }
 
 .widget-body {

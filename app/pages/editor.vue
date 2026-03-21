@@ -40,5 +40,77 @@ useCustomSeoMeta({
 </script>
 
 <template>
-  <PXEditor/>
- </template>
+  <div class="page">
+    <PXEditor/>
+    <section class="editor-intro">
+      <h2 class="editor-intro-heading">About This Editor</h2>
+      <p>SimplePixelArt.com provides a free, browser-based pixel art editor — no installation or account required. Draw directly on a pixel grid with a full set of tools designed for both beginners and experienced artists.</p>
+      <div class="editor-features">
+        <div class="feature-item">
+          <strong>Brush & Eraser</strong>
+          <span>Paint individual pixels or erase with precision. Adjust tool size for fine detail or broad strokes.</span>
+        </div>
+        <div class="feature-item">
+          <strong>Fill Tool</strong>
+          <span>Flood-fill an area with a single click. Perfect for quickly coloring large regions.</span>
+        </div>
+        <div class="feature-item">
+          <strong>Mirror Drawing</strong>
+          <span>Enable horizontal or vertical mirroring to draw symmetric sprites twice as fast.</span>
+        </div>
+        <div class="feature-item">
+          <strong>Multiple Layers</strong>
+          <span>Separate your artwork into layers — sketch on one, color on another, add details on top.</span>
+        </div>
+        <div class="feature-item">
+          <strong>Undo / Redo</strong>
+          <span>Full history support. Experiment freely and step back through any change.</span>
+        </div>
+        <div class="feature-item">
+          <strong>Custom Canvas Sizes</strong>
+          <span>Choose from 8×8 up to 64×64 pixels. Pick the resolution that fits your project.</span>
+        </div>
+        <div class="feature-item">
+          <strong>Color Palette</strong>
+          <span>Build and save a custom color palette for your artwork. Swap colors across the entire canvas instantly.</span>
+        </div>
+        <div class="feature-item">
+          <strong>Export & Share</strong>
+          <span>Save your artwork and share it with the SimplePixelArt.com community. Export as PNG for use in games, web, or print.</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</template>
+
+<style scoped>
+@reference "tailwindcss";
+
+.editor-intro {
+  @apply space-y-3 border-t border-gray-100 pt-4;
+}
+
+.editor-intro-heading {
+  @apply text-sm font-bold text-gray-700 flex items-center;
+}
+
+.editor-intro p {
+  @apply text-xs text-gray-600 leading-relaxed;
+}
+
+.editor-features {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-3 mt-2;
+}
+
+.feature-item {
+  @apply flex flex-col gap-1;
+}
+
+.feature-item strong {
+  @apply text-xs text-gray-800;
+}
+
+.feature-item span {
+  @apply text-xs text-gray-500 leading-relaxed;
+}
+</style>

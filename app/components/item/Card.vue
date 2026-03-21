@@ -18,7 +18,7 @@
     </div>
     <div class="card-head group-hover:translate-y-0">
       <div class="card-title">
-        <h4>{{ value.name || value.id_string || "Untitled" }}</h4>
+        <p>{{ value.name || value.id_string || "Untitled" }}</p>
       </div>
     </div>
   </nuxt-link>
@@ -56,7 +56,7 @@ const to = computed(() => {
   @apply py-1 p-2 text-xs bg-gray-50/80 border-t overflow-hidden;
 }
 
-.card-title h4 {
+.card-title p {
   @apply truncate;
 }
 
