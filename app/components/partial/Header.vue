@@ -9,24 +9,26 @@ const currentTheme = computed(() => themes.find(t => t.id === current.value) ?? 
   <header>
     <div class="container">
       <div class="menu">
-        <nuxt-link to="/" class="item">
+        <nuxt-link to="/" class="item" title="Home">
           <span class="icon icon-home"/>
-          <span>Home</span>
+          <span class="label">Home</span>
         </nuxt-link>
       </div>
       <div class="menu">
-        <nuxt-link to="/arts" class="item">
-          <span>Gallery</span>
+        <nuxt-link to="/arts" class="item" title="Gallery">
+          <span class="icon icon-discovery"/>
+          <span class="label">Gallery</span>
         </nuxt-link>
-        <nuxt-link to="/work" class="item">
-          <span>Your work</span>
+        <nuxt-link to="/work" class="item" title="Your work">
+          <span class="icon icon-brush"/>
+          <span class="label">Your work</span>
         </nuxt-link>
         <ui-dropdown-menu>
-          <div class="item theme-trigger" title="Change theme">
+          <div class="item theme-trigger" :title="`Theme: ${currentTheme.name}`">
             <span class="swatches">
               <span v-for="c in currentTheme.colors" :key="c" :style="{background: c}"/>
             </span>
-            <span>{{ currentTheme.name }}</span>
+            <span class="label">{{ currentTheme.name }}</span>
           </div>
           <template #menu>
             <div
@@ -42,8 +44,14 @@ const currentTheme = computed(() => themes.find(t => t.id === current.value) ?? 
             </div>
           </template>
         </ui-dropdown-menu>
-        <div class="item" v-if="auth.isLogged" @click="auth.logout()">Logout</div>
-        <a class="item" v-else :href="`${config.public.api}/auth/google`">Login</a>
+        <div class="item login-item" v-if="auth.isLogged" @click="auth.logout()" title="Logout">
+          <span class="icon icon-x"/>
+          <span class="label">Logout</span>
+        </div>
+        <a class="item login-item" v-else :href="`${config.public.api}/auth/google`" title="Login with Google">
+          <span class="icon icon-social"/>
+          <span class="label">Login</span>
+        </a>
       </div>
     </div>
   </header>
@@ -53,11 +61,21 @@ const currentTheme = computed(() => themes.find(t => t.id === current.value) ?? 
 @reference "tailwindcss";
 
 .menu {
-  @apply flex gap-4;
+  @apply flex gap-1 md:gap-4;
 }
 
 .menu .item {
-  @apply flex gap-1 items-center py-2;
+  @apply flex gap-1 items-center justify-center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px;
+}
+
+@media (min-width: 768px) {
+  .menu .item {
+    min-width: 0;
+    padding: 8px 4px;
+  }
 }
 
 header .container {
@@ -70,8 +88,25 @@ header .menu .item {
   cursor: pointer;
 }
 
+header .menu .item .icon {
+  font-size: 1.1em;
+}
+
 header .menu .item.router-link-active {
   color: var(--primary);
+}
+
+/* Hide text labels on mobile — rely on icons + swatches.
+ * Theme dropdown menu items inside the panel keep their labels (.swatches + name)
+ * because that markup uses a plain <span>, not .label. */
+header .menu .item .label {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  header .menu .item .label {
+    display: inline;
+  }
 }
 
 .theme-trigger {
