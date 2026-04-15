@@ -5,16 +5,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-pnpm dev          # Start dev server at 0.0.0.0:3000
-pnpm build        # Build for production (Nuxt/Nitro)
-pnpm generate     # Static site generation
-pnpm preview      # Preview production build
-pnpm postinstall  # Run after install to generate Nuxt types
+bun install       # Install dependencies (uses bun.lock)
+bun dev           # Start dev server at 0.0.0.0:3000
+bun run build     # Build for production (Nuxt/Nitro) + run scripts/fix-unhead-bundle.mjs
+bun run generate  # Static site generation
+bun run preview   # Preview production build
 ```
 
-No test or lint commands are configured.
+No test or lint commands are configured. The `build` script chains `nuxt build && node ./scripts/fix-unhead-bundle.mjs` — the post-step copies missing `unhead/dist/*` files into `.output/server/node_modules/` to work around a Nitro bundling gap that crashes prod runtime with `ERR_MODULE_NOT_FOUND` on `unhead/server`.
 
-Deployment is via GitHub Actions (`.github/workflows/deploy_main.yml`) on push to `main` — SSH-deploys to a VPS at `/home/frontend/simplepixelart`: `git stash → git pull → rm -rf .output .nuxt → pnpm install → pnpm run build → pm2 restart simplepixelart`.
+Deployment is via GitHub Actions (`.github/workflows/deploy_main.yml`) on push to `main` — SSH-deploys to a VPS at `/home/frontend/simplepixelart`: `git stash → git pull → rm -rf .output .nuxt → install bun if missing → bun install → bun run build → pm2 restart simplepixelart`.
 
 ## Architecture
 

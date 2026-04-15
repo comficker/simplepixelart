@@ -25,5 +25,10 @@
   },
   "overrides": {
     "vue": "latest"
-  }
+  },
+  "trustedDependencies": [
+    "@firebase/util",
+    "@parcel/watcher",
+    "protobufjs"
+  ]
 }

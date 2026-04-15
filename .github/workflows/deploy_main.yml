@@ -29,7 +29,12 @@ jobs:
             rm -rf .output
             rm -rf .nuxt
             pm2 stop simplepixelart
-            pnpm install
-            pnpm run build
+            # Install bun if missing (idempotent — official installer is safe to re-run)
+            if ! command -v bun >/dev/null 2>&1; then
+              curl -fsSL https://bun.sh/install | bash
+            fi
+            export PATH="$HOME/.bun/bin:$PATH"
+            bun install
+            bun run build
             pm2 restart simplepixelart
           EOF
