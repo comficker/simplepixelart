@@ -31,10 +31,16 @@ defineProps<{ title?: string }>()
 }
 
 .widget-head .title {
-  @apply px-4 py-0.5 rounded-t bg-gray-200 text-gray-800;
+  @apply px-4 py-0.5;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .widget-body {
-  @apply p-2 border rounded-xs border-gray-200;
+  @apply p-2;
+  border: 2px solid var(--border);
+  background: var(--surface);
 }
 </style>

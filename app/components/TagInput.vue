@@ -120,11 +120,15 @@ function handleBlur() {
 }
 
 .tag {
-  @apply inline-flex items-center gap-1 px-1 py-0.5 bg-blue-100 text-blue-800 rounded-md;
+  @apply inline-flex items-center gap-1 px-1 py-0.5;
+  background: var(--surface-2);
+  color: var(--primary);
+  border: 1px solid var(--border);
 }
 
 .remove-btn {
-  @apply ml-1 text-blue-600 hover:text-blue-800 font-bold cursor-pointer;
+  @apply ml-1 font-bold cursor-pointer;
+  color: var(--secondary);
   background: none;
   border: none;
   padding: 0;
@@ -132,15 +136,32 @@ function handleBlur() {
   line-height: 1;
 }
 
+.remove-btn:hover {
+  color: var(--primary);
+}
+
 .tag-input-field {
-  @apply px-1 border border-gray-300 outline-none focus:border-blue-500;
+  @apply px-1 outline-none;
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+.tag-input-field:focus {
+  border-color: var(--primary);
 }
 
 .add-tag-trigger {
-  @apply text-gray-500 cursor-pointer hover:text-gray-700;
+  @apply cursor-pointer;
+  color: var(--muted);
+}
+
+.add-tag-trigger:hover {
+  color: var(--primary);
 }
 
 .max-tags-warning {
-  @apply w-full text-gray-500 text-xs italic;
+  @apply w-full text-xs italic;
+  color: var(--muted);
 }
 </style>

@@ -70,23 +70,24 @@ function toggle() {
 }
 
 .ui-switch:focus-visible .track {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px var(--primary);
 }
 
 .track {
   position: relative;
   display: block;
-  background: #ccc;
+  background: var(--surface-2, #3a2560);
+  border: 2px solid var(--shadow-px, #000);
   transition: background-color 0.15s ease;
 }
 
 .thumb {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-  transition: transform 0.15s ease;
+  top: 0;
+  left: 0;
+  background: var(--foreground, #f5e6a8);
+  border: 2px solid var(--shadow-px, #000);
+  transition: transform 0.15s steps(2);
 }
 
 /* Sizes */
@@ -98,7 +99,8 @@ function toggle() {
 .size-lg .thumb { width: 24px; height: 24px; }
 
 /* ON state */
-.ui-switch.on .track { background: #4ade80; }
+.ui-switch.on .track { background: var(--primary, #ffb800); }
+.ui-switch.on .thumb { background: var(--primary-foreground, #1a1033); }
 .size-sm .ui-switch.on .thumb { transform: translateX(12px); }
 .size-md .ui-switch.on .thumb { transform: translateX(16px); }
 .size-lg .ui-switch.on .thumb { transform: translateX(20px); }

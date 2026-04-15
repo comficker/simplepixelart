@@ -87,15 +87,18 @@ useCustomSeoMeta({
 @reference "tailwindcss";
 
 .editor-intro {
-  @apply space-y-3 border-t border-gray-100 pt-4;
+  @apply space-y-3 pt-4;
+  border-top: 1px solid var(--border);
 }
 
 .editor-intro-heading {
-  @apply text-sm font-bold text-gray-700 flex items-center;
+  @apply text-sm font-bold flex items-center;
+  color: var(--foreground);
 }
 
 .editor-intro p {
-  @apply text-xs text-gray-600 leading-relaxed;
+  @apply text-xs leading-relaxed;
+  color: var(--foreground);
 }
 
 .editor-features {
@@ -107,10 +110,12 @@ useCustomSeoMeta({
 }
 
 .feature-item strong {
-  @apply text-xs text-gray-800;
+  @apply text-xs;
+  color: var(--foreground);
 }
 
 .feature-item span {
-  @apply text-xs text-gray-500 leading-relaxed;
+  @apply text-xs leading-relaxed;
+  color: var(--muted);
 }
 </style>

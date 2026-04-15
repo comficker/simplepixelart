@@ -106,11 +106,13 @@ input.item {
 }
 
 .item.active {
-  @apply border border-black;
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
 }
 
 .palette .ctl {
-  @apply sticky right-0 bg-white flex items-center gap-0;
+  @apply sticky right-0 flex items-center gap-0;
+  background: var(--background);
 }
 
 .palette .item {
@@ -118,7 +120,8 @@ input.item {
 }
 
 .palette .ctl .item.active {
-  @apply bg-gray-200;
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 input[type="color"] {

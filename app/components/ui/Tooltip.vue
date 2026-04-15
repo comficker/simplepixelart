@@ -38,11 +38,15 @@ const show = ref(false)
 
 .tooltip {
   position: absolute;
-  background: #111;
-  color: white;
+  background: var(--primary, #ffb800);
+  color: var(--primary-foreground, #1a1033);
+  border: 2px solid var(--shadow-px, #000);
+  box-shadow: 3px 3px 0 0 var(--shadow-px, #000);
   padding: 6px 10px;
   font-size: 12px;
-  border-radius: 6px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   white-space: nowrap;
   z-index: 1000;
   pointer-events: none;

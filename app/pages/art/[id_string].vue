@@ -168,7 +168,7 @@ const download = (type: string) => {
           </div>
           <div v-if="data.user" class="h-center v-center text-xs gap-2">
             <span>Created by</span>
-            <nuxt-link :to="`/creator/${data.user.username}`" class="text-blue-600 hover:text-blue-800">
+            <nuxt-link :to="`/creator/${data.user.username}`">
               {{ data.user.username }}
             </nuxt-link>
           </div>
@@ -257,7 +257,7 @@ const download = (type: string) => {
         </h2>
         <div class="tags">
           <div class="item" v-for="item in data.taxonomies" :key="item.id">
-            <nuxt-link :to="`/arts/${item.id_string}`" class="hover:bg-blue-50 transition-colors">
+            <nuxt-link :to="`/arts/${item.id_string}`" class="transition-colors">
               {{ item.title }}
             </nuxt-link>
           </div>

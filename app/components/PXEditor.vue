@@ -320,10 +320,17 @@ function drawBackground(): void {
   if (!ctx || !canvas.value) return;
   ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
   if (showGrid.value) {
+    // Read checkerboard colors from theme CSS vars so the transparent
+    // grid stays in sync when the user switches themes.
+    const rootStyle = typeof window !== 'undefined'
+        ? getComputedStyle(document.documentElement)
+        : null;
+    const cellA = rootStyle?.getPropertyValue('--surface').trim() || '#1c4a1c';
+    const cellB = rootStyle?.getPropertyValue('--surface-2').trim() || '#306230';
     for (let y = 0; y < editorData.value.height; y++) {
       for (let x = 0; x < editorData.value.width; x++) {
         // @ts-ignore
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#ffffff" : "#ddd";
+        ctx.fillStyle = (x + y) % 2 === 0 ? cellA : cellB;
         ctx.fillRect(
             x * zoom.value,
             y * zoom.value,

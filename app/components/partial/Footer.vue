@@ -30,10 +30,15 @@ footer .container {
 }
 
 .footer-links a {
-  @apply text-gray-500 hover:text-gray-800;
+  color: var(--muted);
+}
+
+.footer-links a:hover {
+  color: var(--primary);
 }
 
 .footer-copy {
-  @apply text-xs text-gray-600;
+  @apply text-xs;
+  color: var(--foreground);
 }
 </style>

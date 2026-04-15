@@ -6,6 +6,8 @@
             v-if="!isDraw"
             :src="src" :alt="value.name"
             class="size-full"
+            loading="lazy"
+            decoding="async"
         />
         <canvas
             v-else
@@ -44,16 +46,30 @@ const to = computed(() => {
 @reference "tailwindcss";
 
 .card {
-  @apply block overflow-hidden border;
+  @apply block overflow-hidden;
   image-rendering: pixelated;
+  border: 2px solid var(--shadow-px);
+  background: var(--surface);
+  box-shadow: 3px 3px 0 0 var(--shadow-px);
+  transition: transform 80ms steps(2), box-shadow 80ms steps(2);
+}
+
+.card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 6px 6px 0 0 var(--shadow-px);
+  border-color: var(--primary);
 }
 
 .card.selected {
-  @apply border-blue-500;
+  border-color: var(--primary);
+  box-shadow: 4px 4px 0 0 var(--secondary);
 }
 
 .card-head {
-  @apply py-1 p-2 text-xs bg-gray-50/80 border-t overflow-hidden;
+  @apply py-1 p-2 text-xs overflow-hidden;
+  background: var(--surface);
+  color: var(--foreground);
+  border-top: 1px solid var(--border);
 }
 
 .card-title p {

@@ -12,14 +12,66 @@
     --color-secondary-foreground: var(--secondary-foreground);
 }
 
-:root {
-    --background: #FFF;
-    --foreground: oklch(0.145 0 0);
-    --border: #EDEDED;
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0 0 0 / 0.30);
-    --secondary-foreground: oklch(0.205 0 0);
+/* === RETRO THEME PALETTES ===
+ * Each theme defined as [data-theme="..."] block on <html>.
+ * Default (no attribute) falls back to Game Boy via :root.
+ * All components read these CSS variables — no hardcoded hex elsewhere.
+ */
+:root,
+[data-theme="gameboy"] {
+    --background: #0f380f;
+    --foreground: #9bbc0f;
+    --border: #306230;
+    --primary: #9bbc0f;
+    --primary-foreground: #0f380f;
+    --secondary: #8bac0f;
+    --secondary-foreground: #0f380f;
+    --shadow-px: #000;
+    --muted: #8bac0f;
+    --surface: #1c4a1c;
+    --surface-2: #306230;
+}
+
+[data-theme="arcade"] {
+    --background: #1a1033;
+    --foreground: #f5e6a8;
+    --border: #4a2a7a;
+    --primary: #ffb800;
+    --primary-foreground: #1a1033;
+    --secondary: #ff3d7f;
+    --secondary-foreground: #1a1033;
+    --shadow-px: #000;
+    --muted: #a89cc9;
+    --surface: #2a1a4a;
+    --surface-2: #3a2560;
+}
+
+[data-theme="nes"] {
+    --background: #000000;
+    --foreground: #fcfcfc;
+    --border: #383838;
+    --primary: #e40058;
+    --primary-foreground: #fcfcfc;
+    --secondary: #0078f8;
+    --secondary-foreground: #fcfcfc;
+    --shadow-px: #000;
+    --muted: #bcbcbc;
+    --surface: #1c1c1c;
+    --surface-2: #383838;
+}
+
+[data-theme="synthwave"] {
+    --background: #1a0033;
+    --foreground: #f0f0ff;
+    --border: #8833ff;
+    --primary: #00f5ff;
+    --primary-foreground: #1a0033;
+    --secondary: #ff006e;
+    --secondary-foreground: #1a0033;
+    --shadow-px: #000;
+    --muted: #b19cd9;
+    --surface: #2a0d4d;
+    --surface-2: #3d1a66;
 }
 
 .container {
@@ -27,14 +79,61 @@
     margin: 0 auto;
 }
 
+html, body {
+    background: var(--background);
+    color: var(--foreground);
+}
+
 body {
-    font-family: "Proto Mono", serif;
+    font-family: "Proto Mono", monospace;
     font-weight: bold;
     font-size: 14px;
+    position: relative;
+}
+
+/* Subtle CRT scanlines overlay */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 2px,
+        rgba(0, 0, 0, 0.08) 2px,
+        rgba(0, 0, 0, 0.08) 3px
+    );
+    mix-blend-mode: multiply;
 }
 
 * {
     @apply border-border;
+}
+
+::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+a {
+    color: var(--foreground);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--primary);
+}
+
+h1, h2, h3, h4 {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+h1 {
+    color: var(--primary);
+    text-shadow: 2px 2px 0 var(--secondary);
 }
 
 .icon {
@@ -78,12 +177,25 @@ body {
     @apply w-full h-full;
 }
 
-input[type=text] {
-    @apply border outline-none px-2 py-2;
+input[type=text],
+input[type=number] {
+    background: var(--surface);
+    color: var(--foreground);
+    border: 2px solid var(--border);
+    outline: none;
+    padding: 0.5rem 0.75rem;
+    font-family: inherit;
+    font-weight: inherit;
+}
+
+input[type=text]:focus,
+input[type=number]:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary);
 }
 
 input[type=number] {
-    @apply border outline-none px-2 py-0.5;
+    padding: 0.125rem 0.5rem;
 }
 
 .paginator {
@@ -102,16 +214,40 @@ input[type=number] {
     @apply grid grid-cols-3 md:grid-cols-6 gap-1 md:gap-2;
 }
 
+/* Chunky pixel buttons with hard offset shadow */
 .btn {
     @apply items-center flex gap-1 px-6 py-2;
+    border: 2px solid var(--shadow-px);
+    background: var(--surface);
+    color: var(--foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    box-shadow: 4px 4px 0 0 var(--shadow-px);
+    transition: transform 60ms steps(2), box-shadow 60ms steps(2);
+}
+
+.btn:hover {
+    color: var(--primary);
+}
+
+.btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 var(--shadow-px);
 }
 
 .btn.primary {
-    @apply bg-primary text-white;
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.btn.primary:hover {
+    color: var(--primary-foreground);
+    background: var(--secondary);
 }
 
 .btn.secondary {
-    @apply bg-gray-50;
+    background: var(--surface-2);
+    color: var(--foreground);
 }
 
 .meta {
@@ -131,21 +267,30 @@ input[type=number] {
 }
 
 .tags .item a {
-    @apply p-1 py-0.5 bg-gray-100 text-xs;
+    @apply p-1 py-0.5 text-xs;
+    background: var(--surface);
+    color: var(--foreground);
+    border: 1px solid var(--border);
 }
 
+.tags .item a:hover {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+}
 
 h2 {
-    @apply flex items-center text-xs text-gray-500;
+    @apply flex items-center text-xs;
+    color: var(--secondary);
 }
 
 .no-scrollbar {
-    -ms-overflow-style: none; /* Internet Explorer 10+ */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 .no-scrollbar::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
+    display: none;
 }
 
 .dropdown {
@@ -158,18 +303,31 @@ h2 {
 }
 
 .dropdown-trigger {
-    @apply flex items-center justify-center text-yellow-500 cursor-pointer px-2 py-1;
+    @apply flex items-center justify-center cursor-pointer px-2 py-1;
+    color: var(--primary);
 }
 
 .dropdown .dropdown-menu {
-    @apply bg-background z-10 min-w-52 left-0 border border-border shadow text-left divide-y divide-border;
+    @apply z-10 min-w-52 left-0 text-left;
+    background: var(--surface);
+    border: 2px solid var(--shadow-px);
+    box-shadow: 4px 4px 0 0 var(--shadow-px);
     position: absolute;
     top: calc(100% + 10px);
     opacity: 0;
 }
 
+.dropdown .dropdown-menu > * + * {
+    border-top: 1px solid var(--border);
+}
+
 .dropdown .drop-item {
     @apply flex justify-start items-start px-3 py-2 text-sm;
+}
+
+.dropdown .drop-item:hover {
+    background: var(--surface-2);
+    color: var(--primary);
 }
 
 .dropdown.active .dropdown-menu {
@@ -182,23 +340,28 @@ h2 {
 }
 
 [data-sonner-toaster] [data-sonner-toast] {
-    background: white;
+    background: var(--surface);
+    color: var(--foreground);
+    border: 2px solid var(--shadow-px);
+    box-shadow: 4px 4px 0 0 var(--shadow-px);
+    border-radius: 0;
 }
 
 [data-sonner-toast][data-styled='true'] {
     font-size: 14px;
-    font-family: "Stolzl", serif;
+    font-family: "Proto Mono", monospace;
 }
 
 .input {
     @apply py-1;
-
     border: 1px solid transparent;
 }
-.editable-text {
-    @apply border border-blue-500 outline-none px-2 py-1;
 
-    box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+.editable-text {
+    @apply outline-none px-2 py-1;
+    border: 2px solid var(--primary);
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--secondary);
 }
 
 .editor {
@@ -216,39 +379,36 @@ h2 {
     @apply size-6 cursor-pointer;
 }
 
+.editor .ctl > div:hover {
+    color: var(--primary);
+}
+
 .canvas-container {
     width: var(--editor-width, 464px);
     height: var(--editor-width, 464px);
     overflow: auto;
+    border: 2px solid var(--border);
+    background: var(--surface);
 }
 
 canvas {
     image-rendering: pixelated;
 }
 
-canvas.brush {
-    cursor: crosshair;
-}
-
-canvas.eraser {
-    cursor: pointer;
-}
-
-canvas.move {
-    cursor: move;
-}
-
-canvas.clear {
-    cursor: pointer;
-}
+canvas.brush { cursor: crosshair; }
+canvas.eraser { cursor: pointer; }
+canvas.move { cursor: move; }
+canvas.clear { cursor: pointer; }
 
 .mini-map {
     width: var(--editor-minimap-size, 80px);
     image-rendering: pixelated;
+    border: 1px solid var(--border);
 }
 
 .tools {
-    @apply grid grid-cols-4 text-xl ;
+    @apply grid grid-cols-4 text-xl;
+    border: 2px solid var(--border);
 }
 
 .tools * {
@@ -260,8 +420,8 @@ canvas.clear {
 }
 
 .tools .square.active {
-    background-color: #007bff;
-    color: white;
+    background-color: var(--primary);
+    color: var(--primary-foreground);
 }
 
 .layers {
@@ -274,7 +434,6 @@ canvas.clear {
 
 .layers ul {
     @apply text-xs;
-
     list-style: none;
     padding: 0;
 }
@@ -288,7 +447,8 @@ canvas.clear {
 }
 
 .layers li.active {
-    background-color: #e0e0e0;
+    background-color: var(--surface-2);
+    color: var(--primary);
 }
 
 .layers li button {
@@ -298,3 +458,21 @@ canvas.clear {
 .pixelated {
     image-rendering: pixelated;
 }
+
+/* === Tailwind gray-scale overrides for retro theme === */
+.bg-gray-50, .bg-gray-50\/80 { background-color: var(--surface) !important; }
+.bg-gray-100 { background-color: var(--surface-2) !important; }
+.bg-gray-200 { background-color: var(--primary) !important; color: var(--primary-foreground) !important; }
+
+.text-gray-400,
+.text-gray-500 { color: var(--muted) !important; }
+
+.text-gray-600,
+.text-gray-700,
+.text-gray-800 { color: var(--foreground) !important; }
+
+.border-gray-100,
+.border-gray-200 { border-color: var(--border) !important; }
+
+/* Hover states often used */
+.hover\:text-gray-800:hover { color: var(--primary) !important; }

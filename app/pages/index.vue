@@ -126,11 +126,13 @@ useCustomSeoMeta({
 @reference "tailwindcss";
 
 .info-section {
-  @apply space-y-3 py-2 border-t border-gray-100;
+  @apply space-y-3 py-2;
+  border-top: 1px solid var(--border);
 }
 
 .info-heading {
-  @apply text-sm font-bold text-gray-700 flex items-center;
+  @apply text-sm font-bold flex items-center;
+  color: var(--foreground);
 }
 
 .info-list {
@@ -138,6 +140,7 @@ useCustomSeoMeta({
 }
 
 .info-list li {
-  @apply text-xs text-gray-600 leading-relaxed;
+  @apply text-xs leading-relaxed;
+  color: var(--foreground);
 }
 </style>

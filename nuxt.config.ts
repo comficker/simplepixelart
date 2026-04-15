@@ -1,18 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
 
-const analytics = [
-    {
-        src: "https://www.googletagmanager.com/gtag/js?id=G-MKLR8GDG", async: true
-    },
-    {
-        innerHTML: `
-            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','GTM-MKLR8GDG');`
-    }
-]
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     compatibilityDate: '2025-07-15',
@@ -43,6 +30,15 @@ export default defineNuxtConfig({
         public: {
             api: process.env.NUXT_PUBLIC_API || 'https://touch.ninosaur.com',
             siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://simplepixelart.com',
+            firebase: {
+                apiKey: "AIzaSyCF1i7uBqd1OEeJEYfLAVgrs9XlKhLk8tQ",
+                authDomain: "simplepixelart-78b18.firebaseapp.com",
+                projectId: "simplepixelart-78b18",
+                storageBucket: "simplepixelart-78b18.firebasestorage.app",
+                messagingSenderId: "17213734973",
+                appId: "1:17213734973:web:f589f41ae083d475776a54",
+                measurementId: "G-2W3W9J4ER3",
+            },
         }
     },
     app: {
@@ -104,7 +100,6 @@ export default defineNuxtConfig({
                 {name: 'twitter:image', content: 'https://simplepixelart.com/og-image.jpg'},
                 {name: 'twitter:image:alt', content: 'Simple Pixel Art - Create and Discover Pixel Art'},
             ],
-            script: process.env.ENV == "dev" ? []: analytics
         }
     },
 })
