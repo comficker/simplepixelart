@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import {onMounted, ref} from "vue";
+import {nextTick, onMounted, ref} from "vue";
 import {drawThumbnail, editorDataToJSON, editorDataToSVG} from "~/helper/canvas";
+import {toast} from "vue-sonner";
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
@@ -9,6 +10,53 @@ let miniMapCtx: CanvasRenderingContext2D | null = null;
 
 const store = useEditor()
 const route = useRoute()
+const config = useRuntimeConfig()
+
+const showPublishModal = ref(false)
+const publishStep = ref<'edit' | 'done'>('edit')
+
+const shareMeta = computed(() => ({
+  url: `${config.public.siteUrl || 'https://simplepixelart.com'}/art/${editorData.value.id_string}`,
+  title: `${editorData.value.name || 'Untitled'} - Pixel Art`,
+  desc: editorData.value.desc || 'Check out this pixel art!',
+  imgSrc: `${config.public.api}/coloring/files/art-social/${editorData.value.id_string}.png`
+}))
+
+const socialUrls = computed(() => {
+  const url = encodeURIComponent(shareMeta.value.url)
+  const title = encodeURIComponent(shareMeta.value.title)
+  const img = encodeURIComponent(shareMeta.value.imgSrc || '')
+  return {
+    twitter: `https://twitter.com/intent/tweet?url=${url}&text=${title}`,
+    reddit: `https://www.reddit.com/submit?url=${url}&title=${title}`,
+    pinterest: `https://www.pinterest.com/pin/create/button/?url=${url}&media=${img}&description=${title}`,
+  }
+})
+
+const auth = useAuthStore()
+const showLoginPrompt = ref(false)
+
+function openPublish() {
+  if (!auth.isLogged) {
+    showLoginPrompt.value = true
+    return
+  }
+  publishStep.value = 'edit'
+  showPublishModal.value = true
+}
+
+async function saveAndPublish() {
+  editorData.value.is_public = true
+  store.saveState(false)
+  await store.saveNow()
+  publishStep.value = 'done'
+}
+
+function copyLink() {
+  const url = `${config.public.siteUrl || 'https://simplepixelart.com'}/art/${editorData.value.id_string}`
+  navigator.clipboard.writeText(url)
+  toast.success('Link copied!')
+}
 
 const EDITOR_SIZE = ref(384)
 const MINIMAP_SIZE = ref(80)
@@ -435,6 +483,7 @@ function exportFile(type: string) {
   a.download = `SimplePixelArt.${type}`;
   a.click();
   URL.revokeObjectURL(url);
+  toast.success(`Exported as ${type.toUpperCase()}`)
 }
 
 // ================================================== //
@@ -465,47 +514,99 @@ watch(() => editorData.value.width + editorData.value.height, () => {
     height: editorData.value.height
   }
 })
+
+watch(() => store.editorMode, () => {
+  nextTick(() => {
+    miniMapCtx = miniMap.value!.getContext('2d')
+    miniMapCtx!.imageSmoothingEnabled = false
+    setupCanvas()
+  })
+})
 </script>
 
 <template>
   <div class="editor" :style="{'--editor-width': EDITOR_SIZE + 'px','--editor-minimap-size': MINIMAP_SIZE + 'px'}">
-    <div class="flex flex-col md:flex-row gap-3">
-      <div class="flex-1 space-y-2">
-        <div class="flex justify-between items-center">
-          <div class="flex gap-3">
-            <button @click="store.resetEditorData">New</button>
-            <button @click="store.importImage()">Import</button>
-            <ui-dropdown-menu>
-              <div class="item">
-                <span>Export</span>
-              </div>
-              <template #menu>
-                <div class="flex flex-col divide-y">
-                  <div class="btn" @click="exportFile('png')">Export PNG</div>
-                  <div class="btn" @click="exportFile('svg')">Export SVG</div>
-                  <div class="btn" @click="exportFile('json')">Export JSON</div>
-                </div>
-              </template>
-            </ui-dropdown-menu>
-          </div>
-          <div class="ctl">
-            <template v-if="isResizing">
-              <input class="h-5 w-16 text-xs" v-model="newSize.width" type="number">
-              <input class="h-5 w-16 text-xs" v-model="newSize.height" type="number">
-              <div class="size-5" @click="store.resize(newSize);isResizing = false;"><span class="icon icon-check"/>
+    <!-- Top toolbar -->
+    <div class="editor-toolbar">
+      <div class="toolbar-group">
+        <ui-tooltip text="New canvas">
+          <button class="toolbar-btn" @click="store.resetEditorData"><span class="icon icon-plus"/></button>
+        </ui-tooltip>
+        <template v-if="store.editorMode === 'advanced'">
+          <ui-tooltip text="Import file">
+            <button class="toolbar-btn" @click="store.importImage()"><span class="icon icon-upload"/></button>
+          </ui-tooltip>
+          <ui-dropdown-menu>
+            <ui-tooltip text="Export">
+              <div class="toolbar-btn"><span class="icon icon-download"/></div>
+            </ui-tooltip>
+            <template #menu>
+              <div class="flex flex-col divide-y">
+                <div class="btn" @click="exportFile('png')">PNG</div>
+                <div class="btn" @click="exportFile('svg')">SVG</div>
+                <div class="btn" @click="exportFile('json')">JSON</div>
               </div>
             </template>
-            <template v-else>
-              <div @click="store.undo()"><span class="icon icon-undo"/></div>
-              <div @click="store.redo()"><span class="icon icon-redo"/></div>
-              <div @click="store.clearCurrentLayer"><span class="icon icon-broom"/></div>
-              <div @click="zoomIn"><span class="icon icon-zoom-in"/></div>
-              <div @click="zoomOut"><span class="icon icon-zoom-out"/></div>
-              <div @click="showGrid = !showGrid; drawEditor()"><span class="icon icon-grid"/></div>
-              <div @click="isResizing = true"><span class="icon icon-resize"/></div>
-            </template>
-          </div>
+          </ui-dropdown-menu>
+        </template>
+      </div>
+      <div class="toolbar-sep"/>
+      <div class="toolbar-group">
+        <ui-tooltip text="Undo (Ctrl+Z)">
+          <button class="toolbar-btn" @click="store.undo()"><span class="icon icon-undo"/></button>
+        </ui-tooltip>
+        <ui-tooltip text="Redo (Ctrl+Shift+Z)">
+          <button class="toolbar-btn" @click="store.redo()"><span class="icon icon-redo"/></button>
+        </ui-tooltip>
+        <ui-tooltip text="Clear layer">
+          <button class="toolbar-btn" @click="store.clearCurrentLayer"><span class="icon icon-broom"/></button>
+        </ui-tooltip>
+      </div>
+      <div class="toolbar-sep"/>
+      <div class="toolbar-group">
+        <ui-tooltip text="Zoom in (Ctrl+=)">
+          <button class="toolbar-btn" @click="zoomIn"><span class="icon icon-zoom-in"/></button>
+        </ui-tooltip>
+        <ui-tooltip text="Zoom out (Ctrl+-)">
+          <button class="toolbar-btn" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
+        </ui-tooltip>
+        <template v-if="store.editorMode === 'advanced'">
+          <ui-tooltip :text="showGrid ? 'Hide grid' : 'Show grid'">
+            <button class="toolbar-btn" :class="{ active: showGrid }" @click="showGrid = !showGrid; drawEditor()">
+              <span class="icon icon-grid"/>
+            </button>
+          </ui-tooltip>
+        </template>
+      </div>
+      <template v-if="store.editorMode === 'advanced' && !isResizing">
+        <div class="toolbar-sep"/>
+        <ui-tooltip text="Resize canvas">
+          <button class="toolbar-btn" @click="isResizing = true"><span class="icon icon-resize"/></button>
+        </ui-tooltip>
+      </template>
+      <template v-if="isResizing">
+        <div class="toolbar-sep"/>
+        <div class="toolbar-group items-center">
+          <input class="resize-input" v-model="newSize.width" type="number" min="1" max="128">
+          <span class="text-xs">×</span>
+          <input class="resize-input" v-model="newSize.height" type="number" min="1" max="128">
+          <button class="toolbar-btn active" @click="store.resize(newSize);isResizing = false;">
+            <span class="icon icon-check"/>
+          </button>
         </div>
+      </template>
+      <div class="flex-1"/>
+      <span class="toolbar-info">{{ editorData.width }}×{{ editorData.height }}</span>
+      <div class="toolbar-sep"/>
+      <button class="publish-toolbar-btn" @click="openPublish">
+        <span class="icon icon-social"/>
+        <span>Share</span>
+      </button>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-3">
+      <!-- Left: canvas + palette -->
+      <div class="flex-1 space-y-2">
         <Widget>
           <Square>
             <div
@@ -533,48 +634,70 @@ watch(() => editorData.value.width + editorData.value.height, () => {
             </div>
           </Square>
         </Widget>
+
+        <!-- Simple mode: inline tool strip below canvas -->
+        <div v-if="store.editorMode === 'simple'" class="tool-strip">
+          <ui-tooltip text="Brush">
+            <button class="tool-strip-btn" :class="{ active: store.currentTool === 'brush' }" @click="store.setTool('brush')">
+              <span class="icon icon-brush"/>
+            </button>
+          </ui-tooltip>
+          <ui-tooltip text="Fill">
+            <button class="tool-strip-btn" :class="{ active: store.currentTool === 'bucket' }" @click="store.setTool('bucket')">
+              <span class="icon icon-bucket"/>
+            </button>
+          </ui-tooltip>
+          <ui-tooltip text="Eraser">
+            <button class="tool-strip-btn" :class="{ active: store.currentTool === 'eraser' }" @click="store.setTool('eraser')">
+              <span class="icon icon-eraser"/>
+            </button>
+          </ui-tooltip>
+        </div>
+
         <Widget title="Palette">
           <editor-palette/>
         </Widget>
       </div>
-      <div class="md:w-2/5 flex flex-col gap-3">
-        <div class="grid grid-cols-2 gap-2">
-          <Widget title="Control">
-            <Square>
-              <div class="tools">
-                <Square @click="store.setTool('brush')" :class="{ active: store.currentTool === 'brush' }">
-                  <span class="icon icon-brush"/>
-                </Square>
-                <Square @click="store.setTool('bucket')" :class="{ active: store.currentTool === 'bucket' }">
-                  <span class="icon icon-bucket"/>
-                </Square>
-<!--                <Square @click="store.setTool('eraser')" :class="{ active: store.currentTool === 'eraser' }">-->
-<!--                  <span class="icon icon-eraser"/>-->
-<!--                </Square>-->
-                <Square @click="store.setTool('move')" :class="{ active: store.currentTool === 'move' }">
-                  <span class="icon icon-move"/>
-                </Square>
-                <Square @click="toggleSelect()" :class="{ active: store.currentTool === 'select' }">
-                  <span class="icon icon-select"/>
-                </Square>
-                <Square @click="store.toggleMirror('horizontal')" :class="{ active: store.mirrorHorizontal }">
-                  <span class="icon icon-reflect-horizontal"/>
-                </Square>
-                <Square @click="store.toggleMirror('vertical')" :class="{ active: store.mirrorVertical }">
-                  <span class="icon icon-reflect-vertical"/>
-                </Square>
-                <Square @click="store.flipSelectionHorizontal">
-                  <span class="icon icon-flip-h"/>
-                </Square>
-                <Square @click="store.flipSelectionVertical">
-                  <span class="icon icon-flip-v"/>
-                </Square>
-              </div>
-            </Square>
+
+      <!-- Right sidebar -->
+      <div class="editor-sidebar">
+        <!-- Advanced mode: Control + Preview side by side on desktop -->
+        <div :class="store.editorMode === 'advanced' ? 'adv-top-row' : ''">
+          <Widget v-if="store.editorMode === 'advanced'" title="Control">
+            <div class="tools">
+              <Square @click="store.setTool('brush')" :class="{ active: store.currentTool === 'brush' }">
+                <span class="icon icon-brush"/>
+              </Square>
+              <Square @click="store.setTool('bucket')" :class="{ active: store.currentTool === 'bucket' }">
+                <span class="icon icon-bucket"/>
+              </Square>
+              <Square @click="store.setTool('eraser')" :class="{ active: store.currentTool === 'eraser' }">
+                <span class="icon icon-eraser"/>
+              </Square>
+              <Square @click="store.setTool('move')" :class="{ active: store.currentTool === 'move' }">
+                <span class="icon icon-move"/>
+              </Square>
+              <Square @click="toggleSelect()" :class="{ active: store.currentTool === 'select' }">
+                <span class="icon icon-select"/>
+              </Square>
+              <Square @click="store.toggleMirror('horizontal')" :class="{ active: store.mirrorHorizontal }">
+                <span class="icon icon-reflect-horizontal"/>
+              </Square>
+              <Square @click="store.toggleMirror('vertical')" :class="{ active: store.mirrorVertical }">
+                <span class="icon icon-reflect-vertical"/>
+              </Square>
+              <Square @click="store.flipSelectionHorizontal">
+                <span class="icon icon-flip-h"/>
+              </Square>
+              <Square @click="store.flipSelectionVertical">
+                <span class="icon icon-flip-v"/>
+              </Square>
+            </div>
           </Widget>
+          <!-- Preview: always rendered, single ref -->
           <Widget title="Preview">
             <template #ctl>
-              <a target="_blank" :href="`/art/${editorData.id_string}`">
+              <a v-if="editorData.id_string" target="_blank" :href="`/art/${editorData.id_string}`">
                 <span class="icon icon-link"/>
               </a>
             </template>
@@ -583,9 +706,11 @@ watch(() => editorData.value.width + editorData.value.height, () => {
             </Square>
           </Widget>
         </div>
-        <Widget title="Layers" class="layers">
+
+        <!-- Advanced-only: Layers -->
+        <Widget v-if="store.editorMode === 'advanced'" title="Layers" class="layers">
           <template #ctl>
-            <button @click="store.addLayer">Add</button>
+            <button @click="store.addLayer">+</button>
           </template>
           <ul>
             <li
@@ -595,29 +720,141 @@ watch(() => editorData.value.width + editorData.value.height, () => {
                 @click="store.currentLayerIndex = index"
             >
               <EditableText v-model="editorData.layers[index]!.name" placeholder="Name" @changed="store.saveState()"/>
-              <button v-if="editorData.layers.length > 1" @click.stop="store.deleteLayer(index)">D</button>
+              <button v-if="editorData.layers.length > 1" @click.stop="store.deleteLayer(index)" class="layer-del">
+                <span class="icon icon-trash"/>
+              </button>
             </li>
           </ul>
         </Widget>
-        <Widget title="Info" class="text-xs">
-          <div class="font-bold">
-            <EditableText v-model="editorData.name" placeholder="Name" @changed="store.saveState()"/>
-          </div>
-          <div>
-            <EditableText v-model="editorData.desc" placeholder="Description" @changed="store.saveState()"/>
-          </div>
-          <div>
-            <EditableText v-model="editorData.id_string" placeholder="id" @changed="store.saveState()"/>
-          </div>
-          <div>
-            <TagInput v-model="editorData.tags" placeholder="tags" @changed="store.saveState()"/>
-          </div>
-          <div class="h-center gap-2">
-            <ui-switch v-model="editorData.is_public" @change="store.saveState()"/>
-            <span>Is Public?</span>
-          </div>
-        </Widget>
+
+        <!-- Mode toggle -->
+        <button
+            class="mode-toggle"
+            @click="store.editorMode = store.editorMode === 'simple' ? 'advanced' : 'simple'"
+        >
+          <span class="icon" :class="store.editorMode === 'simple' ? 'icon-resize' : 'icon-brush'"/>
+          <span>{{ store.editorMode === 'simple' ? 'Advanced' : 'Simple' }}</span>
+        </button>
       </div>
     </div>
+
+    <!-- Publish modal -->
+    <Teleport to="body">
+      <div v-if="showPublishModal" class="share-overlay" @click.self="showPublishModal = false">
+        <div class="share-modal">
+          <!-- Step 1: Edit info -->
+          <template v-if="publishStep === 'edit'">
+            <h3 class="text-sm font-bold mb-3">Publish your pixel art</h3>
+            <div class="publish-form">
+              <div>
+                <label class="publish-label">Title</label>
+                <input
+                    type="text"
+                    v-model="editorData.name"
+                    placeholder="Give it a name..."
+                    class="publish-input"
+                />
+              </div>
+              <div>
+                <label class="publish-label">Description</label>
+                <input
+                    type="text"
+                    v-model="editorData.desc"
+                    placeholder="Describe your art..."
+                    class="publish-input"
+                />
+              </div>
+              <div>
+                <label class="publish-label">Tags</label>
+                <TagInput v-model="editorData.tags" placeholder="Add tags..."/>
+              </div>
+              <template v-if="store.editorMode === 'advanced'">
+                <div>
+                  <label class="publish-label">Slug</label>
+                  <input
+                      type="text"
+                      v-model="editorData.id_string"
+                      placeholder="custom-url-slug"
+                      class="publish-input"
+                  />
+                </div>
+              </template>
+              <div class="h-center gap-2">
+                <ui-switch v-model="editorData.is_public"/>
+                <span class="text-xs">Public</span>
+              </div>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button class="btn primary flex-1 justify-center" @click="saveAndPublish">
+                Save & Publish
+              </button>
+              <button class="btn flex-1 justify-center" @click="showPublishModal = false">
+                Cancel
+              </button>
+            </div>
+          </template>
+
+          <!-- Step 2: Share result -->
+          <template v-if="publishStep === 'done'">
+            <div class="text-center mb-4">
+              <h3 class="text-sm font-bold">Published!</h3>
+              <p class="text-xs mt-1">Your pixel art is live. Share it!</p>
+            </div>
+            <div class="flex flex-col gap-2">
+              <div class="publish-link" @click="copyLink">
+                <span class="text-xs truncate flex-1">{{ shareMeta.url }}</span>
+                <span class="icon icon-link flex-shrink-0"/>
+              </div>
+              <div class="social-grid">
+                <a :href="socialUrls.twitter" target="_blank" rel="noopener noreferrer" class="social-btn">
+                  <span class="icon icon-x"/>
+                  <span>Twitter</span>
+                </a>
+                <a :href="socialUrls.reddit" target="_blank" rel="noopener noreferrer" class="social-btn">
+                  <span class="icon icon-reddit"/>
+                  <span>Reddit</span>
+                </a>
+                <a :href="socialUrls.pinterest" target="_blank" rel="noopener noreferrer" class="social-btn">
+                  <span class="icon icon-pinterest"/>
+                  <span>Pinterest</span>
+                </a>
+                <button class="social-btn" @click="exportFile('png')">
+                  <span class="icon icon-download"/>
+                  <span>Download</span>
+                </button>
+              </div>
+              <nuxt-link
+                  :to="`/art/${editorData.id_string}`"
+                  class="btn primary w-full justify-center"
+              >
+                View Page
+              </nuxt-link>
+              <button class="share-dismiss" @click="showPublishModal = false">
+                Continue Editing
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Login prompt -->
+    <Teleport to="body">
+      <div v-if="showLoginPrompt" class="share-overlay" @click.self="showLoginPrompt = false">
+        <div class="share-modal">
+          <h3 class="text-sm font-bold mb-2">Login to share</h3>
+          <p class="text-xs mb-4">Sign in to publish and share your pixel art. Your local work will be synced to the cloud.</p>
+          <div class="flex flex-col gap-2">
+            <a :href="`${config.public.api}/auth/google`" class="btn primary w-full justify-center">
+              <span class="icon icon-social"/>
+              <span>Login with Google</span>
+            </a>
+            <button class="share-dismiss" @click="showLoginPrompt = false">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>

@@ -39,7 +39,7 @@ defineProps<{ title?: string }>()
 }
 
 .widget-body {
-  @apply p-2;
+  @apply p-1.5 md:p-2;
   border: 2px solid var(--border);
   background: var(--surface);
 }

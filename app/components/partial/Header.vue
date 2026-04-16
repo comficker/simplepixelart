@@ -44,14 +44,6 @@ const currentTheme = computed(() => themes.find(t => t.id === current.value) ?? 
             </div>
           </template>
         </ui-dropdown-menu>
-        <div class="item login-item" v-if="auth.isLogged" @click="auth.logout()" title="Logout">
-          <span class="icon icon-x"/>
-          <span class="label">Logout</span>
-        </div>
-        <a class="item login-item" v-else :href="`${config.public.api}/auth/google`" title="Login with Google">
-          <span class="icon icon-social"/>
-          <span class="label">Login</span>
-        </a>
       </div>
     </div>
   </header>

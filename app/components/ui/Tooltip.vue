@@ -1,9 +1,9 @@
 <template>
   <div
       class="tooltip-wrapper"
-      @mouseenter="show = true"
+      @mouseenter="onEnter"
       @mouseleave="show = false"
-      @focus="show = true"
+      @focus="onEnter"
       @blur="show = false"
       tabindex="0"
   >
@@ -13,7 +13,7 @@
         class="tooltip"
         :class="`tooltip-${position}`"
     >
-      <slot name="content" />
+      <slot name="content">{{ text }}</slot>
     </div>
   </div>
 </template>
@@ -26,9 +26,19 @@ defineProps({
     type: String,
     default: 'top', // top | bottom | left | right
   },
+  text: {
+    type: String,
+    default: '',
+  },
 })
 
 const show = ref(false)
+
+function onEnter() {
+  // Skip tooltips on touch devices
+  if (typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches) return
+  show.value = true
+}
 </script>
 
 <style scoped>

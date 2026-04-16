@@ -1,36 +1,48 @@
 <template>
-  <nuxt-link class="card" :to="to" :title="value.name">
-    <div class="square group">
-      <div class="inside p-2">
-        <img
-            v-if="!isDraw"
-            :src="src" :alt="value.name"
-            class="size-full"
-            loading="lazy"
-            decoding="async"
-        />
-        <canvas
-            v-else
-            :id="`canvas_${value.id}`"
-            class="size-full"
-            width="200"
-            height="200"
-        />
+  <div class="card-wrapper group/card">
+    <nuxt-link class="card" :to="to" :title="value.name">
+      <div class="square group">
+        <div class="inside p-2">
+          <img
+              v-if="!isDraw"
+              :src="src" :alt="value.name"
+              class="size-full"
+              loading="lazy"
+              decoding="async"
+          />
+          <canvas
+              v-else
+              :id="`canvas_${value.id}`"
+              class="size-full"
+              width="200"
+              height="200"
+          />
+        </div>
       </div>
-    </div>
-    <div class="card-head group-hover:translate-y-0">
-      <div class="card-title">
-        <p>{{ value.name || value.id_string || "Untitled" }}</p>
+      <div class="card-head">
+        <div class="card-title">
+          <p>{{ value.name || value.id_string || "Untitled" }}</p>
+        </div>
       </div>
-    </div>
-  </nuxt-link>
+    </nuxt-link>
+    <nuxt-link
+        v-if="!isDraw"
+        :to="`/editor?id=${value.id_string || value.id}`"
+        class="card-remix"
+        title="Remix this pixel art"
+        @click.stop
+    >
+      <span class="icon icon-brush"/>
+      <span>Remix</span>
+    </nuxt-link>
+  </div>
 </template>
 
 <script setup lang="ts">
 import type {SharedPage} from "~/types";
 
-const {value, isDraw, isAdding, added, showVote} = defineProps<{
-  value: SharedPage, isDraw?: boolean, isAdding?: boolean, added?: boolean, showVote?: boolean
+const {value, isDraw, isRemix, isAdding, added, showVote} = defineProps<{
+  value: SharedPage, isDraw?: boolean, isRemix?: boolean, isAdding?: boolean, added?: boolean, showVote?: boolean
 }>()
 const config = useRuntimeConfig()
 
@@ -38,12 +50,16 @@ const src = computed(() => {
   return `${config.public.api}/coloring/files/art-original/${value.id_string}.png`
 })
 const to = computed(() => {
-  return isDraw ? `/editor?id=${value.id_string || value.id}` : `/art/${value.id_string}`
+  return (isDraw || isRemix) ? `/editor?id=${value.id_string || value.id}` : `/art/${value.id_string}`
 })
 </script>
 
 <style>
 @reference "tailwindcss";
+
+.card-wrapper {
+  @apply relative;
+}
 
 .card {
   @apply block overflow-hidden;
@@ -54,7 +70,7 @@ const to = computed(() => {
   transition: transform 80ms steps(2), box-shadow 80ms steps(2);
 }
 
-.card:hover {
+.card-wrapper:hover .card {
   transform: translate(-3px, -3px);
   box-shadow: 6px 6px 0 0 var(--shadow-px);
   border-color: var(--primary);
@@ -78,5 +94,18 @@ const to = computed(() => {
 
 .card .size-full {
   @apply object-contain;
+}
+
+.card-remix {
+  @apply absolute bottom-8 right-1 flex items-center gap-1 px-2 py-1 text-xs;
+  @apply opacity-0 transition-opacity;
+  background: var(--primary);
+  color: var(--primary-foreground, #fff);
+  border: 1px solid var(--shadow-px);
+  z-index: 10;
+}
+
+.card-wrapper:hover .card-remix {
+  @apply opacity-100;
 }
 </style>

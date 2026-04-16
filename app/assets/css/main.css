@@ -139,8 +139,8 @@ h1 {
 .icon {
     mask-repeat: no-repeat;
     background: currentColor;
-    width: 1em;
-    height: 1em;
+    width: 1.25em;
+    height: 1.25em;
     display: inline-flex;
 }
 
@@ -211,19 +211,31 @@ input[type=number] {
 }
 
 .results {
-    @apply grid grid-cols-3 md:grid-cols-6 gap-1 md:gap-2;
+    @apply grid grid-cols-3 gap-1;
+}
+
+@media (min-width: 768px) {
+    .results {
+        @apply grid-cols-6 gap-2;
+    }
 }
 
 /* Chunky pixel buttons with hard offset shadow */
 .btn {
-    @apply items-center flex gap-1 px-6 py-2;
+    @apply items-center flex gap-1 px-3 md:px-6 py-2 text-xs md:text-sm;
     border: 2px solid var(--shadow-px);
     background: var(--surface);
     color: var(--foreground);
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    box-shadow: 4px 4px 0 0 var(--shadow-px);
+    box-shadow: 3px 3px 0 0 var(--shadow-px);
     transition: transform 60ms steps(2), box-shadow 60ms steps(2);
+}
+
+@media (min-width: 768px) {
+    .btn {
+        box-shadow: 4px 4px 0 0 var(--shadow-px);
+    }
 }
 
 .btn:hover {
@@ -365,24 +377,164 @@ h2 {
 }
 
 .editor {
-    @apply flex flex-col gap-4;
+    @apply flex flex-col gap-2;
 
     --editor-width: 464px;
     --editor-minimap-size: 80px;
 }
 
-.editor .ctl {
-    @apply flex gap-3 text-xl;
+/* --- Top toolbar --- */
+.editor-toolbar {
+    @apply flex items-center gap-0.5 md:gap-1 px-1 md:px-2 py-1;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
 }
 
-.editor .ctl > div {
-    @apply size-6 cursor-pointer;
+.editor-toolbar::-webkit-scrollbar {
+    display: none;
 }
 
-.editor .ctl > div:hover {
+.toolbar-group {
+    @apply flex gap-0;
+    flex-shrink: 0;
+}
+
+.toolbar-btn {
+    @apply size-8 md:size-8 flex items-center justify-center text-base cursor-pointer;
+    background: transparent;
+    border: none;
+    color: var(--foreground);
+    transition: background 60ms steps(2);
+    min-width: 32px;
+    min-height: 32px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.toolbar-btn:hover {
+    background: var(--surface-2);
     color: var(--primary);
 }
 
+.toolbar-btn.active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.toolbar-sep {
+    @apply w-px h-5 mx-0.5 md:mx-1;
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+.toolbar-info {
+    @apply text-xs px-1 md:px-2;
+    color: var(--muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.resize-input {
+    @apply h-6 w-12 text-xs text-center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+}
+
+/* --- Tool strip (simple mode, below canvas) --- */
+.tool-strip {
+    @apply flex gap-1 justify-center;
+}
+
+.tool-strip-btn {
+    @apply flex items-center justify-center text-xl cursor-pointer;
+    width: 44px;
+    height: 44px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    color: var(--foreground);
+    transition: transform 60ms steps(2), background 60ms steps(2);
+    -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 768px) {
+    .tool-strip-btn {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+.tool-strip-btn:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.tool-strip-btn.active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--shadow-px);
+    box-shadow: 2px 2px 0 0 var(--shadow-px);
+}
+
+/* --- Sidebar --- */
+.editor-sidebar {
+    @apply flex flex-col gap-2;
+    width: 100%;
+}
+
+/* On mobile, collapse preview — canvas IS the preview.
+   Use height:0 + overflow:hidden instead of display:none
+   so the canvas ref stays mounted for miniMapCtx. */
+@media (max-width: 767px) {
+    .mini-map {
+        height: 0 !important;
+        overflow: hidden;
+    }
+
+    .widget:has(.mini-map) {
+        height: 0;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+        border: none;
+    }
+
+    .widget:has(.mini-map) .widget-head,
+    .widget:has(.mini-map) .widget-body {
+        height: 0;
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+        border: none;
+    }
+}
+
+@media (min-width: 768px) {
+    .editor-sidebar {
+        width: 36%;
+        max-width: 260px;
+    }
+}
+
+/* --- Mode toggle --- */
+.mode-toggle {
+    @apply flex items-center justify-center gap-2 w-full py-1.5 text-xs cursor-pointer;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: color 60ms steps(2);
+}
+
+.mode-toggle:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* --- Canvas --- */
 .canvas-container {
     width: var(--editor-width, 464px);
     height: var(--editor-width, 464px);
@@ -406,9 +558,36 @@ canvas.clear { cursor: pointer; }
     border: 1px solid var(--border);
 }
 
+/* --- Advanced top row: Control + Preview --- */
+.adv-top-row {
+    @apply flex flex-col gap-2;
+}
+
+@media (min-width: 768px) {
+    .adv-top-row {
+        @apply grid grid-cols-2;
+        align-items: stretch;
+    }
+
+    .adv-top-row > .widget {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .adv-top-row > .widget > .widget-body {
+        flex: 1;
+    }
+}
+
+/* --- Tool grid (advanced mode) --- */
 .tools {
-    @apply grid grid-cols-4 text-xl;
-    border: 2px solid var(--border);
+    @apply grid grid-cols-3 text-xl gap-0.5;
+}
+
+@media (min-width: 768px) {
+    .tools {
+        @apply grid-cols-3;
+    }
 }
 
 .tools * {
@@ -417,13 +596,22 @@ canvas.clear { cursor: pointer; }
 
 .tools .inside {
     @apply flex items-center justify-center cursor-pointer;
+    border: 1px solid transparent;
+    transition: background 60ms steps(2);
 }
 
-.tools .square.active {
+.tools .inside:hover {
+    background: var(--surface-2);
+    color: var(--primary);
+}
+
+.tools .square.active .inside {
     background-color: var(--primary);
     color: var(--primary-foreground);
+    border-color: var(--shadow-px);
 }
 
+/* --- Layers --- */
 .layers {
     @apply flex flex-col flex-1;
 }
@@ -451,8 +639,13 @@ canvas.clear { cursor: pointer; }
     color: var(--primary);
 }
 
-.layers li button {
-    margin-left: 8px;
+.layers .layer-del {
+    @apply size-5 flex items-center justify-center text-xs;
+    color: var(--muted);
+}
+
+.layers .layer-del:hover {
+    color: var(--primary);
 }
 
 .pixelated {
@@ -476,3 +669,103 @@ canvas.clear { cursor: pointer; }
 
 /* Hover states often used */
 .hover\:text-gray-800:hover { color: var(--primary) !important; }
+
+/* Share overlay */
+.share-overlay {
+    @apply fixed inset-0 flex items-center justify-center z-50;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(2px);
+}
+
+.share-modal {
+    @apply p-5;
+    background: var(--surface);
+    border: 2px solid var(--shadow-px);
+    box-shadow: 6px 6px 0 0 var(--shadow-px);
+    max-width: 340px;
+    width: 90%;
+}
+
+.share-dismiss {
+    @apply w-full text-center py-1.5 text-xs cursor-pointer mt-1;
+    color: var(--muted);
+    background: none;
+    border: none;
+}
+
+.share-dismiss:hover {
+    color: var(--primary);
+}
+
+/* Publish form */
+.publish-form {
+    @apply flex flex-col gap-3;
+}
+
+.publish-label {
+    @apply block text-xs mb-1;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.publish-input {
+    @apply w-full text-xs;
+    background: var(--surface-2);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    padding: 6px 10px;
+    font-family: inherit;
+}
+
+.publish-input:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.publish-link {
+    @apply flex items-center gap-2 px-3 py-2 cursor-pointer text-xs;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    word-break: break-all;
+}
+
+.publish-link:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Social buttons grid */
+.social-grid {
+    @apply grid grid-cols-2 gap-1;
+}
+
+.social-btn {
+    @apply flex items-center justify-center gap-1 py-2 text-xs cursor-pointer;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: color 60ms steps(2), border-color 60ms steps(2);
+}
+
+.social-btn:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* Publish button in toolbar */
+.publish-toolbar-btn {
+    @apply flex items-center gap-1 px-3 py-1 text-xs cursor-pointer;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border: none;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+}
+
+.publish-toolbar-btn:hover {
+    background: var(--secondary);
+}

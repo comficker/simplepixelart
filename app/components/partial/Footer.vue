@@ -1,5 +1,7 @@
 <script setup lang="ts">
 const year = new Date().getFullYear()
+const config = useRuntimeConfig()
+const auth = useAuthStore()
 </script>
 
 <template>
@@ -10,6 +12,15 @@ const year = new Date().getFullYear()
         <nuxt-link to="/privacy">Privacy Policy</nuxt-link>
         <nuxt-link to="/terms">Terms of Service</nuxt-link>
         <a href="mailto:comficker@gmail.com">Contact</a>
+        <span class="footer-sep">|</span>
+        <span v-if="auth.isLogged" class="footer-auth" @click="auth.logout()">
+          <span class="icon icon-x"/>
+          <span>Logout</span>
+        </span>
+        <a v-else :href="`${config.public.api}/auth/google`" class="footer-auth">
+          <span class="icon icon-social"/>
+          <span>Login</span>
+        </a>
       </div>
       <div class="h-center gap-1 footer-copy">
         <span>© {{ year }} SimplePixelArt.com</span>
@@ -34,6 +45,19 @@ footer .container {
 }
 
 .footer-links a:hover {
+  color: var(--primary);
+}
+
+.footer-sep {
+  color: var(--border);
+}
+
+.footer-auth {
+  @apply flex items-center gap-1 cursor-pointer;
+  color: var(--muted);
+}
+
+.footer-auth:hover {
   color: var(--primary);
 }
 

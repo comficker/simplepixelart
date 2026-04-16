@@ -7,6 +7,7 @@
       </div>
     </main>
     <PartialFooter/>
+    <UiSonner position="bottom-right"/>
   </div>
 </template>
 
@@ -14,7 +15,7 @@
 @reference "tailwindcss";
 
 .main-wrapper {
-  @apply py-6 space-y-4 p-4;
+  @apply py-4 md:py-6 space-y-4 px-2 md:px-4;
 }
 
 footer {

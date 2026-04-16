@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import type {APIResponse, TagSchema} from "~/types";
+import type {APIResponse, TagSchema, ResponseSharedPage} from "~/types";
 
 const {data} = useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {
   params: {
     page_size: 10
+  }
+})
+
+const {data: templates} = useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
+  params: {
+    status: 'public',
+    page_size: 12,
+    ordering: '-remix_count'
   }
 })
 
@@ -48,16 +56,16 @@ useCustomSeoMeta({
 
 <template>
   <div class="page">
-    <section class="text-center py-6">
-      <div class="h-center v-center gap-4">
-        <img class="size-8" src="/favicon.png" alt="Simple Pixel Art logo" width="32" height="32">
-        <h1 class="text-2xl md:text-4xl">Simple Pixel Art</h1>
+    <section class="hero">
+      <div class="h-center v-center gap-2 md:gap-4">
+        <img class="size-6 md:size-8" src="/favicon.png" alt="Simple Pixel Art logo" width="32" height="32">
+        <h1 class="hero-title">Create pixel art in seconds</h1>
       </div>
-      <p class="text-xs">Discover trending pixel arts updated daily.</p>
-      <div class="v-center mt-4">
+      <p class="text-xs mt-1">Pick a template or start from scratch.</p>
+      <div class="hero-actions">
         <nuxt-link to="/editor" class="btn primary">
           <span class="icon icon-brush"/>
-          <span>Editor</span>
+          <span>Create</span>
         </nuxt-link>
         <nuxt-link to="/arts" class="btn">
           <span class="icon icon-discovery"/>
@@ -65,6 +73,14 @@ useCustomSeoMeta({
         </nuxt-link>
       </div>
     </section>
+
+    <!-- Template picker -->
+    <Widget title="Pick a template & remix">
+      <div v-if="templates?.results" class="results">
+        <ItemCard v-for="item in templates.results" :key="item.id" :value="item" :isRemix="true"/>
+      </div>
+    </Widget>
+
     <Widget title="New">
       <item-list :limit="6"/>
     </Widget>
@@ -83,18 +99,18 @@ useCustomSeoMeta({
       </div>
     </Widget>
 
-    <section class="info-section">
-      <h2 class="info-heading">What is Pixel Art?</h2>
+    <details class="info-section">
+      <summary class="info-heading">What is Pixel Art?</summary>
       <p>Pixel art is a form of digital art where images are created and edited at the pixel level — the smallest unit of a digital image. Originating from early video games and computer graphics of the 1970s–80s, pixel art has grown into a beloved creative medium celebrated for its clarity, charm, and nostalgic aesthetic. Every pixel is placed intentionally, giving artists full control over the final result with minimal tools.</p>
-    </section>
+    </details>
 
-    <section class="info-section">
-      <h2 class="info-heading">Our Mission</h2>
+    <details class="info-section">
+      <summary class="info-heading">Our Mission</summary>
       <p>SimplePixelArt.com was built with one goal: make pixel art creation accessible to everyone. No software to install, no account required to start drawing. Just open the editor and create. We believe great tools should be simple, fast, and free — whether you're a professional game artist or someone who just wants to draw a tiny cat for fun.</p>
-    </section>
+    </details>
 
-    <section class="info-section">
-      <h2 class="info-heading">How to Draw Pixel Art</h2>
+    <details class="info-section">
+      <summary class="info-heading">How to Draw Pixel Art</summary>
       <ul class="info-list">
         <li><strong>Choose your canvas size.</strong> Beginners should start small — 16×16 or 32×32 pixels is ideal for learning. Larger canvases like 64×64 allow more detail.</li>
         <li><strong>Pick a limited palette.</strong> Great pixel art often uses fewer than 16 colors. A constrained palette forces creative decisions and keeps the artwork cohesive.</li>
@@ -106,10 +122,10 @@ useCustomSeoMeta({
       <div class="mt-3">
         <nuxt-link to="/editor" class="btn primary">Open the Editor</nuxt-link>
       </div>
-    </section>
+    </details>
 
-    <section class="info-section">
-      <h2 class="info-heading">Applications of Pixel Art</h2>
+    <details class="info-section">
+      <summary class="info-heading">Applications of Pixel Art</summary>
       <ul class="info-list">
         <li><strong>Game development</strong> — Pixel art is the foundation of countless indie games. Sprites, tilesets, UI elements, and backgrounds are all commonly created in pixel art style.</li>
         <li><strong>NFTs and digital collectibles</strong> — Collections like CryptoPunks popularized pixel art as a format for digital ownership and collectibles.</li>
@@ -118,20 +134,36 @@ useCustomSeoMeta({
         <li><strong>Merchandise and print</strong> — Due to its clean geometry, pixel art scales perfectly onto clothing, stickers, posters, and enamel pins.</li>
         <li><strong>Education</strong> — Pixel art is widely used in schools and coding bootcamps to teach design fundamentals, color theory, and creative thinking alongside programming.</li>
       </ul>
-    </section>
+    </details>
   </div>
 </template>
 
 <style scoped>
 @reference "tailwindcss";
 
+.hero {
+  @apply text-center py-4 md:py-6;
+}
+
+.hero-title {
+  @apply text-lg md:text-4xl;
+}
+
+.hero-actions {
+  @apply flex justify-center gap-2 mt-3 md:mt-4;
+}
+
 .info-section {
-  @apply space-y-3 py-2;
+  @apply py-2;
   border-top: 1px solid var(--border);
 }
 
+.info-section[open] {
+  @apply space-y-3;
+}
+
 .info-heading {
-  @apply text-sm font-bold flex items-center;
+  @apply text-sm font-bold flex items-center cursor-pointer;
   color: var(--foreground);
 }
 

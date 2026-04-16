@@ -174,55 +174,54 @@ const download = (type: string) => {
           </div>
         </div>
       </section>
-      <!-- Enhanced action buttons -->
-      <div class="v-center gap-4">
+      <!-- Remix chain -->
+      <div v-if="data.template" class="remix-chain">
+        <span class="icon icon-brush"/>
+        <span class="text-xs">Remixed from another artwork</span>
+      </div>
+
+      <!-- Primary action: Remix -->
+      <div class="viewer-actions">
         <nuxt-link
             :to="`/editor?id=${route.params.id_string}`"
-            class="btn primary hover:shadow-lg transition-shadow"
+            class="btn primary flex-1 justify-center"
             title="Remix this pixel art in the editor"
         >
           <span class="icon icon-brush"/>
-          <span>Remix</span>
+          <span>Remix This</span>
         </nuxt-link>
-       <ui-dropdown-menu>
-          <button class="btn secondary hover:shadow-lg transition-shadow" :disabled="!data">
+        <nuxt-link to="/editor" class="btn flex-1 justify-center">
+          <span class="icon icon-plus"/>
+          <span>Create New</span>
+        </nuxt-link>
+      </div>
+
+      <!-- Secondary actions -->
+      <div class="viewer-secondary">
+        <ui-dropdown-menu>
+          <button class="btn w-full justify-center" :disabled="!data">
             <span class="icon icon-download"/>
             <span>Download</span>
           </button>
           <template #menu>
             <div class="flex flex-col divide-y">
-              <button
-                  class="btn justify-between" title="Download original pixel art"
-                  @click="download('original')"
-              >
+              <button class="btn justify-between" @click="download('original')">
                 <span>Original</span>
                 <span class="text-gray-500">[{{ data.width }}×{{ data.height }}]</span>
               </button>
-              <button
-                  class="btn justify-between" title="Download preview pixel art"
-                  @click="download('preview')"
-              >
+              <button class="btn justify-between" @click="download('preview')">
                 <span>Preview</span>
-                <span class="text-gray-500">[600×{{ 600 * data.height / data.width }}]</span>
+                <span class="text-gray-500">[600×{{ Math.round(600 * data.height / data.width) }}]</span>
               </button>
-              <button
-                  class="btn" title="Download SVG pixel art"
-                  @click="download('svg')">SVG
-              </button>
-              <button
-                  class="btn"
-                  title="Download PDF pixel art"
-                  @click="download('pdf')">PDF
-              </button>
-              <button
-                  class="btn" title="Download JSON pixel art"
-                  @click="download('json')">JSON
-              </button>
-           </div>
+              <button class="btn" @click="download('svg')">SVG</button>
+              <button class="btn" @click="download('pdf')">PDF</button>
+              <button class="btn" @click="download('json')">JSON</button>
+            </div>
           </template>
         </ui-dropdown-menu>
-        <SocialSharing :meta="meta" />
-       </div>
+        <SocialSharing :meta="meta"/>
+      </div>
+
       <section>
         <h2>
           <span class="icon icon-angle-right"/>
@@ -290,3 +289,28 @@ const download = (type: string) => {
     </template>
   </div>
 </template>
+
+<style scoped>
+@reference "tailwindcss";
+
+.remix-chain {
+  @apply flex items-center gap-2 px-3 py-2 text-xs;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.viewer-actions {
+  @apply flex gap-2;
+}
+
+.viewer-secondary {
+  @apply flex gap-2;
+}
+
+@media (max-width: 767px) {
+  .viewer-actions {
+    @apply flex-col;
+  }
+}
+</style>

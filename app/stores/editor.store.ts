@@ -6,6 +6,7 @@ import {DEFAULT_EDITOR_DATA} from "~/helper/constants";
 import {ref} from "vue";
 import {dataUrlToSamplesGrid, layers2MapNumbers} from "~/helper/canvas";
 import {isSameColor, rgbToHex} from "~/helper/color";
+import {toast} from "vue-sonner";
 
 export const useEditor = defineStore('editor', () => {
     const auth = useAuthStore()
@@ -36,6 +37,7 @@ export const useEditor = defineStore('editor', () => {
     const historyIndex = ref(-1);
 
     const currentTool = ref("brush");
+    const editorMode = ref<'simple' | 'advanced'>('simple');
     const mirrorHorizontal = ref(false);
     const mirrorVertical = ref(false);
 
@@ -295,7 +297,7 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
-    const save = debounce(async () => {
+    async function saveNow() {
         async function save2Cloud() {
             const payload = {
                 name: editorData.value.name || 'Untitled',
@@ -339,11 +341,16 @@ export const useEditor = defineStore('editor', () => {
         if (auth.isLogged) {
             try {
                 await save2Cloud();
+                toast.success('Saved to cloud')
             } catch (e) {
                 console.error('Failed to save to cloud, falling back to local:', e);
                 save2Local();
+                toast.error('Cloud save failed — saved locally')
             }
-        } else save2Local();
+        } else {
+            save2Local();
+            toast.info('Saved locally')
+        }
         histories.value = {
             [editorData.value.id.toString()]: {
                 data: cloneDeep(history.value),
@@ -353,7 +360,9 @@ export const useEditor = defineStore('editor', () => {
         }
         localStorage.setItem('workspace_current', editorData.value.id.toString())
         localStorage.setItem('histories', JSON.stringify(histories.value))
-    }, 1000)
+    }
+
+    const save = debounce(saveNow, 1000)
 
     function setPixelByIndex(x: number, y: number, paletteIndex: number): void {
         if (paletteIndex === -1) {
@@ -543,9 +552,54 @@ export const useEditor = defineStore('editor', () => {
         saveState();
     }
 
+    async function syncLocalToCloud() {
+        if (!auth.isLogged) return
+        const workspaces: { [key: string]: EditorData } = getStorageItem('workspaces')
+        const keys = Object.keys(workspaces)
+        if (keys.length === 0) return
+
+        let synced = 0
+        for (const key of keys) {
+            const item = workspaces[key]
+            if (!item || !validateEditorData(item)) continue
+            try {
+                const payload = {
+                    name: item.name || 'Untitled',
+                    desc: item.desc || '',
+                    tags: item.tags || [],
+                    width: item.width,
+                    height: item.height,
+                    colors: item.colors,
+                    layers: item.layers,
+                    template: item.template,
+                    id_string: '',
+                    map_numbers: layers2MapNumbers(item),
+                    is_public: item.is_public
+                }
+                await useNativeFetch<SharedPage>(`/coloring/shared-pages/`, {
+                    method: 'POST',
+                    body: payload
+                })
+                synced++
+            } catch (e) {
+                console.error(`Failed to sync workspace ${key}:`, e)
+            }
+        }
+        // Clear local storage after sync
+        localStorage.setItem('workspaces', '{}')
+        localStorage.setItem('histories', '{}')
+        localStorage.setItem('workspace_current', '')
+        localWS.value = {}
+        histories.value = {}
+        if (synced > 0) {
+            toast.success(`Synced ${synced} artwork${synced > 1 ? 's' : ''} to cloud`)
+        }
+    }
+
     return {
         editorData,
         currentTool,
+        editorMode,
         currentColorIndex,
         currentLayerIndex,
         mirrorHorizontal,
@@ -576,6 +630,8 @@ export const useEditor = defineStore('editor', () => {
         bucketFill,
         deletePixelsByColor,
         save,
+        saveNow,
+        syncLocalToCloud,
         importImage
     }
 })
