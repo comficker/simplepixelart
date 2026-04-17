@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {nextTick, onMounted, ref} from "vue";
-import {drawThumbnail, editorDataToJSON, editorDataToSVG} from "~/helper/canvas";
+import {drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
 import {toast} from "vue-sonner";
 
 const canvas = ref<HTMLCanvasElement | null>(null);
@@ -78,6 +78,16 @@ const needSave = ref(false);
 
 const editorData = computed(() => store.editorData)
 
+// Art offset within canvas (centers art)
+const artOffset = computed(() => {
+  const cw = canvas.value?.width || EDITOR_SIZE.value
+  const ch = canvas.value?.height || EDITOR_SIZE.value
+  return {
+    x: Math.max(0, (cw - editorData.value.width * zoom.value) / 2),
+    y: Math.max(0, (ch - editorData.value.height * zoom.value) / 2),
+  }
+})
+
 // ================================================== //
 function getClientPos(event: MouseEvent | TouchEvent): { x: number, y: number } {
   const clientX = 'touches' in event ? event!.touches[0]!.clientX : event.clientX;
@@ -89,8 +99,8 @@ function getPixelPos(event: MouseEvent | TouchEvent): { x: number, y: number } {
   const {x: clientX, y: clientY} = getClientPos(event);
   const rect = canvas.value!.getBoundingClientRect();
   return {
-    x: Math.floor((clientX - rect.left) / zoom.value),
-    y: Math.floor((clientY - rect.top) / zoom.value),
+    x: Math.floor((clientX - rect.left - artOffset.value.x) / zoom.value),
+    y: Math.floor((clientY - rect.top - artOffset.value.y) / zoom.value),
   };
 }
 
@@ -113,8 +123,8 @@ function centerView() {
 }
 
 function updateCanvasSize() {
-  canvas.value!.width = editorData.value.width * zoom.value;
-  canvas.value!.height = editorData.value.height * zoom.value;
+  canvas.value!.width = Math.max(EDITOR_SIZE.value, editorData.value.width * zoom.value);
+  canvas.value!.height = Math.max(EDITOR_SIZE.value, editorData.value.height * zoom.value);
 }
 
 // ================================================== //
@@ -140,12 +150,13 @@ function setZoom(newZoom: number) {
 }
 
 function zoomIn() {
-  const min = Math.floor(EDITOR_SIZE.value / editorData.value.width)
-  setZoom(Math.min(zoom.value * 2, Math.floor(min * editorData.value.width / 2)));
+  // Max zoom in = art fills container
+  const maxZoom = Math.floor(EDITOR_SIZE.value / editorData.value.width)
+  setZoom(Math.min(zoom.value * 2, maxZoom));
 }
 
 function zoomOut() {
-  setZoom(Math.max(zoom.value / 2, 2));
+  setZoom(Math.max(Math.floor(zoom.value / 2), 2));
 }
 
 // ================================================== //
@@ -386,32 +397,55 @@ function drawGrid(): void {
       ? getComputedStyle(document.documentElement)
       : null;
   const lineColor = rootStyle?.getPropertyValue('--border').trim() || '#306230';
+  const cw = canvas.value.width;
+  const ch = canvas.value.height;
+  const ox = artOffset.value.x;
+  const oy = artOffset.value.y;
+
   ctx.strokeStyle = lineColor;
   ctx.lineWidth = 1;
-  ctx.globalAlpha = 0.6;
+  ctx.globalAlpha = 0.3;
   ctx.beginPath();
-  // Vertical lines
-  for (let x = 1; x < editorData.value.width; x++) {
-    const px = x * zoom.value + 0.5;
-    ctx.moveTo(px, 0);
-    ctx.lineTo(px, canvas.value.height);
+
+  // Vertical lines — extend across entire canvas from art grid alignment
+  const startX = ox % zoom.value;
+  for (let px = startX; px < cw; px += zoom.value) {
+    ctx.moveTo(Math.floor(px) + 0.5, 0);
+    ctx.lineTo(Math.floor(px) + 0.5, ch);
   }
   // Horizontal lines
-  for (let y = 1; y < editorData.value.height; y++) {
-    const py = y * zoom.value + 0.5;
-    ctx.moveTo(0, py);
-    ctx.lineTo(canvas.value.width, py);
+  const startY = oy % zoom.value;
+  for (let py = startY; py < ch; py += zoom.value) {
+    ctx.moveTo(0, Math.floor(py) + 0.5);
+    ctx.lineTo(cw, Math.floor(py) + 0.5);
   }
   ctx.stroke();
+
+  // Art boundary — stronger border
+  ctx.globalAlpha = 0.8;
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(ox, oy, editorData.value.width * zoom.value, editorData.value.height * zoom.value);
+
   ctx.globalAlpha = 1;
 }
 
 function drawPixels(): void {
-  drawThumbnail(canvas.value!, editorData.value, zoom.value)
+  if (!ctx) return;
+  const ox = artOffset.value.x;
+  const oy = artOffset.value.y;
+  const results = layers2MapNumbers(editorData.value);
+  for (const [key, pixelIndex] of Object.entries(results)) {
+    const [x = 0, y = 0] = key.split('_').map(Number);
+    ctx.fillStyle = editorData.value.colors[pixelIndex] ?? '#000000';
+    ctx.fillRect(ox + x * zoom.value, oy + y * zoom.value, zoom.value, zoom.value);
+  }
 }
 
 function drawSelection(): void {
   if (!ctx) return;
+  const ox = artOffset.value.x;
+  const oy = artOffset.value.y;
   if (store.selectionState.selecting) {
     const minX = Math.min(store.selectionState.start.x, store.selectionState.current.x);
     const maxX = Math.max(store.selectionState.start.x, store.selectionState.current.x);
@@ -420,8 +454,8 @@ function drawSelection(): void {
     ctx.strokeStyle = 'red';
     ctx.lineWidth = 2;
     ctx.strokeRect(
-        minX * zoom.value,
-        minY * zoom.value,
+        ox + minX * zoom.value,
+        oy + minY * zoom.value,
         (maxX - minX + 1) * zoom.value,
         (maxY - minY + 1) * zoom.value
     );
@@ -429,8 +463,8 @@ function drawSelection(): void {
     ctx.strokeStyle = 'red';
     ctx.lineWidth = 2;
     ctx.strokeRect(
-        store.selectionState.bounds.minX * zoom.value,
-        store.selectionState.bounds.minY * zoom.value,
+        ox + store.selectionState.bounds.minX * zoom.value,
+        oy + store.selectionState.bounds.minY * zoom.value,
         (store.selectionState.bounds.maxX - store.selectionState.bounds.minX + 1) * zoom.value,
         (store.selectionState.bounds.maxY - store.selectionState.bounds.minY + 1) * zoom.value
     );
