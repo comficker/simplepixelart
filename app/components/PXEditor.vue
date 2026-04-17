@@ -150,9 +150,7 @@ function setZoom(newZoom: number) {
 }
 
 function zoomIn() {
-  // Max zoom in = art fills container
-  const maxZoom = Math.floor(EDITOR_SIZE.value / editorData.value.width)
-  setZoom(Math.min(zoom.value * 2, maxZoom));
+  setZoom(Math.min(zoom.value * 2, 128));
 }
 
 function zoomOut() {
