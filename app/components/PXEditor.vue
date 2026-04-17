@@ -127,12 +127,14 @@ function setZoom(newZoom: number) {
     const centerPixelY = (container.scrollTop + container.clientHeight / 2) / oldZoom;
     zoom.value = newZoom;
     updateCanvasSize();
-    // Scroll so same pixel stays at center
+    // Scroll so same pixel stays at center, then center if canvas fits
     container.scrollLeft = Math.max(0, centerPixelX * newZoom - container.clientWidth / 2);
     container.scrollTop = Math.max(0, centerPixelY * newZoom - container.clientHeight / 2);
+    centerView();
   } else {
     zoom.value = newZoom;
     updateCanvasSize();
+    centerView();
   }
   drawEditor();
 }
@@ -379,14 +381,14 @@ function drawBackground(): void {
 }
 
 function drawGrid(): void {
-  if (!ctx || !canvas.value || !showGrid.value) return;
+  if (!ctx || !canvas.value || !showGrid.value || zoom.value < 4) return;
   const rootStyle = typeof window !== 'undefined'
       ? getComputedStyle(document.documentElement)
       : null;
   const lineColor = rootStyle?.getPropertyValue('--border').trim() || '#306230';
   ctx.strokeStyle = lineColor;
   ctx.lineWidth = 1;
-  ctx.globalAlpha = 0.4;
+  ctx.globalAlpha = 0.6;
   ctx.beginPath();
   // Vertical lines
   for (let x = 1; x < editorData.value.width; x++) {
