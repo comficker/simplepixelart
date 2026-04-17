@@ -25,9 +25,7 @@ const currentTheme = computed(() => themes.find(t => t.id === current.value) ?? 
         </nuxt-link>
         <ui-dropdown-menu>
           <div class="item theme-trigger" :title="`Theme: ${currentTheme.name}`">
-            <span class="swatches">
-              <span v-for="c in currentTheme.colors" :key="c" :style="{background: c}"/>
-            </span>
+            <span class="icon icon-adjust"/>
             <span class="label">{{ currentTheme.name }}</span>
           </div>
           <template #menu>
@@ -37,9 +35,6 @@ const currentTheme = computed(() => themes.find(t => t.id === current.value) ?? 
                 :class="{active: t.id === current}"
                 @click="setTheme(t.id)"
             >
-              <span class="swatches">
-                <span v-for="c in t.colors" :key="c" :style="{background: c}"/>
-              </span>
               <span>{{ t.name }}</span>
             </div>
           </template>
@@ -101,35 +96,13 @@ header .menu .item .label {
   }
 }
 
-.theme-trigger {
-  gap: 6px !important;
-}
-
 .theme-option {
-  cursor: pointer;
-  gap: 8px;
-  align-items: center;
+  @apply cursor-pointer text-xs;
+  padding: 8px 16px;
 }
 
 .theme-option.active {
   color: var(--primary);
-}
-
-.theme-option.active::before {
-  content: "►";
-  font-size: 0.7em;
-}
-
-.swatches {
-  display: inline-flex;
-  gap: 0;
-  border: 1px solid var(--shadow-px);
-  flex-shrink: 0;
-}
-
-.swatches > span {
-  display: inline-block;
-  width: 10px;
-  height: 14px;
+  background: var(--surface-2);
 }
 </style>

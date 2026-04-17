@@ -21,6 +21,16 @@ export const THEMES = [
     name: 'Synthwave',
     colors: ['#1a0033', '#8833ff', '#00f5ff', '#ff006e'],
   },
+  {
+    id: 'light',
+    name: 'Light',
+    colors: ['#ffffff', '#e5e7eb', '#111827', '#2563eb'],
+  },
+  {
+    id: 'dark',
+    name: 'Dark',
+    colors: ['#111111', '#1f1f1f', '#e5e5e5', '#3b82f6'],
+  },
 ] as const
 
 export type ThemeId = typeof THEMES[number]['id']

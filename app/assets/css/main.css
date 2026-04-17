@@ -74,6 +74,34 @@
     --surface-2: #3d1a66;
 }
 
+[data-theme="light"] {
+    --background: #f5f5f4;
+    --foreground: #111827;
+    --border: #d1d5db;
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    --secondary: #1d4ed8;
+    --secondary-foreground: #ffffff;
+    --shadow-px: #9ca3af;
+    --muted: #6b7280;
+    --surface: #ffffff;
+    --surface-2: #e5e7eb;
+}
+
+[data-theme="dark"] {
+    --background: #111111;
+    --foreground: #e5e5e5;
+    --border: #333333;
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+    --secondary: #60a5fa;
+    --secondary-foreground: #111111;
+    --shadow-px: #000000;
+    --muted: #737373;
+    --surface: #1a1a1a;
+    --surface-2: #262626;
+}
+
 .container {
     max-width: 800px!important;
     margin: 0 auto;
