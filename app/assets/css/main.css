@@ -614,7 +614,7 @@ canvas.clear { cursor: pointer; }
 
 /* --- Tool grid (advanced mode) --- */
 .tools {
-    @apply grid grid-cols-5 text-xl gap-0.5;
+    @apply grid grid-cols-6 text-xl gap-0.5;
 }
 
 @media (min-width: 768px) {
