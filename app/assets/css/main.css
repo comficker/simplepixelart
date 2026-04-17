@@ -591,9 +591,10 @@ canvas.move { cursor: move; }
 canvas.clear { cursor: pointer; }
 
 .mini-map {
-    width: var(--editor-minimap-size, 80px);
     image-rendering: pixelated;
     border: 1px solid var(--border);
+    display: block;
+    margin: auto;
 }
 
 /* --- Advanced top row: Control + Preview --- */

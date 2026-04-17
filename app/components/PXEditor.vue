@@ -505,9 +505,19 @@ function setupCanvas() {
   zoom.value = Math.max(2, Math.floor(wrapperWidth / editorData.value.width));
   EDITOR_SIZE.value = zoom.value * editorData.value.width;
   updateCanvasSize();
-  MINIMAP_SIZE.value = miniMap.value!.parentElement!.clientWidth;
-  miniMap.value!.width = MINIMAP_SIZE.value;
-  miniMap.value!.height = MINIMAP_SIZE.value * editorData.value.height / editorData.value.width;
+  const parentW = miniMap.value!.parentElement!.clientWidth;
+  const parentH = miniMap.value!.parentElement!.clientHeight || parentW;
+  const artRatio = editorData.value.width / editorData.value.height;
+  if (artRatio >= 1) {
+    // Wider or square — fit width
+    miniMap.value!.width = parentW;
+    miniMap.value!.height = parentW / artRatio;
+  } else {
+    // Taller — fit height
+    miniMap.value!.height = parentH;
+    miniMap.value!.width = parentH * artRatio;
+  }
+  MINIMAP_SIZE.value = miniMap.value!.width;
   centerView();
   drawEditor();
 }
