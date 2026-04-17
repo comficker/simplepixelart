@@ -24,9 +24,8 @@ const currentTheme = computed(() => themes.find(t => t.id === current.value) ?? 
           <span class="label">Your work</span>
         </nuxt-link>
         <ui-dropdown-menu position="right">
-          <div class="item theme-trigger" :title="`Theme: ${currentTheme.name}`">
+          <div class="item" :title="`Theme: ${currentTheme.name}`">
             <span class="icon icon-adjust"/>
-            <span class="label">{{ currentTheme.name }}</span>
           </div>
           <template #menu>
             <div
@@ -83,17 +82,8 @@ header .menu .item.router-link-active {
   color: var(--primary);
 }
 
-/* Hide text labels on mobile — rely on icons + swatches.
- * Theme dropdown menu items inside the panel keep their labels (.swatches + name)
- * because that markup uses a plain <span>, not .label. */
 header .menu .item .label {
-  display: none;
-}
-
-@media (min-width: 768px) {
-  header .menu .item .label {
-    display: inline;
-  }
+  @apply text-xs;
 }
 
 .theme-option {
