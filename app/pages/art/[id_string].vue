@@ -87,6 +87,17 @@ useCustomSeoMeta({
   ]
 })
 
+const socialUrls = computed(() => {
+  const url = encodeURIComponent(meta.value.url || '')
+  const title = encodeURIComponent(meta.value.title || '')
+  const img = encodeURIComponent(meta.value.imgSrc || '')
+  return {
+    twitter: `https://twitter.com/intent/tweet?url=${url}&text=${title}`,
+    reddit: `https://www.reddit.com/submit?url=${url}&title=${title}`,
+    pinterest: `https://www.pinterest.com/pin/create/button/?url=${url}&media=${img}&description=${title}`,
+  }
+})
+
 const download = (type: string) => {
   const base = `${config.public.api}/coloring/files`
   let url: string | undefined = ''
@@ -196,13 +207,25 @@ const download = (type: string) => {
         </nuxt-link>
       </div>
 
-      <!-- Secondary actions -->
-      <div class="viewer-secondary">
+      <!-- Share & Download -->
+      <div class="viewer-share-grid">
+        <a :href="socialUrls.twitter" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <span class="icon icon-x"/>
+          <span>Twitter</span>
+        </a>
+        <a :href="socialUrls.reddit" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <span class="icon icon-reddit"/>
+          <span>Reddit</span>
+        </a>
+        <a :href="socialUrls.pinterest" target="_blank" rel="noopener noreferrer" class="social-btn">
+          <span class="icon icon-pinterest"/>
+          <span>Pinterest</span>
+        </a>
         <ui-dropdown-menu>
-          <button class="btn w-full justify-center" :disabled="!data">
+          <div class="social-btn">
             <span class="icon icon-download"/>
             <span>Download</span>
-          </button>
+          </div>
           <template #menu>
             <div class="flex flex-col divide-y">
               <button class="btn justify-between" @click="download('original')">
@@ -219,7 +242,6 @@ const download = (type: string) => {
             </div>
           </template>
         </ui-dropdown-menu>
-        <SocialSharing :meta="meta"/>
       </div>
 
       <section>
@@ -304,8 +326,8 @@ const download = (type: string) => {
   @apply flex gap-2;
 }
 
-.viewer-secondary {
-  @apply flex gap-2;
+.viewer-share-grid {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-1;
 }
 
 @media (max-width: 767px) {
