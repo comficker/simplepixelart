@@ -121,16 +121,19 @@ function updateCanvasSize() {
 function setZoom(newZoom: number) {
   const container = canvas.value!.parentElement;
   if (container && zoom.value !== newZoom) {
+    // Calculate center in pixel coords BEFORE zoom change
+    const oldZoom = zoom.value;
+    const centerPixelX = (container.scrollLeft + container.clientWidth / 2) / oldZoom;
+    const centerPixelY = (container.scrollTop + container.clientHeight / 2) / oldZoom;
     zoom.value = newZoom;
-    const centerX = (container.scrollLeft + EDITOR_SIZE.value / 2) / zoom.value;
-    const centerY = (container.scrollTop + EDITOR_SIZE.value / 2) / zoom.value;
-    container.scrollLeft = Math.max(0, centerX * zoom.value - EDITOR_SIZE.value / 2);
-    container.scrollTop = Math.max(0, centerY * zoom.value - EDITOR_SIZE.value / 2);
+    updateCanvasSize();
+    // Scroll so same pixel stays at center
+    container.scrollLeft = Math.max(0, centerPixelX * newZoom - container.clientWidth / 2);
+    container.scrollTop = Math.max(0, centerPixelY * newZoom - container.clientHeight / 2);
   } else {
     zoom.value = newZoom;
+    updateCanvasSize();
   }
-  updateCanvasSize();
-  centerView();
   drawEditor();
 }
 
@@ -366,27 +369,39 @@ function clearListeners() {
 function drawBackground(): void {
   if (!ctx || !canvas.value) return;
   ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
-  if (showGrid.value) {
-    // Read checkerboard colors from theme CSS vars so the transparent
-    // grid stays in sync when the user switches themes.
-    const rootStyle = typeof window !== 'undefined'
-        ? getComputedStyle(document.documentElement)
-        : null;
-    const cellA = rootStyle?.getPropertyValue('--surface').trim() || '#1c4a1c';
-    const cellB = rootStyle?.getPropertyValue('--surface-2').trim() || '#306230';
-    for (let y = 0; y < editorData.value.height; y++) {
-      for (let x = 0; x < editorData.value.width; x++) {
-        // @ts-ignore
-        ctx.fillStyle = (x + y) % 2 === 0 ? cellA : cellB;
-        ctx.fillRect(
-            x * zoom.value,
-            y * zoom.value,
-            zoom.value,
-            zoom.value
-        );
-      }
-    }
+  // Fill canvas bg
+  const rootStyle = typeof window !== 'undefined'
+      ? getComputedStyle(document.documentElement)
+      : null;
+  const bgColor = rootStyle?.getPropertyValue('--surface').trim() || '#1c4a1c';
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, canvas.value.width, canvas.value.height);
+}
+
+function drawGrid(): void {
+  if (!ctx || !canvas.value || !showGrid.value) return;
+  const rootStyle = typeof window !== 'undefined'
+      ? getComputedStyle(document.documentElement)
+      : null;
+  const lineColor = rootStyle?.getPropertyValue('--border').trim() || '#306230';
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.4;
+  ctx.beginPath();
+  // Vertical lines
+  for (let x = 1; x < editorData.value.width; x++) {
+    const px = x * zoom.value + 0.5;
+    ctx.moveTo(px, 0);
+    ctx.lineTo(px, canvas.value.height);
   }
+  // Horizontal lines
+  for (let y = 1; y < editorData.value.height; y++) {
+    const py = y * zoom.value + 0.5;
+    ctx.moveTo(0, py);
+    ctx.lineTo(canvas.value.width, py);
+  }
+  ctx.stroke();
+  ctx.globalAlpha = 1;
 }
 
 function drawPixels(): void {
@@ -423,6 +438,7 @@ function drawSelection(): void {
 function drawEditor() {
   drawBackground();
   drawPixels();
+  drawGrid();
   drawSelection();
   drawMiniMap();
 }
