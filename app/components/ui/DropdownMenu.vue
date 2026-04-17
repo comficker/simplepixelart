@@ -1,5 +1,5 @@
 <template>
-  <div class="dropdown" :class="[{'active': open}]" ref="root">
+  <div class="dropdown" :class="[{'active': open}, position]" ref="root">
     <div class="cursor-pointer" @click="toggle">
       <slot />
     </div>
@@ -11,6 +11,13 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+
+defineProps({
+  position: {
+    type: String,
+    default: '',
+  },
+})
 
 const open = ref(false)
 const root = ref(null)

@@ -379,6 +379,11 @@ h2 {
     bottom: calc(100% + 10px);
 }
 
+.dropdown.right .dropdown-menu {
+    left: unset;
+    right: 0;
+}
+
 [data-sonner-toaster] [data-sonner-toast] {
     background: var(--surface);
     color: var(--foreground);

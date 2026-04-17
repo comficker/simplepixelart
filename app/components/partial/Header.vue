@@ -23,7 +23,7 @@ const currentTheme = computed(() => themes.find(t => t.id === current.value) ?? 
           <span class="icon icon-brush"/>
           <span class="label">Your work</span>
         </nuxt-link>
-        <ui-dropdown-menu>
+        <ui-dropdown-menu position="right">
           <div class="item theme-trigger" :title="`Theme: ${currentTheme.name}`">
             <span class="icon icon-adjust"/>
             <span class="label">{{ currentTheme.name }}</span>
