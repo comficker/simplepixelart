@@ -140,8 +140,7 @@ function zoomIn() {
 }
 
 function zoomOut() {
-  const min = Math.floor(EDITOR_SIZE.value / editorData.value.width)
-  setZoom(Math.max(zoom.value / 2, min));
+  setZoom(Math.max(zoom.value / 2, 2));
 }
 
 // ================================================== //
@@ -284,7 +283,7 @@ function pinch(e: TouchEvent) {
     const t2 = e.touches[1];
     const newDistance = Math.sqrt((t1!.clientX - t2!.clientX) ** 2 + (t1!.clientY - t2!.clientY) ** 2);
     const ratio = newDistance / initialDistance.value;
-    const newZoom = Math.max(10, Math.min(128, Math.floor(initialZoom.value * ratio)));
+    const newZoom = Math.max(2, Math.min(128, Math.floor(initialZoom.value * ratio)));
     setZoom(newZoom);
     e.preventDefault();
   }
@@ -453,7 +452,7 @@ function initCanvas() {
 
 function setupCanvas() {
   const wrapperWidth = canvas.value!.parentElement!.parentElement!.offsetWidth;
-  zoom.value = Math.floor(wrapperWidth / editorData.value.width);
+  zoom.value = Math.max(2, Math.floor(wrapperWidth / editorData.value.width));
   EDITOR_SIZE.value = zoom.value * editorData.value.width;
   updateCanvasSize();
   MINIMAP_SIZE.value = miniMap.value!.parentElement!.clientWidth;
