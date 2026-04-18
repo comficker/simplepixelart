@@ -1,9 +1,21 @@
 <script setup lang="ts">
+const route = useRoute()
+
+// When ?id=X present, editor loads an existing artwork — canonical to its detail page.
+// Also noindex these variants to avoid duplicate content in GSC.
+const editId = computed(() => route.query.id?.toString() || '')
+const canonical = computed(() =>
+    editId.value
+        ? `https://simplepixelart.com/art/${editId.value}`
+        : 'https://simplepixelart.com/editor'
+)
+
 useCustomSeoMeta({
   title: "Pixel Art editor - Free Online Tool",
   description: "Professional pixel art editor with advanced tools. Create 8-bit, 16-bit, and custom pixel art online. No download required, completely free.",
   keywords: "pixel art editor, online pixel editor, pixel drawing tool, create pixel art, pixel art maker, free editor",
-  canonical: "https://simplepixelart.com/editor",
+  canonical: canonical.value,
+  robots: editId.value ? 'noindex, follow' : 'index, follow',
   script: [
     {
       type: 'application/ld+json',

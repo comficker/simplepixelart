@@ -9,6 +9,7 @@ export interface UseSeoMetaOptions {
   author?: string;
   publishedTime?: string;
   modifiedTime?: string;
+  robots?: string;
   script?: any[]
 }
 
@@ -25,7 +26,7 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
         { name: 'description', content: options.description },
         { name: 'keywords', content: options.keywords },
         { name: 'author', content: options.author || 'SimplePixelArt.com' },
-        { name: 'robots', content: 'index, follow' },
+        { name: 'robots', content: options.robots || 'index, follow' },
         
         // Open Graph
         { property: 'og:title', content: options.title },

@@ -44,6 +44,12 @@ const meta = computed(() => ({
   desc: data.value?.meta.desc || "Explore thousands of pixel art creations from artists worldwide. Browse by size, style, and tags. Updated daily with new pixel art."
 }))
 
+const canonicalUrl = computed(() => {
+  const page = route.query.page ? Number.parseInt(route.query.page.toString()) : 1
+  const base = `https://simplepixelart.com${route.path}`
+  return page > 1 ? `${base}?page=${page}` : base
+})
+
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
@@ -68,11 +74,11 @@ if (limit > 6) {
     title: meta.value.title,
     description: meta.value.desc,
     keywords: "pixel art gallery, pixel art collection, pixel art showcase, discover pixel art, pixel art community",
-    canonical: "https://simplepixelart.com/arts",
+    canonical: canonicalUrl.value,
     script: [
       {
         type: 'application/ld+json',
-        innerHTML: JSON.stringify(structuredData)
+        innerHTML: JSON.stringify({...structuredData, url: canonicalUrl.value})
       }
     ]
   });
