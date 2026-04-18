@@ -62,17 +62,39 @@ useCustomSeoMeta({
         <h1 class="hero-title">Create pixel art in seconds</h1>
       </div>
       <p class="text-xs mt-1">Pick a template or start from scratch.</p>
-      <div class="hero-actions">
-        <nuxt-link to="/editor" class="btn primary">
-          <span class="icon icon-brush"/>
-          <span>Create</span>
-        </nuxt-link>
-        <nuxt-link to="/arts" class="btn">
-          <span class="icon icon-discovery"/>
-          <span>Discover</span>
-        </nuxt-link>
-      </div>
     </section>
+
+    <!-- Feature buttons -->
+    <div class="feature-grid">
+      <nuxt-link to="/editor" class="feature-btn">
+        <span class="icon icon-brush"/>
+        <div>
+          <strong>Create</strong>
+          <span>Open editor, draw from scratch</span>
+        </div>
+      </nuxt-link>
+      <nuxt-link to="/convert" class="feature-btn">
+        <span class="icon icon-adjust"/>
+        <div>
+          <strong>Convert</strong>
+          <span>Turn any image into pixel art</span>
+        </div>
+      </nuxt-link>
+      <nuxt-link to="/arts" class="feature-btn">
+        <span class="icon icon-discovery"/>
+        <div>
+          <strong>Discover</strong>
+          <span>Browse community artworks</span>
+        </div>
+      </nuxt-link>
+      <nuxt-link to="/work" class="feature-btn">
+        <span class="icon icon-grid"/>
+        <div>
+          <strong>Your work</strong>
+          <span>View and manage your artworks</span>
+        </div>
+      </nuxt-link>
+    </div>
 
     <!-- Template picker -->
     <Widget title="Pick a template & remix">
@@ -151,6 +173,47 @@ useCustomSeoMeta({
 
 .hero-actions {
   @apply flex justify-center gap-2 mt-3 md:mt-4;
+}
+
+.feature-grid {
+  @apply grid grid-cols-2 md:grid-cols-4 gap-2;
+}
+
+.feature-btn {
+  @apply flex items-start gap-3 p-3;
+  background: var(--surface);
+  border: 2px solid var(--shadow-px);
+  box-shadow: 3px 3px 0 0 var(--shadow-px);
+  transition: transform 80ms steps(2), box-shadow 80ms steps(2);
+  color: var(--foreground);
+}
+
+.feature-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 0 var(--shadow-px);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.feature-btn .icon {
+  flex-shrink: 0;
+  font-size: 24px;
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+.feature-btn > div {
+  @apply flex flex-col flex-1;
+}
+
+.feature-btn strong {
+  @apply text-sm uppercase;
+  letter-spacing: 0.06em;
+}
+
+.feature-btn span {
+  @apply text-xs mt-0.5;
+  color: var(--muted);
 }
 
 .info-section {
