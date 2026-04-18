@@ -514,7 +514,7 @@ onMounted(() => {
 
 .preview-wrapper {
   @apply flex items-center justify-center;
-  min-height: 300px;
+  aspect-ratio: 1 / 1;
   background: var(--background);
 }
 
