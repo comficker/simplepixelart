@@ -728,13 +728,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
   <div class="editor" :style="{'--editor-width': EDITOR_SIZE + 'px','--editor-minimap-size': MINIMAP_SIZE + 'px'}">
     <!-- Top toolbar -->
     <div class="editor-toolbar">
-      <div class="toolbar-group">
-        <ui-tooltip text="Get started">
-          <button class="toolbar-btn" @click="openOnboarding"><span class="icon icon-rocket"/></button>
-        </ui-tooltip>
-      </div>
-      <div class="toolbar-sep"/>
-      <div class="toolbar-group">
+      <div class="toolbar-start">
         <ui-dropdown-menu>
           <ui-tooltip text="File">
             <button class="toolbar-btn"><span class="icon icon-file"/></button>
@@ -760,6 +754,12 @@ watch(() => editorData.value.width + editorData.value.height, () => {
             </div>
           </template>
         </ui-dropdown-menu>
+      </div>
+      <div class="toolbar-main no-scrollbar">
+      <div class="toolbar-group">
+        <ui-tooltip text="Get started">
+          <button class="toolbar-btn" @click="openOnboarding"><span class="icon icon-rocket"/></button>
+        </ui-tooltip>
       </div>
       <div class="toolbar-sep"/>
       <div class="toolbar-group">
@@ -827,13 +827,14 @@ watch(() => editorData.value.width + editorData.value.height, () => {
           </button>
         </div>
       </template>
-      <div class="flex-1"/>
       <span class="toolbar-info">{{ editorData.width }}×{{ editorData.height }}</span>
-      <div class="toolbar-sep"/>
-      <button class="publish-toolbar-btn" @click="openPublish">
-        <span class="icon icon-social"/>
-        <span>Share</span>
-      </button>
+      </div>
+      <div class="toolbar-end">
+        <button class="publish-toolbar-btn" @click="openPublish">
+          <span class="icon icon-social"/>
+          <span>Share</span>
+        </button>
+      </div>
     </div>
 
     <div class="flex flex-col md:flex-row gap-3">
