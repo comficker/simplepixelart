@@ -24,9 +24,12 @@ const search = ref('')
 
 // /arts/new → newest public + pending works (whole gallery)
 // /creator/<username> → that creator's public + pending works
+// /art/<id_string> → detail page; related section filters by id_string
 const isNewView = computed(() => route.path === '/arts/new')
 const isCreatorView = computed(() => route.path.startsWith('/creator/'))
+const isDetailView = computed(() => route.path.startsWith('/art/'))
 const showPending = computed(() => isNewView.value || isCreatorView.value)
+const relatedId = computed(() => isDetailView.value ? route.params.id_string?.toString() : undefined)
 
 const params = computed(() => ({
   status: showPending.value ? 'public,pending' : status,
@@ -35,6 +38,7 @@ const params = computed(() => ({
   page_size: limit,
   search: search.value,
   ordering: showPending.value ? '-updated' : undefined,
+  related: relatedId.value,
 }));
 
 const {data} = await useAuthFetch<ResponseSharedPage>(`/coloring/shared-pages/`, {
