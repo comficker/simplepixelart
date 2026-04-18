@@ -312,7 +312,7 @@ input[type=number] {
 }
 
 .tags .item a {
-    @apply p-1 py-0.5 text-xs;
+    @apply px-2 py-1 text-sm;
     background: var(--surface);
     color: var(--foreground);
     border: 1px solid var(--border);

@@ -83,7 +83,7 @@ header .menu .item.router-link-active {
 }
 
 header .menu .item .label {
-  @apply text-xs;
+  @apply text-sm;
 }
 
 .theme-option {
