@@ -259,19 +259,17 @@ const download = (type: string) => {
         </nuxt-link>
       </div>
 
-      <!-- Native file share (mobile) -->
-      <button
-          v-if="canShareImage"
-          class="btn primary w-full justify-center"
-          :disabled="sharing"
-          @click="shareImage"
-      >
-        <span class="icon icon-social"/>
-        <span>{{ sharing ? 'Sharing…' : 'Share image' }}</span>
-      </button>
-
       <!-- Share & Download -->
-      <div class="viewer-share-grid">
+      <div class="viewer-share-grid" :class="{'has-native': canShareImage}">
+        <button
+            v-if="canShareImage"
+            class="social-btn"
+            :disabled="sharing"
+            @click="shareImage"
+        >
+          <span class="icon icon-social"/>
+          <span>{{ sharing ? '…' : 'Share' }}</span>
+        </button>
         <a :href="socialUrls.twitter" target="_blank" rel="noopener noreferrer" class="social-btn">
           <span class="icon icon-x"/>
           <span>Twitter</span>
@@ -388,6 +386,10 @@ const download = (type: string) => {
 
 .viewer-share-grid {
   @apply grid grid-cols-2 md:grid-cols-4 gap-1;
+}
+
+.viewer-share-grid.has-native {
+  @apply md:grid-cols-5;
 }
 
 @media (max-width: 767px) {
