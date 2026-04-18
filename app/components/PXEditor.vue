@@ -772,6 +772,9 @@ watch(() => editorData.value.width + editorData.value.height, () => {
         <ui-tooltip text="Clear layer">
           <button class="toolbar-btn" @click="store.clearCurrentLayer"><span class="icon icon-broom"/></button>
         </ui-tooltip>
+        <ui-tooltip text="Clean up unused colors">
+          <button class="toolbar-btn" @click="store.cleanupUnusedColors()"><span class="icon icon-auto-fix"/></button>
+        </ui-tooltip>
       </div>
       <div class="toolbar-sep"/>
       <div class="toolbar-group">

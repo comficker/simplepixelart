@@ -468,6 +468,61 @@ export const useEditor = defineStore('editor', () => {
         bucketFill(x, y - 1, rootColorIndex);
     }
 
+    function removeColor(index: number) {
+        if (editorData.value.colors.length <= 1) return
+        editorData.value.layers.forEach(layer => {
+            const next: { [key: string]: number } = {}
+            Object.keys(layer.pixels).forEach(key => {
+                const v = layer.pixels[key]!
+                if (v === index) return
+                next[key] = v > index ? v - 1 : v
+            })
+            layer.pixels = next
+        })
+        editorData.value.colors.splice(index, 1)
+        if (currentColorIndex.value >= editorData.value.colors.length) {
+            currentColorIndex.value = editorData.value.colors.length - 1
+        } else if (currentColorIndex.value > index) {
+            currentColorIndex.value--
+        }
+        saveState()
+    }
+
+    function cleanupUnusedColors() {
+        const used = new Set<number>()
+        editorData.value.layers.forEach(layer => {
+            Object.values(layer.pixels).forEach(v => used.add(v))
+        })
+        if (used.size === editorData.value.colors.length) return
+        const remap: number[] = []
+        const newColors: string[] = []
+        editorData.value.colors.forEach((c, i) => {
+            if (used.has(i)) {
+                remap[i] = newColors.length
+                newColors.push(c)
+            } else {
+                remap[i] = -1
+            }
+        })
+        if (newColors.length === 0 && editorData.value.colors.length > 0) {
+            newColors.push(editorData.value.colors[0]!)
+            remap[0] = 0
+        }
+        editorData.value.colors = newColors
+        editorData.value.layers.forEach(layer => {
+            const next: { [key: string]: number } = {}
+            Object.keys(layer.pixels).forEach(key => {
+                const mapped = remap[layer.pixels[key]!]
+                if (mapped !== undefined && mapped >= 0) next[key] = mapped
+            })
+            layer.pixels = next
+        })
+        if (currentColorIndex.value >= newColors.length) {
+            currentColorIndex.value = newColors.length - 1
+        }
+        saveState()
+    }
+
     function deletePixelsByColor(targetColorIndex: number) {
         const pixels = editorData.value.layers[currentLayerIndex.value]!.pixels;
         let hasChange = false;
@@ -629,6 +684,8 @@ export const useEditor = defineStore('editor', () => {
         checkKeyInSelection,
         bucketFill,
         deletePixelsByColor,
+        removeColor,
+        cleanupUnusedColors,
         save,
         saveNow,
         syncLocalToCloud,

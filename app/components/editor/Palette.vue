@@ -14,14 +14,8 @@ const handleChange = debounce((index: number, event: Event): void => {
 }, 300)
 
 const removeColor = () => {
-  if (store.editorData.colors.length > 1) {
-    const index = store.currentColorIndex
-    store.editorData.colors.splice(index, 1)
-    if (store.currentColorIndex >= store.editorData.colors.length) {
-      store.currentColorIndex = store.editorData.colors.length - 1
-    }
-    store.saveState()
-  }
+  if (store.currentColorIndex < 0) return
+  store.removeColor(store.currentColorIndex)
 }
 </script>
 
@@ -68,9 +62,9 @@ const removeColor = () => {
           >
             <span class="icon icon-adjust"/>
           </div>
-          <div 
+          <div
               v-if="isModify && store.editorData.colors.length > 1"
-              class="item" 
+              class="item"
               @click="removeColor"
               title="Remove current color"
           >
