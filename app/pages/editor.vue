@@ -130,9 +130,7 @@ useCustomSeoMeta({
 }
 
 .feature-item {
-  @apply flex items-start gap-3 p-2;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  @apply flex items-start gap-3;
 }
 
 .feature-item > div {
@@ -140,10 +138,10 @@ useCustomSeoMeta({
 }
 
 .feature-icon {
-  @apply flex-shrink-0 text-xl mt-0.5;
+  flex-shrink: 0;
   color: var(--primary);
-  width: 1.5em;
-  height: 1.5em;
+  font-size: 24px;
+  margin-top: 2px;
 }
 
 .feature-item strong {
@@ -152,7 +150,7 @@ useCustomSeoMeta({
 }
 
 .feature-item span {
-  @apply text-xs leading-relaxed;
+  @apply text-xs leading-relaxed block;
   color: var(--muted);
 }
 </style>
