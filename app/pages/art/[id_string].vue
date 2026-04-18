@@ -68,6 +68,7 @@ useCustomSeoMeta({
   ogImage: meta.value.imgSrc,
   ogType: 'article',
   author: meta.value.author,
+  robots: data.value?.status === 'pending' ? 'noindex, follow' : 'index, follow',
   publishedTime: data.value?.updated ? new Date(data.value.updated).toISOString() : undefined,
   modifiedTime: data.value?.updated ? new Date(data.value.updated).toISOString() : undefined,
   script: [

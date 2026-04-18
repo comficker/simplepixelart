@@ -147,7 +147,10 @@ useCustomSeoMeta({
     </Widget>
 
     <Widget title="New">
-      <item-list :limit="6"/>
+      <template #ctl>
+        <nuxt-link to="/arts/new" class="text-xs">View all →</nuxt-link>
+      </template>
+      <item-list :limit="6" status="public,pending"/>
     </Widget>
     <Widget title="Tags:">
       <div class="tags">

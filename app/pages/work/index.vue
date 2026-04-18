@@ -90,6 +90,18 @@ function isPublic(w: EditorData): boolean {
   return w.status === 'public'
 }
 
+function statusLabel(w: EditorData): string {
+  if (w.status === 'public') return 'PUBLIC'
+  if (w.status === 'pending') return 'PENDING'
+  return 'DRAFT'
+}
+
+function statusClass(w: EditorData): string {
+  if (w.status === 'public') return 'badge-public'
+  if (w.status === 'pending') return 'badge-pending'
+  return 'badge-draft'
+}
+
 const filtered = computed(() => {
   if (filter.value === 'all') return workspaces.value
   const wantPublic = filter.value === 'public'
@@ -199,7 +211,7 @@ onMounted(() => {
             <span>{{ item.width }}×{{ item.height }}</span>
             <span class="dot">·</span>
             <span>{{ pixelCount(item) }} px</span>
-            <span v-if="isPublic(item)" class="badge">PUBLIC</span>
+            <span class="badge" :class="statusClass(item)">{{ statusLabel(item) }}</span>
           </div>
           <div class="work-actions">
             <nuxt-link :to="`/editor?id=${item.id_string || item.id}`" class="work-action" title="Edit">
@@ -366,10 +378,24 @@ onMounted(() => {
 
 .badge {
   @apply ml-auto px-1;
-  background: var(--primary);
-  color: var(--primary-foreground);
   font-size: 10px;
   letter-spacing: 0.04em;
+}
+
+.badge-public {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.badge-pending {
+  background: #f59e0b;
+  color: #1a1a1a;
+}
+
+.badge-draft {
+  background: var(--surface-2);
+  color: var(--muted);
+  border: 1px solid var(--border);
 }
 
 .work-actions {

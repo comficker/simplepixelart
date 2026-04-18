@@ -3,7 +3,7 @@ import type {ResponseSharedPage} from "~/types";
 import CustomLink from "~/components/CustomLink.vue";
 import {debounce} from "~/helper/utils";
 
-const {limit, showFilter} = defineProps({
+const {limit, showFilter, status} = defineProps({
   limit: {
     type: Number,
     default: 18
@@ -11,6 +11,10 @@ const {limit, showFilter} = defineProps({
   showFilter: {
     type: Boolean,
     default: false
+  },
+  status: {
+    type: String,
+    default: 'public'
   }
 });
 
@@ -18,12 +22,19 @@ const route = useRoute()
 
 const search = ref('')
 
+// /arts/new → newest public + pending works (whole gallery)
+// /creator/<username> → that creator's public + pending works
+const isNewView = computed(() => route.path === '/arts/new')
+const isCreatorView = computed(() => route.path.startsWith('/creator/'))
+const showPending = computed(() => isNewView.value || isCreatorView.value)
+
 const params = computed(() => ({
-  status: 'public',
-  slug: route.path,
+  status: showPending.value ? 'public,pending' : status,
+  slug: isNewView.value ? '/arts' : route.path,
   page: route.query.page ? Number.parseInt(route.query.page.toString()) : 1,
   page_size: limit,
   search: search.value,
+  ordering: showPending.value ? '-updated' : undefined,
 }));
 
 const {data} = await useAuthFetch<ResponseSharedPage>(`/coloring/shared-pages/`, {
