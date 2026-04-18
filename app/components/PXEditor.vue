@@ -533,9 +533,16 @@ function exportFile(type: string) {
     case 'json':
       url = editorDataToJSON(editorData.value)
       break
-    default:
-      url = canvas.value!.toDataURL()
+    default: {
+      // Render art-only canvas (no grid/bg/offset) for export
+      const tmp = document.createElement('canvas')
+      const scale = 10
+      tmp.width = editorData.value.width * scale
+      tmp.height = editorData.value.height * scale
+      drawThumbnail(tmp, editorData.value, scale)
+      url = tmp.toDataURL()
       break
+    }
 
   }
   a.href = url;
