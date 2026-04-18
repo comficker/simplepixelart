@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {onMounted, ref, computed, watch} from 'vue'
+import {onMounted, ref, computed, watch, nextTick} from 'vue'
 import {toast} from 'vue-sonner'
 import type {EditorData} from '~/types'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
@@ -181,7 +181,7 @@ function quantize(grid: RGB[][], k: number): { palette: RGB[], indexed: number[]
   return {palette: paletteOut, indexed}
 }
 
-function convert() {
+async function convert() {
   if (!sourceImage.value) return
   const img = sourceImage.value
   const ratio = img.width / img.height
@@ -191,6 +191,7 @@ function convert() {
   const {palette: p, indexed} = quantize(grid, maxColors.value)
   palette.value = p
   pixels.value = indexed
+  await nextTick()
   drawPreview()
 }
 
