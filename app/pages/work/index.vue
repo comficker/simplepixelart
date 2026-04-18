@@ -51,6 +51,13 @@ async function destroy(item: EditorData) {
   confirmingId.value = null
 
   const currentId = localStorage.getItem('workspace_current')
+  // Optimistic remove from list — no refetch, let transition fade it out
+  const idx = workspaces.value.findIndex(w => w.id === item.id)
+  if (idx !== -1) workspaces.value.splice(idx, 1)
+  if (currentId === item.id.toString()) {
+    localStorage.setItem('workspace_current', "")
+  }
+
   try {
     if (auth.isLogged && typeof item.id === 'number') {
       await useNativeFetch<APIResponse<SharedPage>>(`/coloring/shared-pages/${item.id}/`, {
@@ -61,13 +68,11 @@ async function destroy(item: EditorData) {
       delete data[item.id]
       localStorage.setItem('workspaces', JSON.stringify(data))
     }
-    if (currentId === item.id.toString()) {
-      localStorage.setItem('workspace_current', "")
-    }
     toast.success('Deleted')
-    await fetchData()
   } catch {
     toast.error('Delete failed')
+    // Rollback on error
+    if (idx !== -1) workspaces.value.splice(idx, 0, item)
   }
 }
 
@@ -172,7 +177,12 @@ onMounted(() => {
     </div>
 
     <!-- Grid -->
-    <div v-else-if="filtered.length" class="work-grid">
+    <TransitionGroup
+        v-else-if="filtered.length"
+        tag="div"
+        class="work-grid"
+        name="work-item"
+    >
       <div v-for="item in filtered" :key="item.id as any" class="work-card">
         <nuxt-link class="work-canvas" :to="`/editor?id=${item.id_string || item.id}`">
           <div class="square">
@@ -209,7 +219,7 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
+    </TransitionGroup>
 
     <!-- No results for current filter -->
     <div v-else class="work-empty">
@@ -308,6 +318,20 @@ onMounted(() => {
   border: 2px solid var(--shadow-px);
   box-shadow: 3px 3px 0 0 var(--shadow-px);
   transition: transform 80ms steps(2), box-shadow 80ms steps(2);
+}
+
+.work-item-leave-active {
+  transition: opacity 240ms ease, transform 240ms ease;
+  position: absolute;
+}
+
+.work-item-leave-to {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
+.work-item-move {
+  transition: transform 300ms ease;
 }
 
 .work-card:hover {
