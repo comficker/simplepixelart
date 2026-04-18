@@ -425,7 +425,9 @@ const download = (type: string) => {
   color: var(--primary);
 }
 
-.details-row dd a:hover {
-  color: var(--secondary);
+@media (hover: hover) and (pointer: fine) {
+  .details-row dd a:hover {
+    color: var(--secondary);
+  }
 }
 </style>

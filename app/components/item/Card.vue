@@ -55,10 +55,12 @@ const to = computed(() => {
   transition: transform 80ms steps(2), box-shadow 80ms steps(2);
 }
 
-.card:hover {
-  transform: translate(-3px, -3px);
-  box-shadow: 6px 6px 0 0 var(--shadow-px);
-  border-color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 6px 6px 0 0 var(--shadow-px);
+    border-color: var(--primary);
+  }
 }
 
 .card.selected {

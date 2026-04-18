@@ -136,8 +136,10 @@ function handleBlur() {
   line-height: 1;
 }
 
-.remove-btn:hover {
-  color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .remove-btn:hover {
+    color: var(--primary);
+  }
 }
 
 .tag-input-field {
@@ -156,8 +158,10 @@ function handleBlur() {
   color: var(--muted);
 }
 
-.add-tag-trigger:hover {
-  color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .add-tag-trigger:hover {
+    color: var(--primary);
+  }
 }
 
 .max-tags-warning {

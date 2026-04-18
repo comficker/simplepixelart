@@ -270,8 +270,10 @@ onMounted(() => {
   min-width: 64px;
 }
 
-.stat:hover {
-  color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .stat:hover {
+    color: var(--primary);
+  }
 }
 
 .stat.active {
@@ -346,10 +348,12 @@ onMounted(() => {
   transition: transform 300ms ease;
 }
 
-.work-card:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 0 var(--shadow-px);
-  border-color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .work-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 0 var(--shadow-px);
+    border-color: var(--primary);
+  }
 }
 
 .work-canvas {
@@ -409,14 +413,16 @@ onMounted(() => {
   border: 1px solid var(--border);
 }
 
-.work-action:hover {
-  color: var(--primary);
-  border-color: var(--primary);
-}
+@media (hover: hover) and (pointer: fine) {
+  .work-action:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+  }
 
-.work-action.danger:hover {
-  color: #ff4444;
-  border-color: #ff4444;
+  .work-action.danger:hover {
+    color: #ff4444;
+    border-color: #ff4444;
+  }
 }
 
 .work-action.confirm {

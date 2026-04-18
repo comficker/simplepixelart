@@ -640,9 +640,11 @@ onMounted(() => {
   transition: border-color 60ms steps(2), background 60ms steps(2);
 }
 
-.upload-zone:hover {
-  border-color: var(--primary);
-  background: var(--surface-2);
+@media (hover: hover) and (pointer: fine) {
+  .upload-zone:hover {
+    border-color: var(--primary);
+    background: var(--surface-2);
+  }
 }
 
 .upload-icon {
@@ -753,9 +755,11 @@ onMounted(() => {
   border: 1px solid var(--border);
 }
 
-.palette-swatch.mergeable:hover {
-  border-color: var(--primary);
-  transform: scale(1.1);
+@media (hover: hover) and (pointer: fine) {
+  .palette-swatch.mergeable:hover {
+    border-color: var(--primary);
+    transform: scale(1.1);
+  }
 }
 
 .merge-hint {
@@ -818,8 +822,10 @@ onMounted(() => {
   color: var(--foreground);
 }
 
-.faq summary:hover {
-  color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .faq summary:hover {
+    color: var(--primary);
+  }
 }
 
 .faq p {

@@ -155,8 +155,10 @@ a {
     text-decoration: none;
 }
 
-a:hover {
-    color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    a:hover {
+        color: var(--primary);
+    }
 }
 
 h1, h2, h3, h4 {
@@ -271,8 +273,10 @@ input[type=number] {
     }
 }
 
-.btn:hover {
-    color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .btn:hover {
+        color: var(--primary);
+    }
 }
 
 .btn:active {
@@ -285,9 +289,11 @@ input[type=number] {
     color: var(--primary-foreground);
 }
 
-.btn.primary:hover {
-    color: var(--primary-foreground);
-    background: var(--secondary);
+@media (hover: hover) and (pointer: fine) {
+    .btn.primary:hover {
+        color: var(--primary-foreground);
+        background: var(--secondary);
+    }
 }
 
 .btn.secondary {
@@ -318,10 +324,12 @@ input[type=number] {
     border: 1px solid var(--border);
 }
 
-.tags .item a:hover {
-    background: var(--primary);
-    color: var(--primary-foreground);
-    border-color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .tags .item a:hover {
+        background: var(--primary);
+        color: var(--primary-foreground);
+        border-color: var(--primary);
+    }
 }
 
 h2 {
@@ -370,9 +378,11 @@ h2 {
     @apply flex justify-start items-start px-3 py-2 text-sm;
 }
 
-.dropdown .drop-item:hover {
-    background: var(--surface-2);
-    color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .dropdown .drop-item:hover {
+        background: var(--surface-2);
+        color: var(--primary);
+    }
 }
 
 .dropdown.active .dropdown-menu {
@@ -470,9 +480,11 @@ body::before {
     -webkit-tap-highlight-color: transparent;
 }
 
-.toolbar-btn:hover {
-    background: var(--surface-2);
-    color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .toolbar-btn:hover {
+        background: var(--surface-2);
+        color: var(--primary);
+    }
 }
 
 .toolbar-btn.active {
@@ -503,9 +515,11 @@ body::before {
     color: var(--foreground);
 }
 
-.file-menu-item:hover {
-    background: var(--surface-2);
-    color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .file-menu-item:hover {
+        background: var(--surface-2);
+        color: var(--primary);
+    }
 }
 
 .file-menu-item .icon {
@@ -639,9 +653,11 @@ canvas.clear { cursor: pointer; }
     transition: background 60ms steps(2);
 }
 
-.tools .inside:hover {
-    background: var(--surface-2);
-    color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .tools .inside:hover {
+        background: var(--surface-2);
+        color: var(--primary);
+    }
 }
 
 .tools .square.active .inside {
@@ -683,8 +699,10 @@ canvas.clear { cursor: pointer; }
     color: var(--muted);
 }
 
-.layers .layer-del:hover {
-    color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .layers .layer-del:hover {
+        color: var(--primary);
+    }
 }
 
 .pixelated {
@@ -732,12 +750,14 @@ canvas.clear { cursor: pointer; }
     border: none;
 }
 
-.share-dismiss:hover {
-    color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .share-dismiss:hover {
+        color: var(--primary);
+    }
 }
 
 .onb-overlay {
-    @apply absolute inset-0 flex items-end md:items-center justify-center z-40;
+    @apply absolute inset-0 flex items-start md:items-center justify-center z-40;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(2px);
 }
@@ -784,8 +804,10 @@ canvas.clear { cursor: pointer; }
     color: var(--foreground);
 }
 
-.onb-chip:hover {
-    background: var(--surface-2);
+@media (hover: hover) and (pointer: fine) {
+    .onb-chip:hover {
+        background: var(--surface-2);
+    }
 }
 
 .onb-chip.active {
@@ -816,9 +838,11 @@ canvas.clear { cursor: pointer; }
     color: var(--foreground);
 }
 
-.onb-ref-btn:hover {
-    background: var(--surface-2);
-    color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .onb-ref-btn:hover {
+        background: var(--surface-2);
+        color: var(--primary);
+    }
 }
 
 .onb-ref-status {
@@ -833,8 +857,10 @@ canvas.clear { cursor: pointer; }
     color: var(--muted);
 }
 
-.onb-ref-clear:hover {
-    color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .onb-ref-clear:hover {
+        color: var(--primary);
+    }
 }
 
 .onb-actions {
@@ -874,9 +900,11 @@ canvas.clear { cursor: pointer; }
     word-break: break-all;
 }
 
-.publish-link:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .publish-link:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
 }
 
 /* Social buttons grid */
@@ -894,9 +922,11 @@ canvas.clear { cursor: pointer; }
     transition: color 60ms steps(2), border-color 60ms steps(2);
 }
 
-.social-btn:hover {
-    color: var(--primary);
-    border-color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+    .social-btn:hover {
+        color: var(--primary);
+        border-color: var(--primary);
+    }
 }
 
 /* Publish button in toolbar */
@@ -921,6 +951,8 @@ canvas.clear { cursor: pointer; }
     }
 }
 
-.publish-toolbar-btn:hover {
-    background: var(--secondary);
+@media (hover: hover) and (pointer: fine) {
+    .publish-toolbar-btn:hover {
+        background: var(--secondary);
+    }
 }

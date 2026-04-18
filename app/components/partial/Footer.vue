@@ -44,8 +44,10 @@ footer .container {
   color: var(--muted);
 }
 
-.footer-links a:hover {
-  color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .footer-links a:hover {
+    color: var(--primary);
+  }
 }
 
 .footer-sep {
@@ -57,8 +59,10 @@ footer .container {
   color: var(--muted);
 }
 
-.footer-auth:hover {
-  color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .footer-auth:hover {
+    color: var(--primary);
+  }
 }
 
 .footer-copy {

@@ -3,14 +3,14 @@ import type {APIResponse, TagSchema, ResponseSharedPage} from "~/types";
 
 const {data} = useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {
   params: {
-    page_size: 10
+    page_size: 20
   }
 })
 
 const {data: templates} = useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
   params: {
     status: 'public',
-    page_size: 12,
+    page_size: 6,
     ordering: '-remix_count'
   }
 })
@@ -280,11 +280,13 @@ useCustomSeoMeta({
   color: var(--foreground);
 }
 
-.feature-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 0 var(--shadow-px);
-  border-color: var(--primary);
-  color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .feature-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 0 var(--shadow-px);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
 }
 
 .feature-btn .icon {
