@@ -171,4 +171,5 @@ export interface EditorData {
     template?: number | null;
     updated: string;
     is_public: boolean;
+    status?: string;
 }

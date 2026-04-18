@@ -109,7 +109,7 @@ useCustomSeoMeta({
 
     <!-- Feature buttons -->
     <div class="feature-grid">
-      <nuxt-link to="/editor" class="feature-btn">
+      <nuxt-link to="/editor?new=true" class="feature-btn">
         <span class="icon icon-brush"/>
         <div>
           <strong>Create</strong>

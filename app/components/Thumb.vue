@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref, watch} from "vue";
 import type {EditorData} from "~/types";
-import {drawThumbnail} from "~/helper/canvas";
+import {layers2MapNumbers} from "~/helper/canvas";
 
 const props = defineProps<{
   data: EditorData
@@ -10,19 +10,31 @@ const props = defineProps<{
 const canvas = ref<HTMLCanvasElement | null>(null)
 const ctx = ref<CanvasRenderingContext2D | null>(null)
 
-const defaultSize = computed(() => props.data.width > props.data.height ? props.data.width : props.data.height)
-
 function draw() {
   if (!canvas.value || !ctx.value || !props.data) return
 
-  const canvasSize = defaultSize.value
+  const w = props.data.width
+  const h = props.data.height
+  const size = Math.max(w, h)
+  const zoom = 8
+  const cw = size * zoom
+  canvas.value.width = cw
+  canvas.value.height = cw
 
-  canvas.value.width = canvasSize
-  canvas.value.height = canvasSize
+  // White bg (fills whole square)
+  ctx.value.fillStyle = '#ffffff'
+  ctx.value.fillRect(0, 0, cw, cw)
 
-  ctx.value.clearRect(0, 0, canvas.value.width, canvas.value.height)
+  // Center art in square
+  const ox = Math.floor((size - w) / 2) * zoom
+  const oy = Math.floor((size - h) / 2) * zoom
 
-  drawThumbnail(canvas.value!, props.data)
+  const results = layers2MapNumbers(props.data)
+  for (const [key, pixelIndex] of Object.entries(results)) {
+    const [x = 0, y = 0] = key.split('_').map(Number)
+    ctx.value.fillStyle = props.data.colors[pixelIndex as number] ?? '#000000'
+    ctx.value.fillRect(ox + x * zoom, oy + y * zoom, zoom, zoom)
+  }
 }
 
 onMounted(() => {
@@ -40,11 +52,7 @@ watch(() => props.data, () => {
 
 <template>
   <div class="thumb">
-    <canvas
-        ref="canvas"
-        :style="{ width: defaultSize + 'px', height: defaultSize + 'px'}"
-        class="thumbnail-canvas"
-    />
+    <canvas ref="canvas" class="thumbnail-canvas"/>
   </div>
 </template>
 
@@ -52,12 +60,13 @@ watch(() => props.data, () => {
 @reference "tailwindcss";
 
 .thumb {
-  @apply inline-block size-full;
+  @apply block size-full;
 }
 
 .thumbnail-canvas {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
 }
 </style>

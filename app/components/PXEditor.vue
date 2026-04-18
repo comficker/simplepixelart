@@ -563,7 +563,22 @@ function exportFile(type: string) {
 // ================================================== //
 onMounted(async () => {
   initCanvas()
-  await store.load(route.query.id?.toString())
+  if (route.query.new === 'true') {
+    // Load current workspace, save it, then reset for a fresh artwork
+    await store.load(undefined)
+    const hasContent = editorData.value.layers?.some(l => Object.keys(l.pixels || {}).length > 0)
+    if (hasContent) {
+      try {
+        await store.saveNow()
+      } catch (e) {
+        console.warn('Failed to save current work before reset:', e)
+      }
+    }
+    store.resetEditorData()
+    localStorage.setItem('workspace_current', '')
+  } else {
+    await store.load(route.query.id?.toString())
+  }
   setupCanvas()
   setupKeyListeners()
   newSize.value = {

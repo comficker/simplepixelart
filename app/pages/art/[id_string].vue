@@ -7,19 +7,37 @@ const route = useRoute();
 const config = useRuntimeConfig()
 const {data, pending, error} = await useAuthFetch<SharedPage>(`/coloring/shared-pages/${route.params.id_string}/`)
 
+// Art image URL helpers — 3 variants served by backend:
+//   art-social   → OG/Twitter web preview thumbnail (1200x630-ish)
+//   art-preview  → higher-res image attached to social shares
+//   art-original → true pixel resolution, used for display + download
+function artImg(variant: 'social' | 'preview' | 'original', idString: string) {
+  return `${config.public.api}/coloring/files/art-${variant}/${idString}.png`
+}
+
+const imgSocial = computed(() =>
+    data.value?.id_string ? artImg('social', data.value.id_string) : '/screenshot/default.png'
+)
+const imgPreview = computed(() =>
+    data.value?.id_string ? artImg('preview', data.value.id_string) : ''
+)
+const imgOriginal = computed(() =>
+    data.value?.id_string ? artImg('original', data.value.id_string) : ''
+)
+
 const meta = computed(() => {
   if (!data.value) {
     return {
       url: `${config.public.siteUrl}/art/${route.params.id_string}`,
       title: 'Loading...',
       desc: 'Loading pixel art...',
-      imgSrc: '/screenshot/default.png'
+      imgSrc: imgSocial.value,
     }
   }
 
   const url = `${config.public.siteUrl}/art/${data.value.id_string}`
-  const imgSrc = `${config.public.api}/coloring/files/art-social/${data.value.id_string}.png`
-  const imgSrcOrigin = `${config.public.api}/coloring/files/art-preview/${data.value.id_string}.png`
+  const imgSrc = imgSocial.value
+  const imgSrcOrigin = imgPreview.value
   const pixelCount = data.value.map_numbers ? Object.keys(data.value.map_numbers).length : 0
   const title = data.value.name
       ? `${data.value.name} - ${data.value.width}x${data.value.height} Pixel Art`
@@ -87,10 +105,47 @@ useCustomSeoMeta({
   ]
 })
 
+const canShareImage = ref(false)
+const sharing = ref(false)
+
+onMounted(() => {
+  // Detect Web Share API level 2 (file share support)
+  const nav = typeof navigator !== 'undefined' ? navigator : null
+  if (nav && typeof nav.canShare === 'function') {
+    try {
+      const probe = new File([new Blob()], 'probe.png', {type: 'image/png'})
+      canShareImage.value = nav.canShare({files: [probe]})
+    } catch {
+      canShareImage.value = false
+    }
+  }
+})
+
+async function shareImage() {
+  if (!data.value?.id_string || sharing.value) return
+  sharing.value = true
+  try {
+    const res = await fetch(imgPreview.value)
+    const blob = await res.blob()
+    const file = new File([blob], `${data.value.id_string}.png`, {type: 'image/png'})
+    await navigator.share({
+      files: [file],
+      title: meta.value.title,
+      text: meta.value.desc,
+      url: meta.value.url,
+    })
+  } catch (e: any) {
+    if (e?.name !== 'AbortError') console.warn('Share failed:', e)
+  } finally {
+    sharing.value = false
+  }
+}
+
 const socialUrls = computed(() => {
   const url = encodeURIComponent(meta.value.url || '')
   const title = encodeURIComponent(meta.value.title || '')
-  const img = encodeURIComponent(meta.value.imgSrc || '')
+  // Social shares get art-preview (higher res than the OG thumbnail)
+  const img = encodeURIComponent(imgPreview.value || '')
   return {
     twitter: `https://twitter.com/intent/tweet?url=${url}&text=${title}`,
     reddit: `https://www.reddit.com/submit?url=${url}&title=${title}`,
@@ -99,18 +154,15 @@ const socialUrls = computed(() => {
 })
 
 const download = (type: string) => {
-  const base = `${config.public.api}/coloring/files`
   let url: string | undefined = ''
   let ext: string = 'png'
-  if (['preview', 'original', 'pdf'].includes(type)) {
-    if (type === 'pdf') {
-      url = base + `/art-preview/${data.value!.id_string}.pdf`
-      ext = 'pdf'
-    } else if (type === 'preview') {
-      url = base + `/art-preview/${data.value!.id_string}.png`
-    } else {
-      url = base + `/art-original/${data.value!.id_string}.png`
-    }
+  if (type === 'pdf') {
+    url = `${config.public.api}/coloring/files/art-preview/${data.value!.id_string}.pdf`
+    ext = 'pdf'
+  } else if (type === 'preview') {
+    url = imgPreview.value
+  } else if (type === 'original') {
+    url = imgOriginal.value
   } else {
     const editorData = sharedPage2EditorData(data.value!)
     if (type === 'json') {
@@ -160,7 +212,7 @@ const download = (type: string) => {
             <div class="inside">
               <img
                   id="mainImg"
-                  :src="`${config.public.api}/coloring/files/art-original/${data!.id_string}.png`"
+                  :src="imgOriginal"
                   :alt="data.name || `${data.width}x${data.height} Pixel Art`"
                   class="object-contain w-full mx-auto h-full pixelated"
                   loading="eager"
@@ -206,6 +258,17 @@ const download = (type: string) => {
           <span>Create New</span>
         </nuxt-link>
       </div>
+
+      <!-- Native file share (mobile) -->
+      <button
+          v-if="canShareImage"
+          class="btn primary w-full justify-center"
+          :disabled="sharing"
+          @click="shareImage"
+      >
+        <span class="icon icon-social"/>
+        <span>{{ sharing ? 'Sharing…' : 'Share image' }}</span>
+      </button>
 
       <!-- Share & Download -->
       <div class="viewer-share-grid">

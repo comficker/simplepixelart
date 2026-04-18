@@ -334,7 +334,11 @@ export const useEditor = defineStore('editor', () => {
         }
 
         function save2Local() {
-            localWS.value[editorData.value.id.toString()] = cloneDeep(editorData.value)
+            // Local-only work is always private; public status only comes from API
+            editorData.value.is_public = false
+            const snapshot = cloneDeep(editorData.value)
+            snapshot.is_public = false
+            localWS.value[editorData.value.id.toString()] = snapshot
             localStorage.setItem('workspaces', JSON.stringify(localWS.value))
         }
 
