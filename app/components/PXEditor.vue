@@ -63,6 +63,9 @@ const MINIMAP_SIZE = ref(80)
 const newSize = ref({width: 16, height: 16})
 const zoom = ref(29);
 const showGrid = ref(true);
+const referenceImage = ref<HTMLImageElement | null>(null);
+const referenceVisible = ref(true);
+const referenceOpacity = 0.5;
 const spacePressed = ref(false);
 const panStart = ref({x: 0, y: 0});
 const initialDistance = ref(0);
@@ -75,6 +78,69 @@ const isResizing = ref(false);
 const isPinching = ref(false);
 const moveStart = ref({x: 0, y: 0});
 const needSave = ref(false);
+
+const SIZE_PRESETS = [8, 16, 24, 32, 48, 64];
+const COLOR_PRESETS: Record<number, string[]> = {
+  2: ['#000000', '#FFFFFF'],
+  4: ['#000000', '#FFFFFF', '#FF004D', '#00E436'],
+  8: ['#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'],
+  16: ['#000000', '#1D2B53', '#7E2553', '#008751', '#AB5236', '#5F574F', '#C2C3C7', '#FFF1E8', '#FF004D', '#FFA300', '#FFEC27', '#00E436', '#29ADFF', '#83769C', '#FF77A8', '#FFCCAA'],
+  32: ['#000000', '#222034', '#45283C', '#663931', '#8F563B', '#DF7126', '#D9A066', '#EEC39A', '#FBF236', '#99E550', '#6ABE30', '#37946E', '#4B692F', '#524B24', '#323C39', '#3F3F74', '#306082', '#5B6EE1', '#639BFF', '#5FCDE4', '#CBDBFC', '#FFFFFF', '#9BADB7', '#847E87', '#696A6A', '#595652', '#76428A', '#AC3232', '#D95763', '#D77BBA', '#8F974A', '#8A6F30']
+};
+const COLOR_COUNTS = Object.keys(COLOR_PRESETS).map(Number);
+
+const showOnboarding = ref(false);
+const onbSize = ref(16);
+const onbColorCount = ref(8);
+const onbRefImage = ref<HTMLImageElement | null>(null);
+
+function pickOnbReference() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => { onbRefImage.value = img; };
+      img.src = ev.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function finishOnboarding() {
+  editorData.value.width = onbSize.value;
+  editorData.value.height = onbSize.value;
+  editorData.value.colors = [...COLOR_PRESETS[onbColorCount.value]!];
+  if (onbRefImage.value) {
+    referenceImage.value = onbRefImage.value;
+    referenceVisible.value = true;
+  }
+  localStorage.setItem('editor_onboarded', '1');
+  showOnboarding.value = false;
+  store.saveState();
+  setupCanvas();
+}
+
+function skipOnboarding() {
+  localStorage.setItem('editor_onboarded', '1');
+  showOnboarding.value = false;
+}
+
+function openOnboarding() {
+  onbSize.value = editorData.value.width;
+  const currentCount = editorData.value.colors?.length || 8;
+  const closest = COLOR_COUNTS.reduce((a, b) =>
+      Math.abs(b - currentCount) < Math.abs(a - currentCount) ? b : a
+  );
+  onbColorCount.value = closest;
+  onbRefImage.value = referenceImage.value;
+  showOnboarding.value = true;
+}
 
 const editorData = computed(() => store.editorData)
 
@@ -455,8 +521,21 @@ function drawSelection(): void {
   }
 }
 
+function drawReference(): void {
+  if (!ctx || !referenceImage.value || !referenceVisible.value) return;
+  const ox = artOffset.value.x;
+  const oy = artOffset.value.y;
+  const z = zoom.value;
+  const w = editorData.value.width;
+  const h = editorData.value.height;
+  ctx.globalAlpha = referenceOpacity;
+  ctx.drawImage(referenceImage.value, ox, oy, w * z, h * z);
+  ctx.globalAlpha = 1;
+}
+
 function drawEditor() {
   drawBackground();
+  drawReference();
   drawPixels();
   drawGrid();
   drawSelection();
@@ -531,6 +610,39 @@ function setupCanvas() {
 }
 
 // ================================================== //
+function importReferenceImage() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        referenceImage.value = img;
+        referenceVisible.value = true;
+        drawEditor();
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function toggleReference() {
+  referenceVisible.value = !referenceVisible.value;
+  drawEditor();
+}
+
+function clearReference() {
+  referenceImage.value = null;
+  drawEditor();
+}
+
 function exportFile(type: string) {
   const a = document.createElement('a');
   let url: string;
@@ -585,6 +697,12 @@ onMounted(async () => {
     width: editorData.value.width,
     height: editorData.value.height
   }
+
+  const onboarded = localStorage.getItem('editor_onboarded');
+  const hasContent = editorData.value.layers?.some(l => Object.keys(l.pixels || {}).length > 0);
+  if (!onboarded && !route.query.id && !hasContent) {
+    showOnboarding.value = true;
+  }
 })
 
 onUnmounted(() => {
@@ -604,13 +722,6 @@ watch(() => editorData.value.width + editorData.value.height, () => {
   }
 })
 
-watch(() => store.editorMode, () => {
-  nextTick(() => {
-    miniMapCtx = miniMap.value!.getContext('2d')
-    miniMapCtx!.imageSmoothingEnabled = false
-    setupCanvas()
-  })
-})
 </script>
 
 <template>
@@ -618,23 +729,37 @@ watch(() => store.editorMode, () => {
     <!-- Top toolbar -->
     <div class="editor-toolbar">
       <div class="toolbar-group">
-        <ui-tooltip text="New canvas">
-          <button class="toolbar-btn" @click="store.resetEditorData"><span class="icon icon-plus"/></button>
+        <ui-tooltip text="Get started">
+          <button class="toolbar-btn" @click="openOnboarding"><span class="icon icon-rocket"/></button>
         </ui-tooltip>
-        <ui-tooltip text="Download PNG">
-          <button class="toolbar-btn" @click="exportFile('png')"><span class="icon icon-download"/></button>
-        </ui-tooltip>
-        <template v-if="store.editorMode === 'advanced'">
-          <ui-tooltip text="Import file">
-            <button class="toolbar-btn" @click="store.importImage()"><span class="icon icon-upload"/></button>
+      </div>
+      <div class="toolbar-sep"/>
+      <div class="toolbar-group">
+        <ui-dropdown-menu>
+          <ui-tooltip text="File">
+            <button class="toolbar-btn"><span class="icon icon-file"/></button>
           </ui-tooltip>
-          <ui-tooltip text="Export SVG">
-            <button class="toolbar-btn toolbar-btn-text" @click="exportFile('svg')">SVG</button>
-          </ui-tooltip>
-          <ui-tooltip text="Export JSON">
-            <button class="toolbar-btn toolbar-btn-text" @click="exportFile('json')">JSON</button>
-          </ui-tooltip>
-        </template>
+          <template #menu>
+            <div class="file-menu">
+              <button class="file-menu-item" @click="store.resetEditorData">
+                <span class="icon icon-plus"/><span>New canvas</span>
+              </button>
+              <button class="file-menu-item" @click="store.importImage()">
+                <span class="icon icon-upload"/><span>Import file</span>
+              </button>
+              <div class="file-menu-sep"/>
+              <button class="file-menu-item" @click="exportFile('png')">
+                <span class="icon icon-download"/><span>Download PNG</span>
+              </button>
+              <button class="file-menu-item" @click="exportFile('svg')">
+                <span class="icon icon-download"/><span>Export SVG</span>
+              </button>
+              <button class="file-menu-item" @click="exportFile('json')">
+                <span class="icon icon-download"/><span>Export JSON</span>
+              </button>
+            </div>
+          </template>
+        </ui-dropdown-menu>
       </div>
       <div class="toolbar-sep"/>
       <div class="toolbar-group">
@@ -656,15 +781,33 @@ watch(() => store.editorMode, () => {
         <ui-tooltip text="Zoom out (Ctrl+-)">
           <button class="toolbar-btn" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
         </ui-tooltip>
-        <template v-if="store.editorMode === 'advanced'">
-          <ui-tooltip :text="showGrid ? 'Hide grid' : 'Show grid'">
-            <button class="toolbar-btn" :class="{ active: showGrid }" @click="showGrid = !showGrid; drawEditor()">
-              <span class="icon icon-grid"/>
+        <ui-tooltip :text="showGrid ? 'Hide grid' : 'Show grid'">
+          <button class="toolbar-btn" :class="{ active: showGrid }" @click="showGrid = !showGrid; drawEditor()">
+            <span class="icon icon-grid"/>
+          </button>
+        </ui-tooltip>
+      </div>
+      <div class="toolbar-sep"/>
+      <div class="toolbar-group">
+        <ui-tooltip :text="referenceImage ? 'Replace ref' : 'Add ref'">
+          <button class="toolbar-btn" :class="{ active: !!referenceImage }" @click="importReferenceImage">
+            <span class="icon icon-image"/>
+          </button>
+        </ui-tooltip>
+        <template v-if="referenceImage">
+          <ui-tooltip :text="referenceVisible ? 'Hide reference' : 'Show reference'">
+            <button class="toolbar-btn" :class="{ active: referenceVisible }" @click="toggleReference">
+              <span class="icon icon-eye"/>
+            </button>
+          </ui-tooltip>
+          <ui-tooltip text="Remove reference">
+            <button class="toolbar-btn" @click="clearReference">
+              <span class="icon icon-trash"/>
             </button>
           </ui-tooltip>
         </template>
       </div>
-      <template v-if="store.editorMode === 'advanced' && !isResizing">
+      <template v-if="!isResizing">
         <div class="toolbar-sep"/>
         <ui-tooltip text="Resize canvas">
           <button class="toolbar-btn" @click="isResizing = true"><span class="icon icon-resize"/></button>
@@ -721,25 +864,6 @@ watch(() => store.editorMode, () => {
           </Square>
         </Widget>
 
-        <!-- Simple mode: inline tool strip below canvas -->
-        <div v-if="store.editorMode === 'simple'" class="tool-strip">
-          <ui-tooltip text="Brush">
-            <button class="tool-strip-btn" :class="{ active: store.currentTool === 'brush' }" @click="store.setTool('brush')">
-              <span class="icon icon-brush"/>
-            </button>
-          </ui-tooltip>
-          <ui-tooltip text="Fill">
-            <button class="tool-strip-btn" :class="{ active: store.currentTool === 'bucket' }" @click="store.setTool('bucket')">
-              <span class="icon icon-bucket"/>
-            </button>
-          </ui-tooltip>
-          <ui-tooltip text="Eraser">
-            <button class="tool-strip-btn" :class="{ active: store.currentTool === 'eraser' }" @click="store.setTool('eraser')">
-              <span class="icon icon-eraser"/>
-            </button>
-          </ui-tooltip>
-        </div>
-
         <Widget title="Palette">
           <editor-palette/>
         </Widget>
@@ -747,9 +871,8 @@ watch(() => store.editorMode, () => {
 
       <!-- Right sidebar -->
       <div class="editor-sidebar">
-        <!-- Advanced mode: Control + Preview side by side on desktop -->
-        <div :class="store.editorMode === 'advanced' ? 'adv-top-row' : ''">
-          <Widget v-if="store.editorMode === 'advanced'" title="Control">
+        <div class="adv-top-row">
+          <Widget title="Control">
             <div class="tools">
               <Square @click="store.setTool('brush')" :class="{ active: store.currentTool === 'brush' }">
                 <span class="icon icon-brush"/>
@@ -793,8 +916,7 @@ watch(() => store.editorMode, () => {
           </Widget>
         </div>
 
-        <!-- Advanced-only: Layers -->
-        <Widget v-if="store.editorMode === 'advanced'" title="Layers" class="layers">
+        <Widget title="Layers" class="layers">
           <template #ctl>
             <button @click="store.addLayer">+</button>
           </template>
@@ -813,14 +935,6 @@ watch(() => store.editorMode, () => {
           </ul>
         </Widget>
 
-        <!-- Mode toggle -->
-        <button
-            class="mode-toggle"
-            @click="store.editorMode = store.editorMode === 'simple' ? 'advanced' : 'simple'"
-        >
-          <span class="icon" :class="store.editorMode === 'simple' ? 'icon-resize' : 'icon-brush'"/>
-          <span>{{ store.editorMode === 'simple' ? 'Advanced' : 'Simple' }}</span>
-        </button>
       </div>
     </div>
 
@@ -854,17 +968,15 @@ watch(() => store.editorMode, () => {
                 <label class="publish-label">Tags</label>
                 <TagInput v-model="editorData.tags" placeholder="Add tags..."/>
               </div>
-              <template v-if="store.editorMode === 'advanced'">
-                <div>
-                  <label class="publish-label">Slug</label>
-                  <input
-                      type="text"
-                      v-model="editorData.id_string"
-                      placeholder="custom-url-slug"
-                      class="publish-input"
-                  />
-                </div>
-              </template>
+              <div>
+                <label class="publish-label">Slug</label>
+                <input
+                    type="text"
+                    v-model="editorData.id_string"
+                    placeholder="custom-url-slug"
+                    class="publish-input"
+                />
+              </div>
               <div class="h-center gap-2">
                 <ui-switch v-model="editorData.is_public"/>
                 <span class="text-xs">Public</span>
@@ -923,6 +1035,69 @@ watch(() => store.editorMode, () => {
         </div>
       </div>
     </Teleport>
+
+    <!-- Onboarding bottom sheet -->
+    <div v-if="showOnboarding" class="onb-overlay" @click.self="skipOnboarding">
+        <div class="onb-sheet">
+          <h3 class="onb-title">Start drawing</h3>
+          <p class="onb-sub">Pick a few options to begin</p>
+
+          <div class="onb-field">
+            <label class="onb-label">Canvas size</label>
+            <div class="onb-chips">
+              <button
+                  v-for="s in SIZE_PRESETS"
+                  :key="s"
+                  class="onb-chip"
+                  :class="{ active: onbSize === s }"
+                  @click="onbSize = s"
+              >{{ s }}×{{ s }}</button>
+            </div>
+          </div>
+
+          <div class="onb-field">
+            <label class="onb-label">Number of colors</label>
+            <div class="onb-chips">
+              <button
+                  v-for="c in COLOR_COUNTS"
+                  :key="c"
+                  class="onb-chip"
+                  :class="{ active: onbColorCount === c }"
+                  @click="onbColorCount = c"
+              >{{ c }}</button>
+            </div>
+            <div class="onb-swatches">
+              <span
+                  v-for="(color, i) in COLOR_PRESETS[onbColorCount]"
+                  :key="i"
+                  class="onb-swatch"
+                  :style="{ background: color }"
+              />
+            </div>
+          </div>
+
+          <div class="onb-field">
+            <label class="onb-label">Reference image (optional)</label>
+            <div class="onb-ref-row">
+              <button class="onb-ref-btn" @click="pickOnbReference">
+                <span class="icon icon-image"/>
+                <span>{{ onbRefImage ? 'Replace' : 'Add image' }}</span>
+              </button>
+              <span v-if="onbRefImage" class="onb-ref-status">
+                <span class="icon icon-check"/> Loaded
+              </span>
+              <button v-if="onbRefImage" class="onb-ref-clear" @click="onbRefImage = null">
+                <span class="icon icon-trash"/>
+              </button>
+            </div>
+          </div>
+
+          <div class="onb-actions">
+            <button class="btn primary flex-1 justify-center" @click="finishOnboarding">Start drawing</button>
+            <button class="share-dismiss" @click="skipOnboarding">Skip</button>
+          </div>
+        </div>
+      </div>
 
     <!-- Login prompt -->
     <Teleport to="body">

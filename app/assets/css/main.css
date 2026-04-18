@@ -425,7 +425,7 @@ body::before {
 }
 
 .editor {
-    @apply flex flex-col gap-2;
+    @apply flex flex-col gap-2 relative;
 
     --editor-width: 464px;
     --editor-minimap-size: 80px;
@@ -433,16 +433,9 @@ body::before {
 
 /* --- Top toolbar --- */
 .editor-toolbar {
-    @apply flex items-center gap-0.5 md:gap-1 px-1 md:px-2 py-1;
+    @apply flex items-center gap-0.5 md:gap-1 px-1 md:px-2 py-1 flex-wrap;
     background: var(--surface);
     border: 2px solid var(--border);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-}
-
-.editor-toolbar::-webkit-scrollbar {
-    display: none;
 }
 
 .toolbar-group {
@@ -483,6 +476,31 @@ body::before {
     flex-shrink: 0;
 }
 
+.file-menu {
+    @apply flex flex-col py-1;
+}
+
+.file-menu-item {
+    @apply flex items-center gap-2 px-3 py-2 text-xs cursor-pointer text-left;
+    background: transparent;
+    border: none;
+    color: var(--foreground);
+}
+
+.file-menu-item:hover {
+    background: var(--surface-2);
+    color: var(--primary);
+}
+
+.file-menu-item .icon {
+    flex-shrink: 0;
+}
+
+.file-menu-sep {
+    @apply h-px my-1;
+    background: var(--border);
+}
+
 .toolbar-info {
     @apply text-xs px-1 md:px-2;
     color: var(--muted);
@@ -498,40 +516,6 @@ body::before {
 }
 
 /* --- Tool strip (simple mode, below canvas) --- */
-.tool-strip {
-    @apply flex gap-1 justify-center;
-}
-
-.tool-strip-btn {
-    @apply flex items-center justify-center text-xl cursor-pointer;
-    width: 44px;
-    height: 44px;
-    background: var(--surface);
-    border: 2px solid var(--border);
-    color: var(--foreground);
-    transition: transform 60ms steps(2), background 60ms steps(2);
-    -webkit-tap-highlight-color: transparent;
-}
-
-@media (min-width: 768px) {
-    .tool-strip-btn {
-        width: 40px;
-        height: 40px;
-    }
-}
-
-.tool-strip-btn:hover {
-    color: var(--primary);
-    border-color: var(--primary);
-}
-
-.tool-strip-btn.active {
-    background: var(--primary);
-    color: var(--primary-foreground);
-    border-color: var(--shadow-px);
-    box-shadow: 2px 2px 0 0 var(--shadow-px);
-}
-
 /* --- Sidebar --- */
 .editor-sidebar {
     @apply flex flex-col gap-2;
@@ -570,22 +554,6 @@ body::before {
         width: 36%;
         max-width: 260px;
     }
-}
-
-/* --- Mode toggle --- */
-.mode-toggle {
-    @apply flex items-center justify-center gap-2 w-full py-1.5 text-xs cursor-pointer;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    transition: color 60ms steps(2);
-}
-
-.mode-toggle:hover {
-    color: var(--primary);
-    border-color: var(--primary);
 }
 
 /* --- Canvas --- */
@@ -750,6 +718,111 @@ canvas.clear { cursor: pointer; }
 
 .share-dismiss:hover {
     color: var(--primary);
+}
+
+.onb-overlay {
+    @apply absolute inset-0 flex items-end md:items-center justify-center z-40;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+}
+
+.onb-sheet {
+    @apply p-5 w-full flex flex-col gap-4;
+    background: var(--surface);
+    border: 2px solid var(--shadow-px);
+    box-shadow: 6px 6px 0 0 var(--shadow-px);
+    max-width: 480px;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.onb-title {
+    @apply text-sm font-bold;
+    color: var(--foreground);
+}
+
+.onb-sub {
+    @apply text-xs -mt-3;
+    color: var(--muted);
+}
+
+.onb-field {
+    @apply flex flex-col gap-2;
+}
+
+.onb-label {
+    @apply text-xs font-bold;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.onb-chips {
+    @apply flex flex-wrap gap-1;
+}
+
+.onb-chip {
+    @apply px-3 py-1.5 text-xs cursor-pointer;
+    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--foreground);
+}
+
+.onb-chip:hover {
+    background: var(--surface-2);
+}
+
+.onb-chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.onb-swatches {
+    @apply flex flex-wrap gap-1 mt-1;
+}
+
+.onb-swatch {
+    @apply inline-block;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border);
+}
+
+.onb-ref-row {
+    @apply flex items-center gap-2;
+}
+
+.onb-ref-btn {
+    @apply flex items-center gap-2 px-3 py-2 text-xs cursor-pointer;
+    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--foreground);
+}
+
+.onb-ref-btn:hover {
+    background: var(--surface-2);
+    color: var(--primary);
+}
+
+.onb-ref-status {
+    @apply flex items-center gap-1 text-xs;
+    color: var(--primary);
+}
+
+.onb-ref-clear {
+    @apply cursor-pointer p-1;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+}
+
+.onb-ref-clear:hover {
+    color: var(--primary);
+}
+
+.onb-actions {
+    @apply flex flex-col gap-1 mt-2;
 }
 
 /* Publish form */

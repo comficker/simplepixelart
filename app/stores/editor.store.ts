@@ -37,7 +37,6 @@ export const useEditor = defineStore('editor', () => {
     const historyIndex = ref(-1);
 
     const currentTool = ref("brush");
-    const editorMode = ref<'simple' | 'advanced'>('simple');
     const mirrorHorizontal = ref(false);
     const mirrorVertical = ref(false);
 
@@ -601,7 +600,6 @@ export const useEditor = defineStore('editor', () => {
     return {
         editorData,
         currentTool,
-        editorMode,
         currentColorIndex,
         currentLayerIndex,
         mirrorHorizontal,
