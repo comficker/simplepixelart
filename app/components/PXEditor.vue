@@ -11,6 +11,7 @@ let miniMapCtx: CanvasRenderingContext2D | null = null;
 const store = useEditor()
 const route = useRoute()
 const config = useRuntimeConfig()
+const {current: currentTheme} = useTheme()
 
 const showPublishModal = ref(false)
 const publishStep = ref<'edit' | 'done'>('edit')
@@ -605,6 +606,10 @@ watch(() => editorData.value.width + editorData.value.height, () => {
     width: editorData.value.width,
     height: editorData.value.height
   }
+})
+
+watch(currentTheme, () => {
+  nextTick(() => drawEditor())
 })
 
 watch(() => store.editorMode, () => {
