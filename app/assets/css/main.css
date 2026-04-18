@@ -389,6 +389,10 @@ h2 {
     right: 0;
 }
 
+[data-sonner-toaster] {
+    z-index: 10000 !important;
+}
+
 [data-sonner-toaster] [data-sonner-toast] {
     background: var(--surface);
     color: var(--foreground);
