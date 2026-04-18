@@ -249,27 +249,24 @@ const download = (type: string) => {
           <span class="icon icon-angle-right"/>
           <span>Artwork Details</span>
         </h2>
-        <div v-if="data" class="meta">
-          <div class="item">
-            <div class="icon icon-ruler"/>
-            <div>Pixel Count:</div>
-            <div><strong>{{ Object.keys(data.map_numbers).length }}</strong> pixels</div>
+        <dl v-if="data" class="details-grid">
+          <div class="details-row">
+            <dt><span class="icon icon-ruler"/> Pixels</dt>
+            <dd>{{ Object.keys(data.map_numbers).length }}</dd>
           </div>
-          <div class="item">
-            <div class="icon icon-ruler"/>
-            <div>Canvas Size:</div>
-            <div>
+          <div class="details-row">
+            <dt><span class="icon icon-ruler"/> Size</dt>
+            <dd>
               <nuxt-link :to="`/arts/size-${data.width}x${data.height}`">
                 {{ data.width }}×{{ data.height }}
               </nuxt-link>
-            </div>
+            </dd>
           </div>
-          <div class="item">
-            <div class="icon icon-calender"/>
-            <div>Last Updated:</div>
-            <div>{{ new Date(data.updated).toLocaleDateString() }}</div>
+          <div class="details-row">
+            <dt><span class="icon icon-calender"/> Updated</dt>
+            <dd>{{ new Date(data.updated).toLocaleDateString() }}</dd>
           </div>
-        </div>
+        </dl>
       </section>
       <section v-if="data?.taxonomies && data.taxonomies.length > 0">
         <h2>
@@ -334,5 +331,35 @@ const download = (type: string) => {
   .viewer-actions {
     @apply flex-col;
   }
+}
+
+.details-grid {
+  @apply grid grid-cols-1 md:grid-cols-3 gap-2;
+}
+
+.details-row {
+  @apply flex flex-col gap-1 px-3 py-2;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.details-row dt {
+  @apply flex items-center gap-2 text-xs;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.details-row dd {
+  @apply text-base;
+  color: var(--foreground);
+}
+
+.details-row dd a {
+  color: var(--primary);
+}
+
+.details-row dd a:hover {
+  color: var(--secondary);
 }
 </style>
