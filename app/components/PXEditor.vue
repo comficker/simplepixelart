@@ -11,7 +11,6 @@ let miniMapCtx: CanvasRenderingContext2D | null = null;
 const store = useEditor()
 const route = useRoute()
 const config = useRuntimeConfig()
-const {current: currentTheme} = useTheme()
 
 const showPublishModal = ref(false)
 const publishStep = ref<'edit' | 'done'>('edit')
@@ -378,55 +377,41 @@ function clearListeners() {
 }
 
 // ================================================== //
+// Fixed editor colors — independent of theme
+const EDITOR_BG = '#1a1a1a';
+const EDITOR_CELL_A = '#ffffff';
+const EDITOR_CELL_B = '#cccccc';
+const EDITOR_ART_BG_SOLID = '#ffffff';
+
 function drawBackground(): void {
   if (!ctx || !canvas.value) return;
   ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
-  // Fill canvas bg
-  const rootStyle = typeof window !== 'undefined'
-      ? getComputedStyle(document.documentElement)
-      : null;
-  const bgColor = rootStyle?.getPropertyValue('--surface').trim() || '#1c4a1c';
-  ctx.fillStyle = bgColor;
+  // Outer canvas area (padding around art)
+  ctx.fillStyle = EDITOR_BG;
   ctx.fillRect(0, 0, canvas.value.width, canvas.value.height);
+
+  const ox = artOffset.value.x;
+  const oy = artOffset.value.y;
+  const z = zoom.value;
+  const w = editorData.value.width;
+  const h = editorData.value.height;
+
+  if (showGrid.value) {
+    // Checkerboard — toggle grid = toggle checkerboard
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        ctx.fillStyle = (x + y) % 2 === 0 ? EDITOR_CELL_A : EDITOR_CELL_B;
+        ctx.fillRect(ox + x * z, oy + y * z, z, z);
+      }
+    }
+  } else {
+    ctx.fillStyle = EDITOR_ART_BG_SOLID;
+    ctx.fillRect(ox, oy, w * z, h * z);
+  }
 }
 
 function drawGrid(): void {
-  if (!ctx || !canvas.value || !showGrid.value || zoom.value < 4) return;
-  const rootStyle = typeof window !== 'undefined'
-      ? getComputedStyle(document.documentElement)
-      : null;
-  const lineColor = rootStyle?.getPropertyValue('--border').trim() || '#306230';
-  const cw = canvas.value.width;
-  const ch = canvas.value.height;
-  const ox = artOffset.value.x;
-  const oy = artOffset.value.y;
-
-  ctx.strokeStyle = lineColor;
-  ctx.lineWidth = 1;
-  ctx.globalAlpha = 0.3;
-  ctx.beginPath();
-
-  // Vertical lines — extend across entire canvas from art grid alignment
-  const startX = ox % zoom.value;
-  for (let px = startX; px < cw; px += zoom.value) {
-    ctx.moveTo(Math.floor(px) + 0.5, 0);
-    ctx.lineTo(Math.floor(px) + 0.5, ch);
-  }
-  // Horizontal lines
-  const startY = oy % zoom.value;
-  for (let py = startY; py < ch; py += zoom.value) {
-    ctx.moveTo(0, Math.floor(py) + 0.5);
-    ctx.lineTo(cw, Math.floor(py) + 0.5);
-  }
-  ctx.stroke();
-
-  // Art boundary — stronger border
-  ctx.globalAlpha = 0.8;
-  ctx.strokeStyle = lineColor;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(ox, oy, editorData.value.width * zoom.value, editorData.value.height * zoom.value);
-
-  ctx.globalAlpha = 1;
+  // Grid is rendered via checkerboard in drawBackground, no line overlay
 }
 
 function drawPixels(): void {
@@ -489,13 +474,9 @@ function drawMiniMap() {
   const cellW = mmW / artW;
   const cellH = mmH / artH;
 
-  // Clear + bg
+  // Clear + bg (fixed, not theme)
   miniMapCtx.clearRect(0, 0, mmW, mmH);
-  const rootStyle = typeof window !== 'undefined'
-      ? getComputedStyle(document.documentElement)
-      : null;
-  const bgColor = rootStyle?.getPropertyValue('--surface').trim() || '#1c4a1c';
-  miniMapCtx.fillStyle = bgColor;
+  miniMapCtx.fillStyle = EDITOR_CELL_A;
   miniMapCtx.fillRect(0, 0, mmW, mmH);
 
   // Draw pixels (no grid)
@@ -608,10 +589,6 @@ watch(() => editorData.value.width + editorData.value.height, () => {
   }
 })
 
-watch(currentTheme, () => {
-  nextTick(() => drawEditor())
-})
-
 watch(() => store.editorMode, () => {
   nextTick(() => {
     miniMapCtx = miniMap.value!.getContext('2d')
@@ -629,12 +606,12 @@ watch(() => store.editorMode, () => {
         <ui-tooltip text="New canvas">
           <button class="toolbar-btn" @click="store.resetEditorData"><span class="icon icon-plus"/></button>
         </ui-tooltip>
+        <ui-tooltip text="Download PNG">
+          <button class="toolbar-btn" @click="exportFile('png')"><span class="icon icon-download"/></button>
+        </ui-tooltip>
         <template v-if="store.editorMode === 'advanced'">
           <ui-tooltip text="Import file">
             <button class="toolbar-btn" @click="store.importImage()"><span class="icon icon-upload"/></button>
-          </ui-tooltip>
-          <ui-tooltip text="Export PNG">
-            <button class="toolbar-btn" @click="exportFile('png')"><span class="icon icon-download"/></button>
           </ui-tooltip>
           <ui-tooltip text="Export SVG">
             <button class="toolbar-btn toolbar-btn-text" @click="exportFile('svg')">SVG</button>

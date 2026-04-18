@@ -341,7 +341,6 @@ export const useEditor = defineStore('editor', () => {
         if (auth.isLogged) {
             try {
                 await save2Cloud();
-                toast.success('Saved to cloud')
             } catch (e) {
                 console.error('Failed to save to cloud, falling back to local:', e);
                 save2Local();
@@ -349,7 +348,6 @@ export const useEditor = defineStore('editor', () => {
             }
         } else {
             save2Local();
-            toast.info('Saved locally')
         }
         histories.value = {
             [editorData.value.id.toString()]: {
