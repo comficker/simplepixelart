@@ -100,6 +100,13 @@ export default defineNuxtConfig({
                 {name: 'twitter:image', content: 'https://simplepixelart.com/og-image.jpg'},
                 {name: 'twitter:image:alt', content: 'Simple Pixel Art - Create and Discover Pixel Art'},
             ],
+            script: [
+                {
+                    src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7014744652532083',
+                    async: true,
+                    crossorigin: 'anonymous',
+                },
+            ],
         }
     },
 })
