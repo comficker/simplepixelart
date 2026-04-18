@@ -19,6 +19,10 @@ const currentTheme = computed(() => themes.find(t => t.id === current.value) ?? 
           <span class="icon icon-discovery"/>
           <span class="label">Gallery</span>
         </nuxt-link>
+        <nuxt-link to="/convert" class="item" title="Image to pixel art">
+          <span class="icon icon-adjust"/>
+          <span class="label">Convert</span>
+        </nuxt-link>
         <nuxt-link to="/work" class="item" title="Your work">
           <span class="icon icon-brush"/>
           <span class="label">Your work</span>
