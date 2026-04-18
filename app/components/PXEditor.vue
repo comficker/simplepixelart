@@ -480,17 +480,43 @@ function drawEditor() {
 function drawMiniMap() {
   const container = canvas.value?.parentElement;
   if (!miniMap.value || !canvas.value || !miniMapCtx || !container) return;
-  const scaleX = miniMap.value.width / canvas.value.width;
-  const scaleY = miniMap.value.height / canvas.value.height;
-  miniMapCtx.clearRect(0, 0, miniMap.value.width, miniMap.value.height);
-  miniMapCtx.drawImage(canvas.value, 0, 0, miniMap.value.width, miniMap.value.height);
+
+  const mmW = miniMap.value.width;
+  const mmH = miniMap.value.height;
+  const artW = editorData.value.width;
+  const artH = editorData.value.height;
+  const cellW = mmW / artW;
+  const cellH = mmH / artH;
+
+  // Clear + bg
+  miniMapCtx.clearRect(0, 0, mmW, mmH);
+  const rootStyle = typeof window !== 'undefined'
+      ? getComputedStyle(document.documentElement)
+      : null;
+  const bgColor = rootStyle?.getPropertyValue('--surface').trim() || '#1c4a1c';
+  miniMapCtx.fillStyle = bgColor;
+  miniMapCtx.fillRect(0, 0, mmW, mmH);
+
+  // Draw pixels (no grid)
+  const results = layers2MapNumbers(editorData.value);
+  for (const [key, pixelIndex] of Object.entries(results)) {
+    const [x = 0, y = 0] = key.split('_').map(Number);
+    miniMapCtx.fillStyle = editorData.value.colors[pixelIndex] ?? '#000000';
+    miniMapCtx.fillRect(x * cellW, y * cellH, Math.ceil(cellW), Math.ceil(cellH));
+  }
+
+  // Viewport indicator
+  const scaleX = mmW / canvas.value.width;
+  const scaleY = mmH / canvas.value.height;
+  const ox = artOffset.value.x * scaleX;
+  const oy = artOffset.value.y * scaleY;
   const viewX = container.scrollLeft * scaleX;
   const viewY = container.scrollTop * scaleY;
   const viewW = Math.min(EDITOR_SIZE.value, canvas.value.width) * scaleX;
   const viewH = Math.min(EDITOR_SIZE.value, canvas.value.height) * scaleY;
   miniMapCtx.strokeStyle = 'red';
   miniMapCtx.lineWidth = 1;
-  miniMapCtx.strokeRect(viewX, viewY, viewW, viewH);
+  miniMapCtx.strokeRect(viewX - ox, viewY - oy, viewW, viewH);
 }
 
 function initCanvas() {
