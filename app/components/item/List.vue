@@ -3,7 +3,7 @@ import type {ResponseSharedPage} from "~/types";
 import CustomLink from "~/components/CustomLink.vue";
 import {debounce} from "~/helper/utils";
 
-const {limit, showFilter, status} = defineProps({
+const {limit, showFilter, status, noSeo} = defineProps({
   limit: {
     type: Number,
     default: 18
@@ -15,6 +15,10 @@ const {limit, showFilter, status} = defineProps({
   status: {
     type: String,
     default: 'public'
+  },
+  noSeo: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -87,7 +91,7 @@ const structuredData = {
   }
 };
 
-if (limit > 6) {
+if (limit > 6 && !noSeo) {
   useCustomSeoMeta({
     title: meta.value.title,
     description: meta.value.desc,
@@ -109,7 +113,7 @@ const handleInput = debounce((event: { target: { value: string; }; }) => {
 
 <template>
   <div class="page">
-    <section v-if="limit > 6">
+    <section v-if="limit > 6 && !noSeo">
       <h1 class="h-center">
         <span class="icon icon-angle-right"/>
         <span>{{ meta.title }}</span>
