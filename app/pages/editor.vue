@@ -137,13 +137,6 @@ useCustomSeoMeta({
   @apply flex flex-col gap-1 flex-1;
 }
 
-.feature-icon {
-  flex-shrink: 0;
-  color: var(--primary);
-  font-size: 24px;
-  margin-top: 2px;
-}
-
 .feature-item strong {
   @apply text-xs block;
   color: var(--foreground);
@@ -152,5 +145,12 @@ useCustomSeoMeta({
 .feature-item span {
   @apply text-xs leading-relaxed block;
   color: var(--muted);
+}
+
+.feature-item .feature-icon {
+  flex-shrink: 0;
+  color: var(--primary);
+  font-size: 32px;
+  margin-top: 2px;
 }
 </style>
