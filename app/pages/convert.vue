@@ -634,8 +634,7 @@ onMounted(() => {
 }
 
 .upload-zone {
-  @apply flex flex-col items-center justify-center gap-2 cursor-pointer;
-  min-height: 300px;
+  @apply flex flex-col items-center justify-center gap-2 cursor-pointer py-8;
   border: 2px dashed var(--border);
   background: var(--surface);
   transition: border-color 60ms steps(2), background 60ms steps(2);
