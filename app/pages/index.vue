@@ -77,7 +77,7 @@ useCustomSeoMeta({
     <!-- Template picker -->
     <Widget title="Pick a template & remix">
       <div v-if="templates?.results" class="results">
-        <ItemCard v-for="item in templates.results" :key="item.id" :value="item" :isRemix="true"/>
+        <ItemCard v-for="(item, i) in templates.results" :key="item.id" :value="item" :isRemix="true" :priority="i < 6"/>
       </div>
     </Widget>
 

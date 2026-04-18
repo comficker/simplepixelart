@@ -6,7 +6,8 @@
             v-if="!isDraw"
             :src="src" :alt="value.name"
             class="size-full"
-            loading="lazy"
+            :loading="priority ? 'eager' : 'lazy'"
+            :fetchpriority="priority ? 'high' : 'auto'"
             decoding="async"
         />
         <canvas
@@ -29,8 +30,8 @@
 <script setup lang="ts">
 import type {SharedPage} from "~/types";
 
-const {value, isDraw, isRemix, isAdding, added, showVote} = defineProps<{
-  value: SharedPage, isDraw?: boolean, isRemix?: boolean, isAdding?: boolean, added?: boolean, showVote?: boolean
+const {value, isDraw, isRemix, priority, isAdding, added, showVote} = defineProps<{
+  value: SharedPage, isDraw?: boolean, isRemix?: boolean, priority?: boolean, isAdding?: boolean, added?: boolean, showVote?: boolean
 }>()
 const config = useRuntimeConfig()
 

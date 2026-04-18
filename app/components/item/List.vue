@@ -100,7 +100,7 @@ const handleInput = debounce((event: { target: { value: string; }; }) => {
       <!--<div v-if="limit > 6" class="ml-auto px-2 py-2 border">Order</div>-->
     </div>
     <div v-if="data" class="results">
-      <ItemCard v-for="item in data.results" :key="item.id" :value="item"/>
+      <ItemCard v-for="(item, i) in data.results" :key="item.id" :value="item" :priority="i < 3"/>
     </div>
     <div v-if="limit > 6 && data?.results.length" class="paginator">
       <CustomLink :to="pagination.p">

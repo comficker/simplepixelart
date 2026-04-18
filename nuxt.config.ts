@@ -101,10 +101,28 @@ export default defineNuxtConfig({
                 {name: 'twitter:image:alt', content: 'Simple Pixel Art - Create and Discover Pixel Art'},
             ],
             script: [
+                // Lazy-load AdSense after page idle to unblock LCP.
                 {
-                    src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7014744652532083',
-                    async: true,
-                    crossorigin: 'anonymous',
+                    innerHTML: `
+                      (function(){
+                        var load = function(){
+                          if (window.__adsLoaded) return;
+                          window.__adsLoaded = true;
+                          var s = document.createElement('script');
+                          s.async = true;
+                          s.crossOrigin = 'anonymous';
+                          s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7014744652532083';
+                          document.head.appendChild(s);
+                        };
+                        if ('requestIdleCallback' in window) {
+                          requestIdleCallback(load, { timeout: 3000 });
+                        } else {
+                          setTimeout(load, 3000);
+                        }
+                      })();
+                    `,
+                    type: 'text/javascript',
+                    tagPosition: 'bodyClose',
                 },
             ],
         }
