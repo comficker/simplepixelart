@@ -47,36 +47,60 @@ useCustomSeoMeta({
       <p>SimplePixelArt.com provides a free, browser-based pixel art editor — no installation or account required. Draw directly on a pixel grid with a full set of tools designed for both beginners and experienced artists.</p>
       <div class="editor-features">
         <div class="feature-item">
-          <strong>Brush & Eraser</strong>
-          <span>Paint individual pixels or erase with precision. Adjust tool size for fine detail or broad strokes.</span>
+          <span class="icon icon-brush feature-icon"/>
+          <div>
+            <strong>Brush & Eraser</strong>
+            <span>Paint individual pixels or erase with precision. Adjust tool size for fine detail or broad strokes.</span>
+          </div>
         </div>
         <div class="feature-item">
-          <strong>Fill Tool</strong>
-          <span>Flood-fill an area with a single click. Perfect for quickly coloring large regions.</span>
+          <span class="icon icon-bucket feature-icon"/>
+          <div>
+            <strong>Fill Tool</strong>
+            <span>Flood-fill an area with a single click. Perfect for quickly coloring large regions.</span>
+          </div>
         </div>
         <div class="feature-item">
-          <strong>Mirror Drawing</strong>
-          <span>Enable horizontal or vertical mirroring to draw symmetric sprites twice as fast.</span>
+          <span class="icon icon-reflect-horizontal feature-icon"/>
+          <div>
+            <strong>Mirror Drawing</strong>
+            <span>Enable horizontal or vertical mirroring to draw symmetric sprites twice as fast.</span>
+          </div>
         </div>
         <div class="feature-item">
-          <strong>Multiple Layers</strong>
-          <span>Separate your artwork into layers — sketch on one, color on another, add details on top.</span>
+          <span class="icon icon-grid feature-icon"/>
+          <div>
+            <strong>Multiple Layers</strong>
+            <span>Separate your artwork into layers — sketch on one, color on another, add details on top.</span>
+          </div>
         </div>
         <div class="feature-item">
-          <strong>Undo / Redo</strong>
-          <span>Full history support. Experiment freely and step back through any change.</span>
+          <span class="icon icon-undo feature-icon"/>
+          <div>
+            <strong>Undo / Redo</strong>
+            <span>Full history support. Experiment freely and step back through any change.</span>
+          </div>
         </div>
         <div class="feature-item">
-          <strong>Custom Canvas Sizes</strong>
-          <span>Choose from 8×8 up to 64×64 pixels. Pick the resolution that fits your project.</span>
+          <span class="icon icon-resize feature-icon"/>
+          <div>
+            <strong>Custom Canvas Sizes</strong>
+            <span>Choose from 8×8 up to 64×64 pixels. Pick the resolution that fits your project.</span>
+          </div>
         </div>
         <div class="feature-item">
-          <strong>Color Palette</strong>
-          <span>Build and save a custom color palette for your artwork. Swap colors across the entire canvas instantly.</span>
+          <span class="icon icon-adjust feature-icon"/>
+          <div>
+            <strong>Color Palette</strong>
+            <span>Build and save a custom color palette for your artwork. Swap colors across the entire canvas instantly.</span>
+          </div>
         </div>
         <div class="feature-item">
-          <strong>Export & Share</strong>
-          <span>Save your artwork and share it with the SimplePixelArt.com community. Export as PNG for use in games, web, or print.</span>
+          <span class="icon icon-social feature-icon"/>
+          <div>
+            <strong>Export & Share</strong>
+            <span>Save your artwork and share it with the SimplePixelArt.com community. Export as PNG for use in games, web, or print.</span>
+          </div>
         </div>
       </div>
     </section>
@@ -106,11 +130,24 @@ useCustomSeoMeta({
 }
 
 .feature-item {
-  @apply flex flex-col gap-1;
+  @apply flex items-start gap-3 p-2;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.feature-item > div {
+  @apply flex flex-col gap-1 flex-1;
+}
+
+.feature-icon {
+  @apply flex-shrink-0 text-xl mt-0.5;
+  color: var(--primary);
+  width: 1.5em;
+  height: 1.5em;
 }
 
 .feature-item strong {
-  @apply text-xs;
+  @apply text-xs block;
   color: var(--foreground);
 }
 
