@@ -602,18 +602,15 @@ watch(() => store.editorMode, () => {
           <ui-tooltip text="Import file">
             <button class="toolbar-btn" @click="store.importImage()"><span class="icon icon-upload"/></button>
           </ui-tooltip>
-          <ui-dropdown-menu>
-            <ui-tooltip text="Export">
-              <div class="toolbar-btn"><span class="icon icon-download"/></div>
-            </ui-tooltip>
-            <template #menu>
-              <div class="flex flex-col divide-y">
-                <div class="btn" @click="exportFile('png')">PNG</div>
-                <div class="btn" @click="exportFile('svg')">SVG</div>
-                <div class="btn" @click="exportFile('json')">JSON</div>
-              </div>
-            </template>
-          </ui-dropdown-menu>
+          <ui-tooltip text="Export PNG">
+            <button class="toolbar-btn" @click="exportFile('png')"><span class="icon icon-download"/></button>
+          </ui-tooltip>
+          <ui-tooltip text="Export SVG">
+            <button class="toolbar-btn toolbar-btn-text" @click="exportFile('svg')">SVG</button>
+          </ui-tooltip>
+          <ui-tooltip text="Export JSON">
+            <button class="toolbar-btn toolbar-btn-text" @click="exportFile('json')">JSON</button>
+          </ui-tooltip>
         </template>
       </div>
       <div class="toolbar-sep"/>

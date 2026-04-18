@@ -461,6 +461,12 @@ h2 {
     color: var(--primary-foreground);
 }
 
+.toolbar-btn-text {
+    @apply px-2 text-xs;
+    width: auto;
+    letter-spacing: 0.06em;
+}
+
 .toolbar-sep {
     @apply w-px h-5 mx-0.5 md:mx-1;
     background: var(--border);
