@@ -389,8 +389,14 @@ h2 {
     right: 0;
 }
 
+section[data-sonner-toaster],
 [data-sonner-toaster] {
-    z-index: 10000 !important;
+    z-index: 2147483647 !important;
+    position: fixed !important;
+}
+
+body::before {
+    z-index: 9999;
 }
 
 [data-sonner-toaster] [data-sonner-toast] {

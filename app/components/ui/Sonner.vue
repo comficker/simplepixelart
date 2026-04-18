@@ -1,17 +1,17 @@
 <script lang="ts" setup>
 import { Toaster } from "vue-sonner"
+import 'vue-sonner/style.css'
 
-const props = defineProps()
+const props = defineProps<{
+  position?: string
+}>()
 </script>
 
 <template>
   <Toaster
     class="toaster group"
-    v-bind="props"
-    :style="{
-      '--normal-bg': 'var(--popover)',
-      '--normal-text': 'var(--popover-foreground)',
-      '--normal-border': 'var(--border)',
-    }"
+    :position="(props.position as any) || 'bottom-right'"
+    :expand="true"
+    :rich-colors="false"
   />
 </template>

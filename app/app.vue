@@ -7,7 +7,9 @@
       </div>
     </main>
     <PartialFooter/>
-    <UiSonner position="bottom-right"/>
+    <Teleport to="body">
+      <UiSonner position="bottom-right"/>
+    </Teleport>
   </div>
 </template>
 
