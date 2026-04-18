@@ -7,9 +7,107 @@ import {cloneDeep, generateUUID} from '~/helper/utils'
 
 useCustomSeoMeta({
   title: 'Image to Pixel Art Converter - Free Online Tool',
-  description: 'Convert any photo or image into pixel art in seconds. Adjust size, palette, clean orphan pixels, swap colors, then open in the editor.',
-  keywords: 'image to pixel art, photo to pixel art, pixel converter, pixelate image, pixel art generator',
+  description: 'Convert any photo or image into pixel art in seconds. Free online tool with palette control (4–64 colors), pixel cleaner, color swap, and live preview. No signup required.',
+  keywords: 'image to pixel art, photo to pixel art converter, pixelate image online, pixel art generator, convert jpg to pixel art, png to pixel art, free pixel art maker, 8-bit converter, 16-bit art generator',
   canonical: 'https://simplepixelart.com/convert',
+  ogImage: 'https://simplepixelart.com/og-convert.png',
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'SoftwareApplication',
+            name: 'Image to Pixel Art Converter',
+            description: 'Free online tool that converts photos and images into pixel art with customizable palette, size, and cleanup options.',
+            url: 'https://simplepixelart.com/convert',
+            applicationCategory: 'GraphicsApplication',
+            operatingSystem: 'Any (browser-based)',
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'USD',
+            },
+            featureList: [
+              'Drag and drop image upload',
+              'Output sizes from 8x8 to 64x64 pixels',
+              'Palette reduction 4 to 64 colors via median-cut quantization',
+              'Live brightness, contrast, saturation adjustment',
+              'Pixel Cleaner to remove orphan pixels',
+              'Color Swap and merge palette colors',
+              'One-click export to the pixel art editor',
+            ],
+            publisher: {
+              '@type': 'Organization',
+              name: 'SimplePixelArt.com',
+              url: 'https://simplepixelart.com/',
+            },
+          },
+          {
+            '@type': 'HowTo',
+            name: 'How to convert an image to pixel art',
+            description: 'Turn any photo into pixel art in three steps with our free online converter.',
+            totalTime: 'PT30S',
+            step: [
+              {
+                '@type': 'HowToStep',
+                name: 'Upload your image',
+                text: 'Click the upload area or drag and drop a PNG, JPG, or WebP file.',
+              },
+              {
+                '@type': 'HowToStep',
+                name: 'Pick size and palette',
+                text: 'Choose output pixel width (8–64) and number of colors (4–64). The preview updates live.',
+              },
+              {
+                '@type': 'HowToStep',
+                name: 'Polish and open in editor',
+                text: 'Clean orphan pixels, swap colors, then click Open in Editor to keep drawing or export.',
+              },
+            ],
+          },
+          {
+            '@type': 'FAQPage',
+            mainEntity: [
+              {
+                '@type': 'Question',
+                name: 'Is this image to pixel art converter free?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Yes. The entire tool runs in your browser and is completely free with no signup required.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'What image formats can I upload?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'PNG, JPG, and WebP images are supported. Drag and drop or click to select a file.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'How does the Pixel Cleaner work?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Pixel Cleaner finds isolated pixels with no same-colored neighbors and replaces them with the majority color around them, producing cleaner sprites.',
+                },
+              },
+              {
+                '@type': 'Question',
+                name: 'Can I edit the result after conversion?',
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: 'Yes. Click Open in Editor to load the converted pixel art into our full-featured online editor for further touch-ups.',
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    },
+  ],
 })
 
 type RGB = [number, number, number]
@@ -338,8 +436,8 @@ onMounted(() => {
 <template>
   <div class="page">
     <section class="hero">
-      <h1>Image → Pixel Art</h1>
-      <p class="text-xs">Drop a photo, get pixel art. Clean it up, swap colors, open in editor.</p>
+      <h1>Image to Pixel Art Converter</h1>
+      <p class="text-xs">Turn any photo into pixel art in seconds. Free, no signup, runs in your browser.</p>
     </section>
 
     <!-- Upload zone (no image yet) -->
@@ -460,6 +558,48 @@ onMounted(() => {
         class="hidden"
         @change="onFileSelect"
     />
+
+    <!-- SEO content -->
+    <section class="seo-section">
+      <h2 class="seo-heading">How this converter works</h2>
+      <p>Our free image to pixel art converter runs entirely in your browser. Upload any PNG, JPG, or WebP, pick an output size, and the tool resamples your image and reduces its palette using a <strong>median-cut quantization algorithm</strong> — the same technique used in retro game tools to pick the most representative colors. Every change updates the preview live.</p>
+    </section>
+
+    <section class="seo-section">
+      <h2 class="seo-heading">Features</h2>
+      <ul class="seo-list">
+        <li><strong>Flexible output size.</strong> Convert to 8×8, 16×16, 32×32, 48×48, or up to 64×64 pixels. Aspect ratio preserved automatically.</li>
+        <li><strong>Palette control.</strong> Limit to 4, 8, 16, 32, or 64 colors. Smaller palettes produce that crisp retro look; larger palettes keep more detail.</li>
+        <li><strong>Live image adjustments.</strong> Brightness, contrast, and saturation sliders re-run the conversion on every change.</li>
+        <li><strong>Pixel Cleaner.</strong> Removes orphan pixels — isolated single dots with no matching neighbor — replacing them with the majority color around them. Great for cleaning sprites after quantization.</li>
+        <li><strong>Color Swap & Merge.</strong> Click any palette swatch to pick a replacement color, or merge two palette colors into one to simplify your output further.</li>
+        <li><strong>One-click editor handoff.</strong> Open the result in our full pixel art editor for touch-ups, layers, export to PNG/SVG/JSON, and sharing.</li>
+      </ul>
+    </section>
+
+    <section class="seo-section">
+      <h2 class="seo-heading">Frequently asked questions</h2>
+      <details class="faq">
+        <summary>Is this tool really free?</summary>
+        <p>Yes. The entire converter runs in your browser. No account, no watermark, no upload to any server.</p>
+      </details>
+      <details class="faq">
+        <summary>What image formats are supported?</summary>
+        <p>PNG, JPG, and WebP. Drag and drop a file onto the upload area or click to browse.</p>
+      </details>
+      <details class="faq">
+        <summary>How does the Pixel Cleaner work?</summary>
+        <p>It scans the output for pixels that have no same-colored neighbors (orphans) and replaces each one with the majority color of its four-direction neighbors. This smooths out speckle that quantization often produces from photos.</p>
+      </details>
+      <details class="faq">
+        <summary>Can I edit the result after conversion?</summary>
+        <p>Yes. Click <strong>Open in Editor</strong> to load the converted pixel art into our full online editor with brush, fill, layers, undo/redo, and export options.</p>
+      </details>
+      <details class="faq">
+        <summary>What's the difference between this and other pixel art converters?</summary>
+        <p>Live preview on every setting change, preserved aspect ratio, color merge for manual palette cleanup, orphan-pixel cleaner for noise-free sprites, and a direct handoff to a full editor. No downloads, no signup.</p>
+      </details>
+    </section>
   </div>
 </template>
 
@@ -612,5 +752,48 @@ onMounted(() => {
 
 .hidden {
   display: none;
+}
+
+.seo-section {
+  @apply py-3 space-y-2;
+  border-top: 1px solid var(--border);
+}
+
+.seo-heading {
+  @apply text-sm font-bold;
+  color: var(--foreground);
+}
+
+.seo-section p {
+  @apply text-xs leading-relaxed;
+  color: var(--foreground);
+}
+
+.seo-list {
+  @apply space-y-2 list-none;
+}
+
+.seo-list li {
+  @apply text-xs leading-relaxed;
+  color: var(--foreground);
+}
+
+.faq {
+  @apply py-2;
+  border-top: 1px solid var(--border);
+}
+
+.faq summary {
+  @apply text-sm cursor-pointer font-bold;
+  color: var(--foreground);
+}
+
+.faq summary:hover {
+  color: var(--primary);
+}
+
+.faq p {
+  @apply text-xs mt-2 leading-relaxed;
+  color: var(--muted);
 }
 </style>
