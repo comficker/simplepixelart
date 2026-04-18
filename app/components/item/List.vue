@@ -33,9 +33,12 @@ const {data} = await useAuthFetch<ResponseSharedPage>(`/coloring/shared-pages/`,
 
 const pagination = computed(() => {
   const page = route.query.page ? Number.parseInt(route.query.page.toString()) : 1
+  const prevPage = page - 1
   return {
     n: data.value?.links?.next ? `${route.path}?page=${page + 1}` : null,
-    p: data.value?.links?.previous ? `${route.path}?page=${page - 1}` : null
+    p: data.value?.links?.previous
+        ? (prevPage <= 1 ? route.path : `${route.path}?page=${prevPage}`)
+        : null
   }
 })
 
