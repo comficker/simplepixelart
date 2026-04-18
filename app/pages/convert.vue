@@ -578,6 +578,20 @@ onMounted(() => {
     </section>
 
     <section class="seo-section">
+      <h2 class="seo-heading">Screenshot</h2>
+      <figure class="screenshot">
+        <img
+            src="/screenshot/Image-to-Pixel-Art-Converter.png"
+            alt="Image to Pixel Art Converter interface showing live preview, size and color palette controls, brightness contrast saturation sliders, and generated pixel art output"
+            title="Image to Pixel Art Converter — live preview with palette and adjustment controls"
+            loading="lazy"
+            decoding="async"
+        />
+        <figcaption class="text-xs">Live preview, palette control, and image adjustments in one view.</figcaption>
+      </figure>
+    </section>
+
+    <section class="seo-section">
       <h2 class="seo-heading">Frequently asked questions</h2>
       <details class="faq">
         <summary>Is this tool really free?</summary>
@@ -776,6 +790,23 @@ onMounted(() => {
 .seo-list li {
   @apply text-xs leading-relaxed;
   color: var(--foreground);
+}
+
+.screenshot {
+  @apply flex flex-col items-center gap-2;
+  margin: 0;
+}
+
+.screenshot img {
+  @apply w-full max-w-3xl;
+  border: 2px solid var(--shadow-px);
+  box-shadow: 4px 4px 0 0 var(--shadow-px);
+  image-rendering: auto;
+}
+
+.screenshot figcaption {
+  color: var(--muted);
+  text-align: center;
 }
 
 .faq {
