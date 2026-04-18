@@ -113,8 +113,8 @@ html, body {
 }
 
 body {
-    font-family: "IBM Plex Sans", system-ui, sans-serif;
-    font-weight: 500;
+    font-family: "Proto Mono", monospace;
+    font-weight: bold;
     font-size: 14px;
     position: relative;
 }
@@ -399,7 +399,7 @@ h2 {
 
 [data-sonner-toast][data-styled='true'] {
     font-size: 14px;
-    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    font-family: "Proto Mono", monospace;
 }
 
 .input {
