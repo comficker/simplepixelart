@@ -5,7 +5,12 @@ import {sharedPage2EditorData} from "~/helper/utils";
 
 const route = useRoute();
 const config = useRuntimeConfig()
+const auth = useAuthStore()
 const {data, pending, error} = await useAuthFetch<SharedPage>(`/coloring/shared-pages/${route.params.id_string}/`)
+
+const isOwner = computed(() =>
+    !!auth.logged?.id && !!data.value?.user?.id && auth.logged.id === data.value.user.id
+)
 
 // Art image URL helpers — 3 variants served by backend:
 //   art-social   → OG/Twitter web preview thumbnail (1200x630-ish)
@@ -244,15 +249,15 @@ const download = (type: string) => {
         <span class="text-xs">Remixed from another artwork</span>
       </div>
 
-      <!-- Primary action: Remix -->
+      <!-- Primary action: Remix / Edit -->
       <div class="viewer-actions">
         <nuxt-link
             :to="`/editor?id=${route.params.id_string}`"
             class="btn primary flex-1 justify-center"
-            title="Remix this pixel art in the editor"
+            :title="isOwner ? 'Edit this pixel art in the editor' : 'Remix this pixel art in the editor'"
         >
           <span class="icon icon-brush"/>
-          <span>Remix This</span>
+          <span>{{ isOwner ? 'Edit This' : 'Remix This' }}</span>
         </nuxt-link>
         <nuxt-link to="/editor" class="btn flex-1 justify-center">
           <span class="icon icon-plus"/>
