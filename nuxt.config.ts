@@ -72,6 +72,10 @@ export default defineNuxtConfig({
                     content: 'SimplePixelArt.com'
                 },
                 {
+                    name: 'google-adsense-account',
+                    content: 'ca-pub-7014744652532083'
+                },
+                {
                     name: 'robots',
                     content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
                 },
@@ -101,6 +105,24 @@ export default defineNuxtConfig({
                 {name: 'twitter:image:alt', content: 'Simple Pixel Art - Create and Discover Pixel Art'},
             ],
             script: [
+                // Consent Mode v2 default — denied until user accepts.
+                {
+                    innerHTML: `
+                      window.dataLayer = window.dataLayer || [];
+                      function gtag(){dataLayer.push(arguments);}
+                      gtag('consent', 'default', {
+                        'ad_storage': 'denied',
+                        'ad_user_data': 'denied',
+                        'ad_personalization': 'denied',
+                        'analytics_storage': 'denied',
+                        'functionality_storage': 'granted',
+                        'security_storage': 'granted',
+                        'wait_for_update': 500
+                      });
+                    `,
+                    type: 'text/javascript',
+                    tagPosition: 'head',
+                },
                 // Lazy-load AdSense after page idle to unblock LCP.
                 {
                     innerHTML: `

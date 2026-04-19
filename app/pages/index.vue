@@ -152,6 +152,10 @@ useCustomSeoMeta({
       </template>
       <item-list :limit="6" status="public,pending"/>
     </Widget>
+
+    <ClientOnly>
+      <AdSlot slot="6499761093"/>
+    </ClientOnly>
     <Widget title="Tags:">
       <div class="tags">
         <div class="item" v-for="item in data?.results" :key="item.id">

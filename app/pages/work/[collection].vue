@@ -4,6 +4,12 @@ const collectionName = computed(() => {
   const slug = route.params.collection?.toString() || ''
   return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 })
+
+useCustomSeoMeta({
+  title: `${collectionName.value} Collection`,
+  description: `Your ${collectionName.value} pixel art collection on SimplePixelArt.com.`,
+  robots: 'noindex, follow',
+})
 </script>
 
 <template>

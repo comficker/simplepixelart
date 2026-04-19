@@ -11,7 +11,7 @@ useCustomSeoMeta({
   <div class="page">
     <section>
       <h1 class="text-2xl">Terms of Service</h1>
-      <p class="text-xs text-gray-500">Last updated: March 2025</p>
+      <p class="text-xs text-gray-500">Last updated: April 2026</p>
       <p>By using SimplePixelArt.com ("the site", "our service"), you agree to the following terms. Please read them carefully.</p>
     </section>
 
@@ -38,9 +38,10 @@ useCustomSeoMeta({
       <h2>User-Generated Content</h2>
       <ul class="space-y-2 list-none">
         <li>You retain ownership of pixel art you create. By publishing artwork on the site, you grant SimplePixelArt.com a non-exclusive license to display and distribute that content on the platform.</li>
-        <li>You must not publish content that is illegal, harmful, defamatory, or infringes on the intellectual property rights of others.</li>
+        <li>You must not publish content that is illegal, harmful, defamatory, or infringes on the intellectual property rights of others. See our <nuxt-link to="/guidelines">Community Guidelines</nuxt-link>.</li>
         <li>We reserve the right to remove any content that violates these terms without notice.</li>
         <li>Published artwork is visible to the public. Do not publish artwork containing personal information.</li>
+        <li>Copyright owners can submit takedown requests via our <nuxt-link to="/dmca">DMCA Policy</nuxt-link>.</li>
       </ul>
     </section>
 
@@ -79,6 +80,9 @@ useCustomSeoMeta({
         <div class="item"><nuxt-link to="/">Home</nuxt-link></div>
         <div class="item"><nuxt-link to="/about">About</nuxt-link></div>
         <div class="item"><nuxt-link to="/privacy">Privacy Policy</nuxt-link></div>
+        <div class="item"><nuxt-link to="/contact">Contact</nuxt-link></div>
+        <div class="item"><nuxt-link to="/dmca">DMCA</nuxt-link></div>
+        <div class="item"><nuxt-link to="/guidelines">Community Guidelines</nuxt-link></div>
       </div>
     </section>
   </div>

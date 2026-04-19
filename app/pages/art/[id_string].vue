@@ -12,6 +12,14 @@ const isOwner = computed(() =>
     !!auth.logged?.id && !!data.value?.user?.id && auth.logged.id === data.value.user.id
 )
 
+const reportMailto = computed(() => {
+  const subject = encodeURIComponent(`Report artwork: ${route.params.id_string}`)
+  const body = encodeURIComponent(
+      `Artwork URL: ${config.public.siteUrl}/art/${route.params.id_string}\n\nReason for report:\n`
+  )
+  return `mailto:comficker@gmail.com?subject=${subject}&body=${body}`
+})
+
 // Art image URL helpers — 3 variants served by backend:
 //   art-social   → OG/Twitter web preview thumbnail (1200x630-ish)
 //   art-preview  → higher-res image attached to social shares
@@ -365,12 +373,27 @@ const download = (type: string) => {
           </nuxt-link>
         </div>
       </section>
+      <ClientOnly>
+        <AdSlot slot="6499761093"/>
+      </ClientOnly>
+
       <section>
         <h2>
           <span class="icon icon-angle-right"/>
           <span>Related:</span>
         </h2>
         <item-list :limit="6"/>
+      </section>
+
+      <section class="report-section">
+        <p class="text-xs">
+          See something that breaks the rules?
+          <a :href="reportMailto" class="report-link">Report this artwork</a>
+          ·
+          <nuxt-link to="/dmca">DMCA takedown</nuxt-link>
+          ·
+          <nuxt-link to="/guidelines">Community Guidelines</nuxt-link>
+        </p>
       </section>
     </template>
   </div>
@@ -428,6 +451,27 @@ const download = (type: string) => {
 
 .details-row dd a {
   color: var(--primary);
+}
+
+.report-section {
+  @apply text-center py-3;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+
+.report-section a {
+  color: var(--muted);
+  text-decoration: underline;
+}
+
+.report-section .report-link {
+  color: var(--secondary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .report-section a:hover {
+    color: var(--primary);
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {

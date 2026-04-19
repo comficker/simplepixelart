@@ -31,7 +31,7 @@ useCustomSeoMeta({
 
     <section>
       <h2>Contact</h2>
-      <p>Have a question, suggestion, or found a bug? Reach out to us at <a href="mailto:comficker@gmail.com">comficker@gmail.com</a>.</p>
+      <p>Have a question, suggestion, or found a bug? See our <nuxt-link to="/contact">Contact page</nuxt-link> or email <a href="mailto:comficker@gmail.com">comficker@gmail.com</a>.</p>
     </section>
 
     <section>
@@ -39,8 +39,11 @@ useCustomSeoMeta({
         <div class="item"><nuxt-link to="/">Home</nuxt-link></div>
         <div class="item"><nuxt-link to="/editor">Editor</nuxt-link></div>
         <div class="item"><nuxt-link to="/arts">Gallery</nuxt-link></div>
+        <div class="item"><nuxt-link to="/contact">Contact</nuxt-link></div>
         <div class="item"><nuxt-link to="/privacy">Privacy Policy</nuxt-link></div>
         <div class="item"><nuxt-link to="/terms">Terms of Service</nuxt-link></div>
+        <div class="item"><nuxt-link to="/guidelines">Community Guidelines</nuxt-link></div>
+        <div class="item"><nuxt-link to="/dmca">DMCA</nuxt-link></div>
       </div>
     </section>
   </div>

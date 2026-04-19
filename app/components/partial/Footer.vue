@@ -9,9 +9,11 @@ const auth = useAuthStore()
     <div class="container">
       <div class="footer-links">
         <nuxt-link to="/about">About</nuxt-link>
-        <nuxt-link to="/privacy">Privacy Policy</nuxt-link>
-        <nuxt-link to="/terms">Terms of Service</nuxt-link>
-        <a href="mailto:comficker@gmail.com">Contact</a>
+        <nuxt-link to="/contact">Contact</nuxt-link>
+        <nuxt-link to="/privacy">Privacy</nuxt-link>
+        <nuxt-link to="/terms">Terms</nuxt-link>
+        <nuxt-link to="/guidelines">Guidelines</nuxt-link>
+        <nuxt-link to="/dmca">DMCA</nuxt-link>
         <span class="footer-sep">|</span>
         <span v-if="auth.isLogged" class="footer-auth" @click="auth.logout()">
           <span class="icon icon-x"/>

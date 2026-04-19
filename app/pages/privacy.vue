@@ -11,7 +11,7 @@ useCustomSeoMeta({
   <div class="page">
     <section>
       <h1 class="text-2xl">Privacy Policy</h1>
-      <p class="text-xs text-gray-500">Last updated: March 2025</p>
+      <p class="text-xs text-gray-500">Last updated: April 2026</p>
       <p>This Privacy Policy describes how SimplePixelArt.com ("we", "us", or "our") collects, uses, and shares information when you use our website at <strong>simplepixelart.com</strong>.</p>
     </section>
 
@@ -43,6 +43,11 @@ useCustomSeoMeta({
         <li>You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>.</li>
         <li>You may also opt out at <a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer">aboutads.info</a>.</li>
       </ul>
+    </section>
+
+    <section>
+      <h2>Consent & EEA/UK Users</h2>
+      <p>If you visit from the European Economic Area (EEA), the United Kingdom, or Switzerland, we use Google's Consent Mode v2. Ad storage, personalization, and analytics are denied by default until you grant consent through our cookie banner. You can withdraw consent at any time by clearing your browser cookies or using the banner controls.</p>
     </section>
 
     <section>
@@ -90,6 +95,9 @@ useCustomSeoMeta({
         <div class="item"><nuxt-link to="/">Home</nuxt-link></div>
         <div class="item"><nuxt-link to="/about">About</nuxt-link></div>
         <div class="item"><nuxt-link to="/terms">Terms of Service</nuxt-link></div>
+        <div class="item"><nuxt-link to="/contact">Contact</nuxt-link></div>
+        <div class="item"><nuxt-link to="/dmca">DMCA</nuxt-link></div>
+        <div class="item"><nuxt-link to="/guidelines">Community Guidelines</nuxt-link></div>
       </div>
     </section>
   </div>
