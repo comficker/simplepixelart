@@ -14,6 +14,9 @@ const props = withDefaults(defineProps<Props>(), {
   label: 'Advertisement',
 })
 
+const config = useRuntimeConfig()
+const adsEnabled = config.public.adsEnabled !== false
+
 const insRef = ref<HTMLElement | null>(null)
 const pushed = ref(false)
 
@@ -29,12 +32,13 @@ function push() {
 }
 
 onMounted(() => {
+  if (!adsEnabled) return
   nextTick(() => push())
 })
 </script>
 
 <template>
-  <div class="ad-slot">
+  <div v-if="adsEnabled" class="ad-slot">
     <div class="ad-label">{{ label }}</div>
     <ins
         ref="insRef"

@@ -1,5 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 
+const adsEnabled = process.env.NUXT_PUBLIC_ADS_ENABLED !== 'false';
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     compatibilityDate: '2025-07-15',
@@ -30,6 +32,7 @@ export default defineNuxtConfig({
         public: {
             api: process.env.NUXT_PUBLIC_API || 'https://touch.ninosaur.com',
             siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'https://simplepixelart.com',
+            adsEnabled,
             firebase: {
                 apiKey: "AIzaSyCF1i7uBqd1OEeJEYfLAVgrs9XlKhLk8tQ",
                 authDomain: "simplepixelart-78b18.firebaseapp.com",
@@ -71,10 +74,10 @@ export default defineNuxtConfig({
                     name: 'author',
                     content: 'SimplePixelArt.com'
                 },
-                {
+                ...(adsEnabled ? [{
                     name: 'google-adsense-account',
                     content: 'ca-pub-7014744652532083'
-                },
+                }] : []),
                 {
                     name: 'robots',
                     content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
@@ -104,7 +107,7 @@ export default defineNuxtConfig({
                 {name: 'twitter:image', content: 'https://simplepixelart.com/og-image.jpg'},
                 {name: 'twitter:image:alt', content: 'Simple Pixel Art - Create and Discover Pixel Art'},
             ],
-            script: [
+            script: adsEnabled ? [
                 // Consent Mode v2 default — denied until user accepts.
                 {
                     innerHTML: `
@@ -146,7 +149,7 @@ export default defineNuxtConfig({
                     type: 'text/javascript',
                     tagPosition: 'bodyClose',
                 },
-            ],
+            ] : [],
         }
     },
 })
