@@ -12,6 +12,13 @@ const store = useEditor()
 const route = useRoute()
 const config = useRuntimeConfig()
 
+const googleAuthUrl = computed(() => {
+  const apiBase = (config.public.api as string) || ''
+  if (typeof window === 'undefined') return `${apiBase}/auth/google`
+  const next = `${window.location.origin}/auth/callback`
+  return `${apiBase}/auth/google?state=${encodeURIComponent(next)}`
+})
+
 const showPublishModal = ref(false)
 const publishStep = ref<'edit' | 'done'>('edit')
 
@@ -1110,7 +1117,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
           <h3 class="text-sm font-bold mb-2">Login to share</h3>
           <p class="text-xs mb-4">Sign in to publish and share your pixel art. Your local work will be synced to the cloud.</p>
           <div class="flex flex-col gap-2">
-            <a :href="`${config.public.api}/auth/google`" class="btn primary w-full justify-center">
+            <a :href="googleAuthUrl" class="btn primary w-full justify-center">
               <span class="icon icon-social"/>
               <span>Login with Google</span>
             </a>

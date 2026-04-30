@@ -2,6 +2,13 @@
 const year = new Date().getFullYear()
 const config = useRuntimeConfig()
 const auth = useAuthStore()
+
+const googleAuthUrl = computed(() => {
+  const apiBase = (config.public.api as string) || ''
+  if (typeof window === 'undefined') return `${apiBase}/auth/google`
+  const next = `${window.location.origin}/auth/callback`
+  return `${apiBase}/auth/google?state=${encodeURIComponent(next)}`
+})
 </script>
 
 <template>
@@ -19,7 +26,7 @@ const auth = useAuthStore()
           <span class="icon icon-x"/>
           <span>Logout</span>
         </span>
-        <a v-else :href="`${config.public.api}/auth/google`" class="footer-auth">
+        <a v-else :href="googleAuthUrl" class="footer-auth">
           <span class="icon icon-social"/>
           <span>Login</span>
         </a>
