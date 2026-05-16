@@ -51,6 +51,15 @@ export const useEditor = defineStore('editor', () => {
         bounds: {minX: 0, minY: 0, maxX: 0, maxY: 0, active: false}
     });
 
+    function ensureIsoMeta() {
+        if (!editorData.value.meta) {
+            editorData.value.meta = { iso: { mode: 'square', cell: { width: 2, height: 1 } } };
+        }
+        if (!editorData.value.meta.iso) {
+            editorData.value.meta.iso = { mode: 'square', cell: { width: 2, height: 1 } };
+        }
+    }
+
     const validBounds = computed(() => {
         let width = editorData.value.width;
         let height = editorData.value.height;
@@ -104,6 +113,7 @@ export const useEditor = defineStore('editor', () => {
             id: generateUUID(),
             updated: new Date().toISOString()
         }
+        ensureIsoMeta();
         history.value = []
         historyIndex.value = -1
         saveState(false)
@@ -274,6 +284,7 @@ export const useEditor = defineStore('editor', () => {
                     editorData.value = await loadCloudPage(id)
                 }
             }
+            ensureIsoMeta();
             const currentId = editorData.value.id.toString()
             const temp = histories.value[currentId]
             if (temp && temp.updated === editorData.value.updated) {
@@ -433,6 +444,23 @@ export const useEditor = defineStore('editor', () => {
 
     function setTool(tool: string) {
         currentTool.value = tool
+    }
+
+    function cycleGridMode() {
+        ensureIsoMeta();
+        const order: Array<'square' | 'iso' | 'off'> = ['square', 'iso', 'off'];
+        const current = editorData.value.meta!.iso!.mode;
+        const next = order[(order.indexOf(current) + 1) % order.length]!;
+        editorData.value.meta!.iso!.mode = next;
+        drawTurn.value++;
+    }
+
+    function setGridCell(width: number | string, height: number | string) {
+        ensureIsoMeta();
+        const w = Math.min(32, Math.max(1, Math.floor(Number(width) || 1)));
+        const h = Math.min(32, Math.max(1, Math.floor(Number(height) || 1)));
+        editorData.value.meta!.iso!.cell = { width: w, height: h };
+        saveState();
     }
 
     function paint({x, y}: { x: number; y: number }) {
@@ -689,6 +717,8 @@ export const useEditor = defineStore('editor', () => {
         save,
         saveNow,
         syncLocalToCloud,
-        importImage
+        importImage,
+        cycleGridMode,
+        setGridCell,
     }
 })
