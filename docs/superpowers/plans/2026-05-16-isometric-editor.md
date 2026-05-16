@@ -77,6 +77,8 @@ OR
 
 This decision dictates the exact shape of code in subsequent tasks. Subsequent tasks below assume **root placement** (Outcome B). If Outcome A is selected, adapt the read/write helpers in Task 4 and Task 10 to use `editorData.meta.iso.mode` / `.cell` instead — wherever `editorData.value.gridMode` appears, substitute `editorData.value.meta?.iso?.mode`.
 
+**Decision:** Outcome A — nest under `meta`. Evidence: `SharedPageViewSet` uses `SharedPageDetailSerializer` for all write operations (line 101 of `views.py`). That serializer's `Meta.fields` is an explicit list (`serializers.py` lines 38–47) that does NOT include `gridMode` or `gridCell`. The model's `meta` field is a `JSONField(blank=True, null=True)` (model line 34) and `meta` IS in the serializer's fields list — it is the only arbitrary JSON pass-through. `BaseModel` from `base/interface.py` provides no additional `meta` field (the `SharedPage` model defines `meta` directly). Any top-level key not in the explicit `fields` list is silently dropped by DRF. Therefore `gridMode`/`gridCell` must be stored as `editorData.meta.iso = { mode, cell }`. Adapt read/write helpers in Task 4 and Task 10 to use `editorData.value.meta?.iso?.mode` and `editorData.value.meta?.iso?.cell` instead of root-level properties.
+
 - [ ] **Step 4: Commit the decision note**
 
 ```bash
