@@ -219,6 +219,7 @@ export const useEditor = defineStore('editor', () => {
                                 id: generateUUID(),
                                 updated: new Date().toISOString()
                             };
+                            ensureIsoMeta();
                             saveState();
                         } else {
                             console.error('Invalid EditorData format');
