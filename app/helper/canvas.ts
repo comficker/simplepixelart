@@ -823,3 +823,77 @@ async function test70(ctx: CanvasRenderingContext2D): Promise<{
 
     return {rgbSamplesGrid, colorThatRepresentsTransparent: null};
 }
+
+/**
+ * Renders an isometric diamond grid overlay onto the canvas context.
+ * Each diamond has width cellW × cellH (in pixel-cell units, i.e. art-pixels).
+ *
+ * The grid is rendered as 1px strokes — caller is responsible for drawing
+ * the underlying art/background. The overlay is clipped to the art rect so
+ * partial diamonds at the edges do not leak into the canvas padding.
+ *
+ * @param ctx canvas 2D context
+ * @param ox  x offset (canvas px) of the art-rect top-left
+ * @param oy  y offset (canvas px) of the art-rect top-left
+ * @param zoom canvas px per art-pixel
+ * @param artW art width in art-pixels
+ * @param artH art height in art-pixels
+ * @param cellW iso cell width in art-pixels (>=1)
+ * @param cellH iso cell height in art-pixels (>=1)
+ * @param color stroke style (CSS color string)
+ */
+export function drawIsoGrid(
+    ctx: CanvasRenderingContext2D,
+    ox: number,
+    oy: number,
+    zoom: number,
+    artW: number,
+    artH: number,
+    cellW: number,
+    cellH: number,
+    color: string,
+): void {
+    if (cellW < 1 || cellH < 1) return;
+    if (artW < cellW || artH < cellH) return;
+
+    const artPxW = artW * zoom;
+    const artPxH = artH * zoom;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(ox, oy, artPxW, artPxH);
+    ctx.clip();
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+
+    const halfW = cellW * zoom / 2;
+    const halfH = cellH * zoom / 2;
+    const stepX = cellW * zoom;
+    const stepY = cellH * zoom / 2;
+
+    const cols = Math.ceil(artPxW / stepX) + 2;
+    const rows = Math.ceil(artPxH / stepY) + 2;
+
+    for (let j = -1; j < rows; j++) {
+        for (let i = -1; i < cols; i++) {
+            const cx = ox + i * stepX + (j % 2 === 0 ? 0 : halfW);
+            const cy = oy + j * stepY;
+
+            const top   = { x: Math.round(cx + halfW) + 0.5, y: Math.round(cy) + 0.5 };
+            const right = { x: Math.round(cx + stepX) + 0.5, y: Math.round(cy + halfH) + 0.5 };
+            const bot   = { x: Math.round(cx + halfW) + 0.5, y: Math.round(cy + cellH * zoom) + 0.5 };
+            const left  = { x: Math.round(cx) + 0.5,          y: Math.round(cy + halfH) + 0.5 };
+
+            ctx.moveTo(top.x, top.y);
+            ctx.lineTo(right.x, right.y);
+            ctx.lineTo(bot.x, bot.y);
+            ctx.lineTo(left.x, left.y);
+            ctx.closePath();
+        }
+    }
+
+    ctx.stroke();
+    ctx.restore();
+}
