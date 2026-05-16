@@ -446,6 +446,7 @@ export const useEditor = defineStore('editor', () => {
         currentTool.value = tool
     }
 
+    // Grid mode is a display toggle, not part of history — undo/redo should not unwind it.
     function cycleGridMode() {
         ensureIsoMeta();
         const order: Array<'square' | 'iso' | 'off'> = ['square', 'iso', 'off'];
