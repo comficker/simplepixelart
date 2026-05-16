@@ -471,20 +471,23 @@ export const useEditor = defineStore('editor', () => {
         const color = currentTool.value === 'eraser' ? -1 : currentColorIndex.value;
         setPixelByIndex(x, y, color);
 
+        const inSelection = (mx: number, my: number) =>
+            !selectionState.value.bounds.active || checkKeyInSelection(`${mx}_${my}`);
+
         if (mirrorHorizontal.value) {
             const mx = editorData.value.width - 1 - x;
-            setPixelByIndex(mx, y, color);
+            if (inSelection(mx, y)) setPixelByIndex(mx, y, color);
         }
 
         if (mirrorVertical.value) {
             const my = editorData.value.height - 1 - y;
-            setPixelByIndex(x, my, color);
+            if (inSelection(x, my)) setPixelByIndex(x, my, color);
         }
 
         if (mirrorHorizontal.value && mirrorVertical.value) {
             const mx = editorData.value.width - 1 - x;
             const my = editorData.value.height - 1 - y;
-            setPixelByIndex(mx, my, color);
+            if (inSelection(mx, my)) setPixelByIndex(mx, my, color);
         }
     }
 
