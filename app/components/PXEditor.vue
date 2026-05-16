@@ -69,7 +69,6 @@ const EDITOR_SIZE = ref(384)
 const MINIMAP_SIZE = ref(80)
 const newSize = ref({width: 16, height: 16})
 const zoom = ref(29);
-const showGrid = ref(true);
 const referenceImage = ref<HTMLImageElement | null>(null);
 const referenceVisible = ref(true);
 const referenceOpacity = 0.5;
@@ -150,6 +149,13 @@ function openOnboarding() {
 }
 
 const editorData = computed(() => store.editorData)
+
+const gridIconClass = computed(() => {
+  const mode = editorData.value.meta?.iso?.mode ?? 'square';
+  if (mode === 'iso') return 'icon icon-grid iso-rotated';
+  if (mode === 'off') return 'icon icon-grid grid-off';
+  return 'icon icon-grid';
+});
 
 // Art offset within canvas (centers art)
 const artOffset = computed(() => {
@@ -809,11 +815,34 @@ watch(() => editorData.value.width + editorData.value.height, () => {
         <ui-tooltip text="Zoom out (Ctrl+-)">
           <button class="toolbar-btn" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
         </ui-tooltip>
-        <ui-tooltip :text="showGrid ? 'Hide grid' : 'Show grid'">
-          <button class="toolbar-btn" :class="{ active: showGrid }" @click="showGrid = !showGrid; drawEditor()">
-            <span class="icon icon-grid"/>
+        <ui-tooltip :text="`Grid: ${editorData.meta?.iso?.mode ?? 'square'}`">
+          <button
+              class="toolbar-btn"
+              :class="{ active: (editorData.meta?.iso?.mode ?? 'square') !== 'off' }"
+              @click="store.cycleGridMode(); drawEditor()"
+          >
+            <span :class="gridIconClass"/>
           </button>
         </ui-tooltip>
+        <template v-if="(editorData.meta?.iso?.mode ?? 'square') === 'iso'">
+          <input
+              class="resize-input"
+              type="number"
+              min="1"
+              max="32"
+              :value="(editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).width"
+              @change="store.setGridCell(($event.target as HTMLInputElement).value, (editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).height); drawEditor()"
+          >
+          <span class="text-xs">×</span>
+          <input
+              class="resize-input"
+              type="number"
+              min="1"
+              max="32"
+              :value="(editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).height"
+              @change="store.setGridCell((editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).width, ($event.target as HTMLInputElement).value); drawEditor()"
+          >
+        </template>
       </div>
       <div class="toolbar-sep"/>
       <div class="toolbar-group">
@@ -1148,3 +1177,17 @@ watch(() => editorData.value.width + editorData.value.height, () => {
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+@reference "tailwindcss";
+
+.iso-rotated {
+  transform: rotate(45deg);
+}
+.grid-off {
+  opacity: 0.4;
+}
+canvas.iso-line {
+  cursor: crosshair;
+}
+</style>
