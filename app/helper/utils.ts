@@ -96,6 +96,7 @@ export function sharedPage2EditorData(res: SharedPage, c?: {
         }],
         updated: res.updated,
         status: res.status,
+        meta: res.meta ?? {},
         ...c,
         is_public
     }

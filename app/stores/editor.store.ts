@@ -320,7 +320,8 @@ export const useEditor = defineStore('editor', () => {
                 template: editorData.value.template,
                 id_string: editorData.value.id_string,
                 map_numbers: layers2MapNumbers(editorData.value),
-                is_public: editorData.value.is_public
+                is_public: editorData.value.is_public,
+                meta: editorData.value.meta ?? {},
             }
             if (editorData.value.id_string) {
                 const result = await useNativeFetch<SharedPage>(`/coloring/shared-pages/${editorData.value.id}/`, {
@@ -770,7 +771,8 @@ export const useEditor = defineStore('editor', () => {
                     template: item.template,
                     id_string: '',
                     map_numbers: layers2MapNumbers(item),
-                    is_public: item.is_public
+                    is_public: item.is_public,
+                    meta: item.meta ?? {},
                 }
                 await useNativeFetch<SharedPage>(`/coloring/shared-pages/`, {
                     method: 'POST',
