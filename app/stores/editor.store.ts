@@ -486,6 +486,117 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
+    function clearVirtualLayer() {
+        virtualLayer.value.pixels = {};
+        virtualLayer.value.x = 0;
+        virtualLayer.value.y = 0;
+    }
+
+    function writeVirtualPixel(x: number, y: number, colorIndex: number) {
+        if (x < 0 || x >= editorData.value.width || y < 0 || y >= editorData.value.height) return;
+        if (selectionState.value.bounds.active && !checkKeyInSelection(`${x}_${y}`)) return;
+        if (colorIndex === -1) {
+            delete virtualLayer.value.pixels[`${x}_${y}`];
+        } else {
+            virtualLayer.value.pixels[`${x}_${y}`] = colorIndex;
+        }
+        if (mirrorHorizontal.value) {
+            const mx = editorData.value.width - 1 - x;
+            if (mx >= 0 && mx < editorData.value.width &&
+                !(selectionState.value.bounds.active && !checkKeyInSelection(`${mx}_${y}`))) {
+                if (colorIndex === -1) {
+                    delete virtualLayer.value.pixels[`${mx}_${y}`];
+                } else {
+                    virtualLayer.value.pixels[`${mx}_${y}`] = colorIndex;
+                }
+            }
+        }
+        if (mirrorVertical.value) {
+            const my = editorData.value.height - 1 - y;
+            if (my >= 0 && my < editorData.value.height &&
+                !(selectionState.value.bounds.active && !checkKeyInSelection(`${x}_${my}`))) {
+                if (colorIndex === -1) {
+                    delete virtualLayer.value.pixels[`${x}_${my}`];
+                } else {
+                    virtualLayer.value.pixels[`${x}_${my}`] = colorIndex;
+                }
+            }
+        }
+        if (mirrorHorizontal.value && mirrorVertical.value) {
+            const mx = editorData.value.width - 1 - x;
+            const my = editorData.value.height - 1 - y;
+            if (mx >= 0 && mx < editorData.value.width &&
+                my >= 0 && my < editorData.value.height &&
+                !(selectionState.value.bounds.active && !checkKeyInSelection(`${mx}_${my}`))) {
+                if (colorIndex === -1) {
+                    delete virtualLayer.value.pixels[`${mx}_${my}`];
+                } else {
+                    virtualLayer.value.pixels[`${mx}_${my}`] = colorIndex;
+                }
+            }
+        }
+    }
+
+    /**
+     * Generates a pixel-perfect iso line into virtualLayer.
+     * The line follows one of four axes — NE, SE, SW, NW — at slope ±cellH/cellW.
+     * For each cellW horizontal step the line advances cellH vertically (stair-step).
+     *
+     * Algorithm:
+     *  - Determine direction signs (sx, sy) from the (start → end) vector.
+     *  - k = max(floor(|dx|/cellW), floor(|dy|/cellH)) — number of stair cells.
+     *  - For each cell c ∈ [0, k]: paint a horizontal tread of cellW pixels.
+     *  - For c ∈ [1, k]: paint a vertical riser of (cellH - 1) pixels that
+     *    connects the previous tread's end column to the current tread's start row.
+     *
+     * Emits pixels via writeVirtualPixel which honors mirror flags, selection,
+     * and canvas bounds.
+     */
+    function paintIsoLine(
+        start: { x: number; y: number },
+        end: { x: number; y: number },
+        cellW: number,
+        cellH: number,
+        colorIndex: number,
+    ) {
+        clearVirtualLayer();
+        if (cellW < 1) cellW = 1;
+        if (cellH < 1) cellH = 1;
+
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+
+        const sx = dx >= 0 ? 1 : -1;
+        const sy = dy >= 0 ? 1 : -1;
+
+        const cellsByX = Math.floor(Math.abs(dx) / cellW);
+        const cellsByY = Math.floor(Math.abs(dy) / cellH);
+        const k = Math.max(cellsByX, cellsByY);
+
+        // Always paint the first tread (cellW pixels) at the start row.
+        for (let i = 0; i < cellW; i++) {
+            writeVirtualPixel(start.x + sx * i, start.y, colorIndex);
+        }
+
+        for (let c = 1; c <= k; c++) {
+            // Tread of cell c: cellW pixels at row start.y + c*sy*cellH,
+            // beginning at column start.x + c*sx*cellW.
+            const treadX0 = start.x + c * sx * cellW;
+            const treadY = start.y + c * sy * cellH;
+            for (let i = 0; i < cellW; i++) {
+                writeVirtualPixel(treadX0 + sx * i, treadY, colorIndex);
+            }
+            // Riser: (cellH - 1) pixels filling between previous tread and current tread.
+            // Sits at the previous tread's end column, stepping from one row past
+            // the previous tread to one row before the current tread.
+            const prevTreadEndX = start.x + (c - 1) * sx * cellW + sx * (cellW - 1);
+            const riserStartY = start.y + (c - 1) * sy * cellH + sy;
+            for (let r = 0; r < cellH - 1; r++) {
+                writeVirtualPixel(prevTreadEndX, riserStartY + sy * r, colorIndex);
+            }
+        }
+    }
+
     function bucketFill(x: number, y: number, rootColorIndex: number): void {
         if (!checkKeyInSelection(`${x}_${y}`)) return;
         const positionColorIndex = editorData.value.layers[currentLayerIndex.value]!.pixels[`${x}_${y}`] ?? -1;
@@ -721,5 +832,7 @@ export const useEditor = defineStore('editor', () => {
         importImage,
         cycleGridMode,
         setGridCell,
+        paintIsoLine,
+        clearVirtualLayer,
     }
 })
