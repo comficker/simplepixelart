@@ -27,4 +27,10 @@ export const DEFAULT_EDITOR_DATA: EditorData = {
     template: null,
     updated: new Date().toISOString(),
     is_public: false,
+    meta: {
+        iso: {
+            mode: 'square',
+            cell: { width: 2, height: 1 },
+        },
+    },
 }
