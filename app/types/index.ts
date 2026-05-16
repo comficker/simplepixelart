@@ -157,6 +157,14 @@ export interface Layer {
     y: number
 }
 
+export interface EditorMeta {
+    iso?: {
+        mode: 'square' | 'iso' | 'off';
+        cell: { width: number; height: number };
+    };
+    [key: string]: any;
+}
+
 export interface EditorData {
     id: number | string;
     id_string: string;
@@ -172,4 +180,5 @@ export interface EditorData {
     updated: string;
     is_public: boolean;
     status?: string;
+    meta?: EditorMeta;
 }
