@@ -162,7 +162,6 @@ export interface EditorMeta {
         mode: 'square' | 'iso' | 'off';
         cell: { width: number; height: number };
     };
-    [key: string]: any;
 }
 
 export interface EditorData {
