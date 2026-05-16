@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {nextTick, onMounted, ref} from "vue";
-import {drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
+import {drawIsoGrid, drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
 import {toast} from "vue-sonner";
 
 const canvas = ref<HTMLCanvasElement | null>(null);
@@ -459,7 +459,6 @@ const EDITOR_ART_BG_SOLID = '#ffffff';
 function drawBackground(): void {
   if (!ctx || !canvas.value) return;
   ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
-  // Outer canvas area (padding around art)
   ctx.fillStyle = EDITOR_BG;
   ctx.fillRect(0, 0, canvas.value.width, canvas.value.height);
 
@@ -469,8 +468,9 @@ function drawBackground(): void {
   const w = editorData.value.width;
   const h = editorData.value.height;
 
-  if (showGrid.value) {
-    // Checkerboard — toggle grid = toggle checkerboard
+  const mode = editorData.value.meta?.iso?.mode ?? 'square';
+
+  if (mode === 'square') {
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         ctx.fillStyle = (x + y) % 2 === 0 ? EDITOR_CELL_A : EDITOR_CELL_B;
@@ -540,10 +540,28 @@ function drawReference(): void {
   ctx.globalAlpha = 1;
 }
 
+function drawIsoOverlay(): void {
+  if (!ctx) return;
+  const iso = editorData.value.meta?.iso;
+  if (!iso || iso.mode !== 'iso') return;
+  drawIsoGrid(
+      ctx,
+      artOffset.value.x,
+      artOffset.value.y,
+      zoom.value,
+      editorData.value.width,
+      editorData.value.height,
+      iso.cell.width,
+      iso.cell.height,
+      'rgba(0, 0, 0, 0.4)',
+  );
+}
+
 function drawEditor() {
   drawBackground();
   drawReference();
   drawPixels();
+  drawIsoOverlay();
   drawGrid();
   drawSelection();
   drawMiniMap();
