@@ -78,6 +78,8 @@ const initialDistance = ref(0);
 const initialZoom = ref(0);
 const isMoving = ref(false);
 const isDrawing = ref(false);
+const isIsoLining = ref(false);
+const isoLineStart = ref<{ x: number; y: number } | null>(null);
 const isStarted = ref(false);
 const isPanning = ref(false);
 const isResizing = ref(false);
@@ -265,6 +267,22 @@ function startDraw(e: any) {
       const rootColorIndex = editorData.value.layers[store.currentLayerIndex]!.pixels[`${x}_${y}`] ?? -1;
       store.bucketFill(x, y, rootColorIndex);
       break;
+    case "iso-line":
+      isIsoLining.value = true;
+      isoLineStart.value = getPixelPos(e);
+      store.immigrateVirtualLayer();
+      store.clearVirtualLayer();
+      {
+        const cell = editorData.value.meta?.iso?.cell ?? { width: 2, height: 1 };
+        store.paintIsoLine(
+            isoLineStart.value,
+            isoLineStart.value,
+            cell.width,
+            cell.height,
+            store.currentColorIndex,
+        );
+      }
+      break;
     default:
       isDrawing.value = true;
       if (!isPanning.value && store.currentTool !== 'bucket') store.paint(getPixelPos(e));
@@ -301,6 +319,16 @@ function draw(e: any) {
       }
       moveStart.value = {x: clientX, y: clientY};
     }
+  } else if (isIsoLining.value && isoLineStart.value) {
+    const end = getPixelPos(e);
+    const cell = editorData.value.meta?.iso?.cell ?? { width: 2, height: 1 };
+    store.paintIsoLine(
+        isoLineStart.value,
+        end,
+        cell.width,
+        cell.height,
+        store.currentColorIndex,
+    );
   } else if (isDrawing.value) {
     if (!isPanning.value && store.currentTool !== 'bucket') store.paint(getPixelPos(e));
   }
@@ -321,6 +349,10 @@ function stopDraw() {
   } else if (isMoving.value) {
     isMoving.value = false;
     store.mergeVirtualLayer()
+  } else if (isIsoLining.value) {
+    isIsoLining.value = false;
+    isoLineStart.value = null;
+    store.mergeVirtualLayer();
   } else {
     isDrawing.value = false;
   }
@@ -934,6 +966,9 @@ watch(() => editorData.value.width + editorData.value.height, () => {
             <div class="tools">
               <Square @click="store.setTool('brush')" :class="{ active: store.currentTool === 'brush' }">
                 <span class="icon icon-brush"/>
+              </Square>
+              <Square @click="store.setTool('iso-line')" :class="{ active: store.currentTool === 'iso-line' }">
+                <span class="icon icon-brush iso-rotated"/>
               </Square>
               <Square @click="store.setTool('bucket')" :class="{ active: store.currentTool === 'bucket' }">
                 <span class="icon icon-bucket"/>
