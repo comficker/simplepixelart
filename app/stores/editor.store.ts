@@ -447,14 +447,14 @@ export const useEditor = defineStore('editor', () => {
         currentTool.value = tool
     }
 
-    // Grid mode is a display toggle, not part of history — undo/redo should not unwind it.
+    // Grid mode is part of history — undo/redo includes mode changes, consistent with setGridCell.
     function cycleGridMode() {
         ensureIsoMeta();
         const order: Array<'square' | 'iso' | 'off'> = ['square', 'iso', 'off'];
         const current = editorData.value.meta!.iso!.mode;
         const next = order[(order.indexOf(current) + 1) % order.length]!;
         editorData.value.meta!.iso!.mode = next;
-        drawTurn.value++;
+        saveState();
     }
 
     function setGridCell(width: number | string, height: number | string) {
