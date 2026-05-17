@@ -111,31 +111,19 @@ useCustomSeoMeta({
     <div class="feature-grid">
       <nuxt-link to="/editor?new=true" class="feature-btn">
         <span class="icon icon-brush"/>
-        <div>
-          <strong>Create</strong>
-          <span>Open editor, draw from scratch</span>
-        </div>
+        <strong>Create</strong>
       </nuxt-link>
       <nuxt-link to="/convert" class="feature-btn">
         <span class="icon icon-adjust"/>
-        <div>
-          <strong>Convert</strong>
-          <span>Turn any image into pixel art</span>
-        </div>
+        <strong>Convert</strong>
       </nuxt-link>
       <nuxt-link to="/arts" class="feature-btn">
         <span class="icon icon-discovery"/>
-        <div>
-          <strong>Discover</strong>
-          <span>Browse community artworks</span>
-        </div>
+        <strong>Discover</strong>
       </nuxt-link>
       <nuxt-link to="/work" class="feature-btn">
         <span class="icon icon-grid"/>
-        <div>
-          <strong>Your work</strong>
-          <span>View and manage your artworks</span>
-        </div>
+        <strong>Your work</strong>
       </nuxt-link>
     </div>
 
@@ -276,7 +264,7 @@ useCustomSeoMeta({
 }
 
 .feature-btn {
-  @apply flex items-start gap-3 p-3;
+  @apply flex items-center gap-2 p-2;
   background: var(--surface);
   border: 2px solid var(--shadow-px);
   box-shadow: 3px 3px 0 0 var(--shadow-px);
@@ -295,23 +283,13 @@ useCustomSeoMeta({
 
 .feature-btn .icon {
   flex-shrink: 0;
-  font-size: 24px;
+  font-size: 20px;
   color: var(--primary);
-  margin-top: 2px;
-}
-
-.feature-btn > div {
-  @apply flex flex-col flex-1;
 }
 
 .feature-btn strong {
   @apply text-sm uppercase;
   letter-spacing: 0.06em;
-}
-
-.feature-btn span {
-  @apply text-xs mt-0.5;
-  color: var(--muted);
 }
 
 .info-section {
