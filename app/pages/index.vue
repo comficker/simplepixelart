@@ -144,17 +144,27 @@ useCustomSeoMeta({
     <ClientOnly>
       <AdSlot slot="6499761093"/>
     </ClientOnly>
-    <Widget title="Tags:">
-      <div class="tags">
-        <div class="item" v-for="item in data?.results" :key="item.id">
-          <nuxt-link :to="`/arts/${item.id_string}`">{{ item.title }}</nuxt-link>
+    <Widget title="Browse">
+      <div class="browse-row" v-if="data?.results?.length">
+        <span class="browse-label">Tags</span>
+        <div class="chip-strip no-scrollbar">
+          <nuxt-link
+              v-for="item in data.results"
+              :key="item.id"
+              :to="`/arts/${item.id_string}`"
+              class="chip"
+          >#{{ item.title }}</nuxt-link>
         </div>
       </div>
-    </Widget>
-    <Widget title="Sizes:">
-      <div class="tags">
-        <div class="item" v-for="item in sizes" :key="item">
-          <nuxt-link :to="`/arts/size-${item}`">{{ item }}</nuxt-link>
+      <div class="browse-row">
+        <span class="browse-label">Sizes</span>
+        <div class="chip-strip no-scrollbar">
+          <nuxt-link
+              v-for="item in sizes"
+              :key="item"
+              :to="`/arts/size-${item}`"
+              class="chip"
+          >{{ item }}</nuxt-link>
         </div>
       </div>
     </Widget>
@@ -313,5 +323,43 @@ useCustomSeoMeta({
 .info-list li {
   @apply text-xs leading-relaxed;
   color: var(--foreground);
+}
+
+.browse-row {
+  @apply flex items-center gap-2 py-1;
+}
+
+.browse-row + .browse-row {
+  border-top: 1px solid var(--border);
+}
+
+.browse-label {
+  @apply text-xs uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.chip-strip {
+  @apply flex gap-1 overflow-x-auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.chip {
+  @apply text-xs px-2 py-1 whitespace-nowrap;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  transition: background 80ms steps(2), color 80ms steps(2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .chip:hover {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+  }
 }
 </style>
