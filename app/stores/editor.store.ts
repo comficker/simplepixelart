@@ -758,6 +758,7 @@ export const useEditor = defineStore('editor', () => {
     function move(dx: number, dy: number): void {
         virtualLayer.value.x += dx
         virtualLayer.value.y += dy
+        drawTurn.value++;
     }
 
     function resize({width, height}: { width: number; height: number }): void {
