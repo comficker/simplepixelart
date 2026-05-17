@@ -169,9 +169,9 @@ useCustomSeoMeta({
       </div>
     </Widget>
 
-    <details class="info-section" open>
+    <details class="info-section">
       <summary class="info-heading">Why Simple Pixel Art?</summary>
-      <p>Simple Pixel Art is built on one idea: <strong>anyone should be able to make pixel art in seconds</strong>. No installation, no account, no learning curve. Open the site, pick a template, remix it — or convert any photo into pixel art with one click. If you want to go deeper, the advanced editor has layers, mirror drawing, selections, and a full palette manager.</p>
+      <p>Anyone should be able to make pixel art in seconds. No installation, no account, no learning curve. Pick a template, remix it — or convert any photo into pixel art with one click. For deeper work, the advanced editor has layers, mirror drawing, selections, and a full palette manager.</p>
       <p>The entire Simple Pixel Art platform runs in your browser. Your work saves automatically to local storage when signed out, and syncs to the cloud when you log in with Google.</p>
     </details>
 
