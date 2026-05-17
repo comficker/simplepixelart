@@ -2,6 +2,8 @@
 
 @config "../../../tailwind.config.js";
 
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap');
+
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -102,6 +104,28 @@
     --surface-2: #262626;
 }
 
+[data-theme="cozy"] {
+    --background: #f5e6d3;
+    --foreground: #4a3a2a;
+    --border: #d4c4a8;
+    --primary: #e8a87c;
+    --primary-foreground: #4a3a2a;
+    --secondary: #a8b89a;
+    --secondary-foreground: #4a3a2a;
+    --shadow-px: #c4a888;
+    --shadow: 0 2px 6px rgba(74, 58, 42, 0.12);
+    --shadow-hover: 0 4px 12px rgba(74, 58, 42, 0.15);
+    --radius: 8px;
+    --muted: #8a7a5e;
+    --surface: #ede0c8;
+    --surface-2: #e0d2b8;
+}
+
+[data-theme="cozy"] body {
+    font-family: "Fraunces", "Proto Mono", Georgia, serif;
+    font-optical-sizing: auto;
+}
+
 .container {
     max-width: 800px!important;
     margin: 0 auto;
@@ -137,7 +161,8 @@ body::before {
 }
 
 [data-theme="light"] body::before,
-[data-theme="dark"] body::before {
+[data-theme="dark"] body::before,
+[data-theme="cozy"] body::before {
     display: none;
 }
 
