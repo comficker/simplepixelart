@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {nextTick, onMounted, ref} from "vue";
-import {drawIsoGrid, drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
+import {buildIsoPath, drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
 import {toast} from "vue-sonner";
 
 const canvas = ref<HTMLCanvasElement | null>(null);
@@ -187,6 +187,23 @@ function getPixelMap(): Record<string, number> {
   pixelMapCache = layers2MapNumbers(editorData.value);
   pixelMapCacheTurn = store.drawTurn;
   return pixelMapCache;
+}
+
+let isoPathCache: Path2D | null = null;
+let isoCacheKey = '';
+
+function getIsoPath(): Path2D | null {
+  const iso = editorData.value.meta?.iso;
+  if (!iso || iso.mode !== 'iso') return null;
+  const w = editorData.value.width;
+  const h = editorData.value.height;
+  const key = `${iso.cell.width}_${iso.cell.height}_${zoom.value}_${w}_${h}`;
+  if (isoCacheKey === key && isoPathCache) return isoPathCache;
+  const path = new Path2D();
+  buildIsoPath(path, zoom.value, w, h, iso.cell.width, iso.cell.height);
+  isoPathCache = path;
+  isoCacheKey = key;
+  return path;
 }
 
 const gridIconClass = computed(() => {
@@ -618,19 +635,19 @@ function drawReference(): void {
 
 function drawIsoOverlay(): void {
   if (!ctx) return;
-  const iso = editorData.value.meta?.iso;
-  if (!iso || iso.mode !== 'iso') return;
-  drawIsoGrid(
-      ctx,
-      artOffset.value.x,
-      artOffset.value.y,
-      zoom.value,
-      editorData.value.width,
-      editorData.value.height,
-      iso.cell.width,
-      iso.cell.height,
-      'rgba(0, 0, 0, 0.4)',
-  );
+  const path = getIsoPath();
+  if (!path) return;
+  const w = editorData.value.width;
+  const h = editorData.value.height;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(artOffset.value.x, artOffset.value.y, w * zoom.value, h * zoom.value);
+  ctx.clip();
+  ctx.translate(artOffset.value.x, artOffset.value.y);
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.lineWidth = 1;
+  ctx.stroke(path);
+  ctx.restore();
 }
 
 function drawEditor() {
