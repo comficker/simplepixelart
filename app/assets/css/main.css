@@ -581,8 +581,8 @@ body::before {
 
 @media (min-width: 768px) {
     .editor-sidebar {
-        width: 36%;
-        max-width: 260px;
+        width: 24%;
+        max-width: 190px;
     }
 }
 
@@ -661,27 +661,6 @@ canvas.clear { cursor: pointer; }
         width: 1px;
         height: auto;
         margin: 2px 2px;
-    }
-}
-
-/* --- Advanced top row: Control + Preview --- */
-.adv-top-row {
-    @apply flex flex-col gap-2;
-}
-
-@media (min-width: 768px) {
-    .adv-top-row {
-        @apply grid grid-cols-2;
-        align-items: stretch;
-    }
-
-    .adv-top-row > .widget {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .adv-top-row > .widget > .widget-body {
-        flex: 1;
     }
 }
 
