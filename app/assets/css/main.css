@@ -120,8 +120,7 @@
 }
 
 [data-theme="cozy"] body {
-    font-family: "Inter", "Proto Mono", system-ui, sans-serif;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: "Proto Mono", monospace;
 }
 
 .container {
