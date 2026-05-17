@@ -605,14 +605,24 @@ export const useEditor = defineStore('editor', () => {
     }
 
     function bucketFill(x: number, y: number, rootColorIndex: number): void {
-        if (!checkKeyInSelection(`${x}_${y}`)) return;
-        const positionColorIndex = editorData.value.layers[currentLayerIndex.value]!.pixels[`${x}_${y}`] ?? -1;
-        if (positionColorIndex === currentColorIndex.value || rootColorIndex !== positionColorIndex) return;
-        setPixelByIndex(x, y, currentColorIndex.value);
-        bucketFill(x + 1, y, rootColorIndex);
-        bucketFill(x - 1, y, rootColorIndex);
-        bucketFill(x, y + 1, rootColorIndex);
-        bucketFill(x, y - 1, rootColorIndex);
+        const target = currentColorIndex.value;
+        if (target === rootColorIndex) return;
+        const W = editorData.value.width;
+        const H = editorData.value.height;
+        const pixels = editorData.value.layers[currentLayerIndex.value]!.pixels;
+        const stack: Array<[number, number]> = [[x, y]];
+        while (stack.length) {
+            const [cx, cy] = stack.pop()!;
+            if (cx < 0 || cx >= W || cy < 0 || cy >= H) continue;
+            if (!checkKeyInSelection(`${cx}_${cy}`)) continue;
+            const cur = pixels[`${cx}_${cy}`] ?? -1;
+            if (cur !== rootColorIndex) continue;
+            setPixelByIndex(cx, cy, target);
+            stack.push([cx + 1, cy]);
+            stack.push([cx - 1, cy]);
+            stack.push([cx, cy + 1]);
+            stack.push([cx, cy - 1]);
+        }
     }
 
     function removeColor(index: number) {
