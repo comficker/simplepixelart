@@ -120,7 +120,7 @@
 }
 
 [data-theme="cozy"] body {
-    font-family: "Proto Mono", monospace;
+    font-family: "Space Grotesk", "Proto Mono", system-ui, sans-serif;
 }
 
 .container {
