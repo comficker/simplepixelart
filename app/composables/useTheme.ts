@@ -2,6 +2,11 @@ import useStatefulCookie from '~/composables/useStatefulCookie'
 
 export const THEMES = [
   {
+    id: 'cozy',
+    name: 'Cozy',
+    colors: ['#f5e6d3', '#d4c4a8', '#e8a87c', '#a8b89a'],
+  },
+  {
     id: 'gameboy',
     name: 'Game Boy',
     colors: ['#0f380f', '#306230', '#8bac0f', '#9bbc0f'],
@@ -35,7 +40,7 @@ export const THEMES = [
 
 export type ThemeId = typeof THEMES[number]['id']
 
-const DEFAULT_THEME: ThemeId = 'gameboy'
+const DEFAULT_THEME: ThemeId = 'cozy'
 
 export function useTheme() {
   const cookie = useStatefulCookie('theme')
