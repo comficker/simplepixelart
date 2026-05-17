@@ -56,6 +56,9 @@ export default defineNuxtConfig({
                 {rel: 'apple-touch-icon', href: '/favicon.png'},
                 {rel: 'canonical', href: 'https://simplepixelart.com'},
                 {rel: 'preconnect', href: 'https://touch.ninosaur.com'},
+                {rel: 'preconnect', href: 'https://fonts.googleapis.com'},
+                {rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: ''},
+                {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap'},
             ],
             meta: [
                 {

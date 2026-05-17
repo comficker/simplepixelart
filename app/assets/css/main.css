@@ -2,8 +2,6 @@
 
 @config "../../../tailwind.config.js";
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap');
-
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -108,7 +106,7 @@
     --background: #f5e6d3;
     --foreground: #4a3a2a;
     --border: #d4c4a8;
-    --primary: #e8a87c;
+    --primary: #d4854a;
     --primary-foreground: #4a3a2a;
     --secondary: #a8b89a;
     --secondary-foreground: #4a3a2a;
@@ -1073,7 +1071,7 @@ canvas.clear { cursor: pointer; }
 [data-theme="cozy"] textarea:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(232, 168, 124, 0.2);
+    box-shadow: 0 0 0 3px rgba(212, 133, 74, 0.25);
 }
 
 [data-theme="cozy"] .tool-rail {

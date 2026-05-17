@@ -4,7 +4,7 @@ export const THEMES = [
   {
     id: 'cozy',
     name: 'Cozy',
-    colors: ['#f5e6d3', '#d4c4a8', '#e8a87c', '#a8b89a'],
+    colors: ['#f5e6d3', '#d4c4a8', '#d4854a', '#a8b89a'],
   },
   {
     id: 'gameboy',
