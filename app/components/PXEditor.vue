@@ -152,6 +152,31 @@ function openOnboarding() {
 
 const editorData = computed(() => store.editorData)
 
+let drawRafId: number | null = null;
+function scheduleDraw() {
+  if (drawRafId !== null) return;
+  drawRafId = requestAnimationFrame(() => {
+    drawRafId = null;
+    drawEditor();
+  });
+}
+
+let miniMapRafId: number | null = null;
+function scheduleMiniMap() {
+  if (miniMapRafId !== null) return;
+  miniMapRafId = requestAnimationFrame(() => {
+    miniMapRafId = null;
+    drawMiniMap();
+  });
+}
+
+function cancelScheduledDraw() {
+  if (drawRafId !== null) {
+    cancelAnimationFrame(drawRafId);
+    drawRafId = null;
+  }
+}
+
 const gridIconClass = computed(() => {
   const mode = editorData.value.meta?.iso?.mode ?? 'square';
   if (mode === 'iso') return 'icon icon-grid iso-rotated';
@@ -189,7 +214,7 @@ function getPixelPos(event: MouseEvent | TouchEvent): { x: number, y: number } {
 function toggleSelect() {
   if (store.currentTool === 'select' && store.selectionState.bounds.active) {
     store.selectionState.bounds.active = false;
-    drawEditor();
+    scheduleDraw();
   } else {
     store.setTool('select')
   }
@@ -227,7 +252,7 @@ function setZoom(newZoom: number) {
     updateCanvasSize();
     centerView();
   }
-  drawEditor();
+  scheduleDraw();
 }
 
 function zoomIn() {
@@ -291,7 +316,7 @@ function startDraw(e: any) {
   if (store.currentTool !== 'select') {
     needSave.value = true;
   }
-  drawEditor();
+  scheduleDraw();
   isStarted.value = true;
 }
 
@@ -332,7 +357,7 @@ function draw(e: any) {
   } else if (isDrawing.value) {
     if (!isPanning.value && store.currentTool !== 'bucket') store.paint(getPixelPos(e));
   }
-  drawEditor();
+  scheduleDraw();
 }
 
 function stopDraw() {
@@ -358,6 +383,7 @@ function stopDraw() {
   }
   if (needSave.value) store.saveState();
   needSave.value = false;
+  cancelScheduledDraw();
   drawEditor();
   isStarted.value = false;
 }
@@ -381,7 +407,7 @@ function pan(e: any) {
     container.scrollLeft -= dx;
     container.scrollTop -= dy;
     panStart.value = {x: clientX, y: clientY};
-    drawMiniMap();
+    scheduleMiniMap();
   }
 }
 
@@ -687,7 +713,7 @@ function importReferenceImage() {
       img.onload = () => {
         referenceImage.value = img;
         referenceVisible.value = true;
-        drawEditor();
+        scheduleDraw();
       };
       img.src = dataUrl;
     };
@@ -698,12 +724,12 @@ function importReferenceImage() {
 
 function toggleReference() {
   referenceVisible.value = !referenceVisible.value;
-  drawEditor();
+  scheduleDraw();
 }
 
 function clearReference() {
   referenceImage.value = null;
-  drawEditor();
+  scheduleDraw();
 }
 
 function exportFile(type: string) {
@@ -769,12 +795,14 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  if (drawRafId !== null) cancelAnimationFrame(drawRafId);
+  if (miniMapRafId !== null) cancelAnimationFrame(miniMapRafId);
   store.resetEditorData()
   clearListeners()
 })
 
 watch(() => store.drawTurn, () => {
-  drawEditor()
+  scheduleDraw()
 })
 
 watch(() => editorData.value.width + editorData.value.height, () => {
@@ -851,7 +879,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
           <button
               class="toolbar-btn"
               :class="{ active: (editorData.meta?.iso?.mode ?? 'square') !== 'off' }"
-              @click="store.cycleGridMode(); drawEditor()"
+              @click="store.cycleGridMode(); scheduleDraw()"
           >
             <span :class="gridIconClass"/>
           </button>
@@ -863,7 +891,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
               min="1"
               max="32"
               :value="(editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).width"
-              @change="store.setGridCell(($event.target as HTMLInputElement).value, (editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).height); drawEditor()"
+              @change="store.setGridCell(($event.target as HTMLInputElement).value, (editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).height); scheduleDraw()"
           >
           <span class="text-xs">×</span>
           <input
@@ -872,7 +900,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
               min="1"
               max="32"
               :value="(editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).height"
-              @change="store.setGridCell((editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).width, ($event.target as HTMLInputElement).value); drawEditor()"
+              @change="store.setGridCell((editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).width, ($event.target as HTMLInputElement).value); scheduleDraw()"
           >
         </template>
       </div>
@@ -969,7 +997,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
           <Square>
             <div
                 class="canvas-container no-scrollbar m-auto"
-                @scroll="drawMiniMap"
+                @scroll="scheduleMiniMap"
                 @mousedown="startPan"
                 @touchstart="startPan"
                 @mousemove="pan"
