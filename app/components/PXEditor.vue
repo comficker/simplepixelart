@@ -177,6 +177,18 @@ function cancelScheduledDraw() {
   }
 }
 
+let pixelMapCache: Record<string, number> | null = null;
+let pixelMapCacheTurn = -1;
+
+function getPixelMap(): Record<string, number> {
+  if (pixelMapCacheTurn === store.drawTurn && pixelMapCache) {
+    return pixelMapCache;
+  }
+  pixelMapCache = layers2MapNumbers(editorData.value);
+  pixelMapCacheTurn = store.drawTurn;
+  return pixelMapCache;
+}
+
 const gridIconClass = computed(() => {
   const mode = editorData.value.meta?.iso?.mode ?? 'square';
   if (mode === 'iso') return 'icon icon-grid iso-rotated';
@@ -555,7 +567,7 @@ function drawPixels(): void {
   if (!ctx) return;
   const ox = artOffset.value.x;
   const oy = artOffset.value.y;
-  const results = layers2MapNumbers(editorData.value);
+  const results = getPixelMap();
   for (const [key, pixelIndex] of Object.entries(results)) {
     const [x = 0, y = 0] = key.split('_').map(Number);
     ctx.fillStyle = editorData.value.colors[pixelIndex] ?? '#000000';
@@ -648,7 +660,7 @@ function drawMiniMap() {
   miniMapCtx.fillRect(0, 0, mmW, mmH);
 
   // Draw pixels (no grid)
-  const results = layers2MapNumbers(editorData.value);
+  const results = getPixelMap();
   for (const [key, pixelIndex] of Object.entries(results)) {
     const [x = 0, y = 0] = key.split('_').map(Number);
     miniMapCtx.fillStyle = editorData.value.colors[pixelIndex] ?? '#000000';
