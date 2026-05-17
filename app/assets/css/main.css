@@ -1026,3 +1026,72 @@ canvas.clear { cursor: pointer; }
         grid-auto-flow: row;
     }
 }
+
+/* === Cozy theme component softening (must follow all default rules) === */
+[data-theme="cozy"] .widget,
+[data-theme="cozy"] .btn,
+[data-theme="cozy"] .toolbar-btn,
+[data-theme="cozy"] .publish-toolbar-btn,
+[data-theme="cozy"] .share-modal,
+[data-theme="cozy"] .resize-input,
+[data-theme="cozy"] .canvas-container,
+[data-theme="cozy"] .mini-map {
+    border-radius: var(--radius);
+}
+
+[data-theme="cozy"] .btn,
+[data-theme="cozy"] .share-modal,
+[data-theme="cozy"] .publish-link {
+    box-shadow: var(--shadow);
+    transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+[data-theme="cozy"] .btn:hover,
+[data-theme="cozy"] .toolbar-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+}
+
+[data-theme="cozy"] .btn:active,
+[data-theme="cozy"] .toolbar-btn:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow);
+}
+
+[data-theme="cozy"] .square,
+[data-theme="cozy"] .tools .inside {
+    border-radius: 6px;
+}
+
+[data-theme="cozy"] input,
+[data-theme="cozy"] textarea {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+[data-theme="cozy"] input:focus,
+[data-theme="cozy"] textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(232, 168, 124, 0.2);
+}
+
+[data-theme="cozy"] .tool-rail {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 4px;
+}
+
+[data-theme="cozy"] .item.active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: var(--radius);
+}
+
+[data-theme="cozy"] .toolbar-info {
+    font-variant-numeric: tabular-nums;
+}
+
+[data-theme="cozy"] .canvas-container {
+    overflow: hidden;
+}
