@@ -384,6 +384,7 @@ export const useEditor = defineStore('editor', () => {
         } else {
             editorData.value.layers[currentLayerIndex.value]!.pixels[`${x}_${y}`] = paletteIndex;
         }
+        drawTurn.value++;
     }
 
     function saveState(isSync: boolean = true): void {
@@ -600,6 +601,7 @@ export const useEditor = defineStore('editor', () => {
                 writeVirtualPixel(prevTreadEndX, riserStartY + sy * r, colorIndex);
             }
         }
+        drawTurn.value++;
     }
 
     function bucketFill(x: number, y: number, rootColorIndex: number): void {
@@ -740,6 +742,7 @@ export const useEditor = defineStore('editor', () => {
         virtualLayer.value.pixels = {}
         virtualLayer.value.x = 0
         virtualLayer.value.y = 0
+        drawTurn.value++;
     }
 
     function move(dx: number, dy: number): void {
