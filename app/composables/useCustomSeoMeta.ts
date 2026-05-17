@@ -52,7 +52,7 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
         ...(options.publishedTime ? [{ property: 'article:published_time', content: options.publishedTime }] : []),
         ...(options.modifiedTime ? [{ property: 'article:modified_time', content: options.modifiedTime }] : [])
       ],
-      ...options.script ? options.script: [],
+      script: options.script ?? [],
       link: [
           ...options.canonical ? [{ rel: 'canonical', href: options.canonical }] : [],
       ]
