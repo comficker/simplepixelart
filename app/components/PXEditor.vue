@@ -923,9 +923,48 @@ watch(() => editorData.value.width + editorData.value.height, () => {
       </div>
     </div>
 
-    <div class="flex flex-col md:flex-row gap-3">
-      <!-- Left: canvas + palette -->
-      <div class="flex-1 space-y-2">
+    <div class="editor-body flex flex-col md:flex-row gap-2">
+      <!-- Tool rail (left on desktop, horizontal strip on mobile) -->
+      <Widget class="tool-rail">
+        <div class="tools tools-rail">
+          <Square @click="store.setTool('brush')" :class="{ active: store.currentTool === 'brush' }">
+            <span class="icon icon-brush"/>
+          </Square>
+          <Square @click="store.setTool('iso-line')" :class="{ active: store.currentTool === 'iso-line' }">
+            <span class="icon icon-brush iso-rotated"/>
+          </Square>
+          <Square @click="store.setTool('bucket')" :class="{ active: store.currentTool === 'bucket' }">
+            <span class="icon icon-bucket"/>
+          </Square>
+          <Square @click="store.setTool('eraser')" :class="{ active: store.currentTool === 'eraser' }">
+            <span class="icon icon-eraser"/>
+          </Square>
+
+          <div class="tools-sep"/>
+
+          <Square @click="store.setTool('move')" :class="{ active: store.currentTool === 'move' }">
+            <span class="icon icon-move"/>
+          </Square>
+          <Square @click="toggleSelect()" :class="{ active: store.currentTool === 'select' }">
+            <span class="icon icon-select"/>
+          </Square>
+          <Square @click="store.toggleMirror('horizontal')" :class="{ active: store.mirrorHorizontal }">
+            <span class="icon icon-reflect-horizontal"/>
+          </Square>
+          <Square @click="store.toggleMirror('vertical')" :class="{ active: store.mirrorVertical }">
+            <span class="icon icon-reflect-vertical"/>
+          </Square>
+          <Square @click="store.flipSelectionHorizontal">
+            <span class="icon icon-flip-h"/>
+          </Square>
+          <Square @click="store.flipSelectionVertical">
+            <span class="icon icon-flip-v"/>
+          </Square>
+        </div>
+      </Widget>
+
+      <!-- Canvas + palette column -->
+      <div class="canvas-col flex-1 space-y-2">
         <Widget>
           <Square>
             <div
@@ -959,55 +998,18 @@ watch(() => editorData.value.width + editorData.value.height, () => {
         </Widget>
       </div>
 
-      <!-- Right sidebar -->
+      <!-- Right sidebar (Preview + Layers only) -->
       <div class="editor-sidebar">
-        <div class="adv-top-row">
-          <Widget title="Control">
-            <div class="tools">
-              <Square @click="store.setTool('brush')" :class="{ active: store.currentTool === 'brush' }">
-                <span class="icon icon-brush"/>
-              </Square>
-              <Square @click="store.setTool('iso-line')" :class="{ active: store.currentTool === 'iso-line' }">
-                <span class="icon icon-brush iso-rotated"/>
-              </Square>
-              <Square @click="store.setTool('bucket')" :class="{ active: store.currentTool === 'bucket' }">
-                <span class="icon icon-bucket"/>
-              </Square>
-              <Square @click="store.setTool('eraser')" :class="{ active: store.currentTool === 'eraser' }">
-                <span class="icon icon-eraser"/>
-              </Square>
-              <Square @click="store.setTool('move')" :class="{ active: store.currentTool === 'move' }">
-                <span class="icon icon-move"/>
-              </Square>
-              <Square @click="toggleSelect()" :class="{ active: store.currentTool === 'select' }">
-                <span class="icon icon-select"/>
-              </Square>
-              <Square @click="store.toggleMirror('horizontal')" :class="{ active: store.mirrorHorizontal }">
-                <span class="icon icon-reflect-horizontal"/>
-              </Square>
-              <Square @click="store.toggleMirror('vertical')" :class="{ active: store.mirrorVertical }">
-                <span class="icon icon-reflect-vertical"/>
-              </Square>
-              <Square @click="store.flipSelectionHorizontal">
-                <span class="icon icon-flip-h"/>
-              </Square>
-              <Square @click="store.flipSelectionVertical">
-                <span class="icon icon-flip-v"/>
-              </Square>
-            </div>
-          </Widget>
-          <!-- Preview: always rendered, single ref -->
-          <Widget title="Preview">
-            <template #ctl>
-              <a v-if="editorData.id_string" target="_blank" :href="`/art/${editorData.id_string}`">
-                <span class="icon icon-link"/>
-              </a>
-            </template>
-            <Square class="inside">
-              <canvas ref="miniMap" class="mini-map"/>
-            </Square>
-          </Widget>
-        </div>
+        <Widget title="Preview">
+          <template #ctl>
+            <a v-if="editorData.id_string" target="_blank" :href="`/art/${editorData.id_string}`">
+              <span class="icon icon-link"/>
+            </a>
+          </template>
+          <Square class="inside">
+            <canvas ref="miniMap" class="mini-map"/>
+          </Square>
+        </Widget>
 
         <Widget title="Layers" class="layers">
           <template #ctl>
@@ -1027,7 +1029,6 @@ watch(() => editorData.value.width + editorData.value.height, () => {
             </li>
           </ul>
         </Widget>
-
       </div>
     </div>
 

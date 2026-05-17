@@ -903,6 +903,19 @@ canvas.clear { cursor: pointer; }
     color: var(--primary);
 }
 
+/* Override .tools default grid for the rail variant (must follow .tools rules) */
+.tools.tools-rail {
+    grid-template-columns: repeat(11, minmax(36px, 1fr));
+    grid-auto-flow: column;
+}
+
+@media (min-width: 768px) {
+    .tools.tools-rail {
+        grid-template-columns: 1fr;
+        grid-auto-flow: row;
+    }
+}
+
 .onb-ref-clear {
     @apply cursor-pointer p-1;
     background: transparent;
