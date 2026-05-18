@@ -10,14 +10,14 @@ useCustomSeoMeta({
 <template>
   <div class="page">
     <section>
-      <h1 class="text-2xl">Privacy Policy</h1>
-      <p class="text-xs text-gray-500">Last updated: April 2026</p>
+      <h1 class="page-title">Privacy Policy</h1>
+      <p class="page-meta">Last updated: April 2026</p>
       <p>This Privacy Policy describes how SimplePixelArt.com ("we", "us", or "our") collects, uses, and shares information when you use our website at <strong>simplepixelart.com</strong>.</p>
     </section>
 
     <section>
       <h2>Information We Collect</h2>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li><strong>Account information:</strong> If you sign in with Google, we receive your name, email address, and profile picture from Google. We use this to create and manage your account.</li>
         <li><strong>Usage data:</strong> We collect anonymous data about how you use the site (pages visited, features used) through Google Analytics. This data does not identify you personally.</li>
         <li><strong>User-generated content:</strong> Pixel art you create and choose to publish is stored on our servers and displayed publicly.</li>
@@ -27,7 +27,7 @@ useCustomSeoMeta({
 
     <section>
       <h2>How We Use Your Information</h2>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li>To provide and improve our pixel art editor and gallery services.</li>
         <li>To display your published artwork in your creator profile and the public gallery.</li>
         <li>To analyze site usage and improve the user experience.</li>
@@ -38,7 +38,7 @@ useCustomSeoMeta({
     <section>
       <h2>Advertising</h2>
       <p>We use Google AdSense to display advertisements on this site. Google and its partners may use cookies to serve ads based on your prior visits to this website and other sites on the internet.</p>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li>Google's use of advertising cookies enables it and its partners to serve ads based on your visits to simplepixelart.com and/or other sites on the Internet.</li>
         <li>You may opt out of personalized advertising by visiting <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer">Google Ads Settings</a>.</li>
         <li>You may also opt out at <a href="https://www.aboutads.info" target="_blank" rel="noopener noreferrer">aboutads.info</a>.</li>
@@ -52,7 +52,7 @@ useCustomSeoMeta({
 
     <section>
       <h2>Third-Party Services</h2>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li><strong>Google Analytics:</strong> We use Google Analytics to understand how visitors interact with our site. Google Analytics collects data such as your IP address, browser type, and pages visited. See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google's Privacy Policy</a>.</li>
         <li><strong>Google Sign-In:</strong> We use Google OAuth for authentication. When you log in with Google, Google's <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> applies to the information you provide to Google.</li>
         <li><strong>Google AdSense:</strong> We use Google AdSense to serve ads. Google AdSense uses cookies and web beacons to report ad interactions. See <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener noreferrer">Google's Advertising Policy</a>.</li>
@@ -62,7 +62,7 @@ useCustomSeoMeta({
     <section>
       <h2>Cookies</h2>
       <p>We use the following types of cookies:</p>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li><strong>Essential cookies:</strong> Required for site functionality, such as keeping you logged in.</li>
         <li><strong>Analytics cookies:</strong> Help us understand how visitors use the site (Google Analytics).</li>
         <li><strong>Advertising cookies:</strong> Used by Google AdSense to serve relevant advertisements.</li>

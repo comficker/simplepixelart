@@ -10,15 +10,15 @@ useCustomSeoMeta({
 <template>
   <div class="page">
     <section>
-      <h1 class="text-2xl">DMCA Policy</h1>
-      <p class="text-xs text-gray-500">Last updated: April 2026</p>
+      <h1 class="page-title">DMCA Policy</h1>
+      <p class="page-meta">Last updated: April 2026</p>
       <p>SimplePixelArt.com respects the intellectual property rights of others and expects our users to do the same. In accordance with the Digital Millennium Copyright Act (DMCA), we respond to valid takedown notices for content hosted on our platform.</p>
     </section>
 
     <section>
       <h2>Submitting a Takedown Notice</h2>
       <p>If you believe that content on SimplePixelArt.com infringes your copyright, send a written notice to our designated agent at <a href="mailto:comficker@gmail.com?subject=DMCA%20Takedown%20Request">comficker@gmail.com</a> that includes:</p>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li>A physical or electronic signature of the copyright owner or authorized agent.</li>
         <li>Identification of the copyrighted work claimed to be infringed.</li>
         <li>The exact URL(s) of the infringing material on SimplePixelArt.com.</li>
@@ -36,7 +36,7 @@ useCustomSeoMeta({
     <section>
       <h2>Counter-Notice</h2>
       <p>If your content was removed and you believe it was a mistake or misidentification, you may send a counter-notice to the same address. The counter-notice must include:</p>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li>Your physical or electronic signature.</li>
         <li>Identification of the removed material and its previous URL.</li>
         <li>A statement under penalty of perjury that you have a good-faith belief the material was removed by mistake or misidentification.</li>

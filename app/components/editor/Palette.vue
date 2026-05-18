@@ -3,7 +3,7 @@ import {debounce} from "~/helper/utils";
 
 const store = useEditor()
 
-const isModify = ref(false)
+const isModify = defineModel<boolean>('modify', {default: false})
 
 const handleChange = debounce((index: number, event: Event): void => {
   const target = event.target as HTMLInputElement
@@ -13,10 +13,20 @@ const handleChange = debounce((index: number, event: Event): void => {
   }
 }, 300)
 
-const removeColor = () => {
+function addColor() {
+  store.editorData.colors.push('#000000')
+}
+
+function toggleModify() {
+  isModify.value = !isModify.value
+}
+
+function removeColor() {
   if (store.currentColorIndex < 0) return
   store.removeColor(store.currentColorIndex)
 }
+
+defineExpose({addColor, toggleModify, removeColor})
 </script>
 
 <template>
@@ -50,26 +60,13 @@ const removeColor = () => {
               @input="handleChange(index, $event)"
           />
         </template>
-        <div class="ctl">
-          <div class="item" @click="store.editorData.colors.push('#000000')" title="Add color">
-            <span class="icon icon-plus"/>
-          </div>
-          <div 
-              class="item" 
-              @click="isModify = !isModify"
-              :class="{ active: isModify }"
-              title="Toggle edit mode"
-          >
-            <span class="icon icon-adjust"/>
-          </div>
-          <div
-              v-if="isModify && store.editorData.colors.length > 1"
-              class="item"
-              @click="removeColor"
-              title="Remove current color"
-          >
-            <span class="icon icon-trash"/>
-          </div>
+        <div
+            v-if="isModify && store.editorData.colors.length > 1"
+            class="palette-remove"
+            @click="removeColor"
+            title="Remove current color"
+        >
+          <span class="icon icon-trash"/>
         </div>
       </div>
     </div>
@@ -77,26 +74,34 @@ const removeColor = () => {
 </template>
 
 <style scoped>
-@reference "tailwindcss";
-
 .palette {
-  @apply h-10 relative text-2xl;
+  height: 2.5rem;
+  position: relative;
+  font-size: var(--text-2xl);
+  line-height: var(--text-2xl-lh);
 }
 
 .wrapper {
-  @apply absolute inset-0 overflow-auto;
+  position: absolute;
+  inset: 0;
+  overflow: auto;
 }
 
 .items {
-  @apply flex gap-0.5 flex-nowrap;
+  display: flex;
+  gap: 0.125rem;
+  flex-wrap: nowrap;
 }
 
 .item {
-  @apply flex-none size-10;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
 input.item {
-  @apply border p-1;
+  border: 1px solid var(--border);
+  padding: 0.25rem;
 }
 
 .item.active {
@@ -104,18 +109,34 @@ input.item {
   outline-offset: -2px;
 }
 
-.palette .ctl {
-  @apply sticky right-0 flex items-center gap-0;
-  background: var(--background);
-}
-
 .palette .item {
-  @apply size-10 flex items-center justify-center;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.palette .ctl .item.active {
-  background: var(--primary);
-  color: var(--primary-foreground);
+.palette-remove {
+  position: sticky;
+  right: 0;
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .palette-remove:hover {
+    color: #fff;
+    background: #ef4444;
+  }
 }
 
 input[type="color"] {

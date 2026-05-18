@@ -6,7 +6,7 @@ const {to} = defineProps<{to?: string | null}>()
   <nuxt-link v-if="to" class="h-center underline" :to="to">
     <slot/>
   </nuxt-link>
-  <a v-else class="h-center text-gray-300">
+  <a v-else class="h-center text-muted">
     <slot/>
   </a>
 </template>

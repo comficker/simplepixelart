@@ -109,25 +109,33 @@ function handleBlur() {
 </template>
 
 <style scoped>
-@reference "tailwindcss";
-
 .tags {
-  @apply flex flex-wrap px-1 items-center text-xs;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0 0.25rem;
+  align-items: center;
+  font-size: var(--text-xs);
+  line-height: var(--text-xs-lh);
 }
 
 .tag-wrapper {
-  @apply p-1;
+  padding: 0.25rem;
 }
 
 .tag {
-  @apply inline-flex items-center gap-1 px-1 py-0.5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.25rem;
   background: var(--surface-2);
   color: var(--primary);
   border: 1px solid var(--border);
 }
 
 .remove-btn {
-  @apply ml-1 font-bold cursor-pointer;
+  margin-left: 0.25rem;
+  font-weight: 700;
+  cursor: pointer;
   color: var(--secondary);
   background: none;
   border: none;
@@ -143,7 +151,8 @@ function handleBlur() {
 }
 
 .tag-input-field {
-  @apply px-1 outline-none;
+  padding: 0 0.25rem;
+  outline: none;
   background: var(--surface);
   color: var(--foreground);
   border: 1px solid var(--border);
@@ -154,7 +163,7 @@ function handleBlur() {
 }
 
 .add-tag-trigger {
-  @apply cursor-pointer;
+  cursor: pointer;
   color: var(--muted);
 }
 
@@ -165,7 +174,10 @@ function handleBlur() {
 }
 
 .max-tags-warning {
-  @apply w-full text-xs italic;
+  width: 100%;
+  font-size: var(--text-xs);
+  line-height: var(--text-xs-lh);
+  font-style: italic;
   color: var(--muted);
 }
 </style>

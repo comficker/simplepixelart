@@ -5,6 +5,7 @@ interface Props {
   format?: string
   responsive?: string
   label?: string
+  size?: 'small' | 'medium' | 'large'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -12,10 +13,14 @@ const props = withDefaults(defineProps<Props>(), {
   format: 'auto',
   responsive: 'true',
   label: 'Advertisement',
+  size: 'medium',
 })
 
 const config = useRuntimeConfig()
 const adsEnabled = config.public.adsEnabled !== false
+
+// Skip rendering when slot ID is missing/placeholder so we don't ship broken <ins> tags.
+const hasValidSlot = computed(() => /^\d{6,}$/.test(props.slot))
 
 const insRef = ref<HTMLElement | null>(null)
 const pushed = ref(false)
@@ -32,13 +37,13 @@ function push() {
 }
 
 onMounted(() => {
-  if (!adsEnabled) return
+  if (!adsEnabled || !hasValidSlot.value) return
   nextTick(() => push())
 })
 </script>
 
 <template>
-  <div v-if="adsEnabled" class="ad-slot">
+  <div v-if="adsEnabled && hasValidSlot" class="ad-slot" :class="`ad-slot-${size}`">
     <div class="ad-label">{{ label }}</div>
     <ins
         ref="insRef"
@@ -53,17 +58,37 @@ onMounted(() => {
 </template>
 
 <style scoped>
-@reference "tailwindcss";
-
 .ad-slot {
-  @apply my-4;
-  min-height: 100px;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  /* Reserve space to prevent CLS when ad lazy-loads */
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-slot-small { min-height: 200px; }
+.ad-slot-medium { min-height: 280px; }
+.ad-slot-large { min-height: 320px; }
+
+.ad-slot .adsbygoogle {
+  flex: 1;
+  min-height: inherit;
 }
 
 .ad-label {
-  @apply text-xs uppercase py-1;
-  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0 0 6px;
+  color: var(--muted);
   text-align: center;
+}
+
+@media (max-width: 640px) {
+  .ad-slot-small { min-height: 180px; }
+  .ad-slot-medium { min-height: 250px; }
+  .ad-slot-large { min-height: 280px; }
 }
 </style>

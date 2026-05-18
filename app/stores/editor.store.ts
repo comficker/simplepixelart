@@ -4,7 +4,7 @@ import {useNativeFetch} from "~/composables/useCustomFetch";
 import {cloneDeep, debounce, generateUUID, getStorageItem, key2Point, sharedPage2EditorData} from "~/helper/utils";
 import {DEFAULT_EDITOR_DATA} from "~/helper/constants";
 import {ref} from "vue";
-import {dataUrlToSamplesGrid, layers2MapNumbers} from "~/helper/canvas";
+import {layers2MapNumbers} from "~/helper/canvas";
 import {isSameColor, rgbToHex} from "~/helper/color";
 import {toast} from "vue-sonner";
 
@@ -37,8 +37,34 @@ export const useEditor = defineStore('editor', () => {
     const historyIndex = ref(-1);
 
     const currentTool = ref("brush");
+    const brushSize = ref(1);
     const mirrorHorizontal = ref(false);
     const mirrorVertical = ref(false);
+
+    function setBrushSize(size: number) {
+        brushSize.value = Math.min(8, Math.max(1, Math.floor(size) || 1));
+    }
+
+    // Background config — persisted in editorData.meta.bg so it saves with the art
+    const bgConfig = computed(() => {
+        const bg = editorData.value?.meta?.bg;
+        return {
+            type: bg?.type ?? 'none',
+            color: bg?.color ?? '#FFFFFF',
+            artId: bg?.artId ?? '',
+            artUrl: bg?.artUrl ?? '',
+        };
+    });
+
+    function setBg(partial: Partial<{ type: 'none' | 'solid' | 'art'; color: string; artId: string; artUrl: string }>) {
+        if (!editorData.value) return;
+        if (!editorData.value.meta) editorData.value.meta = {};
+        editorData.value.meta.bg = {
+            ...bgConfig.value,
+            ...partial,
+        };
+        saveState();
+    }
 
     const currentColorIndex = ref(0);
     const currentLayerIndex = ref(0);
@@ -235,6 +261,7 @@ export const useEditor = defineStore('editor', () => {
                 reader.onload = async (e) => {
                     try {
                         const dataUrl = e.target?.result as string;
+                        const {dataUrlToSamplesGrid} = await import("~/helper/canvas");
                         const {rgbSamplesGrid, colorThatRepresentsTransparent} = await dataUrlToSamplesGrid(dataUrl);
                         if (rgbSamplesGrid)
                             loadFromFile(rgbSamplesGrid, colorThatRepresentsTransparent)
@@ -468,27 +495,37 @@ export const useEditor = defineStore('editor', () => {
     }
 
     function paint({x, y}: { x: number; y: number }) {
-        if (selectionState.value.bounds.active && !checkKeyInSelection(`${x}_${y}`)) return;
         const color = currentTool.value === 'eraser' ? -1 : currentColorIndex.value;
-        setPixelByIndex(x, y, color);
+        const size = brushSize.value;
+        const offset = Math.floor((size - 1) / 2);
 
-        const inSelection = (mx: number, my: number) =>
-            !selectionState.value.bounds.active || checkKeyInSelection(`${mx}_${my}`);
+        const inBounds = (px: number, py: number) =>
+            px >= 0 && px < editorData.value.width &&
+            py >= 0 && py < editorData.value.height;
 
-        if (mirrorHorizontal.value) {
-            const mx = editorData.value.width - 1 - x;
-            if (inSelection(mx, y)) setPixelByIndex(mx, y, color);
-        }
+        const inSelection = (px: number, py: number) =>
+            !selectionState.value.bounds.active || checkKeyInSelection(`${px}_${py}`);
 
-        if (mirrorVertical.value) {
-            const my = editorData.value.height - 1 - y;
-            if (inSelection(x, my)) setPixelByIndex(x, my, color);
-        }
+        const paintAt = (px: number, py: number) => {
+            if (!inBounds(px, py) || !inSelection(px, py)) return;
+            setPixelByIndex(px, py, color);
+        };
 
-        if (mirrorHorizontal.value && mirrorVertical.value) {
-            const mx = editorData.value.width - 1 - x;
-            const my = editorData.value.height - 1 - y;
-            if (inSelection(mx, my)) setPixelByIndex(mx, my, color);
+        for (let dx = -offset; dx < size - offset; dx++) {
+            for (let dy = -offset; dy < size - offset; dy++) {
+                const px = x + dx;
+                const py = y + dy;
+                paintAt(px, py);
+                if (mirrorHorizontal.value) {
+                    paintAt(editorData.value.width - 1 - px, py);
+                }
+                if (mirrorVertical.value) {
+                    paintAt(px, editorData.value.height - 1 - py);
+                }
+                if (mirrorHorizontal.value && mirrorVertical.value) {
+                    paintAt(editorData.value.width - 1 - px, editorData.value.height - 1 - py);
+                }
+            }
         }
     }
 
@@ -815,6 +852,10 @@ export const useEditor = defineStore('editor', () => {
     return {
         editorData,
         currentTool,
+        brushSize,
+        setBrushSize,
+        bgConfig,
+        setBg,
         currentColorIndex,
         currentLayerIndex,
         mirrorHorizontal,

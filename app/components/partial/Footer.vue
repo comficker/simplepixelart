@@ -3,10 +3,10 @@ const year = new Date().getFullYear()
 const config = useRuntimeConfig()
 const auth = useAuthStore()
 
+const requestURL = useRequestURL()
 const googleAuthUrl = computed(() => {
   const apiBase = (config.public.api as string) || ''
-  if (typeof window === 'undefined') return `${apiBase}/auth/google`
-  const next = `${window.location.origin}/auth/callback`
+  const next = `${requestURL.origin}/auth/callback`
   return `${apiBase}/auth/google?state=${encodeURIComponent(next)}`
 })
 </script>
@@ -39,14 +39,22 @@ const googleAuthUrl = computed(() => {
 </template>
 
 <style scoped>
-@reference "tailwindcss";
-
 footer .container {
-  @apply flex flex-col items-center gap-3 py-6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 
 .footer-links {
-  @apply flex flex-wrap gap-4 justify-center text-xs;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  font-size: var(--text-xs);
+  line-height: var(--text-xs-lh);
 }
 
 .footer-links a {
@@ -64,7 +72,10 @@ footer .container {
 }
 
 .footer-auth {
-  @apply flex items-center gap-1 cursor-pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
   color: var(--muted);
 }
 
@@ -75,7 +86,8 @@ footer .container {
 }
 
 .footer-copy {
-  @apply text-xs;
+  font-size: var(--text-xs);
+  line-height: var(--text-xs-lh);
   color: var(--foreground);
 }
 </style>

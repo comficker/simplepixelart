@@ -10,14 +10,14 @@ useCustomSeoMeta({
 <template>
   <div class="page">
     <section>
-      <h1 class="text-2xl">Community Guidelines</h1>
-      <p class="text-xs text-gray-500">Last updated: April 2026</p>
+      <h1 class="page-title">Community Guidelines</h1>
+      <p class="page-meta">Last updated: April 2026</p>
       <p>SimplePixelArt.com is a creative platform open to everyone. These guidelines keep it a safe, welcoming, and legal place for artists of all levels. Breaking them can result in removed artwork, suspended accounts, or permanent bans.</p>
     </section>
 
     <section>
       <h2>What's Not Allowed</h2>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li><strong>Illegal content</strong> — Anything that violates applicable law, including child sexual abuse material (CSAM), incitement to violence, or content that promotes terrorism.</li>
         <li><strong>Sexually explicit content</strong> — Nudity, pornography, or sexually suggestive material. SimplePixelArt is not an adult platform.</li>
         <li><strong>Hate speech</strong> — Content that attacks, threatens, or dehumanizes people based on race, ethnicity, national origin, religion, disability, gender, sexual orientation, or other protected characteristics.</li>
@@ -39,7 +39,7 @@ useCustomSeoMeta({
     <section>
       <h2>Reporting Violations</h2>
       <p>Flag artwork that breaks these rules by emailing <a href="mailto:comficker@gmail.com?subject=Abuse%20Report">comficker@gmail.com</a>. Include:</p>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li>The URL of the artwork or profile.</li>
         <li>The rule you believe was broken.</li>
         <li>Any supporting context (screenshots, links).</li>
@@ -49,7 +49,7 @@ useCustomSeoMeta({
 
     <section>
       <h2>Enforcement</h2>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li><strong>First minor violation:</strong> Content removed, warning sent.</li>
         <li><strong>Repeated or severe violations:</strong> Account suspension or permanent ban.</li>
         <li><strong>Illegal content:</strong> Immediate removal and, where required, report to law enforcement (e.g., NCMEC for CSAM).</li>

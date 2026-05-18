@@ -10,7 +10,6 @@ useCustomSeoMeta({
   description: 'Convert any photo or image into pixel art in seconds. Free online tool with palette control (4–64 colors), pixel cleaner, color swap, and live preview. No signup required.',
   keywords: 'image to pixel art, photo to pixel art converter, pixelate image online, pixel art generator, convert jpg to pixel art, png to pixel art, free pixel art maker, 8-bit converter, 16-bit art generator',
   canonical: 'https://simplepixelart.com/convert',
-  ogImage: 'https://simplepixelart.com/og-convert.png',
   script: [
     {
       type: 'application/ld+json',
@@ -437,7 +436,7 @@ onMounted(() => {
   <div class="page">
     <section class="hero">
       <h1>Image to Pixel Art Converter</h1>
-      <p class="text-xs">Turn any photo into pixel art in seconds. Free, no signup, runs in your browser.</p>
+      <p class="hero-sub">Turn any photo into pixel art in seconds. Free, no signup, runs in your browser.</p>
     </section>
 
     <!-- Upload zone (no image yet) -->
@@ -450,7 +449,7 @@ onMounted(() => {
     >
       <span class="icon icon-upload upload-icon"/>
       <p class="text-sm">Click or drop an image here</p>
-      <p class="text-xs text-gray-500 mt-1">PNG, JPG, or WebP</p>
+      <p class="text-xs text-muted mt-1">PNG, JPG, or WebP</p>
     </div>
 
     <!-- Main UI -->
@@ -468,11 +467,11 @@ onMounted(() => {
 
         <!-- Actions -->
         <div class="convert-actions">
-          <button class="btn primary flex-1 justify-center" @click="sendToEditor">
+          <button class="btn primary block" @click="sendToEditor">
             <span class="icon icon-brush"/>
             <span>Open in Editor</span>
           </button>
-          <button class="btn flex-1 justify-center" @click="cleanOrphans">
+          <button class="btn block" @click="cleanOrphans">
             <span class="icon icon-broom"/>
             <span>Clean Orphans</span>
           </button>
@@ -567,13 +566,31 @@ onMounted(() => {
 
     <section class="seo-section">
       <h2 class="seo-heading">Features</h2>
-      <ul class="seo-list">
-        <li><strong>Flexible output size.</strong> Convert to 8×8, 16×16, 32×32, 48×48, or up to 64×64 pixels. Aspect ratio preserved automatically.</li>
-        <li><strong>Palette control.</strong> Limit to 4, 8, 16, 32, or 64 colors. Smaller palettes produce that crisp retro look; larger palettes keep more detail.</li>
-        <li><strong>Live image adjustments.</strong> Brightness, contrast, and saturation sliders re-run the conversion on every change.</li>
-        <li><strong>Pixel Cleaner.</strong> Removes orphan pixels — isolated single dots with no matching neighbor — replacing them with the majority color around them. Great for cleaning sprites after quantization.</li>
-        <li><strong>Color Swap & Merge.</strong> Click any palette swatch to pick a replacement color, or merge two palette colors into one to simplify your output further.</li>
-        <li><strong>One-click editor handoff.</strong> Open the result in our full pixel art editor for touch-ups, layers, export to PNG/SVG/JSON, and sharing.</li>
+      <ul class="seo-list feature-list">
+        <li>
+          <span class="icon icon-plus feature-bullet" aria-hidden="true"/>
+          <span><strong>Flexible output size.</strong> Convert to 8×8, 16×16, 32×32, 48×48, or up to 64×64 pixels. Aspect ratio preserved automatically.</span>
+        </li>
+        <li>
+          <span class="icon icon-plus feature-bullet" aria-hidden="true"/>
+          <span><strong>Palette control.</strong> Limit to 4, 8, 16, 32, or 64 colors. Smaller palettes produce that crisp retro look; larger palettes keep more detail.</span>
+        </li>
+        <li>
+          <span class="icon icon-plus feature-bullet" aria-hidden="true"/>
+          <span><strong>Live image adjustments.</strong> Brightness, contrast, and saturation sliders re-run the conversion on every change.</span>
+        </li>
+        <li>
+          <span class="icon icon-plus feature-bullet" aria-hidden="true"/>
+          <span><strong>Pixel Cleaner.</strong> Removes orphan pixels — isolated single dots with no matching neighbor — replacing them with the majority color around them. Great for cleaning sprites after quantization.</span>
+        </li>
+        <li>
+          <span class="icon icon-plus feature-bullet" aria-hidden="true"/>
+          <span><strong>Color Swap & Merge.</strong> Click any palette swatch to pick a replacement color, or merge two palette colors into one to simplify your output further.</span>
+        </li>
+        <li>
+          <span class="icon icon-plus feature-bullet" aria-hidden="true"/>
+          <span><strong>One-click editor handoff.</strong> Open the result in our full pixel art editor for touch-ups, layers, export to PNG/SVG/JSON, and sharing.</span>
+        </li>
       </ul>
     </section>
 
@@ -593,51 +610,109 @@ onMounted(() => {
 
     <section class="seo-section">
       <h2 class="seo-heading">Frequently asked questions</h2>
-      <details class="faq">
-        <summary>Is this tool really free?</summary>
-        <p>Yes. The entire converter runs in your browser. No account, no watermark, no upload to any server.</p>
-      </details>
-      <details class="faq">
-        <summary>What image formats are supported?</summary>
-        <p>PNG, JPG, and WebP. Drag and drop a file onto the upload area or click to browse.</p>
-      </details>
-      <details class="faq">
-        <summary>How does the Pixel Cleaner work?</summary>
-        <p>It scans the output for pixels that have no same-colored neighbors (orphans) and replaces each one with the majority color of its four-direction neighbors. This smooths out speckle that quantization often produces from photos.</p>
-      </details>
-      <details class="faq">
-        <summary>Can I edit the result after conversion?</summary>
-        <p>Yes. Click <strong>Open in Editor</strong> to load the converted pixel art into our full online editor with brush, fill, layers, undo/redo, and export options.</p>
-      </details>
-      <details class="faq">
-        <summary>What's the difference between this and other pixel art converters?</summary>
-        <p>Live preview on every setting change, preserved aspect ratio, color merge for manual palette cleanup, orphan-pixel cleaner for noise-free sprites, and a direct handoff to a full editor. No downloads, no signup.</p>
-      </details>
+      <div class="qa-list">
+        <details class="qa-item">
+          <summary class="qa-q">
+            <span class="qa-q-text">Is this tool really free?</span>
+            <span class="qa-chevron" aria-hidden="true"/>
+          </summary>
+          <div class="qa-a">
+            <p>Yes. The entire converter runs in your browser. No account, no watermark, no upload to any server.</p>
+          </div>
+        </details>
+        <details class="qa-item">
+          <summary class="qa-q">
+            <span class="qa-q-text">What image formats are supported?</span>
+            <span class="qa-chevron" aria-hidden="true"/>
+          </summary>
+          <div class="qa-a">
+            <p>PNG, JPG, and WebP. Drag and drop a file onto the upload area or click to browse.</p>
+          </div>
+        </details>
+        <details class="qa-item">
+          <summary class="qa-q">
+            <span class="qa-q-text">How does the Pixel Cleaner work?</span>
+            <span class="qa-chevron" aria-hidden="true"/>
+          </summary>
+          <div class="qa-a">
+            <p>It scans the output for pixels that have no same-colored neighbors (orphans) and replaces each one with the majority color of its four-direction neighbors. This smooths out speckle that quantization often produces from photos.</p>
+          </div>
+        </details>
+        <details class="qa-item">
+          <summary class="qa-q">
+            <span class="qa-q-text">Can I edit the result after conversion?</span>
+            <span class="qa-chevron" aria-hidden="true"/>
+          </summary>
+          <div class="qa-a">
+            <p>Yes. Click <strong>Open in Editor</strong> to load the converted pixel art into our full online editor with brush, fill, layers, undo/redo, and export options.</p>
+          </div>
+        </details>
+        <details class="qa-item">
+          <summary class="qa-q">
+            <span class="qa-q-text">What's the difference between this and other pixel art converters?</span>
+            <span class="qa-chevron" aria-hidden="true"/>
+          </summary>
+          <div class="qa-a">
+            <p>Live preview on every setting change, preserved aspect ratio, color merge for manual palette cleanup, orphan-pixel cleaner for noise-free sprites, and a direct handoff to a full editor. No downloads, no signup.</p>
+          </div>
+        </details>
+      </div>
     </section>
   </div>
 </template>
 
 <style scoped>
-@reference "tailwindcss";
-
 .hero {
-  @apply text-center py-4;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
 }
 
 .hero h1 {
-  @apply text-lg md:text-2xl;
+  font-size: var(--text-2xl);
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.015em;
 }
 
-.hero p {
-  @apply mt-1;
+@media (min-width: 768px) {
+  .hero h1 {
+    font-size: var(--text-4xl);
+  }
+}
+
+.hero-sub {
+  margin-top: 0.5rem;
   color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+@media (min-width: 768px) {
+  .hero-sub {
+    font-size: var(--text-base);
+  }
 }
 
 .upload-zone {
-  @apply flex flex-col items-center justify-center gap-2 cursor-pointer py-8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
   border: 2px dashed var(--border);
   background: var(--surface);
-  transition: border-color 60ms steps(2), background 60ms steps(2);
+  border-radius: var(--radius);
+  transition: border-color var(--transition), background var(--transition);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -653,7 +728,8 @@ onMounted(() => {
 }
 
 .convert-grid {
-  @apply grid gap-3;
+  display: grid;
+  gap: 0.75rem;
   grid-template-columns: 1fr;
 }
 
@@ -664,11 +740,15 @@ onMounted(() => {
 }
 
 .convert-preview {
-  @apply flex flex-col gap-2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .preview-wrapper {
-  @apply flex items-center justify-center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   aspect-ratio: 1 / 1;
   background: var(--background);
 }
@@ -678,26 +758,40 @@ onMounted(() => {
   max-width: 100%;
   max-height: 400px;
   border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
 }
 
 .convert-actions {
-  @apply flex gap-2;
+  display: flex;
+  gap: 0.5rem;
 }
 
 .convert-settings {
-  @apply flex flex-col gap-2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .settings-row {
-  @apply flex flex-wrap gap-1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 
 .pill {
-  @apply flex items-center justify-center text-xs px-2 py-1 cursor-pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  line-height: var(--text-xs-lh);
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
   min-width: 36px;
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--foreground);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 
 .pill input {
@@ -707,15 +801,23 @@ onMounted(() => {
 .pill.active {
   background: var(--primary);
   color: var(--primary-foreground);
-  border-color: var(--shadow-px);
+  border-color: var(--primary);
 }
 
 .slider-row {
-  @apply flex flex-col gap-1 py-1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }
 
 .slider-row label {
-  @apply flex justify-between items-center text-xs;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-xs);
+  line-height: var(--text-xs-lh);
   color: var(--muted);
 }
 
@@ -729,26 +831,37 @@ onMounted(() => {
 }
 
 .palette-grid {
-  @apply grid grid-cols-8 gap-1;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 0.25rem;
 }
 
 .palette-swatch {
-  @apply relative cursor-pointer;
+  position: relative;
+  cursor: pointer;
   aspect-ratio: 1;
   border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
 }
 
 .palette-swatch.active {
   border-color: var(--primary);
-  outline: 1px solid var(--shadow-px);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 35%, transparent);
 }
 
 .swatch-color {
-  @apply absolute inset-0;
+  position: absolute;
+  inset: 0;
 }
 
 .palette-swatch input[type=color] {
-  @apply absolute inset-0 opacity-0 cursor-pointer w-full h-full;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
 }
 
 .palette-swatch.mergeable {
@@ -763,73 +876,79 @@ onMounted(() => {
 }
 
 .merge-hint {
-  @apply mt-3 pt-3;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
   border-top: 1px solid var(--border);
-}
-
-.hidden {
-  display: none;
 }
 
 .seo-section {
-  @apply py-3 space-y-2;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
   border-top: 1px solid var(--border);
 }
 
+.seo-section > * + * {
+  margin-top: 0.5rem;
+}
+
 .seo-heading {
-  @apply text-sm font-bold;
+  font-size: var(--text-2xl);
+  line-height: var(--text-2xl-lh);
+  font-weight: 700;
   color: var(--foreground);
 }
 
 .seo-section p {
-  @apply text-xs leading-relaxed;
+  line-height: 1.625;
   color: var(--foreground);
 }
 
 .seo-list {
-  @apply space-y-2 list-none;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .seo-list li {
-  @apply text-xs leading-relaxed;
+  font-size: var(--text-sm);
+  line-height: 1.625;
   color: var(--foreground);
 }
 
+.feature-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.feature-list .feature-bullet {
+  flex-shrink: 0;
+  color: var(--primary);
+  width: 1em;
+  height: 1em;
+  margin-top: 0.35em;
+}
+
 .screenshot {
-  @apply flex flex-col items-center gap-2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
   margin: 0;
 }
 
 .screenshot img {
-  @apply w-full max-w-3xl;
-  border: 2px solid var(--shadow-px);
-  box-shadow: 4px 4px 0 0 var(--shadow-px);
+  width: 100%;
+  max-width: 48rem;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
   image-rendering: auto;
 }
 
 .screenshot figcaption {
   color: var(--muted);
   text-align: center;
-}
-
-.faq {
-  @apply py-2;
-  border-top: 1px solid var(--border);
-}
-
-.faq summary {
-  @apply text-sm cursor-pointer font-bold;
-  color: var(--foreground);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .faq summary:hover {
-    color: var(--primary);
-  }
-}
-
-.faq p {
-  @apply text-xs mt-2 leading-relaxed;
-  color: var(--muted);
 }
 </style>

@@ -38,12 +38,12 @@ const pinterestUrl = computed(() => `https://www.pinterest.com/pin/create/button
 
 <template>
   <ui-dropdown-menu>
-    <button class="btn secondary hover:shadow-lg transition-shadow" :disabled="!meta?.url">
+    <button class="btn secondary share-trigger" :disabled="!meta?.url">
       <span class="icon icon-social"/>
       <span>Share</span>
     </button>
     <template #menu>
-      <div class="flex flex-col divide-y">
+      <div class="share-menu">
         <a class="btn" :href="twitterUrl" target="_blank" rel="noopener noreferrer" title="Share on X (Twitter)">
           <span class="icon icon-x"/> Twitter
         </a>
@@ -57,3 +57,24 @@ const pinterestUrl = computed(() => `https://www.pinterest.com/pin/create/button
     </template>
   </ui-dropdown-menu>
 </template>
+
+<style scoped>
+.share-trigger {
+  transition: box-shadow var(--transition);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .share-trigger:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.share-menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.share-menu > * + * {
+  border-top: 1px solid var(--border);
+}
+</style>

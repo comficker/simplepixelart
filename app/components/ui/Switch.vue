@@ -77,7 +77,8 @@ function toggle() {
   position: relative;
   display: block;
   background: var(--surface-2, #3a2560);
-  border: 2px solid var(--shadow-px, #000);
+  border: 1px solid var(--border);
+  border-radius: 999px;
   transition: background-color 0.15s ease;
 }
 
@@ -86,8 +87,9 @@ function toggle() {
   top: 0;
   left: 0;
   background: var(--foreground, #f5e6a8);
-  border: 2px solid var(--shadow-px, #000);
-  transition: transform 0.15s steps(2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Sizes */

@@ -34,18 +34,18 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
         { property: 'og:type', content: options.ogType || 'website' },
         { property: 'og:url', content: options.canonical },
         { property: 'og:site_name', content: 'SimplePixelArt.com' },
-        { property: 'og:image', content: options.ogImage || `${baseUrl}/og-image.svg` },
+        { property: 'og:image', content: options.ogImage || `${baseUrl}/og-image.jpg` },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
         { property: 'og:image:alt', content: options.title },
         
         // Twitter Card
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:site', content: '@SimplePixelArt' },
-        { name: 'twitter:creator', content: '@SimplePixelArt' },
+        { name: 'twitter:site', content: '@comficker' },
+        { name: 'twitter:creator', content: '@comficker' },
         { name: 'twitter:title', content: options.title },
         { name: 'twitter:description', content: options.description },
-        { name: 'twitter:image', content: options.ogImage || `${baseUrl}/og-image.svg` },
+        { name: 'twitter:image', content: options.ogImage || `${baseUrl}/og-image.jpg` },
         
         // Article specific (if applicable)
         ...(options.articleSection ? [{ property: 'article:section', content: options.articleSection }] : []),

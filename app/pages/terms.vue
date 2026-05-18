@@ -10,14 +10,14 @@ useCustomSeoMeta({
 <template>
   <div class="page">
     <section>
-      <h1 class="text-2xl">Terms of Service</h1>
-      <p class="text-xs text-gray-500">Last updated: April 2026</p>
+      <h1 class="page-title">Terms of Service</h1>
+      <p class="page-meta">Last updated: April 2026</p>
       <p>By using SimplePixelArt.com ("the site", "our service"), you agree to the following terms. Please read them carefully.</p>
     </section>
 
     <section>
       <h2>Use of the Service</h2>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li>SimplePixelArt.com provides a free online pixel art editor and gallery. You may use it for personal and commercial creative purposes.</li>
         <li>You must not use the service in any way that violates applicable laws or regulations.</li>
         <li>You must not attempt to disrupt, hack, or interfere with the service or its servers.</li>
@@ -27,7 +27,7 @@ useCustomSeoMeta({
 
     <section>
       <h2>User Accounts</h2>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li>You may use the editor without an account. Creating an account (via Google Sign-In) allows you to save and publish pixel art.</li>
         <li>You are responsible for maintaining the security of your account.</li>
         <li>We reserve the right to terminate accounts that violate these terms.</li>
@@ -36,7 +36,7 @@ useCustomSeoMeta({
 
     <section>
       <h2>User-Generated Content</h2>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li>You retain ownership of pixel art you create. By publishing artwork on the site, you grant SimplePixelArt.com a non-exclusive license to display and distribute that content on the platform.</li>
         <li>You must not publish content that is illegal, harmful, defamatory, or infringes on the intellectual property rights of others. See our <nuxt-link to="/guidelines">Community Guidelines</nuxt-link>.</li>
         <li>We reserve the right to remove any content that violates these terms without notice.</li>

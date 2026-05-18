@@ -1,5 +1,3 @@
-import tailwindcss from "@tailwindcss/vite";
-
 const adsEnabled = process.env.NUXT_PUBLIC_ADS_ENABLED !== 'false';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -9,7 +7,6 @@ export default defineNuxtConfig({
     modules: ['@pinia/nuxt'],
     css: [
         './app/assets/css/main.css',
-        './app/assets/fonts/ProtoMono/stylesheet.css',
     ],
     typescript: {
         tsConfig: {
@@ -20,12 +17,29 @@ export default defineNuxtConfig({
         }
     },
     vite: {
-        plugins: [
-            tailwindcss(),
-        ],
         build: {
             sourcemap: false
         }
+    },
+    $development: {
+        nitro: {
+            routeRules: {
+                '/**': {
+                    headers: {
+                        'cache-control': 'no-store, no-cache, must-revalidate, max-age=0',
+                        'pragma': 'no-cache',
+                        'expires': '0',
+                    },
+                },
+            },
+        },
+        vite: {
+            server: {
+                headers: {
+                    'cache-control': 'no-store, no-cache, must-revalidate, max-age=0',
+                },
+            },
+        },
     },
     runtimeConfig: {
         api: 'https://touch.ninosaur.com',
@@ -54,11 +68,10 @@ export default defineNuxtConfig({
             link: [
                 {rel: 'icon', type: 'image/x-icon', href: '/favicon.ico'},
                 {rel: 'apple-touch-icon', href: '/favicon.png'},
-                {rel: 'canonical', href: 'https://simplepixelart.com'},
                 {rel: 'preconnect', href: 'https://touch.ninosaur.com'},
                 {rel: 'preconnect', href: 'https://fonts.googleapis.com'},
                 {rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: ''},
-                {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap'},
+                {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&display=swap'},
             ],
             meta: [
                 {

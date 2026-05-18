@@ -59,7 +59,7 @@ useCustomSeoMeta({
       <p>SimplePixelArt.com provides a free, browser-based pixel art editor — no installation or account required. Draw directly on a pixel grid with a full set of tools designed for both beginners and experienced artists.</p>
       <div class="editor-features">
         <div class="feature-item">
-          <span class="icon icon-brush feature-icon"/>
+          <span class="icon icon-square feature-icon"/>
           <div>
             <strong>Brush & Eraser</strong>
             <span>Paint individual pixels or erase with precision. Adjust tool size for fine detail or broad strokes.</span>
@@ -94,7 +94,7 @@ useCustomSeoMeta({
           </div>
         </div>
         <div class="feature-item">
-          <span class="icon icon-resize feature-icon"/>
+          <span class="icon icon-ruler feature-icon"/>
           <div>
             <strong>Custom Canvas Sizes</strong>
             <span>Choose from 8×8 up to 64×64 pixels. Pick the resolution that fits your project.</span>
@@ -120,42 +120,63 @@ useCustomSeoMeta({
 </template>
 
 <style scoped>
-@reference "tailwindcss";
-
 .editor-intro {
-  @apply space-y-3 pt-4;
+  padding-top: 1rem;
   border-top: 1px solid var(--border);
 }
 
+.editor-intro > * + * {
+  margin-top: 0.75rem;
+}
+
 .editor-intro-heading {
-  @apply text-sm font-bold flex items-center;
+  font-size: var(--text-lg);
+  line-height: var(--text-lg-lh);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
   color: var(--foreground);
 }
 
 .editor-intro p {
-  @apply text-xs leading-relaxed;
+  line-height: 1.625;
   color: var(--foreground);
 }
 
 .editor-features {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-3 mt-2;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .editor-features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .feature-item {
-  @apply flex items-start gap-3;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
 }
 
 .feature-item > div {
-  @apply flex flex-col gap-1 flex-1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
 }
 
 .feature-item strong {
-  @apply text-xs block;
+  display: block;
   color: var(--foreground);
 }
 
 .feature-item span {
-  @apply text-xs leading-relaxed block;
+  display: block;
+  line-height: 1.625;
   color: var(--muted);
 }
 

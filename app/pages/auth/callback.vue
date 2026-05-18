@@ -59,8 +59,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-@reference "tailwindcss";
-
 .callback {
   display: flex;
   align-items: center;

@@ -57,10 +57,10 @@ watch(() => props.data, () => {
 </template>
 
 <style scoped>
-@reference "tailwindcss";
-
 .thumb {
-  @apply block size-full;
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .thumbnail-canvas {

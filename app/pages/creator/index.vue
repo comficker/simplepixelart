@@ -10,11 +10,8 @@ useCustomSeoMeta({
 <template>
   <div class="page">
     <section>
-      <h1 class="h-center">
-        <span class="icon icon-angle-right"/>
-        <span>Pixel Art Creators</span>
-      </h1>
-      <p class="text-xs text-gray-400">Discover artists from the SimplePixelArt.com community. Browse their portfolios and explore their pixel art creations.</p>
+      <h1 class="page-title">Pixel Art Creators</h1>
+      <p class="text-muted">Discover artists from the SimplePixelArt.com community. Browse their portfolios and explore their pixel art creations.</p>
     </section>
     <item-list show-filter/>
   </div>

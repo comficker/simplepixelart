@@ -157,11 +157,19 @@ export interface Layer {
     y: number
 }
 
+export interface EditorBg {
+    type: 'none' | 'solid' | 'art';
+    color?: string;        // hex when type === 'solid'
+    artId?: string;        // shared-page id_string when type === 'art'
+    artUrl?: string;       // resolved image URL (cached)
+}
+
 export interface EditorMeta {
     iso?: {
         mode: 'square' | 'iso' | 'off';
         cell: { width: number; height: number };
     };
+    bg?: EditorBg;
 }
 
 export interface EditorData {

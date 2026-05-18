@@ -15,6 +15,7 @@ const staticPages = [
 
 export default defineEventHandler((event) => {
     defaultContentType(event, "text/xml")
+    setHeader(event, 'cache-control', 'public, max-age=86400, stale-while-revalidate=604800')
     const lastmod = new Date().toISOString()
     const urls = staticPages.map(p =>
         `<url>` +

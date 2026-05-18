@@ -10,7 +10,7 @@ useCustomSeoMeta({
 <template>
   <div class="page">
     <section>
-      <h1 class="text-2xl">Contact Us</h1>
+      <h1 class="page-title">Contact Us</h1>
       <p>We read every message. Pick the channel that matches your request.</p>
     </section>
 
@@ -18,7 +18,7 @@ useCustomSeoMeta({
       <h2>General Support</h2>
       <p>Questions about the editor, account issues, feedback, or feature requests:</p>
       <p><a href="mailto:comficker@gmail.com?subject=SimplePixelArt%20Support">comficker@gmail.com</a></p>
-      <p class="text-xs text-gray-500">Typical response: within 3 business days.</p>
+      <p class="page-meta">Typical response: within 3 business days.</p>
     </section>
 
     <section>
@@ -31,7 +31,7 @@ useCustomSeoMeta({
       <h2>Report Abuse</h2>
       <p>Content that violates our <nuxt-link to="/guidelines">Community Guidelines</nuxt-link> (illegal, hateful, harassing, or sexually explicit material):</p>
       <p><a href="mailto:comficker@gmail.com?subject=Abuse%20Report">comficker@gmail.com</a></p>
-      <p class="text-xs text-gray-500">Include the artwork URL and a brief description of the issue.</p>
+      <p class="page-meta">Include the artwork URL and a brief description of the issue.</p>
     </section>
 
     <section>

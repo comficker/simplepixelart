@@ -1,24 +1,29 @@
 import {ofetch} from "ofetch";
-import {APIResponse, SharedPage} from "~/types";
+import {APIResponse, Collection} from "~/types";
 
 const domain = "simplepixelart.com"
 
-
 export default defineEventHandler(async (event) => {
     let out = '<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="/sitemap-template.xsl"?>'
-    const res: APIResponse<SharedPage> = await ofetch(`https://touch.ninosaur.com/coloring/tags/`, {
-        query: {
-            page_size: 50
-        }
-    })
+    const res: APIResponse<Collection & {updated?: string}> = await ofetch(
+        `https://touch.ninosaur.com/coloring/collections/`,
+        {
+            query: {
+                page_size: 200,
+                status: 'public',
+                ordering: '-updated',
+            },
+        },
+    )
     out = out + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
     const lastmod = new Date().toISOString()
     res.results.forEach((item: any) => {
+        if (!item.id_string) return
         out = out + '<url>' +
-            `<loc>https://${domain}/arts/${item.id_string}</loc>` +
+            `<loc>https://${domain}/collections/${item.id_string}</loc>` +
             `<lastmod>${item.updated || lastmod}</lastmod>` +
-            '<changefreq>daily</changefreq>' +
-            '<priority>0.8</priority>' +
+            '<changefreq>weekly</changefreq>' +
+            '<priority>0.7</priority>' +
             '</url>'
     })
     out = out + '</urlset>'

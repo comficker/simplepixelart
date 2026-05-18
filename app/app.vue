@@ -1,12 +1,14 @@
 <template>
   <div class="main-wrapper">
+    <UiScrollProgress/>
     <PartialHeader/>
     <main class="main">
       <div class="container">
-        <NuxtPage/>
+        <NuxtPage :transition="{ name: 'page', mode: 'out-in' }"/>
       </div>
     </main>
     <PartialFooter/>
+    <UiCommandPalette/>
     <Teleport to="body">
       <UiSonner position="bottom-right"/>
     </Teleport>
@@ -14,13 +16,27 @@
 </template>
 
 <style>
-@reference "tailwindcss";
-
-.main-wrapper {
-  @apply py-4 md:py-6 space-y-4 px-2 md:px-4;
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(.22,.61,.36,1);
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-2px);
 }
 
-footer {
-  @apply text-xs;
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active,
+  .page-leave-active {
+    transition: none;
+  }
+  .page-enter-from,
+  .page-leave-to {
+    transform: none;
+  }
 }
 </style>

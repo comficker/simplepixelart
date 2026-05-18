@@ -196,203 +196,237 @@ const download = (type: string) => {
     URL.revokeObjectURL(url);
   }
 }
+
+const formattedDate = computed(() =>
+    data.value?.updated ? new Date(data.value.updated).toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}) : ''
+)
 </script>
 
 <template>
-  <div class="page">
+  <div class="page art-page">
     <!-- Loading state -->
-    <div v-if="pending" class="h-center v-center" style="min-height: 400px;">
-      <div class="text-center">
-        <div class="loading-spinner"></div>
-        <p class="mt-4">Loading pixel art...</p>
-      </div>
+    <div v-if="pending" class="art-state">
+      <div class="skeleton skeleton-square art-state-skeleton"/>
+      <p class="art-state-caption">Loading pixel art…</p>
     </div>
 
     <!-- Error state -->
-    <div v-else-if="error || !data" class="h-center v-center" style="min-height: 400px;">
-      <div class="text-center">
-        <h2>Artwork Not Found</h2>
-        <p>This pixel art couldn't be found or may have been removed.</p>
-        <nuxt-link to="/arts" class="btn primary mt-4">
-          Browse Other Artworks
-        </nuxt-link>
-      </div>
+    <div v-else-if="error || !data" class="empty-state">
+      <span class="empty-state-icon icon icon-search" aria-hidden="true"/>
+      <div class="empty-state-title">Artwork not found</div>
+      <p class="empty-state-body">This pixel art couldn’t be found or may have been removed.</p>
+      <nuxt-link to="/arts" class="btn primary empty-state-action">Browse gallery</nuxt-link>
     </div>
+
     <!-- Main content -->
     <template v-else>
-      <section class="h-center v-center flex-col bg-gray-100 p-4 gap-4 border">
-        <div class="w-full md:w-1/3">
-          <div class="square">
-            <div class="inside">
-              <img
-                  id="mainImg"
-                  :src="imgOriginal"
-                  :alt="data.name || `${data.width}x${data.height} Pixel Art`"
-                  class="object-contain w-full mx-auto h-full pixelated"
-                  loading="eager"
-                  :width="data.width"
-                  :height="data.height"
-              >
-            </div>
+      <!-- HERO: image card + headline -->
+      <section class="art-hero">
+        <div class="art-canvas-wrap">
+          <div class="art-canvas">
+            <img
+                id="mainImg"
+                :src="imgOriginal"
+                :alt="data.name || `${data.width}x${data.height} Pixel Art`"
+                class="art-img"
+                loading="eager"
+                fetchpriority="high"
+                :width="data.width"
+                :height="data.height"
+            >
           </div>
-          <!-- Artwork stats -->
+          <div v-if="data.template" class="art-remix-badge" title="Remixed from another artwork">
+            <span class="icon icon-brush"/>
+            <span>Remix</span>
+          </div>
         </div>
-        <div class="text-center text-sm text-gray-600 w-full">
-          <h1 class="text-2xl">{{ data.name || `${data.width}x${data.height} Pixel Art` }}</h1>
-          <p class="text-xs">{{ data.desc || 'A beautiful pixel art creation.' }}</p>
-          <div class="flex justify-center gap-4 mb-2">
-            <span><strong>{{ Object.keys(data.map_numbers).length }}</strong> pixels</span>
+
+        <div class="art-headline">
+          <span class="art-eyebrow">
+            <span class="art-eyebrow-dot" aria-hidden="true"/>
+            {{ data.status === 'pending' ? 'Pending review' : 'Pixel art' }}
+          </span>
+          <h1 class="art-title">{{ data.name || `${data.width}×${data.height} Pixel Art` }}</h1>
+          <p v-if="data.desc" class="art-desc">{{ data.desc }}</p>
+
+          <div v-if="data.user" class="art-author">
+            <nuxt-link :to="`/creator/${data.user.username}`" class="art-author-link">
+              <span class="art-author-avatar" aria-hidden="true">
+                {{ data.user.username?.charAt(0).toUpperCase() }}
+              </span>
+              <span class="art-author-text">
+                <span class="art-author-label">Created by</span>
+                <span class="art-author-name">@{{ data.user.username }}</span>
+              </span>
+            </nuxt-link>
           </div>
-          <div v-if="data.user" class="h-center v-center text-xs gap-2">
-            <span>Created by</span>
-            <nuxt-link :to="`/creator/${data.user.username}`">
-              {{ data.user.username }}
+
+          <div class="art-meta-pills">
+            <span class="art-pill">
+              <span class="icon icon-ruler"/>
+              <span><strong>{{ data.width }}×{{ data.height }}</strong></span>
+            </span>
+            <span class="art-pill">
+              <span class="icon icon-square"/>
+              <span><strong>{{ Object.keys(data.map_numbers).length }}</strong> pixels</span>
+            </span>
+            <span v-if="data.colors?.length" class="art-pill">
+              <span class="icon icon-adjust"/>
+              <span><strong>{{ data.colors.length }}</strong> colors</span>
+            </span>
+            <span v-if="formattedDate" class="art-pill">
+              <span class="icon icon-calender"/>
+              <span>{{ formattedDate }}</span>
+            </span>
+          </div>
+
+          <div class="art-cta-row">
+            <nuxt-link
+                :to="`/editor?id=${route.params.id_string}`"
+                class="btn primary art-cta-primary"
+                :title="isOwner ? 'Edit this pixel art in the editor' : 'Remix this pixel art in the editor'"
+            >
+              <span class="icon icon-brush"/>
+              <span>{{ isOwner ? 'Edit this' : 'Remix this' }}</span>
+            </nuxt-link>
+            <nuxt-link to="/editor" class="btn art-cta-secondary">
+              <span class="icon icon-plus"/>
+              <span>Create new</span>
             </nuxt-link>
           </div>
         </div>
       </section>
-      <!-- Remix chain -->
-      <div v-if="data.template" class="remix-chain">
-        <span class="icon icon-brush"/>
-        <span class="text-xs">Remixed from another artwork</span>
-      </div>
 
-      <!-- Primary action: Remix / Edit -->
-      <div class="viewer-actions">
-        <nuxt-link
-            :to="`/editor?id=${route.params.id_string}`"
-            class="btn primary flex-1 justify-center"
-            :title="isOwner ? 'Edit this pixel art in the editor' : 'Remix this pixel art in the editor'"
-        >
-          <span class="icon icon-brush"/>
-          <span>{{ isOwner ? 'Edit This' : 'Remix This' }}</span>
-        </nuxt-link>
-        <nuxt-link to="/editor" class="btn flex-1 justify-center">
-          <span class="icon icon-plus"/>
-          <span>Create New</span>
-        </nuxt-link>
-      </div>
+      <!-- AD: after hero (high-engagement zone) -->
+      <ClientOnly>
+        <AdSlot slot="TODO_AFTER_HERO_SLOT_ID" size="medium"/>
+      </ClientOnly>
 
-      <!-- Share & Download -->
-      <div class="viewer-share-grid" :class="{'has-native': canShareImage}">
-        <button
-            v-if="canShareImage"
-            class="social-btn"
-            :disabled="sharing"
-            @click="shareImage"
-        >
-          <span class="icon icon-social"/>
-          <span>{{ sharing ? '…' : 'Share' }}</span>
-        </button>
-        <a :href="socialUrls.twitter" target="_blank" rel="noopener noreferrer" class="social-btn">
-          <span class="icon icon-x"/>
-          <span>Twitter</span>
-        </a>
-        <a :href="socialUrls.reddit" target="_blank" rel="noopener noreferrer" class="social-btn">
-          <span class="icon icon-reddit"/>
-          <span>Reddit</span>
-        </a>
-        <a :href="socialUrls.pinterest" target="_blank" rel="noopener noreferrer" class="social-btn">
-          <span class="icon icon-pinterest"/>
-          <span>Pinterest</span>
-        </a>
-        <ui-dropdown-menu>
-          <div class="social-btn">
-            <span class="icon icon-download"/>
-            <span>Download</span>
-          </div>
-          <template #menu>
-            <div class="flex flex-col divide-y">
-              <button class="btn justify-between" @click="download('original')">
-                <span>Original</span>
-                <span class="text-gray-500">[{{ data.width }}×{{ data.height }}]</span>
-              </button>
-              <button class="btn justify-between" @click="download('preview')">
-                <span>Preview</span>
-                <span class="text-gray-500">[600×{{ Math.round(600 * data.height / data.width) }}]</span>
-              </button>
-              <button class="btn" @click="download('svg')">SVG</button>
-              <button class="btn" @click="download('pdf')">PDF</button>
-              <button class="btn" @click="download('json')">JSON</button>
-            </div>
-          </template>
-        </ui-dropdown-menu>
-      </div>
-
-      <section>
-        <h2>
-          <span class="icon icon-angle-right"/>
-          <span>Artwork Details</span>
-        </h2>
-        <dl v-if="data" class="details-grid">
-          <div class="details-row">
-            <dt><span class="icon icon-ruler"/> Pixels</dt>
-            <dd>{{ Object.keys(data.map_numbers).length }}</dd>
-          </div>
-          <div class="details-row">
-            <dt><span class="icon icon-ruler"/> Size</dt>
-            <dd>
-              <nuxt-link :to="`/arts/size-${data.width}x${data.height}`">
-                {{ data.width }}×{{ data.height }}
-              </nuxt-link>
-            </dd>
-          </div>
-          <div class="details-row">
-            <dt><span class="icon icon-calender"/> Updated</dt>
-            <dd>{{ new Date(data.updated).toLocaleDateString() }}</dd>
-          </div>
-        </dl>
-      </section>
-      <section v-if="data?.taxonomies && data.taxonomies.length > 0">
-        <h2>
-          <span class="icon icon-angle-right"/>
-          <span>Tags & Categories</span>
-        </h2>
-        <div class="tags">
-          <div class="item" v-for="item in data.taxonomies" :key="item.id">
-            <nuxt-link :to="`/arts/${item.id_string}`" class="transition-colors">
-              {{ item.title }}
-            </nuxt-link>
-          </div>
-        </div>
-      </section>
-      <section v-if="data?.colors && data.colors.length > 0">
-        <h2>
-          <span class="icon icon-angle-right"/>
-          <span>Color Palette ({{ data.colors.length }} colors)</span>
-        </h2>
-        <div class="h-center gap-1 flex-wrap">
-          <nuxt-link
-              v-for="item in data.colors" :key="item"
-              class="size-8 group"
-              :to="`/arts/color-${item.toUpperCase().replace('#', '')}`"
-              :style="{background: item}"
-              :title="`Color: ${item} - Find similar artworks`"
+      <!-- Share + download strip -->
+      <section class="art-section">
+        <header class="section-head">
+          <h2 class="section-title">Share &amp; download</h2>
+        </header>
+        <div class="art-share-grid" :class="{'has-native': canShareImage}">
+          <button
+              v-if="canShareImage"
+              class="art-share-btn"
+              :disabled="sharing"
+              @click="shareImage"
           >
-            <span class="opacity-0">{{ item }}</span>
+            <span class="icon icon-social"/>
+            <span>{{ sharing ? '…' : 'Share' }}</span>
+          </button>
+          <a :href="socialUrls.twitter" target="_blank" rel="noopener noreferrer" class="art-share-btn">
+            <span class="icon icon-x"/>
+            <span>Twitter</span>
+          </a>
+          <a :href="socialUrls.reddit" target="_blank" rel="noopener noreferrer" class="art-share-btn">
+            <span class="icon icon-reddit"/>
+            <span>Reddit</span>
+          </a>
+          <a :href="socialUrls.pinterest" target="_blank" rel="noopener noreferrer" class="art-share-btn">
+            <span class="icon icon-pinterest"/>
+            <span>Pinterest</span>
+          </a>
+          <ui-dropdown-menu>
+            <div class="art-share-btn art-share-btn-primary">
+              <span class="icon icon-download"/>
+              <span>Download</span>
+            </div>
+            <template #menu>
+              <div class="download-menu">
+                <button class="drop-item btn-split" @click="download('original')">
+                  <span>Original PNG</span>
+                  <span class="text-muted">{{ data.width }}×{{ data.height }}</span>
+                </button>
+                <button class="drop-item btn-split" @click="download('preview')">
+                  <span>Preview PNG</span>
+                  <span class="text-muted">600×{{ Math.round(600 * data.height / data.width) }}</span>
+                </button>
+                <button class="drop-item btn-split" @click="download('svg')">
+                  <span>SVG</span>
+                  <span class="text-muted">vector</span>
+                </button>
+                <button class="drop-item btn-split" @click="download('pdf')">
+                  <span>PDF</span>
+                  <span class="text-muted">print</span>
+                </button>
+                <button class="drop-item btn-split" @click="download('json')">
+                  <span>JSON</span>
+                  <span class="text-muted">source</span>
+                </button>
+              </div>
+            </template>
+          </ui-dropdown-menu>
+        </div>
+      </section>
+
+      <!-- Tags -->
+      <section v-if="data?.taxonomies && data.taxonomies.length > 0" class="art-section">
+        <header class="section-head">
+          <h2 class="section-title">Tags</h2>
+        </header>
+        <div class="art-tag-row">
+          <nuxt-link
+              v-for="item in data.taxonomies" :key="item.id"
+              :to="`/arts/${item.id_string}`"
+              class="art-tag"
+          >
+            <span>#</span>{{ item.title }}
           </nuxt-link>
         </div>
       </section>
+
+      <!-- Color palette -->
+      <section v-if="data?.colors && data.colors.length > 0" class="art-section">
+        <header class="section-head">
+          <h2 class="section-title">Palette</h2>
+          <span class="section-link">{{ data.colors.length }} colors · tap to find more</span>
+        </header>
+        <div class="art-palette">
+          <nuxt-link
+              v-for="item in data.colors" :key="item"
+              class="art-swatch"
+              :to="`/arts/color-${item.toUpperCase().replace('#', '')}`"
+              :style="{'--swatch': item}"
+              :title="`Color ${item.toUpperCase()} — find similar artworks`"
+          >
+            <span class="art-swatch-color"/>
+            <span class="art-swatch-hex">{{ item.toUpperCase() }}</span>
+          </nuxt-link>
+        </div>
+      </section>
+
+      <!-- AD: mid-content (between palette and related) -->
       <ClientOnly>
-        <AdSlot slot="6499761093"/>
+        <AdSlot slot="6499761093" size="medium"/>
       </ClientOnly>
 
-      <section>
-        <h2>
-          <span class="icon icon-angle-right"/>
-          <span>Related:</span>
-        </h2>
+      <!-- Related -->
+      <section class="art-section">
+        <header class="section-head">
+          <h2 class="section-title">Related artworks</h2>
+          <nuxt-link to="/arts" class="section-link">Browse all →</nuxt-link>
+        </header>
         <item-list :limit="6"/>
       </section>
 
-      <section class="report-section">
-        <p class="text-xs">
-          See something that breaks the rules?
-          <a :href="reportMailto" class="report-link">Report this artwork</a>
+      <!-- AD: after related (bottom funnel) -->
+      <ClientOnly>
+        <AdSlot slot="TODO_AFTER_RELATED_SLOT_ID" size="small"/>
+      </ClientOnly>
+
+      <!-- Report footer -->
+      <section class="art-report">
+        <span class="art-report-icon icon icon-flag" aria-hidden="true"/>
+        <p>
+          Something off about this artwork?
+          <a :href="reportMailto" class="art-report-link">Report</a>
           ·
-          <nuxt-link to="/dmca">DMCA takedown</nuxt-link>
+          <nuxt-link to="/dmca">DMCA</nuxt-link>
           ·
-          <nuxt-link to="/guidelines">Community Guidelines</nuxt-link>
+          <nuxt-link to="/guidelines">Guidelines</nuxt-link>
         </p>
       </section>
     </template>
@@ -400,83 +434,530 @@ const download = (type: string) => {
 </template>
 
 <style scoped>
-@reference "tailwindcss";
-
-.remix-chain {
-  @apply flex items-center gap-2 px-3 py-2 text-xs;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  color: var(--muted);
+.art-page > * + * {
+  margin-top: 1.75rem;
 }
 
-.viewer-actions {
-  @apply flex gap-2;
-}
-
-.viewer-share-grid {
-  @apply grid grid-cols-2 md:grid-cols-4 gap-1;
-}
-
-.viewer-share-grid.has-native {
-  @apply md:grid-cols-5;
-}
-
-@media (max-width: 767px) {
-  .viewer-actions {
-    @apply flex-col;
+@media (min-width: 768px) {
+  .art-page > * + * {
+    margin-top: 2.5rem;
   }
 }
 
-.details-grid {
-  @apply grid grid-cols-1 md:grid-cols-3 gap-2;
+/* ===== Loading / error states ===== */
+.art-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 1rem;
 }
 
-.details-row {
-  @apply flex flex-col gap-1 px-3 py-2;
+.art-state-skeleton {
+  width: 100%;
+  max-width: 360px;
+}
+
+.art-state-caption {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* ===== HERO ===== */
+.art-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .art-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2rem;
+  }
+}
+
+.art-canvas-wrap {
+  position: relative;
+  isolation: isolate;
+}
+
+.art-canvas-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  z-index: -1;
+  border-radius: var(--radius);
+  background-image:
+      radial-gradient(circle at 1px 1px, color-mix(in oklab, var(--foreground) 14%, transparent) 1px, transparent 1px);
+  background-size: 14px 14px;
+  transform: translate(8px, 8px);
+  opacity: 0.6;
+}
+
+.art-canvas {
+  position: relative;
+  aspect-ratio: 1;
   background: var(--surface);
   border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  padding: 1.25rem;
+  box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.05),
+      0 12px 32px -12px rgba(0, 0, 0, 0.18);
 }
 
-.details-row dt {
-  @apply flex items-center gap-2 text-xs;
-  color: var(--muted);
+.art-canvas::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+      linear-gradient(135deg, color-mix(in oklab, var(--primary) 4%, transparent) 0%, transparent 50%);
+}
+
+.art-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.art-remix-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px 4px 8px;
+  font-size: 10px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
-.details-row dd {
-  @apply text-base;
+.art-remix-badge .icon {
+  width: 11px;
+  height: 11px;
+}
+
+/* ===== Headline ===== */
+.art-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .art-headline {
+    padding-top: 0.5rem;
+  }
+}
+
+.art-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 11px 4px 10px;
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  background: color-mix(in oklab, var(--surface-2) 60%, transparent);
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  align-self: flex-start;
+}
+
+.art-eyebrow-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 25%, transparent);
+}
+
+.art-title {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  line-height: 1.05;
+  font-weight: 800;
+  font-variation-settings: "wght" 800;
+  letter-spacing: -0.03em;
   color: var(--foreground);
 }
 
-.details-row dd a {
-  color: var(--primary);
-}
-
-.report-section {
-  @apply text-center py-3;
+.art-desc {
   color: var(--muted);
-  border-top: 1px solid var(--border);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  max-width: 56ch;
 }
 
-.report-section a {
-  color: var(--muted);
-  text-decoration: underline;
-}
-
-.report-section .report-link {
-  color: var(--secondary);
+.art-author-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+  align-self: flex-start;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .report-section a:hover {
+  .art-author-link:hover {
+    border-color: color-mix(in oklab, var(--primary) 50%, var(--border));
+    transform: translateY(-1px);
+  }
+}
+
+.art-author-avatar {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.art-author-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.art-author-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.art-author-name {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+/* ===== Meta pills ===== */
+.art-meta-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.art-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  background: color-mix(in oklab, var(--surface-2) 50%, transparent);
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.art-pill .icon {
+  width: 0.9em;
+  height: 0.9em;
+  color: var(--primary);
+}
+
+.art-pill strong {
+  color: var(--foreground);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Primary CTAs ===== */
+.art-cta-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.art-cta-primary,
+.art-cta-secondary {
+  flex: 1;
+  justify-content: center;
+}
+
+@media (max-width: 520px) {
+  .art-cta-row {
+    flex-direction: column;
+  }
+}
+
+/* ===== Sections (shared head pattern) ===== */
+.art-section .section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.art-section .section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-lg);
+  font-weight: 800;
+  font-variation-settings: "wght" 800;
+  letter-spacing: -0.015em;
+  color: var(--foreground);
+}
+
+.art-section .section-title::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+.art-section .section-link {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .art-section .section-link:hover {
     color: var(--primary);
   }
 }
 
+/* ===== Share grid ===== */
+.art-share-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .art-share-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .art-share-grid.has-native {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.art-share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, color 160ms ease, background 160ms ease;
+}
+
+.art-share-btn .icon {
+  width: 1em;
+  height: 1em;
+  color: var(--primary);
+}
+
 @media (hover: hover) and (pointer: fine) {
-  .details-row dd a:hover {
-    color: var(--secondary);
+  .art-share-btn:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+    color: var(--primary);
+  }
+}
+
+.art-share-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.art-share-btn-primary {
+  background: color-mix(in oklab, var(--primary) 10%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+  color: var(--primary);
+  cursor: pointer;
+}
+
+/* Download menu */
+.download-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+}
+
+.download-menu .drop-item {
+  padding: 10px 12px;
+  font-size: var(--text-sm);
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.download-menu .btn-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.download-menu .text-muted {
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Tags ===== */
+.art-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.art-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 12px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--surface-2) 60%, transparent);
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  border-radius: 999px;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.art-tag > span:first-child {
+  color: var(--primary);
+  font-weight: 800;
+  margin-right: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .art-tag:hover {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+  }
+  .art-tag:hover > span:first-child {
+    color: var(--primary-foreground);
+  }
+}
+
+/* ===== Palette ===== */
+.art-palette {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+}
+
+.art-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: transform 200ms cubic-bezier(.34,1.56,.64,1), border-color 160ms ease, box-shadow 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .art-swatch:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+    box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.art-swatch-color {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--swatch);
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+}
+
+.art-swatch-hex {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .art-swatch:hover .art-swatch-hex {
+    color: var(--foreground);
+  }
+}
+
+/* ===== Report footer ===== */
+.art-report {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.art-report-icon {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.art-report p {
+  margin: 0;
+  flex: 1;
+  line-height: 1.5;
+}
+
+.art-report a {
+  color: var(--foreground);
+  border-bottom: 1px dotted color-mix(in oklab, var(--muted) 60%, transparent);
+}
+
+.art-report .art-report-link {
+  color: var(--secondary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .art-report a:hover {
+    color: var(--primary);
+    border-color: var(--primary);
   }
 }
 </style>

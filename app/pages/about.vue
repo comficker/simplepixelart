@@ -10,13 +10,13 @@ useCustomSeoMeta({
 <template>
   <div class="page">
     <section>
-      <h1 class="text-2xl">About SimplePixelArt.com</h1>
+      <h1 class="page-title">About SimplePixelArt.com</h1>
       <p>SimplePixelArt.com is a free online platform for creating, sharing, and discovering pixel art. Whether you're a beginner picking up a digital brush for the first time or a seasoned artist looking for a lightweight editor, our tools are built to get out of your way and let you create.</p>
     </section>
 
     <section>
       <h2>What We Offer</h2>
-      <ul class="space-y-2 list-none">
+      <ul class="policy-list">
         <li><strong>Free Pixel Art Editor</strong> — A canvas-based editor with brush, eraser, fill, and move tools. Supports multiple layers, undo/redo, mirror drawing, and canvas sizes from 8×8 up to 64×64.</li>
         <li><strong>Gallery</strong> — Browse thousands of pixel art pieces created by our community, updated daily. Filter by tags, categories, and canvas size.</li>
         <li><strong>Creator Profiles</strong> — Artists can sign in with Google and build a public portfolio of their work.</li>

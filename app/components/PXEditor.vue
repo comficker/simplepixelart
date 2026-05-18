@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {nextTick, onMounted, ref} from "vue";
+import {onMounted, ref} from "vue";
 import {buildIsoPath, drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
 import {toast} from "vue-sonner";
 
@@ -43,6 +43,66 @@ const socialUrls = computed(() => {
 const auth = useAuthStore()
 const showLoginPrompt = ref(false)
 
+interface PickerCollection {
+  id: number
+  id_string: string
+  title: string
+  status: string
+}
+
+const editorCollections = ref<PickerCollection[]>([])
+const initialCollectionIds = ref<Set<number>>(new Set())
+const collectionsLoaded = ref(false)
+
+async function loadCurrentCollections() {
+  collectionsLoaded.value = false
+  editorCollections.value = []
+  initialCollectionIds.value = new Set()
+  if (!auth.isLogged) return
+  if (!editorData.value.id_string || typeof editorData.value.id !== 'number') return
+  try {
+    const res = await useNativeFetch<{results: any[]}>(
+        '/coloring/collections/',
+        {params: {mine: 1, items: editorData.value.id, page_size: 200}},
+    )
+    editorCollections.value = res.results.map((c: any) => ({
+      id: c.id,
+      id_string: c.id_string,
+      title: c.title,
+      status: c.status || 'public',
+    }))
+    initialCollectionIds.value = new Set(editorCollections.value.map(c => c.id))
+  } catch {
+    // silent — picker still shows empty
+  } finally {
+    collectionsLoaded.value = true
+  }
+}
+
+async function syncCollections() {
+  if (typeof editorData.value.id !== 'number') return
+  const pageId = editorData.value.id_string
+  if (!pageId) return
+  const current = new Set(editorCollections.value.map(c => c.id))
+  const toAdd = editorCollections.value.filter(c => !initialCollectionIds.value.has(c.id))
+  const toRemove = [...initialCollectionIds.value].filter(id => !current.has(id))
+  const ops: Promise<unknown>[] = []
+  for (const c of toAdd) {
+    ops.push(useNativeFetch(`/coloring/collections/${c.id}/add-item/`, {
+      method: 'POST',
+      body: {page_id_string: pageId},
+    }).catch(() => null))
+  }
+  for (const id of toRemove) {
+    ops.push(useNativeFetch(`/coloring/collections/${id}/remove-item/`, {
+      method: 'POST',
+      body: {page_id_string: pageId},
+    }).catch(() => null))
+  }
+  if (ops.length) await Promise.all(ops)
+  initialCollectionIds.value = new Set(editorCollections.value.map(c => c.id))
+}
+
 function openPublish() {
   if (!auth.isLogged) {
     showLoginPrompt.value = true
@@ -50,12 +110,14 @@ function openPublish() {
   }
   publishStep.value = 'edit'
   showPublishModal.value = true
+  if (!collectionsLoaded.value) loadCurrentCollections()
 }
 
 async function saveAndPublish() {
   editorData.value.is_public = true
   store.saveState(false)
   await store.saveNow()
+  await syncCollections()
   publishStep.value = 'done'
 }
 
@@ -86,6 +148,72 @@ const isResizing = ref(false);
 const isPinching = ref(false);
 const moveStart = ref({x: 0, y: 0});
 const needSave = ref(false);
+const hoverPos = ref<{ x: number; y: number } | null>(null);
+const bgImage = ref<HTMLImageElement | null>(null);
+let bgImageUrlCache = '';
+
+// ===== Background picker (modal) =====
+const showBgPicker = ref(false);
+const bgTab = ref<'none' | 'solid' | 'art'>('none');
+const bgSolidColor = ref('#FFFFFF');
+const myArts = ref<Array<{id: string; name: string; thumb: string}>>([]);
+const loadingMyArts = ref(false);
+const myArtsLoaded = ref(false);
+
+const bgLabel = computed(() => {
+  const cfg = store.bgConfig;
+  if (cfg.type === 'solid') return cfg.color?.toUpperCase() || 'Solid';
+  if (cfg.type === 'art') return 'My art';
+  return 'Default';
+});
+
+function openBgPicker() {
+  const cfg = store.bgConfig;
+  bgTab.value = cfg.type;
+  bgSolidColor.value = cfg.color || '#FFFFFF';
+  showBgPicker.value = true;
+  if (auth.isLogged && !myArtsLoaded.value) loadMyArts();
+}
+
+async function loadMyArts() {
+  if (!auth.logged?.username) return;
+  loadingMyArts.value = true;
+  try {
+    const res = await useNativeFetch<{results: Array<{id_string: string; name: string}>}>(
+        '/coloring/shared-pages/',
+        {
+          params: {
+            user: auth.logged.username,
+            page_size: 24,
+            ordering: '-updated',
+          },
+        }
+    );
+    myArts.value = res.results.map(r => ({
+      id: r.id_string,
+      name: r.name || r.id_string,
+      thumb: `${config.public.api}/coloring/files/art-original/${r.id_string}.png`,
+    }));
+    myArtsLoaded.value = true;
+  } finally {
+    loadingMyArts.value = false;
+  }
+}
+
+function applyBgNone() {
+  store.setBg({type: 'none', color: '', artId: '', artUrl: ''});
+  bgTab.value = 'none';
+}
+
+function applyBgSolid() {
+  store.setBg({type: 'solid', color: bgSolidColor.value.toUpperCase()});
+  bgTab.value = 'solid';
+}
+
+function applyBgArt(art: {id: string; thumb: string}) {
+  store.setBg({type: 'art', artId: art.id, artUrl: art.thumb});
+  bgTab.value = 'art';
+}
 
 const SIZE_PRESETS = [8, 16, 24, 32, 48, 64];
 const COLOR_PRESETS: Record<number, string[]> = {
@@ -152,9 +280,13 @@ function openOnboarding() {
 
 const editorData = computed(() => store.editorData)
 
+const paletteRef = ref<{ addColor: () => void; toggleModify: () => void; removeColor: () => void } | null>(null)
+const paletteModify = ref(false)
+
 let drawRafId: number | null = null;
 function scheduleDraw() {
   if (drawRafId !== null) return;
+  if (typeof requestAnimationFrame === 'undefined') return;
   drawRafId = requestAnimationFrame(() => {
     drawRafId = null;
     drawEditor();
@@ -164,6 +296,7 @@ function scheduleDraw() {
 let miniMapRafId: number | null = null;
 function scheduleMiniMap() {
   if (miniMapRafId !== null) return;
+  if (typeof requestAnimationFrame === 'undefined') return;
   miniMapRafId = requestAnimationFrame(() => {
     miniMapRafId = null;
     drawMiniMap();
@@ -176,6 +309,40 @@ function cancelScheduledDraw() {
     drawRafId = null;
   }
 }
+
+// Background image loader — client-only (Image / rAF unavailable in SSR)
+watch(
+    () => [store.bgConfig.type, store.bgConfig.artUrl] as const,
+    ([type, url]) => {
+      if (typeof window === 'undefined') return;
+      if (type !== 'art' || !url) {
+        bgImage.value = null;
+        bgImageUrlCache = '';
+        scheduleDraw();
+        return;
+      }
+      if (url === bgImageUrlCache && bgImage.value) {
+        scheduleDraw();
+        return;
+      }
+      bgImageUrlCache = url;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        if (bgImageUrlCache === url) {
+          bgImage.value = img;
+          scheduleDraw();
+        }
+      };
+      img.src = url;
+    },
+    {immediate: true}
+);
+
+watch(() => [store.bgConfig.type, store.bgConfig.color], () => {
+  if (typeof window === 'undefined') return;
+  scheduleDraw();
+});
 
 let pixelMapCache: Record<string, number> | null = null;
 let pixelMapCacheTurn = -1;
@@ -264,23 +431,29 @@ function updateCanvasSize() {
 
 // ================================================== //
 function setZoom(newZoom: number) {
-  const container = canvas.value!.parentElement;
-  if (container && zoom.value !== newZoom) {
-    // Calculate center in pixel coords BEFORE zoom change
-    const oldZoom = zoom.value;
-    const centerPixelX = (container.scrollLeft + container.clientWidth / 2) / oldZoom;
-    const centerPixelY = (container.scrollTop + container.clientHeight / 2) / oldZoom;
-    zoom.value = newZoom;
-    updateCanvasSize();
-    // Scroll so same pixel stays at center, then center if canvas fits
-    container.scrollLeft = Math.max(0, centerPixelX * newZoom - container.clientWidth / 2);
-    container.scrollTop = Math.max(0, centerPixelY * newZoom - container.clientHeight / 2);
-    centerView();
-  } else {
+  const container = canvas.value?.parentElement;
+  if (!container || zoom.value === newZoom) {
     zoom.value = newZoom;
     updateCanvasSize();
     centerView();
+    scheduleMiniMap();
+    scheduleDraw();
+    return;
   }
+
+  // Convert current viewport-center → art-pixel coordinates BEFORE zoom change,
+  // then re-scroll so the same art pixel stays under viewport center.
+  const oldZoom = zoom.value;
+  const centerPixelX = (container.scrollLeft + container.clientWidth / 2) / oldZoom;
+  const centerPixelY = (container.scrollTop + container.clientHeight / 2) / oldZoom;
+
+  zoom.value = newZoom;
+  updateCanvasSize();
+
+  container.scrollLeft = Math.max(0, centerPixelX * newZoom - container.clientWidth / 2);
+  container.scrollTop = Math.max(0, centerPixelY * newZoom - container.clientHeight / 2);
+
+  scheduleMiniMap();
   scheduleDraw();
 }
 
@@ -350,6 +523,18 @@ function startDraw(e: any) {
 }
 
 function draw(e: any) {
+  // Track hover position for brush-preview overlay
+  const pos = getPixelPos(e);
+  if (pos.x >= 0 && pos.x < editorData.value.width && pos.y >= 0 && pos.y < editorData.value.height) {
+    if (!hoverPos.value || hoverPos.value.x !== pos.x || hoverPos.value.y !== pos.y) {
+      hoverPos.value = pos;
+      scheduleDraw();
+    }
+  } else if (hoverPos.value) {
+    hoverPos.value = null;
+    scheduleDraw();
+  }
+
   if (!isStarted.value) return;
   if ('touches' in e) e.preventDefault();
   if (store.selectionState.selecting) {
@@ -415,6 +600,14 @@ function stopDraw() {
   cancelScheduledDraw();
   drawEditor();
   isStarted.value = false;
+}
+
+function leaveCanvas() {
+  stopDraw();
+  if (hoverPos.value) {
+    hoverPos.value = null;
+    scheduleDraw();
+  }
 }
 
 // ================================================== //
@@ -552,28 +745,37 @@ const EDITOR_ART_BG_SOLID = '#ffffff';
 function drawBackground(): void {
   if (!ctx || !canvas.value) return;
   ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
-  ctx.fillStyle = EDITOR_BG;
-  ctx.fillRect(0, 0, canvas.value.width, canvas.value.height);
 
-  const ox = artOffset.value.x;
-  const oy = artOffset.value.y;
+  const ox = Math.round(artOffset.value.x);
+  const oy = Math.round(artOffset.value.y);
   const z = zoom.value;
   const w = editorData.value.width;
   const h = editorData.value.height;
 
   const mode = editorData.value.meta?.iso?.mode ?? 'square';
+  const bg = store.bgConfig;
 
-  if (mode === 'square') {
+  // Layer 1 — full-canvas base color. For solid bg, use the user color so no
+  // dark layer can leak through subpixel gaps later.
+  const baseColor = bg.type === 'solid' ? bg.color : EDITOR_BG;
+  ctx.fillStyle = baseColor;
+  ctx.fillRect(0, 0, canvas.value.width, canvas.value.height);
+
+  // Layer 2 — art-area content (image bg / checker / fallback solid)
+  if (bg.type === 'art' && bgImage.value) {
+    ctx.drawImage(bgImage.value, ox, oy, w * z, h * z);
+  } else if (bg.type === 'none' && mode === 'square') {
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         ctx.fillStyle = (x + y) % 2 === 0 ? EDITOR_CELL_A : EDITOR_CELL_B;
         ctx.fillRect(ox + x * z, oy + y * z, z, z);
       }
     }
-  } else {
+  } else if (bg.type === 'none' && mode !== 'square') {
     ctx.fillStyle = EDITOR_ART_BG_SOLID;
     ctx.fillRect(ox, oy, w * z, h * z);
   }
+  // bg.type === 'solid': base layer already covers everything — nothing else to draw
 }
 
 function drawGrid(): void {
@@ -582,13 +784,14 @@ function drawGrid(): void {
 
 function drawPixels(): void {
   if (!ctx) return;
-  const ox = artOffset.value.x;
-  const oy = artOffset.value.y;
+  const ox = Math.round(artOffset.value.x);
+  const oy = Math.round(artOffset.value.y);
+  const z = zoom.value;
   const results = getPixelMap();
   for (const [key, pixelIndex] of Object.entries(results)) {
     const [x = 0, y = 0] = key.split('_').map(Number);
     ctx.fillStyle = editorData.value.colors[pixelIndex] ?? '#000000';
-    ctx.fillRect(ox + x * zoom.value, oy + y * zoom.value, zoom.value, zoom.value);
+    ctx.fillRect(ox + x * z, oy + y * z, z, z);
   }
 }
 
@@ -650,12 +853,61 @@ function drawIsoOverlay(): void {
   ctx.restore();
 }
 
+function drawBrushPreview(): void {
+  if (!ctx || !hoverPos.value) return;
+  const tool = store.currentTool;
+  if (tool !== 'brush' && tool !== 'eraser') return;
+  if (isPanning.value) return;
+
+  const size = store.brushSize;
+  const offset = Math.floor((size - 1) / 2);
+  const z = zoom.value;
+  const ox = artOffset.value.x;
+  const oy = artOffset.value.y;
+
+  // Clip preview to canvas bounds
+  const startX = Math.max(0, hoverPos.value.x - offset);
+  const startY = Math.max(0, hoverPos.value.y - offset);
+  const endX = Math.min(editorData.value.width, hoverPos.value.x - offset + size);
+  const endY = Math.min(editorData.value.height, hoverPos.value.y - offset + size);
+  if (endX <= startX || endY <= startY) return;
+
+  const px = ox + startX * z;
+  const py = oy + startY * z;
+  const w = (endX - startX) * z;
+  const h = (endY - startY) * z;
+
+  const isEraser = tool === 'eraser';
+  const currentColor = editorData.value.colors[store.currentColorIndex];
+
+  ctx.save();
+  // Soft fill that hints what's about to land (color for brush, red for eraser)
+  if (isEraser) {
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.18)';
+  } else if (currentColor) {
+    ctx.fillStyle = currentColor;
+    ctx.globalAlpha = 0.45;
+  } else {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+  }
+  ctx.fillRect(px, py, w, h);
+  ctx.globalAlpha = 1;
+
+  // Outline — dashed for eraser to read as "removing"
+  ctx.strokeStyle = isEraser ? 'rgba(239, 68, 68, 0.95)' : 'rgba(0, 0, 0, 0.7)';
+  ctx.lineWidth = 1.5;
+  if (isEraser) ctx.setLineDash([4, 3]);
+  ctx.strokeRect(px + 0.5, py + 0.5, w - 1, h - 1);
+  ctx.restore();
+}
+
 function drawEditor() {
   drawBackground();
   drawReference();
   drawPixels();
   drawIsoOverlay();
   drawGrid();
+  drawBrushPreview();
   drawSelection();
   drawMiniMap();
 }
@@ -671,31 +923,49 @@ function drawMiniMap() {
   const cellW = mmW / artW;
   const cellH = mmH / artH;
 
-  // Clear + bg (fixed, not theme)
+  // Clear, then apply art background (mirrors main canvas)
   miniMapCtx.clearRect(0, 0, mmW, mmH);
-  miniMapCtx.fillStyle = EDITOR_CELL_A;
-  miniMapCtx.fillRect(0, 0, mmW, mmH);
+  const bg = store.bgConfig;
+  if (bg.type === 'solid') {
+    miniMapCtx.fillStyle = bg.color;
+    miniMapCtx.fillRect(0, 0, mmW, mmH);
+  } else if (bg.type === 'art' && bgImage.value) {
+    miniMapCtx.drawImage(bgImage.value, 0, 0, mmW, mmH);
+  }
 
-  // Draw pixels (no grid)
+  // Draw pixels with edge-aligned coords: adjacent cells share the exact
+  // boundary pixel, so no gaps or color bleed regardless of fractional cellW.
   const results = getPixelMap();
   for (const [key, pixelIndex] of Object.entries(results)) {
     const [x = 0, y = 0] = key.split('_').map(Number);
+    const sx = Math.round(x * cellW);
+    const sy = Math.round(y * cellH);
+    const ex = Math.round((x + 1) * cellW);
+    const ey = Math.round((y + 1) * cellH);
     miniMapCtx.fillStyle = editorData.value.colors[pixelIndex] ?? '#000000';
-    miniMapCtx.fillRect(x * cellW, y * cellH, Math.ceil(cellW), Math.ceil(cellH));
+    miniMapCtx.fillRect(sx, sy, ex - sx, ey - sy);
   }
 
-  // Viewport indicator
-  const scaleX = mmW / canvas.value.width;
-  const scaleY = mmH / canvas.value.height;
-  const ox = artOffset.value.x * scaleX;
-  const oy = artOffset.value.y * scaleY;
-  const viewX = container.scrollLeft * scaleX;
-  const viewY = container.scrollTop * scaleY;
-  const viewW = Math.min(EDITOR_SIZE.value, canvas.value.width) * scaleX;
-  const viewH = Math.min(EDITOR_SIZE.value, canvas.value.height) * scaleY;
-  miniMapCtx.strokeStyle = 'red';
-  miniMapCtx.lineWidth = 1;
-  miniMapCtx.strokeRect(viewX - ox, viewY - oy, viewW, viewH);
+  // Viewport indicator — map container's visible region to minimap (art) coords
+  const visiblePixelX = (container.scrollLeft - artOffset.value.x) / zoom.value;
+  const visiblePixelY = (container.scrollTop - artOffset.value.y) / zoom.value;
+  const visiblePixelW = container.clientWidth / zoom.value;
+  const visiblePixelH = container.clientHeight / zoom.value;
+
+  // Skip rect when the whole art is visible (zoomed out enough to fit)
+  const showsEverything = visiblePixelW >= artW && visiblePixelH >= artH;
+  if (showsEverything) return;
+
+  const vx = Math.max(0, visiblePixelX) * cellW;
+  const vy = Math.max(0, visiblePixelY) * cellH;
+  const vw = Math.min(artW - Math.max(0, visiblePixelX), visiblePixelW) * cellW;
+  const vh = Math.min(artH - Math.max(0, visiblePixelY), visiblePixelH) * cellH;
+
+  if (vw > 0 && vh > 0) {
+    miniMapCtx.strokeStyle = 'red';
+    miniMapCtx.lineWidth = 1.5;
+    miniMapCtx.strokeRect(vx + 0.5, vy + 0.5, vw - 1, vh - 1);
+  }
 }
 
 function initCanvas() {
@@ -791,6 +1061,15 @@ function exportFile(type: string) {
 }
 
 // ================================================== //
+watch(
+    () => editorData.value.id,
+    () => {
+      collectionsLoaded.value = false
+      editorCollections.value = []
+      initialCollectionIds.value = new Set()
+    },
+)
+
 onMounted(async () => {
   initCanvas()
   if (route.query.new === 'true') {
@@ -820,6 +1099,10 @@ onMounted(async () => {
   const hasContent = editorData.value.layers?.some(l => Object.keys(l.pixels || {}).length > 0);
   if (!onboarded && !route.query.id && !hasContent) {
     showOnboarding.value = true;
+  }
+
+  if (auth.isLogged && editorData.value.id_string && typeof editorData.value.id === 'number') {
+    loadCurrentCollections()
   }
 })
 
@@ -874,6 +1157,58 @@ watch(() => editorData.value.width + editorData.value.height, () => {
             </div>
           </template>
         </ui-dropdown-menu>
+        <ui-dropdown-menu>
+          <ui-tooltip text="Settings">
+            <button class="toolbar-btn"><span class="icon icon-cog"/></button>
+          </ui-tooltip>
+          <template #menu>
+            <div class="file-menu">
+              <button class="file-menu-item" @click="isResizing = true">
+                <span class="icon icon-ruler"/>
+                <span class="file-menu-label">
+                  <span>Resize canvas</span>
+                  <span class="file-menu-hint">{{ editorData.width }}×{{ editorData.height }}</span>
+                </span>
+              </button>
+              <button class="file-menu-item" @click="openBgPicker">
+                <span class="icon icon-image"/>
+                <span class="file-menu-label">
+                  <span>Background</span>
+                  <span class="file-menu-hint">{{ bgLabel }}</span>
+                </span>
+              </button>
+              <button class="file-menu-item" @click="store.cycleGridMode(); scheduleDraw()">
+                <span :class="gridIconClass"/>
+                <span class="file-menu-label">
+                  <span>Grid mode</span>
+                  <span class="file-menu-hint">{{ editorData.meta?.iso?.mode ?? 'square' }}</span>
+                </span>
+              </button>
+              <div class="file-menu-sep"/>
+              <button class="file-menu-item" @click="importReferenceImage">
+                <span class="icon icon-upload"/>
+                <span>{{ referenceImage ? 'Replace reference image' : 'Add reference image' }}</span>
+              </button>
+              <button v-if="referenceImage" class="file-menu-item" @click="toggleReference">
+                <span class="icon" :class="referenceVisible ? 'icon-eye-cross' : 'icon-eye'"/>
+                <span>{{ referenceVisible ? 'Hide reference' : 'Show reference' }}</span>
+              </button>
+              <button v-if="referenceImage" class="file-menu-item" @click="clearReference">
+                <span class="icon icon-trash"/>
+                <span>Remove reference</span>
+              </button>
+              <div class="file-menu-sep"/>
+              <button class="file-menu-item" @click="store.clearCurrentLayer">
+                <span class="icon icon-broom"/>
+                <span>Clear current layer</span>
+              </button>
+              <button class="file-menu-item" @click="store.cleanupUnusedColors()">
+                <span class="icon icon-auto-fix"/>
+                <span>Cleanup unused colors</span>
+              </button>
+            </div>
+          </template>
+        </ui-dropdown-menu>
       </div>
       <div class="toolbar-main no-scrollbar">
       <div class="toolbar-group">
@@ -889,12 +1224,6 @@ watch(() => editorData.value.width + editorData.value.height, () => {
         <ui-tooltip text="Redo (Ctrl+Shift+Z)">
           <button class="toolbar-btn" @click="store.redo()"><span class="icon icon-redo"/></button>
         </ui-tooltip>
-        <ui-tooltip text="Clear layer">
-          <button class="toolbar-btn" @click="store.clearCurrentLayer"><span class="icon icon-broom"/></button>
-        </ui-tooltip>
-        <ui-tooltip text="Clean up unused colors">
-          <button class="toolbar-btn" @click="store.cleanupUnusedColors()"><span class="icon icon-auto-fix"/></button>
-        </ui-tooltip>
       </div>
       <div class="toolbar-sep"/>
       <div class="toolbar-group">
@@ -904,16 +1233,11 @@ watch(() => editorData.value.width + editorData.value.height, () => {
         <ui-tooltip text="Zoom out (Ctrl+-)">
           <button class="toolbar-btn" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
         </ui-tooltip>
-        <ui-tooltip :text="`Grid: ${editorData.meta?.iso?.mode ?? 'square'}`">
-          <button
-              class="toolbar-btn"
-              :class="{ active: (editorData.meta?.iso?.mode ?? 'square') !== 'off' }"
-              @click="store.cycleGridMode(); scheduleDraw()"
-          >
-            <span :class="gridIconClass"/>
-          </button>
-        </ui-tooltip>
-        <template v-if="(editorData.meta?.iso?.mode ?? 'square') === 'iso'">
+      </div>
+      <!-- Inline iso cell editor when iso grid is active -->
+      <template v-if="(editorData.meta?.iso?.mode ?? 'square') === 'iso'">
+        <div class="toolbar-sep"/>
+        <div class="toolbar-group items-center">
           <input
               class="resize-input"
               type="number"
@@ -931,34 +1255,9 @@ watch(() => editorData.value.width + editorData.value.height, () => {
               :value="(editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).height"
               @change="store.setGridCell((editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).width, ($event.target as HTMLInputElement).value); scheduleDraw()"
           >
-        </template>
-      </div>
-      <div class="toolbar-sep"/>
-      <div class="toolbar-group">
-        <ui-tooltip :text="referenceImage ? 'Replace ref' : 'Add ref'">
-          <button class="toolbar-btn" :class="{ active: !!referenceImage }" @click="importReferenceImage">
-            <span class="icon icon-image"/>
-          </button>
-        </ui-tooltip>
-        <template v-if="referenceImage">
-          <ui-tooltip :text="referenceVisible ? 'Hide reference' : 'Show reference'">
-            <button class="toolbar-btn" :class="{ active: referenceVisible }" @click="toggleReference">
-              <span class="icon icon-eye"/>
-            </button>
-          </ui-tooltip>
-          <ui-tooltip text="Remove reference">
-            <button class="toolbar-btn" @click="clearReference">
-              <span class="icon icon-trash"/>
-            </button>
-          </ui-tooltip>
-        </template>
-      </div>
-      <template v-if="!isResizing">
-        <div class="toolbar-sep"/>
-        <ui-tooltip text="Resize canvas">
-          <button class="toolbar-btn" @click="isResizing = true"><span class="icon icon-resize"/></button>
-        </ui-tooltip>
+        </div>
       </template>
+      <!-- Inline resize editor when triggered from Settings -->
       <template v-if="isResizing">
         <div class="toolbar-sep"/>
         <div class="toolbar-group items-center">
@@ -967,6 +1266,9 @@ watch(() => editorData.value.width + editorData.value.height, () => {
           <input class="resize-input" v-model="newSize.height" type="number" min="1" max="128">
           <button class="toolbar-btn active" @click="store.resize(newSize);isResizing = false;">
             <span class="icon icon-check"/>
+          </button>
+          <button class="toolbar-btn toolbar-btn-text" @click="isResizing = false">
+            Cancel
           </button>
         </div>
       </template>
@@ -980,15 +1282,15 @@ watch(() => editorData.value.width + editorData.value.height, () => {
       </div>
     </div>
 
-    <div class="editor-body flex flex-col md:flex-row gap-2">
+    <div class="editor-body">
       <!-- Tool rail (left on desktop, horizontal strip on mobile) -->
       <Widget class="tool-rail">
-        <div class="tools tools-rail">
+        <div class="tools tools-rail no-scrollbar">
           <Square @click="store.setTool('brush')" :class="{ active: store.currentTool === 'brush' }">
-            <span class="icon icon-brush"/>
+            <span class="icon icon-square"/>
           </Square>
           <Square @click="store.setTool('iso-line')" :class="{ active: store.currentTool === 'iso-line' }">
-            <span class="icon icon-brush iso-rotated"/>
+            <span class="icon icon-rhombus"/>
           </Square>
           <Square @click="store.setTool('bucket')" :class="{ active: store.currentTool === 'bucket' }">
             <span class="icon icon-bucket"/>
@@ -996,6 +1298,30 @@ watch(() => editorData.value.width + editorData.value.height, () => {
           <Square @click="store.setTool('eraser')" :class="{ active: store.currentTool === 'eraser' }">
             <span class="icon icon-eraser"/>
           </Square>
+
+          <div
+              v-if="store.currentTool === 'brush' || store.currentTool === 'eraser'"
+              class="brush-sizes"
+              role="group"
+              aria-label="Brush size"
+          >
+            <button
+                v-for="n in [1, 2, 3, 4, 5]"
+                :key="n"
+                type="button"
+                class="brush-size"
+                :class="{ active: store.brushSize === n }"
+                :title="`Brush size ${n}`"
+                :aria-label="`Brush size ${n}`"
+                :aria-pressed="store.brushSize === n"
+                @click="store.setBrushSize(n)"
+            >
+              <span
+                  class="brush-size-dot"
+                  :style="{ width: `${Math.min(14, 2 + n * 2)}px`, height: `${Math.min(14, 2 + n * 2)}px` }"
+              />
+            </button>
+          </div>
 
           <div class="tools-sep"/>
 
@@ -1021,7 +1347,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
       </Widget>
 
       <!-- Canvas + palette column -->
-      <div class="canvas-col flex-1 space-y-2">
+      <div class="canvas-col">
         <Widget>
           <Square>
             <div
@@ -1041,7 +1367,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
                   @mousedown="startDraw"
                   @mousemove="draw"
                   @mouseup="stopDraw"
-                  @mouseleave="stopDraw"
+                  @mouseleave="leaveCanvas"
                   @touchstart="handleTouchStart"
                   @touchmove="handleTouchMove"
                   @touchend="handleTouchEnd"
@@ -1051,13 +1377,30 @@ watch(() => editorData.value.width + editorData.value.height, () => {
         </Widget>
 
         <Widget title="Palette">
-          <editor-palette/>
+          <template #ctl>
+            <div class="widget-ctl-group">
+              <button class="widget-ctl-btn" @click="paletteRef?.addColor()" title="Add color">
+                <span class="icon icon-plus"/>
+                <span>Add</span>
+              </button>
+              <button
+                  class="widget-ctl-btn"
+                  :class="{active: paletteModify}"
+                  @click="paletteRef?.toggleModify()"
+                  title="Toggle edit mode"
+              >
+                <span class="icon icon-adjust"/>
+                <span>Edit</span>
+              </button>
+            </div>
+          </template>
+          <editor-palette ref="paletteRef" v-model:modify="paletteModify"/>
         </Widget>
       </div>
 
       <!-- Right sidebar (Preview + Layers only) -->
       <div class="editor-sidebar">
-        <Widget title="Preview">
+        <Widget title="Preview" class="preview-widget">
           <template #ctl>
             <a v-if="editorData.id_string" target="_blank" :href="`/art/${editorData.id_string}`">
               <span class="icon icon-link"/>
@@ -1070,7 +1413,9 @@ watch(() => editorData.value.width + editorData.value.height, () => {
 
         <Widget title="Layers" class="layers">
           <template #ctl>
-            <button @click="store.addLayer">+</button>
+            <button class="layer-add" @click="store.addLayer" title="Add new layer" aria-label="Add new layer">
+              <span class="icon icon-plus"/>
+            </button>
           </template>
           <ul>
             <li
@@ -1079,8 +1424,20 @@ watch(() => editorData.value.width + editorData.value.height, () => {
                 :class="{ active: index === store.currentLayerIndex }"
                 @click="store.currentLayerIndex = index"
             >
-              <EditableText v-model="editorData.layers[index]!.name" placeholder="Name" @changed="store.saveState()"/>
-              <button v-if="editorData.layers.length > 1" @click.stop="store.deleteLayer(index)" class="layer-del">
+              <span class="layer-num" aria-hidden="true">{{ editorData.layers.length - index }}</span>
+              <EditableText
+                  v-model="editorData.layers[index]!.name"
+                  placeholder="Untitled layer"
+                  class="layer-name"
+                  @changed="store.saveState()"
+              />
+              <button
+                  v-if="editorData.layers.length > 1"
+                  @click.stop="store.deleteLayer(index)"
+                  class="layer-del"
+                  title="Delete layer"
+                  aria-label="Delete layer"
+              >
                 <span class="icon icon-trash"/>
               </button>
             </li>
@@ -1089,13 +1446,20 @@ watch(() => editorData.value.width + editorData.value.height, () => {
       </div>
     </div>
 
+    <!-- Reference strip from user's collections -->
+    <EditorCollectionStrip
+        v-if="editorCollections.length"
+        :collections="editorCollections"
+        :exclude-id="editorData.id_string"
+    />
+
     <!-- Publish modal -->
     <Teleport to="body">
       <div v-if="showPublishModal" class="share-overlay" @click.self="showPublishModal = false">
         <div class="share-modal">
           <!-- Step 1: Edit info -->
           <template v-if="publishStep === 'edit'">
-            <h3 class="text-sm font-bold mb-3">Publish your pixel art</h3>
+            <h3 class="publish-heading">Publish your pixel art</h3>
             <div class="publish-form">
               <div>
                 <label class="publish-label">Title</label>
@@ -1128,16 +1492,20 @@ watch(() => editorData.value.width + editorData.value.height, () => {
                     class="publish-input"
                 />
               </div>
+              <div>
+                <label class="publish-label">Collections</label>
+                <EditorCollectionPicker v-model="editorCollections"/>
+              </div>
               <div class="h-center gap-2">
                 <ui-switch v-model="editorData.is_public"/>
                 <span class="text-xs">Public</span>
               </div>
             </div>
-            <div class="flex gap-2 mt-4">
-              <button class="btn primary flex-1 justify-center" @click="saveAndPublish">
+            <div class="publish-actions">
+              <button class="btn primary block" @click="saveAndPublish">
                 Save & Publish
               </button>
-              <button class="btn flex-1 justify-center" @click="showPublishModal = false">
+              <button class="btn block" @click="showPublishModal = false">
                 Cancel
               </button>
             </div>
@@ -1145,13 +1513,13 @@ watch(() => editorData.value.width + editorData.value.height, () => {
 
           <!-- Step 2: Share result -->
           <template v-if="publishStep === 'done'">
-            <div class="text-center mb-4">
+            <div class="publish-done-header">
               <h3 class="text-sm font-bold">Published!</h3>
               <p class="text-xs mt-1">Your pixel art is live. Share it!</p>
             </div>
-            <div class="flex flex-col gap-2">
+            <div class="share-stack">
               <div class="publish-link" @click="copyLink">
-                <span class="text-xs truncate flex-1">{{ shareMeta.url }}</span>
+                <span class="publish-link-text">{{ shareMeta.url }}</span>
                 <span class="icon icon-link flex-shrink-0"/>
               </div>
               <div class="social-grid">
@@ -1174,7 +1542,7 @@ watch(() => editorData.value.width + editorData.value.height, () => {
               </div>
               <nuxt-link
                   :to="`/art/${editorData.id_string}`"
-                  class="btn primary w-full justify-center"
+                  class="btn primary wide"
               >
                 View Page
               </nuxt-link>
@@ -1244,20 +1612,107 @@ watch(() => editorData.value.width + editorData.value.height, () => {
           </div>
 
           <div class="onb-actions">
-            <button class="btn primary flex-1 justify-center" @click="finishOnboarding">Start drawing</button>
+            <button class="btn primary block" @click="finishOnboarding">Start drawing</button>
             <button class="share-dismiss" @click="skipOnboarding">Skip</button>
           </div>
         </div>
       </div>
 
+    <!-- Background picker -->
+    <Teleport to="body">
+      <div v-if="showBgPicker" class="share-overlay" @click.self="showBgPicker = false">
+        <div class="share-modal bg-picker-modal">
+          <h3 class="publish-heading">Canvas background</h3>
+          <p class="publish-sub">Choose what shows under your pixels. Saves with the art.</p>
+
+          <div class="bg-tabs">
+            <button class="bg-tab" :class="{active: bgTab === 'none'}" @click="bgTab = 'none'">
+              <span class="bg-tab-preview bg-tab-preview-checker" aria-hidden="true"/>
+              <span>Default</span>
+            </button>
+            <button class="bg-tab" :class="{active: bgTab === 'solid'}" @click="bgTab = 'solid'">
+              <span class="bg-tab-preview" :style="{background: bgSolidColor}" aria-hidden="true"/>
+              <span>Solid</span>
+            </button>
+            <button
+                class="bg-tab"
+                :class="{active: bgTab === 'art'}"
+                :disabled="!auth.isLogged"
+                :title="auth.isLogged ? 'Use one of your arts' : 'Login required'"
+                @click="bgTab = 'art'; auth.isLogged && !myArtsLoaded && loadMyArts()"
+            >
+              <span class="bg-tab-preview bg-tab-preview-art" aria-hidden="true"/>
+              <span>My art</span>
+            </button>
+          </div>
+
+          <div class="bg-tab-body">
+            <div v-if="bgTab === 'none'" class="bg-pane-none">
+              <p>Transparent checkerboard — what you see at editor start. No solid layer behind the pixels.</p>
+              <button class="btn primary wide" @click="applyBgNone(); showBgPicker = false">
+                Use default
+              </button>
+            </div>
+
+            <div v-else-if="bgTab === 'solid'" class="bg-pane-solid">
+              <label class="bg-color-row">
+                <input type="color" v-model="bgSolidColor" class="bg-color-input">
+                <span class="bg-color-hex">{{ bgSolidColor.toUpperCase() }}</span>
+              </label>
+              <div class="bg-color-presets">
+                <button
+                    v-for="c in ['#FFFFFF','#000000','#F5F5F5','#FFE4B5','#B0E0E6','#1A1033','#0F380F','#2A0D4D']"
+                    :key="c"
+                    class="bg-color-preset"
+                    :style="{background: c}"
+                    :title="c"
+                    @click="bgSolidColor = c"
+                />
+              </div>
+              <button class="btn primary wide" @click="applyBgSolid(); showBgPicker = false">
+                Apply color
+              </button>
+            </div>
+
+            <div v-else-if="bgTab === 'art'" class="bg-pane-art">
+              <div v-if="!auth.isLogged" class="bg-empty">
+                <p>Login to pick from your published arts.</p>
+              </div>
+              <div v-else-if="loadingMyArts" class="bg-art-grid">
+                <div v-for="i in 6" :key="i" class="skeleton skeleton-square bg-art-thumb"/>
+              </div>
+              <div v-else-if="!myArts.length" class="bg-empty">
+                <p>You haven't published any art yet.</p>
+                <p class="text-xs text-muted">Publish first, then come back here.</p>
+              </div>
+              <div v-else class="bg-art-grid">
+                <button
+                    v-for="art in myArts"
+                    :key="art.id"
+                    class="bg-art-thumb"
+                    :class="{active: store.bgConfig.artId === art.id}"
+                    :title="art.name"
+                    @click="applyBgArt(art); showBgPicker = false"
+                >
+                  <img :src="art.thumb" :alt="art.name" loading="lazy">
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button class="share-dismiss" @click="showBgPicker = false">Close</button>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- Login prompt -->
     <Teleport to="body">
       <div v-if="showLoginPrompt" class="share-overlay" @click.self="showLoginPrompt = false">
         <div class="share-modal">
-          <h3 class="text-sm font-bold mb-2">Login to share</h3>
-          <p class="text-xs mb-4">Sign in to publish and share your pixel art. Your local work will be synced to the cloud.</p>
-          <div class="flex flex-col gap-2">
-            <a :href="googleAuthUrl" class="btn primary w-full justify-center">
+          <h3 class="login-heading">Login to share</h3>
+          <p class="login-msg">Sign in to publish and share your pixel art. Your local work will be synced to the cloud.</p>
+          <div class="share-stack">
+            <a :href="googleAuthUrl" class="btn primary wide">
               <span class="icon icon-social"/>
               <span>Login with Google</span>
             </a>
@@ -1272,15 +1727,229 @@ watch(() => editorData.value.width + editorData.value.height, () => {
 </template>
 
 <style scoped>
-@reference "tailwindcss";
+.publish-heading {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm-lh);
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
 
-.iso-rotated {
-  transform: rotate(45deg);
+.login-heading {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm-lh);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
 }
-.grid-off {
-  opacity: 0.4;
+
+/* ===== Background picker modal ===== */
+.bg-picker-modal {
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem !important;
 }
-canvas.iso-line {
-  cursor: crosshair;
+
+.bg-picker-modal .publish-heading {
+  margin-bottom: 0;
+}
+
+.publish-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: -0.5rem;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+.bg-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.bg-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.bg-tab:hover:not(:disabled) {
+  color: var(--foreground);
+}
+
+.bg-tab.active {
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.bg-tab:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.bg-tab-preview {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.bg-tab-preview-checker {
+  background:
+    linear-gradient(45deg, #ccc 25%, transparent 25%),
+    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ccc 75%),
+    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+  background-size: 6px 6px;
+  background-position: 0 0, 0 3px, 3px -3px, -3px 0;
+  background-color: #fff;
+}
+
+.bg-tab-preview-art {
+  background: linear-gradient(135deg, var(--primary), color-mix(in oklab, var(--primary) 50%, var(--foreground)));
+}
+
+.bg-tab-body {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bg-pane-none,
+.bg-pane-solid,
+.bg-pane-art {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.bg-pane-none p,
+.bg-empty p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.bg-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+/* Solid color tab */
+.bg-color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.bg-color-input {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bg-color-hex {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+  letter-spacing: 0.02em;
+}
+
+.bg-color-presets {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+}
+
+.bg-color-preset {
+  aspect-ratio: 1;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 140ms ease, border-color 140ms ease;
+}
+
+.bg-color-preset:hover {
+  transform: scale(1.08);
+  border-color: var(--primary);
+}
+
+/* Art picker tab */
+.bg-art-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.bg-art-thumb {
+  aspect-ratio: 1;
+  background: var(--surface-2);
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+
+.bg-art-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  display: block;
+}
+
+.bg-art-thumb:hover {
+  border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+  transform: translateY(-1px);
+}
+
+.bg-art-thumb.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--primary) 35%, transparent);
+}
+
+.btn.wide {
+  width: 100%;
+  justify-content: center;
+}
+
+.login-msg {
+  font-size: var(--text-xs);
+  line-height: var(--text-xs-lh);
+  margin-bottom: 1rem;
 }
 </style>
