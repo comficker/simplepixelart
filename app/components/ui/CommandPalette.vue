@@ -79,9 +79,14 @@ const baseCommands = computed<Cmd[]>(() => [
   { id: 'create:tilemap', label: 'New tilemap', icon: 'icon-rhombus', hint: 'Grid / iso', group: 'Create', keywords: 'map grid isometric build level scene world', run: () => router.push('/tilemaps/editor') },
   { id: 'create:slice', label: 'Slice a tileset', icon: 'icon-select', group: 'Create', keywords: 'spritesheet cut sprites tiles', run: () => router.push('/tilesets/slicer') },
   { id: 'create:palette', label: 'Extract a palette', icon: 'icon-image', hint: 'From image', group: 'Create', keywords: 'color palette from image extract', run: () => router.push('/palettes/color-palette-from-image') },
-  { id: 'help:guide', label: 'Guidelines', icon: 'icon-search', group: 'Help', run: () => router.push('/guidelines') },
-  { id: 'help:about', label: 'About SimplePixelArt', icon: 'icon-search', group: 'Help', run: () => router.push('/about') },
-  { id: 'help:contact', label: 'Contact', icon: 'icon-search', group: 'Help', run: () => router.push('/contact') },
+  { id: 'help:guide', label: 'Guidelines', icon: 'icon-flag', group: 'Help', keywords: 'community rules', run: () => router.push('/guidelines') },
+  { id: 'help:about', label: 'About SimplePixelArt', icon: 'icon-explore', group: 'Help', keywords: 'info mission', run: () => router.push('/about') },
+  { id: 'help:contact', label: 'Contact', icon: 'icon-at', group: 'Help', keywords: 'email support help', run: () => router.push('/contact') },
+  { id: 'help:privacy', label: 'Privacy Policy', icon: 'icon-eye-cross', group: 'Help', keywords: 'privacy data gdpr cookies', run: () => router.push('/privacy') },
+  { id: 'help:terms', label: 'Terms of Service', icon: 'icon-file', group: 'Help', keywords: 'terms tos legal', run: () => router.push('/terms') },
+  { id: 'help:dmca', label: 'DMCA', icon: 'icon-flag', group: 'Help', keywords: 'copyright takedown report', run: () => router.push('/dmca') },
+  { id: 'help:github', label: 'GitHub repository', icon: 'icon-link', hint: 'Open source', group: 'Help', keywords: 'github source code open source star contribute repo', run: () => window.open('https://github.com/comficker/simplepixelart', '_blank', 'noopener') },
+  { id: 'help:issues', label: 'Report an issue', icon: 'icon-flag', hint: 'GitHub Issues', group: 'Help', keywords: 'bug report feature request issue github feedback', run: () => window.open('https://github.com/comficker/simplepixelart/issues', '_blank', 'noopener') },
   { id: 'system:reset', label: 'Reset app data', hint: 'Clear cache & storage', icon: 'icon-broom', group: 'System', keywords: 'reset clear cache storage wipe localstorage indexeddb hard refresh fix stuck broken', run: resetAppData },
 ])
 
