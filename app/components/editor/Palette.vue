@@ -100,7 +100,8 @@ defineExpose({addColor, toggleModify, removeColor})
 
 <style scoped>
 .palette {
-  height: 2.5rem;
+  /* Swatch size + the items row's vertical padding. */
+  height: calc(2.5rem + 2 * var(--space-2));
   position: relative;
   font-size: var(--text-2xl);
   line-height: var(--text-2xl-lh);
@@ -114,8 +115,9 @@ defineExpose({addColor, toggleModify, removeColor})
 
 .items {
   display: flex;
-  gap: 0.125rem;
+  gap: var(--space-2);
   flex-wrap: nowrap;
+  padding: var(--space-2);
 }
 
 .item {
