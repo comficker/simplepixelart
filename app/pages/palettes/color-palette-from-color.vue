@@ -58,7 +58,7 @@ useCustomSeoMeta({
   keywords: "color palette by color, color palette from color, color palette generator, palette from one color, color harmony palette, complementary colors, analogous colors, triadic colors, color combinations",
   canonical: "https://simplepixelart.com/palettes/color-palette-from-color",
   robots: "index, follow",
-  ogImage: "https://simplepixelart.com/og-image.jpg",
+  ogImage: "https://simplepixelart.com/og-image.png",
   script: [
     {
       type: 'application/ld+json',

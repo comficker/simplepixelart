@@ -55,7 +55,7 @@ useCustomSeoMeta({
   keywords: "color palette for image, color palette from image, extract colors from image, image color palette generator, get colors from photo, image to palette, dominant colors extractor, photo color palette",
   canonical: "https://simplepixelart.com/palettes/color-palette-from-image",
   robots: "index, follow",
-  ogImage: "https://simplepixelart.com/og-image.jpg",
+  ogImage: "https://simplepixelart.com/og-image.png",
   script: [
     {
       type: 'application/ld+json',

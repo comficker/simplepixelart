@@ -43,7 +43,7 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
       { property: 'og:type', content: () => toValue(options.ogType) || 'website' },
       { property: 'og:url', content: v(options.canonical) },
       { property: 'og:site_name', content: 'SimplePixelArt.com' },
-      { property: 'og:image', content: () => toValue(options.ogImage) || `${baseUrl}/og-image.jpg` },
+      { property: 'og:image', content: () => toValue(options.ogImage) || `${baseUrl}/og-image.png` },
       { property: 'og:image:width', content: '1200' },
       { property: 'og:image:height', content: '630' },
       { property: 'og:image:alt', content: v(options.title) },
@@ -54,7 +54,7 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
       { name: 'twitter:creator', content: '@comficker' },
       { name: 'twitter:title', content: v(options.title) },
       { name: 'twitter:description', content: v(options.description) },
-      { name: 'twitter:image', content: () => toValue(options.ogImage) || `${baseUrl}/og-image.jpg` },
+      { name: 'twitter:image', content: () => toValue(options.ogImage) || `${baseUrl}/og-image.png` },
 
       // Article specific (if applicable)
       ...(options.articleSection ? [{ property: 'article:section', content: v(options.articleSection) }] : []),

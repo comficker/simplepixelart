@@ -131,7 +131,7 @@ const ogImage = computed(() => {
   if (firstSample.value?.id_string) {
     return `${config.public.api}/coloring/files/art-social/${firstSample.value.id_string}.png`
   }
-  return 'https://simplepixelart.com/og-image.jpg'
+  return 'https://simplepixelart.com/og-image.png'
 })
 
 // `titleTemplate` in nuxt.config already appends " - SimplePixelArt.com" (21

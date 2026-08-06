@@ -36,7 +36,7 @@ useCustomSeoMeta({
   keywords: 'pixel art gallery, pixel art collection, browse pixel art, free pixel art, pixel art download, 8-bit art, 16-bit art, pixel sprites, retro art, pixel art community',
   canonical: canonicalUrl,
   robots: () => (page.value > 1 || hasFilterQuery.value) ? 'noindex, follow' : 'index, follow',
-  ogImage: 'https://simplepixelart.com/og-image.jpg',
+  ogImage: 'https://simplepixelart.com/og-image.png',
   script: [
     {
       type: 'application/ld+json',

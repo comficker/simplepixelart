@@ -45,7 +45,7 @@ const coverItem = computed(() => items.value[0])
 const ogImage = computed(() =>
     coverItem.value?.id_string
         ? `${config.public.api}/coloring/files/art-social/${coverItem.value.id_string}.png`
-        : `${config.public.siteUrl}/og-image.jpg`,
+        : `${config.public.siteUrl}/og-image.png`,
 )
 
 const formattedDate = computed(() => {

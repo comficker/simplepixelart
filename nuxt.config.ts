@@ -131,7 +131,7 @@ export default defineNuxtConfig({
                 {property: 'og:title', content: 'Simple Pixel Art - Create & Discover Pixel Art Online'},
                 {property: 'og:description', content: 'Create and discover amazing pixel art online. Free pixel art editor with advanced tools and vibrant community.'},
                 {property: 'og:url', content: 'https://simplepixelart.com'},
-                {property: 'og:image', content: 'https://simplepixelart.com/og-image.jpg'},
+                {property: 'og:image', content: 'https://simplepixelart.com/og-image.png'},
                 {property: 'og:image:width', content: '1200'},
                 {property: 'og:image:height', content: '630'},
                 {property: 'og:image:alt', content: 'Simple Pixel Art - Create and Discover Pixel Art'},
@@ -142,7 +142,7 @@ export default defineNuxtConfig({
                 {name: 'twitter:creator', content: '@comficker'},
                 {name: 'twitter:title', content: 'Simple Pixel Art - Create & Discover Pixel Art Online'},
                 {name: 'twitter:description', content: 'Create and discover amazing pixel art online. Free pixel art editor with advanced tools.'},
-                {name: 'twitter:image', content: 'https://simplepixelart.com/og-image.jpg'},
+                {name: 'twitter:image', content: 'https://simplepixelart.com/og-image.png'},
                 {name: 'twitter:image:alt', content: 'Simple Pixel Art - Create and Discover Pixel Art'},
             ],
             script: [
