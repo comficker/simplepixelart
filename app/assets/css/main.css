@@ -2703,6 +2703,11 @@ html.editor-fullscreen .consent {
     border-bottom: 1px solid color-mix(in oklab, var(--border) 45%, transparent);
 }
 
+/* Dividers separate items — the last row doesn't need a trailing line. */
+.qa-item:last-child {
+    border-bottom: 0;
+}
+
 .qa-q {
     display: flex;
     align-items: center;
@@ -3234,7 +3239,6 @@ html.editor-fullscreen .consent {
 .readme-body h1,
 .readme-body h2,
 .readme-body h3 {
-  font-family: inherit;                /* override the app's display heading font */
   font-variation-settings: normal;
   letter-spacing: normal;
   color: var(--foreground);
