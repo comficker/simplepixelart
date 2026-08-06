@@ -13,6 +13,26 @@ See the [README](README.md) for configuration and project layout. The editor cor
 `app/components/PXEditor.vue` + `app/stores/editor.store.ts`; pure canvas/pixel utilities in
 `app/helper/`.
 
+## Branches & commits
+
+- Branch from `main`: `feat/<slug>`, `fix/<slug>`, `perf/<slug>`, `ui/<slug>`,
+  `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`
+- Commit format — Conventional Commits with a gitmoji prefix:
+  `<emoji> <type>(<scope>): <subject>`
+
+  ```
+  ✨ feat(editor): single-key tool shortcuts (B/E/G/V/M/L)
+  🐛 fix(editor): whole-canvas flip was off by one pixel
+  ⚡ perf(editor): draw iso lattice as line families
+  💄 ui(work): pin panel to viewport height
+  📝 docs: add editor screenshot to README
+  ```
+
+  Emoji ↔ type: ✨ feat · 🐛 fix · ⚡ perf · 💄 ui · ♻️ refactor · 📝 docs ·
+  🔧 chore · 🔒 security · 🧹 cleanup
+- Subject: imperative, lowercase, ≤ 72 chars; body explains the *why*
+- One logical change per commit/PR
+
 ## Guidelines
 
 - **Keep PRs small and focused** — one fix or feature per PR.

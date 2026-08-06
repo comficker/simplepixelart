@@ -70,3 +70,69 @@ All API calls go through `useNativeFetch` / `useAuthFetch` (from `app/composable
 - Modals: use the shared `UiModal` component (share-overlay chrome) — don't hand-roll overlays
 - One flat-panel frame for canvas tools (`.editor` / `.flat-editor` chrome in main.css); widgets sit flush with 1px dividers
 - Match the package manager to the lockfile: `bun.lock` → bun
+
+## Git workflow
+
+This is a public open-source repo — commits and releases follow a strict convention
+(also documented for contributors in [CONTRIBUTING.md](CONTRIBUTING.md)).
+
+### Branches
+
+`main` is always deployable — **every push to `main` auto-deploys production**.
+Work on a branch, merge when done:
+
+```
+feat/<short-slug>      new feature            feat/onion-skin-opacity
+fix/<short-slug>       bug fix                fix/fullscreen-pointer-events
+perf/<short-slug>      performance            perf/iso-lattice-lines
+ui/<short-slug>        visual/UX polish       ui/toolbar-tooltips
+refactor/<short-slug>  no behavior change     refactor/palette-store
+docs/<short-slug>      docs only              docs/readme-screenshot
+chore/<short-slug>     build/config/deps      chore/deploy-secrets
+```
+
+Trivial single-commit changes (typo, doc line) may go straight to `main`; anything
+touching editor behavior gets a branch.
+
+### Commits — Conventional Commits + gitmoji
+
+Format: `<emoji> <type>(<scope>): <subject>`
+
+| Emoji | Type | Use for |
+|---|---|---|
+| ✨ | `feat` | new user-facing feature |
+| 🐛 | `fix` | bug fix |
+| ⚡ | `perf` | performance improvement |
+| 💄 | `ui` | visual/UX polish, CSS |
+| ♻️ | `refactor` | code change, same behavior |
+| 📝 | `docs` | README/docs/comments only |
+| 🔧 | `chore` | build, config, deps, CI |
+| 🔒 | `security` | security fix |
+| 🚑 | `hotfix` | urgent prod fix on main |
+| 🧹 | `cleanup` | dead code removal |
+
+- **Scope** = area touched: `editor`, `tileset`, `tilemap`, `palette`, `animation`,
+  `convert`, `work`, `gallery`, `seo`, `deploy` (omit if truly global)
+- **Subject**: imperative, lowercase, no trailing period, ≤ 72 chars
+- **Body** (when non-obvious): the *why* and the user-visible effect; wrap at 72
+- One logical change per commit — don't mix a feature with unrelated cleanup
+
+Examples:
+
+```
+✨ feat(editor): single-key tool shortcuts (B/E/G/V/M/L)
+🐛 fix(editor): whole-canvas flip was off by one pixel
+⚡ perf(editor): draw iso lattice as line families, not per-diamond quads
+💄 ui(work): pin panel to viewport height with internal scroll
+📝 docs: add editor screenshot to README
+```
+
+### Releases
+
+- **SemVer** annotated tags: `git tag -a vX.Y.Z -m "vX.Y.Z"` on `main` **after**
+  the deploy for that commit is green
+- **patch** = fixes/polish · **minor** = new features · **major** = breaking/redesign
+- Every tag gets a GitHub Release with notes structured as:
+  `## ✨ Highlights` → `## 🐛 Fixes` → `## 🧰 Internal` (skip empty sections;
+  one bullet per change, user-facing wording, link PRs/issues when they exist)
+- Tag pushes do NOT trigger deploy (workflow only watches branch `main`)
