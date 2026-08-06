@@ -1453,16 +1453,23 @@ export const useEditor = defineStore('editor', () => {
     }
 
     /**
-     * Generates a pixel-perfect iso line into virtualLayer.
-     * The line follows one of four axes — NE, SE, SW, NW — at slope ±cellH/cellW.
-     * For each cellW horizontal step the line advances cellH vertically (stair-step).
+     * Generates a pixel-perfect line into virtualLayer, with the angle SNAPPED
+     * to whichever pixel-art axis the (start → end) cursor vector is closest to:
      *
-     * Algorithm:
-     *  - Determine direction signs (sx, sy) from the (start → end) vector.
-     *  - k = max(floor(|dx|/cellW), floor(|dy|/cellH)) — number of stair cells.
-     *  - For each cell c ∈ [0, k]: paint a horizontal tread of cellW pixels.
-     *  - For c ∈ [1, k]: paint a vertical riser of (cellH - 1) pixels that
-     *    connects the previous tread's end column to the current tread's start row.
+     *   horizontal · iso diagonal (cellH:cellW, e.g. 2:1) · true diagonal (1:1)
+     *   · steep iso diagonal (cellW:cellH swapped, e.g. 1:2) · vertical
+     *
+     * — each in all four quadrants. Boundaries sit at the angular midpoints
+     * between neighbouring axes, so the chosen slope follows the cursor live:
+     * drag at ~45° for a clean 1:1 diagonal, shallower for the iso stair,
+     * near-flat/near-plumb for straight edges.
+     *
+     * Stair algorithm (slope = h per w):
+     *  - k = max(floor(|dx|/w), floor(|dy|/h)) — number of stair cells.
+     *  - For each cell c ∈ [0, k]: paint a horizontal tread of w pixels.
+     *  - For c ∈ [1, k]: paint a vertical riser of (h - 1) pixels connecting
+     *    the previous tread's end column to the current tread's start row.
+     *  (w=h=1 degenerates to the true 1:1 diagonal.)
      *
      * Emits pixels via writeVirtualPixel which honors mirror flags, selection,
      * and canvas bounds.
@@ -1484,8 +1491,47 @@ export const useEditor = defineStore('editor', () => {
         const sx = dx >= 0 ? 1 : -1;
         const sy = dy >= 0 ? 1 : -1;
 
-        const cellsByX = Math.floor(Math.abs(dx) / cellW);
-        const cellsByY = Math.floor(Math.abs(dy) / cellH);
+        const adx = Math.abs(dx);
+        const ady = Math.abs(dy);
+        const angle = Math.atan2(ady, Math.max(adx, 1e-9));
+
+        // Candidate slopes as stair cells (w, h); Infinity = vertical. Sorted by
+        // angle, deduped (a 1×1 iso cell collapses onto the true diagonal).
+        const candidates: Array<{ w: number; h: number } | 'h' | 'v'> = ['h'];
+        const flat = { w: cellW, h: cellH };
+        const steep = { w: cellH, h: cellW };
+        for (const c of [flat.h / flat.w <= 1 ? flat : steep, { w: 1, h: 1 }, steep.h / steep.w >= 1 ? steep : flat]) {
+            const prev = candidates[candidates.length - 1];
+            if (typeof prev === 'object' && prev.h * c.w === c.h * prev.w) continue;   // same slope
+            candidates.push(c);
+        }
+        candidates.push('v');
+        const angleOf = (c: typeof candidates[number]) =>
+            c === 'h' ? 0 : c === 'v' ? Math.PI / 2 : Math.atan2(c.h, c.w);
+
+        // Pick the candidate whose axis angle is nearest the cursor angle.
+        let chosen = candidates[0]!;
+        for (const c of candidates) {
+            if (Math.abs(angleOf(c) - angle) < Math.abs(angleOf(chosen) - angle)) chosen = c;
+        }
+
+        if (chosen === 'h') {
+            for (let i = 0; i <= adx; i++) writeVirtualPixel(start.x + sx * i, start.y, colorIndex);
+            markFullRedraw()
+            drawTurn.value++;
+            return;
+        }
+        if (chosen === 'v') {
+            for (let i = 0; i <= ady; i++) writeVirtualPixel(start.x, start.y + sy * i, colorIndex);
+            markFullRedraw()
+            drawTurn.value++;
+            return;
+        }
+
+        cellW = chosen.w;
+        cellH = chosen.h;
+        const cellsByX = Math.floor(adx / cellW);
+        const cellsByY = Math.floor(ady / cellH);
         const k = Math.max(cellsByX, cellsByY);
 
         // Always paint the first tread (cellW pixels) at the start row.
