@@ -1,0 +1,10 @@
+# Cloudflare Pages — preview deploys for design review.
+# Build with the Nitro `cloudflare-pages` preset (outputs to ./dist), then
+# `bunx wrangler pages deploy`. See package.json `cf:build` / `cf:deploy`.
+name = "simplepixelart-preview"
+pages_build_output_dir = "dist"
+
+# nodejs_compat lets the SSR worker use Node built-ins the Nitro bundle pulls in.
+# Requires compatibility_date >= 2024-09-23.
+compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]

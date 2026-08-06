@@ -1,0 +1,18 @@
+User-Agent: *
+Allow: /
+
+# Block unnecessary directories
+Disallow: /api/
+Disallow: /admin/
+Disallow: /*.json$
+Disallow: /*.php$
+
+# Allow specific bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Sitemap location
+Sitemap: https://simplepixelart.com/sitemap-index.xml

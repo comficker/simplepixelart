@@ -1,0 +1,3323 @@
+/* ==========================================================================
+ * Preflight — minimal reset that replaces Tailwind's preflight.
+ * Kept tight: no Tailwind, no PostCSS. Pure CSS.
+ * ========================================================================== */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    border: 0 solid var(--border);
+}
+
+/* Respect user motion preference — kill animations/transitions for a11y. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Global focus-visible baseline — keyboard users always see where they are. */
+:focus {
+    outline: none;
+}
+
+:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* Form fields already signal focus with their border/caret — browsers apply
+   :focus-visible to them even on mouse click, so the ring is pure noise. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: none;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+}
+
+html {
+    scroll-behavior: smooth;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv01", "cv11";
+}
+
+img, svg, video, canvas {
+    display: block;
+    max-width: 100%;
+}
+
+button, input, select, textarea {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+ul, ol {
+    list-style: none;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* ==========================================================================
+ * Theme tokens
+ * Variables drive every component. Switch a theme by setting
+ * data-theme="<name>" on <html>; :root is the Game Boy default.
+ * ========================================================================== */
+:root {
+    --radius: 6px;
+    --radius-sm: 4px;
+    --radius-pill: 999px;
+
+    /* Semantic status colors (theme-agnostic) */
+    --danger: #dc2626;
+    --danger-foreground: #ffffff;
+    --success: #16a34a;
+    --success-foreground: #ffffff;
+    --warning: #d97706;
+    --warning-foreground: #ffffff;
+
+    /* Spacing scale — linear 4px step: --space-N = N × 0.25rem. */
+    --space-1: 0.25rem;   /* 4px  */
+    --space-2: 0.5rem;    /* 8px  */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.25rem;   /* 20px */
+    --space-6: 1.5rem;    /* 24px */
+    /* Flat / minimal: no resting or hover elevation. Only true overlays
+     * (modals, command palette, dropdowns) get a soft, single shadow. */
+    --shadow: none;
+    --shadow-hover: none;
+    --shadow-modal: 0 8px 24px -12px rgba(0, 0, 0, 0.22);
+    --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Type families — swap these two vars to change every font in the app.
+     * Display: headings, brand, section titles. Body: everything else. */
+    --font-display: "Bricolage Grotesque", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    /* Type scale. Body stays at 16px; display sizes nudged up for more presence. */
+    --text-2xs: 0.6875rem;
+    --text-2xs-lh: 1rem;
+    --text-xs: 0.8125rem;
+    --text-xs-lh: 1.125rem;
+    --text-sm: 0.875rem;
+    --text-sm-lh: 1.25rem;
+    --text-base: 1rem;
+    --text-base-lh: 1.55rem;
+    --text-lg: 1.1875rem;
+    --text-lg-lh: 1.75rem;
+    --text-xl: 1.3125rem;
+    --text-xl-lh: 1.8rem;
+    --text-2xl: 1.625rem;
+    --text-2xl-lh: 2.1rem;
+    --text-3xl: 2rem;
+    --text-3xl-lh: 2.4rem;
+    --text-4xl: 2.5rem;
+    --text-4xl-lh: 2.75rem;
+}
+
+:root,
+[data-theme="gameboy"] {
+    --background: #0f380f;
+    --foreground: #9bbc0f;
+    --border: #306230;
+    --primary: #9bbc0f;
+    --primary-foreground: #0f380f;
+    --secondary: #8bac0f;
+    --secondary-foreground: #0f380f;
+
+    --muted: #8bac0f;
+    --surface: #1c4a1c;
+    --surface-2: #306230;
+}
+
+[data-theme="arcade"] {
+    --background: #1a1033;
+    --foreground: #f5e6a8;
+    --border: #4a2a7a;
+    --primary: #ffb800;
+    --primary-foreground: #1a1033;
+    --secondary: #ff3d7f;
+    --secondary-foreground: #1a1033;
+
+    --muted: #a89cc9;
+    --surface: #2a1a4a;
+    --surface-2: #3a2560;
+}
+
+[data-theme="nes"] {
+    --background: #000000;
+    --foreground: #fcfcfc;
+    --border: #383838;
+    --primary: #e40058;
+    --primary-foreground: #fcfcfc;
+    --secondary: #0078f8;
+    --secondary-foreground: #fcfcfc;
+
+    --muted: #bcbcbc;
+    --surface: #1c1c1c;
+    --surface-2: #383838;
+}
+
+[data-theme="synthwave"] {
+    --background: #1a0033;
+    --foreground: #f0f0ff;
+    --border: #8833ff;
+    --primary: #00f5ff;
+    --primary-foreground: #1a0033;
+    --secondary: #ff006e;
+    --secondary-foreground: #1a0033;
+
+    --muted: #b19cd9;
+    --surface: #2a0d4d;
+    --surface-2: #3d1a66;
+}
+
+[data-theme="light"] {
+    --background: #f5f5f4;
+    --foreground: #111827;
+    --border: #d1d5db;
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    --secondary: rgba(0, 0, 0, 0.8);
+    --secondary-foreground: #ffffff;
+
+    --muted: #6b7280;
+    --surface: #ffffff;
+    --surface-2: #e5e7eb;
+    /* Darker green than base #16a34a so white-on-success and success-on-white
+       both clear WCAG AA (4.5:1) on the light theme. */
+    --success: #15803d;
+}
+
+[data-theme="dark"] {
+    --background: #111111;
+    --foreground: #e5e5e5;
+    --border: #333333;
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+    --secondary: rgba(255, 255, 255, 0.8);
+    --secondary-foreground: #111111;
+
+    --muted: #737373;
+    --surface: #1a1a1a;
+    --surface-2: #262626;
+}
+
+[data-theme="cozy"] {
+    --background: #f5e6d3;
+    --foreground: #4a3a2a;
+    --border: #d4c4a8;
+    --primary: #d4854a;
+    --primary-foreground: #4a3a2a;
+    --secondary: #a8b89a;
+    --secondary-foreground: #4a3a2a;
+
+    --muted: #8a7a5e;
+    --surface: #ede0c8;
+    --surface-2: #e0d2b8;
+}
+
+/* ==========================================================================
+ * Base typography & globals
+ * ========================================================================== */
+html, body {
+    background: var(--surface);
+    color: var(--foreground);
+}
+
+body {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.6;
+    position: relative;
+}
+
+::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+a {
+    color: var(--foreground);
+    text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    a:hover {
+        color: var(--primary);
+    }
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-variation-settings: "wght" 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
+}
+
+h1 {
+    font-size: var(--text-4xl);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+    color: var(--primary);
+}
+
+h2 {
+    display: flex;
+    align-items: center;
+    font-size: var(--text-2xl);
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    color: var(--secondary);
+}
+
+h3 {
+    font-size: var(--text-xl);
+    line-height: 1.2;
+}
+
+h4 {
+    font-size: var(--text-lg);
+    line-height: 1.25;
+}
+
+h5 {
+    font-size: var(--text-base);
+    line-height: 1.3;
+    font-weight: 700;
+    font-variation-settings: "wght" 700;
+}
+
+h6 {
+    font-size: var(--text-sm);
+    line-height: 1.35;
+    font-weight: 700;
+    font-variation-settings: "wght" 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* ==========================================================================
+ * Form controls
+ * ========================================================================== */
+input[type=text],
+input[type=number],
+textarea {
+    background: var(--surface);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    outline: none;
+    padding: 0.5rem 0.75rem;
+    font-family: inherit;
+    font-weight: inherit;
+    font-size: inherit;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 2.5rem;
+}
+
+input[type=text]:focus,
+input[type=number]:focus,
+textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+input[type=number] {
+    padding: 0.125rem 0.5rem;
+}
+
+/* ==========================================================================
+ * Layout primitives
+ * ========================================================================== */
+.container {
+    max-width: 748px !important;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Folded-corner size for cards (art/studio/work). Registered as <length> so
+ * hover growth transitions smoothly — gradients recompute per frame. */
+/* inherits MUST be true: with false, ::before/::after don't inherit the value
+ * from their originating element — the flap would stay at initial 14px while
+ * the element's own mask (the cut) animates. */
+@property --fold-size {
+    syntax: '<length>';
+    inherits: true;
+    initial-value: 14px;
+}
+
+.main-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: 1rem;
+}
+
+footer {
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+}
+
+.page > * + * {
+    margin-top: 1rem;
+}
+
+/* Shared listing-page hero (gallery, palettes): the boxed .home-hero card, but
+   with a title half the size of the home hero's. */
+.page-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+    padding: 1rem;
+    background:
+        radial-gradient(120% 120% at 100% 0%, color-mix(in oklab, var(--primary) 10%, transparent), transparent 60%),
+        var(--surface);
+    border: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
+    border-radius: var(--radius);
+}
+
+.page-hero h1 {
+    font-size: clamp(0.875rem, 2.5vw, 1.375rem);   /* half of the home hero */
+    line-height: 1.1;
+    font-weight: 800;
+    font-variation-settings: "wght" 800;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
+}
+
+.page-hero p {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.55;
+    max-width: 60ch;
+}
+
+.page-hero-eyebrow {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.square {
+    position: relative;
+    padding-top: 100%;
+}
+
+.square .inside {
+    position: absolute;
+    inset: 0;
+    padding: var(--space-5);
+}
+
+.full-size {
+    width: 100%;
+    height: 100%;
+}
+
+.icon {
+    mask-repeat: no-repeat;
+    background: currentColor;
+    width: 1.25em;
+    height: 1.25em;
+    display: inline-flex;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.pixelated {
+    image-rendering: pixelated;
+}
+
+/* ==========================================================================
+ * Utilities — small, hand-picked set used inline in templates.
+ * Anything not in this list should be a semantic component class.
+ * ========================================================================== */
+.text-xs { font-size: var(--text-xs); line-height: var(--text-xs-lh); }
+.text-sm { font-size: var(--text-sm); line-height: var(--text-sm-lh); }
+.text-base { font-size: var(--text-base); line-height: var(--text-base-lh); }
+.text-lg { font-size: var(--text-lg); line-height: var(--text-lg-lh); }
+.text-xl { font-size: var(--text-xl); line-height: var(--text-xl-lh); }
+.text-2xl { font-size: var(--text-2xl); line-height: var(--text-2xl-lh); }
+.text-4xl { font-size: var(--text-4xl); line-height: var(--text-4xl-lh); }
+
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.font-bold { font-weight: 700; font-variation-settings: "wght" 700; }
+.font-extrabold { font-weight: 800; font-variation-settings: "wght" 800; letter-spacing: -0.015em; }
+.italic { font-style: italic; }
+.underline { text-decoration: underline; }
+.truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.whitespace-nowrap { white-space: nowrap; }
+
+.hidden { display: none; }
+.block { display: block; }
+.inline-block { display: inline-block; }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-row { flex-direction: row; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1 1 0%; }
+.flex-none { flex: none; }
+.flex-shrink-0 { flex-shrink: 0; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.items-stretch { align-items: stretch; }
+.justify-center { justify-content: center; }
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
+.justify-between { justify-content: space-between; }
+
+.gap-1 { gap: var(--space-1); }
+.gap-2 { gap: var(--space-3); }
+.gap-3 { gap: var(--space-4); }
+.gap-4 { gap: var(--space-5); }
+
+.m-auto { margin: auto; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.ml-auto { margin-left: auto; }
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.mt-4 { margin-top: 1rem; }
+.mb-1 { margin-bottom: 0.25rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-3 { margin-bottom: 0.75rem; }
+.mb-4 { margin-bottom: 1rem; }
+.pt-4 { padding-top: 1rem; }
+.py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+.p-1 { padding: var(--space-1); }
+.p-2 { padding: var(--space-3); }
+.p-4 { padding: var(--space-5); }
+.px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.size-full { width: 100%; height: 100%; }
+.size-5 { width: 1.25rem; height: 1.25rem; }
+.size-7 { width: 1.75rem; height: 1.75rem; }
+.size-8 { width: 2rem; height: 2rem; }
+.size-9 { width: 2.25rem; height: 2.25rem; }
+.size-10 { width: 2.5rem; height: 2.5rem; }
+.w-1\/3 { width: 33.3333%; }
+.min-w-0 { min-width: 0; }
+.min-w-52 { min-width: 13rem; }
+.max-w-3xl { max-width: 48rem; }
+
+.relative { position: relative; }
+.absolute { position: absolute; }
+.sticky { position: sticky; }
+.fixed { position: fixed; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.z-10 { z-index: 10; }
+.z-40 { z-index: 40; }
+.z-50 { z-index: 50; }
+
+.opacity-0 { opacity: 0; }
+
+.overflow-hidden { overflow: hidden; }
+.overflow-auto { overflow: auto; }
+.overflow-x-auto { overflow-x: auto; }
+
+.cursor-pointer { cursor: pointer; }
+.object-contain { object-fit: contain; }
+
+.border { border-width: 1px; border-style: solid; }
+.border-t { border-top-width: 1px; border-top-style: solid; }
+
+.divide-y > * + * {
+    border-top: 1px solid var(--border);
+}
+
+.list-none { list-style: none; }
+
+.space-y-2 > * + * { margin-top: 0.5rem; }
+.space-y-3 > * + * { margin-top: 0.75rem; }
+
+/* Background / colour overrides — kept here so any legacy text-gray-*
+ * still resolves to the active theme token.
+ */
+.bg-gray-50 { background-color: var(--surface); }
+.bg-gray-100 { background-color: var(--surface-2); }
+.bg-gray-200 { background-color: var(--primary); color: var(--primary-foreground); }
+.text-gray-300,
+.text-gray-400,
+.text-gray-500,
+.text-muted { color: var(--muted); }
+.text-gray-600,
+.text-gray-700,
+.text-gray-800,
+.text-fg { color: var(--foreground); }
+.border-gray-100,
+.border-gray-200 { border-color: var(--border); }
+
+@media (hover: hover) and (pointer: fine) {
+    .hover\:text-gray-800:hover { color: var(--primary); }
+}
+
+/* Centring helpers (legacy aliases). */
+.h-center { display: flex; align-items: center; }
+
+/* Responsive helpers (only the inline patterns actually used in templates). */
+@media (min-width: 768px) {
+    .md\:text-4xl { font-size: var(--text-4xl); line-height: var(--text-4xl-lh); }
+    .md\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .md\:flex-row { flex-direction: row; }
+}
+
+/* ==========================================================================
+ * Buttons
+ * ========================================================================== */
+.btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0.5rem 0.75rem;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--foreground);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    transition: color var(--transition), background var(--transition), border-color var(--transition);
+}
+
+@media (min-width: 768px) {
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: var(--text-sm);
+        line-height: var(--text-sm-lh);
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .btn:hover {
+        color: var(--primary);
+        background: var(--surface-2);
+    }
+}
+
+.btn:active {
+    transform: scale(0.985);
+}
+
+.btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn.primary {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .btn.primary:hover {
+        color: var(--primary-foreground);
+        background: var(--secondary);
+    }
+}
+
+.btn.secondary {
+    background: var(--surface-2);
+    color: var(--foreground);
+}
+
+/* ==========================================================================
+ * Keyboard hint chip — shared by Header, CommandPalette, error page
+ * ========================================================================== */
+.kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 4px;
+    font-family: var(--font-body);
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--muted);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.04em;
+    line-height: 1;
+}
+
+.kbd.kbd-on-surface {
+    background: var(--background);
+}
+
+/* ==========================================================================
+ * Skeleton + empty state — reusable loading & nothing-here surfaces
+ * ========================================================================== */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: color-mix(in oklab, var(--surface-2) 70%, var(--background));
+    border-radius: var(--radius-sm);
+    isolation: isolate;
+}
+
+.skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        color-mix(in oklab, var(--foreground) 6%, transparent) 50%,
+        transparent 100%
+    );
+    animation: shimmer 1.4s cubic-bezier(.4,0,.2,1) infinite;
+    z-index: 1;
+}
+
+.skeleton.skeleton-square { aspect-ratio: 1; }
+.skeleton.skeleton-line { height: 0.875rem; border-radius: var(--radius-pill); }
+.skeleton.skeleton-line-sm { height: 0.625rem; border-radius: var(--radius-pill); }
+.skeleton.skeleton-line-lg { height: 1.25rem; border-radius: var(--radius-pill); }
+
+@keyframes shimmer {
+    100% { transform: translateX(100%); }
+}
+
+.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-3);
+}
+
+@media (min-width: 1024px) {
+    .skeleton-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: var(--space-4);
+    }
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--muted);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    background: color-mix(in oklab, var(--surface) 50%, transparent);
+}
+
+.empty-state-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--primary);
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.empty-state-title {
+    font-size: var(--text-base);
+    line-height: var(--text-base-lh);
+    font-weight: 700;
+    color: var(--foreground);
+    letter-spacing: -0.01em;
+}
+
+.empty-state-body {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm-lh);
+    max-width: 32ch;
+}
+
+.empty-state-action {
+    margin-top: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .skeleton::after { animation: none; }
+}
+
+/* ==========================================================================
+ * Meta grid, tags, sections
+ * ========================================================================== */
+.meta {
+    display: grid;
+    gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+    .meta {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.meta .item {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem;
+}
+
+.tags .item {
+    padding: var(--space-1);
+    display: inline-flex;
+}
+
+.tags .item a {
+    padding: 0.25rem 0.5rem;
+    font-size: var(--text-sm);
+    line-height: var(--text-sm-lh);
+    background: var(--surface);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .tags .item a:hover {
+        background: var(--primary);
+        color: var(--primary-foreground);
+    }
+}
+
+/* ==========================================================================
+ * Results / paginator grids
+ * ========================================================================== */
+.results {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+    .results {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: var(--space-4);
+    }
+}
+
+.paginator {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: max-content;
+    max-width: 100%;
+    padding: 3px;
+    background: color-mix(in oklab, var(--surface-2) 60%, transparent);
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    border-radius: var(--radius-sm);
+}
+
+.paginator > a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 160ms ease, background 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .paginator > a[href]:hover {
+        color: var(--foreground);
+        background: color-mix(in oklab, var(--surface) 60%, transparent);
+    }
+}
+
+.paginator > a:not([href]) {
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+.paginator > div {
+    width: 3.5rem;
+    text-align: center;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--foreground);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+ * Dropdown
+ * ========================================================================== */
+.dropdown {
+    overflow: hidden;
+    position: relative;
+}
+
+.dropdown.active {
+    overflow: unset;
+}
+
+.dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    color: var(--primary);
+}
+
+.dropdown .dropdown-menu {
+    z-index: 10;
+    min-width: 13rem;
+    left: 0;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-modal);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: absolute;
+    top: calc(100% + 6px);
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+    transform-origin: top center;
+    transition:
+        opacity 160ms cubic-bezier(.22,.61,.36,1),
+        transform 180ms cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+}
+
+.dropdown .dropdown-menu > * + * {
+    border-top: 1px solid var(--border);
+}
+
+.dropdown .drop-item {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 0.5rem 0.75rem;
+    font-size: var(--text-sm);
+    line-height: var(--text-sm-lh);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .dropdown .drop-item:hover {
+        background: var(--surface-2);
+        color: var(--primary);
+    }
+}
+
+.dropdown .drop-item {
+    cursor: pointer;
+    outline: none;
+    transition: background 140ms ease, color 140ms ease;
+}
+
+.dropdown .drop-item:focus-visible {
+    background: var(--surface-2);
+    color: var(--primary);
+    box-shadow: inset 2px 0 0 0 var(--primary);
+}
+
+.dropdown.active .dropdown-menu {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.dropdown.bottom .dropdown-menu {
+    transform-origin: bottom center;
+    transform: translateY(4px) scale(0.97);
+}
+
+.dropdown.bottom.active .dropdown-menu {
+    transform: translateY(0) scale(1);
+}
+
+.dropdown.bottom .dropdown-menu {
+    top: unset;
+    bottom: calc(100% + 10px);
+}
+
+/* Pointer caret bridging the trigger and the menu. It lives on the .dropdown
+   (relative, and overflow:unset once active) rather than inside the menu, whose
+   own overflow:hidden would clip it. A rotated square shows only its two outer
+   borders so the menu's border reads as continuing into a point; left:50% aims
+   it at the trigger centre for both default and right-aligned menus. */
+.dropdown::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 6px);
+    width: 10px;
+    height: 10px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+    transform: translate(-50%, -50%) rotate(45deg);
+    z-index: 11;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms cubic-bezier(.22, .61, .36, 1);
+}
+
+.dropdown.active::after {
+    opacity: 1;
+}
+
+/* Opens upward → caret sits on the menu's bottom edge, pointing down. */
+.dropdown.bottom::after {
+    top: unset;
+    bottom: calc(100% + 10px);
+    border-top: 0;
+    border-left: 0;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    transform: translate(-50%, 50%) rotate(45deg);
+}
+
+/* ==========================================================================
+ * Sonner toast
+ * ========================================================================== */
+section[data-sonner-toaster],
+[data-sonner-toaster] {
+    z-index: 2147483647 !important;
+    position: fixed !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast] {
+    background: color-mix(in oklab, var(--surface) 92%, transparent);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    color: var(--foreground);
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    box-shadow:
+        0 1px 0 0 color-mix(in oklab, var(--foreground) 6%, transparent) inset,
+        0 12px 32px -8px rgba(0, 0, 0, 0.25),
+        0 2px 6px -2px rgba(0, 0, 0, 0.12);
+    border-radius: var(--radius-sm);
+    transition: transform 220ms cubic-bezier(.34,1.56,.64,1) !important;
+}
+
+[data-sonner-toast][data-styled='true'] {
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    font-family: var(--font-body);
+}
+
+[data-sonner-toast] [data-description] {
+    font-weight: 500;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+[data-sonner-toast][data-type='success'] {
+    border-color: color-mix(in oklab, #16a34a 45%, var(--border));
+}
+[data-sonner-toast][data-type='success'] [data-icon] { color: #16a34a; }
+
+[data-sonner-toast][data-type='error'] {
+    border-color: color-mix(in oklab, #ef4444 45%, var(--border));
+}
+[data-sonner-toast][data-type='error'] [data-icon] { color: #ef4444; }
+
+[data-sonner-toast][data-type='warning'] [data-icon] { color: #f59e0b; }
+[data-sonner-toast][data-type='info'] [data-icon] { color: var(--primary); }
+
+/* ==========================================================================
+ * Editable text
+ * ========================================================================== */
+.input {
+    padding: 0.25rem 0;
+    border: 1px solid transparent;
+}
+
+.editable-text {
+    outline: none;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--primary);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* ==========================================================================
+ * Editor — pixel art canvas surface
+ * ========================================================================== */
+/* One framed surface. Regions inside sit flush and are separated by 1px
+   dividers (see the "Flat panels" block below) rather than gaps + per-card
+   borders. No overflow:hidden here — the File/Settings/collection dropdowns
+   must escape the frame; the rounded corners work anyway because every inner
+   region is transparent over this same surface. */
+.editor {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+
+    --editor-width: 464px;
+    --editor-minimap-size: 80px;
+}
+
+/* Fullscreen editor. The `editor-fullscreen` class lives on <html> (set in
+   setup + a pre-paint head script) so this applies before first paint — no
+   flash arriving at the editor. Covers both OS and in-window modes. */
+html.editor-fullscreen .editor {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+    overflow: auto;
+    background: var(--surface);
+}
+
+html.editor-fullscreen .editor .editor-body {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Fullscreen-conditional toolbar bits. Both the enter (.fs-hide) and exit /
+   back-home (.fs-only) controls are always in the DOM and toggled purely by the
+   <html> class — so server and client render the same markup (no hydration
+   mismatch) while the correct set shows pre-paint (no flash). */
+.editor .fs-only { display: none; }
+html.editor-fullscreen .editor .fs-only { display: block; }
+html.editor-fullscreen .editor .fs-hide { display: none; }
+
+/* Fullscreen (desktop AND mobile): the canvas stage fills the reclaimed space
+   (it's a camera-based infinite canvas, so it needn't stay a width-locked
+   square), while the palette keeps its natural height instead of being
+   squished — the editor grows to fit the whole screen. */
+html.editor-fullscreen .editor .canvas-col {
+    min-height: 0;
+}
+
+html.editor-fullscreen .editor .canvas-col > .widget:first-child {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+html.editor-fullscreen .editor .canvas-col > .widget:first-child > .widget-body {
+    flex: 1;
+    min-height: 0;
+}
+
+html.editor-fullscreen .editor .canvas-col .square {
+    padding-top: 0;
+    height: 100%;
+}
+
+html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
+    flex: 0 0 auto;
+}
+
+.editor-toolbar {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    border-bottom: 1px solid var(--border);
+}
+
+@media (min-width: 768px) {
+    .editor-toolbar {
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* ── Flat panels ──────────────────────────────────────────────────────────
+   Shared by the pixel editor (.editor) and the other canvas tools that opt in
+   with `.flat-editor` (convert, slicer, tilemap). The wrapper is one framed
+   surface; every Widget inside drops its own card chrome and becomes a flush
+   section separated from its neighbours by 1px dividers. Specificity of
+   `:is(.editor,.flat-editor) .widget` = 0-2-0 beats Widget.vue's base
+   (.widget = 0-1-0) regardless of style-injection order. */
+.flat-editor {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+/* "More tools" docks flush beneath the tool frame above it — one shared divider,
+   matching the editor. The frame (when a .tool-more follows it, possibly with a
+   hidden <input> between) squares its bottom corners; the widget squares its top
+   and overlaps the border by 1px so the two edges read as a single line. */
+:is(.editor, .flat-editor, .tool-card):has(~ .tool-more) {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.tool-more {
+    margin-top: -1px;
+}
+
+/* .widget wins its own radius at 0-2-0, so match that to square the top. */
+.tool-more.widget {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+:is(.editor, .flat-editor) .widget {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    /* keep the base widget's overflow:hidden — the fixed-size canvas would
+       otherwise bleed 14px into the palette below; the File/Settings menus and
+       collection panel escape via the toolbar / a body Teleport, not here. */
+}
+
+/* Widget titles everywhere now use the flush eyebrow style (Widget.vue) —
+   no per-editor override needed. */
+
+/* tilemap & tileset editors: .tm-panel / .tm-stage carry their own card chrome
+   GLOBALLY (border + radius, shared by both pages). Inside a flat editor drop
+   it — the frame + dividers replace it, else the borders double up. The panel
+   keeps a single right divider: on desktop it sits left of the stage/desk;
+   on mobile it stacks above, so the divider flips to the bottom. */
+:is(.editor, .flat-editor) .tm-panel {
+    background: transparent;
+    border: 0;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+}
+
+:is(.editor, .flat-editor) .tm-stage {
+    border: 0;
+    border-radius: 0;
+}
+
+@media (max-width: 767px) {
+    :is(.editor, .flat-editor) .tm-panel {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+    }
+}
+
+/* Dividers between flush sections (all beat the border:0 above at 0-2-0+). */
+.canvas-col > .widget + .widget {
+    border-top: 1px solid var(--border);
+}
+
+.editor .sidebar-stack-inner > *:not(:last-child) {
+    border-bottom: 1px solid var(--border);
+}
+
+.editor .editor-timeline {
+    border-top: 1px solid var(--border);
+}
+
+@media (min-width: 768px) {
+    .editor .preview-widget {
+        border-bottom: 1px solid var(--border);
+    }
+}
+
+.toolbar-start {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    padding-right: 0.25rem;
+    border-right: 1px solid var(--border);
+}
+
+@media (min-width: 768px) {
+    .toolbar-start {
+        padding-right: 0.2rem;
+    }
+}
+
+.toolbar-main {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 768px) {
+    .toolbar-main {
+        gap: var(--space-1);
+    }
+}
+
+.toolbar-end {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex-shrink: 0;
+    padding-left: 0.25rem;
+    border-left: 1px solid var(--border);
+}
+
+/* Right-aligned dropdown (corner controls) so the menu doesn't clip off-screen. */
+.dropdown.right .dropdown-menu {
+    left: auto;
+    right: 0;
+    transform-origin: top right;
+}
+
+@media (min-width: 768px) {
+    .toolbar-end {
+        padding-left: 0.5rem;
+    }
+}
+
+.toolbar-group {
+    display: flex;
+    gap: 0;
+    flex-shrink: 0;
+}
+
+.toolbar-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    color: var(--foreground);
+    border-radius: var(--radius-sm);
+    transition: background var(--transition), color var(--transition);
+    min-width: 36px;
+    min-height: 36px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .toolbar-btn:hover:not(:disabled) {
+        background: var(--surface-2);
+        color: var(--primary);
+    }
+}
+
+.toolbar-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.toolbar-btn.active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.toolbar-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+}
+
+.toolbar-sep {
+    width: 1px;
+    height: 1.25rem;
+    margin: 0 0.125rem;
+    background: var(--border);
+    flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+    .toolbar-sep {
+        margin: 0 0.25rem;
+    }
+}
+
+.file-menu {
+    display: flex;
+    flex-direction: column;
+    padding: 0.25rem 0;
+}
+
+.file-menu-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0.5rem 0.75rem;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    cursor: pointer;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--foreground);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .file-menu-item:hover {
+        background: var(--surface-2);
+        color: var(--primary);
+    }
+}
+
+.file-menu-item .icon {
+    flex-shrink: 0;
+}
+
+.file-menu-item:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.file-menu-label {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+/* Stacked variant (menu headers): title on one line, hint below. */
+.file-menu-label.is-stacked {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 2px;
+}
+
+
+/* Non-interactive section header inside a menu — reuses .file-menu-item so its
+   font/padding match the items (a bare label would inherit the big body font). */
+.file-menu-heading {
+    cursor: default;
+    pointer-events: none;
+    padding-bottom: 0.35rem;
+    font-weight: 700;
+}
+
+.file-menu-sep {
+    height: 1px;
+    margin: 0.25rem 0;
+    background: var(--border);
+}
+
+.toolbar-info {
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    padding: 0 0.25rem;
+    color: var(--muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+    .toolbar-info {
+        padding: 0 0.5rem;
+    }
+}
+
+.resize-input {
+    height: 2.25rem;
+    width: 3.5rem;
+    font-size: var(--text-sm);
+    text-align: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    border-radius: var(--radius-sm);
+    padding: 0 6px;
+    line-height: 1;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.resize-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 25%, transparent);
+    outline: none;
+}
+
+/* Inputs in toolbar groups need breathing room around the × separator. */
+.toolbar-group:has(.resize-input) {
+    gap: var(--space-2);
+    align-items: center;
+}
+
+.toolbar-group:has(.resize-input) > span:not(.icon) {
+    color: var(--muted);
+    font-size: var(--text-sm);
+    user-select: none;
+    line-height: 1;
+}
+
+/* Sidebar — preview + layers column. */
+.editor-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    min-height: 0;
+}
+
+/* On mobile, collapse preview — the canvas IS the preview.
+   Use height:0 + overflow:hidden instead of display:none
+   so the canvas ref stays mounted for miniMapCtx. */
+@media (max-width: 767px) {
+    .mini-map {
+        height: 0 !important;
+        overflow: hidden;
+    }
+
+    .widget:has(.mini-map) {
+        height: 0;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+        border: none;
+    }
+
+    .widget:has(.mini-map) .widget-head,
+    .widget:has(.mini-map) .widget-body {
+        height: 0;
+        overflow: hidden;
+        padding: 0;
+        margin: 0;
+        border: none;
+    }
+}
+
+@media (min-width: 768px) {
+    .editor-sidebar {
+        width: 24%;
+        max-width: 190px;
+    }
+}
+
+.editor-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+@media (min-width: 768px) {
+    .editor-body {
+        flex-direction: row;
+    }
+}
+
+.canvas-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+}
+
+@media (min-width: 768px) {
+    .canvas-col {
+        border-bottom: 0;
+        border-right: 1px solid var(--border);
+    }
+}
+
+.canvas-col .widget-body {
+    padding: 0;
+}
+
+/* The canvas Square must not inherit `.square .inside`'s thumbnail padding
+   (space-5) — the fixed-size canvas-container would then sit off-centre. */
+.canvas-col .square .inside {
+    padding: 0;
+}
+
+/* Infinite-canvas stage: a fixed viewport that fills the Square. Panning/zoom
+   is done by a camera (no scrolling); the canvas fills the stage and its
+   backing store is sized to stage×DPR in JS. */
+.canvas-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--surface-2);
+    border-radius: 0;
+    touch-action: none;
+}
+
+.canvas-container > canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+}
+
+canvas {
+    image-rendering: pixelated;
+}
+
+canvas.panning { cursor: grab; }
+
+canvas.brush { cursor: crosshair; }
+canvas.eraser { cursor: pointer; }
+canvas.move { cursor: move; }
+canvas.clear { cursor: pointer; }
+canvas.iso-line { cursor: crosshair; }
+
+.mini-map {
+    image-rendering: pixelated;
+    border-radius: var(--radius-sm);
+    display: block;
+    margin: auto;
+}
+
+/* Preview widget — no card chrome, floating canvas only */
+.preview-widget {
+    border: 0;
+    background: transparent;
+    overflow: visible;
+}
+
+.iso-rotated { transform: rotate(45deg); }
+.grid-off { opacity: 0.4; }
+
+/* Tool rail — vertical on desktop, horizontal strip on mobile.
+   Flush inside the editor frame; divider below (mobile) / right (desktop).
+   Scoped under .editor so it out-specifies the flat-panel `.editor .widget
+   { border:0 }` rule (tool-rail IS a widget). */
+:is(.editor, .flat-editor) .tool-rail {
+    flex: none;
+    padding: var(--space-1);
+    border-bottom: 1px solid var(--border);
+}
+
+.tool-rail .widget-head {
+    display: none;
+}
+
+.tool-rail .widget-body {
+    padding: var(--space-1);
+    border: none;
+    background: transparent;
+    border-radius: 0;
+}
+
+.tools-rail {
+    display: grid;
+    gap: 2px;
+}
+
+/* ui-tooltip wrappers stay layout-transparent in the rail grid. */
+.tools-rail .tooltip-wrapper { min-width: 0; }
+
+.tools-rail .tooltip-wrapper > * { width: 100%; }
+
+.tools-sep {
+    background: var(--border);
+}
+
+/* Brush size picker — flat into the rail grid so each preset is its own cell */
+.brush-sizes {
+    display: contents;
+}
+
+.brush-size {
+    position: relative;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm, 4px);
+    cursor: pointer;
+    color: var(--foreground);
+    transition: background 140ms ease, border-color 140ms ease, transform 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .brush-size:hover {
+        background: var(--surface-2);
+    }
+}
+
+.brush-size:active {
+    transform: scale(0.94);
+}
+
+.brush-size.active {
+    background: color-mix(in oklab, var(--primary) 18%, transparent);
+    border-color: color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
+.brush-size-dot {
+    display: block;
+    background: currentColor;
+    border-radius: 1px;
+    flex-shrink: 0;
+    transition: background 140ms ease;
+}
+
+.brush-size.active .brush-size-dot {
+    background: var(--primary);
+}
+
+/* All-frames mode toggle — tiny text badge inside a tool Square. */
+.move-all-label {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    line-height: 1;
+}
+
+/* "Fit all boards" — text label inside a toolbar button (no icon needed). */
+.fit-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1;
+}
+
+/* Live zoom % — click resets to 100%. Fixed-ish width + tabular digits so the
+   toolbar doesn't wiggle as the number changes. */
+.zoom-readout {
+    width: auto;
+    min-width: 3.25rem;
+    padding: 0 6px;
+    font-size: 10px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    color: var(--muted);
+}
+
+/* No room in the 356px mobile toolbar — pinch/FIT cover zooming there. */
+@media (max-width: 767px) {
+    .zoom-readout {
+        display: none;
+    }
+}
+
+/* Desk background swatches in the Canvas menu. */
+.desk-sw {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex: none;
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--border) 70%, transparent);
+}
+/* ── Canvas settings modal ─────────────────────────────────────────────── */
+.canvas-modal {
+    max-width: 360px;
+    text-align: left;
+}
+.canvas-modal .publish-sub {
+    margin-bottom: 0;
+}
+.cv-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin: var(--space-4) 0 var(--space-5);
+}
+.cv-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+.cv-label {
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.cv-opts {
+    display: grid;
+    gap: 6px;
+}
+.cv-opts.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.cv-opts.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.cv-opts.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.cv-opt {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 8px;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--foreground);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+}
+@media (hover: hover) and (pointer: fine) {
+    .cv-opt:hover:not(.active) { background: var(--surface-2); }
+}
+.cv-opt.active {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+}
+.cv-opt .desk-sw { width: 12px; height: 12px; }
+.cv-cap { text-transform: capitalize; }
+/* A cv-opt that doubles as a color picker: the native input fills it invisibly. */
+.cv-swatch { position: relative; overflow: hidden; }
+.cv-swatch-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+.cv-color-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+.cv-color {
+    width: 46px;
+    height: 34px;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+    flex: none;
+}
+.cv-hex {
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+}
+
+.brush-size:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+}
+
+@media (min-width: 768px) {
+    :is(.editor, .flat-editor) .tool-rail {
+        width: 48px;
+        border-bottom: 0;
+        border-right: 1px solid var(--border);
+    }
+    .tools-rail {
+        grid-template-columns: 1fr;
+        font-size: 1.5rem;
+    }
+    .tools-sep {
+        height: 1px;
+        margin: 4px 2px;
+    }
+}
+
+@media (max-width: 767px) {
+    .tool-rail {
+        width: 100%;
+    }
+    .tools-rail {
+        grid-template-columns: repeat(11, minmax(36px, 1fr));
+        grid-auto-columns: minmax(36px, 1fr);
+        grid-auto-flow: column;
+        overflow-x: auto;
+        font-size: 1.5rem;
+        /* Scroll hint: edge shadows that appear only when content is clipped on
+         * that side. The surface-colored covers scroll with the content
+         * (attachment: local) and slide over the fixed shadows at either end. */
+        background-image:
+            linear-gradient(to right, var(--surface), var(--surface)),
+            linear-gradient(to left, var(--surface), var(--surface)),
+            linear-gradient(to right, rgba(17, 24, 39, 0.14), transparent),
+            linear-gradient(to left, rgba(17, 24, 39, 0.14), transparent);
+        background-position: left center, right center, left center, right center;
+        background-size: 28px 100%, 28px 100%, 12px 100%, 12px 100%;
+        background-repeat: no-repeat;
+        background-attachment: local, local, scroll, scroll;
+    }
+    .tools-sep {
+        width: 1px;
+        height: auto;
+        margin: 2px 2px;
+    }
+}
+
+.tools {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    font-size: 1.25rem;
+    gap: 0.125rem;
+}
+
+@media (min-width: 768px) {
+    .tools {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.tools * {
+    flex: none;
+}
+
+/* Tool buttons: single source of inside padding (overrides .square .inside's
+ * larger thumbnail padding, which this rule follows in the cascade). */
+.tools .inside {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-2);
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition), color var(--transition);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .tools .inside:hover {
+        background: var(--surface-2);
+        color: var(--primary);
+    }
+}
+
+.tools .square.active .inside {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+}
+
+/* Override .tools default grid for the rail variant (must follow .tools rules). */
+.tools.tools-rail {
+    grid-template-columns: repeat(11, minmax(36px, 1fr));
+    grid-auto-flow: column;
+}
+
+@media (min-width: 768px) {
+    .tools.tools-rail {
+        grid-template-columns: 1fr;
+        grid-auto-flow: row;
+    }
+}
+
+/* Layers panel. */
+/* Collection + Layers wrapper. On desktop the inner is absolute-filled so its
+   content can't inflate the sidebar past the canvas column; the two widgets
+   then split this region equally (each = 1/2 the old Layers box) and scroll. */
+.sidebar-stack-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+@media (min-width: 768px) {
+    .sidebar-stack {
+        flex: 1;
+        min-height: 0;
+        position: relative;
+    }
+
+    .sidebar-stack-inner {
+        position: absolute;
+        inset: 0;
+    }
+}
+
+.layers {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.layers .widget-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* Reference-collections strip sits above Layers in the sidebar and shares the
+   leftover height equally with it; its body scrolls. min-height:0 on both keeps
+   the sidebar bounded by the canvas column (never taller than the editor). */
+.cstrip {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.cstrip .widget-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* Widget head control buttons — hanging tabs that mirror the title tag */
+.widget-ctl-group {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+/* Widget-head controls share the .cstrip-pick-btn ghost language: no chip
+   background, muted → primary on hover/active, color-only transition. */
+.widget-ctl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    height: 18px;
+    padding: 0 4px;
+    font-size: 10px;
+    font-weight: 700;
+    font-variation-settings: "wght" 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color var(--transition);
+}
+
+.widget-ctl-btn .icon {
+    width: 11px;
+    height: 11px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .widget-ctl-btn:hover {
+        color: var(--primary);
+    }
+}
+
+.widget-ctl-btn.active {
+    color: var(--primary);
+}
+
+.widget-ctl-btn:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Compact "+" add layer button in the widget head — same ghost style. */
+.layer-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 18px;
+    padding: 0;
+    color: var(--muted);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    transition: color var(--transition);
+}
+
+.layer-add .icon {
+    width: 15px;
+    height: 15px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .layer-add:hover {
+        color: var(--primary);
+    }
+}
+
+.layer-add:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* Layer stack */
+.layers ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.layers li {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 6px 8px 6px 6px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    overflow: hidden;
+    transition:
+        border-color 160ms ease,
+        background 160ms ease,
+        box-shadow 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .layers li:hover {
+        background: var(--surface);
+    }
+}
+
+/* Number chip showing layer position in the stack */
+.layer-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    font-size: 10.5px;
+    font-weight: 700;
+    font-variation-settings: "wght" 700;
+    color: var(--muted);
+    background: var(--surface-2);
+    border-radius: var(--radius-sm, 4px);
+    border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+    letter-spacing: 0.02em;
+    transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.layer-name {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--text-xs);
+    line-height: 1.2;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.layer-name input,
+.layer-name .editable-text {
+    width: 100%;
+}
+
+/* Active layer: primary stripe + tinted bg */
+.layers li.active {
+    background: color-mix(in oklab, var(--primary) 10%, var(--surface));
+    border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
+}
+
+.layers li.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary);
+}
+
+.layers li.active .layer-num {
+    color: var(--primary-foreground);
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.layers li.active .layer-name {
+    color: var(--foreground);
+}
+
+/* Delete button: icon-only, red hover */
+.layers .layer-del {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm, 4px);
+    cursor: pointer;
+    opacity: 0.6;
+    transition:
+        color 160ms ease,
+        background 160ms ease,
+        border-color 160ms ease,
+        opacity 160ms ease;
+}
+
+.layers li:hover .layer-del,
+.layers li.active .layer-del {
+    opacity: 1;
+}
+
+.layers .layer-del .icon {
+    font-size: 0.85em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .layers .layer-del:hover {
+        color: #fff;
+        background: #ef4444;
+    }
+}
+
+.layers .layer-del:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+}
+
+/* ==========================================================================
+ * Share / publish overlays + modal
+ * ========================================================================== */
+/* Any open modal overlay locks body scroll (covers every modal app-wide,
+   present and future, so long as it uses one of these overlay classes). */
+body:has(.share-overlay),
+body:has(.onb-overlay),
+body:has(.cmdk-overlay) {
+    overflow: hidden;
+}
+
+/* Fullscreen editor (class lives on <html> so it applies before first paint). */
+html.editor-fullscreen body {
+    overflow: hidden;
+}
+
+/* Modals must sit above the fullscreen editor (z 9999), not behind it. */
+html.editor-fullscreen :is(.share-overlay, .onb-overlay, .cmdk-overlay) {
+    z-index: 10000;
+}
+
+/* The consent banner (base z-45, below modals) must still show over the
+   fullscreen editor (z-9999); modals at 10000 stay on top of it. */
+html.editor-fullscreen .consent {
+    z-index: 9999;
+}
+
+.share-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    animation: overlayFadeIn 220ms cubic-bezier(.22,.61,.36,1);
+}
+
+@keyframes overlayFadeIn {
+    from { opacity: 0; backdrop-filter: blur(0); }
+    to { opacity: 1; }
+}
+
+.share-modal {
+    padding: 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-modal);
+    border-radius: var(--radius);
+    max-width: 340px;
+    width: 90%;
+    animation: modalIn 260ms cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.share-dismiss {
+    width: 100%;
+    text-align: center;
+    padding: 0.375rem 0;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    cursor: pointer;
+    margin-top: 0.25rem;
+    color: var(--muted);
+    background: none;
+    border: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .share-dismiss:hover {
+        color: var(--primary);
+    }
+}
+
+.onb-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    z-index: 40;
+    animation: overlayFadeIn 220ms cubic-bezier(.22,.61,.36,1);
+}
+
+@media (min-width: 768px) {
+    .onb-overlay {
+        align-items: center;
+    }
+}
+
+.onb-sheet {
+    padding: 1.25rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-modal);
+    border-radius: var(--radius);
+    max-width: 480px;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.onb-title {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm-lh);
+    font-weight: 700;
+    color: var(--foreground);
+}
+
+.onb-sub {
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    margin-top: -0.75rem;
+    color: var(--muted);
+}
+
+.onb-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.onb-label {
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.onb-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+}
+
+.onb-chip {
+    padding: 0.375rem 0.75rem;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    border-radius: var(--radius-sm);
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .onb-chip:hover {
+        background: var(--surface-2);
+    }
+}
+
+.onb-chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--primary-foreground);
+}
+
+.onb-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin-top: 0.25rem;
+}
+
+.onb-swatch {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.onb-ref-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.onb-ref-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0.5rem 0.75rem;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    border-radius: var(--radius-sm);
+    transition: background var(--transition), color var(--transition);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .onb-ref-btn:hover {
+        background: var(--surface-2);
+        color: var(--primary);
+    }
+}
+
+.onb-ref-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    color: var(--primary);
+}
+
+.onb-ref-clear {
+    cursor: pointer;
+    padding: var(--space-1);
+    background: transparent;
+    border: none;
+    color: var(--muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .onb-ref-clear:hover {
+        color: var(--primary);
+    }
+}
+
+.onb-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-top: 0.5rem;
+}
+
+/* Get-started modal (UiModal) width + the new-editor tips block. */
+.onb-modal {
+    max-width: 420px;
+}
+
+/* Even vertical rhythm between the modal's sections. */
+.onb-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    margin-top: var(--space-4);
+}
+
+.onb-tips {
+    list-style: none;
+    margin: 0;
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    line-height: 1.4;
+    /* Darker than --muted so 13px text clears AA on the surface-2 panel. */
+    color: color-mix(in oklab, var(--muted) 50%, var(--foreground));
+}
+
+.onb-tips li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.onb-tips .icon {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    color: var(--muted);
+}
+
+/* Publish form. */
+.publish-heading {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm-lh);
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.publish-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: -0.5rem;
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+.publish-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.publish-label {
+    display: block;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    margin-bottom: 0.25rem;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.publish-input {
+    width: 100%;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    background: var(--surface-2);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    font-family: inherit;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.publish-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+    outline: none;
+}
+
+.publish-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    word-break: break-all;
+    transition: border-color var(--transition), color var(--transition);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .publish-link:hover {
+        color: var(--primary);
+    }
+}
+
+/* Social buttons grid. */
+.social-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-1);
+}
+
+.social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    padding: 0.5rem 0;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    cursor: pointer;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    transition: color var(--transition), border-color var(--transition), background var(--transition);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .social-btn:hover {
+        color: var(--primary);
+    }
+}
+
+/* Publish CTA in toolbar. */
+.publish-toolbar-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0 0.75rem;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    cursor: pointer;
+    align-self: stretch;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    flex-shrink: 0;
+    position: sticky;
+    box-shadow: -8px 0 8px -4px var(--surface);
+    transition: background var(--transition);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .publish-toolbar-btn:hover {
+        background: var(--secondary);
+    }
+}
+
+/* Modal helper rows used by PXEditor publish/share flow. */
+.publish-actions {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: 1rem;
+}
+
+.publish-done-header {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.share-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.publish-link-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+}
+
+.btn.block {
+    flex: 1;
+    justify-content: center;
+}
+
+.btn.wide {
+    width: 100%;
+    justify-content: center;
+}
+
+/* ==========================================================================
+ * Q&A details block (reusable across pages)
+ * ========================================================================== */
+/* Quiet FAQ list: no card chrome, faint hairline dividers, muted toggle. */
+.qa-item {
+    border-bottom: 1px solid color-mix(in oklab, var(--border) 45%, transparent);
+}
+
+.qa-q {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.25rem 0;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.qa-q::-webkit-details-marker {
+    display: none;
+}
+
+.qa-q::marker {
+    content: "";
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .qa-q:hover .qa-q-text {
+        color: var(--primary);
+    }
+    .qa-q:hover .qa-chevron {
+        color: var(--foreground);
+    }
+}
+
+.qa-chevron {
+    position: relative;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    color: var(--muted);
+    transition: color var(--transition);
+}
+
+/* Chevron-right that rotates to point down when the item opens */
+.qa-chevron::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translate(-70%, -50%) rotate(-45deg);
+    transition: transform 220ms cubic-bezier(.22,.61,.36,1);
+}
+
+.qa-item[open] .qa-chevron::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.qa-a {
+    padding: 0 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.qa-a p {
+    font-size: var(--text-sm);
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+.qa-a ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.qa-a ul li {
+    font-size: var(--text-sm);
+    line-height: 1.65;
+    color: var(--muted);
+    padding-left: 18px;
+    position: relative;
+}
+
+.qa-a ul li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.65em;
+    width: 8px;
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+}
+
+.qa-a strong {
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.qa-a a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* ==========================================================================
+ * Color tool pages (/palettes/color-palette-from-image, .../from-color) — shared shell so the
+ * two generators stay visually in sync.
+ * ========================================================================== */
+.tool-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+}
+
+.tool-eyebrow {
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--primary);
+}
+
+.tool-title {
+    font-size: var(--text-2xl);
+    line-height: var(--text-2xl-lh);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.tool-sub {
+    max-width: 60ch;
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm-lh);
+}
+
+/* Two-pane tool card: input on the left, result on the right, hairline split. */
+.tool-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    overflow: hidden;
+}
+
+.tool-pane {
+    padding: 1.25rem;
+    min-width: 0;
+}
+
+.tool-pane + .tool-pane {
+    border-left: 1px solid var(--border);
+}
+
+@media (max-width: 720px) {
+    .tool-card {
+        grid-template-columns: 1fr;
+    }
+
+    .tool-pane + .tool-pane {
+        border-left: 0;
+        border-top: 1px solid var(--border);
+    }
+}
+
+.tool-pane-cap {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.625rem;
+}
+
+.tool-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    min-height: 200px;
+    height: 100%;
+    text-align: center;
+    color: var(--muted);
+    font-size: var(--text-sm);
+}
+
+.tool-empty .icon {
+    font-size: 28px;
+    opacity: 0.6;
+}
+
+/* ==========================================================================
+ * Shared page heading (h1 used across policy / about / gallery pages)
+ * ========================================================================== */
+.page-title {
+    font-size: var(--text-2xl);
+    line-height: 1.1;
+    font-weight: 800;
+    font-variation-settings: "wght" 800;
+    letter-spacing: -0.03em;
+    color: var(--primary);
+}
+
+@media (min-width: 768px) {
+    .page-title {
+        font-size: var(--text-4xl);
+        line-height: 1.05;
+        letter-spacing: -0.035em;
+    }
+}
+
+/* Lists used by policy pages (Terms, Privacy, Guidelines, DMCA, About). */
+.policy-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+/* Meta line for page subtitles (date stamps, etc.). */
+.page-meta {
+    font-size: var(--text-sm);
+    line-height: var(--text-sm-lh);
+    color: var(--muted);
+}
+
+/* ==========================================================================
+ * Editor chrome — shared by the tilemap (/tilemaps/editor) and tileset
+ * (/tilesets/editor) tools. One control scale (--tm-ctl), one toolbar, one
+ * segmented control, one panel/label/search vocabulary.
+ * ========================================================================== */
+.tm-seg {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px;
+  height: var(--tm-ctl, 34px); padding: 3px; box-sizing: border-box;
+  background: var(--surface-2); border-radius: var(--radius-sm);
+}
+/* ui-tooltip wrappers stay layout-transparent inside chrome containers —
+   the wrapped control sizes exactly as if it were a direct child. */
+.tm-seg .tooltip-wrapper { display: flex; min-width: 0; }
+.tm-seg .tooltip-wrapper > button { flex: 1; width: 100%; }
+.tm-zoom .tooltip-wrapper { display: inline-flex; }
+.tm-seg button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
+  height: 100%; min-height: 0; border: 0; background: transparent; border-radius: calc(var(--radius-sm) - 2px);
+  font-size: var(--text-xs); font-weight: 700; color: var(--muted); cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+.tm-seg button.active { background: var(--surface); color: var(--foreground); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.tm-seg button em {
+  font-style: normal; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0 5px;
+  border-radius: var(--radius-pill); background: var(--surface-2); color: var(--muted);
+}
+.tm-seg button.active em { background: color-mix(in oklab, var(--primary) 16%, var(--surface)); color: var(--primary); }
+
+.tm-panel {
+  --tm-ctl: 34px;
+  display: flex; flex-direction: column; gap: 0.875rem;
+  padding: 0.875rem; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.tm-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.tm-grow { flex: 1; min-height: 0; }
+.tm-label {
+  font-size: var(--text-2xs); font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--muted);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.tm-label em { font-style: normal; color: var(--foreground); font-weight: 600; letter-spacing: 0; }
+
+.tm-search {
+  display: flex; align-items: center; gap: 0.4rem;
+  height: var(--tm-ctl, 34px); padding: 0 0.5rem; margin-bottom: 0.1rem;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface);
+}
+.tm-search:focus-within { border-color: var(--primary); }
+.tm-search .icon-search { color: var(--muted); font-size: 0.9em; flex: none; }
+.tm-search input {
+  flex: 1; min-width: 0; border: 0; background: transparent; outline: none;
+  font-size: var(--text-xs); color: var(--foreground);
+}
+
+/* Compact icon-only toolbar buttons. */
+.tm-iconbtn {
+  width: var(--tm-ctl, 34px);
+  height: var(--tm-ctl, 34px);
+  padding: 0;
+  justify-content: center;
+}
+.tm-iconbtn .icon { width: 15px; height: 15px; }
+
+/* Unsaved indicator — a dot on the Save button instead of a label. */
+/* Icon save button: a square icon button (matches .toolbar-btn), not the
+   stretched text pill the .publish-toolbar-btn base assumes. */
+.tm-save {
+  position: relative;
+  align-self: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: none;
+}
+.tm-save.dirty::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--warning, #d97706);
+  border: 2px solid var(--background);
+}
+
+/* Square artboard stage: the document pans/scrolls inside it. */
+.tm-stage {
+  position: relative;
+  display: flex; align-items: safe center; justify-content: safe center;
+  padding: var(--space-5); overflow: auto;
+  aspect-ratio: 1 / 1;
+  background-color: var(--surface-2);
+  background-image: radial-gradient(color-mix(in oklab, var(--border) 65%, transparent) 1px, transparent 1.6px);
+  background-size: 16px 16px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+
+/* Compact select that lives in the controls row (world/tileset switcher). */
+.tm-world-select {
+  height: var(--tm-ctl, 34px); max-width: 160px; padding: 0 0.6rem;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--foreground);
+  font-size: var(--text-xs); font-weight: 600; cursor: pointer;
+}
+.tm-world-select:focus { border-color: var(--primary); }
+
+/* Public-page link floating on the artboard (top-right), zoom-pill styling —
+   shared by the tilemap and tileset editors. A plain positioning div that
+   WRAPS the ui-tooltip — never put this class on the tooltip wrapper itself
+   (its scoped `position: relative` would win the cascade). */
+.tm-stage-fab {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 5;
+}
+
+.tm-stage-fab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  color: var(--foreground);
+}
+
+.tm-stage-fab-btn:hover { color: var(--primary); }
+
+.tm-stage-fab-btn .icon { width: 14px; height: 14px; }
+
+/* Floating zoom control (bottom-right of the artboard). */
+.tm-zoom {
+  position: absolute; bottom: 0.75rem; right: 0.75rem;
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 3px; border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--surface) 92%, transparent);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.tm-zoom-btn {
+  width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; background: transparent; border-radius: var(--radius-pill); cursor: pointer;
+  font-size: 1rem; line-height: 1; color: var(--foreground);
+}
+.tm-zoom-btn:hover:not(:disabled) { background: var(--surface-2); }
+.tm-zoom-btn:disabled { opacity: 0.4; cursor: default; }
+.tm-zoom-val {
+  min-width: 44px; height: 24px; border: 0; background: transparent; cursor: pointer;
+  font-size: var(--text-2xs); font-weight: 700; color: var(--muted);
+}
+.tm-zoom-val:hover { color: var(--foreground); }
+
+/* Zoom % / fit readout — a .toolbar-btn variant (auto width, tabular digits).
+   Shared by the slicer / tileset editor toolbars (was .ts-zoom-pct/.tsx-zoom-pct). */
+.zoom-pct {
+  width: auto;
+  min-width: 3.2rem;
+  padding: 0 0.4rem;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Shared canvas-tool form rows (was duplicated scoped in slicer + convert). */
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.slider-row + .slider-row {
+  margin-top: 0.625rem;
+}
+
+.slider-row label {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.slider-row input[type=range] {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+/* ============================================================
+   Tool "README" doc card — one shared format for every tool page's SEO prose
+   (editor, converter, slicer, palette tools, …). A rendered-markdown look in
+   GitHub's file-view style; theme-safe via tokens. Rendered by the <ToolReadme>
+   component; content lives in .readme-body as plain semantic markup
+   (h1/h2/h3, p, ol/ul, code, a, strong, blockquote.gh-alert, .readme-badges).
+   ============================================================ */
+.readme {
+  margin-top: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+/* File header: tab row (README active) + right-side action icons. */
+.readme-head {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.readme-tabs { display: flex; gap: var(--space-4); }
+
+.readme-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  margin-bottom: -1px;                 /* sit the underline on the header rule */
+  border-bottom: 2px solid transparent;
+  font-size: var(--text-xs);
+  font-weight: 800;
+  color: var(--muted);
+  text-decoration: none;
+  background: none;
+}
+
+.readme-tab.is-active { color: var(--foreground); border-bottom-color: #fd8c73; }
+.readme-tab:not(.is-active):hover { color: var(--foreground); }
+.readme-tab .icon { font-size: 15px; }
+
+.readme-actions { display: flex; align-items: center; gap: var(--space-3); }
+
+.readme-toc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition);
+}
+
+.readme-toc-btn:hover { color: var(--foreground); background: var(--surface-2); }
+.readme-toc-btn .icon { font-size: 17px; }
+
+/* Table-of-contents modal list. */
+.readme-toc { display: flex; flex-direction: column; }
+
+.readme-toc-item {
+  text-align: left;
+  border: 0;
+  background: none;
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-sm);
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.readme-toc-item:hover { background: var(--surface-2); color: var(--primary); }
+.readme-toc-item.lvl-2 { padding-left: var(--space-2); }
+.readme-toc-item.lvl-3 { padding-left: var(--space-5); color: var(--muted); font-size: var(--text-xs); }
+.readme-toc-empty { color: var(--muted); font-size: var(--text-sm); }
+
+.readme-body {
+  padding: var(--space-4);
+  color: var(--foreground);            /* GitHub body text is dark, not gray */
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.readme-body > * + * { margin-top: var(--space-4); }
+
+.readme-body h1,
+.readme-body h2,
+.readme-body h3 {
+  font-family: inherit;                /* override the app's display heading font */
+  font-variation-settings: normal;
+  letter-spacing: normal;
+  color: var(--foreground);
+}
+
+.readme-body h1,
+.readme-body h2 {
+  font-weight: 600;
+}
+
+.readme-body h1 { font-size: var(--text-2xl); line-height: 1.3; }
+.readme-body h2 { font-size: var(--text-lg); line-height: 1.3; margin-top: var(--space-6); }
+/* …except the QnA title, which already gets the block gap from its section. */
+.readme-body h2.section-title { margin-top: 0; }
+.readme-body h3 { font-size: var(--text-base); font-weight: 600; line-height: 1.3; }
+
+.readme-body a { color: var(--primary); text-decoration: none; }
+.readme-body a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+.readme-body strong { font-weight: 600; }
+
+.readme-body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88em;
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--surface-2) 55%, transparent);
+}
+
+.readme-body ol,
+.readme-body ul { padding-left: 1.5rem; }
+.readme-body ol { list-style: decimal; }
+.readme-body ul { list-style: disc; }
+.readme-body li { line-height: 1.6; padding-left: 0.25rem; }
+.readme-body li + li { margin-top: var(--space-1); }
+.readme-body li::marker { color: var(--muted); }
+
+.readme-body figure { margin: 0; }
+.readme-body figure img { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.readme-body figcaption { margin-top: var(--space-2); color: var(--muted); font-size: var(--text-xs); }
+
+/* QnA embedded in a README card: match the surrounding prose so answers read as
+ * the same document, not a smaller, greyer widget. */
+.readme-body .qa-a p,
+.readme-body .qa-a ul li {
+  font-size: inherit;
+  color: var(--foreground);
+  line-height: 1.6;
+}
+
+/* Keep the QnA answer's own dash bullet — don't stack the readme disc on top. */
+.readme-body .qa-a ul { list-style: none; padding-left: 0; }
+
+/* Shields-style two-tone badges. */
+.readme-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.readme-badges .badge {
+  display: inline-flex;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--text-2xs);
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.readme-badges .badge > span { padding: 0.4em 0.55em; }
+.readme-badges .badge > span:first-child { background: color-mix(in oklab, var(--foreground) 72%, var(--surface)); color: var(--surface); }
+.readme-badges .badge .v { background: var(--surface-2); color: var(--foreground); }
+.readme-badges .badge .v.ok { background: var(--success); color: #fff; }
+
+/* GitHub-style alert (blockquote note/tip). */
+.readme-body .gh-alert { padding: var(--space-2) var(--space-4); border-left: 3px solid var(--border); }
+.readme-body .gh-alert > * + * { margin-top: 0.15rem; }
+.gh-alert-title { display: flex; align-items: center; gap: var(--space-2); font-weight: 600; }
+.gh-alert-title .icon { font-size: 15px; }
+.readme-body .gh-tip { border-left-color: var(--success); }
+.readme-body .gh-tip .gh-alert-title { color: var(--success); }
+
+/* QnA sits inside a README body — match its heading to the markdown h2. */
+.readme-body .section-head .section-title {
+  font-family: inherit;
+  font-weight: 600;
+  font-variation-settings: normal;
+  letter-spacing: normal;
+  font-size: var(--text-lg);
+}
