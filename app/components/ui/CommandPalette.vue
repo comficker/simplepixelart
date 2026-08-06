@@ -129,18 +129,25 @@ const filtered = computed(() => {
       .map(x => x.cmd)
 })
 
-// Group matches into blocks, emitted in GROUP_ORDER (Help last). Each item
-// carries its flat index so keyboard nav + activation line up with the layout.
+// Group matches into blocks. Browsing (empty query) keeps the stable
+// GROUP_ORDER; while searching, groups are ordered by their best-scoring item
+// so an exact match (e.g. "terms" → Terms of Service in Help) lands on top and
+// Enter activates it — GROUP_ORDER must not beat relevance.
 const groupedBlocks = computed(() => {
   const map = new Map<string, Cmd[]>()
   filtered.value.forEach(cmd => {
     if (!map.has(cmd.group)) map.set(cmd.group, [])
     map.get(cmd.group)!.push(cmd)
   })
-  const order = [
-    ...GROUP_ORDER.filter(g => map.has(g)),
-    ...[...map.keys()].filter(g => !GROUP_ORDER.includes(g)),
-  ]
+  const q = query.value
+  const order = q
+      ? [...map.keys()].sort((a, b) =>
+          Math.max(...map.get(b)!.map(c => score(c, q))) -
+          Math.max(...map.get(a)!.map(c => score(c, q))))
+      : [
+        ...GROUP_ORDER.filter(g => map.has(g)),
+        ...[...map.keys()].filter(g => !GROUP_ORDER.includes(g)),
+      ]
   const blocks: Array<{ group: string; items: Array<{ cmd: Cmd; index: number }> }> = []
   let index = 0
   for (const group of order) {
