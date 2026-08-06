@@ -6,7 +6,7 @@ Free, browser-based pixel art editor — draw sprites, build tilesets with auto-
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-![Simple Pixel Art editor](https://simplepixelart.com/og-image.jpg)
+![Simple Pixel Art editor](public/screenshot/editor.png)
 
 ## Features
 
