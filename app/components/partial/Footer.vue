@@ -14,18 +14,28 @@ const googleAuthUrl = computed(() => {
 <template>
   <footer>
     <div class="container footer-bar">
-      <nav class="footer-links" aria-label="Footer">
-        <nuxt-link to="/about">About</nuxt-link>
-        <nuxt-link to="/contact">Contact</nuxt-link>
-        <nuxt-link to="/privacy">Privacy</nuxt-link>
-        <nuxt-link to="/terms">Terms</nuxt-link>
-        <nuxt-link to="/guidelines">Guidelines</nuxt-link>
-        <nuxt-link to="/dmca">DMCA</nuxt-link>
-        <a href="https://github.com/comficker/simplepixelart" target="_blank" rel="noopener">GitHub</a>
+      <div class="footer-left">
+        <span class="footer-copy">© {{ year }} SimplePixelArt.com</span>
+        <!-- Minimal set: Privacy/Terms must stay visible (AdSense + legal),
+             Contact for trust. About/Guidelines/DMCA remain reachable via the
+             command palette and the contact page. -->
+        <nav class="footer-links" aria-label="Footer">
+          <nuxt-link to="/contact">Contact</nuxt-link>
+          <nuxt-link to="/privacy">Privacy</nuxt-link>
+          <nuxt-link to="/terms">Terms</nuxt-link>
+        </nav>
+      </div>
+      <div class="footer-actions">
+        <a href="https://github.com/comficker/simplepixelart" target="_blank" rel="noopener" class="footer-ic" title="Open source on GitHub" aria-label="GitHub repository">
+          <span class="icon icon-github"/>
+        </a>
+        <a href="https://x.com/comficker" target="_blank" rel="noopener" class="footer-ic" title="Follow on X" aria-label="X (Twitter)">
+          <span class="icon icon-brand-x"/>
+        </a>
+        <span class="footer-sep" aria-hidden="true"/>
         <span v-if="auth.isLogged" class="footer-auth" @click="auth.logout()">Logout</span>
         <a v-else :href="googleAuthUrl" class="footer-auth">Login</a>
-      </nav>
-      <span class="footer-copy">© {{ year }} SimplePixelArt.com</span>
+      </div>
     </div>
   </footer>
 </template>
@@ -43,15 +53,24 @@ const googleAuthUrl = computed(() => {
   line-height: var(--text-xs-lh);
 }
 
+.footer-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+
 .footer-copy {
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .footer-links {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-2) var(--space-3);
 }
 
 .footer-links a,
@@ -61,6 +80,34 @@ const googleAuthUrl = computed(() => {
   transition: color 160ms ease;
 }
 
+/* GitHub / X get first-class placement: icon buttons on the right. */
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.footer-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--muted);
+  transition: color 160ms ease;
+}
+
+.footer-ic .icon {
+  width: 17px;
+  height: 17px;
+}
+
+.footer-sep {
+  width: 1px;
+  height: 14px;
+  background: var(--border);
+}
+
 .footer-auth {
   font-weight: 600;
   color: var(--foreground);
@@ -68,14 +115,13 @@ const googleAuthUrl = computed(() => {
 
 @media (hover: hover) and (pointer: fine) {
   .footer-links a:hover,
-  .footer-auth:hover {
+  .footer-auth:hover,
+  .footer-ic:hover {
     color: var(--primary);
   }
 }
 
-/* Small screens: stack the bar centered (links, then copyright). All seven
-   links don't quite fit one line at 390px, so cap the nav width to force a
-   balanced two-line wrap instead of a lone orphaned "Login". */
+/* Small screens: stack centered — copyright, links, then the action row. */
 @media (max-width: 640px) {
   .footer-bar {
     flex-direction: column;
@@ -83,10 +129,13 @@ const googleAuthUrl = computed(() => {
     text-align: center;
   }
 
+  .footer-left {
+    flex-direction: column;
+    align-items: center;
+  }
+
   .footer-links {
     justify-content: center;
-    gap: var(--space-2) var(--space-3);
-    max-width: 300px;
   }
 }
 </style>
