@@ -30,6 +30,15 @@ useCustomSeoMeta({
     </section>
 
     <section>
+      <h2>Open Source</h2>
+      <p>
+        The editor is <a href="https://github.com/comficker/simplepixelart" target="_blank" rel="noopener">open source on GitHub</a> (MIT).
+        Found a bug or have an idea? <a href="https://github.com/comficker/simplepixelart/issues" target="_blank" rel="noopener">Open an issue</a> —
+        or contribute a pull request.
+      </p>
+    </section>
+
+    <section>
       <h2>Contact</h2>
       <p>Have a question, suggestion, or found a bug? See our <nuxt-link to="/contact">Contact page</nuxt-link> or email <a href="mailto:comficker@gmail.com">comficker@gmail.com</a>.</p>
     </section>

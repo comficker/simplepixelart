@@ -21,6 +21,7 @@ const googleAuthUrl = computed(() => {
         <nuxt-link to="/terms">Terms</nuxt-link>
         <nuxt-link to="/guidelines">Guidelines</nuxt-link>
         <nuxt-link to="/dmca">DMCA</nuxt-link>
+        <a href="https://github.com/comficker/simplepixelart" target="_blank" rel="noopener">GitHub</a>
         <span v-if="auth.isLogged" class="footer-auth" @click="auth.logout()">Logout</span>
         <a v-else :href="googleAuthUrl" class="footer-auth">Login</a>
       </nav>

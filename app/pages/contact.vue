@@ -15,8 +15,18 @@ useCustomSeoMeta({
     </section>
 
     <section>
+      <h2>Bugs &amp; Feature Requests</h2>
+      <p>
+        SimplePixelArt is <a href="https://github.com/comficker/simplepixelart" target="_blank" rel="noopener">open source</a> —
+        the fastest way to report a bug or request a feature is to
+        <a href="https://github.com/comficker/simplepixelart/issues" target="_blank" rel="noopener">open an issue on GitHub</a>.
+        Pull requests are welcome too.
+      </p>
+    </section>
+
+    <section>
       <h2>General Support</h2>
-      <p>Questions about the editor, account issues, feedback, or feature requests:</p>
+      <p>Questions about the editor, account issues, or feedback:</p>
       <p><a href="mailto:comficker@gmail.com?subject=SimplePixelArt%20Support">comficker@gmail.com</a></p>
       <p class="page-meta">Typical response: within 3 business days.</p>
     </section>
