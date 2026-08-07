@@ -227,9 +227,14 @@ useCustomSeoMeta({
   ]
 })
 
-// Share dropdown (same pattern as collection detail); only difference from
-// `meta`: Pinterest pins the clean, brand-free card.
-const shareBtnMeta = computed(() => ({...meta.value, imgSrcOrigin: imgCard.value || imgPreview.value}))
+// Share dropdown (same pattern as collection detail); differences from `meta`:
+// Pinterest pins the clean, brand-free 2:3 card, Instagram/native share sheets
+// get the 1080×1080 square render.
+const shareBtnMeta = computed(() => ({
+  ...meta.value,
+  imgSrcOrigin: imgCard.value || imgPreview.value,
+  imgSquare: imgPreview.value,
+}))
 
 // Slug for downloaded file names. (imgCard is still used as the Pinterest share
 // image via shareBtnMeta.)
@@ -526,6 +531,9 @@ const previewStyle = computed(() => {
                   <span class="text-muted">{{ dlScale === s.scale ? '…' : `${s.w}×${s.h}` }}</span>
                 </button>
                 <div class="file-menu-sep"/>
+                <button class="drop-item btn-split" @click="download('preview')">
+                  <span>PNG · square</span><span class="text-muted">1080×1080 · social</span>
+                </button>
                 <button v-if="isAnimatedArt" class="drop-item btn-split" @click="download('gif')">
                   <span>Animated GIF</span><span class="text-muted">{{ animation.frames.length }} frames</span>
                 </button>
