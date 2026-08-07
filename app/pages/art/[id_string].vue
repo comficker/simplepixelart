@@ -43,7 +43,8 @@ const reportMailto = computed(() => {
 //   art-preview  → higher-res image attached to social shares
 //   art-original → true pixel resolution, used for display + download
 //   art-card     → clean, brand-free 2:3 card (art + name + colors) for Pinterest/download
-function artImg(variant: 'social' | 'preview' | 'original' | 'card', idString: string) {
+//   art-square   → text-free 1080×1080 (art + palette only) for Instagram/social
+function artImg(variant: 'social' | 'preview' | 'original' | 'card' | 'square', idString: string) {
   return `${config.public.api}/coloring/files/art-${variant}/${idString}.png`
 }
 
@@ -58,6 +59,9 @@ const imgOriginal = computed(() =>
 )
 const imgCard = computed(() =>
     data.value?.id_string ? artImg('card', data.value.id_string) : ''
+)
+const imgSquare = computed(() =>
+    data.value?.id_string ? artImg('square', data.value.id_string) : ''
 )
 
 // Animated artworks carry their frames in meta.animation (see editor.store).
@@ -233,7 +237,7 @@ useCustomSeoMeta({
 const shareBtnMeta = computed(() => ({
   ...meta.value,
   imgSrcOrigin: imgCard.value || imgPreview.value,
-  imgSquare: imgPreview.value,
+  imgSquare: imgSquare.value || imgPreview.value,
 }))
 
 // Slug for downloaded file names. (imgCard is still used as the Pinterest share
@@ -250,6 +254,8 @@ const download = (type: string) => {
     ext = 'pdf'
   } else if (type === 'preview') {
     url = imgPreview.value
+  } else if (type === 'square') {
+    url = imgSquare.value
   } else if (type === 'original') {
     url = imgOriginal.value
   } else if (type === 'gif') {
@@ -531,7 +537,7 @@ const previewStyle = computed(() => {
                   <span class="text-muted">{{ dlScale === s.scale ? '…' : `${s.w}×${s.h}` }}</span>
                 </button>
                 <div class="file-menu-sep"/>
-                <button class="drop-item btn-split" @click="download('preview')">
+                <button class="drop-item btn-split" @click="download('square')">
                   <span>PNG · square</span><span class="text-muted">1080×1080 · social</span>
                 </button>
                 <button v-if="isAnimatedArt" class="drop-item btn-split" @click="download('gif')">
