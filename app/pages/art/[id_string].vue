@@ -82,22 +82,38 @@ const meta = computed(() => {
   const imgSrc = imgSocial.value
   const imgSrcOrigin = imgPreview.value
   const pixelCount = data.value.map_numbers ? Object.keys(data.value.map_numbers).length : 0
-  const title = data.value.name
-      ? `${data.value.name} - ${data.value.width}x${data.value.height} Pixel Art`
-      : `${data.value.width}x${data.value.height} Pixel Art - Created by ${data.value.user?.username || 'Anonymous'}`
+  const name = data.value.name?.trim()
+  const author = data.value.user?.username || 'Anonymous'
+  const size = `${data.value.width}x${data.value.height}`
+  const tagList = data.value.taxonomies?.map(t => t.title).filter(Boolean) || []
+
+  // UGC names collide (several "Sonic"s, "Tree"s…), and duplicate <title>s get
+  // pages folded together in search. Uniquify with the author (H1 keeps the
+  // user's plain name); unnamed art leans on tags, then a short id as the
+  // final tiebreaker. Kept short — titleTemplate appends the site name.
+  const title = name
+      ? `${name} — ${size} Pixel Art by ${author}`
+      : tagList.length
+          ? `${tagList.slice(0, 2).join(' ')} Pixel Art — ${size} by ${author}`
+          : `${size} Pixel Art by ${author} — ${data.value.id_string}`
+  // `desc` stays original-only — hasOriginalContent gates INDEXING on it.
+  // The synthetic fallback is separate: it feeds the meta description for
+  // social shares / noindexed pages without ungating thin content.
   const desc = data.value.desc?.trim() || ''
+  const descFallback = `${name || 'A'} ${size} pixel art with ${pixelCount} pixels${tagList.length ? `, tagged ${tagList.slice(0, 3).join(', ')}` : ''}, by ${author}. Remix it in the free online editor on SimplePixelArt.`
 
   return {
     url,
     title,
     desc,
+    descFallback,
     imgSrc,
     imgSrcOrigin,
     author: data.value.user?.username,
     width: data.value.width,
     height: data.value.height,
     pixels: pixelCount,
-    tags: data.value.taxonomies?.map(t => t.title).join(', ') || ''
+    tags: tagList.join(', ')
   }
 })
 
@@ -120,7 +136,7 @@ const hasOriginalContent = computed(() =>
 
 useCustomSeoMeta({
   title: meta.value.title,
-  description: meta.value.desc || `Pixel art by ${meta.value.author || 'Anonymous'} on SimplePixelArt.`,
+  description: meta.value.desc || meta.value.descFallback,
   canonical: meta.value.url,
   // Animated art → use the moving GIF as the share image (platforms that don't
   // animate fall back to its first frame); static art → the composed card.
@@ -211,9 +227,14 @@ useCustomSeoMeta({
   ]
 })
 
-// Share dropdown (same pattern as collection detail); only difference from
-// `meta`: Pinterest pins the clean, brand-free card.
-const shareBtnMeta = computed(() => ({...meta.value, imgSrcOrigin: imgCard.value || imgPreview.value}))
+// Share dropdown (same pattern as collection detail); differences from `meta`:
+// Pinterest pins the clean, brand-free 2:3 card, Instagram/native share sheets
+// get the 1080×1080 square render.
+const shareBtnMeta = computed(() => ({
+  ...meta.value,
+  imgSrcOrigin: imgCard.value || imgPreview.value,
+  imgSquare: imgPreview.value,
+}))
 
 // Slug for downloaded file names. (imgCard is still used as the Pinterest share
 // image via shareBtnMeta.)
@@ -510,6 +531,9 @@ const previewStyle = computed(() => {
                   <span class="text-muted">{{ dlScale === s.scale ? '…' : `${s.w}×${s.h}` }}</span>
                 </button>
                 <div class="file-menu-sep"/>
+                <button class="drop-item btn-split" @click="download('preview')">
+                  <span>PNG · square</span><span class="text-muted">1080×1080 · social</span>
+                </button>
                 <button v-if="isAnimatedArt" class="drop-item btn-split" @click="download('gif')">
                   <span>Animated GIF</span><span class="text-muted">{{ animation.frames.length }} frames</span>
                 </button>
