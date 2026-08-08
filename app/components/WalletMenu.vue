@@ -26,6 +26,7 @@ interface Summary {
 
 const sum = ref<Summary | null>(null)
 const claiming = ref('')
+const dd = ref<{ close: (o?: { restoreFocus?: boolean }) => void } | null>(null)
 
 async function load() {
   if (!auth.isLogged) return
@@ -53,21 +54,11 @@ async function claimDaily() {
   }
 }
 
-async function claimMission(m: Mission) {
-  if (claiming.value || !m.done || m.claimed) return
-  claiming.value = m.code
-  try {
-    const res = await useNativeFetch<{ granted: number; balance: number }>(
-        '/coloring/economy/missions/claim/', {method: 'POST', body: {code: m.code}})
-    if (sum.value) sum.value.balance = res.balance
-    m.claimed = true
-    toast.success(`+${res.granted} credits`)
-  } catch {
-    toast.error('Could not claim — refresh and try again')
-  } finally {
-    claiming.value = ''
-  }
-}
+// Claimable missions surface as a badge on the Missions link — claiming
+// itself lives on the /missions screen.
+const claimableCount = computed(() =>
+    (sum.value?.missions || []).filter(m => m.done && !m.claimed).length
+    + (sum.value && !sum.value.daily_claimed ? 1 : 0))
 
 onMounted(load)
 watch(() => auth.isLogged, (v) => {
@@ -77,7 +68,7 @@ watch(() => auth.isLogged, (v) => {
 </script>
 
 <template>
-  <ui-dropdown-menu v-if="auth.isLogged && sum" class="wallet" label="Credits wallet" @click="load">
+  <ui-dropdown-menu v-if="auth.isLogged && sum" ref="dd" class="wallet" label="Credits wallet" @click="load">
     <button type="button" class="wallet-chip" title="Credits — daily bonus & missions">
       <span class="icon icon-coin"/>
       <span class="wallet-n">{{ sum.balance ?? 0 }}</span>
@@ -101,24 +92,14 @@ watch(() => auth.isLogged, (v) => {
             <template v-else>+{{ sum.daily_grant }}</template>
           </span>
         </button>
-        <template v-if="sum.missions?.length">
-          <div class="file-menu-sep"/>
-          <div class="file-menu-item file-menu-heading">Missions</div>
-          <button
-              v-for="m in sum.missions"
-              :key="m.code"
-              class="file-menu-item wallet-row"
-              :disabled="m.claimed || !m.done || claiming === m.code"
-              :title="m.claimed ? 'Claimed' : m.done ? 'Claim reward' : 'Not completed yet'"
-              @click="claimMission(m)"
-          >
-            <span class="wallet-row-title" :class="{muted: !m.done && !m.claimed}">{{ m.title }}</span>
-            <span class="wallet-row-side" :class="{claimed: m.claimed, ready: m.done && !m.claimed}">
-              <template v-if="m.claimed"><span class="icon icon-check"/></template>
-              <template v-else>+{{ m.reward }}</template>
-            </span>
-          </button>
-        </template>
+        <div class="file-menu-sep"/>
+        <nuxt-link class="file-menu-item wallet-row" to="/missions" @click="dd?.close({restoreFocus: false})">
+          <span class="wallet-row-title">
+            <span class="icon icon-flag"/>
+            <span>Missions</span>
+          </span>
+          <span v-if="claimableCount" class="wallet-badge">{{ claimableCount }}</span>
+        </nuxt-link>
       </div>
     </template>
   </ui-dropdown-menu>
@@ -204,5 +185,26 @@ watch(() => auth.isLogged, (v) => {
 .wallet-row-side .icon {
   width: 13px;
   height: 13px;
+}
+
+.wallet-row-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Claimable count riding the Missions link. */
+.wallet-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: var(--text-2xs);
+  font-weight: 700;
 }
 </style>
