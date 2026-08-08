@@ -996,11 +996,23 @@ function doResizeBoard(e: MouseEvent | TouchEvent) {
   }
 }
 
+let resizeStartSize = {w: 0, h: 0};
+
+function endResizeFromWindow() {
+  window.removeEventListener('mousemove', doResizeBoard);
+  stopResizeBoard();
+}
+
 function stopResizeBoard() {
   const active = isResizingBoard.value;
   isResizingBoard.value = false;
   resizeMode.value = '';
-  if (active) store.resize({width: editorData.value.width, height: editorData.value.height});
+  window.removeEventListener('mousemove', doResizeBoard);
+  // Only commit (history entry + save) when the size actually changed — a
+  // grab-and-release used to push a no-op undo step.
+  if (active && (editorData.value.width !== resizeStartSize.w || editorData.value.height !== resizeStartSize.h)) {
+    store.resize({width: editorData.value.width, height: editorData.value.height});
+  }
 }
 
 // Topmost board under a pointer event (world hit-test), or null (empty desk).
@@ -1152,6 +1164,55 @@ function onAddBoard(size: number) {
   fitAllBoards();
 }
 
+// Import file(s): pick first, then a small modal collects intent — pixel
+// filter vs original 1:1 pixels, and where the files land (boards / animation
+// frames / replace the current canvas).
+const showImportModal = ref(false);
+const importPicked = ref<File[]>([]);
+const importProcess = ref<'filter' | 'original'>('filter');
+const importDest = ref<'boards' | 'frames' | 'replace'>('boards');
+const importBusy = ref(false);
+
+function onImportFiles() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,image/*';
+  input.multiple = true;
+  input.onchange = (e) => {
+    const files = Array.from((e.target as HTMLInputElement).files || []);
+    if (!files.length) return;
+    importPicked.value = files;
+    importProcess.value = 'filter';
+    importDest.value = files.length === 1 ? 'replace' : 'boards';
+    showImportModal.value = true;
+  };
+  input.click();
+}
+
+async function confirmImport() {
+  if (importBusy.value) return;
+  importBusy.value = true;
+  try {
+    const dest = importDest.value;
+    const res = await store.importFiles(importPicked.value, {process: importProcess.value, dest});
+    showImportModal.value = false;
+    importPicked.value = [];
+    if (res.added) {
+      if (dest === 'boards' && store.boards.length > 1) fitAllBoards();
+      toast.success(
+          dest === 'frames'
+              ? `Imported ${res.added} frame${res.added > 1 ? 's' : ''}`
+              : `Imported ${res.added} file${res.added > 1 ? 's' : ''}`
+          + (res.skipped ? ` · ${res.skipped} skipped` : ''),
+      );
+    } else {
+      toast.error(res.skipped ? `Nothing imported — ${res.skipped} file${res.skipped > 1 ? 's' : ''} skipped` : 'Nothing could be imported');
+    }
+  } finally {
+    importBusy.value = false;
+  }
+}
+
 // Size the canvas backing store to its CSS box × DPR, drawing in CSS px.
 function updateCanvasSize() {
   const el = canvas.value;
@@ -1299,6 +1360,11 @@ function startDraw(e: any) {
   if (hmode) {
     isResizingBoard.value = true;
     resizeMode.value = hmode;
+    resizeStartSize = {w: editorData.value.width, h: editorData.value.height};
+    // Track the drag on WINDOW: growing a board naturally pulls the pointer
+    // past the canvas edge, and canvas-only listeners froze the resize there.
+    window.addEventListener('mousemove', doResizeBoard);
+    window.addEventListener('mouseup', endResizeFromWindow, {once: true});
     if ('preventDefault' in e) e.preventDefault();
     return;
   }
@@ -1553,6 +1619,12 @@ function stopDraw() {
 }
 
 function leaveCanvas() {
+  // A resize drag legitimately crosses the canvas edge — its window-level
+  // listeners own the rest of the gesture; don't cut it short here.
+  if (isResizingBoard.value) {
+    if (hoverPos.value) { hoverPos.value = null; scheduleDraw(); }
+    return;
+  }
   stopDraw();
   if (hoverPos.value) {
     hoverPos.value = null;
@@ -1697,6 +1769,14 @@ function handleKeyDown(e: any) {
 
   const mod = e.ctrlKey || e.metaKey;
   const key = (e.key || '').toLowerCase();   // Shift makes e.key uppercase — normalize
+
+  // Mid-drag (mouse held), history/tool/delete shortcuts would yank the state
+  // out from under the in-flight virtual layer — swallow them until mouseup.
+  // (Space-pan and Escape are handled above and stay available.)
+  if (isStarted.value && (mod || TOOL_KEYS[key] || e.key === 'Backspace' || e.key === 'Delete')) {
+    e.preventDefault();
+    return;
+  }
 
   if (mod && key === 'z') {
     // Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z redo.
@@ -2756,6 +2836,8 @@ onUnmounted(() => {
   if (miniMapRafId !== null) cancelAnimationFrame(miniMapRafId);
   if (playbackTimer) clearTimeout(playbackTimer);
   if (camSaveTimer) clearTimeout(camSaveTimer);
+  window.removeEventListener('mousemove', doResizeBoard);
+  window.removeEventListener('mouseup', endResizeFromWindow);
   stageRO?.disconnect();
   stageRO = null;
   store.isPlaying = false
@@ -2858,8 +2940,8 @@ watch(
                 <span class="icon icon-workspace"/><span>Load board…</span>
               </button>
               <div class="file-menu-sep"/>
-              <button class="file-menu-item" @click="store.importImage()">
-                <span class="icon icon-upload"/><span>Import file</span>
+              <button class="file-menu-item" @click="onImportFiles">
+                <span class="icon icon-upload"/><span>Import files…</span>
               </button>
               <button class="file-menu-item" @click="store.insertImage()">
                 <span class="icon icon-image"/><span>Insert image</span>
@@ -3599,6 +3681,57 @@ watch(
           </button>
           <button class="share-dismiss" @click="showPngModal = false">Cancel</button>
       </UiModal>
+
+    <!-- Import options: how to read pixels + where the files land -->
+    <UiModal v-if="showImportModal" class="png-modal" @close="showImportModal = false">
+      <h3 class="publish-heading">Import {{ importPicked.length }} file{{ importPicked.length > 1 ? 's' : '' }}</h3>
+      <p class="publish-sub">Choose how to read the pixels and where they go.</p>
+
+      <div class="onb-field">
+        <label class="onb-label">Pixels</label>
+        <div class="onb-chips">
+          <button class="onb-chip" :class="{ active: importProcess === 'filter' }" @click="importProcess = 'filter'">
+            Pixel filter
+          </button>
+          <button class="onb-chip" :class="{ active: importProcess === 'original' }" @click="importProcess = 'original'">
+            Original 1:1
+          </button>
+        </div>
+        <p class="png-dims">
+          {{ importProcess === 'filter'
+            ? 'Resamples any image into pixel art (grid detection + palette).'
+            : 'Keeps every pixel and color exactly as-is — images up to 256×256.' }}
+        </p>
+      </div>
+
+      <div class="onb-field">
+        <label class="onb-label">Add to</label>
+        <div class="onb-chips">
+          <button v-if="importPicked.length === 1" class="onb-chip" :class="{ active: importDest === 'replace' }" @click="importDest = 'replace'">
+            Current canvas
+          </button>
+          <button class="onb-chip" :class="{ active: importDest === 'boards' }" @click="importDest = 'boards'">
+            {{ importPicked.length > 1 ? 'Boards' : 'New board' }}
+          </button>
+          <button class="onb-chip" :class="{ active: importDest === 'frames' }" @click="importDest = 'frames'">
+            Animation frames
+          </button>
+        </div>
+        <p class="png-dims">
+          {{ importDest === 'boards'
+            ? (importPicked.length > 1 ? 'Each file becomes its own board on the desk.' : 'The file becomes a new board beside the others.')
+            : importDest === 'frames'
+              ? 'Files become the frames of one animation, in pick order (replaces the current canvas).'
+              : 'Replaces the artwork on the current canvas.' }}
+        </p>
+      </div>
+
+      <button class="btn primary wide" :disabled="importBusy" @click="confirmImport">
+        <span class="icon icon-upload"/>
+        <span>{{ importBusy ? 'Importing…' : 'Import' }}</span>
+      </button>
+      <button class="share-dismiss" @click="showImportModal = false">Cancel</button>
+    </UiModal>
 
     <!-- Delete confirm -->
     <UiModal v-if="showDeleteConfirm" class="del-modal" @close="showDeleteConfirm = false">
