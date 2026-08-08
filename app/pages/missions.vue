@@ -326,13 +326,13 @@ watch(() => auth.isLogged, (v) => {
 /* Diagonal "Soon" ribbon across the card's top-right corner. */
 .msn-soon {
   position: absolute;
-  top: 12px;
-  right: -28px;
-  width: 100px;
+  top: 8px;
+  right: -24px;
+  width: 84px;
   transform: rotate(45deg);
   text-align: center;
-  padding: 2px 0;
-  font-size: var(--text-2xs);
+  padding: 1px 0;
+  font-size: 8px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
