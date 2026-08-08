@@ -85,6 +85,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const sourceImage = ref<HTMLImageElement | null>(null)
 const imageData = ref('')   // dataURL of the loaded sheet, persisted so F5 keeps the work
 const rawImageData = ref('') // the original upload, kept so "editor import" can re-derive
+const sourceName = ref('')   // upload's basename — names the animation art
 const hasImage = computed(() => !!sourceImage.value)
 
 // Run the same image pipeline the editor uses on import (de-upscale, crop,
@@ -426,6 +427,7 @@ function onDrop(e: DragEvent) {
 }
 
 function loadFile(file: File) {
+  sourceName.value = file.name.replace(/\.[^.]+$/, '')
   const reader = new FileReader()
   reader.onload = (e) => {
     rawImageData.value = e.target?.result as string
@@ -675,11 +677,47 @@ function drawGrid(ctx: CanvasRenderingContext2D) {
   const tw = tileW.value * displayScale, th = tileH.value * displayScale
   const mx = offsetX.value * displayScale, my = offsetY.value * displayScale
   ctx.lineWidth = 1
-  for (const [color, inset] of [['rgba(0,0,0,0.55)', 0], ['rgba(255,255,255,0.35)', 1]] as const) {
-    ctx.strokeStyle = color
-    for (let r = 0; r < rows.value; r++) {
-      for (let c = 0; c < cols.value; c++) {
-        ctx.strokeRect(Math.round(mx + c * spanX) + 0.5 + inset, Math.round(my + r * spanY) + 0.5 + inset, Math.round(tw) - inset * 2, Math.round(th) - inset * 2)
+  const cw = ctx.canvas.width, ch = ctx.canvas.height
+  if (spacing.value === 0) {
+    // No spacing (the normal case): full-canvas line families, one long stroke
+    // per boundary — same grid style as the tilemap/pixel editors' world grid.
+    // The modulo start extends lines across offset margins and partial edge
+    // cells, so the lattice fills the whole sheet. Black + white pass keeps it
+    // readable on any image.
+    for (const [color, shift] of [['rgba(0,0,0,0.55)', 0], ['rgba(255,255,255,0.35)', 1]] as const) {
+      ctx.strokeStyle = color
+      ctx.beginPath()
+      for (let x = ((mx % spanX) + spanX) % spanX; x <= cw + 1; x += spanX) {
+        // A 1px line is centered on its coordinate: at the right/bottom edge
+        // the +0.5 crisping offset pushes it outside the bitmap — clamp the
+        // black/white pair back inside.
+        let px = Math.round(x) + 0.5 + shift
+        if (px > cw - 0.5) px = cw - 0.5 - shift
+        ctx.moveTo(px, 0)
+        ctx.lineTo(px, ch)
+      }
+      for (let y = ((my % spanY) + spanY) % spanY; y <= ch + 1; y += spanY) {
+        let py = Math.round(y) + 0.5 + shift
+        if (py > ch - 0.5) py = ch - 0.5 - shift
+        ctx.moveTo(0, py)
+        ctx.lineTo(cw, py)
+      }
+      ctx.stroke()
+    }
+  } else {
+    // With spacing, cells are separated by gaps a continuous lattice can't
+    // express — outline each cell, clamping edge cells inside the bitmap.
+    const maxX = cw - 0.5, maxY = ch - 0.5
+    for (const [color, inset] of [['rgba(0,0,0,0.55)', 0], ['rgba(255,255,255,0.35)', 1]] as const) {
+      ctx.strokeStyle = color
+      for (let r = 0; r < rows.value; r++) {
+        for (let c = 0; c < cols.value; c++) {
+          const x = Math.round(mx + c * spanX) + 0.5 + inset
+          const y = Math.round(my + r * spanY) + 0.5 + inset
+          const w = Math.min(Math.round(tw) - inset * 2, maxX - inset - x)
+          const h = Math.min(Math.round(th) - inset * 2, maxY - inset - y)
+          ctx.strokeRect(x, y, w, h)
+        }
       }
     }
   }
@@ -1412,6 +1450,62 @@ async function openAllInEditor() {
   navigateTo('/editor')
 }
 
+// Group every cut tile into ONE animated art: each tile becomes a frame with a
+// shared palette (the editor's colors array is artwork-global), then the piece
+// opens in the editor with its timeline ready. Same meta.animation shape the
+// editor's own loadAnimationFrames builds.
+const MAX_ANIM_FRAMES = 64  // editor's MAX_FRAMES cap
+// "Open editor" shape toggle: boards per tile (off) vs one animated art (on).
+const openAsAnim = ref(false)
+async function openAsAnimation() {
+  const boxes = tiles.value
+  if (boxes.length < 2) { toast.error('Cut at least 2 tiles to animate'); return }
+  const colors: string[] = []
+  const colorIndex = new Map<string, number>()
+  const frames: { id: string; layers: any[]; duration: number }[] = []
+  let fw = 0, fh = 0
+  for (const b of boxes) {
+    if (frames.length >= MAX_ANIM_FRAMES) break
+    const raw = cropBox(b)
+    if (!raw) continue
+    const cv = processCanvas(raw)
+    const {data} = cv.getContext('2d')!.getImageData(0, 0, cv.width, cv.height)
+    const pixels: { [key: string]: number } = {}
+    for (let y = 0; y < cv.height; y++) {
+      for (let x = 0; x < cv.width; x++) {
+        const i = (y * cv.width + x) * 4
+        if (data[i + 3]! < 16) continue
+        const hex = rgbToHex(data[i]!, data[i + 1]!, data[i + 2]!)
+        let idx = colorIndex.get(hex)
+        if (idx === undefined) { idx = colors.length; colors.push(hex); colorIndex.set(hex, idx) }
+        pixels[`${x}_${y}`] = idx
+      }
+    }
+    // Empty cells (grid margins, blank sheet areas) would become blank frames —
+    // drop them, same as openAllInEditor drops empty tiles.
+    if (!Object.keys(pixels).length) continue
+    fw = Math.max(fw, cv.width); fh = Math.max(fh, cv.height)
+    frames.push({id: generateUUID(), layers: [{name: 'Layer 1', pixels, x: 0, y: 0}], duration: 100})
+  }
+  if (frames.length < 2) { toast.error('Need at least 2 non-empty tiles to animate'); return }
+  if (boxes.length > MAX_ANIM_FRAMES) toast.info(`Using the first ${MAX_ANIM_FRAMES} tiles (frame limit)`)
+  const ed = {
+    ...cloneDeep(DEFAULT_EDITOR_DATA),
+    id: generateUUID(),
+    name: sourceName.value || 'Animation',
+    width: fw, height: fh, colors,
+    layers: frames[0]!.layers,
+    updated: new Date().toISOString(),
+  }
+  ed.meta = {...(ed.meta || {}), animation: {fps: 10, loop: true, frames, shared: []}}
+  const ws = getStorageItem('workspaces')
+  ws[ed.id] = ed
+  localStorage.setItem('workspaces', JSON.stringify(ws))
+  localStorage.setItem('workspace_current', ed.id)
+  await clearWorkspaceFull()   // single (animated) art → no multi-board snapshot
+  navigateTo(`/editor?id=${ed.id}`)
+}
+
 // ── Tilesets ───────────────────────────────────────────────────────
 async function loadTilesets() {
   if (!auth.isLogged) {
@@ -1478,14 +1572,22 @@ async function syncTile(box: Box, index: number) {
   if (!ed) { toast.error('That tile is empty'); return }
   const sel = selectedTs.value
 
-  // Guest: store the tile in a local tileset (a tileset must be selected).
+  // Guest: with a tileset selected the tile goes into it; without one it still
+  // syncs — into the local workspace as a draft (parity with the signed-in
+  // flow, which creates the cloud art regardless of tileset).
   if (!auth.isLogged) {
-    if (!sel || !sel.local) { toast.error('Pick or create a tileset first'); return }
     syncingKey.value = key
     try {
-      localTs.addTile(String(sel.id), {name: ed.name, ed, thumb: canvas.toDataURL('image/png')})
+      if (sel?.local) {
+        localTs.addTile(String(sel.id), {name: ed.name, ed, thumb: canvas.toDataURL('image/png')})
+        toast.success('Added to tileset')
+      } else {
+        const ws = getStorageItem('workspaces')
+        ws[ed.id] = ed
+        localStorage.setItem('workspaces', JSON.stringify(ws))
+        toast.success('Synced to workspace')
+      }
       syncedTiles.value = {...syncedTiles.value, [key]: {id: 0, id_string: ed.id}}
-      toast.success('Added to tileset')
     } finally {
       syncingKey.value = null
     }
@@ -1535,10 +1637,13 @@ function downloadTile() {
   toast.success('Sprite downloaded')
 }
 
-function cropToPng(b: Box): Promise<Uint8Array | null> {
-  const raw = cropBox(b)
-  if (!raw) return Promise.resolve(null)
-  const cv = processCanvas(raw)
+function canvasHasPixels(cv: HTMLCanvasElement): boolean {
+  const {data} = cv.getContext('2d')!.getImageData(0, 0, cv.width, cv.height)
+  for (let i = 3; i < data.length; i += 4) if (data[i]! >= 16) return true
+  return false
+}
+
+function canvasToPngBytes(cv: HTMLCanvasElement): Promise<Uint8Array | null> {
   return new Promise((resolve) => {
     cv.toBlob(async (blob) => {
       if (!blob) return resolve(null)
@@ -1549,22 +1654,32 @@ function cropToPng(b: Box): Promise<Uint8Array | null> {
 
 const exporting = ref(false)
 
+// ZIP every cut tile — all three modes (grid cells, auto boxes, regions).
+// Fully-transparent cells (grid margins, blank sheet areas) are skipped so the
+// archive only contains real sprites.
 async function downloadAllZip() {
-  if (!regions.value.length || exporting.value) return
+  const boxes = tiles.value
+  if (!boxes.length || exporting.value) return
+  if (boxes.length > 2000) { toast.error('Too many tiles to ZIP — increase the tile size'); return }
   exporting.value = true
   try {
     const files: { name: string; data: Uint8Array }[] = []
-    for (let i = 0; i < regions.value.length; i++) {
-      const data = await cropToPng(regions.value[i]!)
-      if (data) files.push({name: `tile_${i + 1}.png`, data})
+    let skipped = 0
+    for (const b of boxes) {
+      const raw = cropBox(b)
+      if (!raw) { skipped++; continue }
+      const cv = processCanvas(raw)
+      if (!canvasHasPixels(cv)) { skipped++; continue }
+      const data = await canvasToPngBytes(cv)
+      if (data) files.push({name: `tile_${files.length + 1}.png`, data})
     }
-    if (!files.length) { toast.error('Nothing to export'); return }
+    if (!files.length) { toast.error('Nothing to export — all tiles are empty'); return }
     const blob = createZip(files)
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url; a.download = 'tiles.zip'; a.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
-    toast.success(`Exported ${files.length} tiles`)
+    toast.success(skipped ? `Exported ${files.length} tiles · ${skipped} empty skipped` : `Exported ${files.length} tiles`)
   } finally {
     exporting.value = false
   }
@@ -1708,7 +1823,7 @@ const faq = [
         </Widget>
         <div class="ts-stage-foot">
           <p class="ts-hint text-xs text-muted">
-            <template v-if="mode === 'grid'">{{ tileCount }} tiles · {{ cols }}×{{ rows }} · {{ tileW }}×{{ tileH }}px</template>
+            <template v-if="mode === 'grid'">{{ tileCount }} cells · {{ cols }}×{{ rows }} · {{ tileW }}×{{ tileH }}px</template>
             <template v-else-if="mode === 'auto'">{{ detecting ? 'Detecting…' : `${boxes.length} sprites — click one` }}</template>
             <template v-else>{{ regions.length }} region{{ regions.length === 1 ? '' : 's' }} — {{ selectShape === 'fixed' ? 'click to drop a box' : (selectShape === 'square' ? 'drag a square' : 'drag to add a box') }}</template>
           </p>
@@ -1750,12 +1865,14 @@ const faq = [
                 @click="selectTile(i)"
             >
               <span class="ts-region-num">{{ i + 1 }}</span>
-              <span class="ts-region-dim">{{ t.w }}×{{ t.h }}</span>
+              <!-- Grid cells are all the same size — the row/col position is the
+                   useful identifier; free boxes keep their (varied) dimensions. -->
+              <span class="ts-region-dim">{{ mode === 'grid' ? `R${Math.floor(i / Math.max(1, cols)) + 1} · C${(i % Math.max(1, cols)) + 1}` : `${t.w}×${t.h}` }}</span>
               <button
                   class="ts-sync"
                   :class="{synced: !!syncedTiles[tileKey(t)]}"
                   :disabled="syncingKey === tileKey(t)"
-                  :title="syncedTiles[tileKey(t)] ? 'Added' : (auth.isLogged ? 'Sync to workspace / tileset' : 'Add to selected tileset')"
+                  :title="syncedTiles[tileKey(t)] ? 'Added' : 'Sync to workspace / tileset'"
                   @click.stop="syncTile(t, i)"
               >
                 <span class="icon" :class="syncedTiles[tileKey(t)] ? 'icon-check' : (syncingKey === tileKey(t) ? 'icon-undo spin' : 'icon-upload')"/>
@@ -1772,7 +1889,19 @@ const faq = [
 
           <!-- Tile actions: pick a tileset to sync to + open all in the editor. -->
           <div class="ts-tiles-foot">
-            <ui-dropdown-menu ref="pickerRef" position="bottom" class="ts-pick" label="Choose tileset to sync to">
+            <!-- One action, two shapes: boards per tile, or (toggled) one
+                 animated art where every tile becomes a frame. The toggle sits
+                 first — as an animation the tiles bypass tilesets entirely, so
+                 the picker below hides. -->
+            <ui-switch
+                v-model="openAsAnim"
+                size="sm"
+                class="ts-anim-toggle"
+                title="Group all cut tiles into one animated art — each tile becomes a frame"
+            >
+              <span class="text-xs">As animation</span>
+            </ui-switch>
+            <ui-dropdown-menu v-if="!openAsAnim" ref="pickerRef" position="bottom" class="ts-pick" label="Choose tileset to sync to">
               <button type="button" class="btn ts-pick-trigger">
                 <span class="ts-pick-name" :class="{placeholder: selectedTilesetId == null}">{{ currentTsName }}</span>
                 <span class="icon icon-chevron-down"/>
@@ -1809,17 +1938,21 @@ const faq = [
               </template>
             </ui-dropdown-menu>
 
-            <button class="btn ts-open-btn" :disabled="!tiles.length" @click="openAllInEditor">
+            <button
+                class="btn ts-open-btn"
+                :disabled="openAsAnim ? tiles.length < 2 : !tiles.length"
+                @click="openAsAnim ? openAsAnimation() : openAllInEditor()"
+            >
               <span class="icon icon-pen"/><span>Open editor</span>
             </button>
           </div>
         </Widget>
 
         <!-- Export bar: pinned to the rail bottom, aligned with the canvas foot -->
-        <div v-if="mode === 'select'" class="ts-zip-bar">
-          <button class="btn primary wide ts-zip-btn" :disabled="!regions.length || exporting" @click="downloadAllZip">
+        <div class="ts-zip-bar">
+          <button class="btn primary wide ts-zip-btn" :disabled="!tiles.length || exporting" @click="downloadAllZip">
             <span class="icon icon-download"/>
-            <span>{{ exporting ? 'Exporting…' : `ZIP (${regions.length})` }}</span>
+            <span>{{ exporting ? 'Exporting…' : `ZIP (${tiles.length})` }}</span>
           </button>
         </div>
       </div>
@@ -2060,6 +2193,10 @@ const faq = [
   aspect-ratio: 1;
   width: 100%;
   overflow: auto;
+  /* Center the sheet on both axes. flex + margin:auto (not place-items) so a
+     zoomed-in canvas larger than the viewport stays fully scrollable — auto
+     margins collapse to 0 on overflow instead of clipping the top/left. */
+  display: flex;
   background:
       repeating-conic-gradient(color-mix(in oklab, var(--foreground) 8%, transparent) 0% 25%, transparent 0% 50%)
       50% / 16px 16px;
@@ -2067,6 +2204,7 @@ const faq = [
 
 .ts-canvas {
   display: block;
+  margin: auto;
   max-width: none;
   cursor: crosshair;
 }
@@ -2498,6 +2636,21 @@ const faq = [
   display: flex;
   flex-direction: column;
   gap: 3px;
+}
+
+/* Mobile: hundreds of grid cells must not swallow the page — cap the list and
+   scroll inside it, and keep the selected-tile preview from claiming the whole
+   first screen. */
+@media (max-width: 767px) {
+  .ts-region-scroll {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  .ts-preview-box {
+    max-width: 240px;
+    margin-inline: auto;
+  }
 }
 
 @media (min-width: 768px) {

@@ -4,7 +4,8 @@
       class="tooltip-wrapper"
       @mouseenter="onEnter"
       @mouseleave="show = false"
-      @focus="onEnter"
+      @mousedown="show = false"
+      @focus="onFocus"
       @blur="show = false"
       tabindex="0"
   >
@@ -42,6 +43,14 @@ const wrap = ref(null)
 // ancestors (.toolbar-main, panels, modals). Anchor point = the edge of
 // the wrapped control matching `position`, captured on hover.
 const pt = ref({ x: 0, y: 0 })
+
+function onFocus() {
+  // Keyboard focus only. Click/programmatic focus (e.g. a modal restoring
+  // focus to the button that opened it) must not pop a tooltip that then
+  // lingers over the UI until the next blur.
+  if (wrap.value && !wrap.value.matches(':focus-visible')) return
+  onEnter()
+}
 
 function onEnter() {
   // Skip tooltips on touch devices

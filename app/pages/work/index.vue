@@ -197,6 +197,33 @@ useCustomSeoMeta({
   robots: 'noindex, follow',
 })
 
+// ===== Sort (shared by all tabs; cloud artworks sort server-side) =====
+type SortKey = 'newest' | 'oldest' | 'name-az' | 'name-za'
+const sortBy = ref<SortKey>('newest')
+const SORT_META: Record<SortKey, { label: string; ordering: string }> = {
+  'newest': {label: 'Newest', ordering: '-updated'},
+  'oldest': {label: 'Oldest', ordering: 'updated'},
+  'name-az': {label: 'Name A–Z', ordering: 'name'},
+  'name-za': {label: 'Name Z–A', ordering: '-name'},
+}
+
+// Client-side comparator for everything not server-paginated (guest artworks,
+// collections, worlds, tilesets). Collections label with `title`, not `name`;
+// local drafts always have `updated` (the editor stamps it on every save), but
+// tolerate rows without one (sorted last on Newest).
+function sortItems<T extends { name?: string; title?: string; updated?: string }>(list: T[]): T[] {
+  const name = (i: T) => (i.name || (i as any).title || '').toLowerCase()
+  const time = (i: T) => Date.parse(i.updated || '') || 0
+  const sorted = [...list]
+  switch (sortBy.value) {
+    case 'newest': sorted.sort((a, b) => time(b) - time(a)); break
+    case 'oldest': sorted.sort((a, b) => time(a) - time(b)); break
+    case 'name-az': sorted.sort((a, b) => name(a).localeCompare(name(b))); break
+    case 'name-za': sorted.sort((a, b) => name(b).localeCompare(name(a))); break
+  }
+  return sorted
+}
+
 // ===== Artworks =====
 const workspaces = ref<WorkItem[]>([])
 const loadingWorks = ref(false)
@@ -224,7 +251,7 @@ async function fetchWorks() {
           page: workPage.value,
           page_size: PAGE_SIZE,
           is_template: true,
-          ordering: '-updated',
+          ordering: SORT_META[sortBy.value].ordering,
           ...(status ? {status} : {}),
           ...(workTileFilter.value === 'tiles' ? {is_tile: true}
               : workTileFilter.value === 'art' ? {is_tile: false} : {}),
@@ -253,6 +280,14 @@ async function fetchWorks() {
 
 watch([workFilter, workTileFilter], () => {
   workPage.value = 1
+  if (auth.logged?.id) fetchWorks()
+})
+// Sort applies to every tab: reset all pagers; cloud artworks re-sort server-side.
+watch(sortBy, () => {
+  workPage.value = 1
+  collPage.value = 1
+  worldPage.value = 1
+  tilesetPage.value = 1
   if (auth.logged?.id) fetchWorks()
 })
 watch(workPage, () => {
@@ -386,7 +421,7 @@ const localFilteredWorks = computed(() => {
     const wantPublic = workFilter.value === 'public'
     list = list.filter(w => isPublic(w) === wantPublic)
   }
-  return list
+  return sortItems(list)
 })
 
 const filteredWorks = computed(() => {
@@ -468,8 +503,9 @@ function coverUrl(c: CollectionItem): string | null {
 }
 
 const filteredColls = computed(() => {
-  if (collFilter.value === 'all') return collections.value
-  return collections.value.filter(c => c.status === collFilter.value)
+  const list = collFilter.value === 'all' ? collections.value
+      : collections.value.filter(c => c.status === collFilter.value)
+  return sortItems(list)
 })
 
 // Client-side paging (collections are fetched in one go).
@@ -622,15 +658,15 @@ const tilesetPage = ref(1)
 watch(worldFilter, () => { worldPage.value = 1 })
 watch(tilesetFilter, () => { tilesetPage.value = 1 })
 
-const filteredWorlds = computed(() => worldFilter.value === 'all'
+const filteredWorlds = computed(() => sortItems(worldFilter.value === 'all'
     ? worldsList.value
-    : worldsList.value.filter(w => (w.status === 'public') === (worldFilter.value === 'public')))
+    : worldsList.value.filter(w => (w.status === 'public') === (worldFilter.value === 'public'))))
 const worldNumPages = computed(() => Math.max(1, Math.ceil(filteredWorlds.value.length / PAGE_SIZE)))
 const pagedWorlds = computed(() => filteredWorlds.value.slice((worldPage.value - 1) * PAGE_SIZE, worldPage.value * PAGE_SIZE))
 
-const filteredTilesets = computed(() => tilesetFilter.value === 'all'
+const filteredTilesets = computed(() => sortItems(tilesetFilter.value === 'all'
     ? tilesetsList.value
-    : tilesetsList.value.filter(t => (t.status === 'public') === (tilesetFilter.value === 'public')))
+    : tilesetsList.value.filter(t => (t.status === 'public') === (tilesetFilter.value === 'public'))))
 const tilesetNumPages = computed(() => Math.max(1, Math.ceil(filteredTilesets.value.length / PAGE_SIZE)))
 const pagedTilesets = computed(() => filteredTilesets.value.slice((tilesetPage.value - 1) * PAGE_SIZE, tilesetPage.value * PAGE_SIZE))
 
@@ -763,6 +799,29 @@ onMounted(() => {
               <span class="file-menu-label">
                 <span>{{ f === 'all' ? 'All types' : f === 'art' ? 'Art' : 'Tiles' }}</span>
                 <span v-if="workTileFilter === f" class="icon icon-check"/>
+              </span>
+            </button>
+          </div>
+        </template>
+      </ui-dropdown-menu>
+      <!-- Sort — its own concern, kept apart from the filter group: pushed to
+           the right edge, next to the primary action. -->
+      <ui-dropdown-menu class="work-sel work-sel-sort">
+        <button class="btn work-sel-btn" title="Sort by">
+          <span>{{ SORT_META[sortBy].label }}</span>
+          <span class="icon icon-chevron-down work-sel-caret"/>
+        </button>
+        <template #menu>
+          <div class="file-menu">
+            <button
+                v-for="(m, k) in SORT_META"
+                :key="k"
+                class="file-menu-item"
+                @click="sortBy = k"
+            >
+              <span class="file-menu-label">
+                <span>{{ m.label }}</span>
+                <span v-if="sortBy === k" class="icon icon-check"/>
               </span>
             </button>
           </div>
@@ -1180,6 +1239,12 @@ onMounted(() => {
   color: var(--muted);
 }
 
+/* Sort is not a filter — separate it from the filter group by pushing it to
+   the right edge, beside the primary New action. */
+.work-sel-sort {
+  margin-left: auto;
+}
+
 /* README-style card: control bar in the header, tab content in the body. The
    panel fills the viewport (see the :has(.work-page) rules below) as a fixed
    three-row layout — head pinned top, body scrolls, foot pinned bottom. */
@@ -1290,8 +1355,11 @@ onMounted(() => {
   /* Keep every control on one line: no wrap, triggers drop their fixed width and
      shrink to content with tighter padding, and the New button collapses to its
      icon to reclaim room. */
+  /* Five controls on artworks (tab, status, sort, type, New) no longer fit one
+     line — wrap to a second row instead of overflowing. overflow-x: auto is NOT
+     an option: it would clip the absolutely-positioned dropdown menus. */
   .work-controlbar {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
   .work-sel-btn {
     min-width: 0;
