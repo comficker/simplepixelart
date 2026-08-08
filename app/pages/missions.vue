@@ -136,23 +136,26 @@ watch(() => auth.isLogged, (v) => {
         <!-- What credits power — shown to everyone, guests included -->
         <div class="msn-uses">
           <div class="msn-use">
+            <span class="msn-soon">Soon</span>
             <span class="icon icon-auto-fix"/>
             <div class="msn-use-main">
-              <div class="msn-use-title">Generate art with AI <span class="msn-soon">Soon</span></div>
+              <div class="msn-use-title">Generate art with AI</div>
               <p class="msn-use-desc text-xs">Turn a prompt into pixel art, straight onto your canvas.</p>
             </div>
           </div>
           <div class="msn-use">
+            <span class="msn-soon">Soon</span>
             <span class="icon icon-pencil"/>
             <div class="msn-use-main">
-              <div class="msn-use-title">AI content assistant <span class="msn-soon">Soon</span></div>
+              <div class="msn-use-title">AI content assistant</div>
               <p class="msn-use-desc text-xs">Writes titles, descriptions and tags for your art, so it gets found.</p>
             </div>
           </div>
           <div class="msn-use">
+            <span class="msn-soon">Soon</span>
             <span class="icon icon-gift"/>
             <div class="msn-use-main">
-              <div class="msn-use-title">Tip artists <span class="msn-soon">Soon</span></div>
+              <div class="msn-use-title">Tip artists</div>
               <p class="msn-use-desc text-xs">Gift credits to creators to show love for their art.</p>
             </div>
           </div>
@@ -300,6 +303,8 @@ watch(() => auth.isLogged, (v) => {
 }
 
 .msn-use {
+  position: relative;
+  overflow: hidden;   /* clips the corner ribbon */
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -318,18 +323,22 @@ watch(() => auth.isLogged, (v) => {
   font-weight: 700;
 }
 
+/* Diagonal "Soon" ribbon across the card's top-right corner. */
 .msn-soon {
-  display: inline-block;
-  vertical-align: 2px;
-  margin-left: 4px;
-  padding: 1px 6px;
+  position: absolute;
+  top: 12px;
+  right: -28px;
+  width: 100px;
+  transform: rotate(45deg);
+  text-align: center;
+  padding: 2px 0;
   font-size: var(--text-2xs);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
+  letter-spacing: 0.08em;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  pointer-events: none;
 }
 
 .msn-use-desc {
