@@ -19,6 +19,12 @@ interface Summary {
   balance?: number
   daily_claimed?: boolean
   missions?: Mission[]
+  referral?: {
+    signup_reward: number
+    purchase_rate: number
+    invited?: number
+    earned?: number
+  }
 }
 
 useCustomSeoMeta({
@@ -79,7 +85,27 @@ async function claimMission(m: Mission) {
   }
 }
 
-onMounted(load)
+// Referral invite link — reward numbers come from backend config.
+const inviteLink = computed(() => {
+  if (!auth.logged?.id || import.meta.server) return ''
+  return `${location.origin}/?ref=${auth.logged.id}`
+})
+
+async function copyInvite() {
+  if (!inviteLink.value) return
+  try {
+    await navigator.clipboard.writeText(inviteLink.value)
+    toast.success('Invite link copied')
+  } catch {
+    toast.error('Could not copy — select the link manually')
+  }
+}
+
+onMounted(async () => {
+  // A pending ?ref may still be waiting if sign-in happened elsewhere.
+  await attachPendingReferral()
+  load()
+})
 watch(() => auth.isLogged, (v) => {
   if (v) load()
   else sum.value = null
@@ -151,6 +177,29 @@ watch(() => auth.isLogged, (v) => {
                 <template v-else>Claim</template>
               </button>
             </div>
+          </div>
+
+          <!-- Referral: unbounded earner, so it lives apart from the missions list -->
+          <div v-if="sum.referral?.signup_reward" class="msn-invite">
+            <div class="msn-row-main">
+              <div class="msn-row-title">Invite friends</div>
+              <div class="msn-row-sub text-xs">
+                +{{ sum.referral.signup_reward }} per friend who joins
+                <template v-if="sum.referral.purchase_rate">
+                  · {{ Math.round(sum.referral.purchase_rate * 100) }}% of credits they buy
+                </template>
+              </div>
+            </div>
+            <div class="msn-invite-bar">
+              <input class="msn-invite-link" :value="inviteLink" readonly @focus="($event.target as HTMLInputElement).select()">
+              <button class="btn primary" @click="copyInvite">
+                <span class="icon icon-link"/><span>Copy</span>
+              </button>
+            </div>
+            <p v-if="sum.referral.invited" class="text-xs text-muted">
+              {{ sum.referral.invited }} friend{{ sum.referral.invited === 1 ? '' : 's' }} joined
+              · {{ sum.referral.earned }} credits earned
+            </p>
           </div>
 
           <p class="msn-hint text-xs text-muted">
@@ -288,6 +337,33 @@ watch(() => auth.isLogged, (v) => {
 
 .msn-hint {
   margin-top: var(--space-4);
+}
+
+/* Invite friends card */
+.msn-invite {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.msn-invite-bar {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.msn-invite-link {
+  flex: 1;
+  min-width: 0;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2, var(--surface));
+  color: var(--muted);
+  font-size: var(--text-xs);
 }
 
 @media (max-width: 640px) {
