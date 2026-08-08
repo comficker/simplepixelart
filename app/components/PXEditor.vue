@@ -996,11 +996,23 @@ function doResizeBoard(e: MouseEvent | TouchEvent) {
   }
 }
 
+let resizeStartSize = {w: 0, h: 0};
+
+function endResizeFromWindow() {
+  window.removeEventListener('mousemove', doResizeBoard);
+  stopResizeBoard();
+}
+
 function stopResizeBoard() {
   const active = isResizingBoard.value;
   isResizingBoard.value = false;
   resizeMode.value = '';
-  if (active) store.resize({width: editorData.value.width, height: editorData.value.height});
+  window.removeEventListener('mousemove', doResizeBoard);
+  // Only commit (history entry + save) when the size actually changed — a
+  // grab-and-release used to push a no-op undo step.
+  if (active && (editorData.value.width !== resizeStartSize.w || editorData.value.height !== resizeStartSize.h)) {
+    store.resize({width: editorData.value.width, height: editorData.value.height});
+  }
 }
 
 // Topmost board under a pointer event (world hit-test), or null (empty desk).
@@ -1348,6 +1360,11 @@ function startDraw(e: any) {
   if (hmode) {
     isResizingBoard.value = true;
     resizeMode.value = hmode;
+    resizeStartSize = {w: editorData.value.width, h: editorData.value.height};
+    // Track the drag on WINDOW: growing a board naturally pulls the pointer
+    // past the canvas edge, and canvas-only listeners froze the resize there.
+    window.addEventListener('mousemove', doResizeBoard);
+    window.addEventListener('mouseup', endResizeFromWindow, {once: true});
     if ('preventDefault' in e) e.preventDefault();
     return;
   }
@@ -1602,6 +1619,12 @@ function stopDraw() {
 }
 
 function leaveCanvas() {
+  // A resize drag legitimately crosses the canvas edge — its window-level
+  // listeners own the rest of the gesture; don't cut it short here.
+  if (isResizingBoard.value) {
+    if (hoverPos.value) { hoverPos.value = null; scheduleDraw(); }
+    return;
+  }
   stopDraw();
   if (hoverPos.value) {
     hoverPos.value = null;
@@ -1746,6 +1769,14 @@ function handleKeyDown(e: any) {
 
   const mod = e.ctrlKey || e.metaKey;
   const key = (e.key || '').toLowerCase();   // Shift makes e.key uppercase — normalize
+
+  // Mid-drag (mouse held), history/tool/delete shortcuts would yank the state
+  // out from under the in-flight virtual layer — swallow them until mouseup.
+  // (Space-pan and Escape are handled above and stay available.)
+  if (isStarted.value && (mod || TOOL_KEYS[key] || e.key === 'Backspace' || e.key === 'Delete')) {
+    e.preventDefault();
+    return;
+  }
 
   if (mod && key === 'z') {
     // Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z redo.
@@ -2805,6 +2836,8 @@ onUnmounted(() => {
   if (miniMapRafId !== null) cancelAnimationFrame(miniMapRafId);
   if (playbackTimer) clearTimeout(playbackTimer);
   if (camSaveTimer) clearTimeout(camSaveTimer);
+  window.removeEventListener('mousemove', doResizeBoard);
+  window.removeEventListener('mouseup', endResizeFromWindow);
   stageRO?.disconnect();
   stageRO = null;
   store.isPlaying = false

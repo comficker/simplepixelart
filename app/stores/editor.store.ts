@@ -1067,14 +1067,7 @@ export const useEditor = defineStore('editor', () => {
                 historyIndex.value = -1
                 saveState()
             }
-            const layerNames = editorData.value.layers.map(x => x.name)
-            const virIndex = layerNames.indexOf("Virtual")
-            if (virIndex >= 0) {
-                currentLayerIndex.value = virIndex - 1
-                virtualLayer.value = cloneDeep(editorData.value.layers[virIndex]!)
-                virtualLayer.value.pixels = markRaw(virtualLayer.value.pixels || {})
-                mergeVirtualLayer()
-            }
+            foldStrayVirtual()
             initBoardsFromCurrent()
             await restoreWorkspaceLayout()
             applyWorkspaceLayoutOverlay()   // positions + bg/iso win over a stale snapshot
@@ -1341,6 +1334,19 @@ export const useEditor = defineStore('editor', () => {
     const canUndo = computed(() => historyIndex.value > 0)
     const canRedo = computed(() => historyIndex.value < history.value.length - 1)
 
+    // A stray "Virtual" layer (from a pre-fix polluted snapshot, or a crash
+    // mid-drag) gets folded back into its host so it never surfaces in the
+    // Layers panel. mergeVirtualLayer finds it by reference, so adopt the very
+    // object from the array first.
+    function foldStrayVirtual() {
+        const vi = editorData.value.layers.findIndex(l => l.name === 'Virtual')
+        if (vi < 0) return
+        currentLayerIndex.value = Math.max(0, vi - 1)
+        virtualLayer.value = editorData.value.layers[vi]!
+        virtualLayer.value.pixels = markRaw(virtualLayer.value.pixels || {})
+        mergeVirtualLayer()
+    }
+
     function undo() {
         if (historyIndex.value > 0) {
             historyIndex.value--;
@@ -1348,6 +1354,7 @@ export const useEditor = defineStore('editor', () => {
             if (data) {
                 editorData.value = cloneDeep<EditorData>(data);
                 markRawPixels(editorData.value)
+                foldStrayVirtual()
                 linkActiveFrame()
                 sharedRev.value++
                 markFullRedraw()
@@ -1364,6 +1371,7 @@ export const useEditor = defineStore('editor', () => {
             if (data) {
                 editorData.value = cloneDeep<EditorData>(data);
                 markRawPixels(editorData.value)
+                foldStrayVirtual()
                 linkActiveFrame()
                 sharedRev.value++
                 markFullRedraw()
@@ -1803,10 +1811,16 @@ export const useEditor = defineStore('editor', () => {
         saveState();
     }
 
+    // Start a move/iso-line drag: CUT the affected content into the virtual
+    // layer and splice it in just above the current layer. Deliberately no
+    // saveState here — a drag start isn't a commit, and snapshotting now would
+    // bake the transient "Virtual" layer into history (undo then resurrects a
+    // ghost layer). The single history entry lands at mergeVirtualLayer time.
     function immigrateVirtualLayer() {
         virtualLayer.value.pixels = markRaw(getContentInBound(true));
         editorData.value.layers.splice(currentLayerIndex.value + 1, 0, virtualLayer.value);
-        clearCurrentLayer()
+        markFullRedraw()
+        drawTurn.value++;
     }
 
     // All-frames mode: when ON, edits apply to every frame at once —
@@ -1826,23 +1840,38 @@ export const useEditor = defineStore('editor', () => {
     }
 
     function mergeVirtualLayer() {
+        // Locate the in-flight layer BY REFERENCE — never splice blind by
+        // index. If it isn't in the current art (undo / board switch / import
+        // replaced editorData mid-drag), the pre-drag pixels are already back
+        // via that snapshot: dropping the in-flight copy is the only merge
+        // that neither duplicates pixels nor eats an innocent layer.
+        const vi = editorData.value.layers.indexOf(virtualLayer.value)
+        if (vi <= 0) {
+            virtualLayer.value.pixels = markRaw({})
+            virtualLayer.value.x = 0
+            virtualLayer.value.y = 0
+            markFullRedraw()
+            drawTurn.value++;
+            return
+        }
+
+        const host = editorData.value.layers[vi - 1]!   // the layer it was cut from
         const dx = virtualLayer.value.x
         const dy = virtualLayer.value.y
         Object.keys(virtualLayer.value.pixels).forEach((key) => {
             const {x, y} = key2Point(key)
             const newKey = `${x + dx}_${y + dy}`;
-            editorData.value.layers[currentLayerIndex.value]!.pixels[newKey] = virtualLayer.value.pixels[key] ?? -1;
+            host.pixels[newKey] = virtualLayer.value.pixels[key] ?? -1;
         })
-        editorData.value.layers.splice(currentLayerIndex.value + 1, 1);
+        editorData.value.layers.splice(vi, 1);
 
         if (allFrames.value && (dx || dy) && !selectionState.value.bounds.active) {
             const anim = editorData.value.meta?.animation
             if (anim?.frames?.length) {
-                const mergedLayer = editorData.value.layers[currentLayerIndex.value]
                 const all: Layer[] = [...(anim.shared ?? [])]
                 anim.frames.forEach(f => all.push(...(f.layers ?? [])))
                 all.forEach(l => {
-                    if (l !== mergedLayer) translateLayer(l, dx, dy)
+                    if (l !== host) translateLayer(l, dx, dy)
                 })
             }
         }
