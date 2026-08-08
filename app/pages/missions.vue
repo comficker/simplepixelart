@@ -145,8 +145,8 @@ watch(() => auth.isLogged, (v) => {
           <div class="msn-use">
             <span class="icon icon-pencil"/>
             <div class="msn-use-main">
-              <div class="msn-use-title">Auto title, description &amp; tags <span class="msn-soon">Soon</span></div>
-              <p class="msn-use-desc text-xs">AI names and tags your artwork when you publish, so it gets found.</p>
+              <div class="msn-use-title">AI content assistant <span class="msn-soon">Soon</span></div>
+              <p class="msn-use-desc text-xs">Writes titles, descriptions and tags for your art, so it gets found.</p>
             </div>
           </div>
           <div class="msn-use">
