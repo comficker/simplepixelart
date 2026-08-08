@@ -211,24 +211,26 @@ watch(() => auth.isLogged, (v) => {
             </div>
           </div>
 
-          <!-- Referral: unbounded earner, so it lives apart from the missions list -->
+          <!-- Referral: the only unbounded earner — the loudest card on the page -->
           <div v-if="sum.referral?.signup_reward" class="msn-invite">
-            <div class="msn-row-main">
-              <div class="msn-row-title">Invite friends</div>
-              <div class="msn-row-sub text-xs">
-                +{{ sum.referral.signup_reward }} per friend who joins
-                <template v-if="sum.referral.purchase_rate">
-                  · {{ Math.round(sum.referral.purchase_rate * 100) }}% of credits they buy
-                </template>
+            <div class="msn-invite-head">
+              <span class="icon icon-gift msn-invite-ic"/>
+              <div class="msn-row-main">
+                <div class="msn-invite-title">Invite friends, earn forever</div>
+                <div class="msn-invite-sub">
+                  <strong>+{{ sum.referral.signup_reward }}</strong> per friend who joins<template v-if="sum.referral.purchase_rate">
+                  · <strong>{{ Math.round(sum.referral.purchase_rate * 100) }}%</strong> of every credit pack they buy</template>
+                </div>
               </div>
             </div>
             <div class="msn-invite-bar">
               <input class="msn-invite-link" :value="inviteLink" readonly @focus="($event.target as HTMLInputElement).select()">
               <button class="btn primary" @click="copyInvite">
-                <span class="icon icon-link"/><span>Copy</span>
+                <span class="icon icon-link"/><span>Copy link</span>
               </button>
             </div>
-            <p v-if="sum.referral.invited" class="text-xs text-muted">
+            <p v-if="sum.referral.invited" class="msn-invite-stats text-xs">
+              <span class="icon icon-check"/>
               {{ sum.referral.invited }} friend{{ sum.referral.invited === 1 ? '' : 's' }} joined
               · {{ sum.referral.earned }} credits earned
             </p>
@@ -435,15 +437,46 @@ watch(() => auth.isLogged, (v) => {
   margin-top: var(--space-4);
 }
 
-/* Invite friends card */
+/* Invite friends — the one accent card on the page: primary-tinted face so it
+   reads as the headline earner, not another list row. */
 .msn-invite {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
   margin-top: var(--space-4);
-  padding: var(--space-3);
-  border: 1px solid var(--border);
+  padding: var(--space-4);
+  border: 1px solid color-mix(in oklab, var(--primary) 35%, var(--border));
   border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--primary) 6%, transparent);
+}
+
+.msn-invite-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.msn-invite-ic {
+  font-size: 26px;
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.msn-invite-title {
+  font-size: var(--text-base);
+  line-height: var(--text-base-lh);
+  font-weight: 800;
+}
+
+.msn-invite-sub {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.msn-invite-sub strong {
+  color: var(--primary);
+  font-weight: 800;
 }
 
 .msn-invite-bar {
@@ -451,15 +484,32 @@ watch(() => auth.isLogged, (v) => {
   gap: var(--space-2);
 }
 
+.msn-invite-bar .btn {
+  flex-shrink: 0;
+}
+
 .msn-invite-link {
   flex: 1;
   min-width: 0;
   padding: 0 var(--space-3);
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in oklab, var(--primary) 25%, var(--border));
   border-radius: var(--radius-sm);
-  background: var(--surface-2, var(--surface));
-  color: var(--muted);
+  background: var(--background);
+  color: var(--foreground);
   font-size: var(--text-xs);
+}
+
+.msn-invite-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--muted);
+}
+
+.msn-invite-stats .icon {
+  width: 13px;
+  height: 13px;
+  color: var(--primary);
 }
 
 @media (max-width: 640px) {
