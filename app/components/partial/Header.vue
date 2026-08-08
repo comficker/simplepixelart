@@ -37,6 +37,7 @@ function openCommandPalette() {
           <span class="hdr-link-label">Your work</span>
         </nuxt-link>
         <span class="hdr-divider" aria-hidden="true"/>
+        <WalletMenu/>
         <button
             type="button"
             class="cmdk-trigger"
