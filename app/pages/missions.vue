@@ -85,10 +85,11 @@ async function claimMission(m: Mission) {
   }
 }
 
-// Referral invite link — reward numbers come from backend config.
+// Referral invite link — carries the username (readable, shareable); the
+// backend also accepts the numeric id from older links.
 const inviteLink = computed(() => {
-  if (!auth.logged?.id || import.meta.server) return ''
-  return `${location.origin}/?ref=${auth.logged.id}`
+  if (!auth.logged?.username || import.meta.server) return ''
+  return `${location.origin}/?ref=${encodeURIComponent(auth.logged.username)}`
 })
 
 async function copyInvite() {
