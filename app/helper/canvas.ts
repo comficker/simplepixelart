@@ -307,6 +307,47 @@ function processCellColorsOptimized(ctx: CanvasRenderingContext2D, cells: Array<
     return results;
 }
 
+/**
+ * Read an image 1:1 — every source pixel becomes one cell, no resampling, no
+ * palette guessing. Transparent pixels (alpha < 128) come back as null.
+ * Refuses images larger than maxSide per axis (that's converter territory).
+ */
+export async function dataUrlToOriginalGrid(dataUrl: string, maxSide = 256): Promise<{
+    grid: (RGB | null)[][];
+    tooLarge: boolean;
+}> {
+    if (!dataUrl || !dataUrl.startsWith('data:image/')) return {grid: [], tooLarge: false};
+    try {
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const i = new Image();
+            i.onload = () => resolve(i);
+            i.onerror = reject;
+            i.src = dataUrl;
+        });
+        const w = img.naturalWidth, h = img.naturalHeight;
+        if (!w || !h) return {grid: [], tooLarge: false};
+        if (w > maxSide || h > maxSide) return {grid: [], tooLarge: true};
+        const cv = document.createElement('canvas');
+        cv.width = w;
+        cv.height = h;
+        const ctx = cv.getContext('2d')!;
+        ctx.drawImage(img, 0, 0);
+        const data = ctx.getImageData(0, 0, w, h).data;
+        const grid: (RGB | null)[][] = [];
+        for (let y = 0; y < h; y++) {
+            const row: (RGB | null)[] = [];
+            for (let x = 0; x < w; x++) {
+                const i = (y * w + x) * 4;
+                row.push(data[i + 3]! < 128 ? null : [data[i]!, data[i + 1]!, data[i + 2]!]);
+            }
+            grid.push(row);
+        }
+        return {grid, tooLarge: false};
+    } catch {
+        return {grid: [], tooLarge: false};
+    }
+}
+
 export async function dataUrlToSamplesGrid(dataUrl: string): Promise<{
     rgbSamplesGrid: SamplesGrid;
     colorThatRepresentsTransparent: RGB | null

@@ -702,37 +702,44 @@ export const useEditor = defineStore('editor', () => {
         return hex === '#ffffff' || isSameColor('ffffff', hex.replace("#", ""));
     }
 
-    const loadFromFile = (pxColor: number[][][], ignoreColor: number[] | null) => {
-        if (!pxColor?.length) return;
-        
+    // Pure conversion: RGB grid → a fresh EditorData (no store mutation). Cells
+    // may be null (already-resolved transparency: 1:1 import); when
+    // `transparentHandled` is set the ignore-color/white heuristics are skipped
+    // so genuinely white pixels survive. Shared by single- and multi-file import.
+    function gridToEditorData(
+        pxColor: (number[] | null)[][],
+        ignoreColor: number[] | null,
+        name = '',
+        transparentHandled = false,
+    ): EditorData | null {
+        if (!pxColor?.length) return null;
         const maps_results: { [key: string]: number } = {};
         const colors: string[] = [];
         let maxWidth = 0;
-
         for (let y = 0; y < pxColor.length; y++) {
             const row = pxColor[y];
-            if (!row?.length) continue;
-            
+            if (!row) continue;
             maxWidth = Math.max(maxWidth, row.length);
-            
             for (let x = 0; x < row.length; x++) {
-                const [r, g, b] = row[x] || [0, 0, 0];
-                const hex = rgbToHex(r!, g!, b!);
-                
-                if (shouldIgnoreColor(hex, ignoreColor)) continue;
-
+                const cell = row[x];
+                if (!cell) continue;
+                const hex = rgbToHex(cell[0]!, cell[1]!, cell[2]!);
+                if (!transparentHandled && shouldIgnoreColor(hex, ignoreColor)) continue;
                 maps_results[`${x}_${y}`] = findOrCreateColor(hex, colors);
             }
         }
-
-        resetEditorData();
-        editorData.value.width = maxWidth;
-        editorData.value.height = pxColor.length;
-        editorData.value.layers[0]!.pixels = markRaw(maps_results);
-        editorData.value.colors = colors.map(x => x.toUpperCase());
-        markFullRedraw()
-        drawTurn.value++;
-        saveState();   // persist the import + seed history AFTER the mutation
+        if (!maxWidth) return null;
+        const data = markRawPixels({
+            ...cloneDeep(DEFAULT_EDITOR_DATA),
+            id: generateUUID(),
+            name,
+            width: maxWidth,
+            height: pxColor.length,
+            updated: new Date().toISOString(),
+        });
+        data.layers[0]!.pixels = markRaw(maps_results);
+        data.colors = colors.map(x => x.toUpperCase());
+        return data;
     }
 
     // Replace the artwork with an animation built from sliced sprite-strip
@@ -766,81 +773,157 @@ export const useEditor = defineStore('editor', () => {
             }
         })
 
-        resetEditorData()
-        editorData.value.width = fw
-        editorData.value.height = fh
-        editorData.value.colors = colors.map(c => c.toUpperCase())
+        const converted = markRawPixels({
+            ...cloneDeep(DEFAULT_EDITOR_DATA),
+            id: generateUUID(),
+            updated: new Date().toISOString(),
+            width: fw,
+            height: fh,
+        })
+        converted.colors = colors.map(c => c.toUpperCase())
         if (frames.length > 1) {
-            if (!editorData.value.meta) editorData.value.meta = {}
-            editorData.value.meta.animation = {fps: 10, loop: true, frames, shared: []}
-            currentFrameIndex.value = 0
-            currentLayerIndex.value = 0
-            linkActiveFrame()
+            if (!converted.meta) converted.meta = {}
+            converted.meta.animation = {fps: 10, loop: true, frames, shared: []}
         } else {
-            editorData.value.layers = frames[0]!.layers
-            currentLayerIndex.value = 0
+            converted.layers = frames[0]!.layers
         }
-        markFullRedraw()
-        drawTurn.value++
-        saveState()
+        // In-place swap of the ACTIVE board — other boards survive (the old
+        // resetEditorData() path collapsed the whole workspace).
+        replaceCanvasWith(converted)
     }
 
-    async function importImage() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json,image/*';
+    type ImportProcess = 'filter' | 'original'
+    type ImportDest = 'boards' | 'frames' | 'replace'
 
-        input.onchange = async (e) => {
-            const file = (e.target as HTMLInputElement).files?.[0];
-            if (!file) return;
+    function readFileAsDataUrl(file: File): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(file);
+        });
+    }
 
-            const fileName = file.name.toLowerCase();
+    // One image file → a null-transparent RGB grid, via the chosen pipeline:
+    // 'filter' resamples/quantizes like the converter; 'original' reads pixels
+    // 1:1 (≤256/side — larger returns null and counts as skipped).
+    async function fileToGrid(file: File, process: ImportProcess): Promise<(number[] | null)[][] | null> {
+        const dataUrl = await readFileAsDataUrl(file);
+        const canvasHelper = await import("~/helper/canvas");
+        if (process === 'original') {
+            const {grid, tooLarge} = await canvasHelper.dataUrlToOriginalGrid(dataUrl);
+            return (tooLarge || !grid.length) ? null : grid;
+        }
+        const {rgbSamplesGrid, colorThatRepresentsTransparent} = await canvasHelper.dataUrlToSamplesGrid(dataUrl);
+        if (!rgbSamplesGrid?.length) return null;
+        // Normalize to null-transparency so every consumer downstream agrees.
+        const ig = colorThatRepresentsTransparent;
+        return rgbSamplesGrid.map(row => row.map(cell => {
+            if (!cell) return null;
+            const hex = rgbToHex(cell[0]!, cell[1]!, cell[2]!);
+            return shouldIgnoreColor(hex, ig) ? null : cell;
+        }));
+    }
 
-            if (fileName.endsWith('.json')) {
-                // Handle JSON file
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const content = e.target?.result as string;
-                        const jsonData = JSON.parse(content);
-
-                        // Validate EditorData type
-                        if (validateEditorData(jsonData)) {
-                            editorData.value = markRawPixels({
-                                ...cloneDeep(DEFAULT_EDITOR_DATA),
-                                ...jsonData,
-                                id: generateUUID(),
-                                updated: new Date().toISOString()
-                            });
-                            ensureIsoMeta();
-                            saveState();
-                        } else {
-                            console.error('Invalid EditorData format');
-                        }
-                    } catch (error) {
-                        console.error('Error parsing JSON file:', error);
-                    }
-                };
-                reader.readAsText(file);
-            } else {
-                // Handle image file
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    try {
-                        const dataUrl = e.target?.result as string;
-                        const {dataUrlToSamplesGrid} = await import("~/helper/canvas");
-                        const {rgbSamplesGrid, colorThatRepresentsTransparent} = await dataUrlToSamplesGrid(dataUrl);
-                        if (rgbSamplesGrid)
-                            loadFromFile(rgbSamplesGrid, colorThatRepresentsTransparent)
-                    } catch (error) {
-                        console.error('Error processing image:', error);
-                    }
-                };
-                reader.readAsDataURL(file);
+    // Parse one picked file into a fresh EditorData (JSON export or any image).
+    async function fileToEditorData(file: File, process: ImportProcess): Promise<EditorData | null> {
+        const baseName = file.name.replace(/\.[^.]+$/, '')
+        if (file.name.toLowerCase().endsWith('.json')) {
+            try {
+                const jsonData = JSON.parse(await file.text());
+                if (!validateEditorData(jsonData)) return null;
+                return markRawPixels({
+                    ...cloneDeep(DEFAULT_EDITOR_DATA),
+                    ...jsonData,
+                    id: generateUUID(),
+                    updated: new Date().toISOString(),
+                });
+            } catch {
+                return null;
             }
-        };
+        }
+        try {
+            const grid = await fileToGrid(file, process);
+            if (!grid) return null;
+            return gridToEditorData(grid, null, baseName, true);
+        } catch {
+            return null;
+        }
+    }
 
-        input.click();
+    // Import picked files with explicit intent (the editor collects the options
+    // in a modal): each file → its own board, all files → frames of ONE new
+    // animation on the active board, or (single file) replace the active canvas.
+    async function importFiles(
+        files: File[],
+        opts: { process: ImportProcess; dest: ImportDest },
+    ): Promise<{ added: number; skipped: number }> {
+        let added = 0;
+        let skipped = 0;
+
+        if (opts.dest === 'frames') {
+            const frameGrids: (number[] | null)[][][] = [];
+            for (const file of files) {
+                if (file.name.toLowerCase().endsWith('.json')) { skipped++; continue; }  // frames are image-only
+                try {
+                    const grid = await fileToGrid(file, opts.process);
+                    if (grid) frameGrids.push(grid);
+                    else skipped++;
+                } catch { skipped++; }
+            }
+            if (frameGrids.length) {
+                loadAnimationFrames(frameGrids);
+                added = frameGrids.length;
+            }
+            return {added, skipped};
+        }
+
+        if (opts.dest === 'replace') {
+            const data = files[0] ? await fileToEditorData(files[0], opts.process) : null;
+            if (!data) return {added: 0, skipped: files.length};
+            replaceCanvasWith(data);
+            return {added: 1, skipped: files.length - 1};
+        }
+
+        for (const file of files) {
+            const data = await fileToEditorData(file, opts.process);
+            if (!data) { skipped++; continue; }
+            addBoardWithData(data);   // auto-placed right of the rightmost
+            added++;
+        }
+        return {added, skipped};
+    }
+
+    // Single-file import keeps the historical semantics — the imported art
+    // replaces the CURRENT canvas (as a new artwork, fresh id) — but only the
+    // ACTIVE board: the rest of the multi-board workspace stays put (the old
+    // resetEditorData() path collapsed every other board).
+    function replaceCanvasWith(converted: EditorData) {
+        const idx = boards.value.findIndex(b => b.id === activeBoardId.value);
+        editorData.value = converted;
+        ensureIsoMeta();
+        history.value = [];
+        historyIndex.value = -1;
+        currentLayerIndex.value = 0;
+        currentFrameIndex.value = 0;
+        if (editorData.value.meta?.animation) linkActiveFrame();
+        if (idx >= 0) {
+            const b = boards.value[idx]!;
+            b.id = converted.id.toString();
+            b.data = converted;
+            b.history = [];
+            b.historyIndex = -1;
+            b.currentLayerIndex = 0;
+            b.currentFrameIndex = 0;
+            activeBoardId.value = b.id;
+            boardsRev.value++;
+        } else {
+            initBoardsFromCurrent();
+        }
+        markFullRedraw()
+        drawTurn.value++;
+        saveState();          // seed history + persist AFTER the swap
+        saveWorkspaceLayout();
     }
 
     // Stamp a sampled image grid onto the current frame's active layer, scaled to
@@ -1907,7 +1990,7 @@ export const useEditor = defineStore('editor', () => {
         saveNow,
         flush,
         syncLocalToCloud,
-        importImage,
+        importFiles,
         insertImage,
         loadAnimationFrames,
         allFrames,
