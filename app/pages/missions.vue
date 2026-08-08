@@ -127,11 +127,42 @@ watch(() => auth.isLogged, (v) => {
       </div>
 
       <div class="msn-body">
+        <p class="msn-lead">
+          Credits are SimplePixelArt's token — earn them free every day,
+          spend them on AI tools that help you make art and content,
+          or gift them to artists you love.
+        </p>
+
+        <!-- What credits power — shown to everyone, guests included -->
+        <div class="msn-uses">
+          <div class="msn-use">
+            <span class="icon icon-auto-fix"/>
+            <div class="msn-use-main">
+              <div class="msn-use-title">Generate art with AI <span class="msn-soon">Soon</span></div>
+              <p class="msn-use-desc text-xs">Turn a prompt into pixel art, straight onto your canvas.</p>
+            </div>
+          </div>
+          <div class="msn-use">
+            <span class="icon icon-pencil"/>
+            <div class="msn-use-main">
+              <div class="msn-use-title">Auto title, description &amp; tags <span class="msn-soon">Soon</span></div>
+              <p class="msn-use-desc text-xs">AI names and tags your artwork when you publish, so it gets found.</p>
+            </div>
+          </div>
+          <div class="msn-use">
+            <span class="icon icon-gift"/>
+            <div class="msn-use-main">
+              <div class="msn-use-title">Tip artists <span class="msn-soon">Soon</span></div>
+              <p class="msn-use-desc text-xs">Gift credits to creators to show love for their art.</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Guests: the economy starts at sign-in -->
         <div v-if="!auth.isLogged" class="msn-empty">
           <span class="icon icon-coin empty-icon"/>
           <h2 class="msn-empty-title">Sign in to earn credits</h2>
-          <p class="text-xs">Daily bonus and missions reward you for creating and sharing pixel art.</p>
+          <p class="text-xs">Daily bonus, missions and invites reward you for creating and sharing pixel art.</p>
           <nuxt-link to="/auth" class="btn primary">Sign in</nuxt-link>
         </div>
 
@@ -140,6 +171,7 @@ watch(() => auth.isLogged, (v) => {
         </div>
 
         <template v-else-if="sum">
+          <h2 class="msn-section-title">Earn credits</h2>
           <div class="msn-list">
             <!-- Daily bonus is just the first "mission" of the day -->
             <div class="msn-row">
@@ -203,7 +235,7 @@ watch(() => auth.isLogged, (v) => {
           </div>
 
           <p class="msn-hint text-xs text-muted">
-            Credits pay for upcoming AI tools. Daily missions reset at midnight UTC.
+            Daily missions reset at midnight UTC.
           </p>
         </template>
       </div>
@@ -248,6 +280,70 @@ watch(() => auth.isLogged, (v) => {
 
 .msn-body {
   padding: var(--space-4);
+}
+
+.msn-lead {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--muted);
+  margin-bottom: var(--space-4);
+}
+
+/* What credits power — one card per use case */
+.msn-uses {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-5, var(--space-4));
+}
+
+.msn-use {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.msn-use > .icon {
+  font-size: 22px;
+  color: var(--primary);
+}
+
+.msn-use-title {
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.msn-soon {
+  display: inline-block;
+  vertical-align: 2px;
+  margin-left: 4px;
+  padding: 1px 6px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+}
+
+.msn-use-desc {
+  color: var(--muted);
+}
+
+.msn-section-title {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  margin-bottom: var(--space-1);
+}
+
+@media (max-width: 640px) {
+  .msn-uses {
+    grid-template-columns: 1fr;
+  }
 }
 
 .msn-list {
