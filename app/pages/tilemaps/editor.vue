@@ -2529,7 +2529,7 @@ const faq = [
 .tm-bg-opts { display: flex; flex-direction: column; gap: var(--space-3); }
 .tm-bg-sw {
   width: 20px; height: 20px; flex: none; border-radius: var(--radius-sm);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--border) 80%, transparent);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 .tm-bg-sw.checker {
   background: repeating-conic-gradient(#cfcfd6 0% 25%, #ffffff 0% 50%) 0 0 / 10px 10px;
@@ -2546,7 +2546,7 @@ const faq = [
 .tm-bg-presets { display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--space-1); }
 .tm-bg-preset {
   aspect-ratio: 1; border: 0; border-radius: var(--radius-sm); cursor: pointer; padding: 0;
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--border) 60%, transparent);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 .tm-bg-preset.active { outline: 2px solid var(--primary); outline-offset: 1px; }
 
@@ -2645,7 +2645,7 @@ const faq = [
   aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
   padding: var(--space-1); border: 0; border-radius: var(--radius-sm);
   background: var(--surface-2); cursor: pointer; overflow: hidden; color: var(--muted);
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--border) 55%, transparent);
+  box-shadow: inset 0 0 0 1px var(--border);
   transition: box-shadow var(--transition);
 }
 .tm-tile:hover { box-shadow: inset 0 0 0 1px var(--muted); }
@@ -2669,7 +2669,7 @@ const faq = [
 .tm-board {
   flex: none; font-size: 0; overflow: hidden; border-radius: 3px;
   box-shadow:
-      0 0 0 1px color-mix(in oklab, var(--border) 90%, transparent),
+      0 0 0 1px var(--border),
       0 1px 2px rgba(0, 0, 0, 0.05),
       0 12px 30px -10px rgba(0, 0, 0, 0.22);
 }

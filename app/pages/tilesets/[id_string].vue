@@ -247,7 +247,7 @@ async function cloneTileset() {
 .tsd-world-chip {
   padding: 5px 12px;
   background: color-mix(in oklab, var(--surface-2) 60%, transparent);
-  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--foreground);
   font-size: var(--text-xs);

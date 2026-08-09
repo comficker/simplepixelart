@@ -63,7 +63,7 @@ header .hdr {
   margin-left: auto;
   padding: 3px;
   background: color-mix(in oklab, var(--surface-2) 60%, transparent);
-  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
 }
 
@@ -71,7 +71,7 @@ header .hdr {
   width: 1px;
   align-self: stretch;
   margin: 4px 2px;
-  background: color-mix(in oklab, var(--border) 80%, transparent);
+  background: var(--border);
 }
 
 /* ============ Brand ============ */
@@ -111,7 +111,7 @@ header .brand-logo {
   border-radius: var(--radius-sm);
   background: var(--background);
   padding: 3px;
-  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  border: 1px solid var(--border);
   transition: border-color 240ms ease;
 }
 

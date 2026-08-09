@@ -504,7 +504,7 @@ onBeforeUnmount(() => {
   flex: none;
   border-radius: 50%;
   background: var(--sw-ring);
-  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  border: 1px solid var(--border);
   display: inline-flex;
   align-items: center;
   justify-content: center;

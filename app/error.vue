@@ -84,7 +84,7 @@ const handleError = () => clearError({ redirect: '/' })
   width: 168px;
   height: 168px;
   margin-bottom: 0.5rem;
-  border: 1px dashed color-mix(in oklab, var(--border) 80%, transparent);
+  border: 1px dashed var(--border);
   border-radius: var(--radius-sm);
   background:
     linear-gradient(135deg, color-mix(in oklab, var(--primary) 8%, transparent), transparent 70%),

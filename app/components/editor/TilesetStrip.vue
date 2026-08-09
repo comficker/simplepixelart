@@ -626,7 +626,7 @@ defineExpose({removeItem, refresh, siblingId})
   height: 64px;
   padding: 0;
   /* Faint divider between items (not a highlight frame). */
-  border: 1px solid color-mix(in oklab, var(--border) 45%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
   background: transparent;

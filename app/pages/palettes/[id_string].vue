@@ -372,7 +372,7 @@ useCustomSeoMeta({
   width: 100%;
   aspect-ratio: 1;
   border-radius: calc(var(--radius-sm) - 2px);
-  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  border: 1px solid var(--border);
 }
 
 .pd-sw-hex {
@@ -424,7 +424,7 @@ useCustomSeoMeta({
   width: 52px;
   height: 52px;
   border-radius: 10px;
-  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  border: 1px solid var(--border);
 }
 
 .pd-dom-meta {
@@ -486,7 +486,7 @@ useCustomSeoMeta({
   flex: 1;
   height: 10px;
   border-radius: var(--radius-pill);
-  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  border: 1px solid var(--border);
 }
 
 .pd-tags {

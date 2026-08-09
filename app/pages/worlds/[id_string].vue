@@ -176,6 +176,6 @@ const formattedDate = computed(() => {
   justify-content: center;
   margin-top: var(--space-6);
   padding-top: var(--space-6);
-  border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  border-top: 1px solid var(--border);
 }
 </style>

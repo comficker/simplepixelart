@@ -394,7 +394,7 @@ useCustomSeoMeta({
   background:
     radial-gradient(120% 120% at 100% 0%, color-mix(in oklab, var(--primary) 10%, transparent), transparent 60%),
     var(--surface);
-  border: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 
@@ -469,7 +469,7 @@ useCustomSeoMeta({
   width: 100%;
   margin-top: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  border-top: 1px solid var(--border);
 }
 
 .home-hero-stats li {
@@ -572,7 +572,7 @@ useCustomSeoMeta({
   padding: var(--space-4);
   text-align: center;
   background: transparent;
-  border: 1px dashed color-mix(in oklab, var(--border) 65%, transparent);
+  border: 1px dashed var(--border);
   border-radius: var(--radius-sm);
   color: var(--muted);
   aspect-ratio: 1;
@@ -602,7 +602,7 @@ useCustomSeoMeta({
   position: relative;
   overflow: hidden;
   background: var(--surface);
-  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   transition: border-color var(--transition);
   /* Folded "file" corner, same as art cards. */

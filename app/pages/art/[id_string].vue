@@ -825,7 +825,7 @@ const previewStyle = computed(() => {
   aspect-ratio: 1;
   background: var(--swatch);
   border-radius: calc(var(--radius-sm) - 2px);
-  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  border: 1px solid var(--border);
 }
 
 .art-swatch-hex {
@@ -1015,7 +1015,7 @@ const previewStyle = computed(() => {
 }
 
 .art-meta-row + .art-meta-row {
-  border-top: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  border-top: 1px solid var(--border);
 }
 
 .art-meta-row dt {

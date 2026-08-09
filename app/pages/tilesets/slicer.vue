@@ -2548,7 +2548,7 @@ const faq = [
   padding: 5px 12px;
   font-size: var(--text-xs);
   font-weight: 600;
-  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   cursor: pointer;
   color: var(--foreground);
@@ -2672,7 +2672,7 @@ const faq = [
   align-items: center;
   gap: var(--space-3);
   padding: 5px 6px;
-  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: border-color var(--transition), background var(--transition);
@@ -2736,7 +2736,7 @@ const faq = [
   height: 20px;
   flex-shrink: 0;
   color: var(--muted);
-  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   transition: color var(--transition), background var(--transition), border-color var(--transition);
 }

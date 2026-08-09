@@ -4183,7 +4183,7 @@ const faq = [
   position: relative;
   aspect-ratio: 1;
   padding: 3px;
-  border: 1px solid color-mix(in oklab, var(--border) 60%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: transparent;
   cursor: pointer;
