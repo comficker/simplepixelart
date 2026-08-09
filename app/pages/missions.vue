@@ -16,6 +16,7 @@ interface Mission {
 
 interface Summary {
   daily_grant: number
+  ai_enabled?: boolean
   balance?: number
   daily_claimed?: boolean
   missions?: Mission[]
@@ -39,7 +40,8 @@ const loading = ref(false)
 const claiming = ref('')
 
 async function load() {
-  if (!auth.isLogged) return
+  // Public endpoint — guests get pricing/ai_enabled (drives the Soon ribbons),
+  // signed-in users additionally get balance/missions/referral.
   loading.value = true
   try {
     sum.value = await useNativeFetch<Summary>('/coloring/economy/')
@@ -145,11 +147,11 @@ watch(() => auth.isLogged, (v) => {
             </div>
           </div>
           <div class="msn-use">
-            <span class="msn-soon">Soon</span>
+            <span v-if="!sum?.ai_enabled" class="msn-soon">Soon</span>
             <span class="icon icon-pencil"/>
             <div class="msn-use-main">
               <div class="msn-use-title">AI content assistant</div>
-              <p class="msn-use-desc text-xs">Writes titles, descriptions and tags for your art, so it gets found.</p>
+              <p class="msn-use-desc text-xs">Writes titles, descriptions and tags for your art when you publish.</p>
             </div>
           </div>
           <div class="msn-use">

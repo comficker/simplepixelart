@@ -191,6 +191,60 @@ function openPublish() {
   }
   publishStep.value = 'edit'
   showPublishModal.value = true
+  loadEconomyForPublish()
+}
+
+// ── AI auto-fill (publish flow) ──────────────────────────────────────
+// One call fills title/description/tags from the artwork itself — costs the
+// configured gen_meta price (1 credit). The button only shows when the
+// backend has an AI key (ai_enabled) — checked on modal open.
+const aiMeta = ref<{ enabled: boolean; cost: number; balance: number } | null>(null)
+const aiBusy = ref(false)
+
+async function loadEconomyForPublish() {
+  try {
+    const res = await useNativeFetch<any>('/coloring/economy/')
+    aiMeta.value = {
+      enabled: !!res.ai_enabled,
+      cost: res.actions?.gen_meta ?? 1,
+      balance: res.balance ?? 0,
+    }
+  } catch { aiMeta.value = null }
+}
+
+async function genMetaWithAI() {
+  if (aiBusy.value || !aiMeta.value?.enabled) return
+  aiBusy.value = true
+  try {
+    // Raw 1:1 art PNG — the server upscales nearest-neighbor for the model.
+    const tmp = document.createElement('canvas')
+    tmp.width = editorData.value.width
+    tmp.height = editorData.value.height
+    drawThumbnail(tmp, editorData.value, 1)
+    const res = await useNativeFetch<{ title: string; description: string; tags: string[]; balance: number }>(
+        '/coloring/economy/gen-meta/', {
+          method: 'POST',
+          body: {
+            image: tmp.toDataURL('image/png'),
+            width: editorData.value.width,
+            height: editorData.value.height,
+            colors: editorData.value.colors,
+            tags: editorData.value.tags || [],
+            name: editorData.value.name || '',
+          },
+        })
+    editorData.value.name = res.title
+    editorData.value.desc = res.description
+    if (res.tags?.length) editorData.value.tags = res.tags
+    if (aiMeta.value) aiMeta.value.balance = res.balance
+    toast.success(`Filled by AI · −${aiMeta.value?.cost ?? 1} credit`)
+  } catch (e: any) {
+    const s = e?.status ?? e?.response?.status
+    if (s === 402) toast.error('Not enough credits — earn some in Missions')
+    else toast.error('AI could not read this one — your credit was refunded')
+  } finally {
+    aiBusy.value = false
+  }
 }
 
 async function saveArt() {
@@ -3491,24 +3545,54 @@ watch(
     <UiModal v-if="showPublishModal" @close="showPublishModal = false">
           <!-- Step 1: Edit info -->
           <template v-if="publishStep === 'edit'">
-            <h3 class="publish-heading">Save your pixel art</h3>
+            <h3 class="publish-heading">Publish your pixel art</h3>
             <div class="publish-form">
+              <!-- Art preview + AI auto-fill side by side: see what you're
+                   naming, and let the model name it for you. -->
+              <div class="publish-top">
+                <div class="publish-preview">
+                  <Thumb :data="editorData"/>
+                </div>
+                <div class="publish-ai">
+                  <button
+                      v-if="aiMeta?.enabled"
+                      class="btn publish-ai-btn"
+                      :disabled="aiBusy"
+                      title="AI writes the title, description and tags from the artwork"
+                      @click="genMetaWithAI"
+                  >
+                    <span class="icon icon-auto-fix"/>
+                    <span>{{ aiBusy ? 'Reading your art…' : 'Auto-fill with AI' }}</span>
+                    <span class="publish-ai-cost"><span class="icon icon-coin"/>{{ aiMeta.cost }}</span>
+                  </button>
+                  <p class="publish-ai-hint text-xs text-muted">
+                    <template v-if="aiMeta?.enabled">
+                      A good title and tags help people find your art.
+                    </template>
+                    <template v-else>
+                      Name it well — a good title and tags help people find your art.
+                    </template>
+                  </p>
+                </div>
+              </div>
               <div>
                 <label class="publish-label">Title</label>
                 <input
                     type="text"
                     v-model="editorData.name"
-                    placeholder="Give it a name..."
+                    placeholder="What does it show?"
+                    maxlength="60"
                     class="publish-input"
                 />
               </div>
               <div>
                 <label class="publish-label">Description</label>
-                <input
-                    type="text"
+                <textarea
                     v-model="editorData.desc"
-                    placeholder="Describe your art..."
-                    class="publish-input"
+                    placeholder="A sentence or two about it..."
+                    maxlength="300"
+                    rows="2"
+                    class="publish-input publish-textarea"
                 />
               </div>
               <div>
@@ -3532,7 +3616,7 @@ watch(
             </div>
             <div class="publish-actions">
               <button class="btn primary block" @click="saveArt">
-                Save
+                {{ editorData.is_public ? 'Publish' : 'Save' }}
               </button>
               <button class="btn block" @click="showPublishModal = false">
                 Cancel
