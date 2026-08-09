@@ -1478,9 +1478,23 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     background: var(--border);
 }
 
+/* Fullscreen cluster rides the right edge of the scrollable strip: pushed
+   there by the auto margin, kept visible by sticky while the strip scrolls
+   (the surface bg + soft shadow cover content sliding beneath). */
+.toolbar-fs {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-left: auto;
+    position: sticky;
+    right: 0;
+    background: var(--surface);
+    box-shadow: -8px 0 8px -4px var(--surface);
+}
+
 .toolbar-info {
-    font-size: var(--text-xs);
-    line-height: var(--text-xs-lh);
+    font-size: var(--text-2xs);
+    line-height: var(--text-2xs-lh, 1.4);
     padding: 0 0.25rem;
     color: var(--muted);
     flex-shrink: 0;
@@ -2580,6 +2594,54 @@ html.editor-fullscreen .consent {
     outline: none;
 }
 
+.publish-textarea {
+    resize: vertical;
+    min-height: 48px;
+}
+
+/* AI auto-fill: a quiet assistant line under the fields, not a headline —
+   text-button chrome, muted until hover. */
+.publish-ai-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    align-self: flex-start;
+    padding: 2px 0;
+    background: none;
+    border: 0;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    color: var(--muted);
+    cursor: pointer;
+    transition: color var(--transition);
+}
+
+.publish-ai-row:hover:not(:disabled) {
+    color: var(--foreground);
+}
+
+.publish-ai-row:disabled {
+    cursor: default;
+    opacity: 0.7;
+}
+
+.publish-ai-row .icon-auto-fix {
+    font-size: 13px;
+}
+
+.publish-ai-cost {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: var(--text-2xs);
+    font-weight: 700;
+}
+
+.publish-ai-cost .icon {
+    width: 11px;
+    height: 11px;
+}
+
 .publish-link {
     display: flex;
     align-items: center;
@@ -2658,11 +2720,41 @@ html.editor-fullscreen .consent {
     }
 }
 
+/* Pixel-editor trigger: drafts autosave, so the button is about PUBLISHING —
+   a labeled pill, not a save-disk icon. Height matches the square icon
+   buttons beside it. */
+.tm-publish {
+    align-self: center;
+    height: 2.25rem;
+    border-radius: var(--radius-sm);
+    box-shadow: none;
+}
+
+@media (max-width: 479px) {
+    .tm-publish-label {
+        display: none;   /* icon-only on tight toolbars */
+    }
+}
+
 /* Modal helper rows used by PXEditor publish/share flow. */
 .publish-actions {
     display: flex;
     gap: var(--space-3);
     margin-top: 1rem;
+}
+
+/* Button labels never wrap. */
+.publish-actions .btn {
+    white-space: nowrap;
+}
+
+/* Status select sits between the form and the action it drives. */
+.publish-status-row {
+    margin-top: 1rem;
+}
+
+.publish-status-row select.publish-input {
+    cursor: pointer;
 }
 
 .publish-done-header {
