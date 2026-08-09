@@ -47,7 +47,7 @@ async function load() {
     // Backend treats a missing `enabled` as true — make the checkbox agree.
     config.value.missions.forEach((m: Mission) => { m.enabled = m.enabled !== false })
     if (!config.value.referral) config.value.referral = {signup_reward: 1, purchase_rate: 0.1}
-    if (!config.value.ai) config.value.ai = {enabled: true, model: 'claude-haiku-4-5'}
+    if (!config.value.ai) config.value.ai = {enabled: true}
   } catch {
     toast.error('Could not load dashboard')
   } finally {
@@ -207,10 +207,8 @@ watch(isStaff, (v) => { if (v) load() })
                 <span>Margin ×</span>
                 <input v-model.number="config.margin" type="number" min="1" step="0.5" class="adm-input">
               </label>
-              <label class="adm-knob">
-                <span>AI model</span>
-                <input v-model="config.ai.model" class="adm-input" placeholder="claude-haiku-4-5">
-              </label>
+              <!-- API key + model id live in the shared vault (ninosaur
+                   dashboard) — this is just the economy-side kill switch. -->
               <label class="adm-knob adm-knob-check" title="Kill switch — hides every AI button even with an API key set">
                 <span>AI enabled</span>
                 <input v-model="config.ai.enabled" type="checkbox">
