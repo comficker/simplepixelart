@@ -384,19 +384,7 @@ useCustomSeoMeta({
 
 <style scoped>
 .home > * + * {
-  margin-top: 0.75rem; /* 12px — mobile */
-}
-
-@media (min-width: 640px) {
-  .home > * + * {
-    margin-top: 1rem; /* 16px — tablet */
-  }
-}
-
-@media (min-width: 1024px) {
-  .home > * + * {
-    margin-top: 1.5rem; /* 24px — desktop (max) */
-  }
+  margin-top: 1rem;
 }
 
 /* === Hero === */
