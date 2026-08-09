@@ -2727,6 +2727,22 @@ html.editor-fullscreen .consent {
     }
 }
 
+/* Pixel-editor trigger: drafts autosave, so the button is about PUBLISHING —
+   a labeled pill, not a save-disk icon. Height matches the square icon
+   buttons beside it. */
+.tm-publish {
+    align-self: center;
+    height: 2.25rem;
+    border-radius: var(--radius-sm);
+    box-shadow: none;
+}
+
+@media (max-width: 479px) {
+    .tm-publish-label {
+        display: none;   /* icon-only on tight toolbars */
+    }
+}
+
 /* Modal helper rows used by PXEditor publish/share flow. */
 .publish-actions {
     display: flex;

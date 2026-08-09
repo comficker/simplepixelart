@@ -3269,9 +3269,10 @@ watch(
       <span class="toolbar-info">{{ editorData.width }}×{{ editorData.height }}</span>
       </div>
       <div class="toolbar-end">
-        <ui-tooltip text="Save online & share — local work autosaves">
-          <button class="publish-toolbar-btn tm-save" aria-label="Save online and share" @click="openPublish">
-            <span class="icon icon-save"/>
+        <ui-tooltip text="Publish & share — your work autosaves as you draw">
+          <button class="publish-toolbar-btn tm-publish" aria-label="Publish and share" @click="openPublish">
+            <span class="icon icon-earth"/>
+            <span class="tm-publish-label">Publish</span>
           </button>
         </ui-tooltip>
         <ui-dropdown-menu class="fs-hide" position="right" label="Fullscreen">
