@@ -184,11 +184,23 @@ async function destroyCurrent() {
   deleting.value = false
 }
 
+// Visibility is a status, not a boolean — the list is data so new states
+// (unlisted, scheduled…) slot in without touching the layout. `pending`
+// isn't offered: the backend assigns it (moderation) on non-staff publishes.
+const PUBLISH_STATUSES = [
+  {value: 'public', label: 'Public — listed in the gallery', action: 'Publish'},
+  {value: 'draft', label: 'Private draft — only you can see it', action: 'Save draft'},
+] as const
+const publishStatus = ref<'public' | 'draft'>('draft')
+const publishAction = computed(() =>
+    PUBLISH_STATUSES.find(s => s.value === publishStatus.value)?.action || 'Save')
+
 function openPublish() {
   if (!auth.isLogged) {
     showLoginPrompt.value = true
     return
   }
+  publishStatus.value = editorData.value.is_public ? 'public' : 'draft'
   publishStep.value = 'edit'
   showPublishModal.value = true
   loadEconomyForPublish()
@@ -247,11 +259,9 @@ async function genMetaWithAI() {
   }
 }
 
-async function saveArt(isPublic: boolean) {
-  // Two explicit actions instead of a switch: publish to the gallery, or keep
-  // it unlisted (saved to your account, reachable only via its link). Drafts
-  // auto-save all along — this modal only decides visibility.
-  editorData.value.is_public = isPublic
+async function saveArt() {
+  // Drafts auto-save all along — this modal only decides the status.
+  editorData.value.is_public = publishStatus.value === 'public'
   store.saveState(false)
   await store.saveNow()
   // Either way it's now on the cloud with a slug, so offer the share step — the
@@ -3599,14 +3609,16 @@ watch(
                 <span class="publish-ai-cost"><span class="icon icon-coin"/>{{ aiMeta.cost }}</span>
               </button>
             </div>
+            <div class="publish-status-row">
+              <label class="publish-label" for="publish-status">Status</label>
+              <select id="publish-status" v-model="publishStatus" class="publish-input">
+                <option v-for="s in PUBLISH_STATUSES" :key="s.value" :value="s.value">{{ s.label }}</option>
+              </select>
+            </div>
             <div class="publish-actions">
-              <button class="btn primary block" @click="saveArt(true)">
-                <span class="icon icon-earth"/>
-                <span>Publish to gallery</span>
-              </button>
-              <button class="btn block" title="Saved to your account — only people with the link can see it" @click="saveArt(false)">
-                <span class="icon icon-earth-off"/>
-                <span>Keep unlisted</span>
+              <button class="btn primary block" @click="saveArt">
+                <span class="icon" :class="publishStatus === 'public' ? 'icon-earth' : 'icon-earth-off'"/>
+                <span>{{ publishAction }}</span>
               </button>
             </div>
           </template>

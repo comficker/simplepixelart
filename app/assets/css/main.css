@@ -2750,6 +2750,20 @@ html.editor-fullscreen .consent {
     margin-top: 1rem;
 }
 
+/* Button labels never wrap. */
+.publish-actions .btn {
+    white-space: nowrap;
+}
+
+/* Status select sits between the form and the action it drives. */
+.publish-status-row {
+    margin-top: 1rem;
+}
+
+.publish-status-row select.publish-input {
+    cursor: pointer;
+}
+
 .publish-done-header {
     text-align: center;
     margin-bottom: 1rem;
