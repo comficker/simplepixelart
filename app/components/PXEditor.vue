@@ -3560,9 +3560,6 @@ watch(
           <template v-if="publishStep === 'edit'">
             <h3 class="publish-heading">Publish your pixel art</h3>
             <div class="publish-form">
-              <div class="publish-preview">
-                <Thumb :data="editorData"/>
-              </div>
               <div>
                 <label class="publish-label">Title</label>
                 <input
