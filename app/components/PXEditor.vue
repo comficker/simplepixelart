@@ -3277,14 +3277,8 @@ watch(
         </div>
       </template>
       <span class="toolbar-info">{{ editorData.width }}×{{ editorData.height }}</span>
-      </div>
-      <div class="toolbar-end">
-        <ui-tooltip text="Publish & share — your work autosaves as you draw">
-          <button class="publish-toolbar-btn tm-publish" aria-label="Publish and share" @click="openPublish">
-            <span class="icon icon-earth"/>
-            <span class="tm-publish-label">Publish</span>
-          </button>
-        </ui-tooltip>
+      <!-- Pinned to the strip's right edge — stays put while the strip scrolls. -->
+      <div class="toolbar-fs">
         <ui-dropdown-menu class="fs-hide" position="right" label="Fullscreen">
           <ui-tooltip text="Fullscreen">
             <button class="toolbar-btn" aria-label="Fullscreen"><span class="icon icon-fullscreen"/></button>
@@ -3302,6 +3296,15 @@ watch(
         </ui-dropdown-menu>
         <ui-tooltip class="fs-only" text="Exit fullscreen (Esc)">
           <button class="toolbar-btn" aria-label="Exit fullscreen" @click="exitFullscreen"><span class="icon icon-fullscreen-exit"/></button>
+        </ui-tooltip>
+      </div>
+      </div>
+      <div class="toolbar-end">
+        <ui-tooltip text="Publish & share — your work autosaves as you draw">
+          <button class="publish-toolbar-btn tm-publish" aria-label="Publish and share" @click="openPublish">
+            <span class="icon icon-earth"/>
+            <span class="tm-publish-label">Publish</span>
+          </button>
         </ui-tooltip>
       </div>
     </div>

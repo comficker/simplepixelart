@@ -1478,6 +1478,20 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     background: var(--border);
 }
 
+/* Fullscreen cluster rides the right edge of the scrollable strip: pushed
+   there by the auto margin, kept visible by sticky while the strip scrolls
+   (the surface bg + soft shadow cover content sliding beneath). */
+.toolbar-fs {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-left: auto;
+    position: sticky;
+    right: 0;
+    background: var(--surface);
+    box-shadow: -8px 0 8px -4px var(--surface);
+}
+
 .toolbar-info {
     font-size: var(--text-2xs);
     line-height: var(--text-2xs-lh, 1.4);
