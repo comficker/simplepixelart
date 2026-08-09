@@ -144,7 +144,7 @@ header .brand-name-stamp {
 /* PixelArt — chunky logotype */
 header .brand-name-main {
   display: block;
-  font-size: 1em;
+  font-size: 1rem;
   font-weight: 800;
   font-variation-settings: "wght" 800;
   letter-spacing: -0.04em;

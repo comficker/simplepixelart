@@ -326,7 +326,6 @@ watch(isStaff, (v) => { if (v) load() })
 
 .adm-card-l {
   font-size: var(--text-2xs);
-  text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);
   margin-top: 2px;
