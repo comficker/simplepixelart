@@ -112,9 +112,14 @@ watch(isStaff, (v) => { if (v) load() })
     <section class="readme adm-panel">
       <div class="readme-head adm-head">
         <h1 class="adm-title"><span class="icon icon-adjust"/><span>Admin</span></h1>
-        <button v-if="isStaff" class="btn" :disabled="loading" @click="load">
-          <span class="icon icon-refresh"/><span>Refresh</span>
-        </button>
+        <div class="adm-head-actions">
+          <NuxtLink v-if="isStaff" to="/admin/users" class="btn">
+            <span class="icon icon-user"/><span>Users</span>
+          </NuxtLink>
+          <button v-if="isStaff" class="btn" :disabled="loading" @click="load">
+            <span class="icon icon-refresh"/><span>Refresh</span>
+          </button>
+        </div>
       </div>
 
       <div class="adm-body">
@@ -287,6 +292,12 @@ watch(isStaff, (v) => { if (v) load() })
 }
 
 .adm-title .icon { color: var(--primary); }
+
+.adm-head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
 
 .adm-body {
   padding: var(--space-4);
