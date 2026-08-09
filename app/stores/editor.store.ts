@@ -250,9 +250,13 @@ export const useEditor = defineStore('editor', () => {
         void saveWorkspaceFull(payload)
     }
 
-    async function restoreWorkspaceLayout() {
+    async function restoreWorkspaceLayout(preferId?: string) {
         const payload = await loadWorkspaceFull()
         if (!payload || !Array.isArray(payload.boards) || payload.boards.length <= 1) return
+        // The board load() just resolved (the single entry initBoardsFromCurrent
+        // built). When the URL explicitly asked for it (?id= from /work), the
+        // snapshot must not bury it: it stays loaded, active, and fresh.
+        const fresh = preferId ? boards.value.find(b => b.id === preferId) : undefined
         const rebuilt: Board[] = payload.boards
             .filter((e: any) => e && e.data)
             .map((e: any) => {
@@ -264,12 +268,29 @@ export const useEditor = defineStore('editor', () => {
                 }
             })
         if (rebuilt.length <= 1) return
+        let ai = Math.min(rebuilt.length - 1, Math.max(0, payload.activeIndex || 0))
+        if (fresh) {
+            const idx = rebuilt.findIndex(b => b.id === fresh.id)
+            if (idx >= 0) {
+                // Same art already on the desk — keep its position, use the
+                // fresh load's data (cloud/localStorage is what /work showed).
+                rebuilt[idx] = {...fresh, x: rebuilt[idx]!.x, y: rebuilt[idx]!.y}
+                ai = idx
+            } else {
+                // Not on the desk yet — place it right of the rightmost board.
+                const gap = 8
+                let x = 0
+                for (const b of rebuilt) x = Math.max(x, b.x + b.data.width + gap)
+                rebuilt.push({...fresh, x, y: 0})
+                ai = rebuilt.length - 1
+            }
+        }
         boards.value = rebuilt
-        const ai = Math.min(rebuilt.length - 1, Math.max(0, payload.activeIndex || 0))
         loadBoardLive(rebuilt[ai]!)
         history.value = []; historyIndex.value = -1; saveState(false)
         rebuilt[ai]!.history = history.value
         rebuilt[ai]!.historyIndex = historyIndex.value
+        if (fresh) saveWorkspaceLayout()
     }
 
     // Reapply the lightweight layout (positions + per-board bg/iso) over whatever
@@ -1034,6 +1055,10 @@ export const useEditor = defineStore('editor', () => {
             }
         }
 
+        // An explicit id (e.g. /editor?id= from /work) must end up as the
+        // active, focused board; the workspace_current fallback below is just
+        // "reopen where I was" and carries no such intent.
+        const explicitId = !!id
         try {
             histories.value = getStorageItem('histories')
             localWS.value = getStorageItem('workspaces')
@@ -1069,7 +1094,7 @@ export const useEditor = defineStore('editor', () => {
             }
             foldStrayVirtual()
             initBoardsFromCurrent()
-            await restoreWorkspaceLayout()
+            await restoreWorkspaceLayout(explicitId ? editorData.value.id.toString() : undefined)
             applyWorkspaceLayoutOverlay()   // positions + bg/iso win over a stale snapshot
         } catch (error) {
             resetEditorData()
