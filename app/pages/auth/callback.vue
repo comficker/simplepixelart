@@ -40,6 +40,9 @@ onMounted(async () => {
   if (auth.isLogged) {
     try { await editor.syncLocalToCloud() }
     catch {}
+    // Bind the account to its inviter (?ref= captured on landing) — pays
+    // the inviter's signup reward. No-op without a stored ref.
+    await attachPendingReferral()
   }
 
   const next = (route.query.next as string | undefined) || '/'

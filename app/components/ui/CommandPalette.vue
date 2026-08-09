@@ -6,7 +6,7 @@ type Cmd = {
   label: string
   hint?: string
   icon?: string
-  group: 'Navigate' | 'Create' | 'Theme' | 'Help' | 'System'
+  group: 'Navigate' | 'Create' | 'Account' | 'Theme' | 'Help' | 'System'
   keywords?: string
   swatch?: { ring: string; ink: string }   // Theme commands render as a colour circle
   active?: boolean                          // currently-applied theme
@@ -14,7 +14,7 @@ type Cmd = {
 }
 
 // Group display order — Help / System sit at the very bottom.
-const GROUP_ORDER = ['Theme', 'Navigate', 'Create', 'Help', 'System']
+const GROUP_ORDER = ['Theme', 'Navigate', 'Create', 'Account', 'Help', 'System']
 
 const router = useRouter()
 const { current, setTheme, themes } = useTheme() as any
@@ -71,7 +71,6 @@ const baseCommands = computed<Cmd[]>(() => [
   { id: 'nav:tilemap', label: 'Tilemap Editor', icon: 'icon-rhombus', hint: 'Grid / iso map', group: 'Navigate', keywords: 'tilemap map grid isometric tiles level scene world', run: () => router.push('/tilemaps/editor') },
   { id: 'nav:palettes', label: 'Palettes', icon: 'icon-bucket', group: 'Navigate', keywords: 'color palette swatches library', run: () => router.push('/palettes') },
   { id: 'nav:arts', label: 'Discovery', icon: 'icon-search', group: 'Navigate', keywords: 'gallery browse art', run: () => router.push('/arts') },
-  { id: 'nav:work', label: 'Your work', icon: 'icon-grid', group: 'Navigate', keywords: 'mine artworks', run: () => router.push('/work') },
   { id: 'nav:collections', label: 'Your collections', icon: 'icon-rhombus', group: 'Navigate', keywords: 'collection group theme album', run: () => router.push('/work?tab=collections') },
   { id: 'create:new', label: 'New pixel art', icon: 'icon-square', hint: 'Open editor', group: 'Create', keywords: 'start blank draw', run: () => router.push('/editor') },
   { id: 'create:convert', label: 'Convert an image', icon: 'icon-swap', group: 'Create', keywords: 'photo upload pixelate', run: () => router.push('/convert') },
@@ -90,6 +89,52 @@ const baseCommands = computed<Cmd[]>(() => [
   { id: 'system:reset', label: 'Reset app data', hint: 'Clear cache & storage', icon: 'icon-broom', group: 'System', keywords: 'reset clear cache storage wipe localstorage indexeddb hard refresh fix stuck broken', run: resetAppData },
 ])
 
+// Account — what shows depends on the session. Guests get the bare trio
+// (sign in / settings / your work); signed-in users manage their presence.
+const accountCommands = computed<Cmd[]>(() => {
+  const cmds: Cmd[] = []
+  if (!auth.isLogged) {
+    cmds.push({
+      id: 'account:login', label: 'Sign in', icon: 'icon-user', hint: 'Google',
+      group: 'Account', keywords: 'login signin account google',
+      run: () => { window.location.href = googleAuthUrl.value },
+    })
+  }
+  cmds.push({
+    id: 'account:settings', label: 'Settings', icon: 'icon-cog',
+    group: 'Account', keywords: 'account profile username password theme preferences reset',
+    run: () => router.push('/settings'),
+  })
+  if (auth.isLogged) {
+    cmds.push({
+      id: 'account:profile', label: 'Public profile', icon: 'icon-user',
+      hint: `@${auth.logged?.username}`, group: 'Account',
+      keywords: 'creator page my profile',
+      run: () => router.push(`/creator/${auth.logged?.username}`),
+    })
+  }
+  cmds.push({
+    id: 'account:work', label: 'Your work', icon: 'icon-workspace',
+    group: 'Account', keywords: 'mine artworks drafts',
+    run: () => router.push('/work'),
+  })
+  if (auth.isLogged) {
+    cmds.push(
+        {
+          id: 'account:missions', label: 'Missions & credits', icon: 'icon-coin',
+          group: 'Account', keywords: 'credits tokens rewards earn daily invite referral',
+          run: () => router.push('/missions'),
+        },
+        {
+          id: 'account:logout', label: 'Log out', icon: 'icon-x',
+          group: 'Account', keywords: 'sign out logout leave',
+          run: () => auth.logout(),
+        },
+    )
+  }
+  return cmds
+})
+
 const themeCommands = computed<Cmd[]>(() =>
     (themes || []).map((t: any) => ({
       id: `theme:${t.id}`,
@@ -104,7 +149,7 @@ const themeCommands = computed<Cmd[]>(() =>
     }))
 )
 
-const allCommands = computed(() => [...baseCommands.value, ...themeCommands.value])
+const allCommands = computed(() => [...baseCommands.value, ...accountCommands.value, ...themeCommands.value])
 
 function score(cmd: Cmd, q: string): number {
   if (!q) return 1
@@ -162,33 +207,7 @@ const flatItems = computed(() => groupedBlocks.value.flatMap(b => b.items.map(i 
 
 watch(query, () => { selected.value = 0 })
 
-// Wipe all local app state — the "get me unstuck" escape hatch. Clears cache /
-// storage / IndexedDB, then reloads. Confirms first: this also drops unsynced
-// guest art + tilesets (the signed-in session lives in a cookie, so it stays).
-async function resetAppData() {
-  if (typeof window === 'undefined') return
-  const ok = window.confirm(
-      'Reset app data?\n\nThis clears local cache and storage — including any guest artwork or tilesets not yet synced — and reloads the page. Your signed-in account is not affected.',
-  )
-  if (!ok) return
-  try { localStorage.clear() } catch { /* ignore */ }
-  try { sessionStorage.clear() } catch { /* ignore */ }
-  try {
-    if (window.caches?.keys) {
-      const keys = await caches.keys()
-      await Promise.all(keys.map(k => caches.delete(k)))
-    }
-  } catch { /* ignore */ }
-  try {
-    // @ts-ignore — databases() is not in every lib.dom yet
-    if (indexedDB?.databases) {
-      // @ts-ignore
-      const dbs = await indexedDB.databases()
-      await Promise.all((dbs || []).map((d: any) => d?.name && indexedDB.deleteDatabase(d.name)))
-    }
-  } catch { /* ignore */ }
-  location.reload()
-}
+// resetAppData lives in composables/useAppReset (shared with /settings).
 
 function openPalette() {
   open.value = true

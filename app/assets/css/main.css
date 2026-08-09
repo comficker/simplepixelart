@@ -2712,7 +2712,7 @@ html.editor-fullscreen .consent {
     display: flex;
     align-items: center;
     gap: 0.625rem;
-    padding: 0.25rem 0;
+    padding: 0.5rem 0;
     cursor: pointer;
     list-style: none;
     user-select: none;
@@ -3151,7 +3151,6 @@ html.editor-fullscreen .consent {
    (h1/h2/h3, p, ol/ul, code, a, strong, blockquote.gh-alert, .readme-badges).
    ============================================================ */
 .readme {
-  margin-top: var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);

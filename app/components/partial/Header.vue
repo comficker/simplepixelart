@@ -20,23 +20,16 @@ function openCommandPalette() {
       </nuxt-link>
 
       <nav class="hdr-nav" aria-label="Primary">
-        <nuxt-link to="/editor" class="hdr-link" title="Editor">
-          <span class="icon icon-pen"/>
-          <span class="hdr-link-label">Editor</span>
-        </nuxt-link>
         <nuxt-link to="/arts" class="hdr-link" title="Discovery">
           <span class="icon icon-explore"/>
           <span class="hdr-link-label">Discovery</span>
-        </nuxt-link>
-        <nuxt-link to="/palettes" class="hdr-link" title="Color palettes">
-          <span class="icon icon-palette"/>
-          <span class="hdr-link-label">Palettes</span>
         </nuxt-link>
         <nuxt-link to="/work" class="hdr-link" title="Your work">
           <span class="icon icon-workspace"/>
           <span class="hdr-link-label">Your work</span>
         </nuxt-link>
         <span class="hdr-divider" aria-hidden="true"/>
+        <WalletMenu/>
         <button
             type="button"
             class="cmdk-trigger"
@@ -151,7 +144,7 @@ header .brand-name-stamp {
 /* PixelArt — chunky logotype */
 header .brand-name-main {
   display: block;
-  font-size: 1em;
+  font-size: 1rem;
   font-weight: 800;
   font-variation-settings: "wght" 800;
   letter-spacing: -0.04em;
