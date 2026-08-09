@@ -2845,7 +2845,10 @@ onMounted(async () => {
   // Restore the saved camera (pan + zoom) so a refresh reopens the exact view —
   // for a single board too, not just multi-board. ?new=true starts fresh; with
   // no saved camera we fall back to the fitted centerView from setupCanvas.
-  if (route.query.new !== 'true') {
+  // ?id= means "open THIS art" (e.g. from /work) — skip the old camera so the
+  // first ResizeObserver pass centerView()s onto the requested board instead
+  // of wherever the workspace was last panned.
+  if (route.query.new !== 'true' && !route.query.id) {
     try {
       const sc = JSON.parse(localStorage.getItem('workspace_camera') || 'null');
       if (sc && isFinite(sc.z) && isFinite(sc.x) && isFinite(sc.y)) {
