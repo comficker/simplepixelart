@@ -2585,17 +2585,11 @@ html.editor-fullscreen .consent {
     min-height: 48px;
 }
 
-/* Preview + AI auto-fill row at the top of the publish form. */
-.publish-top {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-}
-
+/* Art preview at the top of the publish form. */
 .publish-preview {
     width: 84px;
     height: 84px;
-    flex-shrink: 0;
+    margin-inline: auto;
     padding: 6px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -2612,21 +2606,34 @@ html.editor-fullscreen .consent {
     image-rendering: pixelated;
 }
 
-.publish-ai {
+/* AI auto-fill: a quiet assistant line under the fields, not a headline —
+   text-button chrome, muted until hover. */
+.publish-ai-row {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    min-width: 0;
-}
-
-.publish-ai-btn {
+    align-items: center;
     gap: var(--space-2);
     align-self: flex-start;
-    border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+    padding: 2px 0;
+    background: none;
+    border: 0;
+    font-size: var(--text-xs);
+    line-height: var(--text-xs-lh);
+    color: var(--muted);
+    cursor: pointer;
+    transition: color var(--transition);
 }
 
-.publish-ai-btn .icon-auto-fix {
-    color: var(--primary);
+.publish-ai-row:hover:not(:disabled) {
+    color: var(--foreground);
+}
+
+.publish-ai-row:disabled {
+    cursor: default;
+    opacity: 0.7;
+}
+
+.publish-ai-row .icon-auto-fix {
+    font-size: 13px;
 }
 
 .publish-ai-cost {
@@ -2635,12 +2642,11 @@ html.editor-fullscreen .consent {
     gap: 3px;
     font-size: var(--text-2xs);
     font-weight: 700;
-    color: var(--primary);
 }
 
 .publish-ai-cost .icon {
-    width: 12px;
-    height: 12px;
+    width: 11px;
+    height: 11px;
 }
 
 .publish-link {

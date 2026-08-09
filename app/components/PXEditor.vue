@@ -247,9 +247,11 @@ async function genMetaWithAI() {
   }
 }
 
-async function saveArt() {
-  // Honor the Public switch: ON → publish to the gallery, OFF → unlisted (saved
-  // to your account, reachable only via its link — not listed anywhere).
+async function saveArt(isPublic: boolean) {
+  // Two explicit actions instead of a switch: publish to the gallery, or keep
+  // it unlisted (saved to your account, reachable only via its link). Drafts
+  // auto-save all along — this modal only decides visibility.
+  editorData.value.is_public = isPublic
   store.saveState(false)
   await store.saveNow()
   // Either way it's now on the cloud with a slug, so offer the share step — the
@@ -3547,33 +3549,8 @@ watch(
           <template v-if="publishStep === 'edit'">
             <h3 class="publish-heading">Publish your pixel art</h3>
             <div class="publish-form">
-              <!-- Art preview + AI auto-fill side by side: see what you're
-                   naming, and let the model name it for you. -->
-              <div class="publish-top">
-                <div class="publish-preview">
-                  <Thumb :data="editorData"/>
-                </div>
-                <div class="publish-ai">
-                  <button
-                      v-if="aiMeta?.enabled"
-                      class="btn publish-ai-btn"
-                      :disabled="aiBusy"
-                      title="AI writes the title, description and tags from the artwork"
-                      @click="genMetaWithAI"
-                  >
-                    <span class="icon icon-auto-fix"/>
-                    <span>{{ aiBusy ? 'Reading your art…' : 'Auto-fill with AI' }}</span>
-                    <span class="publish-ai-cost"><span class="icon icon-coin"/>{{ aiMeta.cost }}</span>
-                  </button>
-                  <p class="publish-ai-hint text-xs text-muted">
-                    <template v-if="aiMeta?.enabled">
-                      A good title and tags help people find your art.
-                    </template>
-                    <template v-else>
-                      Name it well — a good title and tags help people find your art.
-                    </template>
-                  </p>
-                </div>
+              <div class="publish-preview">
+                <Thumb :data="editorData"/>
               </div>
               <div>
                 <label class="publish-label">Title</label>
@@ -3608,18 +3585,27 @@ watch(
                     class="publish-input"
                 />
               </div>
-              <div class="h-center gap-2">
-                <ui-switch v-model="editorData.is_public"/>
-                <span class="text-xs">Public</span>
-                <span class="text-xs text-muted">{{ editorData.is_public ? '— listed in the gallery' : '— unlisted · only people with the link' }}</span>
-              </div>
+              <!-- Quiet assistant, not a headline: fills the fields above. -->
+              <button
+                  v-if="aiMeta?.enabled"
+                  class="publish-ai-row"
+                  :disabled="aiBusy"
+                  title="AI writes the title, description and tags from the artwork"
+                  @click="genMetaWithAI"
+              >
+                <span class="icon icon-auto-fix"/>
+                <span>{{ aiBusy ? 'Reading your art…' : 'Let AI fill these for you' }}</span>
+                <span class="publish-ai-cost"><span class="icon icon-coin"/>{{ aiMeta.cost }}</span>
+              </button>
             </div>
             <div class="publish-actions">
-              <button class="btn primary block" @click="saveArt">
-                {{ editorData.is_public ? 'Publish' : 'Save' }}
+              <button class="btn primary block" @click="saveArt(true)">
+                <span class="icon icon-earth"/>
+                <span>Publish to gallery</span>
               </button>
-              <button class="btn block" @click="showPublishModal = false">
-                Cancel
+              <button class="btn block" title="Saved to your account — only people with the link can see it" @click="saveArt(false)">
+                <span class="icon icon-earth-off"/>
+                <span>Keep unlisted</span>
               </button>
             </div>
           </template>
