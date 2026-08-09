@@ -1479,8 +1479,8 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
 }
 
 .toolbar-info {
-    font-size: var(--text-xs);
-    line-height: var(--text-xs-lh);
+    font-size: var(--text-2xs);
+    line-height: var(--text-2xs-lh, 1.4);
     padding: 0 0.25rem;
     color: var(--muted);
     flex-shrink: 0;
