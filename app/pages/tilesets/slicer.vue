@@ -142,8 +142,11 @@ const hoverRegion = ref(-1)
 let moveGrab = {dx: 0, dy: 0}
 
 // ── Cleanup (applied to every extracted sprite) ────────────────────
-const crispFactor = ref<'auto' | number>('auto') // round pixels: de-upscale factor
-const mergeTol = ref(16)                          // merge near-identical colours (0 = off)
+// Neutral by default: what you slice is exactly what the sheet shows, so the
+// "Clean sheet on load" toggle visibly drives preview + output. Per-tile
+// cleanup is an explicit opt-in from the settings modal.
+const crispFactor = ref<'auto' | number>(1)      // round pixels: de-upscale factor
+const mergeTol = ref(0)                           // merge near-identical colours (0 = off)
 const cleanInfo = ref('')                         // "16×16 · 8 colors" after processing
 const crispOptions: { v: 'auto' | number; l: string }[] = [
   {v: 'auto', l: 'Auto'}, {v: 1, l: '1×'}, {v: 2, l: '2×'}, {v: 3, l: '3×'}, {v: 4, l: '4×'},
@@ -287,7 +290,12 @@ const previewInfo = computed(() => {
 const STORAGE_KEY = 'tileset_state_v1'
 // The source sheet (base64 dataURL, can be MBs) lives under its own key and is
 // only rewritten when the image itself changes — not on every settings tweak.
+// v1 stored the *displayed* (possibly cleaned) sheet, losing the original —
+// after a refresh the toggle could never restore the raw upload. v2 stores the
+// RAW upload; the cleaned sheet is re-derived on restore (deterministic, so
+// saved regions/selections still line up).
 const IMG_KEY = 'tileset_img_v1'
+const RAW_KEY = 'tileset_img_v2'
 let restoring = false
 
 function snapshotState() {
@@ -312,6 +320,7 @@ function saveState() {
     if (!imageData.value) {
       localStorage.removeItem(STORAGE_KEY)
       localStorage.removeItem(IMG_KEY)
+      localStorage.removeItem(RAW_KEY)
       return
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshotState()))
@@ -322,24 +331,30 @@ function saveState() {
 }
 const debouncedSave = debounce(saveState, 400)
 
-// The heavy part — persisted only when the image actually changes.
-watch(imageData, (v) => {
+// The heavy part — persisted only when the image actually changes. The raw
+// upload is the source of truth; the legacy processed-sheet key is dropped so
+// old states can't shadow it.
+watch(rawImageData, (v) => {
   if (restoring || typeof localStorage === 'undefined') return
   try {
-    if (v) localStorage.setItem(IMG_KEY, v)
-    else localStorage.removeItem(IMG_KEY)
+    if (v) localStorage.setItem(RAW_KEY, v)
+    else localStorage.removeItem(RAW_KEY)
+    localStorage.removeItem(IMG_KEY)
   } catch (e) {
     console.warn('Tileset: could not save image', e)
   }
 })
 
-function restoreState() {
+async function restoreState() {
   if (typeof localStorage === 'undefined') return
   let s: any = null
   try { s = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') } catch { return }
-  // `s.img` covers states saved before the image moved to its own key.
-  const imgSrc = (s && (localStorage.getItem(IMG_KEY) || s.img)) || ''
-  if (!s || !imgSrc) return
+  // RAW_KEY is the raw upload (current format). IMG_KEY / `s.img` are legacy
+  // states that only kept the displayed sheet — used as-is, never re-cleaned
+  // (double-processing them would shift the saved regions).
+  const rawSrc = (s && localStorage.getItem(RAW_KEY)) || ''
+  const legacySrc = (s && (localStorage.getItem(IMG_KEY) || s.img)) || ''
+  if (!s || (!rawSrc && !legacySrc)) return
   restoring = true
   editorProcess.value = !!s.editorProcess
   mode.value = s.mode ?? mode.value
@@ -361,11 +376,18 @@ function restoreState() {
   }
   if (s.tilesetId != null) selectedTilesetId.value = s.tilesetId
   if (s.synced) syncedTiles.value = s.synced
+  // Displayed sheet: the raw upload, re-cleaned when the toggle was on —
+  // deterministic, so the regions/selection restored above still line up.
+  let display = rawSrc || legacySrc
+  if (rawSrc && editorProcess.value) {
+    const url = await cleanSheet(rawSrc)
+    if (url) display = url
+  }
   const img = new Image()
   img.onload = () => {
     sourceImage.value = img
-    imageData.value = imgSrc
-    rawImageData.value = imgSrc
+    imageData.value = display
+    rawImageData.value = rawSrc || legacySrc
     nextTick(() => {
       measureWrap()
       if (resizeObs && wrapEl.value) { resizeObs.disconnect(); resizeObs.observe(wrapEl.value) }
@@ -376,7 +398,7 @@ function restoreState() {
     })
   }
   img.onerror = () => { restoring = false }
-  img.src = imgSrc
+  img.src = display
 }
 
 // Mirror any change to storage (debounced). Object/array refs use getters so we
@@ -462,6 +484,23 @@ function gridToDataUrl(grid: RGB[][], transparent: RGB | null): string {
   return cv.toDataURL('image/png')
 }
 
+// The editor's import pipeline (de-upscale, crop, quantize) over a raw data
+// URL → a cleaned data URL, or '' when it fails. Shared by the toggle flow
+// and the state restore, which must re-derive the same sheet from the raw.
+async function cleanSheet(raw: string): Promise<string> {
+  processing.value = true
+  try {
+    const {dataUrlToSamplesGrid} = await import('~/helper/canvas')
+    const {rgbSamplesGrid, colorThatRepresentsTransparent} = await dataUrlToSamplesGrid(raw)
+    return gridToDataUrl(rgbSamplesGrid, colorThatRepresentsTransparent)
+  } catch (err) {
+    console.error('Tileset: editor import failed', err)
+    return ''
+  } finally {
+    processing.value = false
+  }
+}
+
 // Build the working sheet from the raw upload — optionally through the editor's
 // import pipeline first — then load it as the source image.
 async function applySource() {
@@ -469,19 +508,9 @@ async function applySource() {
   if (!raw) return
   let dataUrl = raw
   if (editorProcess.value) {
-    processing.value = true
-    try {
-      const {dataUrlToSamplesGrid} = await import('~/helper/canvas')
-      const {rgbSamplesGrid, colorThatRepresentsTransparent} = await dataUrlToSamplesGrid(raw)
-      const url = gridToDataUrl(rgbSamplesGrid, colorThatRepresentsTransparent)
-      if (url) dataUrl = url
-      else toast.error('Could not process image — using the original')
-    } catch (err) {
-      console.error('Tileset: editor import failed', err)
-      toast.error('Could not process image — using the original')
-    } finally {
-      processing.value = false
-    }
+    const url = await cleanSheet(raw)
+    if (url) dataUrl = url
+    else toast.error('Could not process image — using the original')
   }
   const img = new Image()
   img.onload = () => setSource(img, dataUrl)
@@ -1827,9 +1856,7 @@ const faq = [
             <template v-else-if="mode === 'auto'">{{ detecting ? 'Detecting…' : `${boxes.length} sprites — click one` }}</template>
             <template v-else>{{ regions.length }} region{{ regions.length === 1 ? '' : 's' }} — {{ selectShape === 'fixed' ? 'click to drop a box' : (selectShape === 'square' ? 'drag a square' : 'drag to add a box') }}</template>
           </p>
-          <ui-switch v-model="editorProcess" :disabled="processing" size="sm" class="ts-foot-toggle" title="Runs the editor's import pipeline (de-upscale, crop, quantize) on the sheet.">
-            <span class="text-xs">{{ processing ? 'Processing…' : 'Clean sheet on load' }}</span>
-          </ui-switch>
+          <span v-if="processing" class="text-xs text-muted">Processing…</span>
         </div>
       </div>
 
@@ -2073,7 +2100,15 @@ const faq = [
 
         <div class="ts-set-col">
           <label class="ts-set-label">Cleanup</label>
-          <ui-switch v-model="removeBg" size="sm"><span class="text-xs">Remove background</span></ui-switch>
+          <ui-switch
+              v-model="editorProcess"
+              :disabled="processing"
+              size="sm"
+              title="Runs the editor's import pipeline (de-upscale, crop, quantize) on the whole sheet — the preview and every export slice from the result."
+          >
+            <span class="text-xs">{{ processing ? 'Processing…' : 'Clean sheet on load' }}</span>
+          </ui-switch>
+          <ui-switch v-model="removeBg" size="sm" class="ts-set-toggle"><span class="text-xs">Remove background</span></ui-switch>
           <div v-if="removeBg" class="ts-bg-block">
             <div class="ts-bg-row">
               <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
@@ -2243,10 +2278,6 @@ const faq = [
   flex: 1 1 auto;
   min-width: 0;
   font-variant-numeric: tabular-nums;
-}
-
-.ts-foot-toggle {
-  flex-shrink: 0;
 }
 
 /* Tiles list widget grows to fill the rail between the fixed sections; its list
