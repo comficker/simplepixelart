@@ -1141,6 +1141,18 @@ export const useEditor = defineStore('editor', () => {
                     item.id = result.id
                 })
                 editorData.value.updated = result.updated
+                // Re-key the board that held this art under its local UUID —
+                // board identity must follow the cloud id, or the workspace
+                // snapshot and addBoardWithData's dedupe keep seeing the
+                // retired UUID and every later open of this art spawns a
+                // duplicate board (which then autosaves as a duplicate art).
+                const promoted = boards.value.find(b => b.id === oldLocalKey)
+                if (promoted) {
+                    promoted.id = result.id.toString()
+                    if (activeBoardId.value === oldLocalKey) activeBoardId.value = promoted.id
+                    boardsRev.value++
+                    saveWorkspaceLayout()
+                }
                 // Drop the stale local workspace so F5 doesn't reload it (which
                 // would look like an unsaved local art and POST a duplicate).
                 if (localWS.value[oldLocalKey]) {
@@ -1160,6 +1172,16 @@ export const useEditor = defineStore('editor', () => {
             // PUTting to /shared-pages/{uuid}/ would 404. Treat it as new (POST).
             const existsOnServer = typeof editorData.value.id === 'number' && !!editorData.value.id_string
             if (!existsOnServer) {
+                // A blank, unnamed, never-saved canvas isn't an artwork yet —
+                // POSTing it would litter /work with empty "Untitled" arts
+                // every time a fresh board or a reset autosaves. It still
+                // persists locally below; the first pixel (or a name) creates
+                // the cloud record. Existing arts can be erased to empty and
+                // PUT fine — this guards creation only.
+                const frames = anim?.frames?.length ? anim.frames : [{layers: ed.layers}]
+                const hasPixels = frames.some(f =>
+                    (f?.layers || []).some(l => Object.keys(l?.pixels || {}).length > 0))
+                if (!hasPixels && !ed.name) return
                 await createCloud()
                 return
             }
