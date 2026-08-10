@@ -373,6 +373,13 @@ async function restoreState() {
     crispFactor.value = s.clean.crispFactor; mergeTol.value = s.clean.mergeTol
     removeBg.value = s.clean.removeBg; removeBgTol.value = s.clean.removeBgTol
     despeckle.value = s.clean.despeckle; median.value = s.clean.median; quantize.value = s.clean.quantize
+    // States saved before cleanup became opt-in carry the old always-on
+    // defaults (Auto + merge 16) — indistinguishable from a deliberate
+    // choice, but the old values were never chosen by anyone, so map them
+    // to today's neutral defaults instead of silently mangling extracts.
+    if (s.clean.crispFactor === 'auto' && s.clean.mergeTol === 16) {
+      crispFactor.value = 1; mergeTol.value = 0
+    }
   }
   if (s.tilesetId != null) selectedTilesetId.value = s.tilesetId
   if (s.synced) syncedTiles.value = s.synced
@@ -1100,13 +1107,17 @@ function cropActive(): HTMLCanvasElement | null {
 
 // ── Cleanup: round pixels (de-upscale) + merge similar colours ─────
 // How uniform are f×f blocks? High uniformity ⇒ the art is upscaled by f.
+// Transparent-led blocks are skipped: a sprite's empty margins are uniform at
+// EVERY factor, so counting them made "Auto" hallucinate huge upscale factors
+// on crops that are mostly background and shrink the tile to mush.
 function blockUniformity(data: Uint8ClampedArray, w: number, h: number, f: number): number {
   const tol = 22 * 22 * 3
   let uni = 0, total = 0
   for (let by = 0; by + f <= h; by += f) {
     for (let bx = 0; bx + f <= w; bx += f) {
-      total++
       const ri = (by * w + bx) * 4
+      if (data[ri + 3]! < 16) continue   // background block — no signal
+      total++
       let ok = true
       for (let y = 0; y < f && ok; y++) {
         for (let x = 0; x < f; x++) {
@@ -1118,7 +1129,10 @@ function blockUniformity(data: Uint8ClampedArray, w: number, h: number, f: numbe
       if (ok) uni++
     }
   }
-  return total ? uni / total : 0
+  // Too few content blocks (a solid patch of sprite could be uniform at any
+  // factor) is no evidence of upscaling either.
+  if (total < 6) return 0
+  return uni / total
 }
 
 function detectScale(data: Uint8ClampedArray, w: number, h: number): number {
