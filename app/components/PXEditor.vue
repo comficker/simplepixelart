@@ -1516,8 +1516,9 @@ function startDraw(e: any) {
     case "iso-line":
       isIsoLining.value = true;
       isoLineStart.value = getPixelPos(e);
-      store.immigrateVirtualLayer();
-      store.clearVirtualLayer();
+      // Empty preview overlay — never immigrate+clear here: that cut the
+      // whole layer into the virtual layer and threw it away (data loss).
+      store.beginVirtualOverlay();
       {
         const cell = editorData.value.meta?.iso?.cell ?? { width: 2, height: 1 };
         store.paintIsoLine(
@@ -2325,8 +2326,17 @@ function drawReference(): void {
   const z = zoom.value;
   const w = editorData.value.width;
   const h = editorData.value.height;
+  // Contain-fit: scale by the limiting (largest) dimension and center — never
+  // stretch the image to the board, a squished reference is useless to trace.
+  const img = referenceImage.value;
+  const iw = img.naturalWidth || img.width;
+  const ih = img.naturalHeight || img.height;
+  if (!iw || !ih) return;
+  const scale = Math.min((w * z) / iw, (h * z) / ih);
+  const dw = iw * scale;
+  const dh = ih * scale;
   ctx.globalAlpha = referenceOpacity;
-  ctx.drawImage(referenceImage.value, ox, oy, w * z, h * z);
+  ctx.drawImage(img, ox + (w * z - dw) / 2, oy + (h * z - dh) / 2, dw, dh);
   ctx.globalAlpha = 1;
 }
 

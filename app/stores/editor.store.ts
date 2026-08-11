@@ -1644,86 +1644,52 @@ export const useEditor = defineStore('editor', () => {
      * Emits pixels via writeVirtualPixel which honors mirror flags, selection,
      * and canvas bounds.
      */
+    // Segmented pixel line: both drag endpoints land EXACTLY on the line, and
+    // the long axis divides into one run per short-axis step — as equal as
+    // possible, consecutive runs sharing their junction pixel row/column
+    // (4-connected corners, like hand-drawn joined segments). Uneven lengths
+    // bias toward the END. E.g. (0,0)→(1,4) becomes (0,0)-(0,2) + (1,2)-(1,4).
+    // (cellW/cellH kept for call compatibility — the line no longer snaps to
+    // the iso cell ratio; it follows the cursor.)
     function paintIsoLine(
         start: { x: number; y: number },
         end: { x: number; y: number },
-        cellW: number,
-        cellH: number,
+        _cellW: number,
+        _cellH: number,
         colorIndex: number,
     ) {
         clearVirtualLayer();
-        if (cellW < 1) cellW = 1;
-        if (cellH < 1) cellH = 1;
-
         const dx = end.x - start.x;
         const dy = end.y - start.y;
-
         const sx = dx >= 0 ? 1 : -1;
         const sy = dy >= 0 ? 1 : -1;
-
         const adx = Math.abs(dx);
         const ady = Math.abs(dy);
-        const angle = Math.atan2(ady, Math.max(adx, 1e-9));
 
-        // Candidate slopes as stair cells (w, h); Infinity = vertical. Sorted by
-        // angle, deduped (a 1×1 iso cell collapses onto the true diagonal).
-        const candidates: Array<{ w: number; h: number } | 'h' | 'v'> = ['h'];
-        const flat = { w: cellW, h: cellH };
-        const steep = { w: cellH, h: cellW };
-        for (const c of [flat.h / flat.w <= 1 ? flat : steep, { w: 1, h: 1 }, steep.h / steep.w >= 1 ? steep : flat]) {
-            const prev = candidates[candidates.length - 1];
-            if (typeof prev === 'object' && prev.h * c.w === c.h * prev.w) continue;   // same slope
-            candidates.push(c);
-        }
-        candidates.push('v');
-        const angleOf = (c: typeof candidates[number]) =>
-            c === 'h' ? 0 : c === 'v' ? Math.PI / 2 : Math.atan2(c.h, c.w);
+        // U = long axis (runs), V = short axis (one step per run).
+        const steep = ady > adx;
+        const aU = steep ? ady : adx;
+        const aV = steep ? adx : ady;
+        const put = steep
+            ? (u: number, v: number) => writeVirtualPixel(start.x + sx * v, start.y + sy * u, colorIndex)
+            : (u: number, v: number) => writeVirtualPixel(start.x + sx * u, start.y + sy * v, colorIndex);
 
-        // Pick the candidate whose axis angle is nearest the cursor angle.
-        let chosen = candidates[0]!;
-        for (const c of candidates) {
-            if (Math.abs(angleOf(c) - angle) < Math.abs(angleOf(chosen) - angle)) chosen = c;
-        }
-
-        if (chosen === 'h') {
-            for (let i = 0; i <= adx; i++) writeVirtualPixel(start.x + sx * i, start.y, colorIndex);
-            markFullRedraw()
-            drawTurn.value++;
-            return;
-        }
-        if (chosen === 'v') {
-            for (let i = 0; i <= ady; i++) writeVirtualPixel(start.x, start.y + sy * i, colorIndex);
-            markFullRedraw()
-            drawTurn.value++;
-            return;
-        }
-
-        cellW = chosen.w;
-        cellH = chosen.h;
-        const cellsByX = Math.floor(adx / cellW);
-        const cellsByY = Math.floor(ady / cellH);
-        const k = Math.max(cellsByX, cellsByY);
-
-        // Always paint the first tread (cellW pixels) at the start row.
-        for (let i = 0; i < cellW; i++) {
-            writeVirtualPixel(start.x + sx * i, start.y, colorIndex);
-        }
-
-        for (let c = 1; c <= k; c++) {
-            // Tread of cell c: cellW pixels at row start.y + c*sy*cellH,
-            // beginning at column start.x + c*sx*cellW.
-            const treadX0 = start.x + c * sx * cellW;
-            const treadY = start.y + c * sy * cellH;
-            for (let i = 0; i < cellW; i++) {
-                writeVirtualPixel(treadX0 + sx * i, treadY, colorIndex);
-            }
-            // Riser: (cellH - 1) pixels filling between previous tread and current tread.
-            // Sits at the previous tread's end column, stepping from one row past
-            // the previous tread to one row before the current tread.
-            const prevTreadEndX = start.x + (c - 1) * sx * cellW + sx * (cellW - 1);
-            const riserStartY = start.y + (c - 1) * sy * cellH + sy;
-            for (let r = 0; r < cellH - 1; r++) {
-                writeVirtualPixel(prevTreadEndX, riserStartY + sy * r, colorIndex);
+        if (aU === aV) {
+            // True diagonal — plain 1px steps (0,0 → 1,1 → 2,2 …). The
+            // junction-sharing below would double every step into an L.
+            for (let i = 0; i <= aU; i++) put(i, i);
+        } else {
+            const runs = aV + 1;
+            // Each junction pixel belongs to BOTH neighbouring runs, so the
+            // total painted length is span + (runs − 1).
+            const total = (aU + 1) + (runs - 1);
+            const base = Math.floor(total / runs);
+            const extra = total % runs;
+            let u = 0;
+            for (let i = 0; i < runs; i++) {
+                const len = base + (i >= runs - extra ? 1 : 0);   // remainder → end runs
+                for (let j = 0; j < len; j++) put(u + j, i);
+                u += len - 1;   // next run starts on this run's junction pixel
             }
         }
         // Iso-line previews live in the virtual layer with offsets — rebuild fully.
@@ -2000,6 +1966,18 @@ export const useEditor = defineStore('editor', () => {
         drawTurn.value++;
     }
 
+    // An EMPTY scratch overlay above the current layer, for stroke previews
+    // (iso-line). Unlike immigrateVirtualLayer it does NOT cut the host
+    // content out — the old immigrate+clear combo cut the whole layer into
+    // the virtual layer and then threw it away, so drawing one iso line
+    // erased everything already on the layer.
+    function beginVirtualOverlay() {
+        clearVirtualLayer()
+        editorData.value.layers.splice(currentLayerIndex.value + 1, 0, virtualLayer.value)
+        markFullRedraw()
+        drawTurn.value++
+    }
+
     // All-frames mode: when ON, edits apply to every frame at once —
     // paint/erase/bucket replicate each pixel write (see setPixelByIndex),
     // and committing a whole-layer move translates every layer of every frame
@@ -2191,6 +2169,7 @@ export const useEditor = defineStore('editor', () => {
         addLayer,
         deleteLayer,
         immigrateVirtualLayer,
+        beginVirtualOverlay,
         mergeVirtualLayer,
         move,
         resetEditorData,
