@@ -48,6 +48,8 @@ async function load() {
     config.value.missions.forEach((m: Mission) => { m.enabled = m.enabled !== false })
     if (!config.value.referral) config.value.referral = {signup_reward: 1, purchase_rate: 0.1}
     if (!config.value.ai) config.value.ai = {enabled: true}
+    if (config.value.ai.image_enabled === undefined) config.value.ai.image_enabled = false
+    if (!config.value.actions) config.value.actions = {}
   } catch {
     toast.error('Could not load dashboard')
   } finally {
@@ -56,6 +58,15 @@ async function load() {
 }
 
 const missions = computed<Mission[]>(() => config.value?.missions || [])
+
+// Mirror of the backend's action_cost: explicit tokens override wins, else
+// derive from usd × margin / base — so admins see the live charged price.
+function chargedCost(spec: { usd?: number; tokens?: number }): number {
+  if (spec.tokens != null && spec.tokens !== ('' as any)) return Math.max(1, Math.floor(spec.tokens))
+  const base = Number(config.value?.base_usd_per_token) || 0.0005
+  const margin = Number(config.value?.margin) || 1
+  return Math.max(1, Math.ceil((spec.usd || 0) * margin / base))
+}
 
 function addMission() {
   config.value.missions.push({
@@ -218,6 +229,36 @@ watch(isStaff, (v) => { if (v) load() })
                 <span>AI enabled</span>
                 <input v-model="config.ai.enabled" type="checkbox">
               </label>
+              <label class="adm-knob adm-knob-check" title="Image generation needs a BILLING-enabled Gemini key (free tier has zero image quota) — turn on only after billing is set up">
+                <span>AI image gen</span>
+                <input v-model="config.ai.image_enabled" type="checkbox">
+              </label>
+            </div>
+
+            <!-- ── Action pricing ── -->
+            <h2 class="adm-section-title">Action pricing</h2>
+            <div class="adm-table-wrap">
+              <table class="adm-table">
+                <thead>
+                <tr><th>Action</th><th>API cost (USD)</th><th>Tokens override</th><th>Charged</th></tr>
+                </thead>
+                <tbody>
+                <tr v-for="(spec, code) in config.actions" :key="code">
+                  <td>{{ code }}</td>
+                  <td><input v-model.number="spec.usd" type="number" min="0" step="0.001" class="adm-input adm-input-n"></td>
+                  <td>
+                    <!-- Blank = derive from usd × margin / base. -->
+                    <input
+                        :value="spec.tokens"
+                        type="number" min="1" placeholder="auto"
+                        class="adm-input adm-input-n"
+                        @input="e => { const v = (e.target as HTMLInputElement).value; v === '' ? delete spec.tokens : spec.tokens = Number(v) }"
+                    >
+                  </td>
+                  <td class="adm-charged">🪙{{ chargedCost(spec) }}</td>
+                </tr>
+                </tbody>
+              </table>
             </div>
 
             <!-- ── Missions manager ── -->
@@ -443,6 +484,8 @@ watch(isStaff, (v) => { if (v) load() })
 }
 
 .adm-missions td { padding: 4px 4px; }
+
+.adm-charged { font-weight: 700; white-space: nowrap; }
 
 .adm-ic { padding: 6px; }
 

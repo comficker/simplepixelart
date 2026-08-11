@@ -17,6 +17,7 @@ interface Mission {
 interface Summary {
   daily_grant: number
   ai_enabled?: boolean
+  ai_image_enabled?: boolean
   balance?: number
   daily_claimed?: boolean
   missions?: Mission[]
@@ -139,11 +140,14 @@ watch(() => auth.isLogged, (v) => {
         <!-- What credits power — shown to everyone, guests included -->
         <div class="msn-uses">
           <div class="msn-use">
-            <span class="msn-soon">Soon</span>
+            <span v-if="!sum?.ai_image_enabled" class="msn-soon">Soon</span>
             <span class="icon icon-auto-fix"/>
             <div class="msn-use-main">
               <div class="msn-use-title">Generate art with AI</div>
-              <p class="msn-use-desc text-xs">Turn a prompt into pixel art, straight onto your canvas.</p>
+              <p class="msn-use-desc text-xs">
+                Turn a prompt into pixel art, straight onto your canvas.
+                <nuxt-link v-if="sum?.ai_image_enabled" to="/editor" class="msn-use-link">Try it in the editor →</nuxt-link>
+              </p>
             </div>
           </div>
           <div class="msn-use">
@@ -327,6 +331,12 @@ watch(() => auth.isLogged, (v) => {
 }
 
 /* Diagonal "Soon" ribbon across the card's top-right corner. */
+.msn-use-link {
+  color: var(--primary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .msn-soon {
   position: absolute;
   top: 8px;
