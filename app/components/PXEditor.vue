@@ -1811,7 +1811,7 @@ function handleKeyUp(e: any) {
 
 // Single-key tool shortcuts (see handleKeyDown). 'm' routes via toggleSelect.
 const TOOL_KEYS: Record<string, string> = {
-  b: 'brush', l: 'iso-line', g: 'bucket', e: 'eraser', v: 'move', m: 'select',
+  b: 'brush', l: 'iso-line', g: 'bucket', v: 'move', m: 'select',
 };
 
 function handleKeyDown(e: any) {
@@ -1842,7 +1842,7 @@ function handleKeyDown(e: any) {
   // Mid-drag (mouse held), history/tool/delete shortcuts would yank the state
   // out from under the in-flight virtual layer — swallow them until mouseup.
   // (Space-pan and Escape are handled above and stay available.)
-  if (isStarted.value && (mod || TOOL_KEYS[key] || e.key === 'Backspace' || e.key === 'Delete')) {
+  if (isStarted.value && (mod || TOOL_KEYS[key] || key === 'e' || e.key === 'Backspace' || e.key === 'Delete')) {
     e.preventDefault();
     return;
   }
@@ -1871,6 +1871,11 @@ function handleKeyDown(e: any) {
     // Single-key tool switching (industry-standard letters; tooltips teach them).
     if (key === 'm') toggleSelect();
     else store.setTool(TOOL_KEYS[key]!);
+    e.preventDefault();
+  } else if (!mod && !e.altKey && key === 'e' && !e.repeat) {
+    // The eraser lives in the palette — E picks the transparent "color"
+    // (same as clicking the palette's eraser swatch).
+    store.currentColorIndex = -1;
     e.preventDefault();
   } else if (!mod && !e.altKey && key >= '1' && key <= '5'
       && (store.currentTool === 'brush' || store.currentTool === 'eraser')) {
@@ -3113,7 +3118,7 @@ watch(
                 <span class="icon icon-image"/><span>Insert image</span>
               </button>
               <button class="file-menu-item" @click="showStripImport = true">
-                <span class="icon icon-select"/><span>Import sprite strip</span>
+                <span class="icon icon-filmstrip"/><span>Import sprite strip</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" @click="exportFile('png')">
@@ -3175,11 +3180,11 @@ watch(
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" :title="`Copies the ${store.activeScope} (${modK}C)`" @click="onCopy">
-                <span class="icon icon-select"/>
+                <span class="icon icon-content-copy"/>
                 <span>Copy {{ store.activeScope }}</span>
               </button>
               <button v-if="store.clipboard" class="file-menu-item" :title="`Paste (${modK}V)`" @click="onPaste">
-                <span class="icon icon-selected"/>
+                <span class="icon icon-content-paste"/>
                 <span>Paste {{ store.clipboard.kind === 'board' ? 'as new board' : 'as new layer' }}</span>
               </button>
               <div class="file-menu-sep"/>
@@ -3188,11 +3193,11 @@ watch(
                 <span>Clear current layer</span>
               </button>
               <button class="file-menu-item" @click="store.cleanupUnusedColors()">
-                <span class="icon icon-auto-fix"/>
+                <span class="icon icon-palette-swatch-outline"/>
                 <span>Cleanup unused colors</span>
               </button>
               <button class="file-menu-item" title="Remove pixels stranded outside the canvas by a resize or move — they never render but still slow drawing and bloat saves" @click="onTrimHidden">
-                <span class="icon icon-broom"/>
+                <span class="icon icon-crop"/>
                 <span>Trim hidden pixels</span>
               </button>
               <div class="file-menu-sep"/>
@@ -3448,12 +3453,6 @@ watch(
               <span class="icon icon-bucket"/>
             </Square>
           </ui-tooltip>
-          <ui-tooltip text="Eraser (E)">
-            <Square aria-label="Eraser" @click="store.setTool('eraser')" :class="{ active: store.currentTool === 'eraser' }">
-              <span class="icon icon-eraser"/>
-            </Square>
-          </ui-tooltip>
-
           <div
               v-if="store.currentTool === 'brush' || store.currentTool === 'eraser'"
               class="brush-sizes"
@@ -3515,12 +3514,12 @@ watch(
           </ui-tooltip>
           <ui-tooltip v-if="store.selectionState.bounds.active" text="Merge pixels — the selection becomes 1 pixel and the whole canvas re-tiles in blocks of that size, aligned to it">
             <Square aria-label="Merge pixels by selection block" @click="onMergeBlock">
-              <span class="icon icon-arrange"/>
+              <span class="icon icon-arrow-collapse-all"/>
             </Square>
           </ui-tooltip>
           <ui-tooltip v-if="selectedLayers.size >= 2" :text="`Merge ${selectedLayers.size} selected layers into one`">
             <Square aria-label="Merge selected layers" @click="onMergeLayers">
-              <span class="icon icon-expand-down"/>
+              <span class="icon icon-merge"/>
             </Square>
           </ui-tooltip>
 
