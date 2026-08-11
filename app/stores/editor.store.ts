@@ -826,24 +826,20 @@ export const useEditor = defineStore('editor', () => {
     }
 
     // One image file → a null-transparent RGB grid, via the chosen pipeline:
-    // 'filter' resamples/quantizes like the converter; 'original' reads pixels
-    // 1:1 (≤256/side — larger returns null and counts as skipped).
+    // 'filter' runs the shared import pipeline (bg knockout, upscale-factor +
+    // grid-phase detection, two-stage reconstruction, margin trim — see
+    // ~/helper/pixel-reconstruct); 'original' reads pixels 1:1 (≤256/side —
+    // larger returns null and counts as skipped).
     async function fileToGrid(file: File, process: ImportProcess): Promise<(number[] | null)[][] | null> {
         const dataUrl = await readFileAsDataUrl(file);
-        const canvasHelper = await import("~/helper/canvas");
         if (process === 'original') {
-            const {grid, tooLarge} = await canvasHelper.dataUrlToOriginalGrid(dataUrl);
+            const {dataUrlToOriginalGrid} = await import("~/helper/canvas");
+            const {grid, tooLarge} = await dataUrlToOriginalGrid(dataUrl);
             return (tooLarge || !grid.length) ? null : grid;
         }
-        const {rgbSamplesGrid, colorThatRepresentsTransparent} = await canvasHelper.dataUrlToSamplesGrid(dataUrl);
-        if (!rgbSamplesGrid?.length) return null;
-        // Normalize to null-transparency so every consumer downstream agrees.
-        const ig = colorThatRepresentsTransparent;
-        return rgbSamplesGrid.map(row => row.map(cell => {
-            if (!cell) return null;
-            const hex = rgbToHex(cell[0]!, cell[1]!, cell[2]!);
-            return shouldIgnoreColor(hex, ig) ? null : cell;
-        }));
+        const {imageToCells} = await import("~/helper/pixel-reconstruct");
+        const res = await imageToCells(dataUrl);
+        return res ? res.cells : null;
     }
 
     // Parse one picked file into a fresh EditorData (JSON export or any image).
@@ -947,16 +943,16 @@ export const useEditor = defineStore('editor', () => {
         saveWorkspaceLayout();
     }
 
-    // Stamp a sampled image grid onto the current frame's active layer, scaled to
-    // fit (contain) the canvas and centered. Unlike loadFromFile this keeps the
-    // existing canvas/size/palette and overlays the image — transparent/ignored
-    // source pixels leave whatever is underneath untouched.
-    const insertFromGrid = (pxColor: number[][][], ignoreColor: number[] | null) => {
-        if (!pxColor?.length) return;
+    // Stamp a null-transparent cell grid onto the current frame's active layer,
+    // scaled to fit (contain) the canvas and centered. Unlike loadFromFile this
+    // keeps the existing canvas/size/palette and overlays the image — null
+    // (transparent) source cells leave whatever is underneath untouched.
+    const insertFromGrid = (cells: (number[] | null)[][]) => {
+        if (!cells?.length) return;
 
-        const gh = pxColor.length;
+        const gh = cells.length;
         let gw = 0;
-        for (const row of pxColor) gw = Math.max(gw, row?.length || 0);
+        for (const row of cells) gw = Math.max(gw, row?.length || 0);
         if (!gw) return;
 
         const cw = editorData.value.width;
@@ -974,19 +970,19 @@ export const useEditor = defineStore('editor', () => {
 
         for (let ty = 0; ty < targetH; ty++) {
             const sy = Math.min(gh - 1, Math.floor(ty * gh / targetH));
-            const srcRow = pxColor[sy];
+            const srcRow = cells[sy];
             if (!srcRow?.length) continue;
             for (let tx = 0; tx < targetW; tx++) {
                 const sx = Math.min(srcRow.length - 1, Math.floor(tx * gw / targetW));
-                const [r, g, b] = srcRow[sx] || [0, 0, 0];
-                const hex = rgbToHex(r!, g!, b!);
-                if (shouldIgnoreColor(hex, ignoreColor)) continue;
+                const cell = srcRow[sx];
+                if (!cell) continue;   // transparent — keep what's underneath
 
                 const cx = offsetX + tx;
                 const cy = offsetY + ty;
                 if (cx < 0 || cy < 0 || cx >= cw || cy >= ch) continue;
 
-                layer.pixels[`${cx - layer.x}_${cy - layer.y}`] = findOrCreateColor(hex, colors);
+                layer.pixels[`${cx - layer.x}_${cy - layer.y}`] =
+                    findOrCreateColor(rgbToHex(cell[0]!, cell[1]!, cell[2]!), colors);
             }
         }
 
@@ -1010,10 +1006,9 @@ export const useEditor = defineStore('editor', () => {
             reader.onload = async (ev) => {
                 try {
                     const dataUrl = ev.target?.result as string;
-                    const {dataUrlToSamplesGrid} = await import("~/helper/canvas");
-                    const {rgbSamplesGrid, colorThatRepresentsTransparent} = await dataUrlToSamplesGrid(dataUrl);
-                    if (rgbSamplesGrid?.length)
-                        insertFromGrid(rgbSamplesGrid, colorThatRepresentsTransparent);
+                    const {imageToCells} = await import("~/helper/pixel-reconstruct");
+                    const res = await imageToCells(dataUrl);
+                    if (res?.cells.length) insertFromGrid(res.cells);
                 } catch (error) {
                     console.error('Error inserting image:', error);
                 }

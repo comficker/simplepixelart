@@ -5,6 +5,7 @@ import type {EditorData} from '~/types'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
 import {cloneDeep, generateUUID, debounce, getStorageItem} from '~/helper/utils'
 import {layers2MapNumbers} from '~/helper/canvas'
+import {detectPixelScale, bestPhase, shiftCrop, modeDownscale, imageToCells} from '~/helper/pixel-reconstruct'
 import {saveWorkspaceFull, clearWorkspaceFull} from '~/helper/workspaceSnapshot'
 import {createZip} from '~/helper/zip'
 
@@ -491,15 +492,14 @@ function gridToDataUrl(grid: RGB[][], transparent: RGB | null): string {
   return cv.toDataURL('image/png')
 }
 
-// The editor's import pipeline (de-upscale, crop, quantize) over a raw data
+// The shared import pipeline (bg knockout, de-upscale, crop) over a raw data
 // URL → a cleaned data URL, or '' when it fails. Shared by the toggle flow
 // and the state restore, which must re-derive the same sheet from the raw.
 async function cleanSheet(raw: string): Promise<string> {
   processing.value = true
   try {
-    const {dataUrlToSamplesGrid} = await import('~/helper/canvas')
-    const {rgbSamplesGrid, colorThatRepresentsTransparent} = await dataUrlToSamplesGrid(raw)
-    return gridToDataUrl(rgbSamplesGrid, colorThatRepresentsTransparent)
+    const res = await imageToCells(raw)
+    return res ? gridToDataUrl(res.cells, null) : ''
   } catch (err) {
     console.error('Tileset: editor import failed', err)
     return ''
@@ -1106,71 +1106,9 @@ function cropActive(): HTMLCanvasElement | null {
 }
 
 // ── Cleanup: round pixels (de-upscale) + merge similar colours ─────
-// How uniform are f×f blocks? High uniformity ⇒ the art is upscaled by f.
-// Transparent-led blocks are skipped: a sprite's empty margins are uniform at
-// EVERY factor, so counting them made "Auto" hallucinate huge upscale factors
-// on crops that are mostly background and shrink the tile to mush.
-function blockUniformity(data: Uint8ClampedArray, w: number, h: number, f: number): number {
-  const tol = 22 * 22 * 3
-  let uni = 0, total = 0
-  for (let by = 0; by + f <= h; by += f) {
-    for (let bx = 0; bx + f <= w; bx += f) {
-      const ri = (by * w + bx) * 4
-      if (data[ri + 3]! < 16) continue   // background block — no signal
-      total++
-      let ok = true
-      for (let y = 0; y < f && ok; y++) {
-        for (let x = 0; x < f; x++) {
-          const i = ((by + y) * w + (bx + x)) * 4
-          const dr = data[i]! - data[ri]!, dg = data[i + 1]! - data[ri + 1]!, db = data[i + 2]! - data[ri + 2]!
-          if (dr * dr + dg * dg + db * db > tol || Math.abs(data[i + 3]! - data[ri + 3]!) > 40) { ok = false; break }
-        }
-      }
-      if (ok) uni++
-    }
-  }
-  // Too few content blocks (a solid patch of sprite could be uniform at any
-  // factor) is no evidence of upscaling either.
-  if (total < 6) return 0
-  return uni / total
-}
-
-function detectScale(data: Uint8ClampedArray, w: number, h: number): number {
-  for (let f = 8; f >= 2; f--) {
-    if (w < f * 2 || h < f * 2) continue
-    if (blockUniformity(data, w, h, f) >= 0.82) return f
-  }
-  return 1
-}
-
-// Downsample by f using the most common colour per block (kills AA blur cleanly).
-function downscaleMode(data: Uint8ClampedArray, w: number, h: number, f: number) {
-  const w2 = Math.max(1, Math.round(w / f)), h2 = Math.max(1, Math.round(h / f))
-  const out = new Uint8ClampedArray(w2 * h2 * 4)
-  for (let oy = 0; oy < h2; oy++) {
-    for (let ox = 0; ox < w2; ox++) {
-      const counts = new Map<number, number>()
-      let transparent = 0, total = 0
-      for (let y = 0; y < f; y++) {
-        for (let x = 0; x < f; x++) {
-          const sx = ox * f + x, sy = oy * f + y
-          if (sx >= w || sy >= h) continue
-          total++
-          const i = (sy * w + sx) * 4
-          if (data[i + 3]! < 16) { transparent++; continue }
-          const k = (data[i]! << 16) | (data[i + 1]! << 8) | data[i + 2]!
-          counts.set(k, (counts.get(k) || 0) + 1)
-        }
-      }
-      const oi = (oy * w2 + ox) * 4
-      if (counts.size === 0 || transparent * 2 > total) { out[oi + 3] = 0; continue }
-      let bestK = 0, best = -1
-      counts.forEach((v, k) => { if (v > best) { best = v; bestK = k } })
-      out[oi] = (bestK >> 16) & 255; out[oi + 1] = (bestK >> 8) & 255; out[oi + 2] = bestK & 255; out[oi + 3] = 255
-    }
-  }
-  return {data: out, w: w2, h: h2}
-}
+// Factor + phase detection and mode-downscale live in the shared core
+// (~/helper/pixel-reconstruct) — the same code drives the editor import
+// and the /convert page.
 
 // Cluster similar colours, seeding from the most frequent ones so each cluster's
 // representative is the dominant (clean) colour rather than a noisy outlier.
@@ -1371,8 +1309,19 @@ function processCanvas(src: HTMLCanvasElement): HTMLCanvasElement {
   let dat: Uint8ClampedArray = idata.data
   let w = idata.width, h = idata.height
   if (removeBg.value) knockoutBg(dat, w, h, bg.value, removeBgTol.value)  // before downscale
-  const f = crispFactor.value === 'auto' ? detectScale(dat, w, h) : (crispFactor.value as number)
-  if (f > 1) { const d = downscaleMode(dat, w, h, f); dat = d.data; w = d.w; h = d.h }
+  const det = crispFactor.value === 'auto'
+      ? detectPixelScale(dat, w, h)
+      : bestPhase(dat, w, h, crispFactor.value as number)
+  if (det.f > 1) {
+    // Align to the detected phase first — a hand-drawn crop rarely starts on
+    // a block boundary, and a misaligned downscale shreds every edge.
+    if (det.ox || det.oy) {
+      const s = shiftCrop(dat, w, h, det.ox, det.oy)
+      dat = s.data; w = s.w; h = s.h
+    }
+    const d = modeDownscale(dat, w, h, det.f)
+    dat = d.data; w = d.w; h = d.h
+  }
   if (median.value) dat = medianFilter(dat, w, h)
   if (mergeTol.value > 0) dat = mergeSimilar(dat, w, h, mergeTol.value)
   if (quantize.value > 0) dat = quantizeColors(dat, w, h, quantize.value)
