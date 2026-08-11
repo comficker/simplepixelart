@@ -43,9 +43,14 @@ export const useEditor = defineStore('editor', () => {
         y: 0
     });
 
-    const localWS = ref<{ [key: string]: EditorData }>({})
+    // Shallow on purpose: both hold full EditorData blobs (every pixel of
+    // every art / undo snapshot). Deep-proxying them buys nothing — nothing
+    // renders them reactively — and costs real main-thread time: every read
+    // through a deep ref walks proxy traps over hundreds of thousands of
+    // pixel entries (clone/stringify during autosave got measurably slower).
+    const localWS = shallowRef<{ [key: string]: EditorData }>({})
 
-    const histories = ref<{
+    const histories = shallowRef<{
         [key: string]: {
             data: EditorData[],
             index: number,
@@ -1241,39 +1246,53 @@ export const useEditor = defineStore('editor', () => {
         // the tileset editor / ?tileset= reload reflect it (no-op if it's not a
         // tile anywhere). Never let a tileset write-back failure block the save.
         try { localTs.syncEditedArt(toRaw(editorData.value)) } catch (e) { /* non-fatal */ }
-        // history.value entries are already immutable plain snapshots — no need
-        // to clone the whole 50-deep array again (that second copy is a major
-        // memory spike that contributed to crashes on large canvases).
-        // Persist only the tail: a reload rarely needs 50 undo steps, and
-        // stringifying every snapshot on each debounced save is the single
-        // biggest localStorage write in the app. In-memory undo stays full.
         const wsId = editorData.value.id.toString()
-        const tail = history.value.slice(-15)
-        const offset = history.value.length - tail.length
-        histories.value = {
-            [wsId]: {
-                data: tail,
-                index: Math.max(0, Math.min(historyIndex.value - offset, tail.length - 1)),
-                updated: editorData.value.updated
-            }
-        }
         localStorage.setItem('workspace_current', wsId)
         saveWorkspaceLayout()
-        try {
-            localStorage.setItem('histories', JSON.stringify(histories.value))
-        } catch (e) {
-            // QuotaExceededError on large canvases — persist only the most
-            // recent snapshots so undo partly survives reload without crashing.
-            console.warn('Failed to persist full history, trimming:', e)
+        persistHistories(wsId)
+    }
+
+    // Persist the undo tail so it survives a reload. This stringify is the
+    // single heaviest main-thread cost in the app on big art (hundreds of ms
+    // for a deep tail — and it used to build a 25MB+ payload just to bounce
+    // off the localStorage quota and rebuild AGAIN in the catch). Now it is
+    // (a) size-budgeted: one snapshot is measured first and the tail shrinks
+    // to what can actually fit, and (b) deferred to idle time, so it never
+    // rides a save call mid-stroke. In-memory undo is unaffected either way.
+    const HISTORY_BUDGET = 3 * 1024 * 1024
+    let histIdleId: number | null = null
+    function persistHistories(wsId: string) {
+        const run = () => {
+            histIdleId = null
             try {
-                const data = history.value.slice(-10)
-                const trimmed = {
-                    [wsId]: {data, index: data.length - 1, updated: editorData.value.updated}
+                const one = JSON.stringify(history.value[historyIndex.value] ?? null)
+                if (one.length > HISTORY_BUDGET) {
+                    // One snapshot alone can't fit — undo just won't survive a
+                    // reload for this art. Drop any stale persisted tail.
+                    localStorage.removeItem('histories')
+                    return
                 }
-                localStorage.setItem('histories', JSON.stringify(trimmed))
-            } catch (e2) {
-                console.warn('Failed to persist trimmed history, skipping:', e2)
+                const tailN = Math.max(1, Math.min(15, Math.floor(HISTORY_BUDGET / Math.max(1, one.length))))
+                const tail = history.value.slice(-tailN)
+                const offset = history.value.length - tail.length
+                histories.value = {
+                    [wsId]: {
+                        data: tail,
+                        index: Math.max(0, Math.min(historyIndex.value - offset, tail.length - 1)),
+                        updated: editorData.value.updated
+                    }
+                }
+                localStorage.setItem('histories', JSON.stringify(histories.value))
+            } catch (e) {
+                console.warn('Failed to persist history, skipping:', e)
+                try { localStorage.removeItem('histories') } catch { /* ignore */ }
             }
+        }
+        if (typeof requestIdleCallback !== 'undefined') {
+            if (histIdleId !== null) cancelIdleCallback(histIdleId)
+            histIdleId = requestIdleCallback(run, {timeout: 3000})
+        } else {
+            run()
         }
     }
 
@@ -1354,8 +1373,12 @@ export const useEditor = defineStore('editor', () => {
     function saveState(isSync: boolean = true): void {
         editorData.value.version = historyIndex.value
         // Clone from the raw object — avoids walking reactive proxies (much
-        // faster) and yields a plain, non-reactive snapshot.
-        const snapshot = cloneDeep<EditorData>(toRaw(editorData.value))
+        // faster) and yields a plain, non-reactive snapshot. Re-mark the
+        // clone's pixel maps (cloneDeep drops the non-enumerable markRaw
+        // flag): snapshots flow into boards[].history — a deep ref — and
+        // unmarked pixels would get proxy-wrapped and deep-traversed there,
+        // a real main-thread cost on big art.
+        const snapshot = markRawPixels(cloneDeep<EditorData>(toRaw(editorData.value)))
         const next = history.value.slice(0, historyIndex.value + 1);
         next.push(snapshot);
         historyIndex.value++;
@@ -1389,6 +1412,18 @@ export const useEditor = defineStore('editor', () => {
         mergeVirtualLayer()
     }
 
+    // Undo/redo REPLACE the editorData object — the active board entry must
+    // follow, or hit-testing and board rendering (which read b.data) keep the
+    // retired snapshot: after an undo across a canvas resize (e.g. merge
+    // pixels) the board stays the old size and the editor stops responding.
+    function rebindActiveBoard() {
+        const b = boards.value.find(x => x.id === activeBoardId.value)
+        if (b && b.data !== editorData.value) {
+            b.data = editorData.value
+            boardsRev.value++
+        }
+    }
+
     function undo() {
         if (historyIndex.value > 0) {
             historyIndex.value--;
@@ -1398,6 +1433,7 @@ export const useEditor = defineStore('editor', () => {
                 markRawPixels(editorData.value)
                 foldStrayVirtual()
                 linkActiveFrame()
+                rebindActiveBoard()
                 sharedRev.value++
                 markFullRedraw()
                 drawTurn.value++
@@ -1415,6 +1451,7 @@ export const useEditor = defineStore('editor', () => {
                 markRawPixels(editorData.value)
                 foldStrayVirtual()
                 linkActiveFrame()
+                rebindActiveBoard()
                 sharedRev.value++
                 markFullRedraw()
                 drawTurn.value++
@@ -1772,6 +1809,104 @@ export const useEditor = defineStore('editor', () => {
         saveState()
     }
 
+    // Drop pixels that ended up outside the canvas — a resize-down or a layer
+    // move can strand big chunks of art off-canvas where they never render
+    // but every draw/serialize pass still walks them (lag, bloated saves).
+    // Runs over every frame + shared layer of the active board; undoable.
+    function trimHiddenPixels(): number {
+        const w = editorData.value.width, h = editorData.value.height
+        let removed = 0
+        forEachLayer(layer => {
+            const lx = layer.x || 0, ly = layer.y || 0
+            const keys = Object.keys(layer.pixels)
+            const next: { [key: string]: number } = {}
+            for (const key of keys) {
+                const {x: kx, y: ky} = key2Point(key)
+                const x = kx + lx, y = ky + ly
+                if (x < 0 || y < 0 || x >= w || y >= h) { removed++; continue }
+                next[key] = layer.pixels[key]!
+            }
+            if (Object.keys(next).length !== keys.length) layer.pixels = markRaw(next)
+        })
+        if (removed) {
+            markFullRedraw()
+            drawTurn.value++
+            saveState()
+        }
+        return removed
+    }
+
+    // Merge pixels by block: the active selection defines both the block SIZE
+    // and the grid PHASE — the selected bw×bh cells collapse into 1 pixel and
+    // the whole canvas re-tiles in bw×bh blocks anchored at the selection
+    // (partial edge blocks merge too). Each block keeps its majority color;
+    // the canvas shrinks accordingly. Runs over every frame; undoable.
+    function mergeSelectedBlock(): { w: number; h: number } | null {
+        const b = selectionState.value.bounds
+        if (!b.active) return null
+        // Selection bounds are INCLUSIVE (maxX is the last selected pixel).
+        const bw = Math.max(1, b.maxX - b.minX + 1)
+        const bh = Math.max(1, b.maxY - b.minY + 1)
+        if (bw <= 1 && bh <= 1) return null   // 1×1 merges nothing
+        const w = editorData.value.width, h = editorData.value.height
+        const phaseX = ((b.minX % bw) + bw) % bw
+        const phaseY = ((b.minY % bh) + bh) % bh
+        const leadX = phaseX > 0 ? 1 : 0
+        const leadY = phaseY > 0 ? 1 : 0
+        const outW = leadX + Math.max(1, Math.ceil((w - phaseX) / bw))
+        const outH = leadY + Math.max(1, Math.ceil((h - phaseY) / bh))
+
+        // A destination cell's slot count = its block clipped to the canvas —
+        // needed so transparency can win the vote (a block that is mostly
+        // empty must merge to empty, or sparse art densifies into mush).
+        const cellSlots = (X: number, Y: number): number => {
+            const x0 = leadX && X === 0 ? 0 : phaseX + (X - leadX) * bw
+            const x1 = Math.min(w, leadX && X === 0 ? phaseX : phaseX + (X - leadX + 1) * bw)
+            const y0 = leadY && Y === 0 ? 0 : phaseY + (Y - leadY) * bh
+            const y1 = Math.min(h, leadY && Y === 0 ? phaseY : phaseY + (Y - leadY + 1) * bh)
+            return Math.max(0, x1 - x0) * Math.max(0, y1 - y0)
+        }
+
+        forEachLayer(layer => {
+            const lx = layer.x || 0, ly = layer.y || 0
+            // Majority vote per destination cell (off-canvas strays drop).
+            const votes = new Map<string, Map<number, number>>()
+            for (const key of Object.keys(layer.pixels)) {
+                const {x: kx, y: ky} = key2Point(key)
+                const ax = kx + lx, ay = ky + ly
+                if (ax < 0 || ay < 0 || ax >= w || ay >= h) continue
+                const X = Math.floor((ax - phaseX) / bw) + leadX
+                const Y = Math.floor((ay - phaseY) / bh) + leadY
+                const cell = `${X}_${Y}`
+                let m = votes.get(cell)
+                if (!m) { m = new Map(); votes.set(cell, m) }
+                const v = layer.pixels[key]!
+                m.set(v, (m.get(v) || 0) + 1)
+            }
+            const next: { [key: string]: number } = {}
+            votes.forEach((m, cell) => {
+                let best = -1, bestN = 0, painted = 0
+                m.forEach((n, v) => { painted += n; if (n > bestN) { bestN = n; best = v } })
+                if (best < 0) return
+                const {x: X, y: Y} = key2Point(cell)
+                if (painted * 2 < cellSlots(X, Y)) return   // mostly empty → empty
+                next[cell] = best
+            })
+            layer.pixels = markRaw(next)
+            layer.x = 0
+            layer.y = 0
+        })
+        editorData.value.width = outW
+        editorData.value.height = outH
+        selectionState.value.bounds.active = false
+        selectionState.value.selecting = false
+        markFullRedraw()
+        drawTurn.value++
+        boardsRev.value++
+        saveState()
+        return {w: outW, h: outH}
+    }
+
     // Apply a library palette to the current artwork.
     //  - 'replace': recolor by index — palette slot i takes the new color, so
     //    existing pixels recolor in place. Any slots the new palette doesn't
@@ -1936,6 +2071,19 @@ export const useEditor = defineStore('editor', () => {
     function resize({width, height}: { width: number; height: number }): void {
         editorData.value.width = width
         editorData.value.height = height
+        // A selection lives in canvas pixel coords (inclusive bounds) — after
+        // a shrink it can point at pixels that no longer exist. Clamp it into
+        // the new canvas, or drop it when it falls entirely outside.
+        const b = selectionState.value.bounds
+        if (b.active) {
+            if (b.minX > width - 1 || b.minY > height - 1) {
+                b.active = false
+                selectionState.value.selecting = false
+            } else {
+                b.maxX = Math.min(b.maxX, width - 1)
+                b.maxY = Math.min(b.maxY, height - 1)
+            }
+        }
         saveState();
     }
 
@@ -2056,6 +2204,8 @@ export const useEditor = defineStore('editor', () => {
         bucketFill,
         removeColor,
         cleanupUnusedColors,
+        trimHiddenPixels,
+        mergeSelectedBlock,
         applyPalette,
         save,
         saveNow,

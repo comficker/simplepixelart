@@ -2660,6 +2660,25 @@ function clearReference() {
   scheduleDraw();
 }
 
+function onMergeBlock() {
+  const res = store.mergeSelectedBlock()
+  if (!res) { toast.info('Select at least a 2-pixel-wide area to merge'); return }
+  newSize.value = {width: res.w, height: res.h}
+  centerView()
+  scheduleDraw()
+  toast.success(`Merged — canvas is now ${res.w}×${res.h}`)
+}
+
+function onTrimHidden() {
+  const removed = store.trimHiddenPixels()
+  if (removed) {
+    scheduleDraw()
+    toast.success(`Removed ${removed} hidden pixel${removed > 1 ? 's' : ''} outside the canvas`)
+  } else {
+    toast.info('Nothing to trim — all pixels are inside the canvas')
+  }
+}
+
 function exportFile(type: string) {
   if (type === 'png') {
     // PNG opens a modal so the user can pick an export scale.
@@ -2998,11 +3017,6 @@ watch(
             <span class="icon" :class="hasPreviousScreen ? 'icon-angle-left' : 'icon-home'"/>
           </button>
         </ui-tooltip>
-        <ui-tooltip text="Generate with AI">
-          <button class="toolbar-btn" aria-label="Generate with AI" @click="showAiGenerate = true">
-            <span class="icon icon-auto-fix"/>
-          </button>
-        </ui-tooltip>
         <ui-dropdown-menu label="File">
           <ui-tooltip text="File">
             <button class="toolbar-btn" aria-label="File"><span class="icon icon-file"/></button>
@@ -3099,6 +3113,10 @@ watch(
               <button class="file-menu-item" @click="store.cleanupUnusedColors()">
                 <span class="icon icon-auto-fix"/>
                 <span>Cleanup unused colors</span>
+              </button>
+              <button class="file-menu-item" title="Remove pixels stranded outside the canvas by a resize or move — they never render but still slow drawing and bloat saves" @click="onTrimHidden">
+                <span class="icon icon-broom"/>
+                <span>Trim hidden pixels</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item file-menu-danger" @click="showDeleteConfirm = true">
@@ -3246,6 +3264,13 @@ watch(
             </div>
           </template>
         </ui-dropdown-menu>
+        <!-- AI gets its own section — next to File it caught mis-clicks. -->
+        <div class="toolbar-sep"/>
+        <ui-tooltip text="Generate with AI">
+          <button class="toolbar-btn" aria-label="Generate with AI" @click="showAiGenerate = true">
+            <span class="icon icon-auto-fix"/>
+          </button>
+        </ui-tooltip>
       </div>
       <div class="toolbar-main no-scrollbar">
       <div class="toolbar-group">
@@ -3409,6 +3434,11 @@ watch(
           <ui-tooltip text="Flip vertically — layer, or selection if active">
             <Square aria-label="Flip vertically" @click="store.flipSelectionVertical">
               <span class="icon icon-flip-v"/>
+            </Square>
+          </ui-tooltip>
+          <ui-tooltip v-if="store.selectionState.bounds.active" text="Merge pixels — the selection becomes 1 pixel and the whole canvas re-tiles in blocks of that size, aligned to it">
+            <Square aria-label="Merge pixels by selection block" @click="onMergeBlock">
+              <span class="icon icon-arrange"/>
             </Square>
           </ui-tooltip>
 
