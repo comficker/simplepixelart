@@ -52,7 +52,7 @@ defineExpose({addColor, toggleModify, removeColor})
             class="item"
             @click="store.currentColorIndex = -1"
             :class="{ active: store.currentColorIndex === -1 }"
-            title="Remove color"
+            title="Eraser (E) — paint with transparency to remove pixels"
         >
           <span class="icon icon-eraser"/>
         </div>
