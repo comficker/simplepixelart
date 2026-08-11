@@ -2685,6 +2685,44 @@ function onMergeBlock() {
   toast.success(`Merged — canvas is now ${res.w}×${res.h}`)
 }
 
+// ── Multi-select layers → merge ─────────────────────────────────────
+// Toggled by the check button next to Add layer, or transiently by holding
+// Shift while clicking layers. With 2+ selected, a merge button appears in
+// the tools rail.
+const multiSelectLayers = ref(false)
+const selectedLayers = ref<Set<number>>(new Set())
+
+function onLayerClick(index: number, e: MouseEvent) {
+  if (multiSelectLayers.value || e.shiftKey) {
+    const next = new Set(selectedLayers.value)
+    if (next.has(index)) next.delete(index)
+    else next.add(index)
+    selectedLayers.value = next
+    store.activateLayer(index)
+    return
+  }
+  if (selectedLayers.value.size) selectedLayers.value = new Set()
+  store.activateLayer(index)
+}
+
+function toggleLayerMultiSelect() {
+  multiSelectLayers.value = !multiSelectLayers.value
+  if (!multiSelectLayers.value) selectedLayers.value = new Set()
+}
+
+function onMergeLayers() {
+  if (!store.mergeLayers([...selectedLayers.value])) return
+  selectedLayers.value = new Set()
+  multiSelectLayers.value = false
+  scheduleDraw()
+  toast.success('Merged layers into one')
+}
+
+// Layer indices go stale whenever the stack changes shape or the active
+// frame/art swaps — drop the selection rather than merge the wrong layers.
+watch([() => editorData.value.layers, () => editorData.value.layers.length, () => store.currentFrameIndex],
+    () => { if (selectedLayers.value.size) selectedLayers.value = new Set() })
+
 function onCopy() {
   const scope = store.copyActiveScope()
   if (scope) toast.success(`Copied ${scope}`)
@@ -3480,6 +3518,11 @@ watch(
               <span class="icon icon-arrange"/>
             </Square>
           </ui-tooltip>
+          <ui-tooltip v-if="selectedLayers.size >= 2" :text="`Merge ${selectedLayers.size} selected layers into one`">
+            <Square aria-label="Merge selected layers" @click="onMergeLayers">
+              <span class="icon icon-expand-down"/>
+            </Square>
+          </ui-tooltip>
 
           <!-- Animation: edits apply to all frames -->
           <template v-if="store.isAnimated">
@@ -3602,6 +3645,15 @@ watch(
 
             <Widget title="Layers" class="layers">
               <template #ctl>
+                <button
+                    class="layer-add"
+                    :class="{ active: multiSelectLayers }"
+                    title="Select multiple layers — or hold Shift and click"
+                    aria-label="Select multiple layers"
+                    @click="toggleLayerMultiSelect"
+                >
+                  <span class="icon icon-check"/>
+                </button>
                 <button class="layer-add" @click="store.addLayer" title="Add new layer" aria-label="Add new layer">
                   <span class="icon icon-plus"/>
                 </button>
@@ -3610,10 +3662,14 @@ watch(
             <li
                 v-for="(_, index) in editorData.layers"
                 :key="index"
-                :class="{ active: index === store.currentLayerIndex && store.activeScope !== 'board' }"
-                @click="store.activateLayer(index)"
+                :class="{
+                  active: index === store.currentLayerIndex && store.activeScope !== 'board',
+                  selected: selectedLayers.has(index),
+                }"
+                @click="onLayerClick(index, $event)"
             >
-              <span class="layer-num" aria-hidden="true">{{ editorData.layers.length - index }}</span>
+              <span v-if="selectedLayers.has(index)" class="layer-num layer-check" aria-hidden="true"><span class="icon icon-check"/></span>
+              <span v-else class="layer-num" aria-hidden="true">{{ editorData.layers.length - index }}</span>
               <EditableText
                   v-model="editorData.layers[index]!.name"
                   placeholder="Untitled layer"

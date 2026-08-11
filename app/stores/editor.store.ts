@@ -1873,6 +1873,38 @@ export const useEditor = defineStore('editor', () => {
         return {w: outW, h: outH}
     }
 
+    // Merge the given layers of the ACTIVE frame into one. Pixels compose in
+    // stack order (higher index sits on top and wins), the result lands on
+    // the bottom-most selected layer and the other layers are removed.
+    function mergeLayers(indices: number[]): boolean {
+        const list = [...new Set(indices)]
+            .filter(i => i >= 0 && i < editorData.value.layers.length)
+            .sort((a, b) => a - b)
+        if (list.length < 2) return false
+        const merged: { [key: string]: number } = {}
+        for (const i of list) {   // ascending — the top layer overwrites
+            const layer = editorData.value.layers[i]!
+            const lx = layer.x || 0, ly = layer.y || 0
+            for (const key of Object.keys(layer.pixels)) {
+                const {x, y} = key2Point(key)
+                merged[`${x + lx}_${y + ly}`] = layer.pixels[key]!
+            }
+        }
+        const target = editorData.value.layers[list[0]!]!
+        target.pixels = markRaw(merged)
+        target.x = 0
+        target.y = 0
+        for (let j = list.length - 1; j >= 1; j--) {
+            editorData.value.layers.splice(list[j]!, 1)
+        }
+        currentLayerIndex.value = list[0]!
+        layerActive.value = true
+        markFullRedraw()
+        drawTurn.value++
+        saveState()
+        return true
+    }
+
     // ── Clipboard (internal) ────────────────────────────────────────
     // Copy follows the active scope (selection > layer > board). Pixels are
     // stored as HEX (palette-independent), so pasting across boards with
@@ -2275,6 +2307,7 @@ export const useEditor = defineStore('editor', () => {
         clipboard,
         copyActiveScope,
         pasteClipboard,
+        mergeLayers,
         applyPalette,
         save,
         saveNow,
