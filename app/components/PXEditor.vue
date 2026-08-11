@@ -1855,6 +1855,12 @@ function handleKeyDown(e: any) {
     // Ctrl+Y — Windows-style redo.
     store.redo();
     e.preventDefault();
+  } else if (mod && key === 'c' && !e.shiftKey && !e.altKey) {
+    onCopy();
+    e.preventDefault();
+  } else if (mod && key === 'v' && !e.shiftKey && !e.altKey) {
+    onPaste();
+    e.preventDefault();
   } else if (mod && (key === '=' || key === '+')) {
     zoomIn();
     e.preventDefault();
@@ -2679,6 +2685,20 @@ function onMergeBlock() {
   toast.success(`Merged — canvas is now ${res.w}×${res.h}`)
 }
 
+function onCopy() {
+  const scope = store.copyActiveScope()
+  if (scope) toast.success(`Copied ${scope}`)
+  else toast.info('Nothing to copy here')
+}
+
+function onPaste() {
+  const res = store.pasteClipboard()
+  if (!res) { toast.info('Clipboard is empty — copy something first'); return }
+  if (res === 'board') focusActiveBoard()
+  scheduleDraw()
+  toast.success(res === 'board' ? 'Pasted as a new board' : 'Pasted as a new layer')
+}
+
 function onTrimHidden() {
   const removed = store.trimHiddenPixels()
   if (removed) {
@@ -3114,6 +3134,15 @@ watch(
               <button v-if="referenceImage" class="file-menu-item" @click="clearReference">
                 <span class="icon icon-trash"/>
                 <span>Remove reference</span>
+              </button>
+              <div class="file-menu-sep"/>
+              <button class="file-menu-item" :title="`Copies the ${store.activeScope} (${modK}C)`" @click="onCopy">
+                <span class="icon icon-select"/>
+                <span>Copy {{ store.activeScope }}</span>
+              </button>
+              <button v-if="store.clipboard" class="file-menu-item" :title="`Paste (${modK}V)`" @click="onPaste">
+                <span class="icon icon-selected"/>
+                <span>Paste {{ store.clipboard.kind === 'board' ? 'as new board' : 'as new layer' }}</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" @click="store.clearCurrentLayer">

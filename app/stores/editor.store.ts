@@ -1873,6 +1873,93 @@ export const useEditor = defineStore('editor', () => {
         return {w: outW, h: outH}
     }
 
+    // ── Clipboard (internal) ────────────────────────────────────────
+    // Copy follows the active scope (selection > layer > board). Pixels are
+    // stored as HEX (palette-independent), so pasting across boards with
+    // different palettes just works. Paste: selection/layer → a new layer on
+    // the active board at the same coords; a copied board → a new board.
+    const clipboard = shallowRef<null | {
+        kind: 'selection' | 'layer' | 'board'
+        width: number
+        height: number
+        pixels: { [key: string]: string }
+    }>(null)
+
+    function copyActiveScope(): 'selection' | 'layer' | 'board' | null {
+        const scope = activeScope.value
+        const colors = editorData.value.colors
+        const out: { [key: string]: string } = {}
+        if (scope === 'selection' || scope === 'layer') {
+            const layer = editorData.value.layers[currentLayerIndex.value]!
+            const lx = layer.x || 0, ly = layer.y || 0
+            for (const key of Object.keys(layer.pixels)) {
+                const {x, y} = key2Point(key)
+                const ax = x + lx, ay = y + ly
+                if (scope === 'selection' && !checkKeyInSelection(`${ax}_${ay}`)) continue
+                const hex = colors[layer.pixels[key]!]
+                if (hex) out[`${ax}_${ay}`] = hex
+            }
+        } else {
+            // Board: the visible composite — top layer wins per pixel.
+            for (let i = editorData.value.layers.length - 1; i >= 0; i--) {
+                const layer = editorData.value.layers[i]!
+                const lx = layer.x || 0, ly = layer.y || 0
+                for (const key of Object.keys(layer.pixels)) {
+                    const {x, y} = key2Point(key)
+                    const ak = `${x + lx}_${y + ly}`
+                    if (ak in out) continue
+                    const hex = colors[layer.pixels[key]!]
+                    if (hex) out[ak] = hex
+                }
+            }
+        }
+        if (!Object.keys(out).length) return null
+        clipboard.value = {
+            kind: scope,
+            width: editorData.value.width,
+            height: editorData.value.height,
+            pixels: out,
+        }
+        return scope
+    }
+
+    function pasteClipboard(): 'layer' | 'board' | null {
+        const clip = clipboard.value
+        if (!clip) return null
+        if (clip.kind === 'board') {
+            const data = markRawPixels({
+                ...cloneDeep(DEFAULT_EDITOR_DATA),
+                id: generateUUID(),
+                name: `${editorData.value.name || 'Board'} copy`,
+                width: clip.width,
+                height: clip.height,
+                colors: [] as string[],
+                layers: [{name: 'Layer 1', pixels: {}, x: 0, y: 0}],
+                updated: new Date().toISOString(),
+            } as EditorData)
+            for (const key of Object.keys(clip.pixels)) {
+                data.layers[0]!.pixels[key] = findOrCreateColor(clip.pixels[key]!, data.colors)
+            }
+            addBoardWithData(data)
+            return 'board'
+        }
+        // Selection/layer content → a fresh layer, same coordinates, so the
+        // paste is movable and never overwrites what's underneath.
+        const colors = editorData.value.colors
+        const pixels: { [key: string]: number } = {}
+        for (const key of Object.keys(clip.pixels)) {
+            pixels[key] = findOrCreateColor(clip.pixels[key]!, colors)
+        }
+        editorData.value.layers.push({name: 'Pasted', pixels: markRaw(pixels), x: 0, y: 0})
+        currentLayerIndex.value = editorData.value.layers.length - 1
+        layerActive.value = true
+        editorData.value.colors = colors.map(c => c.toUpperCase())
+        markFullRedraw()
+        drawTurn.value++
+        saveState()
+        return 'layer'
+    }
+
     // Apply a library palette to the current artwork.
     //  - 'replace': recolor by index — palette slot i takes the new color, so
     //    existing pixels recolor in place. Any slots the new palette doesn't
@@ -2185,6 +2272,9 @@ export const useEditor = defineStore('editor', () => {
         cleanupUnusedColors,
         trimHiddenPixels,
         mergeSelectedBlock,
+        clipboard,
+        copyActiveScope,
+        pasteClipboard,
         applyPalette,
         save,
         saveNow,

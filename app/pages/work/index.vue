@@ -1174,20 +1174,20 @@ onMounted(() => {
       <div class="readme-foot work-foot">
         <div class="work-foot-sel">
           <button
-              class="btn work-ic-btn"
-              :class="{primary: selectMode}"
+              class="work-ic-btn"
+              :class="{active: selectMode}"
               :title="selectMode ? 'Exit select mode' : 'Select multiple items'"
               :aria-label="selectMode ? 'Exit select mode' : 'Select multiple items'"
               @click="toggleSelectMode"
           >
-            <span class="icon icon-radio"/>
+            <span class="icon" :class="selectMode ? 'icon-selected' : 'icon-select'"/>
           </button>
           <template v-if="selectedCount">
-            <button class="btn work-ic-btn" title="Deselect all" aria-label="Deselect all" @click="deselectAll">
+            <button class="work-ic-btn" title="Deselect all" aria-label="Deselect all" @click="deselectAll">
               <span class="icon icon-x"/>
             </button>
             <button
-                class="btn work-ic-btn work-bulk-del"
+                class="work-ic-btn work-bulk-del"
                 :class="{confirm: confirmingBulk}"
                 :disabled="bulkDeleting"
                 :title="bulkDeleting ? 'Deleting…' : confirmingBulk ? 'Click again to confirm' : `Delete ${selectedCount} selected`"
@@ -1436,9 +1436,25 @@ onMounted(() => {
   height: 13px;
 }
 
-/* Square icon-only control-bar buttons. */
+/* Flat icon-only footer controls — no button chrome, state = icon + color. */
 .work-ic-btn {
-  padding: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.375rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.work-ic-btn:hover:not(:disabled) {
+  color: var(--foreground);
+}
+
+.work-ic-btn.active {
+  color: var(--primary);
 }
 
 /* Tiny count riding on the trash icon — the only "label" the button needs. */
@@ -1449,10 +1465,9 @@ onMounted(() => {
   line-height: 1;
 }
 
+.work-bulk-del:hover:not(:disabled),
 .work-bulk-del.confirm {
-  background: var(--danger);
-  border-color: var(--danger);
-  color: var(--danger-foreground, #fff);
+  color: var(--danger);
 }
 
 /* Clip contents on the inner box so corner cuts can sit over the border. */
@@ -1661,7 +1676,6 @@ onMounted(() => {
   justify-content: center;
   width: 100%;
   height: 100%;
-  background: var(--surface-2);
   color: var(--muted);
   font-size: 32px;
 }
