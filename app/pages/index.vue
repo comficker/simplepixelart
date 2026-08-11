@@ -122,8 +122,23 @@ const faq = [
   },
 ]
 
+// AI prompt → editor hand-off. The form only shows when the backend can
+// actually generate (billing-gated flag), so the homepage never advertises a
+// dead end. Generating (and the token spend) happens in the editor modal.
+const aiEnabled = ref(false)
+const aiPrompt = ref('')
+
+function goGenerate() {
+  const p = aiPrompt.value.trim()
+  if (p.length < 3) return
+  navigateTo(`/editor?ai=${encodeURIComponent(p.slice(0, 300))}`)
+}
+
 onMounted(() => {
   loadUserWorks()
+  useNativeFetch<{ ai_image_enabled?: boolean }>('/coloring/economy/')
+      .then(s => { aiEnabled.value = !!s.ai_image_enabled })
+      .catch(() => { /* form stays hidden */ })
 })
 
 // "Simple Pixel Art" is load-bearing: it's an exact-phrase match that earns
@@ -226,6 +241,19 @@ useCustomSeoMeta({
         <p class="home-hero-tagline">
           Draw from scratch, convert any photo into pixel art, or remix templates from a community library — all in one place.
         </p>
+        <form v-if="aiEnabled" class="home-ai" @submit.prevent="goGenerate">
+          <input
+              v-model="aiPrompt"
+              class="home-ai-input"
+              type="text"
+              maxlength="300"
+              placeholder="Describe a sprite — “a sleeping orange cat”…"
+              aria-label="Describe the pixel art to generate"
+          >
+          <button type="submit" class="btn primary home-ai-btn" :disabled="aiPrompt.trim().length < 3">
+            <span class="icon icon-auto-fix"/><span>Generate</span>
+          </button>
+        </form>
         <div class="studio-tools">
           <ToolPaths/>
         </div>
@@ -450,6 +478,35 @@ useCustomSeoMeta({
   .home-hero-tagline {
     font-size: var(--text-base);
   }
+}
+
+/* AI prompt → editor hand-off */
+.home-ai {
+  display: flex;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 480px;
+}
+
+.home-ai-input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: var(--text-sm);
+}
+
+.home-ai-input:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -1px;
+}
+
+.home-ai-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .home-hero-greeting {

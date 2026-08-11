@@ -61,10 +61,6 @@ header .hdr {
   align-items: center;
   gap: 2px;
   margin-left: auto;
-  padding: 3px;
-  background: color-mix(in oklab, var(--surface-2) 60%, transparent);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
 }
 
 .hdr-divider {
@@ -194,6 +190,8 @@ header .brand-name-main {
   align-items: center;
   gap: var(--space-2);
   padding: 7px 10px;
+  /* Flush with the container edge — the padding stays as hit area only. */
+  margin-right: -10px;
   background: transparent;
   border: 0;
   border-radius: 6px;
@@ -227,10 +225,10 @@ header .brand-name-main {
   header .brand { gap: 0.45rem; padding: var(--space-1); }
   header .brand-logo { width: 36px; height: 36px; padding: 2px; border-radius: var(--radius-sm); }
   header .brand-name { font-size: var(--text-lg); }
-  .hdr-nav { padding: 2px; gap: 0; }
+  .hdr-nav { gap: 0; }
   .hdr-link { padding: 7px 9px; }
   .cmdk-hint { display: none; }
-  .cmdk-trigger { padding: 7px; border-radius: var(--radius-sm); }
+  .cmdk-trigger { padding: 7px; margin-right: -7px; border-radius: var(--radius-sm); }
 }
 
 </style>

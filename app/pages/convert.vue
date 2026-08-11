@@ -4,6 +4,7 @@ import {toast} from 'vue-sonner'
 import type {EditorData} from '~/types'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
 import {cloneDeep, debounce, generateUUID, getStorageItem} from '~/helper/utils'
+import {reconstructPixels} from '~/helper/pixel-reconstruct'
 
 useCustomSeoMeta({
   title: 'Image to Pixel Art Converter - Free Online Tool',
@@ -189,91 +190,29 @@ function applyAdjustments(r: number, g: number, b: number): RGB {
   ]
 }
 
-function sampleImage(img: HTMLImageElement, w: number, h: number): RGB[][] {
+// Working bitmap for the two-stage reconstruction: the image drawn at an
+// integer multiple of the target grid (white ground flattens alpha), with the
+// user's brightness/contrast/saturation baked into the pixels.
+function prepareWorking(img: HTMLImageElement, w: number, h: number): ImageData {
+  const cell = Math.max(2, Math.floor(512 / Math.max(w, h)))
+  const ww = w * cell, hh = h * cell
   const tmp = document.createElement('canvas')
-  tmp.width = w
-  tmp.height = h
+  tmp.width = ww
+  tmp.height = hh
   const ctx = tmp.getContext('2d')!
   ctx.imageSmoothingEnabled = true
   ctx.imageSmoothingQuality = 'high'
-  // Fit image into target keeping aspect
-  const ir = img.width / img.height
-  const tr = w / h
-  let dw = w, dh = h, dx = 0, dy = 0
-  if (ir > tr) {
-    dh = w / ir
-    dy = (h - dh) / 2
-  } else {
-    dw = h * ir
-    dx = (w - dw) / 2
-  }
   ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, w, h)
-  ctx.drawImage(img, dx, dy, dw, dh)
-  const data = ctx.getImageData(0, 0, w, h).data
-  const grid: RGB[][] = []
-  for (let y = 0; y < h; y++) {
-    const row: RGB[] = []
-    for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4
-      row.push(applyAdjustments(data[i]!, data[i + 1]!, data[i + 2]!))
-    }
-    grid.push(row)
+  ctx.fillRect(0, 0, ww, hh)
+  // h is already derived from the image ratio — a plain fill keeps aspect.
+  ctx.drawImage(img, 0, 0, ww, hh)
+  const src = ctx.getImageData(0, 0, ww, hh)
+  const d = src.data
+  for (let i = 0; i < d.length; i += 4) {
+    const [r, g, b] = applyAdjustments(d[i]!, d[i + 1]!, d[i + 2]!)
+    d[i] = r; d[i + 1] = g; d[i + 2] = b
   }
-  return grid
-}
-
-// Median-cut color quantization
-function quantize(grid: RGB[][], k: number): { palette: RGB[], indexed: number[][] } {
-  const all: RGB[] = []
-  for (const row of grid) for (const p of row) all.push(p)
-
-  function medianCut(bucket: RGB[], depth: number): RGB[] {
-    if (depth === 0 || bucket.length === 0) {
-      if (bucket.length === 0) return []
-      let r = 0, g = 0, b = 0
-      for (const p of bucket) {
-        r += p[0]; g += p[1]; b += p[2]
-      }
-      return [[Math.round(r / bucket.length), Math.round(g / bucket.length), Math.round(b / bucket.length)]]
-    }
-    // Find channel with largest range
-    let rMin = 255, rMax = 0, gMin = 255, gMax = 0, bMin = 255, bMax = 0
-    for (const p of bucket) {
-      if (p[0] < rMin) rMin = p[0]; if (p[0] > rMax) rMax = p[0]
-      if (p[1] < gMin) gMin = p[1]; if (p[1] > gMax) gMax = p[1]
-      if (p[2] < bMin) bMin = p[2]; if (p[2] > bMax) bMax = p[2]
-    }
-    const rRange = rMax - rMin, gRange = gMax - gMin, bRange = bMax - bMin
-    const ch = rRange >= gRange && rRange >= bRange ? 0 : (gRange >= bRange ? 1 : 2)
-    bucket.sort((a, b) => a[ch] - b[ch])
-    const mid = Math.floor(bucket.length / 2)
-    return [...medianCut(bucket.slice(0, mid), depth - 1), ...medianCut(bucket.slice(mid), depth - 1)]
-  }
-
-  const depth = Math.ceil(Math.log2(k))
-  let paletteOut = medianCut(all, depth).slice(0, k)
-  if (paletteOut.length === 0) paletteOut = [[0, 0, 0]]
-
-  // Map each pixel to nearest palette color
-  const indexed: number[][] = []
-  for (const row of grid) {
-    const indexedRow: number[] = []
-    for (const p of row) {
-      let best = 0, bestD = Infinity
-      for (let i = 0; i < paletteOut.length; i++) {
-        const c = paletteOut[i]!
-        const d = (p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 + (p[2] - c[2]) ** 2
-        if (d < bestD) {
-          bestD = d
-          best = i
-        }
-      }
-      indexedRow.push(best)
-    }
-    indexed.push(indexedRow)
-  }
-  return {palette: paletteOut, indexed}
+  return src
 }
 
 async function convert() {
@@ -282,8 +221,9 @@ async function convert() {
   const ratio = img.width / img.height
   const w = outputSize.value
   const h = Math.round(w / ratio) || w
-  const grid = sampleImage(img, w, h)
-  const {palette: p, indexed} = quantize(grid, maxColors.value)
+  // Two-stage reconstruction (label vote → color recovery) keeps region
+  // edges crisp — a plain downscale averages colors across boundaries.
+  const {palette: p, indexed} = reconstructPixels(prepareWorking(img, w, h), w, h, maxColors.value)
   palette.value = p
   pixels.value = indexed
   await nextTick()
