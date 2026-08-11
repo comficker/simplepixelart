@@ -2152,6 +2152,8 @@ canvas.iso-line { cursor: crosshair; }
     border-radius: var(--radius-sm);
     cursor: pointer;
     overflow: hidden;
+    /* Shift+click multi-selects layers — don't let it highlight the name. */
+    user-select: none;
     transition:
         border-color 160ms ease,
         background 160ms ease,
@@ -2221,6 +2223,23 @@ canvas.iso-line { cursor: crosshair; }
 
 .layers li.active .layer-name {
     color: var(--foreground);
+}
+
+/* Multi-select (merge) state: check badge in place of the number. */
+.layers li.selected .layer-num.layer-check {
+    color: var(--primary-foreground);
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.layer-check .icon {
+    width: 11px;
+    height: 11px;
+}
+
+.layer-add.active {
+    color: var(--primary);
+    background: color-mix(in oklab, var(--primary) 12%, transparent);
 }
 
 /* Delete button: icon-only, red hover */
