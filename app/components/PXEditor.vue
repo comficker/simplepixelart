@@ -3645,18 +3645,20 @@ watch(
 
             <Widget title="Layers" class="layers">
               <template #ctl>
-                <button
-                    class="layer-add"
-                    :class="{ active: multiSelectLayers }"
-                    title="Select multiple layers — or hold Shift and click"
-                    aria-label="Select multiple layers"
-                    @click="toggleLayerMultiSelect"
-                >
-                  <span class="icon icon-check"/>
-                </button>
-                <button class="layer-add" @click="store.addLayer" title="Add new layer" aria-label="Add new layer">
-                  <span class="icon icon-plus"/>
-                </button>
+                <div class="layer-ctl">
+                  <button
+                      class="layer-add"
+                      :class="{ active: multiSelectLayers }"
+                      title="Select multiple layers — or hold Shift and click"
+                      aria-label="Select multiple layers"
+                      @click="toggleLayerMultiSelect"
+                  >
+                    <span class="icon icon-check"/>
+                  </button>
+                  <button class="layer-add" @click="store.addLayer" title="Add new layer" aria-label="Add new layer">
+                    <span class="icon icon-plus"/>
+                  </button>
+                </div>
               </template>
           <ul>
             <li

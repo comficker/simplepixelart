@@ -2242,6 +2242,14 @@ canvas.iso-line { cursor: crosshair; }
     background: color-mix(in oklab, var(--primary) 12%, transparent);
 }
 
+/* Both header buttons stay together on the right (widget-head is
+   space-between — unwrapped they'd spread apart). */
+.layer-ctl {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
 /* Delete button: icon-only, red hover */
 .layers .layer-del {
     width: 24px;
