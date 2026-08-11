@@ -50,10 +50,38 @@ function renderAllThumbs() {
 }
 
 onMounted(renderAllThumbs)
-// Re-render thumbs whenever content (drawTurn), frame set, palette or shared bg changes.
-watch(() => [store.drawTurn, store.frameCount, store.editorData.colors.length, store.sharedRev], () => {
+
+// drawTurn bumps on EVERY brush move — recomposing every frame's thumbnail
+// each move froze big animated art (~160ms per pointer event). Mid-stroke
+// only the ACTIVE frame's pixels can change, so repaint just that one,
+// trailing-debounced. A palette recolor touches every frame's look without
+// changing anything structural — the cheap fingerprint catches it.
+let thumbTimer: ReturnType<typeof setTimeout> | null = null
+let lastPalette = ''
+watch(() => store.drawTurn, () => {
+  if (thumbTimer) clearTimeout(thumbTimer)
+  thumbTimer = setTimeout(() => {
+    thumbTimer = null
+    const palette = (store.editorData.colors || []).join(',')
+    if (palette !== lastPalette) {
+      lastPalette = palette
+      renderAllThumbs()
+      return
+    }
+    if (store.isAnimated && store.currentFrameIndex === -1) {
+      if (bgThumbEl.value) renderThumb(bgThumbEl.value, {id: '_bg', layers: store.sharedLayers as any})
+      return
+    }
+    const i = Math.max(0, store.currentFrameIndex)
+    renderThumb(thumbEls.value[i] || null, displayFrames.value[i]!)
+  }, 120)
+})
+// Structural changes (frame ops, undo/redo via sharedRev, palette size) are
+// rare — those still repaint everything.
+watch(() => [store.frameCount, store.editorData.colors.length, store.sharedRev], () => {
   nextTick(renderAllThumbs)
 })
+onBeforeUnmount(() => { if (thumbTimer) clearTimeout(thumbTimer) })
 
 function editShared() {
   store.isPlaying = false
