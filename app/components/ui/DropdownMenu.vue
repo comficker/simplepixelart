@@ -25,6 +25,7 @@
         ref="menuEl"
         role="menu"
         :aria-hidden="!open"
+        @click="onMenuClick"
     >
       <slot name="menu"/>
     </div>
@@ -136,6 +137,16 @@ function onClickOutside(e) {
   if (!root.value?.contains(e.target)) {
     open.value = false
   }
+}
+
+// An activation inside the menu is an action — close like a real menu.
+// Without this, a menu action that hides the dropdown (e.g. entering
+// fullscreen display:none's the trigger) strands `open` as true, and the
+// next trigger click toggles the invisible menu CLOSED — the button feels
+// dead. Drill-down menus (Settings) stop propagation on their panel, so
+// they keep themselves open for navigation.
+function onMenuClick() {
+  close({restoreFocus: false})
 }
 
 // When menu opens via click (mouse), still ensure items become focusable
