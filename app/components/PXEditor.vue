@@ -1870,11 +1870,11 @@ function handleKeyDown(e: any) {
 
   if (mod && key === 'z') {
     // Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z redo.
-    e.shiftKey ? store.redo() : store.undo();
+    e.shiftKey ? doRedo() : doUndo();
     e.preventDefault();
   } else if (mod && key === 'y') {
     // Ctrl+Y — Windows-style redo.
-    store.redo();
+    doRedo();
     e.preventDefault();
   } else if (mod && key === 'c' && !e.shiftKey && !e.altKey) {
     onCopy();
@@ -3080,6 +3080,24 @@ watch([cam, zoom], () => {
 // Onion-skin toggle changes what's drawn under the current frame.
 watch(() => store.onionSkin, () => scheduleDraw())
 
+// Undo/redo restore a snapshot — that's not a layout gesture, so the camera
+// must stay put even when the snapshot changes the board size (undo across a
+// resize/merge/trim). The flag rides through the size watcher below and is
+// dropped after the flush.
+let restoringHistory = false;
+
+function doUndo() {
+  restoringHistory = true;
+  store.undo();
+  nextTick(() => { restoringHistory = false; });
+}
+
+function doRedo() {
+  restoringHistory = true;
+  store.redo();
+  nextTick(() => { restoringHistory = false; });
+}
+
 // Refit only when the ACTIVE board is genuinely resized — NOT when switching to
 // a different-size board (that would jump the zoom on every board click; we keep
 // the user's current camera instead).
@@ -3091,12 +3109,13 @@ watch(
       const switched = id !== lastActiveBoardId;
       lastActiveBoardId = id;
       newSize.value = {width: editorData.value.width, height: editorData.value.height};
-      // Board switch keeps the camera; live drag-resize handles its own redraw —
-      // neither should trigger a setupCanvas refit (that would jump the view).
-      // But BOTH must re-fit the minimap to the new aspect: on drop the size no
-      // longer changes (store.resize commits the same dims), so a drag-resize
-      // that skips sizeMiniMap here leaves the preview stretched for good.
-      if (switched || isResizingBoard.value) { sizeMiniMap(); scheduleDraw(); scheduleMiniMap(); return; }
+      // Board switch keeps the camera; live drag-resize handles its own redraw;
+      // undo/redo restore state, not layout — none should trigger a setupCanvas
+      // refit (that would jump the view). But ALL must re-fit the minimap to the
+      // new aspect: on resize-drop the size no longer changes (store.resize
+      // commits the same dims), so skipping sizeMiniMap here would leave the
+      // preview stretched for good.
+      if (switched || isResizingBoard.value || restoringHistory) { sizeMiniMap(); scheduleDraw(); scheduleMiniMap(); return; }
       setupCanvas();
     }
 );
@@ -3380,10 +3399,10 @@ watch(
       <div class="toolbar-main no-scrollbar">
       <div class="toolbar-group">
         <ui-tooltip :text="`Undo (${modK}Z)`">
-          <button class="toolbar-btn" aria-label="Undo" :disabled="!store.canUndo" @click="store.undo()"><span class="icon icon-undo"/></button>
+          <button class="toolbar-btn" aria-label="Undo" :disabled="!store.canUndo" @click="doUndo()"><span class="icon icon-undo"/></button>
         </ui-tooltip>
         <ui-tooltip :text="`Redo (${modK}${shiftK}Z)`">
-          <button class="toolbar-btn" aria-label="Redo" :disabled="!store.canRedo" @click="store.redo()"><span class="icon icon-redo"/></button>
+          <button class="toolbar-btn" aria-label="Redo" :disabled="!store.canRedo" @click="doRedo()"><span class="icon icon-redo"/></button>
         </ui-tooltip>
       </div>
       <div class="toolbar-sep"/>
