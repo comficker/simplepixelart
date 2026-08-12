@@ -3093,8 +3093,10 @@ watch(
       newSize.value = {width: editorData.value.width, height: editorData.value.height};
       // Board switch keeps the camera; live drag-resize handles its own redraw —
       // neither should trigger a setupCanvas refit (that would jump the view).
-      // But the minimap must re-fit the new board's aspect so it isn't stretched.
-      if (switched || isResizingBoard.value) { if (switched) sizeMiniMap(); scheduleDraw(); scheduleMiniMap(); return; }
+      // But BOTH must re-fit the minimap to the new aspect: on drop the size no
+      // longer changes (store.resize commits the same dims), so a drag-resize
+      // that skips sizeMiniMap here leaves the preview stretched for good.
+      if (switched || isResizingBoard.value) { sizeMiniMap(); scheduleDraw(); scheduleMiniMap(); return; }
       setupCanvas();
     }
 );
