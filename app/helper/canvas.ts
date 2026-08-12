@@ -80,76 +80,143 @@ export function drawThumbnail(canvas: HTMLCanvasElement, editorData: EditorData,
     }
 }
 
-export function findRectangles(editorData: EditorData, layerPixels: { [key: string]: number }): Rectangle[] {
-    const rectangles: Rectangle[] = [];
-    const visited: { [key: string]: boolean } = {}
-
-    for (let y = 0; y < editorData.height; y++) {
-        for (let x = 0; x < editorData.width; x++) {
-            if (typeof layerPixels[`${x}_${y}`] == 'undefined' || visited[`${x}_${y}`] || layerPixels[`${x}_${y}`] === -1) continue;
-
-            const colorIndex = layerPixels[`${x}_${y}`];
-            const color = editorData.colors[colorIndex!] || '#000';
-
-            // Find the largest rectangle starting from this position
-            let width = 1;
-            let height = 1;
-
-            // Extend width
-            for (let w = x + 1; w < editorData.width; w++) {
-                if (layerPixels[`${w}_${y}`] !== colorIndex || visited[`${w}_${y}`]) break;
-                width++;
-            }
-
-            // Extend height, but check if the entire width matches
-            heightLoop: for (let h = y + 1; h < editorData.height; h++) {
-                for (let w = 0; w < width; w++) {
-                    const nx = x + w;
-                    const ny = h;
-                    if (ny >= editorData.height || layerPixels[`${nx}_${ny}`] !== colorIndex || visited[`${nx}_${ny}`]) {
-                        break heightLoop;
-                    }
+// ── SVG export ─────────────────────────────────────────────────────────────
+// Trace a set of filled cells ("x_y" keys) into closed rectilinear outlines
+// and return an SVG path `d`. Every cell side facing an empty neighbor
+// becomes a directed unit edge (interior kept on a consistent side); chaining
+// the edges yields the region outlines, with hole loops falling out naturally
+// (rendered via fill-rule="evenodd"). At a pinched corner — two cells of the
+// set touching only diagonally — the sharpest right turn is taken so each
+// loop hugs its own region. Collinear steps merge into single h/v commands.
+function traceCellLoops(cells: Set<string>): string {
+    const edges = new Map<string, [number, number][]>();
+    const addEdge = (x1: number, y1: number, x2: number, y2: number) => {
+        const k = `${x1}_${y1}`;
+        const list = edges.get(k);
+        if (list) list.push([x2, y2]);
+        else edges.set(k, [[x2, y2]]);
+    };
+    for (const key of cells) {
+        const sep = key.indexOf('_');
+        const x = +key.slice(0, sep);
+        const y = +key.slice(sep + 1);
+        if (!cells.has(`${x}_${y - 1}`)) addEdge(x, y, x + 1, y);
+        if (!cells.has(`${x + 1}_${y}`)) addEdge(x + 1, y, x + 1, y + 1);
+        if (!cells.has(`${x}_${y + 1}`)) addEdge(x + 1, y + 1, x, y + 1);
+        if (!cells.has(`${x - 1}_${y}`)) addEdge(x, y + 1, x, y);
+    }
+    let d = '';
+    for (const [startKey, starts] of edges) {
+        while (starts.length) {
+            const sep = startKey.indexOf('_');
+            const sx = +startKey.slice(0, sep);
+            const sy = +startKey.slice(sep + 1);
+            let [cx, cy] = starts.pop()!;
+            let runDx = cx - sx, runDy = cy - sy;   // direction of the pending run
+            let run = 1;                            // pending run length (unit steps)
+            d += `M${sx} ${sy}`;
+            while (cx !== sx || cy !== sy) {
+                const outs = edges.get(`${cx}_${cy}`)!;
+                let next: [number, number];
+                if (outs.length === 1) {
+                    next = outs.pop()!;
+                } else {
+                    // Pinched corner: prefer the right turn relative to travel.
+                    const rx = cx - runDy, ry = cy + runDx;
+                    const i = outs.findIndex(([ex, ey]) => ex === rx && ey === ry);
+                    next = i >= 0 ? outs.splice(i, 1)[0]! : outs.pop()!;
                 }
-                height++;
-            }
-
-            // Mark all pixels in this rectangle as visited
-            for (let dy = 0; dy < height; dy++) {
-                for (let dx = 0; dx < width; dx++) {
-                    visited[`${x + dx}_${y + dy}`] = true;
+                const dx = next[0] - cx, dy = next[1] - cy;
+                if (dx === runDx && dy === runDy) {
+                    run++;
+                } else {
+                    d += runDx ? `h${runDx * run}` : `v${runDy * run}`;
+                    runDx = dx;
+                    runDy = dy;
+                    run = 1;
                 }
+                cx = next[0];
+                cy = next[1];
             }
-
-            rectangles.push({
-                x: x,
-                y: y,
-                width: width,
-                height: height,
-                color: color
-            });
+            d += 'z';   // z draws the final straight run back to the M point
         }
     }
+    return d;
+}
 
-    return rectangles;
+const escapeXml = (s: string) =>
+    s.replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]!));
+
+// Multi-layer art exports one <g> per layer (bottom→top, painter's order —
+// pixels hidden under upper layers stay intact in their own group), one path
+// per color inside. Single-layer art has no structure worth keeping, so each
+// 4-connected same-color region becomes its own editable path instead.
+export function editorDataToSVGMarkup(editorData: EditorData): string {
+    const w = editorData.width;
+    const h = editorData.height;
+    const colors = editorData.colors;
+    let body = '';
+    if (editorData.layers.length > 1) {
+        const usedIds = new Set<string>();
+        editorData.layers.forEach((layer, li) => {
+            const byColor = new Map<number, Set<string>>();
+            // Legacy arts from the API can lack layer offsets — NaN coords
+            // would silently clip every pixel out of the export.
+            const lx = layer.x || 0;
+            const ly = layer.y || 0;
+            for (const [key, ci] of Object.entries(layer.pixels)) {
+                if (ci === undefined || ci === -1 || !colors[ci]) continue;
+                const sep = key.indexOf('_');
+                const x = +key.slice(0, sep) + lx;
+                const y = +key.slice(sep + 1) + ly;
+                if (x < 0 || x >= w || y < 0 || y >= h) continue;
+                let set = byColor.get(ci);
+                if (!set) byColor.set(ci, set = new Set());
+                set.add(`${x}_${y}`);
+            }
+            if (!byColor.size) return;
+            const name = layer.name || `Layer ${li + 1}`;
+            // Vector editors read <g id> as the layer name (spaces aren't valid
+            // in XML ids — data-name carries the original, as Illustrator does).
+            let id = name.replace(/[^A-Za-z0-9_-]+/g, '_') || `layer_${li + 1}`;
+            while (usedIds.has(id)) id += '_';
+            usedIds.add(id);
+            body += `<g id="${id}" data-name="${escapeXml(name)}">`;
+            for (const ci of [...byColor.keys()].sort((a, b) => a - b)) {
+                body += `<path fill="${escapeXml(colors[ci]!)}" fill-rule="evenodd" d="${traceCellLoops(byColor.get(ci)!)}"/>`;
+            }
+            body += '</g>';
+        });
+    } else {
+        const map = layers2MapNumbers(editorData);
+        const seen = new Set<string>();
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const k = `${x}_${y}`;
+                const ci = map[k];
+                if (ci === undefined || seen.has(k) || !colors[ci]) continue;
+                const cells = new Set<string>([k]);
+                seen.add(k);
+                const queue: [number, number][] = [[x, y]];
+                while (queue.length) {
+                    const [qx, qy] = queue.pop()!;
+                    for (const [nx, ny] of [[qx + 1, qy], [qx - 1, qy], [qx, qy + 1], [qx, qy - 1]]) {
+                        const nk = `${nx}_${ny}`;
+                        if (nx < 0 || nx >= w || ny < 0 || ny >= h || seen.has(nk) || map[nk] !== ci) continue;
+                        seen.add(nk);
+                        cells.add(nk);
+                        queue.push([nx, ny]);
+                    }
+                }
+                body += `<path fill="${escapeXml(colors[ci]!)}" fill-rule="evenodd" d="${traceCellLoops(cells)}"/>`;
+            }
+        }
+    }
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">${body}</svg>`;
 }
 
 export function editorDataToSVG(editorData: EditorData) {
-    const w = editorData.width;
-    const h = editorData.height;
-    const results = layers2MapNumbers(editorData);
-    let svgContent = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`;
-    const rectangles = findRectangles(editorData, results);
-    if (rectangles.length > 0) {
-        svgContent += `<g>`;
-        rectangles.forEach(rect => {
-            const color = rect.color;
-            svgContent += `<rect x="${rect.x}" y="${rect.y}" width="${rect.width}" height="${rect.height}" fill="${color}"/>`;
-        });
-        svgContent += '</g>';
-    }
-    svgContent += '</svg>';
-
-    const blob = new Blob([svgContent], {type: 'image/svg+xml'});
+    const blob = new Blob([editorDataToSVGMarkup(editorData)], {type: 'image/svg+xml'});
     return URL.createObjectURL(blob);
 }
 
