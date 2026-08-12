@@ -1668,6 +1668,12 @@ canvas.iso-line { cursor: crosshair; }
     overflow: visible;
 }
 
+/* The minimap fills its Square — `.square .inside`'s thumbnail padding is
+   dead space here (same override the canvas Square needs). */
+.preview-widget .square .inside {
+    padding: 0;
+}
+
 .iso-rotated { transform: rotate(45deg); }
 .grid-off { opacity: 0.4; }
 
