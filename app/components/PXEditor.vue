@@ -1864,7 +1864,7 @@ function handleKeyDown(e: any) {
   // Mid-drag (mouse held), history/tool/delete shortcuts would yank the state
   // out from under the in-flight virtual layer — swallow them until mouseup.
   // (Space-pan and Escape are handled above and stay available.)
-  if (isStarted.value && (mod || TOOL_KEYS[key] || key === 'e' || e.key === 'Backspace' || e.key === 'Delete')) {
+  if (isStarted.value && (mod || TOOL_KEYS[key] || key === 'e' || key === ',' || key === '.' || e.key === 'Backspace' || e.key === 'Delete')) {
     e.preventDefault();
     return;
   }
@@ -1902,6 +1902,11 @@ function handleKeyDown(e: any) {
   } else if (!mod && !e.altKey && key >= '1' && key <= '5'
       && (store.currentTool === 'brush' || store.currentTool === 'eraser')) {
     store.setBrushSize(Number(key));
+    e.preventDefault();
+  } else if (!mod && !e.altKey && (key === ',' || key === '.') && store.isAnimated) {
+    // Frame stepping (Aseprite keys): , previous · . next
+    store.isPlaying = false;
+    store.setActiveFrame(Math.max(0, store.currentFrameIndex) + (key === ',' ? -1 : 1));
     e.preventDefault();
   } else if (!mod && (e.key === 'Backspace' || e.key === 'Delete')) {
     // Act on the active scope. Board scope (no layer active) → remove the board
@@ -2539,15 +2544,41 @@ function renderPlaybackFrame(i: number) {
   drawBoardChrome();
 }
 
+// A selected tag scopes playback to its frame range and direction (Aseprite
+// behavior); with no tag the whole timeline plays forward.
+let pingpongDir: 1 | -1 = 1;
+
+function playbackRange(): { lo: number; hi: number; dir: 'forward' | 'reverse' | 'pingpong' } {
+  const t = store.activeTag;
+  if (t && t.from <= t.to && t.to < store.frameCount) return {lo: t.from, hi: t.to, dir: t.direction};
+  return {lo: 0, hi: store.frameCount - 1, dir: 'forward'};
+}
+
+// Next frame index, or null when a non-looping run just finished.
+function playbackNext(cur: number): number | null {
+  const {lo, hi, dir} = playbackRange();
+  if (hi <= lo) return store.loopAnimation ? lo : null;
+  if (dir === 'forward') return cur + 1 > hi ? (store.loopAnimation ? lo : null) : cur + 1;
+  if (dir === 'reverse') return cur - 1 < lo ? (store.loopAnimation ? hi : null) : cur - 1;
+  // pingpong — bounce at the ends without showing the end frame twice
+  let next = cur + pingpongDir;
+  if (next > hi) {
+    pingpongDir = -1;
+    next = cur - 1;
+  } else if (next < lo) {
+    if (!store.loopAnimation) return null;   // completed there-and-back
+    pingpongDir = 1;
+    next = cur + 1;
+  }
+  return Math.max(lo, Math.min(hi, next));
+}
+
 function playbackTick() {
   const dur = store.frames[playbackIndex]?.duration ?? Math.round(1000 / store.fps);
   playbackTimer = setTimeout(() => {
     if (!store.isPlaying) return;
-    let next = playbackIndex + 1;
-    if (next >= store.frameCount) {
-      if (!store.loopAnimation) { store.isPlaying = false; return; }
-      next = 0;
-    }
+    const next = playbackNext(playbackIndex);
+    if (next === null) { store.isPlaying = false; return; }
     playbackIndex = next;
     store.currentFrameIndex = next; // timeline highlight (plain ref — no recomposite)
     renderPlaybackFrame(next);
@@ -2559,7 +2590,14 @@ function startPlayback() {
   if (!store.isAnimated) { store.isPlaying = false; return; }
   cancelScheduledDraw();
   buildPlaybackBuffers();
-  playbackIndex = Math.max(0, Math.min(store.frameCount - 1, store.currentFrameIndex));
+  const {lo, hi, dir} = playbackRange();
+  pingpongDir = 1;
+  // Resume from the current frame when it's inside the range; else enter at
+  // the range's natural starting end.
+  let start = store.currentFrameIndex;
+  if (start < lo || start > hi) start = dir === 'reverse' ? hi : lo;
+  playbackIndex = start;
+  store.currentFrameIndex = start;
   renderPlaybackFrame(playbackIndex);
   playbackTick();
 }
@@ -2862,6 +2900,43 @@ async function exportSpritesheet() {
   } catch (e) {
     console.error(e);
     toast.error('Spritesheet export failed');
+  }
+}
+
+// Game-engine export: 1× spritesheet + Aseprite-format JSON (frame rects,
+// per-frame durations, frameTags). Phaser/Unity/Godot importers consume the
+// pair directly. Two downloads, like Aseprite's own sheet export.
+async function exportGame() {
+  try {
+    const {framesToSpritesheet, framesToAsepriteJSON} = await import('~/helper/anim-export');
+    const name = editorData.value.name || 'SimplePixelArt';
+    const frames = animationFrames();
+    const sheet = framesToSpritesheet(
+        frames,
+        editorData.value.width,
+        editorData.value.height,
+        toRaw(editorData.value.colors),
+        1,                                   // native pixels — engines scale themselves
+        toRaw(store.sharedLayers),
+    );
+    const json = framesToAsepriteJSON(frames, editorData.value.width, editorData.value.height, {
+      name,
+      image: `${name}-sheet.png`,
+      fps: store.fps,
+      scale: 1,
+      tags: toRaw(store.tags),
+    });
+    sheet.toBlob((blob) => {
+      if (blob) downloadBlob(blob, `${name}-sheet.png`);
+      // Fire the JSON after the PNG so browsers don't swallow the second download.
+      setTimeout(() => {
+        downloadBlob(new Blob([json], {type: 'application/json'}), `${name}-sheet.json`);
+      }, 300);
+    });
+    toast.success('Exported spritesheet + JSON for game engines');
+  } catch (e) {
+    console.error(e);
+    toast.error('Game export failed');
   }
 }
 
@@ -3180,6 +3255,9 @@ watch(
                 </button>
                 <button class="file-menu-item" @click="exportSpritesheet">
                   <span class="icon icon-download"/><span>Download spritesheet</span>
+                </button>
+                <button class="file-menu-item" @click="exportGame" title="1× spritesheet + Aseprite-format JSON (durations, tags) for Phaser / Unity / Godot">
+                  <span class="icon icon-download"/><span>Export for game (sheet + JSON)</span>
                 </button>
               </template>
             </div>
