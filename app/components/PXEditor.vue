@@ -2451,7 +2451,9 @@ let onionNextCanvas: HTMLCanvasElement | null = null;
 
 function drawOnion(): void {
   if (!ctx) return;
-  if (!store.onionSkin || !store.isAnimated || store.isPlaying || isDrawing.value) return;
+  // Preview playback leaves the editor interactive — onion stays useful there;
+  // only main-canvas playback suppresses it.
+  if (!store.onionSkin || !store.isAnimated || (store.isPlaying && !playbackOnPreview) || isDrawing.value) return;
   const fr = store.frames;
   const cur = store.currentFrameIndex;
   const ox = Math.round(artOffset.value.x);
@@ -2505,32 +2507,75 @@ function drawEditor() {
 
 // ===== Pre-rendered playback =====
 // Each frame is composited once into an offscreen canvas; the loop just blits
-// the right buffer to the main canvas. Buttery-smooth even on large canvases
-// (no per-frame re-composite). Driven by the shared store.isPlaying flag.
+// the right buffer. On desktop the animation plays in the PREVIEW widget
+// (Aseprite-style) and the editor stays fully interactive; mobile hides the
+// preview (height 0), so playback falls back to taking over the main canvas.
+// Driven by the shared store.isPlaying flag.
 let playbackBuffers: HTMLCanvasElement[] = [];
 let playbackTimer: ReturnType<typeof setTimeout> | null = null;
 let playbackIndex = 0;
+let playbackOnPreview = false;
 
 function buildPlaybackBuffers() {
   const ed = toRaw(editorData.value);
   const colors = toRaw(ed.colors);
   const list = store.frames.length ? store.frames : [{layers: ed.layers}];
-  // Frame-only buffers — the shared background is already baked into the cached
-  // bg and blitted behind these (see renderBackgroundCache).
+  // Preview playback is self-contained, so the shared background is baked
+  // into each buffer. Main-canvas playback keeps buffers frame-only — the
+  // cached bg blitted behind them already carries the shared stack.
+  const shared = playbackOnPreview ? toRaw(store.sharedLayers) : [];
   playbackBuffers = (list as any[]).map((f) => {
     const c = document.createElement('canvas');
-    compositeFrame(c, toRaw(f.layers), ed.width, ed.height, colors);
+    compositeFrame(c, [...shared, ...toRaw(f.layers)], ed.width, ed.height, colors);
     return c;
   });
 }
 
+// While the preview loops, edits land on the current frame — recomposite just
+// that buffer (trailing-debounced off drawTurn) so the loop picks them up.
+let playbackRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+function refreshPlaybackBuffer() {
+  if (playbackRefreshTimer) clearTimeout(playbackRefreshTimer);
+  playbackRefreshTimer = setTimeout(() => {
+    playbackRefreshTimer = null;
+    const i = Math.max(0, store.currentFrameIndex);
+    const f = store.frames[i];
+    const buf = playbackBuffers[i];
+    if (!f || !buf) return;
+    compositeFrame(
+        buf,
+        [...toRaw(store.sharedLayers), ...toRaw(f.layers)],
+        editorData.value.width,
+        editorData.value.height,
+        toRaw(editorData.value.colors),
+    );
+  }, 120);
+}
+
 function renderPlaybackFrame(i: number) {
+  const buf = playbackBuffers[i];
+  if (playbackOnPreview) {
+    // Blit into the preview widget (same bg treatment as the minimap).
+    if (!miniMap.value || !miniMapCtx || !buf) return;
+    const mmW = miniMap.value.width;
+    const mmH = miniMap.value.height;
+    miniMapCtx.clearRect(0, 0, mmW, mmH);
+    const bg = store.bgConfig;
+    if (bg.type === 'solid') {
+      miniMapCtx.fillStyle = bg.color;
+      miniMapCtx.fillRect(0, 0, mmW, mmH);
+    } else if (bg.type === 'art' && bgImage.value) {
+      miniMapCtx.drawImage(bgImage.value, 0, 0, mmW, mmH);
+    }
+    miniMapCtx.imageSmoothingEnabled = false;
+    miniMapCtx.drawImage(buf, 0, 0, editorData.value.width, editorData.value.height, 0, 0, mmW, mmH);
+    return;
+  }
   if (!ctx) return;
   drawDesk();
   drawInactiveBoards();
   drawBackground();
   drawReference();
-  const buf = playbackBuffers[i];
   if (buf) {
     const ox = Math.round(artOffset.value.x);
     const oy = Math.round(artOffset.value.y);
@@ -2580,7 +2625,10 @@ function playbackTick() {
     const next = playbackNext(playbackIndex);
     if (next === null) { store.isPlaying = false; return; }
     playbackIndex = next;
-    store.currentFrameIndex = next; // timeline highlight (plain ref — no recomposite)
+    // Preview playback leaves the editing frame alone — the user may be
+    // drawing while it loops. Main-canvas playback keeps the timeline
+    // highlight in step (plain ref — no recomposite).
+    if (!playbackOnPreview) store.currentFrameIndex = next;
     renderPlaybackFrame(next);
     playbackTick();
   }, dur);
@@ -2588,7 +2636,9 @@ function playbackTick() {
 
 function startPlayback() {
   if (!store.isAnimated) { store.isPlaying = false; return; }
-  cancelScheduledDraw();
+  // Desktop plays in the Preview widget and keeps the editor interactive;
+  // mobile hides the preview (height 0) so playback takes the main canvas.
+  playbackOnPreview = !!(miniMap.value && miniMap.value.clientHeight > 0);
   buildPlaybackBuffers();
   const {lo, hi, dir} = playbackRange();
   pingpongDir = 1;
@@ -2597,7 +2647,10 @@ function startPlayback() {
   let start = store.currentFrameIndex;
   if (start < lo || start > hi) start = dir === 'reverse' ? hi : lo;
   playbackIndex = start;
-  store.currentFrameIndex = start;
+  if (!playbackOnPreview) {
+    cancelScheduledDraw();
+    store.currentFrameIndex = start;
+  }
   renderPlaybackFrame(playbackIndex);
   playbackTick();
 }
@@ -2605,7 +2658,13 @@ function startPlayback() {
 function stopPlayback() {
   if (playbackTimer) clearTimeout(playbackTimer);
   playbackTimer = null;
+  if (playbackRefreshTimer) { clearTimeout(playbackRefreshTimer); playbackRefreshTimer = null; }
   playbackBuffers = [];
+  if (playbackOnPreview) {
+    playbackOnPreview = false;
+    drawMiniMap();               // hand the preview back to the minimap
+    return;
+  }
   // Re-bind editing layers to the frame we paused on, then draw normally.
   store.setActiveFrame(store.currentFrameIndex);
 }
@@ -2617,6 +2676,8 @@ watch(() => store.isPlaying, (v) => {
 
 function drawMiniMap() {
   if (!miniMap.value || !canvas.value || !miniMapCtx) return;
+  // While the animation plays in the preview, playback owns this canvas.
+  if (store.isPlaying && playbackOnPreview) return;
 
   const mmW = miniMap.value.width;
   const mmH = miniMap.value.height;
@@ -3117,7 +3178,10 @@ onUnmounted(() => {
 })
 
 watch(() => store.drawTurn, () => {
-  if (store.isPlaying) return   // playback drives the canvas itself
+  if (store.isPlaying) {
+    if (!playbackOnPreview) return   // main-canvas playback drives the canvas itself
+    refreshPlaybackBuffer()          // keep the looping preview fresh with live edits
+  }
   scheduleDraw()
   scheduleMiniMap()
 })
