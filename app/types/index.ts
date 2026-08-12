@@ -188,10 +188,23 @@ export interface AnimationFrame {
     duration?: number;
 }
 
+// Named frame range (Aseprite-style tag): "walk" = frames 2..5, played in the
+// given direction. Exported as meta.frameTags in the game JSON.
+export interface AnimationTag {
+    id: string;
+    name: string;
+    from: number;                                   // inclusive frame index
+    to: number;                                     // inclusive frame index
+    direction: 'forward' | 'reverse' | 'pingpong';
+    color: string;                                  // tag chip color (hex)
+}
+
 export interface EditorAnimation {
     fps: number;
     loop: boolean;
     frames: AnimationFrame[];
+    shared?: Layer[];          // static background stack drawn beneath every frame
+    tags?: AnimationTag[];
 }
 
 export interface EditorMeta {

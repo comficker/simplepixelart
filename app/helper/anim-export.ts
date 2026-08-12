@@ -1,6 +1,6 @@
 import {hexToRgb} from "~/helper/color";
 import {compositeFrame, layers2MapNumbers} from "~/helper/canvas";
-import type {AnimationFrame, Layer} from "~/types";
+import type {AnimationFrame, AnimationTag, Layer} from "~/types";
 
 // Pick an integer upscale so the longest side lands near ~320px (crisp, shareable),
 // capped so we never emit absurdly large files.
@@ -70,6 +70,51 @@ export async function framesToGif(
 /**
  * Render all frames side-by-side into one transparent PNG spritesheet canvas.
  */
+/**
+ * Aseprite-compatible spritesheet metadata (JSON "array" form). Game engines
+ * that import Aseprite exports — Phaser's load.aseprite, Unity/Godot importer
+ * plugins — read frame rects, per-frame durations and frameTags from this
+ * exact shape, so a sheet exported here drops straight into a game project.
+ * Frame rects assume the single-row layout framesToSpritesheet produces.
+ */
+export function framesToAsepriteJSON(
+    frames: AnimationFrame[],
+    width: number,
+    height: number,
+    opts: {name: string; image: string; fps: number; scale?: number; tags?: AnimationTag[]},
+): string {
+    const s = opts.scale ?? 1;
+    const w = width * s;
+    const h = height * s;
+    return JSON.stringify({
+        frames: frames.map((f, i) => ({
+            filename: `${opts.name} ${i}`,
+            frame: {x: i * w, y: 0, w, h},
+            rotated: false,
+            trimmed: false,
+            spriteSourceSize: {x: 0, y: 0, w, h},
+            sourceSize: {w, h},
+            duration: f.duration ?? Math.round(1000 / opts.fps),
+        })),
+        meta: {
+            app: 'https://simplepixelart.com',
+            version: '1.0',
+            image: opts.image,
+            format: 'RGBA8888',
+            size: {w: w * frames.length, h},
+            scale: String(s),
+            frameTags: (opts.tags ?? []).map(t => ({
+                name: t.name,
+                from: t.from,
+                to: t.to,
+                direction: t.direction,
+            })),
+            layers: [],
+            slices: [],
+        },
+    }, null, 2);
+}
+
 export function framesToSpritesheet(
     frames: AnimationFrame[],
     width: number,

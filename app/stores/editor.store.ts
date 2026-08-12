@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import type {EditorData, Layer, SharedPage} from "~/types";
+import type {AnimationTag, EditorData, Layer, SharedPage} from "~/types";
 import {useNativeFetch} from "~/composables/useCustomFetch";
 import {cloneDeep, debounce, generateUUID, getStorageItem, key2Point, sharedPage2EditorData} from "~/helper/utils";
 import {DEFAULT_EDITOR_DATA} from "~/helper/constants";
@@ -399,6 +399,82 @@ export const useEditor = defineStore('editor', () => {
     const sharedLayers = computed(() => editorData.value.meta?.animation?.shared ?? [])
     const editingShared = computed(() => currentFrameIndex.value === -1)
 
+    // ===== Tags (named frame ranges, Aseprite-style) =====
+    // Tags persist in meta.animation; the selection is ephemeral. A selected
+    // tag scopes playback to its range/direction and is highlighted in the
+    // timeline. Ranges are positional — frame moves don't drag tags along.
+    const tags = computed(() => editorData.value.meta?.animation?.tags ?? [])
+    const activeTagId = ref<string | null>(null)
+    const activeTag = computed(() => tags.value.find(t => t.id === activeTagId.value) ?? null)
+
+    const TAG_COLORS = ['#E4572E', '#17BEBB', '#2E86AB', '#A846A0', '#76B041', '#FFC914']
+
+    function addTag(from?: number, to?: number) {
+        ensureAnimation()
+        const anim = editorData.value.meta!.animation!
+        if (!anim.tags) anim.tags = []
+        const last = anim.frames.length - 1
+        const f = Math.max(0, Math.min(last, from ?? Math.max(0, currentFrameIndex.value)))
+        const t = Math.max(f, Math.min(last, to ?? f))
+        const tag: AnimationTag = {
+            id: generateUUID(),
+            name: `Tag ${anim.tags.length + 1}`,
+            from: f,
+            to: t,
+            direction: 'forward',
+            color: TAG_COLORS[anim.tags.length % TAG_COLORS.length]!,
+        }
+        anim.tags.push(tag)
+        activeTagId.value = tag.id
+        saveState()
+        return tag
+    }
+
+    function updateTag(id: string, patch: Partial<AnimationTag>) {
+        const anim = editorData.value.meta?.animation
+        const tag = anim?.tags?.find(t => t.id === id)
+        if (!anim || !tag) return
+        Object.assign(tag, patch)
+        const last = anim.frames.length - 1
+        tag.from = Math.max(0, Math.min(last, Math.round(tag.from) || 0))
+        tag.to = Math.max(tag.from, Math.min(last, Math.round(tag.to) || 0))
+        if (!tag.name.trim()) tag.name = 'Tag'
+        saveState()
+    }
+
+    function deleteTag(id: string) {
+        const anim = editorData.value.meta?.animation
+        if (!anim?.tags) return
+        const i = anim.tags.findIndex(t => t.id === id)
+        if (i < 0) return
+        anim.tags.splice(i, 1)
+        if (activeTagId.value === id) activeTagId.value = null
+        saveState()
+    }
+
+    // Frame inserted at index k (duplicate of frame k-1): ranges after shift
+    // right; a range containing the source frame grows to adopt the copy.
+    function shiftTagsOnInsert(k: number) {
+        const anim = editorData.value.meta?.animation
+        anim?.tags?.forEach(t => {
+            if (t.from >= k) { t.from++; t.to++ }
+            else if (t.to >= k - 1) t.to++
+        })
+    }
+
+    // Frame removed at index i: ranges after shift left; a range containing
+    // the frame shrinks, and a range reduced to nothing is dropped.
+    function shiftTagsOnDelete(i: number) {
+        const anim = editorData.value.meta?.animation
+        if (!anim?.tags) return
+        anim.tags.forEach(t => {
+            if (t.from > i) { t.from--; t.to-- }
+            else if (t.to >= i) t.to--
+        })
+        anim.tags = anim.tags.filter(t => t.to >= t.from && t.from >= 0)
+        if (activeTagId.value && !anim.tags.some(t => t.id === activeTagId.value)) activeTagId.value = null
+    }
+
     function ensureSharedStack() {
         const anim = editorData.value.meta?.animation
         if (!anim) return
@@ -494,6 +570,7 @@ export const useEditor = defineStore('editor', () => {
         const src = anim.frames[at]!
         const layers = duplicate ? cloneLayers(src.layers) : newBlankLayers()
         anim.frames.splice(at + 1, 0, {id: generateUUID(), layers, duration: src.duration ?? Math.round(1000 / fps.value)})
+        shiftTagsOnInsert(at + 1)
         setActiveFrame(at + 1)
         saveState()
     }
@@ -508,6 +585,7 @@ export const useEditor = defineStore('editor', () => {
         const src = anim.frames[i]
         if (!src) return
         anim.frames.splice(i + 1, 0, {id: generateUUID(), layers: cloneLayers(src.layers), duration: src.duration})
+        shiftTagsOnInsert(i + 1)
         setActiveFrame(i + 1)
         saveState()
     }
@@ -516,6 +594,7 @@ export const useEditor = defineStore('editor', () => {
         const anim = editorData.value.meta?.animation
         if (!anim?.frames || anim.frames.length <= 1) return
         anim.frames.splice(i, 1)
+        shiftTagsOnDelete(i)
         if (anim.frames.length === 1) {
             // Collapse back to a static artwork. Bake any shared background
             // beneath the surviving frame so it isn't lost.
@@ -2343,5 +2422,11 @@ export const useEditor = defineStore('editor', () => {
         setFrameDuration,
         setFps,
         toggleLoop,
+        tags,
+        activeTagId,
+        activeTag,
+        addTag,
+        updateTag,
+        deleteTag,
     }
 })
