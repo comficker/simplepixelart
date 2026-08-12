@@ -1206,8 +1206,9 @@ function focusActiveBoard() {
 // Fit ALL boards in the stage (workspace overview).
 function fitAllBoards() {
   const bs = store.boards;
-  if (!bs.length) { centerView(); return; }
-  if (bs.length === 1) { centerView(); return; }
+  // centerView only sets zoom/cam — without an explicit redraw the stage
+  // stays stale until the pointer re-enters the canvas ("FIT does nothing").
+  if (bs.length <= 1) { centerView(); scheduleDraw(); scheduleMiniMap(); return; }
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const b of bs) {
     minX = Math.min(minX, b.x);
