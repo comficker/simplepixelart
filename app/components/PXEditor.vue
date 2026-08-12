@@ -360,6 +360,13 @@ const needSave = ref(false);
 // loading overlay so users never see an empty canvas while content loads.
 const canvasReady = ref(false);
 const hoverPos = ref<{ x: number; y: number } | null>(null);
+// Select tool: hovering inside the active selection advertises drag-to-move.
+const hoverInSelection = computed(() =>
+    store.currentTool === 'select' &&
+    store.selectionState.bounds.active &&
+    !!hoverPos.value &&
+    store.checkKeyInSelection(`${hoverPos.value.x}_${hoverPos.value.y}`)
+);
 const bgImage = ref<HTMLImageElement | null>(null);
 let bgImageUrlCache = '';
 
@@ -1477,6 +1484,19 @@ function startDraw(e: any) {
   }
   let resetSelection = false
   if (store.selectionState.bounds.active && store.currentTool == 'select') {
+    // Press inside the selection drags it (pixels + marquee) — the same
+    // gesture the move tool offers, without leaving the select tool.
+    if (store.checkKeyInSelection(`${x}_${y}`)) {
+      isMoving.value = true;
+      store.immigrateVirtualLayer();
+      const cp = getClientPos(e);
+      moveStart.value = {x: cp.x, y: cp.y};
+      // needSave stays false until the drag actually moves — a plain click
+      // inside the selection must not mint a history entry.
+      scheduleDraw();
+      isStarted.value = true;
+      return;
+    }
     store.selectionState.bounds.active = false;
     resetSelection = true
   }
@@ -1593,6 +1613,7 @@ function draw(e: any) {
     const dx = Math.round((clientX - moveStart.value.x) / zoom.value);
     const dy = Math.round((clientY - moveStart.value.y) / zoom.value);
     if (dx !== 0 || dy !== 0) {
+      needSave.value = true;   // select-tool drags arm this lazily, on first real motion
       if (store.selectionState.bounds.active) {
         store.move(dx, dy);
         store.selectionState.bounds.minX += dx;
@@ -3554,7 +3575,7 @@ watch(
             >
               <canvas
                   ref="canvas"
-                  :class="[store.currentTool, { panning: spacePressed }]"
+                  :class="[store.currentTool, { panning: spacePressed, 'sel-drag': hoverInSelection }]"
                   @mousedown="startDraw"
                   @dblclick="onDblClick"
                   @mousemove="draw"
@@ -4031,6 +4052,11 @@ watch(
 /* ===== Find-color (picker) tool ===== */
 canvas.picker {
   cursor: crosshair;
+}
+
+/* Inside an active selection the select tool drags it — space-pan still wins. */
+canvas.select.sel-drag:not(.panning) {
+  cursor: move;
 }
 
 .pick-readout {
