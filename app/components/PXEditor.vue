@@ -1654,9 +1654,17 @@ function stopDraw() {
     const y0 = Math.min(marqueeStart.value.y, marqueeCur.value.y);
     const w = Math.abs(marqueeCur.value.x - marqueeStart.value.x);
     const h = Math.abs(marqueeCur.value.y - marqueeStart.value.y);
-    // A tiny drag (or plain click) is not a create gesture — just clear it.
+    // A tiny drag (or plain click) is not a create gesture.
     if (w >= MARQUEE_MIN && h >= MARQUEE_MIN) {
       store.addBoard(Math.round(w), Math.round(h), {x: Math.round(x0), y: Math.round(y0)});
+    } else {
+      // Plain click on empty desk → click-away: drop the active layer (and
+      // any selection) so the scope falls back to the board itself.
+      store.layerActive = false;
+      if (store.selectionState.bounds.active) {
+        store.selectionState.bounds.active = false;
+        store.selectionState.selecting = false;
+      }
     }
     cancelScheduledDraw();
     drawEditor();
