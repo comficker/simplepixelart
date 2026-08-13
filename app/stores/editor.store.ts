@@ -910,20 +910,27 @@ export const useEditor = defineStore('editor', () => {
     }
 
     // One image file → a null-transparent RGB grid, via the chosen pipeline:
-    // 'filter' runs the shared import pipeline (bg knockout, upscale-factor +
-    // grid-phase detection, two-stage reconstruction, margin trim — see
-    // ~/helper/pixel-reconstruct); 'original' reads pixels 1:1 (≤256/side —
-    // larger returns null and counts as skipped).
+    // 'filter' runs the legacy sampled pipeline (gradient erosion + line-score
+    // grid detection in ~/helper/canvas — it beats the pixel-reconstruct port
+    // on editor imports; /convert and the slicer keep pixel-reconstruct);
+    // 'original' reads pixels 1:1 (≤256/side — larger returns null and counts
+    // as skipped).
     async function fileToGrid(file: File, process: ImportProcess): Promise<(number[] | null)[][] | null> {
         const dataUrl = await readFileAsDataUrl(file);
+        const canvasHelper = await import("~/helper/canvas");
         if (process === 'original') {
-            const {dataUrlToOriginalGrid} = await import("~/helper/canvas");
-            const {grid, tooLarge} = await dataUrlToOriginalGrid(dataUrl);
+            const {grid, tooLarge} = await canvasHelper.dataUrlToOriginalGrid(dataUrl);
             return (tooLarge || !grid.length) ? null : grid;
         }
-        const {imageToCells} = await import("~/helper/pixel-reconstruct");
-        const res = await imageToCells(dataUrl);
-        return res ? res.cells : null;
+        const {rgbSamplesGrid, colorThatRepresentsTransparent} = await canvasHelper.dataUrlToSamplesGrid(dataUrl);
+        if (!rgbSamplesGrid?.length) return null;
+        // Normalize to null-transparency so every consumer downstream agrees.
+        const ig = colorThatRepresentsTransparent;
+        return rgbSamplesGrid.map(row => row.map(cell => {
+            if (!cell) return null;
+            const hex = rgbToHex(cell[0]!, cell[1]!, cell[2]!);
+            return shouldIgnoreColor(hex, ig) ? null : cell;
+        }));
     }
 
     // Parse one picked file into a fresh EditorData (JSON export or any image).
@@ -1090,9 +1097,17 @@ export const useEditor = defineStore('editor', () => {
             reader.onload = async (ev) => {
                 try {
                     const dataUrl = ev.target?.result as string;
-                    const {imageToCells} = await import("~/helper/pixel-reconstruct");
-                    const res = await imageToCells(dataUrl);
-                    if (res?.cells.length) insertFromGrid(res.cells);
+                    // Legacy sampled pipeline (see fileToGrid) — normalized to
+                    // the null-transparent grid insertFromGrid expects.
+                    const {dataUrlToSamplesGrid} = await import("~/helper/canvas");
+                    const {rgbSamplesGrid, colorThatRepresentsTransparent} = await dataUrlToSamplesGrid(dataUrl);
+                    if (rgbSamplesGrid?.length) {
+                        const ig = colorThatRepresentsTransparent;
+                        insertFromGrid(rgbSamplesGrid.map(row => row.map(cell => {
+                            if (!cell) return null;
+                            return shouldIgnoreColor(rgbToHex(cell[0]!, cell[1]!, cell[2]!), ig) ? null : cell;
+                        })));
+                    }
                 } catch (error) {
                     console.error('Error inserting image:', error);
                 }
