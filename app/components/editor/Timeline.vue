@@ -191,6 +191,12 @@ function moveCur(dir: -1 | 1) {
   store.moveFrame(store.currentFrameIndex, store.currentFrameIndex + dir)
 }
 
+// Transport stepping (same as the , / . keys).
+function step(dir: -1 | 1) {
+  store.isPlaying = false
+  store.setActiveFrame(Math.max(0, store.currentFrameIndex) + dir)
+}
+
 // Live draft for the duration slider/input. We commit (which saveStates) only
 // on release/change, not on every drag tick — otherwise dragging the slider
 // would flood history + autosave.
@@ -267,10 +273,16 @@ onUnmounted(() => { store.isPlaying = false })
 <template>
   <Widget title="Animation frames" class="timeline">
     <div class="tl-bar">
-      <!-- Playback + frame ops (only meaningful once animated) -->
+      <!-- Playback + settings (only meaningful once animated).
+           Transport first, then the two timing numbers, then view toggles;
+           the rarer per-frame edits live in the ⋯ menu so the row stays one
+           line. -->
       <div class="tl-controls" v-if="store.isAnimated">
-        <!-- Play + position -->
+        <!-- Transport -->
         <div class="tl-group">
+          <button class="tl-op" title="Previous frame (,)" :disabled="store.currentFrameIndex <= 0" @click="step(-1)">
+            <span class="icon icon-angle-left"/>
+          </button>
           <button class="tl-play" :title="playing ? 'Pause' : 'Play'" @click="togglePlay">
             <svg v-if="!playing" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
               <path d="M7 5v14l12-7z" fill="currentColor"/>
@@ -279,6 +291,9 @@ onUnmounted(() => { store.isPlaying = false })
               <path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/>
             </svg>
           </button>
+          <button class="tl-op" title="Next frame (.)" :disabled="store.currentFrameIndex >= store.frameCount - 1" @click="step(1)">
+            <span class="icon icon-angle-right"/>
+          </button>
           <span class="tl-counter" title="Current frame / total">
             {{ store.currentFrameIndex + 1 }}<i>/</i>{{ store.frameCount }}
           </span>
@@ -286,44 +301,23 @@ onUnmounted(() => { store.isPlaying = false })
 
         <span class="tl-divider"/>
 
-        <!-- Current-frame ops -->
+        <!-- Timing: global speed + the selected frame's own duration -->
         <div class="tl-group">
-          <button class="tl-op" title="Duplicate frame" @click="onDuplicate">
-            <span class="icon icon-plus"/>
-          </button>
-          <button class="tl-op" title="Move frame left" :disabled="store.currentFrameIndex <= 0" @click="moveCur(-1)">
-            <span class="icon icon-angle-left"/>
-          </button>
-          <button class="tl-op" title="Move frame right" :disabled="store.currentFrameIndex >= store.frameCount - 1" @click="moveCur(1)">
-            <span class="icon icon-angle-right"/>
-          </button>
-          <button class="tl-op tl-op-del" title="Delete frame" :disabled="store.frameCount <= 1" @click="onDelete">
-            <span class="icon icon-trash"/>
-          </button>
+          <label class="tl-field" title="Playback speed — frames without their own duration use this">
+            <span>Speed</span>
+            <input type="number" min="1" max="60" v-model.number="fpsDraft" @change="commitFps">
+            <em>fps</em>
+          </label>
+          <label class="tl-field" title="How long the selected frame stays on screen">
+            <span>Frame</span>
+            <input type="number" min="10" max="10000" step="10" v-model.number="durationDraft" @change="commitDuration">
+            <em>ms</em>
+          </label>
         </div>
 
         <span class="tl-divider"/>
 
-        <!-- Global speed -->
-        <div class="tl-knob" title="Playback speed — frames shown per second">
-          <span class="tl-knob-label">Speed</span>
-          <input class="tl-slider" type="range" min="1" max="30" v-model.number="fpsDraft" @change="commitFps">
-          <span class="tl-knob-val">{{ fpsDraft }} fps</span>
-        </div>
-
-        <span class="tl-divider"/>
-
-        <!-- Selected frame duration -->
-        <div class="tl-knob" title="How long the selected frame stays on screen">
-          <span class="tl-knob-label">This frame</span>
-          <input class="tl-slider" type="range" min="16" max="1000" step="2" v-model.number="durationDraft" @change="commitDuration">
-          <input class="tl-knob-num" type="number" min="10" max="10000" step="10" v-model.number="durationDraft" @change="commitDuration">
-          <span class="tl-knob-unit">ms</span>
-        </div>
-
-        <span class="tl-divider"/>
-
-        <!-- View toggles -->
+        <!-- View toggles + tagging -->
         <div class="tl-group">
           <button
               class="tl-toggle"
@@ -357,6 +351,35 @@ onUnmounted(() => { store.isPlaying = false })
             <span>Tag</span>
           </button>
         </div>
+
+        <!-- Per-frame edits: labelled menu instead of four mystery icons.
+             `bottom` opens it upward — the timeline sits at the screen edge. -->
+        <ui-dropdown-menu class="tl-more" position="bottom" label="Frame actions">
+          <button class="tl-op" title="Frame actions" aria-label="Frame actions">
+            <span class="icon icon-dots"/>
+          </button>
+          <template #menu>
+            <div class="file-menu">
+              <button class="file-menu-item" @click="onDuplicate">
+                <span class="icon icon-content-copy"/><span>Duplicate frame</span>
+              </button>
+              <button class="file-menu-item" :disabled="store.currentFrameIndex <= 0" @click="moveCur(-1)">
+                <span class="icon icon-angle-left"/><span>Move frame left</span>
+              </button>
+              <button
+                  class="file-menu-item"
+                  :disabled="store.currentFrameIndex >= store.frameCount - 1"
+                  @click="moveCur(1)"
+              >
+                <span class="icon icon-angle-right"/><span>Move frame right</span>
+              </button>
+              <div class="file-menu-sep"/>
+              <button class="file-menu-item tl-del" :disabled="store.frameCount <= 1" @click="onDelete">
+                <span class="icon icon-trash"/><span>Delete frame</span>
+              </button>
+            </div>
+          </template>
+        </ui-dropdown-menu>
       </div>
 
       <!-- Selected-tag editor: name, 1-based range, direction, delete -->
@@ -554,57 +577,54 @@ onUnmounted(() => { store.isPlaying = false })
 .tl-op .icon { font-size: 12px; }
 .tl-op:hover:not(:disabled) { color: var(--foreground); }
 .tl-op:disabled { opacity: 0.35; cursor: not-allowed; }
-.tl-op-del:hover:not(:disabled) { border-color: var(--danger); color: var(--danger); }
 
-/* Labeled slider group: [Label] [====slider====] [value] */
-.tl-knob {
+/* Compact numeric setting: [Label] [input] [unit]. Replaces the two range
+   sliders — they ate ~380px of the row for values users type once. */
+.tl-field {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: 5px;
+  cursor: text;
 }
 
-.tl-knob-label {
+.tl-field > span {
   font-size: var(--text-2xs);
   font-weight: 700;
   color: var(--foreground);
   white-space: nowrap;
 }
 
-.tl-slider {
-  width: 110px;
-  height: 4px;
-  accent-color: var(--primary);
-  cursor: pointer;
-}
-
-.tl-knob-val {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  min-width: 42px;
-  font-variant-numeric: tabular-nums;
-}
-
-.tl-knob-num {
-  width: 60px;
-  padding: 4px 6px;
+.tl-field input {
+  width: 52px;
+  padding: 4px 4px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--background);
   color: var(--foreground);
   font-size: 12px;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
-.tl-knob-num:focus {
+.tl-field input:focus {
   outline: none;
   border-color: var(--primary);
 }
 
-.tl-knob-unit {
+.tl-field em {
+  font-style: normal;
   font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--muted);
+}
+
+/* The ⋯ menu is pushed to the end of the row. */
+.tl-more {
+  margin-left: auto;
+}
+
+.tl-del:not(:disabled) {
+  color: var(--danger);
 }
 
 .tl-toggle {
