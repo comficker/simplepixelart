@@ -3,6 +3,7 @@
       class="dropdown"
       :class="[{ active: open }, position]"
       ref="root"
+      v-bind="attrs"
       @keydown="onKeydown"
   >
     <div
@@ -20,20 +21,38 @@
     >
       <slot/>
     </div>
-    <div
-        class="dropdown-menu"
-        ref="menuEl"
-        role="menu"
-        :aria-hidden="!open"
-        @click="onMenuClick"
-    >
-      <slot name="menu"/>
-    </div>
+    <!-- The panel is teleported to <body>: inside a scroll container (the
+         editor toolbar) an absolutely-positioned panel gets clipped away. The
+         ghost is a fixed-position mirror of the trigger's on-screen box, so
+         every existing `.dropdown .dropdown-menu` rule — offset, right-align,
+         open animation, and the class the parent passed in — still applies
+         unchanged. Client-only: a menu is closed on arrival, so keeping it out
+         of the SSR markup costs nothing and avoids a hydration mismatch. -->
+    <Teleport v-if="mounted" to="body">
+      <div
+          class="dropdown dd-ghost"
+          :class="[{ active: open }, position, attrs.class]"
+          :style="ghostStyle"
+          @keydown="onKeydown"
+      >
+        <div
+            class="dropdown-menu"
+            ref="menuEl"
+            role="menu"
+            :aria-hidden="!open"
+            @click="onMenuClick"
+        >
+          <slot name="menu"/>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import {ref, onMounted, onBeforeUnmount, nextTick, watch} from 'vue'
+import {ref, computed, onMounted, onBeforeUnmount, nextTick, watch, useAttrs} from 'vue'
+
+defineOptions({inheritAttrs: false})
 
 defineProps({
   position: {
@@ -48,10 +67,44 @@ defineProps({
   },
 })
 
+const attrs = useAttrs()
 const open = ref(false)
+const mounted = ref(false)
 const root = ref(null)
 const triggerEl = ref(null)
 const menuEl = ref(null)
+
+// Ghost geometry = the trigger's viewport box, refreshed while open so the
+// panel tracks the trigger through scrolls and resizes.
+const rect = ref({left: 0, top: 0, width: 0, height: 0})
+
+const ghostStyle = computed(() => ({
+  position: 'fixed',
+  left: `${rect.value.left}px`,
+  top: `${rect.value.top}px`,
+  width: `${rect.value.width}px`,
+  height: `${rect.value.height}px`,
+  // Above modals (10000 while the editor is fullscreen), below toasts.
+  zIndex: 10001,
+  // The mirror box must never swallow clicks aimed at the trigger beneath it;
+  // the panel itself re-enables them via `.dropdown.active .dropdown-menu`.
+  pointerEvents: 'none',
+}))
+
+function syncRect() {
+  const el = triggerEl.value
+  if (!el) return
+  const r = el.getBoundingClientRect()
+  rect.value = {left: r.left, top: r.top, width: r.width, height: r.height}
+}
+
+// Capture phase so a scroll in ANY ancestor (the toolbar itself) is caught.
+function bindTracking(on) {
+  if (typeof window === 'undefined') return
+  const fn = on ? window.addEventListener : window.removeEventListener
+  fn.call(window, 'scroll', syncRect, true)
+  fn.call(window, 'resize', syncRect)
+}
 
 function getItems() {
   if (!menuEl.value) return []
@@ -86,7 +139,9 @@ function currentIndex() {
 
 async function openMenu(focusFirst = true) {
   if (open.value) return
+  syncRect()            // place the ghost before it becomes visible
   open.value = true
+  bindTracking(true)
   await nextTick()
   ensureItemsFocusable()
   if (focusFirst) focusIndex(0)
@@ -95,6 +150,7 @@ async function openMenu(focusFirst = true) {
 function close({restoreFocus = true} = {}) {
   if (!open.value) return
   open.value = false
+  bindTracking(false)
   if (restoreFocus) triggerEl.value?.focus()
 }
 
@@ -134,7 +190,9 @@ function onKeydown(e) {
 }
 
 function onClickOutside(e) {
-  if (!root.value?.contains(e.target)) {
+  // The panel lives under <body> now — it still counts as "inside".
+  if (!root.value?.contains(e.target) && !menuEl.value?.contains(e.target)) {
+    if (open.value) bindTracking(false)
     open.value = false
   }
 }
@@ -159,11 +217,14 @@ watch(open, async (val) => {
 })
 
 onMounted(() => {
+  mounted.value = true
+  syncRect()
   document.addEventListener('click', onClickOutside)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', onClickOutside)
+  bindTracking(false)
 })
 
 defineExpose({open: openMenu, close, toggle})
