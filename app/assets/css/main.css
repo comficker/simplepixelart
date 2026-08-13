@@ -1166,6 +1166,9 @@ html.editor-fullscreen .editor .editor-body {
 .editor .fs-only { display: none; }
 html.editor-fullscreen .editor .fs-only { display: block; }
 html.editor-fullscreen .editor .fs-hide { display: none; }
+/* A dropdown's panel is teleported to <body> (see ui/DropdownMenu.vue), so the
+   `.editor`-scoped rule above can't reach it — hide the mirror too. */
+html.editor-fullscreen .dd-ghost.fs-hide { display: none; }
 
 /* Fullscreen (desktop AND mobile): the canvas stage fills the reclaimed space
    (it's a camera-based infinite canvas, so it needn't stay a width-locked
