@@ -1049,10 +1049,16 @@ export const useEditor = defineStore('editor', () => {
         const cw = editorData.value.width;
         const ch = editorData.value.height;
 
-        // Contain: largest scale that fits the whole image inside the canvas.
-        const scale = Math.min(cw / gw, ch / gh);
-        const targetW = Math.max(1, Math.round(gw * scale));
-        const targetH = Math.max(1, Math.round(gh * scale));
+        // Pixel art only survives INTEGER scaling, so stamp 1:1 whenever the
+        // image fits (what "paste" means everywhere else) and shrink by a whole
+        // factor 1/den only when it's too big for the canvas. The old
+        // fractional contain-fit rendered the same 1px source detail 2 wide
+        // here and 3 wide there — the art came out mushy and off-grid.
+        const den = (gw <= cw && gh <= ch)
+            ? 1
+            : Math.max(1, Math.ceil(Math.max(gw / cw, gh / ch)));
+        const targetW = Math.max(1, Math.floor(gw / den));
+        const targetH = Math.max(1, Math.floor(gh / den));
         const offsetX = Math.floor((cw - targetW) / 2);
         const offsetY = Math.floor((ch - targetH) / 2);
 
@@ -1060,11 +1066,11 @@ export const useEditor = defineStore('editor', () => {
         const colors = editorData.value.colors;
 
         for (let ty = 0; ty < targetH; ty++) {
-            const sy = Math.min(gh - 1, Math.floor(ty * gh / targetH));
+            const sy = Math.min(gh - 1, ty * den);
             const srcRow = cells[sy];
             if (!srcRow?.length) continue;
             for (let tx = 0; tx < targetW; tx++) {
-                const sx = Math.min(srcRow.length - 1, Math.floor(tx * gw / targetW));
+                const sx = Math.min(srcRow.length - 1, tx * den);
                 const cell = srcRow[sx];
                 if (!cell) continue;   // transparent — keep what's underneath
 
