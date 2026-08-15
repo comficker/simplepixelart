@@ -201,9 +201,11 @@ function onClickOutside(e) {
 // Without this, a menu action that hides the dropdown (e.g. entering
 // fullscreen display:none's the trigger) strands `open` as true, and the
 // next trigger click toggles the invisible menu CLOSED — the button feels
-// dead. Drill-down menus (Settings) stop propagation on their panel, so
-// they keep themselves open for navigation.
-function onMenuClick() {
+// dead. Two opt-outs for controls that must survive their own click:
+// `data-keep-open` on the control (click-twice confirms, toggles), and
+// stopping propagation on the panel (the Settings drill-down).
+function onMenuClick(e) {
+  if (e.target?.closest?.('[data-keep-open]')) return
   close({restoreFocus: false})
 }
 

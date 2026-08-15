@@ -924,7 +924,9 @@ onMounted(() => {
                   <nuxt-link v-if="item.id_string" class="file-menu-item" :to="`/art/${item.id_string}`">
                     <span class="icon icon-link"/><span>Open page</span>
                   </nuxt-link>
-                  <button class="file-menu-item" @click="destroyWork(item)">
+                  <!-- data-keep-open: the first click only arms the confirm, so the menu
+                       must survive it (see ui/DropdownMenu.vue). -->
+                  <button class="file-menu-item" data-keep-open @click="destroyWork(item)">
                     <span class="icon" :class="confirmingWorkId === item.id ? 'icon-check' : 'icon-trash'"/>
                     <span>{{ confirmingWorkId === item.id ? 'Confirm delete' : 'Delete' }}</span>
                   </button>
@@ -1010,7 +1012,7 @@ onMounted(() => {
                   <nuxt-link class="file-menu-item" :to="`/collections/${c.id_string}`">
                     <span class="icon icon-pencil"/><span>Edit</span>
                   </nuxt-link>
-                  <button class="file-menu-item" @click="destroyColl(c)">
+                  <button class="file-menu-item" data-keep-open @click="destroyColl(c)">
                     <span class="icon" :class="confirmingCollId === c.id ? 'icon-check' : 'icon-trash'"/>
                     <span>{{ confirmingCollId === c.id ? 'Confirm delete' : 'Delete' }}</span>
                   </button>
@@ -1086,7 +1088,7 @@ onMounted(() => {
                   <nuxt-link v-if="!w.local" class="file-menu-item" :to="`/worlds/${w.id_string}`">
                     <span class="icon icon-link"/><span>Open page</span>
                   </nuxt-link>
-                  <button class="file-menu-item" @click="destroyWorld(w)">
+                  <button class="file-menu-item" data-keep-open @click="destroyWorld(w)">
                     <span class="icon" :class="confirmingWorldId === w.id ? 'icon-check' : 'icon-trash'"/>
                     <span>{{ confirmingWorldId === w.id ? 'Confirm delete' : 'Delete' }}</span>
                   </button>
@@ -1158,7 +1160,7 @@ onMounted(() => {
                   <nuxt-link v-if="!t.local" class="file-menu-item" :to="`/tilesets/${t.id_string}`">
                     <span class="icon icon-link"/><span>Open page</span>
                   </nuxt-link>
-                  <button class="file-menu-item" @click="destroyTileset(t)">
+                  <button class="file-menu-item" data-keep-open @click="destroyTileset(t)">
                     <span class="icon" :class="confirmingTilesetId === t.id ? 'icon-check' : 'icon-trash'"/>
                     <span>{{ confirmingTilesetId === t.id ? 'Deletes its worlds too — confirm' : 'Delete' }}</span>
                   </button>
