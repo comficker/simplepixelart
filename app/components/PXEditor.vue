@@ -233,7 +233,7 @@ async function genMetaWithAI() {
     tmp.width = editorData.value.width
     tmp.height = editorData.value.height
     drawThumbnail(tmp, editorData.value, 1)
-    const res = await useNativeFetch<{ title: string; description: string; tags: string[]; balance: number }>(
+    const res = await useNativeFetch<{ title: string; description: string; tags: string[]; slug?: string; balance: number }>(
         '/coloring/economy/gen-meta/', {
           method: 'POST',
           body: {
@@ -248,6 +248,10 @@ async function genMetaWithAI() {
     editorData.value.name = res.title
     editorData.value.desc = res.description
     if (res.tags?.length) editorData.value.tags = res.tags
+    // A draft auto-saves before it has a title, so its URL is stuck on the
+    // "untitled-<n>" slug the backend minted. Take the title's slug instead —
+    // but never for published art: that link is already out in the world.
+    if (res.slug && !editorData.value.is_public) editorData.value.id_string = res.slug
     if (aiMeta.value) aiMeta.value.balance = res.balance
     toast.success(`Filled by AI · −${aiMeta.value?.cost ?? 1} credit`)
   } catch (e: any) {
@@ -3939,7 +3943,7 @@ watch(
                   v-if="aiMeta?.enabled"
                   class="publish-ai-row"
                   :disabled="aiBusy"
-                  title="AI writes the title, description and tags from the artwork"
+                  title="AI writes the title, description, tags and a matching URL slug from the artwork"
                   @click="genMetaWithAI"
               >
                 <span class="icon icon-auto-fix"/>
