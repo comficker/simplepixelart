@@ -55,7 +55,15 @@ const relatedFetch = useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {
   key: 'tag-related',
 })
 
-await Promise.all([tagFetch, statsFetch, relatedFetch].filter(Boolean))
+// Prewarm the grid fetch the item-list below will make, so it runs in
+// PARALLEL with the lookups above instead of waterfalling behind them (a
+// child component's setup can't start until this page's awaits resolve —
+// that second round trip was pure TTFB, and GSC flags these pages' LCP).
+// Same key → Nuxt dedupes; the component reads the resolved payload.
+// Keep the inputs mirrored with the item-list tag in the template below.
+const gridPrewarm = useArtListFetch({limit: 24}).fetch
+
+await Promise.all([tagFetch, statsFetch, relatedFetch, gridPrewarm].filter(Boolean))
 const tag = tagFetch ? tagFetch.data : ref<TagSchema | null>(null)
 const tagError = tagFetch ? tagFetch.error : ref<any>(null)
 const {data: stats} = statsFetch
