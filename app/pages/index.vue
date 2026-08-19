@@ -122,23 +122,28 @@ const faq = [
   },
 ]
 
-// AI prompt → editor hand-off. The form only shows when the backend can
+// AI prompt → /generate hand-off. The form only shows when the backend can
 // actually generate (billing-gated flag), so the homepage never advertises a
-// dead end. Generating (and the token spend) happens in the editor modal.
-const aiEnabled = ref(false)
+// dead end. Resolved during SSR: as a client-only flag the hero grew a row
+// after hydration and the form was absent from the crawled HTML. `transform`
+// keeps the payload down to the one boolean, and the key must not look like a
+// route path — a payload key such as "/coloring/economy/" gets picked up as a
+// relative URL and crawled.
+const {data: aiEnabled} = await useAuthFetch<boolean>('/coloring/economy/', {
+  key: 'home-ai-image-enabled',
+  transform: (s: any) => !!s?.ai_image_enabled,
+  default: () => false,
+})
 const aiPrompt = ref('')
 
 function goGenerate() {
   const p = aiPrompt.value.trim()
   if (p.length < 3) return
-  navigateTo(`/editor?ai=${encodeURIComponent(p.slice(0, 300))}`)
+  navigateTo(`/generate?prompt=${encodeURIComponent(p.slice(0, 300))}`)
 }
 
 onMounted(() => {
   loadUserWorks()
-  useNativeFetch<{ ai_image_enabled?: boolean }>('/coloring/economy/')
-      .then(s => { aiEnabled.value = !!s.ai_image_enabled })
-      .catch(() => { /* form stays hidden */ })
 })
 
 // "Simple Pixel Art" is load-bearing: it's an exact-phrase match that earns
@@ -255,7 +260,8 @@ useCustomSeoMeta({
           </button>
         </form>
         <div class="studio-tools">
-          <ToolPaths/>
+          <!-- AI sits in the prompt form right above — no need to repeat it. -->
+          <ToolPaths exclude="ai"/>
         </div>
         <p v-if="auth.logged" class="home-hero-greeting">
           Welcome back, <span class="home-hero-name">@{{ greetingName }}</span>

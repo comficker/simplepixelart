@@ -736,8 +736,6 @@ const paletteRef = ref<{ addColor: () => void; toggleModify: () => void; removeC
 const paletteModify = ref(false)
 const showPalettePicker = ref(false)
 const showStripImport = ref(false)
-const showAiGenerate = ref(false)
-const aiSeed = ref('')
 
 let drawRafId: number | null = null;
 function scheduleDraw() {
@@ -3075,13 +3073,10 @@ onMounted(async () => {
   }
   // Open-in-editor from a palette page (?palette=<id_string>): apply the chosen
   // palette to the freshly loaded art and link it, then drop the query param.
-  // Hand-off from the Home AI form (?ai=<prompt>): open the generate modal
-  // with the prompt prefilled — generating (and spending) stays a click away.
+  // AI generation lives on /generate now — forward any old ?ai= link there.
   if (route.query.ai) {
-    aiSeed.value = String(route.query.ai).slice(0, 300)
-    showAiGenerate.value = true
-    const q = {...route.query}; delete q.ai
-    router.replace({query: q}).catch(() => {})
+    navigateTo(`/generate?prompt=${encodeURIComponent(String(route.query.ai).slice(0, 300))}`)
+    return
   }
   if (route.query.palette) {
     try {
@@ -3546,9 +3541,9 @@ watch(
         <!-- AI gets its own section — next to File it caught mis-clicks. -->
         <div class="toolbar-sep"/>
         <ui-tooltip text="Generate with AI">
-          <button class="toolbar-btn" aria-label="Generate with AI" @click="showAiGenerate = true">
+          <nuxt-link to="/generate" class="toolbar-btn" aria-label="Generate with AI">
             <span class="icon icon-auto-fix"/>
-          </button>
+          </nuxt-link>
         </ui-tooltip>
       </div>
       <div class="toolbar-main no-scrollbar">
@@ -3897,7 +3892,6 @@ watch(
     <!-- Palette library / image-extract / save-current -->
     <EditorPalettePicker v-model:open="showPalettePicker"/>
     <EditorStripImport v-model:open="showStripImport"/>
-    <EditorAiGenerate v-model:open="showAiGenerate" :seed="aiSeed" @added="focusActiveBoard"/>
 
     <!-- Publish modal -->
     <UiModal v-if="showPublishModal" @close="showPublishModal = false">
