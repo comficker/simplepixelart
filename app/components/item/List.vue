@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type {ResponseSharedPage} from "~/types";
 import CustomLink from "~/components/CustomLink.vue";
 import {debounce} from "~/helper/utils";
 import {looksLikeProtectedIP} from "~/helper/ip-denylist";
@@ -41,6 +40,14 @@ const router = useRouter()
 
 const search = ref('')
 
+// Params + payload key + fetch live in useArtListFetch (shared with the pages
+// that prewarm this exact fetch in parallel with their own SSR lookups).
+const {
+  fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive,
+} = useArtListFetch({limit, status, ordering, hideIp, search})
+
+const isDetailView = computed(() => route.path.startsWith('/art/'))
+
 const SIZE_PRESETS = [
   {width: 8, height: 8},
   {width: 16, height: 16},
@@ -50,66 +57,11 @@ const SIZE_PRESETS = [
   {width: 64, height: 64},
 ] as const
 
-const isNewView = computed(() => route.path === '/arts/new')
-const isDetailView = computed(() => route.path.startsWith('/art/'))
-const relatedId = computed(() => isDetailView.value ? route.params.id_string?.toString() : undefined)
-
-const sizeSlugMatch = computed(() => route.path.match(/^\/arts\/size-(\d+)x(\d+)$/i))
-
-const currentSize = computed(() => {
-  if (sizeSlugMatch.value) {
-    return {width: parseInt(sizeSlugMatch.value[1]!), height: parseInt(sizeSlugMatch.value[2]!)}
-  }
-  const w = route.query.width
-  const h = route.query.height
-  if (w && h) {
-    const wn = parseInt(w.toString())
-    const hn = parseInt(h.toString())
-    if (!Number.isNaN(wn) && !Number.isNaN(hn)) return {width: wn, height: hn}
-  }
-  return null
-})
-
-const isoActive = computed(() =>
-    route.query.is_iso === '1' || route.query.is_iso === 'true',
-)
-
 const hasActiveFilters = computed(() =>
     !!currentSize.value || isoActive.value || !!search.value,
 )
 
-const params = computed(() => ({
-  // /arts shows only approved (public) art. The "new" feed also surfaces
-  // pending (awaiting-review) submissions; the backend caps non-owners to
-  // public+pending so drafts never leak.
-  status: isNewView.value ? 'public,pending' : status,
-  slug: isNewView.value ? '/arts' : route.path,
-  page: route.query.page ? Number.parseInt(route.query.page.toString()) : 1,
-  // When IP filtering is on, over-fetch a buffer so client-side drops still
-  // leave ~`limit` items to show (otherwise e.g. 10 fetched → 7 rendered).
-  page_size: hideIp ? limit + 6 : limit,
-  search: search.value,
-  ordering: ordering || (isNewView.value ? '-updated' : undefined),
-  related: relatedId.value,
-  width: !sizeSlugMatch.value && route.query.width ? route.query.width : undefined,
-  height: !sizeSlugMatch.value && route.query.height ? route.query.height : undefined,
-  is_iso: isoActive.value ? '1' : undefined,
-}));
-
-// Key includes the props that change the query (ordering/limit) so two lists on
-// the same route — e.g. homepage "What's new" vs another feed — never share a
-// cache entry and render identical data.
-//
-// The path is URI-encoded on purpose. This key ships inside the SSR payload, and
-// the previous form `/arts/steve|default|20` reads as a URL path — Googlebot
-// extracted it and crawled it as a real page. That page then emitted its own key
-// (`…|default|20|default|20`), which got crawled too: an unbounded, self-feeding
-// crawl trap of near-duplicate listings. Encoding drops the slashes so nothing in
-// the key can be mistaken for a path. Don't "tidy" this back into a raw path.
-const {data, pending} = await useAuthFetch<ResponseSharedPage>(`/coloring/shared-pages/`, {
-  query: params,
-  key: `item-list:${encodeURIComponent(route.fullPath)}:${ordering || 'default'}:${limit}`,
-})
+const {data, pending} = await listFetch
 
 const visibleResults = computed(() => {
   const items = data.value?.results || []
