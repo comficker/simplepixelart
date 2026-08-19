@@ -478,6 +478,7 @@ footer {
  * Utilities — small, hand-picked set used inline in templates.
  * Anything not in this list should be a semantic component class.
  * ========================================================================== */
+.text-2xs { font-size: var(--text-2xs); line-height: var(--text-2xs-lh); }
 .text-xs { font-size: var(--text-xs); line-height: var(--text-xs-lh); }
 .text-sm { font-size: var(--text-sm); line-height: var(--text-sm-lh); }
 .text-base { font-size: var(--text-base); line-height: var(--text-base-lh); }
@@ -518,6 +519,18 @@ footer {
 .justify-between { justify-content: space-between; }
 
 .gap-1 { gap: var(--space-1); }
+
+/* One-line helper note under a tool-page settings row (generate, convert). */
+.tool-note {
+    display: block;
+    margin: var(--space-2) 0 0;
+    text-align: center;
+    font-size: var(--text-2xs);
+    line-height: var(--text-2xs-lh);
+    color: var(--muted);
+}
+
+.tool-note a { color: var(--primary); }
 .gap-2 { gap: var(--space-3); }
 .gap-3 { gap: var(--space-4); }
 .gap-4 { gap: var(--space-5); }

@@ -4,7 +4,7 @@ import {toast} from 'vue-sonner'
 import type {EditorData} from '~/types'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
 import {cloneDeep, debounce, generateUUID, getStorageItem} from '~/helper/utils'
-import {reconstructPixels} from '~/helper/pixel-reconstruct'
+import {cleanOrphanCells, convertImageToGrid} from '~/helper/pixel'
 
 useCustomSeoMeta({
   title: 'Image to Pixel Art Converter - Free Online Tool',
@@ -31,8 +31,12 @@ useCustomSeoMeta({
             },
             featureList: [
               'Drag and drop image upload',
+              'Auto size: detects the native pixel grid of upscaled pixel art',
               'Output sizes from 8x8 to 64x64 pixels',
               'Palette reduction 4 to 64 colors via median-cut quantization',
+              'Quantize into a community palette from the library',
+              'Transparent background removal',
+              'Ordered (Bayer) dithering for photo gradients',
               'Live brightness, contrast, saturation adjustment',
               'Pixel Cleaner to remove orphan pixels',
               'Color Swap and merge palette colors',
@@ -116,19 +120,28 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const previewCanvas = ref<HTMLCanvasElement | null>(null)
 const sourceImage = ref<HTMLImageElement | null>(null)
 
-const outputSize = ref(32)
+const outputSize = ref<number | 'auto'>('auto')
 const maxColors = ref(16)
 const brightness = ref(0)
 const contrast = ref(0)
 const saturation = ref(0)
+// Backdrop → transparency, and ordered dithering for photos (both off by
+// default: they change the output's nature, not just its quality).
+const bgCut = ref(false)
+const dither = ref(false)
+// Lock quantization to a library palette ('' = automatic median cut).
+type LibPalette = { id_string: string; name: string; colors: string[] }
+const libPalettes = ref<LibPalette[]>([])
+const lockedPalette = ref<LibPalette | null>(null)
 
 const pixels = ref<number[][]>([])
+const isNative = ref(false)          // the input's own grid was detected
 const palette = ref<RGB[]>([])
 const selectedColorIndex = ref<number>(-1)
 
 const hasImage = computed(() => !!sourceImage.value)
 
-const sizeOptions = [8, 12, 16, 20, 24, 32, 48, 64]
+const sizeOptions: (number | 'auto')[] = ['auto', 8, 12, 16, 20, 24, 32, 48, 64]
 const colorOptions = [4, 8, 16, 32, 64]
 
 // ================================================================
@@ -144,6 +157,8 @@ function onFileSelect(e: Event) {
   loadFile(file)
 }
 
+const sourceUrl = ref('')      // kept for the native fast-path in the preset
+
 function loadFile(file: File) {
   const reader = new FileReader()
   reader.onload = (e) => {
@@ -151,6 +166,7 @@ function loadFile(file: File) {
     const img = new Image()
     img.onload = () => {
       sourceImage.value = img
+      sourceUrl.value = url
       convert()
     }
     img.src = url
@@ -165,108 +181,40 @@ function onDrop(e: DragEvent) {
 }
 
 // ================================================================
-// Conversion pipeline
+// Conversion pipeline — the shared preset in ~/helper/pixel: uniform-margin
+// crop, adjustment bake, two-stage label-vote reconstruction.
 // ================================================================
-function applyAdjustments(r: number, g: number, b: number): RGB {
-  // Brightness
-  r += brightness.value
-  g += brightness.value
-  b += brightness.value
-  // Contrast
-  const c = (contrast.value + 100) / 100
-  r = (r - 128) * c + 128
-  g = (g - 128) * c + 128
-  b = (b - 128) * c + 128
-  // Saturation
-  const sat = (saturation.value + 100) / 100
-  const gray = 0.299 * r + 0.587 * g + 0.114 * b
-  r = gray + (r - gray) * sat
-  g = gray + (g - gray) * sat
-  b = gray + (b - gray) * sat
-  return [
-    Math.max(0, Math.min(255, Math.round(r))),
-    Math.max(0, Math.min(255, Math.round(g))),
-    Math.max(0, Math.min(255, Math.round(b))),
-  ]
-}
-
-// Working bitmap for the two-stage reconstruction: the image drawn at an
-// integer multiple of the target grid (white ground flattens alpha), with the
-// user's brightness/contrast/saturation baked into the pixels.
-function prepareWorking(img: HTMLImageElement, w: number, h: number): ImageData {
-  const cell = Math.max(2, Math.floor(512 / Math.max(w, h)))
-  const ww = w * cell, hh = h * cell
-  const tmp = document.createElement('canvas')
-  tmp.width = ww
-  tmp.height = hh
-  const ctx = tmp.getContext('2d')!
-  ctx.imageSmoothingEnabled = true
-  ctx.imageSmoothingQuality = 'high'
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, ww, hh)
-  // h is already derived from the image ratio — a plain fill keeps aspect.
-  ctx.drawImage(img, 0, 0, ww, hh)
-  const src = ctx.getImageData(0, 0, ww, hh)
-  const d = src.data
-  for (let i = 0; i < d.length; i += 4) {
-    const [r, g, b] = applyAdjustments(d[i]!, d[i + 1]!, d[i + 2]!)
-    d[i] = r; d[i + 1] = g; d[i + 2] = b
-  }
-  return src
-}
+// Converts run async and can interleave (rapid pill clicks): the token makes
+// sure only the LATEST call may publish its result — an older convert landing
+// late must not overwrite a newer one.
+let convertRun = 0
 
 async function convert() {
   if (!sourceImage.value) return
-  const img = sourceImage.value
-  const ratio = img.width / img.height
-  const w = outputSize.value
-  const h = Math.round(w / ratio) || w
-  // Two-stage reconstruction (label vote → color recovery) keeps region
-  // edges crisp — a plain downscale averages colors across boundaries.
-  const {palette: p, indexed} = reconstructPixels(prepareWorking(img, w, h), w, h, maxColors.value)
-  palette.value = p
-  pixels.value = indexed
+  const run = ++convertRun
+  const res = await convertImageToGrid(sourceImage.value, {
+    size: outputSize.value,
+    maxColors: maxColors.value,
+    brightness: brightness.value,
+    contrast: contrast.value,
+    saturation: saturation.value,
+    dataUrl: sourceUrl.value,
+    cutBackground: bgCut.value,
+    dither: dither.value,
+    palette: lockedPalette.value ? lockedPalette.value.colors.map(hexToRgb) : undefined,
+  })
+  if (!res || run !== convertRun) return
+  isNative.value = !!res.native
+  palette.value = res.palette
+  pixels.value = res.indexed
   await nextTick()
   drawPreview()
 }
 
 function cleanOrphans() {
   if (!pixels.value.length) return
-  const h = pixels.value.length
-  const w = pixels.value[0]!.length
-  const cleaned = pixels.value.map(r => [...r])
-  let changed = 0
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const c = pixels.value[y]![x]!
-      // Count same neighbors in 4-dir
-      let same = 0
-      if (y > 0 && pixels.value[y - 1]![x] === c) same++
-      if (y < h - 1 && pixels.value[y + 1]![x] === c) same++
-      if (x > 0 && pixels.value[y]![x - 1] === c) same++
-      if (x < w - 1 && pixels.value[y]![x + 1] === c) same++
-      if (same === 0) {
-        // Replace with majority neighbor
-        const neighbors: number[] = []
-        if (y > 0) neighbors.push(pixels.value[y - 1]![x]!)
-        if (y < h - 1) neighbors.push(pixels.value[y + 1]![x]!)
-        if (x > 0) neighbors.push(pixels.value[y]![x - 1]!)
-        if (x < w - 1) neighbors.push(pixels.value[y]![x + 1]!)
-        const counts = new Map<number, number>()
-        for (const n of neighbors) counts.set(n, (counts.get(n) || 0) + 1)
-        let majority = c, best = 0
-        counts.forEach((v, k) => {
-          if (v > best) {
-            best = v
-            majority = k
-          }
-        })
-        cleaned[y]![x] = majority
-        changed++
-      }
-    }
-  }
-  pixels.value = cleaned
+  const {grid, changed} = cleanOrphanCells(pixels.value)
+  pixels.value = grid
   drawPreview()
   toast.success(`Cleaned ${changed} orphan pixel${changed !== 1 ? 's' : ''}`)
 }
@@ -314,6 +262,7 @@ function drawPreview() {
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const idx = pixels.value[y]![x]!
+      if (idx < 0) continue                       // cut background — stays clear
       const rgb = palette.value[idx]!
       ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`
       ctx.fillRect(x * cellW, y * cellH, Math.ceil(cellW), Math.ceil(cellH))
@@ -332,7 +281,9 @@ function sendToEditor() {
   const layerPixels: {[key: string]: number} = {}
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      layerPixels[`${x}_${y}`] = pixels.value[y]![x]!
+      const idx = pixels.value[y]![x]!
+      if (idx < 0) continue                       // transparent stays empty
+      layerPixels[`${x}_${y}`] = idx
     }
   }
   const data: EditorData = {
@@ -364,14 +315,24 @@ function sendToEditor() {
 // Debounced: the range sliders fire continuously while dragging, and each
 // convert() re-samples + re-quantizes the full output grid.
 const debouncedConvert = debounce(() => { if (sourceImage.value) convert() }, 150)
-watch([outputSize, maxColors, brightness, contrast, saturation], () => debouncedConvert())
+watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither, lockedPalette], () => debouncedConvert())
+
+// Popular library palettes for the quantize-into-palette lock. Best-effort —
+// the section simply stays hidden offline.
+onMounted(() => {
+  useNativeFetch<{ results: LibPalette[] }>('/coloring/palettes/', {
+    params: {ordering: '-score', page_size: 8},
+  }).then(r => { libPalettes.value = (r.results || []).filter(p => p.colors?.length >= 3) })
+      .catch(() => { /* hidden */ })
+})
 
 const faq = [
   {q: 'Is this tool really free?', a: `<p>Yes. The entire converter runs in your browser. No account, no watermark, no upload to any server.</p>`},
   {q: 'What image formats are supported?', a: `<p>PNG, JPG, and WebP. Drag and drop a file onto the upload area or click to browse.</p>`},
   {q: 'How does the Pixel Cleaner work?', a: `<p>It scans the output for pixels that have no same-colored neighbors (orphans) and replaces each one with the majority color of its four-direction neighbors. This smooths out speckle that quantization often produces from photos.</p>`},
   {q: 'Can I edit the result after conversion?', a: `<p>Yes. Click <strong>Open in Editor</strong> to load the converted pixel art into our full online editor with brush, fill, layers, undo/redo, and export options.</p>`},
-  {q: "What's the difference between this and other pixel art converters?", a: `<p>Live preview on every setting change, preserved aspect ratio, color merge for manual palette cleanup, orphan-pixel cleaner for noise-free sprites, and a direct handoff to a full editor. No downloads, no signup.</p>`},
+  {q: "What's the difference between this and other pixel art converters?", a: `<p>Auto size that reads real pixel art back at its native resolution (most converters blindly resample it), transparent background removal, Bayer dithering, quantizing into community palettes, live preview on every setting change, color merge, an orphan-pixel cleaner, and a direct handoff to a full editor. No downloads, no signup.</p>`},
+  {q: 'What does the Auto size do?', a: `<p>If your image is pixel art that was upscaled, screenshotted, JPEG-compressed, or captured with grid lines, Auto detects the original cell size and reads the art back cell for cell — no detail lost, no blur. For photos it estimates a sensible output size instead.</p>`},
 ]
 </script>
 
@@ -386,7 +347,7 @@ const faq = [
             <button v-if="hasImage" class="text-xs" @click="openFileDialog">Change image</button>
           </template>
           <div class="preview-wrapper">
-            <canvas v-show="hasImage" ref="previewCanvas" class="pixel-preview"/>
+            <canvas v-show="hasImage" ref="previewCanvas" class="pixel-preview" :class="{checker: bgCut}"/>
             <div
                 v-if="!hasImage"
                 class="upload-zone"
@@ -418,21 +379,57 @@ const faq = [
       <!-- Settings -->
       <div class="convert-settings">
         <Widget title="Size">
-          <div class="settings-row">
+          <div class="settings-row" title="Auto reads the image's own pixel grid when it has one">
             <label v-for="s in sizeOptions" :key="s" class="pill" :class="{active: outputSize === s}">
               <input type="radio" :value="s" v-model="outputSize">
-              <span>{{ s }}</span>
+              <span>{{ s === 'auto' ? 'Auto' : s }}</span>
             </label>
           </div>
+          <p v-if="outputSize === 'auto' && pixels.length" class="tool-note">
+            Auto → {{ pixels[0]!.length }}×{{ pixels.length }}{{ isNative ? ' — native grid detected' : '' }}
+          </p>
         </Widget>
 
         <Widget title="Colors">
           <div class="settings-row">
-            <label v-for="c in colorOptions" :key="c" class="pill" :class="{active: maxColors === c}">
-              <input type="radio" :value="c" v-model="maxColors">
+            <label v-for="c in colorOptions" :key="c" class="pill" :class="{active: maxColors === c, off: !!lockedPalette}">
+              <input type="radio" :value="c" v-model="maxColors" :disabled="!!lockedPalette">
               <span>{{ c }}</span>
             </label>
           </div>
+          <label class="cv-check" title="Cut a uniform backdrop to transparency — the sprite lands in the editor with nothing behind it">
+            <input v-model="bgCut" type="checkbox">
+            <span class="text-xs">Transparent background</span>
+          </label>
+          <label class="cv-check" title="Ordered (Bayer) dithering — fakes gradients a small palette can't hold; best on photos">
+            <input v-model="dither" type="checkbox">
+            <span class="text-xs">Dithering</span>
+          </label>
+        </Widget>
+
+        <!-- Quantize INTO a community palette instead of deriving one. -->
+        <Widget v-if="libPalettes.length" title="Library palette">
+          <div class="cv-libpal">
+            <button class="cv-libpal-row" :class="{active: !lockedPalette}" @click="lockedPalette = null">
+              <span class="text-xs">Auto (from image)</span>
+            </button>
+            <button
+                v-for="lp in libPalettes"
+                :key="lp.id_string"
+                class="cv-libpal-row"
+                :class="{active: lockedPalette?.id_string === lp.id_string}"
+                :title="lp.name"
+                @click="lockedPalette = lockedPalette?.id_string === lp.id_string ? null : lp"
+            >
+              <span class="cv-libpal-sws">
+                <span v-for="c in lp.colors.slice(0, 8)" :key="c" class="cv-libpal-sw" :style="{backgroundColor: c}"/>
+              </span>
+              <span class="cv-libpal-name text-2xs">{{ lp.name }}</span>
+            </button>
+          </div>
+          <p class="tool-note">
+            <nuxt-link to="/palettes">Browse all palettes →</nuxt-link>
+          </p>
         </Widget>
 
         <Widget title="Adjust">
@@ -508,7 +505,7 @@ const faq = [
       <h2>How to use it</h2>
       <ol>
         <li><strong>Upload an image</strong> — drag and drop a PNG, JPG or WebP, or click to browse. Nothing is uploaded — it all runs in your browser.</li>
-        <li><strong>Pick size &amp; palette</strong> — choose an output size (<code>8×8</code>–<code>64×64</code>) and a color count (4–64), then tune brightness, contrast and saturation live.</li>
+        <li><strong>Pick size &amp; palette</strong> — keep <strong>Auto</strong> (it reads the image's own pixel grid when there is one — even from an upscaled, JPEG-compressed or grid-lined screenshot) or choose a size from <code>8×8</code> to <code>64×64</code>; pick a color count (4–64) or lock the output to a community palette, then tune brightness, contrast and saturation live.</li>
         <li><strong>Clean up &amp; export</strong> — run the Pixel Cleaner, merge colors, then open the result in the editor or save your pixel art.</li>
       </ol>
 
@@ -521,6 +518,10 @@ const faq = [
         <li><strong>Palette control</strong> — limit to 4, 8, 16, 32, or 64 colors. Smaller palettes produce that crisp retro look; larger palettes keep more detail.</li>
         <li><strong>Live image adjustments</strong> — brightness, contrast, and saturation sliders re-run the conversion on every change.</li>
         <li><strong>Pixel Cleaner</strong> — removes orphan pixels (isolated single dots with no matching neighbor), replacing them with the majority color around them.</li>
+        <li><strong>Auto size</strong> — pixel art that was exported at 8× or screenshotted with grid lines is read back at its true resolution, cell for cell, instead of being blindly resampled.</li>
+        <li><strong>Transparent background</strong> — cut a uniform backdrop to real transparency; the sprite lands in the editor with nothing behind it.</li>
+        <li><strong>Dithering</strong> — ordered (Bayer) dithering fakes the gradients a small palette can't hold; best on photos.</li>
+        <li><strong>Library palettes</strong> — quantize straight into a palette from the <a href="/palettes">community library</a>.</li>
         <li><strong>Color Swap &amp; Merge</strong> — click any palette swatch to pick a replacement color, or merge two palette colors into one to simplify your output.</li>
         <li><strong>One-click editor handoff</strong> — open the result in the full pixel art editor for touch-ups, layers, export to PNG/SVG/JSON, and sharing.</li>
       </ul>
@@ -632,6 +633,71 @@ const faq = [
   display: flex;
   flex-direction: column;
   gap: 0;
+}
+
+.cv-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  cursor: pointer;
+}
+
+/* Library palettes: one row per palette — swatch strip + name. */
+.cv-libpal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.cv-libpal-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.cv-libpal-row:hover { border-color: var(--primary); }
+
+.cv-libpal-row.active {
+  border-color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 8%, var(--surface));
+}
+
+.cv-libpal-sws {
+  display: inline-flex;
+  flex: none;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.cv-libpal-sw {
+  width: 10px;
+  height: 14px;
+}
+
+.cv-libpal-name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+.pill.off { opacity: 0.45; }
+
+/* Transparent-background mode: show the classic checkerboard through the art. */
+.pixel-preview.checker {
+  background:
+      repeating-conic-gradient(color-mix(in oklab, var(--muted) 18%, transparent) 0% 25%, transparent 0% 50%)
+      0 0 / 16px 16px;
 }
 
 .pill {

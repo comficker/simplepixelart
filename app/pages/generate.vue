@@ -2,7 +2,7 @@
 import {toast} from 'vue-sonner'
 import {cloneDeep, generateUUID, getStorageItem} from '~/helper/utils'
 import {rgbToHex} from '~/helper/color'
-import {aiImageToGrid} from '~/helper/pixel-reconstruct'
+import {aiImageToGrid} from '~/helper/pixel'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
 import type {EditorData} from '~/types'
 
@@ -220,18 +220,24 @@ async function claimDaily() {
 }
 
 // ── Convert: the model's picture → an indexed N×N grid ───────────────
-// aiImageToGrid (see ~/helper/pixel-reconstruct) flood-fills the model's flat
+// aiImageToGrid (see ~/helper/pixel) flood-fills the model's flat
 // ground to transparency from the border, crops to the subject, then resamples
 // by cell majority keeping the model's own flat colours. Index 0 is the
 // background and palette[0] holds the ground colour, so "Keep" can paint it in.
+// Same guard as /convert: conversions are async and knob changes can
+// interleave — only the latest call may publish.
+let convertRun = 0
+
 async function convertResult() {
   if (!resultUrl.value) return
+  const run = ++convertRun
   converting.value = true
   try {
     const q = await aiImageToGrid(resultUrl.value, size.value, maxColors.value, {
       removeGround: bgMode.value !== 'off',
       fillGrid: fillGrid.value,
     })
+    if (run !== convertRun) return
     if (!q) { toast.error('Could not read the generated image'); return }
     grid.value = q.indexed
     palette.value = q.palette.map(c => rgbToHex(c[0], c[1], c[2]).toUpperCase())
@@ -360,19 +366,37 @@ function deleteFromHistory(id: number) {
 
 // Hand off to the editor the same way the other tools do: park the artwork in
 // the local workspace store and open it by id.
-function sendToEditor() {
+async function sendToEditor() {
   if (!grid.value.length) return
-  const skip = bgMode.value === 'cut' ? BG : -1
-  const n = grid.value.length
+  let g = grid.value
+  let pal = palette.value
+  let skip = bgMode.value === 'cut' ? BG : -1
+  // The tab picks what you take with you: Pixel art hands off the converted
+  // sprite; Original hands off the model's own picture — native size (Auto
+  // detection), framing and background kept, a generous palette.
+  if (previewMode.value === 'original' && resultUrl.value) {
+    converting.value = true
+    try {
+      const q = await aiImageToGrid(resultUrl.value, 'auto', 64,
+          {removeGround: false, fillGrid: false, minShare: 0})
+      if (!q) { toast.error('Could not read the generated image'); return }
+      g = q.indexed
+      pal = q.palette.map(c => rgbToHex(c[0], c[1], c[2]).toUpperCase())
+      skip = -1                        // the background is part of the original
+    } finally {
+      converting.value = false
+    }
+  }
+  const n = g.length
   const pixels: Record<string, number> = {}
   const remap = new Map<number, number>()
   const colors: string[] = []
   for (let y = 0; y < n; y++) {
     for (let x = 0; x < n; x++) {
-      const idx = grid.value[y]![x]!
+      const idx = g[y]![x]!
       if (idx === skip) continue
       let m = remap.get(idx)
-      if (m === undefined) { m = colors.length; colors.push(palette.value[idx]!); remap.set(idx, m) }
+      if (m === undefined) { m = colors.length; colors.push(pal[idx]!); remap.set(idx, m) }
       pixels[`${x}_${y}`] = m
     }
   }
@@ -462,9 +486,13 @@ const faq = [
         </p>
 
         <div v-if="hasResult" class="gen-actions">
-          <button class="btn primary block" @click="sendToEditor">
+          <button
+              class="btn primary block"
+              :title="previewMode === 'original' ? 'Open the original picture in the editor' : 'Open the pixel art in the editor'"
+              @click="sendToEditor"
+          >
             <span class="icon icon-pen"/>
-            <span>Open in Editor</span>
+            <span>{{ previewMode === 'original' ? 'Open Original in Editor' : 'Open in Editor' }}</span>
           </button>
         </div>
 
@@ -568,7 +596,7 @@ const faq = [
               <span>{{ s === 'auto' ? 'Auto' : s }}</span>
             </label>
           </div>
-          <p v-if="size === 'auto' && hasResult" class="gen-note text-2xs text-muted">
+          <p v-if="size === 'auto' && hasResult" class="tool-note">
             Auto → {{ grid.length }}×{{ grid.length }}
           </p>
           <div class="settings-row gen-row2" title="Palette size — re-converts for free">
@@ -579,7 +607,7 @@ const faq = [
           </div>
           <!-- Only in the one case where it matters: a photo's subject cannot
                survive 16 or 32 cells (measured in test_gemini). -->
-          <p v-if="reference && size !== 'auto' && size < 64" class="gen-note text-2xs text-muted">
+          <p v-if="reference && size !== 'auto' && size < 64" class="tool-note">
             A photo holds up better at 64+
           </p>
         </Widget>
@@ -610,7 +638,7 @@ const faq = [
               </button>
             </div>
           </div>
-          <p class="gen-note text-2xs text-muted">Reopening is free</p>
+          <p class="tool-note">Reopening is free</p>
         </Widget>
       </div>
     </div>
@@ -944,16 +972,6 @@ const faq = [
   border-top: 1px solid var(--border);
 }
 
-.gen-prompt {
-  width: 100%;
-  resize: vertical;
-}
-
-.gen-cta {
-  margin-top: var(--space-2);
-  justify-content: center;
-}
-
 .gen-cost {
   display: inline-flex;
   align-items: center;
@@ -963,15 +981,6 @@ const faq = [
 }
 
 .gen-cost .icon { width: 12px; height: 12px; }
-
-.gen-note {
-  display: block;
-  margin: var(--space-2) 0 0;
-  text-align: center;
-}
-
-
-.gen-note a { color: var(--primary); }
 
 .gen-row2 { margin-top: var(--space-2); }
 
