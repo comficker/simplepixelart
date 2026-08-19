@@ -5,7 +5,7 @@ import type {EditorData} from '~/types'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
 import {cloneDeep, generateUUID, debounce, getStorageItem} from '~/helper/utils'
 import {layers2MapNumbers} from '~/helper/canvas'
-import {detectPixelScale, bestPhase, shiftCrop, modeDownscale, imageToCells} from '~/helper/pixel-reconstruct'
+import {detectPixelScale, bestPhase, shiftCrop, modeDownscale, imageToCells} from '~/helper/pixel'
 import {saveWorkspaceFull, clearWorkspaceFull} from '~/helper/workspaceSnapshot'
 import {createZip} from '~/helper/zip'
 
@@ -1107,7 +1107,7 @@ function cropActive(): HTMLCanvasElement | null {
 
 // ── Cleanup: round pixels (de-upscale) + merge similar colours ─────
 // Factor + phase detection and mode-downscale live in the shared core
-// (~/helper/pixel-reconstruct) — the same code drives the editor import
+// (~/helper/pixel) — the same code drives the editor import
 // and the /convert page.
 
 // Cluster similar colours, seeding from the most frequent ones so each cluster's

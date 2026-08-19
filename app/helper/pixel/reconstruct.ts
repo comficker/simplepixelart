@@ -262,6 +262,18 @@ export function reconstructCells(
  * budget (/convert, the AI generator). The source must be pre-flattened
  * (no alpha) — any transparent cell falls back to white.
  */
+/** Quantize an RGB|null cell grid to k colours (nulls read as white — the
+ *  tool pages have no transparency concept). */
+export function quantizeCells(
+    cells: Cell[][], k: number,
+): { palette: RGB[]; indexed: number[][] } {
+    const flat: RGB[] = []
+    for (const row of cells) for (const p of row) flat.push(p ?? [255, 255, 255])
+    const palette = medianCut(flat, k)
+    const indexed = cells.map(row => row.map(p => nearest(p ?? [255, 255, 255], palette)))
+    return {palette, indexed}
+}
+
 export function reconstructPixels(
     src: ImageData, outW: number, outH: number, k: number,
 ): { palette: RGB[]; indexed: number[][] } {
@@ -300,10 +312,13 @@ function knockoutUniformBg(img: ImageData) {
         if (d <= EDGE_TOL) near++
     }
     if (near < border.length * 0.85) return   // border isn't one solid color
+    // Tight knockout: EDGE_TOL here also killed cream-on-white sprite colours
+    // (pixel_bench: the cat lost its paws and every native read came up short).
+    const KNOCK_TOL = 12 * 12 * 3
     for (let i = 0; i < w * h; i++) {
         const o = i * 4
         const d = (data[o]! - bg![0]) ** 2 + (data[o + 1]! - bg![1]) ** 2 + (data[o + 2]! - bg![2]) ** 2
-        if (d <= EDGE_TOL) data[o + 3] = 0
+        if (d <= KNOCK_TOL) data[o + 3] = 0
     }
 }
 
@@ -399,13 +414,35 @@ export async function imageToCells(
     if (opts?.knockoutBg !== false) knockoutUniformBg(src)
 
     const det = detectOnWindow(src)
-    const cols = Math.floor((dw - det.ox) / det.f)
-    const rows = Math.floor((dh - det.oy) / det.f)
+    // Arbitration: JPEG noise can fool the round-trip detector into a tiny
+    // f=2 while the comb reads the true 8px pitch. When the comb sees a pitch
+    // at least twice the round-trip factor, the fine factor is a phantom.
+    if (det.f > 1) {
+        const pitch = estimateCellPx(src.data, dw, dh, 0, 0, dw - 1, dh - 1)
+        if (pitch && pitch >= det.f * 2) det.f = 1
+    }
+    let cols = Math.floor((dw - det.ox) / det.f)
+    let rows = Math.floor((dh - det.oy) / det.f)
 
     let cells: Cell[][]
     let scale = det.f
     if (det.f > 1 && cols >= 1 && rows >= 1 && cols <= maxOut && rows <= maxOut) {
         cells = reconstructCells(src, cols, rows, {x0: det.ox, y0: det.oy, cellW: det.f, cellH: det.f})
+    } else if (det.f <= 1
+        && (() => {
+            // The round-trip detector is blind past f=8 and on wobbly grids
+            // (grid-lined shots have pitch cell+line; JPEG noise defeats its
+            // exact round trip). The comb pitch reader covers that range — and
+            // it is its own photo gate: a photo has too few stable colour runs
+            // to elect a pitch at all.
+            const pitch = estimateCellPx(src.data, dw, dh, 0, 0, dw - 1, dh - 1)
+            if (!pitch || pitch < 3) return false
+            cols = Math.round(dw / pitch)
+            rows = Math.round(dh / pitch)
+            return cols >= 2 && rows >= 2 && cols <= maxOut && rows <= maxOut
+        })()) {
+        cells = reconstructCells(src, cols, rows)
+        scale = Math.max(2, Math.round(dw / cols))
     } else if (dw <= maxOut && dh <= maxOut && distinctColors(src, 1024) <= 1024) {
         // Already native-size pixel art (limited palette) — read cells 1:1.
         cells = reconstructCells(src, dw, dh, {cellW: 1, cellH: 1})
@@ -436,7 +473,7 @@ export async function imageToCells(
 // corner-majority colour) left the ground in the art in 12 of 21 cases.
 
 /** Peel the flat ground (and any frame around it) to real transparency. */
-function peelGround(img: ImageData): RGB | null {
+export function peelGround(img: ImageData): RGB | null {
     const {width: W, height: H, data: D} = img
     const total = W * H
     const at = (x: number, y: number) => (y * W + x) * 4
@@ -519,6 +556,20 @@ function peelGround(img: ImageData): RGB | null {
         return removed
     }
 
+    // Opaque content box — the frame test below compares it across a peel.
+    const bbox = () => {
+        let bx0 = W, by0 = H, bx1 = -1, by1 = -1
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+            if (D[at(x, y) + 3]! >= ALPHA_ON) {
+                if (x < bx0) bx0 = x
+                if (x > bx1) bx1 = x
+                if (y < by0) by0 = y
+                if (y > by1) by1 = y
+            }
+        }
+        return bx1 < 0 ? null : {x0: bx0, y0: by0, x1: bx1, y1: by1}
+    }
+
     // A peeled band leaves a 1-2px blend ring standing, which SEALS the region
     // behind it from the border — the next flood would remove nothing.
     const erodeHalo = (rounds: number) => {
@@ -539,15 +590,53 @@ function peelGround(img: ImageData): RGB | null {
         }
     }
 
+    const peeled: RGB[] = []                      // colours already peeled
     for (let round = 0; round < 3; round++) {
         const bgs = ringColors()
         if (!bgs) break                           // ring isn't a flat ground
         const before = opaqueCount()
+        // A vignetted ground peels over several rounds — a follow-up round in
+        // the same colour family is a continuation, not a new band, and must
+        // not be gated like one.
+        const continues = peeled.some(pc => bgs.some(bg => Math.sqrt(
+            (pc[0] - bg[0]) ** 2 + (pc[1] - bg[1]) ** 2 + (pc[2] - bg[2]) ** 2) <= TOL * 2.5))
+        const pre = (round && !continues) ? bbox() : null
+        // Gated rounds may only peel an ENCLOSING band, judged AFTER the halo
+        // erosion (the blend ring a peel leaves hugs the old extremes and made
+        // an honest shrink look like none). Two tests from pixel_bench:
+        //  · a real band shrinks the content box on all four sides — a
+        //    mostly-one-colour sprite body doesn't (its outline stays at the
+        //    same extremes: chubby-orange-cat lost its whole body here), and
+        //  · a band's colour doesn't recur INSIDE what remains, sprite ink
+        //    does (the cat's outline colour is also its eyes and mouth).
+        // Failing either restores the round wholesale from the snapshot.
+        let alphaSnap: Uint8Array | null = null
+        if (pre) {
+            alphaSnap = new Uint8Array(total)
+            for (let i = 0; i < total; i++) alphaSnap[i] = D[i * 4 + 3]!
+        }
         const removed = flood(bgs)
         if (!removed) break
+        erodeHalo(2)
+        if (pre && alphaSnap) {
+            const dist = (o: number) => Math.min(...bgs.map(bg => Math.sqrt(
+                (D[o]! - bg[0]) ** 2 + (D[o + 1]! - bg[1]) ** 2 + (D[o + 2]! - bg[2]) ** 2)))
+            let inkLeft = 0
+            for (let i = 0; i < total; i++) {
+                const o = i * 4
+                if (D[o + 3]! >= ALPHA_ON && dist(o) <= TOL) inkLeft++
+            }
+            const now = bbox()
+            const shrank = !!now && now.x0 > pre.x0 && now.y0 > pre.y0
+                && now.x1 < pre.x1 && now.y1 < pre.y1
+            if (!shrank || inkLeft > removed * 0.05) {
+                for (let i = 0; i < total; i++) D[i * 4 + 3] = alphaSnap[i]!
+                break
+            }
+        }
+        peeled.push(...bgs)
         if (!ground) ground = bgs[0]!             // first band = what to paint back
         else if (removed > total * 0.15) ground = bgs[0]!   // the real ground, not a frame
-        erodeHalo(2)
         const after = opaqueCount()
         if (after / total < 0.10) break           // safety: never eat the sprite
         if (before - after < total * 0.002) break
@@ -580,21 +669,28 @@ function peelGround(img: ImageData): RGB | null {
  * framing instead of cropping to the subject — both are re-runs of a picture
  * already paid for, so the caller can offer them as free adjustments.
  */
-// The model's "native" cell size, for Auto output. detectPixelScale can't see
-// it (AI cells are 8–20px with a blended halo — its round-trip gate rejects
-// them, f=1 on all 21 test images), so the pitch is read from stable colour
-// runs instead: sample lines across the subject, keep runs of one colour
-// (3–80px, halo steps are shorter), then comb-score candidate cell sizes —
-// a run folds in as any multiple of the candidate, weighted 1/multiple, and
-// the largest candidate within 92% of the best score wins (the harmonic trick
-// that keeps a bimodal image — grid-line backdrops, dithered texture — from
-// electing a sub-pitch). Measured over the 21 test generations: 21/128 cells
-// on chunky art, 99–128 on fine art, no blow-ups.
-function estimateCellPx(
+// The art's cell period in source pixels, for Auto output — where the
+// round-trip detector is blind (AI output's wobbly 8–20px cells, upscales
+// past f=8, JPEG noise, grid-lined shots). Three ideas, each earned on
+// pixel_bench + the 21 test generations:
+//  · lattice sites are the STARTS of stable colour runs; the comb works on
+//    start-to-start gaps (run lengths hide a 1px grid line's share of the
+//    period),
+//  · comb election: a gap explains a candidate as any multiple (weight 1/m),
+//    largest candidate within 92% of the best score wins (anti sub-pitch),
+//  · the elected integer is refined by fitting gap ≈ a·m + b — the slope is
+//    the true period (a 5.5× upscale has no integer candidate; b absorbs a
+//    constant separator).
+export function estimateCellPx(
     D: Uint8ClampedArray, W: number, H: number,
     x0: number, y0: number, x1: number, y1: number,
 ): number | null {
     const at = (x: number, y: number) => (y * W + x) * 4
+    // Lattice sites: the START of every stable colour run (≥4px — JPEG speckle
+    // forms 3px runs and elects phantom sub-pitches). The comb below works on
+    // start-to-start GAPS, not run lengths: a 1px grid line cuts every run to
+    // one cell and hides the period from lengths (runs say 8, the truth is 9),
+    // while start gaps carry the separator with them.
     const runs: number[] = []
     const LINES = 64
     const collect = (horizontal: boolean) => {
@@ -604,12 +700,22 @@ function estimateCellPx(
             const fixed = (horizontal ? y0 : x0) + Math.floor(span * (li + 0.5) / LINES)
             let anchor: [number, number, number] | null = null
             let run = 0
-            const flush = () => { if (run >= 3 && run <= 80) runs.push(run) }
+            let runStart = -1
+            let prevStart = -1
+            const flush = () => {
+                if (run >= 4 && run <= 80) {
+                    if (prevStart >= 0) {
+                        const gap = runStart - prevStart
+                        if (gap >= 4 && gap <= 80) runs.push(gap)
+                    }
+                    prevStart = runStart
+                }
+            }
             for (let t = 0; t < len; t++) {
                 const x = horizontal ? x0 + t : fixed
                 const y = horizontal ? fixed : y0 + t
                 const o = at(x, y)
-                if (D[o + 3]! < ALPHA_ON) { flush(); anchor = null; run = 0; continue }
+                if (D[o + 3]! < ALPHA_ON) { flush(); anchor = null; run = 0; prevStart = -1; continue }
                 if (anchor
                     && (D[o]! - anchor[0]) ** 2 + (D[o + 1]! - anchor[1]) ** 2 + (D[o + 2]! - anchor[2]) ** 2 <= EDGE_TOL) {
                     run++
@@ -618,6 +724,7 @@ function estimateCellPx(
                 flush()
                 anchor = [D[o]!, D[o + 1]!, D[o + 2]!]
                 run = 1
+                runStart = t
             }
             flush()
         }
@@ -639,12 +746,34 @@ function estimateCellPx(
     }
     if (!best) return null
     const good = scores.filter(([, sc]) => sc >= best * 0.92)
-    return good[good.length - 1]![0]
+    const c = good[good.length - 1]![0]
+    // Refine to the REAL period by fitting run ≈ a·m + b over what the elected
+    // candidate explains. The slope IS the pitch and the intercept absorbs a
+    // constant separator: a 5.5× upscale fits a=5.5 b=0 (no integer candidate
+    // exists), a grid-lined shot fits a=9 b=-1 (runs are 9m-1 — a plain mean
+    // under-read it by 7% and every size came out wrong).
+    const tol = Math.max(1.5, c * 0.12)
+    let n = 0, sm = 0, sr = 0, smm = 0, smr = 0
+    for (const run of runs) {
+        const m = Math.round(run / c)
+        if (m >= 1 && Math.abs(run - m * c) <= tol) {
+            n++
+            sm += m
+            sr += run
+            smm += m * m
+            smr += m * run
+        }
+    }
+    if (!n) return c
+    const varM = smm - sm * sm / n
+    if (varM < 1e-6) return sr / sm               // one multiple only — plain mean
+    const a = (smr - sm * sr / n) / varM
+    return (a >= 3.2 && a <= 80) ? a : c
 }
 
 export async function aiImageToGrid(
     dataUrl: string, n: number | 'auto', maxColors: number,
-    opts?: { removeGround?: boolean; fillGrid?: boolean },
+    opts?: { removeGround?: boolean; fillGrid?: boolean; minShare?: number },
 ): Promise<{ palette: RGB[]; indexed: number[][] } | null> {
     if (!dataUrl || !dataUrl.startsWith('data:image/')) return null
     let img: HTMLImageElement
@@ -755,8 +884,12 @@ export async function aiImageToGrid(
     }
     const ranked = [...freq.values()].sort((a, b) => b.n - a.n)
     const painted = ranked.reduce((a, e) => a + e.n, 0) || 1
+    // The share floor kills one-off blend speckle on a cropped sprite — but on
+    // a kept-frame image the flat background owns the area and would starve
+    // every detail colour, so such callers pass minShare: 0.
+    const minShare = opts?.minShare ?? 0.01
     const keep = ranked
-        .filter((e, i) => i < maxColors && (i < 6 || e.n / painted >= 0.01))
+        .filter((e, i) => i < maxColors && (i < 6 || e.n / painted >= minShare))
         .map(e => e.c)
     if (!keep.length) keep.push([0, 0, 0])
     const nearest = (c: RGB) => {
