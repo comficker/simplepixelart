@@ -34,7 +34,7 @@ useCustomSeoMeta({
         featureList: [
           'Text prompt to pixel art sprite',
           'Reference image to pixel art (image-to-image)',
-          'Output sizes 16x16 to 128x128',
+          'Output sizes 16x16 to 128x128, or auto-detected native size',
           'Palette cap of 8, 16 or 32 colors',
           'Automatic background removal to transparency',
           'Crop to subject so the sprite fills the canvas',
@@ -52,7 +52,10 @@ const googleAuthUrl = computed(() => {
   return `${apiBase}/auth/google?state=${encodeURIComponent(`${requestURL.origin}/auth/callback`)}`
 })
 
-const SIZES = [16, 32, 64, 128]
+// 'auto' = the size the model natively drew at (detected from the picture,
+// usually 40-110) — the option for users who want the art as large as it
+// really is. The prompt then asks for the finest grid we offer.
+const SIZES: (number | 'auto')[] = ['auto', 16, 32, 64, 128]
 const COLOR_COUNTS = [8, 16, 32]
 // Whitelisted prompt modifiers (mirrored server-side) — steer the model
 // without asking users to write prompt-engineering incantations.
@@ -79,7 +82,7 @@ const BG_MODES = [
 type BgMode = typeof BG_MODES[number]['v']
 
 const prompt = ref('')
-const size = ref(32)
+const size = ref<number | 'auto'>(32)
 const style = ref('sprite')
 const view = ref('auto')
 const outline = ref(false)
@@ -247,7 +250,7 @@ watch(previewMode, (m) => { if (m === 'pixel') nextTick(drawPreview) })
 function drawPreview() {
   const cv = previewCanvas.value
   if (!cv || !grid.value.length) return
-  const n = size.value
+  const n = grid.value.length          // = size, or whatever Auto detected
   const scale = Math.max(1, Math.floor(384 / n))
   cv.width = n * scale
   cv.height = n * scale
@@ -274,7 +277,8 @@ async function generate() {
         {
           method: 'POST',
           body: {
-            prompt: prompt.value.trim(), size: size.value,
+            prompt: prompt.value.trim(),
+            size: size.value === 'auto' ? 128 : size.value,
             style: style.value, view: view.value, outline: outline.value,
             colors: maxColors.value,
             ...(reference.value ? {reference: reference.value} : {}),
@@ -359,11 +363,12 @@ function deleteFromHistory(id: number) {
 function sendToEditor() {
   if (!grid.value.length) return
   const skip = bgMode.value === 'cut' ? BG : -1
+  const n = grid.value.length
   const pixels: Record<string, number> = {}
   const remap = new Map<number, number>()
   const colors: string[] = []
-  for (let y = 0; y < size.value; y++) {
-    for (let x = 0; x < size.value; x++) {
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
       const idx = grid.value[y]![x]!
       if (idx === skip) continue
       let m = remap.get(idx)
@@ -377,7 +382,7 @@ function sendToEditor() {
     ...cloneDeep(DEFAULT_EDITOR_DATA),
     id,
     name: prompt.value.trim().slice(0, 60),
-    width: size.value, height: size.value,
+    width: n, height: n,
     colors,
     layers: [{name: 'Layer 1', pixels, x: 0, y: 0}],
     updated: new Date().toISOString(),
@@ -423,14 +428,13 @@ const faq = [
       <!-- Preview -->
       <div class="gen-main">
         <Widget title="Preview">
-          <template #ctl>
+          <div class="preview-wrapper">
+            <!-- Overlaid on the stage, not in the header: the toggle belongs to
+                 the picture it switches. -->
             <div v-if="hasResult" class="tm-seg gen-viewseg">
               <button :class="{active: previewMode === 'pixel'}" @click="previewMode = 'pixel'">Pixel art</button>
               <button :class="{active: previewMode === 'original'}" @click="previewMode = 'original'">Original</button>
             </div>
-          </template>
-
-          <div class="preview-wrapper">
             <template v-if="hasResult">
               <canvas
                   v-show="previewMode === 'pixel'"
@@ -558,12 +562,15 @@ const faq = [
              for, so they share one panel and carry no cost badge — the title
              attributes say so on hover instead of a paragraph of copy. -->
         <Widget title="Output">
-          <div class="settings-row" title="Canvas size — re-converts for free">
+          <div class="settings-row" title="Canvas size — Auto keeps the model's native detail; re-converts for free">
             <label v-for="s in SIZES" :key="s" class="pill" :class="{active: size === s}">
               <input type="radio" :value="s" v-model="size">
-              <span>{{ s }}</span>
+              <span>{{ s === 'auto' ? 'Auto' : s }}</span>
             </label>
           </div>
+          <p v-if="size === 'auto' && hasResult" class="gen-note text-2xs text-muted">
+            Auto → {{ grid.length }}×{{ grid.length }}
+          </p>
           <div class="settings-row gen-row2" title="Palette size — re-converts for free">
             <label v-for="c in COLOR_COUNTS" :key="c" class="pill" :class="{active: maxColors === c}">
               <input type="radio" :value="c" v-model="maxColors">
@@ -572,7 +579,7 @@ const faq = [
           </div>
           <!-- Only in the one case where it matters: a photo's subject cannot
                survive 16 or 32 cells (measured in test_gemini). -->
-          <p v-if="reference && size < 64" class="gen-note text-2xs text-muted">
+          <p v-if="reference && size !== 'auto' && size < 64" class="gen-note text-2xs text-muted">
             A photo holds up better at 64+
           </p>
         </Widget>
@@ -634,7 +641,7 @@ const faq = [
       <ul>
         <li><strong>Text to sprite</strong> — prompt modifiers for style and view, plus an optional dark outline, so you don't have to write prompt incantations.</li>
         <li><strong>Reference image</strong> — attach a photo, drawing or existing sprite and have it redrawn as pixel art; it is downscaled in your browser before being sent.</li>
-        <li><strong>Sizes 16×16 to 128×128</strong> — and switching size re-converts the same picture instead of charging again.</li>
+        <li><strong>Sizes 16×16 to 128×128, or Auto</strong> — Auto reads the cell size the model actually drew at and keeps every pixel of that detail; switching size re-converts the same picture instead of charging again.</li>
         <li><strong>Palette cap</strong> — 8, 16 or 32 colors, chosen by how much area each color covers, so flat regions stay flat.</li>
         <li><strong>Background control</strong> — cut it to transparency, keep it as a color, or leave it untouched when the removal misjudges a subject.</li>
         <li><strong>See the original</strong> — compare the model's own picture with the pixel art built from it.</li>
@@ -681,12 +688,18 @@ const faq = [
   border-top: 1px solid var(--border);
 }
 
+/* The stage is flush with the widget frame — no body padding, no own padding:
+   the picture goes edge to edge. */
+.gen-main :deep(.widget-body) {
+  padding: 0;
+}
+
 .preview-wrapper {
+  position: relative;                /* anchors the view toggle overlay */
   display: flex;
   align-items: center;
   justify-content: center;
   aspect-ratio: 1;
-  padding: var(--space-4);
 }
 
 .gen-preview,
@@ -716,12 +729,18 @@ const faq = [
 
 .gen-original { border-radius: var(--radius-sm); }
 
-/* A header control, not a panel control: .tm-seg defaults to a 34px box with
-   13px labels and no horizontal padding, which swelled this header to 43px and
-   left the two labels touching each other and the edges. */
+/* Overlaid top-right on the stage. .tm-seg defaults to a 34px box with 13px
+   labels and no horizontal padding — kept compact here for the same reason it
+   was in the header: the control must not compete with the picture. */
 .gen-viewseg {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 1;
   --tm-ctl: 24px;
   padding: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border);
 }
 
 .gen-viewseg button {

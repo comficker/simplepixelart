@@ -580,8 +580,70 @@ function peelGround(img: ImageData): RGB | null {
  * framing instead of cropping to the subject — both are re-runs of a picture
  * already paid for, so the caller can offer them as free adjustments.
  */
+// The model's "native" cell size, for Auto output. detectPixelScale can't see
+// it (AI cells are 8–20px with a blended halo — its round-trip gate rejects
+// them, f=1 on all 21 test images), so the pitch is read from stable colour
+// runs instead: sample lines across the subject, keep runs of one colour
+// (3–80px, halo steps are shorter), then comb-score candidate cell sizes —
+// a run folds in as any multiple of the candidate, weighted 1/multiple, and
+// the largest candidate within 92% of the best score wins (the harmonic trick
+// that keeps a bimodal image — grid-line backdrops, dithered texture — from
+// electing a sub-pitch). Measured over the 21 test generations: 21/128 cells
+// on chunky art, 99–128 on fine art, no blow-ups.
+function estimateCellPx(
+    D: Uint8ClampedArray, W: number, H: number,
+    x0: number, y0: number, x1: number, y1: number,
+): number | null {
+    const at = (x: number, y: number) => (y * W + x) * 4
+    const runs: number[] = []
+    const LINES = 64
+    const collect = (horizontal: boolean) => {
+        const len = horizontal ? (x1 - x0 + 1) : (y1 - y0 + 1)
+        const span = horizontal ? (y1 - y0 + 1) : (x1 - x0 + 1)
+        for (let li = 0; li < LINES; li++) {
+            const fixed = (horizontal ? y0 : x0) + Math.floor(span * (li + 0.5) / LINES)
+            let anchor: [number, number, number] | null = null
+            let run = 0
+            const flush = () => { if (run >= 3 && run <= 80) runs.push(run) }
+            for (let t = 0; t < len; t++) {
+                const x = horizontal ? x0 + t : fixed
+                const y = horizontal ? fixed : y0 + t
+                const o = at(x, y)
+                if (D[o + 3]! < ALPHA_ON) { flush(); anchor = null; run = 0; continue }
+                if (anchor
+                    && (D[o]! - anchor[0]) ** 2 + (D[o + 1]! - anchor[1]) ** 2 + (D[o + 2]! - anchor[2]) ** 2 <= EDGE_TOL) {
+                    run++
+                    continue
+                }
+                flush()
+                anchor = [D[o]!, D[o + 1]!, D[o + 2]!]
+                run = 1
+            }
+            flush()
+        }
+    }
+    collect(true)
+    collect(false)
+    if (runs.length < 40) return null
+    let best = 0
+    const scores: [number, number][] = []
+    for (let c = 4; c <= 64; c++) {
+        const tol = Math.max(1.5, c * 0.12)
+        let score = 0
+        for (const run of runs) {
+            const m = Math.round(run / c)
+            if (m >= 1 && Math.abs(run - m * c) <= tol) score += 1 / m
+        }
+        scores.push([c, score])
+        if (score > best) best = score
+    }
+    if (!best) return null
+    const good = scores.filter(([, sc]) => sc >= best * 0.92)
+    return good[good.length - 1]![0]
+}
+
 export async function aiImageToGrid(
-    dataUrl: string, n: number, maxColors: number,
+    dataUrl: string, n: number | 'auto', maxColors: number,
     opts?: { removeGround?: boolean; fillGrid?: boolean },
 ): Promise<{ palette: RGB[]; indexed: number[][] } | null> {
     if (!dataUrl || !dataUrl.startsWith('data:image/')) return null
@@ -611,29 +673,42 @@ export async function aiImageToGrid(
     // the model leaves a wide margin of its own, and a sprite that fills the
     // canvas is the whole point at 32².
     let x0 = W, y0 = H, x1 = -1, y1 = -1
-    if (opts?.fillGrid === false) {
-        x0 = 0; y0 = 0; x1 = W - 1; y1 = H - 1                // keep the model's framing
-    } else {
-        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-            if (D[at(x, y) + 3]! >= ALPHA_ON) {
-                if (x < x0) x0 = x
-                if (x > x1) x1 = x
-                if (y < y0) y0 = y
-                if (y > y1) y1 = y
-            }
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (D[at(x, y) + 3]! >= ALPHA_ON) {
+            if (x < x0) x0 = x
+            if (x > x1) x1 = x
+            if (y < y0) y0 = y
+            if (y > y1) y1 = y
         }
     }
     if (x1 < 0) { x0 = 0; y0 = 0; x1 = W - 1; y1 = H - 1 }   // nothing survived
+
+    // Auto = the size the model actually drew at: subject cells (+2 for the
+    // margin the contain-fit adds back), clamped to the tool's 16..128 range.
+    // No pitch found (photo-like output) → 64, the safe large default.
+    let N: number
+    if (n === 'auto') {
+        const pitch = estimateCellPx(D, W, H, x0, y0, x1, y1)
+        const span = opts?.fillGrid === false
+            ? Math.max(W, H)
+            : Math.max(x1 - x0 + 1, y1 - y0 + 1)
+        const margin = opts?.fillGrid === false ? 0 : 2
+        N = pitch ? Math.max(16, Math.min(128, Math.round(span / pitch) + margin)) : 64
+    } else {
+        N = n
+    }
+
+    if (opts?.fillGrid === false) { x0 = 0; y0 = 0; x1 = W - 1; y1 = H - 1 }  // keep the model's framing
     const cw = x1 - x0 + 1, ch = y1 - y0 + 1
     // A cropped subject gets a 1px breathing margin; the model's own framing
     // already has margins of its own, so it uses the full grid.
-    const inner = opts?.fillGrid === false ? n : Math.max(1, n - 2)
+    const inner = opts?.fillGrid === false ? N : Math.max(1, N - 2)
     const f = Math.min(inner / cw, inner / ch)
-    const tw = Math.max(1, Math.min(n, Math.round(cw * f)))
-    const th = Math.max(1, Math.min(n, Math.round(ch * f)))
-    const ox = Math.floor((n - tw) / 2), oy = Math.floor((n - th) / 2)
+    const tw = Math.max(1, Math.min(N, Math.round(cw * f)))
+    const th = Math.max(1, Math.min(N, Math.round(ch * f)))
+    const ox = Math.floor((N - tw) / 2), oy = Math.floor((N - th) / 2)
 
-    const grid: Cell[][] = Array.from({length: n}, () => Array<Cell>(n).fill(null))
+    const grid: Cell[][] = Array.from({length: N}, () => Array<Cell>(N).fill(null))
     for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
         const sx0 = x0 + Math.floor(x * cw / tw)
         const sx1 = x0 + Math.max(Math.floor((x + 1) * cw / tw), Math.floor(x * cw / tw) + 1)
