@@ -418,24 +418,18 @@ useCustomSeoMeta({
 
 <style scoped>
 .home > * + * {
-  margin-top: 1rem;
+  margin-top: var(--space-2);
 }
 
 /* === Hero === */
 /* Boxed hero: card panel on a subtle accent wash. */
 .home-hero {
-  padding: 1rem;
+  padding: var(--space-4);
   background:
     radial-gradient(120% 120% at 100% 0%, color-mix(in oklab, var(--primary) 10%, transparent), transparent 60%),
     var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-@media (min-width: 768px) {
-  .home-hero {
-    padding: 1rem;
-  }
+  border-radius: var(--radius-sm);
 }
 
 .home-hero-inner {
@@ -609,8 +603,6 @@ useCustomSeoMeta({
 }
 
 /* === Studio + Library: wrapped in the README card; plain padded body === */
-.studio.readme,
-.library.readme { margin-top: var(--space-4); }
 .studio-body,
 .library-body { padding: var(--space-4); }
 
