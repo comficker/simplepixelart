@@ -420,3 +420,283 @@ export async function imageToCells(
     cells = trimTransparentBorder(cells)
     return cells.length && cells[0]!.length ? {cells, scale} : null
 }
+
+// ── AI-generated art → grid ─────────────────────────────────────────
+// Text-to-image models don't draw the N×N bitmap you asked for. Measured over
+// 21 Gemini generations (simplepixelart/test_gemini/report.md):
+//   · they never return real alpha, even when the prompt demands it (0 of 21),
+//   · they put the subject on a flat ground whose hue may also appear inside
+//     the subject (an orange ground next to a gold shield),
+//   · they sometimes frame the whole image in a solid band,
+//   · their "pixels" are 8–20 screen px wide, with a blended halo at every
+//     colour boundary.
+// So the ground is removed geometrically — flood filled from the border, which
+// can never punch a hole inside the subject — and only then is the art
+// resampled. The old path (smooth contain-fit → median cut → drop the
+// corner-majority colour) left the ground in the art in 12 of 21 cases.
+
+/** Peel the flat ground (and any frame around it) to real transparency. */
+function peelGround(img: ImageData): RGB | null {
+    const {width: W, height: H, data: D} = img
+    const total = W * H
+    const at = (x: number, y: number) => (y * W + x) * 4
+    const TOL = 46          // one flat colour, plus a shade of resampling drift
+    let ground: RGB | null = null
+
+    const opaqueCount = () => {
+        let k = 0
+        for (let i = 3; i < D.length; i += 4) if (D[i]! >= ALPHA_ON) k++
+        return k
+    }
+
+    // The ring is sampled 2px INSIDE the opaque boundary: right after a peel the
+    // outermost pixels are the blend between the band just removed and whatever
+    // is under it, and that mixture hides the flat colour behind it.
+    const ringColors = (): RGB[] | null => {
+        const hist = new Map<string, { n: number; c: RGB }>()
+        let sampled = 0
+        const walk = (xs: number, ys: number, dx: number, dy: number) => {
+            let x = xs, y = ys, hits = 0
+            while (x >= 0 && y >= 0 && x < W && y < H) {
+                const o = at(x, y)
+                if (D[o + 3]! >= ALPHA_ON) {
+                    hits++
+                    if (hits > 2) {
+                        const c: RGB = [D[o]!, D[o + 1]!, D[o + 2]!]
+                        const k = `${c[0] >> 3},${c[1] >> 3},${c[2] >> 3}`
+                        const e = hist.get(k) || {n: 0, c}
+                        e.n++
+                        hist.set(k, e)
+                        sampled++
+                        return
+                    }
+                }
+                x += dx
+                y += dy
+            }
+        }
+        for (let x = 0; x < W; x += 2) { walk(x, 0, 0, 1); walk(x, H - 1, 0, -1) }
+        for (let y = 0; y < H; y += 2) { walk(0, y, 1, 0); walk(W - 1, y, -1, 0) }
+        if (!sampled) return null
+        const ranked = [...hist.values()].sort((a, b) => b.n - a.n)
+        const first = ranked[0]!
+        // A flat ground owns almost the whole ring; a sprite outline never does.
+        // Without this gate, the round after the ground is gone samples the
+        // sprite itself and floods it away.
+        if (first.n / sampled >= 0.7) return [first.c]
+        // Two-colour grounds happen: asked for transparency the model paints a
+        // grey/white checkerboard, and "pixel grid" wording makes it rule lines
+        // over the ground. Take both only when together they own the ring.
+        const second = ranked[1]
+        if (second && (first.n + second.n) / sampled >= 0.85) return [first.c, second.c]
+        return null
+    }
+
+    const flood = (bgs: RGB[]) => {
+        const dist = (o: number) => Math.min(...bgs.map(bg => Math.sqrt(
+            (D[o]! - bg[0]) ** 2 + (D[o + 1]! - bg[1]) ** 2 + (D[o + 2]! - bg[2]) ** 2)))
+        const seen = new Uint8Array(total)
+        const stack: number[] = []
+        for (let x = 0; x < W; x++) stack.push(x, 0, x, H - 1)
+        for (let y = 0; y < H; y++) stack.push(0, y, W - 1, y)
+        let removed = 0
+        while (stack.length) {
+            const y = stack.pop()!, x = stack.pop()!
+            if (x < 0 || y < 0 || x >= W || y >= H) continue
+            const i = y * W + x
+            if (seen[i]) continue
+            seen[i] = 1
+            const o = i * 4
+            if (D[o + 3]! < ALPHA_ON) {           // already gone — keep spreading
+                stack.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1)
+                continue
+            }
+            if (dist(o) > TOL) continue
+            D[o + 3] = 0
+            removed++
+            stack.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1)
+        }
+        return removed
+    }
+
+    // A peeled band leaves a 1-2px blend ring standing, which SEALS the region
+    // behind it from the border — the next flood would remove nothing.
+    const erodeHalo = (rounds: number) => {
+        for (let r = 0; r < rounds; r++) {
+            const drop: number[] = []
+            for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+                const o = at(x, y)
+                if (D[o + 3]! < ALPHA_ON) continue
+                let bgN = 0
+                if (x === 0 || D[at(x - 1, y) + 3]! < ALPHA_ON) bgN++
+                if (y === 0 || D[at(x, y - 1) + 3]! < ALPHA_ON) bgN++
+                if (x === W - 1 || D[at(x + 1, y) + 3]! < ALPHA_ON) bgN++
+                if (y === H - 1 || D[at(x, y + 1) + 3]! < ALPHA_ON) bgN++
+                if (bgN >= 2) drop.push(o)
+            }
+            if (!drop.length) return
+            for (const o of drop) D[o + 3] = 0
+        }
+    }
+
+    for (let round = 0; round < 3; round++) {
+        const bgs = ringColors()
+        if (!bgs) break                           // ring isn't a flat ground
+        const before = opaqueCount()
+        const removed = flood(bgs)
+        if (!removed) break
+        if (!ground) ground = bgs[0]!             // first band = what to paint back
+        else if (removed > total * 0.15) ground = bgs[0]!   // the real ground, not a frame
+        erodeHalo(2)
+        const after = opaqueCount()
+        if (after / total < 0.10) break           // safety: never eat the sprite
+        if (before - after < total * 0.002) break
+    }
+    // Final de-speckle: a pixel with ground on all four sides is a blend leftover.
+    const drop: number[] = []
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const o = at(x, y)
+        if (D[o + 3]! < ALPHA_ON) continue
+        let bgN = 0
+        if (x === 0 || D[at(x - 1, y) + 3]! < ALPHA_ON) bgN++
+        if (y === 0 || D[at(x, y - 1) + 3]! < ALPHA_ON) bgN++
+        if (x === W - 1 || D[at(x + 1, y) + 3]! < ALPHA_ON) bgN++
+        if (y === H - 1 || D[at(x, y + 1) + 3]! < ALPHA_ON) bgN++
+        if (bgN === 4) drop.push(o)
+    }
+    for (const o of drop) D[o + 3] = 0
+    return ground
+}
+
+/**
+ * A text-to-image PNG → an indexed N×N grid ready for the editor.
+ *
+ * Index 0 is the background: transparent in the art, and `palette[0]` carries
+ * the ground colour the model drew, so a caller can paint it back instead.
+ * Returns null when the image can't be read.
+ *
+ * `removeGround: false` keeps the model's ground as art (the escape hatch when
+ * the peel misjudges a subject), and `fillGrid: false` keeps the model's own
+ * framing instead of cropping to the subject — both are re-runs of a picture
+ * already paid for, so the caller can offer them as free adjustments.
+ */
+export async function aiImageToGrid(
+    dataUrl: string, n: number, maxColors: number,
+    opts?: { removeGround?: boolean; fillGrid?: boolean },
+): Promise<{ palette: RGB[]; indexed: number[][] } | null> {
+    if (!dataUrl || !dataUrl.startsWith('data:image/')) return null
+    let img: HTMLImageElement
+    try {
+        img = await new Promise<HTMLImageElement>((resolve, reject) => {
+            const i = new Image()
+            i.onload = () => resolve(i)
+            i.onerror = reject
+            i.src = dataUrl
+        })
+    } catch { return null }
+    if (!img.naturalWidth || !img.naturalHeight) return null
+
+    const cv = document.createElement('canvas')
+    cv.width = img.naturalWidth
+    cv.height = img.naturalHeight
+    const ctx = cv.getContext('2d', {willReadFrequently: true})
+    if (!ctx) return null
+    ctx.drawImage(img, 0, 0)
+    const src = ctx.getImageData(0, 0, cv.width, cv.height)
+    const ground = opts?.removeGround === false ? null : peelGround(src)
+    const {width: W, height: H, data: D} = src
+    const at = (x: number, y: number) => (y * W + x) * 4
+
+    // Crop to the subject, then contain-fit it into the grid with a 1px margin:
+    // the model leaves a wide margin of its own, and a sprite that fills the
+    // canvas is the whole point at 32².
+    let x0 = W, y0 = H, x1 = -1, y1 = -1
+    if (opts?.fillGrid === false) {
+        x0 = 0; y0 = 0; x1 = W - 1; y1 = H - 1                // keep the model's framing
+    } else {
+        for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+            if (D[at(x, y) + 3]! >= ALPHA_ON) {
+                if (x < x0) x0 = x
+                if (x > x1) x1 = x
+                if (y < y0) y0 = y
+                if (y > y1) y1 = y
+            }
+        }
+    }
+    if (x1 < 0) { x0 = 0; y0 = 0; x1 = W - 1; y1 = H - 1 }   // nothing survived
+    const cw = x1 - x0 + 1, ch = y1 - y0 + 1
+    // A cropped subject gets a 1px breathing margin; the model's own framing
+    // already has margins of its own, so it uses the full grid.
+    const inner = opts?.fillGrid === false ? n : Math.max(1, n - 2)
+    const f = Math.min(inner / cw, inner / ch)
+    const tw = Math.max(1, Math.min(n, Math.round(cw * f)))
+    const th = Math.max(1, Math.min(n, Math.round(ch * f)))
+    const ox = Math.floor((n - tw) / 2), oy = Math.floor((n - th) / 2)
+
+    const grid: Cell[][] = Array.from({length: n}, () => Array<Cell>(n).fill(null))
+    for (let y = 0; y < th; y++) for (let x = 0; x < tw; x++) {
+        const sx0 = x0 + Math.floor(x * cw / tw)
+        const sx1 = x0 + Math.max(Math.floor((x + 1) * cw / tw), Math.floor(x * cw / tw) + 1)
+        const sy0 = y0 + Math.floor(y * ch / th)
+        const sy1 = y0 + Math.max(Math.floor((y + 1) * ch / th), Math.floor(y * ch / th) + 1)
+        // Majority colour of the source block, averaged within its bucket — the
+        // model's "one flat colour" still drifts by a shade or two.
+        const hist = new Map<string, { n: number; sum: [number, number, number] }>()
+        let opaque = 0, count = 0
+        for (let sy = sy0; sy < sy1 && sy < H; sy++) for (let sx = sx0; sx < sx1 && sx < W; sx++) {
+            count++
+            const o = at(sx, sy)
+            if (D[o + 3]! < ALPHA_ON) continue
+            opaque++
+            const k = `${D[o]! >> 3},${D[o + 1]! >> 3},${D[o + 2]! >> 3}`
+            const e = hist.get(k) || {n: 0, sum: [0, 0, 0] as [number, number, number]}
+            e.n++
+            e.sum[0] += D[o]!
+            e.sum[1] += D[o + 1]!
+            e.sum[2] += D[o + 2]!
+            hist.set(k, e)
+        }
+        if (!opaque || opaque * 3 < count) continue      // mostly ground → stay empty
+        let best: { n: number; sum: [number, number, number] } | null = null
+        hist.forEach(e => { if (!best || e.n > best.n) best = e })
+        if (!best) continue
+        grid[oy + y]![ox + x] = [
+            Math.round(best.sum[0] / best.n),
+            Math.round(best.sum[1] / best.n),
+            Math.round(best.sum[2] / best.n),
+        ]
+    }
+
+    // Palette by area, not by median cut: the source is already flat, so keeping
+    // the model's own colours avoids inventing in-between tones. A long tail of
+    // one-off blend colours is what makes a converted sprite look speckled.
+    const freq = new Map<string, { n: number; c: RGB }>()
+    for (const row of grid) for (const c of row) {
+        if (!c) continue
+        const k = `${c[0] >> 3},${c[1] >> 3},${c[2] >> 3}`
+        const e = freq.get(k) || {n: 0, c}
+        e.n++
+        freq.set(k, e)
+    }
+    const ranked = [...freq.values()].sort((a, b) => b.n - a.n)
+    const painted = ranked.reduce((a, e) => a + e.n, 0) || 1
+    const keep = ranked
+        .filter((e, i) => i < maxColors && (i < 6 || e.n / painted >= 0.01))
+        .map(e => e.c)
+    if (!keep.length) keep.push([0, 0, 0])
+    const nearest = (c: RGB) => {
+        let bi = 0, bd = Infinity
+        for (let i = 0; i < keep.length; i++) {
+            const k = keep[i]!
+            const d = (c[0] - k[0]) ** 2 + (c[1] - k[1]) ** 2 + (c[2] - k[2]) ** 2
+            if (d < bd) { bd = d; bi = i }
+        }
+        return bi
+    }
+    return {
+        // Slot 0 = the background: transparent in the art, but the ground colour
+        // is kept so "Transparent background: off" can paint it back.
+        palette: [ground ?? [255, 255, 255], ...keep],
+        indexed: grid.map(row => row.map(c => (c ? nearest(c) + 1 : 0))),
+    }
+}
