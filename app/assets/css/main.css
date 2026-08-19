@@ -397,7 +397,7 @@ footer {
 }
 
 .page > * + * {
-    margin-top: 1rem;
+    margin-top: var(--space-2);
 }
 
 /* Shared listing-page hero (gallery, palettes): the boxed .home-hero card, but

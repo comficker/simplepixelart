@@ -66,6 +66,7 @@ const baseCommands = computed<Cmd[]>(() => [
   { id: 'nav:home', label: 'Home', icon: 'icon-square', group: 'Navigate', keywords: 'index start', run: () => router.push('/') },
   { id: 'nav:editor', label: 'PX Editor', icon: 'icon-pen', hint: 'New canvas', group: 'Navigate', keywords: 'draw paint create canvas', run: () => router.push('/editor') },
   { id: 'nav:convert', label: 'Image to Pixel Art', icon: 'icon-swap', group: 'Navigate', keywords: 'convert photo pixelate', run: () => router.push('/convert') },
+  { id: 'nav:generate', label: 'AI Generator', icon: 'icon-auto-fix', hint: 'Text to sprite', group: 'Navigate', keywords: 'ai generate prompt text to sprite reference image gemini', run: () => router.push('/generate') },
   { id: 'nav:tileset', label: 'Tileset Slicer', icon: 'icon-select', hint: 'Slice a sheet', group: 'Navigate', keywords: 'spritesheet slice cut sprites tiles', run: () => router.push('/tilesets/slicer') },
   { id: 'nav:tilesets', label: 'Tileset Editor', icon: 'icon-grid', hint: 'Curate tiles', group: 'Navigate', keywords: 'tileset tiles curate registry set', run: () => router.push('/tilesets/editor') },
   { id: 'nav:tilemap', label: 'Tilemap Editor', icon: 'icon-rhombus', hint: 'Grid / iso map', group: 'Navigate', keywords: 'tilemap map grid isometric tiles level scene world', run: () => router.push('/tilemaps/editor') },
@@ -74,6 +75,7 @@ const baseCommands = computed<Cmd[]>(() => [
   { id: 'nav:collections', label: 'Your collections', icon: 'icon-rhombus', group: 'Navigate', keywords: 'collection group theme album', run: () => router.push('/work?tab=collections') },
   { id: 'create:new', label: 'New pixel art', icon: 'icon-square', hint: 'Open editor', group: 'Create', keywords: 'start blank draw', run: () => router.push('/editor') },
   { id: 'create:convert', label: 'Convert an image', icon: 'icon-swap', group: 'Create', keywords: 'photo upload pixelate', run: () => router.push('/convert') },
+  { id: 'create:generate', label: 'Generate with AI', icon: 'icon-auto-fix', hint: 'Prompt or photo', group: 'Create', keywords: 'ai generate prompt text to pixel art sprite', run: () => router.push('/generate') },
   { id: 'create:tileset', label: 'New tileset', icon: 'icon-grid', group: 'Create', keywords: 'tiles curate set registry', run: () => router.push('/tilesets/editor') },
   { id: 'create:tilemap', label: 'New tilemap', icon: 'icon-rhombus', hint: 'Grid / iso', group: 'Create', keywords: 'map grid isometric build level scene world', run: () => router.push('/tilemaps/editor') },
   { id: 'create:slice', label: 'Slice a tileset', icon: 'icon-select', group: 'Create', keywords: 'spritesheet cut sprites tiles', run: () => router.push('/tilesets/slicer') },
@@ -197,6 +199,9 @@ const groupedBlocks = computed(() => {
   let index = 0
   for (const group of order) {
     const list = map.get(group)!
+    // Browsing lists each group A→Z so an entry's place is predictable;
+    // while searching, the relevance order above must survive untouched.
+    if (!q) list.sort((a, b) => a.label.localeCompare(b.label))
     blocks.push({ group, items: list.map(cmd => ({ cmd, index: index++ })) })
   }
   return blocks
