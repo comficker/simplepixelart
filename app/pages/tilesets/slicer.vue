@@ -1942,7 +1942,7 @@ const faq = [
             </template>
           </ui-dropdown-menu>
           <ui-tooltip text="Slice settings">
-            <button class="toolbar-btn" title="Slice settings" @click="showSettings = true"><span class="icon icon-cog"/></button>
+            <button class="toolbar-btn" :class="{ active: showSettings }" title="Slice settings" @click="showSettings = !showSettings"><span class="icon icon-cog"/></button>
           </ui-tooltip>
         </div>
         <div class="toolbar-main no-scrollbar">
@@ -1970,6 +1970,151 @@ const faq = [
             </ui-tooltip>
           </div>
         </div>
+      </div>
+
+      <!-- Slice settings: an inline panel, NOT a modal — every knob previews
+           live on the canvas below, so nothing may cover it. -->
+      <div v-if="showSettings" class="ts-settings-bar">
+        <button class="ts-settings-x" aria-label="Close settings" @click="showSettings = false">
+          <span class="icon icon-close"/>
+        </button>
+<div class="ts-set">
+        <div class="ts-set-col">
+          <label class="ts-set-label">Cut method</label>
+          <div class="tm-seg">
+            <button :class="{active: mode === 'select'}" @click="mode = 'select'">Select</button>
+            <button :class="{active: mode === 'auto'}" @click="mode = 'auto'">Auto</button>
+            <button :class="{active: mode === 'grid'}" @click="mode = 'grid'">Grid</button>
+          </div>
+
+          <div class="ts-params">
+            <!-- Grid -->
+            <template v-if="mode === 'grid'">
+              <label class="ts-sub">Tile size</label>
+              <div class="settings-row">
+                <label v-for="s in sizePresets" :key="s" class="ts-pill" :class="{active: tileW === s && tileH === s}">
+                  <input type="radio" :value="s" :checked="tileW === s && tileH === s" @change="() => { tileW = s; tileH = s }">
+                  <span>{{ s }}</span>
+                </label>
+              </div>
+              <div class="ts-dims">
+                <label class="ts-field"><span>W</span><input type="number" min="1" v-model.number="tileW"></label>
+                <button class="ts-link" :class="{active: linkSize}" @click="linkSize = !linkSize" title="Link width & height"><span class="icon icon-link"/></button>
+                <label class="ts-field"><span>H</span><input type="number" min="1" v-model.number="tileH" :disabled="linkSize"></label>
+              </div>
+              <label class="ts-sub">Spacing &amp; offset</label>
+              <div class="slider-row">
+                <label>Spacing <span>{{ spacing }}px</span></label>
+                <input type="range" v-model.number="spacing" min="0" max="16" step="1">
+              </div>
+              <div class="ts-dims">
+                <label class="ts-field"><span>X</span><input type="number" min="0" v-model.number="offsetX"></label>
+                <label class="ts-field"><span>Y</span><input type="number" min="0" v-model.number="offsetY"></label>
+              </div>
+            </template>
+
+            <!-- Auto-detect -->
+            <template v-else-if="mode === 'auto'">
+              <div class="ts-bg-row">
+                <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
+                <span class="text-xs text-muted">Background</span>
+                <button class="ts-inline-btn" @click="detect" :disabled="detecting">{{ detecting ? '…' : 'Re-detect' }}</button>
+              </div>
+              <div class="slider-row">
+                <label>Tolerance <span>{{ tolerance }}</span></label>
+                <input type="range" v-model.number="tolerance" min="0" max="100" step="2">
+              </div>
+              <div class="slider-row">
+                <label>Min sprite size <span>{{ minSize }}px</span></label>
+                <input type="range" v-model.number="minSize" min="4" max="64" step="1">
+              </div>
+              <div class="slider-row">
+                <label>Merge gap <span>{{ mergeGap }}px</span></label>
+                <input type="range" v-model.number="mergeGap" min="0" max="6" step="1">
+              </div>
+            </template>
+
+            <!-- Select by hand -->
+            <template v-else>
+              <label class="ts-sub">Selection shape</label>
+              <div class="tm-seg">
+                <button :class="{active: selectShape === 'free'}" @click="selectShape = 'free'">Rectangle</button>
+                <button :class="{active: selectShape === 'square'}" @click="selectShape = 'square'">Square</button>
+                <button :class="{active: selectShape === 'fixed'}" @click="selectShape = 'fixed'">Fixed</button>
+              </div>
+              <div v-if="selectShape === 'fixed'" class="ts-dims">
+                <label class="ts-field"><span>W</span><input type="number" min="1" v-model.number="fixedW"></label>
+                <button class="ts-link" :class="{active: fixedLink}" @click="fixedLink = !fixedLink" title="Link width & height"><span class="icon icon-link"/></button>
+                <label class="ts-field"><span>H</span><input type="number" min="1" v-model.number="fixedH" :disabled="fixedLink"></label>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div class="ts-set-col">
+          <label class="ts-set-label">Cleanup</label>
+          <ui-switch
+              v-model="editorProcess"
+              :disabled="processing"
+              size="sm"
+              title="Runs the shared import pipeline (the same engine the editor, /convert and /generate use: de-upscale to the native grid, background knockout, crop) on the whole sheet — the preview and every export slice from the result."
+          >
+            <span class="text-xs">{{ processing ? 'Processing…' : 'Clean sheet on load' }}</span>
+          </ui-switch>
+          <template v-if="editorProcess">
+            <ui-switch
+                v-model="sheetKeepBg"
+                :disabled="processing"
+                size="sm"
+                class="ts-set-toggle"
+                title="Keep the sheet's backdrop instead of knocking it out to transparency"
+            >
+              <span class="text-xs">Keep background</span>
+            </ui-switch>
+            <p v-if="sheetInfo" class="text-2xs text-muted ts-sheetinfo">Detected {{ sheetInfo }}</p>
+          </template>
+          <ui-switch v-model="removeBg" size="sm" class="ts-set-toggle"><span class="text-xs">Remove background</span></ui-switch>
+          <div v-if="removeBg" class="ts-bg-block">
+            <div class="ts-bg-row">
+              <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
+              <button class="ts-pickbtn" :class="{active: picking}" @click="picking = !picking">
+                {{ picking ? 'Click a pixel…' : 'Pick color' }}
+              </button>
+            </div>
+            <div class="slider-row" style="margin-top: 0.5rem">
+              <label>Bg tolerance <span>{{ removeBgTol }}</span></label>
+              <input type="range" v-model.number="removeBgTol" min="0" max="100" step="2">
+            </div>
+          </div>
+
+          <label class="ts-sub">Round pixels</label>
+          <div class="settings-row">
+            <button
+                v-for="opt in crispOptions"
+                :key="opt.l"
+                class="ts-pill"
+                :class="{active: crispFactor === opt.v}"
+                @click="crispFactor = opt.v"
+            >{{ opt.l }}</button>
+          </div>
+          <ui-switch v-model="median" size="sm" class="ts-set-toggle"><span class="text-xs">Smooth</span></ui-switch>
+          <div class="slider-row" style="margin-top: 0.75rem">
+            <label>Merge similar colors <span>{{ mergeTol }}</span></label>
+            <input type="range" v-model.number="mergeTol" min="0" max="60" step="2">
+          </div>
+          <label class="ts-sub">Reduce to colors</label>
+          <div class="settings-row">
+            <button
+                v-for="opt in quantOptions"
+                :key="opt.l"
+                class="ts-pill"
+                :class="{active: quantize === opt.v}"
+                @click="quantize = opt.v"
+            >{{ opt.l }}</button>
+          </div>
+          <ui-switch v-model="despeckle" size="sm" class="ts-set-toggle"><span class="text-xs">Despeckle</span></ui-switch>
+        </div>
+      </div>
       </div>
 
       <!-- Body: canvas stage + control rail — editor-style flex row -->
@@ -2174,147 +2319,7 @@ const faq = [
     <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileSelect">
 
     <!-- Slice settings modal: how to cut (left) · cleanup (right) -->
-    <UiModal v-if="showSettings" class="ts-set-modal" title="Slice settings" width="34rem" @close="showSettings = false">
-      <div class="ts-set">
-        <div class="ts-set-col">
-          <label class="ts-set-label">Cut method</label>
-          <div class="tm-seg">
-            <button :class="{active: mode === 'select'}" @click="mode = 'select'">Select</button>
-            <button :class="{active: mode === 'auto'}" @click="mode = 'auto'">Auto</button>
-            <button :class="{active: mode === 'grid'}" @click="mode = 'grid'">Grid</button>
-          </div>
 
-          <div class="ts-params">
-            <!-- Grid -->
-            <template v-if="mode === 'grid'">
-              <label class="ts-sub">Tile size</label>
-              <div class="settings-row">
-                <label v-for="s in sizePresets" :key="s" class="ts-pill" :class="{active: tileW === s && tileH === s}">
-                  <input type="radio" :value="s" :checked="tileW === s && tileH === s" @change="() => { tileW = s; tileH = s }">
-                  <span>{{ s }}</span>
-                </label>
-              </div>
-              <div class="ts-dims">
-                <label class="ts-field"><span>W</span><input type="number" min="1" v-model.number="tileW"></label>
-                <button class="ts-link" :class="{active: linkSize}" @click="linkSize = !linkSize" title="Link width & height"><span class="icon icon-link"/></button>
-                <label class="ts-field"><span>H</span><input type="number" min="1" v-model.number="tileH" :disabled="linkSize"></label>
-              </div>
-              <label class="ts-sub">Spacing &amp; offset</label>
-              <div class="slider-row">
-                <label>Spacing <span>{{ spacing }}px</span></label>
-                <input type="range" v-model.number="spacing" min="0" max="16" step="1">
-              </div>
-              <div class="ts-dims">
-                <label class="ts-field"><span>X</span><input type="number" min="0" v-model.number="offsetX"></label>
-                <label class="ts-field"><span>Y</span><input type="number" min="0" v-model.number="offsetY"></label>
-              </div>
-            </template>
-
-            <!-- Auto-detect -->
-            <template v-else-if="mode === 'auto'">
-              <div class="ts-bg-row">
-                <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
-                <span class="text-xs text-muted">Background</span>
-                <button class="ts-inline-btn" @click="detect" :disabled="detecting">{{ detecting ? '…' : 'Re-detect' }}</button>
-              </div>
-              <div class="slider-row">
-                <label>Tolerance <span>{{ tolerance }}</span></label>
-                <input type="range" v-model.number="tolerance" min="0" max="100" step="2">
-              </div>
-              <div class="slider-row">
-                <label>Min sprite size <span>{{ minSize }}px</span></label>
-                <input type="range" v-model.number="minSize" min="4" max="64" step="1">
-              </div>
-              <div class="slider-row">
-                <label>Merge gap <span>{{ mergeGap }}px</span></label>
-                <input type="range" v-model.number="mergeGap" min="0" max="6" step="1">
-              </div>
-            </template>
-
-            <!-- Select by hand -->
-            <template v-else>
-              <label class="ts-sub">Selection shape</label>
-              <div class="tm-seg">
-                <button :class="{active: selectShape === 'free'}" @click="selectShape = 'free'">Rectangle</button>
-                <button :class="{active: selectShape === 'square'}" @click="selectShape = 'square'">Square</button>
-                <button :class="{active: selectShape === 'fixed'}" @click="selectShape = 'fixed'">Fixed</button>
-              </div>
-              <div v-if="selectShape === 'fixed'" class="ts-dims">
-                <label class="ts-field"><span>W</span><input type="number" min="1" v-model.number="fixedW"></label>
-                <button class="ts-link" :class="{active: fixedLink}" @click="fixedLink = !fixedLink" title="Link width & height"><span class="icon icon-link"/></button>
-                <label class="ts-field"><span>H</span><input type="number" min="1" v-model.number="fixedH" :disabled="fixedLink"></label>
-              </div>
-            </template>
-          </div>
-        </div>
-
-        <div class="ts-set-col">
-          <label class="ts-set-label">Cleanup</label>
-          <ui-switch
-              v-model="editorProcess"
-              :disabled="processing"
-              size="sm"
-              title="Runs the shared import pipeline (the same engine the editor, /convert and /generate use: de-upscale to the native grid, background knockout, crop) on the whole sheet — the preview and every export slice from the result."
-          >
-            <span class="text-xs">{{ processing ? 'Processing…' : 'Clean sheet on load' }}</span>
-          </ui-switch>
-          <template v-if="editorProcess">
-            <ui-switch
-                v-model="sheetKeepBg"
-                :disabled="processing"
-                size="sm"
-                class="ts-set-toggle"
-                title="Keep the sheet's backdrop instead of knocking it out to transparency"
-            >
-              <span class="text-xs">Keep background</span>
-            </ui-switch>
-            <p v-if="sheetInfo" class="text-2xs text-muted ts-sheetinfo">Detected {{ sheetInfo }}</p>
-          </template>
-          <ui-switch v-model="removeBg" size="sm" class="ts-set-toggle"><span class="text-xs">Remove background</span></ui-switch>
-          <div v-if="removeBg" class="ts-bg-block">
-            <div class="ts-bg-row">
-              <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
-              <button class="ts-pickbtn" :class="{active: picking}" @click="picking = !picking">
-                {{ picking ? 'Click a pixel…' : 'Pick color' }}
-              </button>
-            </div>
-            <div class="slider-row" style="margin-top: 0.5rem">
-              <label>Bg tolerance <span>{{ removeBgTol }}</span></label>
-              <input type="range" v-model.number="removeBgTol" min="0" max="100" step="2">
-            </div>
-          </div>
-
-          <label class="ts-sub">Round pixels</label>
-          <div class="settings-row">
-            <button
-                v-for="opt in crispOptions"
-                :key="opt.l"
-                class="ts-pill"
-                :class="{active: crispFactor === opt.v}"
-                @click="crispFactor = opt.v"
-            >{{ opt.l }}</button>
-          </div>
-          <ui-switch v-model="median" size="sm" class="ts-set-toggle"><span class="text-xs">Smooth</span></ui-switch>
-          <div class="slider-row" style="margin-top: 0.75rem">
-            <label>Merge similar colors <span>{{ mergeTol }}</span></label>
-            <input type="range" v-model.number="mergeTol" min="0" max="60" step="2">
-          </div>
-          <label class="ts-sub">Reduce to colors</label>
-          <div class="settings-row">
-            <button
-                v-for="opt in quantOptions"
-                :key="opt.l"
-                class="ts-pill"
-                :class="{active: quantize === opt.v}"
-                @click="quantize = opt.v"
-            >{{ opt.l }}</button>
-          </div>
-          <ui-switch v-model="despeckle" size="sm" class="ts-set-toggle"><span class="text-xs">Despeckle</span></ui-switch>
-        </div>
-      </div>
-
-      <button class="btn primary wide ts-set-done" @click="showSettings = false">Done</button>
-    </UiModal>
   </div>
 </template>
 
@@ -2620,13 +2625,56 @@ const faq = [
   color: var(--muted);
 }
 
-/* Inside the modal the params hug their section heading. */
-.ts-set-col .ts-params {
-  margin-top: var(--space-3);
+/* Inline settings bar between the toolbar and the stage — the canvas stays
+   visible while every knob is turned. */
+.ts-settings-bar {
+  position: relative;
+  padding: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
 }
 
-.ts-set-done {
-  margin-top: var(--space-5);
+.ts-settings-bar .ts-set-col {
+  padding: var(--space-2);
+}
+
+.ts-settings-bar .ts-set {
+  max-width: 56rem;
+}
+
+/* The wider inline column let the toggles flow onto one line — stack them. */
+.ts-settings-bar :deep(.ui-switch-wrapper) {
+  display: flex;
+  width: fit-content;
+}
+
+.ts-settings-x {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.ts-settings-x .icon { width: 0.875rem; height: 0.875rem; }
+
+.ts-settings-x:hover {
+  background: var(--surface-2);
+  color: var(--foreground);
+}
+
+/* The params hug their section heading. */
+.ts-set-col .ts-params {
+  margin-top: var(--space-3);
 }
 
 .ts-stage-inner {
