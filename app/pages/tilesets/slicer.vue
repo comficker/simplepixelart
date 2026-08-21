@@ -92,6 +92,8 @@ const hasImage = computed(() => !!sourceImage.value)
 // Run the same image pipeline the editor uses on import (de-upscale, crop,
 // quantize to dominant colours) on the sheet before slicing it.
 const editorProcess = ref(false)
+const sheetKeepBg = ref(false)   // clean without knocking the backdrop out
+const sheetInfo = ref('')        // "8× → 128×96" after a clean
 const processing = ref(false)
 
 const mode = ref<'grid' | 'auto' | 'select'>('select')
@@ -221,24 +223,94 @@ function clampScale(s: number): number {
 
 function setZoom(s: number) { zoom.value = clampScale(s) }
 function zoomFit() { setZoom(snapDown(fitScale())) }
+function zoomTo100() { setZoomAt(1) }
 
-function zoomIn() {
-  const s = zoom.value
-  setZoom(s >= 1 ? s + 1 : (Math.round(1 / s) - 1 <= 1 ? 1 : 1 / (Math.round(1 / s) - 1)))
+function nextZoomIn(s: number): number {
+  return s >= 1 ? s + 1 : (Math.round(1 / s) - 1 <= 1 ? 1 : 1 / (Math.round(1 / s) - 1))
 }
 
-function zoomOut() {
-  const s = zoom.value
-  setZoom(s > 1 ? s - 1 : 1 / (Math.round(1 / s) + 1))
+function nextZoomOut(s: number): number {
+  return s > 1 ? s - 1 : 1 / (Math.round(1 / s) + 1)
 }
+
+// Zoom keeping a viewport point fixed (the cursor for wheel zoom, the centre
+// for the toolbar buttons) — same feel as the editor. Pan here is the wrap's
+// native scroll, so "keep the point still" is one scroll adjustment after the
+// canvas re-renders at the new scale.
+function setZoomAt(next: number, clientX?: number, clientY?: number) {
+  const wrap = wrapEl.value
+  const cv = sheetCanvas.value
+  const img = sourceImage.value
+  const clamped = clampScale(next)
+  if (!wrap || !cv || !img || clamped === zoom.value) { setZoom(next); return }
+  const wrapRect = wrap.getBoundingClientRect()
+  const px = clientX ?? wrapRect.left + wrapRect.width / 2
+  const py = clientY ?? wrapRect.top + wrapRect.height / 2
+  const cvRect = cv.getBoundingClientRect()
+  // Source point currently under the anchor.
+  const sx = (px - cvRect.left) * (img.width / cvRect.width)
+  const sy = (py - cvRect.top) * (img.height / cvRect.height)
+  setZoom(clamped)
+  nextTick(() => {
+    drawSheet()
+    wrap.scrollLeft = sx * zoom.value - (px - wrapRect.left)
+    wrap.scrollTop = sy * zoom.value - (py - wrapRect.top)
+  })
+}
+
+function zoomIn() { setZoomAt(nextZoomIn(zoom.value)) }
+function zoomOut() { setZoomAt(nextZoomOut(zoom.value)) }
 
 function onWheel(e: WheelEvent) {
   if (!e.ctrlKey && !e.metaKey) return  // plain wheel scrolls the viewport
   e.preventDefault()
-  if (e.deltaY < 0) zoomIn(); else zoomOut()
+  const next = e.deltaY < 0 ? nextZoomIn(zoom.value) : nextZoomOut(zoom.value)
+  setZoomAt(next, e.clientX, e.clientY)
+}
+
+// ── Pan: hold Space (or the middle mouse button) and drag — the editor's
+// gesture, on top of the wrap's native scrollbars/trackpad scrolling. ──
+const spacePressed = ref(false)
+const panning = ref(false)
+let panStart = {x: 0, y: 0, sl: 0, st: 0}
+
+function onKeyDown(e: KeyboardEvent) {
+  if (e.code !== 'Space') return
+  const t = e.target as HTMLElement | null
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+  spacePressed.value = true
+  e.preventDefault()
+}
+
+function onKeyUp(e: KeyboardEvent) {
+  if (e.code === 'Space') spacePressed.value = false
+}
+
+function startPan(e: MouseEvent) {
+  const wrap = wrapEl.value
+  if (!wrap) return
+  panning.value = true
+  panStart = {x: e.clientX, y: e.clientY, sl: wrap.scrollLeft, st: wrap.scrollTop}
+  window.addEventListener('mousemove', doPan)
+  window.addEventListener('mouseup', endPan, {once: true})
+  e.preventDefault()
+}
+
+function doPan(e: MouseEvent) {
+  const wrap = wrapEl.value
+  if (!wrap || !panning.value) return
+  wrap.scrollLeft = panStart.sl - (e.clientX - panStart.x)
+  wrap.scrollTop = panStart.st - (e.clientY - panStart.y)
+}
+
+function endPan() {
+  panning.value = false
+  window.removeEventListener('mousemove', doPan)
 }
 
 onMounted(() => {
+  window.addEventListener('keydown', onKeyDown)
+  window.addEventListener('keyup', onKeyUp)
   if (typeof ResizeObserver !== 'undefined') {
     resizeObs = new ResizeObserver(measureWrap)
   }
@@ -258,6 +330,9 @@ watch(() => auth.isLogged, async (v) => {
   await loadTilesets()
 })
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeyDown)
+  window.removeEventListener('keyup', onKeyUp)
+  window.removeEventListener('mousemove', doPan)
   resizeObs?.disconnect()
 })
 const selectedCell = ref<{ c: number; r: number } | null>(null)
@@ -308,7 +383,7 @@ function snapshotState() {
     regions: regions.value,
     shape: {kind: selectShape.value, w: fixedW.value, h: fixedH.value, link: fixedLink.value},
     sel: {region: selectedRegion.value, cell: selectedCell.value, box: selectedBox.value},
-    clean: {crispFactor: crispFactor.value, mergeTol: mergeTol.value, removeBg: removeBg.value, removeBgTol: removeBgTol.value, despeckle: despeckle.value, median: median.value, quantize: quantize.value},
+    clean: {crispFactor: crispFactor.value, mergeTol: mergeTol.value, removeBg: removeBg.value, removeBgTol: removeBgTol.value, despeckle: despeckle.value, median: median.value, quantize: quantize.value, sheetKeepBg: sheetKeepBg.value},
     zoom: zoom.value,
     tilesetId: selectedTilesetId.value,
     synced: syncedTiles.value,
@@ -372,6 +447,7 @@ async function restoreState() {
   if (s.sel) { selectedRegion.value = s.sel.region ?? -1; selectedCell.value = s.sel.cell ?? null; selectedBox.value = s.sel.box ?? -1 }
   if (s.clean) {
     crispFactor.value = s.clean.crispFactor; mergeTol.value = s.clean.mergeTol
+    sheetKeepBg.value = !!s.clean.sheetKeepBg
     removeBg.value = s.clean.removeBg; removeBgTol.value = s.clean.removeBgTol
     despeckle.value = s.clean.despeckle; median.value = s.clean.median; quantize.value = s.clean.quantize
     // States saved before cleanup became opt-in carry the old always-on
@@ -498,10 +574,13 @@ function gridToDataUrl(grid: RGB[][], transparent: RGB | null): string {
 async function cleanSheet(raw: string): Promise<string> {
   processing.value = true
   try {
-    const res = await imageToCells(raw)
-    return res ? gridToDataUrl(res.cells, null) : ''
+    const res = await imageToCells(raw, {knockoutBg: !sheetKeepBg.value})
+    if (!res) { sheetInfo.value = ''; return '' }
+    sheetInfo.value = `${res.scale > 1 ? `${res.scale}× → ` : ''}${res.cells[0]!.length}×${res.cells.length}px`
+    return gridToDataUrl(res.cells, null)
   } catch (err) {
     console.error('Tileset: editor import failed', err)
+    sheetInfo.value = ''
     return ''
   } finally {
     processing.value = false
@@ -514,6 +593,7 @@ async function applySource() {
   const raw = rawImageData.value
   if (!raw) return
   let dataUrl = raw
+  if (!editorProcess.value) sheetInfo.value = ''
   if (editorProcess.value) {
     const url = await cleanSheet(raw)
     if (url) dataUrl = url
@@ -791,6 +871,22 @@ function drawRegions(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = '#6366f1'; ctx.fillRect(x, y, 15, 14)
     ctx.fillStyle = '#fff'; ctx.fillText(String(i + 1), x + 4, y + 2)
   }
+  // Resize handles on the selected region — 8 white squares, editor-style.
+  if (mode.value === 'select' && selectedRegion.value >= 0) {
+    const b = regions.value[selectedRegion.value]
+    if (b) {
+      const HS = 3
+      for (const hp of regionHandlePoints(b)) {
+        const hx = Math.round(hp.x * displayScale)
+        const hy = Math.round(hp.y * displayScale)
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(hx - HS, hy - HS, HS * 2, HS * 2)
+        ctx.strokeStyle = '#6366f1'
+        ctx.lineWidth = 1
+        ctx.strokeRect(hx - HS + 0.5, hy - HS + 0.5, HS * 2 - 1, HS * 2 - 1)
+      }
+    }
+  }
   if (draft.value) {
     const b = draft.value
     ctx.setLineDash([4, 3]); ctx.lineWidth = 1; ctx.strokeStyle = '#6366f1'
@@ -874,15 +970,85 @@ function smallestBoxAt(list: Box[], sx: number, sy: number): number {
   return best
 }
 
+// ── Region resize handles (select mode) ───────────────────────────
+// The selected region grows 8 handles; grabbing one resizes instead of moving.
+type HandleMode = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
+const resizingRegion = ref<{ index: number; mode: HandleMode } | null>(null)
+const hoverHandle = ref<HandleMode | ''>('')
+let resizeAnchor = {x: 0, y: 0, w: 0, h: 0}
+const HANDLE_TOL_PX = 6                       // screen px around a handle
+
+const HANDLE_CURSOR: Record<HandleMode, string> = {
+  n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize',
+  ne: 'nesw-resize', sw: 'nesw-resize', nw: 'nwse-resize', se: 'nwse-resize',
+}
+
+function regionHandlePoints(b: Box): Array<{ mode: HandleMode; x: number; y: number }> {
+  const mx = b.x + b.w / 2, my = b.y + b.h / 2
+  return [
+    {mode: 'nw', x: b.x, y: b.y}, {mode: 'n', x: mx, y: b.y}, {mode: 'ne', x: b.x + b.w, y: b.y},
+    {mode: 'w', x: b.x, y: my}, {mode: 'e', x: b.x + b.w, y: my},
+    {mode: 'sw', x: b.x, y: b.y + b.h}, {mode: 's', x: mx, y: b.y + b.h}, {mode: 'se', x: b.x + b.w, y: b.y + b.h},
+  ]
+}
+
+function handleAtRegion(e: MouseEvent): HandleMode | null {
+  if (mode.value !== 'select' || selectedRegion.value < 0) return null
+  const b = regions.value[selectedRegion.value]
+  const cv = sheetCanvas.value
+  const img = sourceImage.value
+  if (!b || !cv || !img) return null
+  const rect = cv.getBoundingClientRect()
+  const scale = rect.width / img.width
+  for (const h of regionHandlePoints(b)) {
+    const hx = rect.left + h.x * scale
+    const hy = rect.top + h.y * scale
+    if (Math.abs(e.clientX - hx) <= HANDLE_TOL_PX && Math.abs(e.clientY - hy) <= HANDLE_TOL_PX) return h.mode
+  }
+  return null
+}
+
+function applyRegionResize(p: Pt) {
+  const r = resizingRegion.value
+  if (!r) return
+  const b = regions.value[r.index]
+  const img = sourceImage.value
+  if (!b || !img) return
+  const a = resizeAnchor
+  let x = a.x, y = a.y, w = a.w, h = a.h
+  const px = Math.round(Math.max(0, Math.min(img.width, p.x)))
+  const py = Math.round(Math.max(0, Math.min(img.height, p.y)))
+  if (r.mode.includes('e')) w = Math.max(1, px - a.x)
+  if (r.mode.includes('s')) h = Math.max(1, py - a.y)
+  if (r.mode.includes('w')) { const right = a.x + a.w; x = Math.min(px, right - 1); w = right - x }
+  if (r.mode.includes('n')) { const bottom = a.y + a.h; y = Math.min(py, bottom - 1); h = bottom - y }
+  b.x = x; b.y = y; b.w = w; b.h = h
+  dragMoved = true
+  drawSheet()
+}
+
 // ── Pointer handlers ───────────────────────────────────────────────
 let gridStartOffset = {x: 0, y: 0}
 let dragMoved = false
 
 function onDown(e: MouseEvent) {
+  // Space-drag / middle-drag pans the viewport — same gesture as the editor.
+  if (spacePressed.value || e.button === 1) { startPan(e); return }
+  if (e.button !== 0) return
   if (picking.value) return  // eyedropper handled on click (onUp)
   const p = eventToSource(e)
   if (!p) return
   if (mode.value === 'select') {
+    // A resize handle on the selected region wins over move/draw.
+    const hmode = handleAtRegion(e)
+    if (hmode) {
+      const b = regions.value[selectedRegion.value]!
+      resizingRegion.value = {index: selectedRegion.value, mode: hmode}
+      resizeAnchor = {x: b.x, y: b.y, w: b.w, h: b.h}
+      dragging.value = true
+      dragMoved = false
+      return
+    }
     dragging.value = true
     dragStart.value = clampPt(p)
     dragMoved = false
@@ -914,6 +1080,11 @@ function onMove(e: MouseEvent) {
   const p = eventToSource(e)
   if (!p) return
   if (mode.value === 'select') {
+    if (resizingRegion.value) { applyRegionResize(p); return }
+    if (!dragging.value) {
+      const hh = handleAtRegion(e)
+      if ((hh || '') !== hoverHandle.value) hoverHandle.value = hh || ''
+    }
     if (movingRegion.value >= 0) {
       const r = regions.value[movingRegion.value]
       if (r) {
@@ -978,8 +1149,15 @@ function onUp(e: MouseEvent) {
     drawSheet()
     return
   }
-  // select: finalize a move, a drawn box, or treat a non-drag as a click-select
+  // select: finalize a resize, a move, a drawn box, or a click-select
   dragging.value = false
+  if (resizingRegion.value) {
+    selectedRegion.value = resizingRegion.value.index
+    resizingRegion.value = null
+    drawSheet()
+    nextTick(drawTilePreview)
+    return
+  }
   if (movingRegion.value >= 0) {
     selectedRegion.value = movingRegion.value
     movingRegion.value = -1
@@ -1000,8 +1178,16 @@ function onUp(e: MouseEvent) {
 }
 
 function onLeave() {
+  hoverHandle.value = ''
   if (dragging.value) {
     if (mode.value === 'select') {
+      if (resizingRegion.value) {
+        selectedRegion.value = resizingRegion.value.index
+        resizingRegion.value = null
+        dragging.value = false
+        nextTick(drawTilePreview)
+        return
+      }
       if (movingRegion.value >= 0) {
         // Keep the region at its current position; just end the move.
         movingRegion.value = -1
@@ -1718,7 +1904,7 @@ watch([crispFactor, mergeTol, removeBg, removeBgTol, despeckle, median, quantize
 watch(zoom, () => { if (sourceImage.value) drawSheet() })
 
 // Toggling "editor import" re-derives the sheet from the original upload.
-watch(editorProcess, () => { if (!restoring && rawImageData.value) applySource() })
+watch([editorProcess, sheetKeepBg], () => { if (!restoring && rawImageData.value) applySource() })
 
 const faq = [
   {q: 'Is the Tileset Slicer free?', a: `<p>Yes — completely free and running entirely in your browser. No signup, no watermark, and your image is never uploaded to a server.</p>`},
@@ -1765,7 +1951,7 @@ const faq = [
               <button class="toolbar-btn" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
             </ui-tooltip>
             <ui-tooltip text="Reset to fit">
-              <button class="toolbar-btn zoom-pct" @click="zoomFit">{{ Math.round(zoom * 100) }}%</button>
+              <button class="toolbar-btn zoom-pct" title="Zoom level — click for 100%" @click="zoomTo100">{{ Math.round(zoom * 100) }}%</button>
             </ui-tooltip>
             <ui-tooltip text="Zoom in">
               <button class="toolbar-btn" @click="zoomIn"><span class="icon icon-zoom-in"/></button>
@@ -1796,7 +1982,8 @@ const faq = [
               <canvas
                   ref="sheetCanvas"
                   class="ts-canvas pixelated"
-                  :class="{drawing: mode === 'select', moving: mode === 'select' && !picking && (movingRegion >= 0 || hoverRegion >= 0), grabbable: mode === 'grid', grabbing: mode === 'grid' && dragging, picking}"
+                  :class="{drawing: mode === 'select', moving: mode === 'select' && !picking && (movingRegion >= 0 || hoverRegion >= 0), grabbable: mode === 'grid' || spacePressed, grabbing: (mode === 'grid' && dragging) || panning, picking}"
+                  :style="hoverHandle || resizingRegion ? {cursor: HANDLE_CURSOR[(resizingRegion?.mode || hoverHandle) as any]} : (spacePressed ? {cursor: panning ? 'grabbing' : 'grab'} : undefined)"
                   @mousedown="onDown"
                   @mousemove="onMove"
                   @mouseup="onUp"
@@ -2067,10 +2254,22 @@ const faq = [
               v-model="editorProcess"
               :disabled="processing"
               size="sm"
-              title="Runs the editor's import pipeline (de-upscale, crop, quantize) on the whole sheet — the preview and every export slice from the result."
+              title="Runs the shared import pipeline (the same engine the editor, /convert and /generate use: de-upscale to the native grid, background knockout, crop) on the whole sheet — the preview and every export slice from the result."
           >
             <span class="text-xs">{{ processing ? 'Processing…' : 'Clean sheet on load' }}</span>
           </ui-switch>
+          <template v-if="editorProcess">
+            <ui-switch
+                v-model="sheetKeepBg"
+                :disabled="processing"
+                size="sm"
+                class="ts-set-toggle"
+                title="Keep the sheet's backdrop instead of knocking it out to transparency"
+            >
+              <span class="text-xs">Keep background</span>
+            </ui-switch>
+            <p v-if="sheetInfo" class="text-2xs text-muted ts-sheetinfo">Detected {{ sheetInfo }}</p>
+          </template>
           <ui-switch v-model="removeBg" size="sm" class="ts-set-toggle"><span class="text-xs">Remove background</span></ui-switch>
           <div v-if="removeBg" class="ts-bg-block">
             <div class="ts-bg-row">
@@ -2507,6 +2706,8 @@ const faq = [
   opacity: 0.5;
   cursor: default;
 }
+
+.ts-sheetinfo { margin: 4px 0 0; }
 
 .ts-set-toggle {
   margin-top: 0.75rem;
