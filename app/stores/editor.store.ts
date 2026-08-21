@@ -1595,6 +1595,15 @@ export const useEditor = defineStore('editor', () => {
         applyIsoToAllBoards();
     }
 
+    // Direct setter for the Board settings panel (the toolbar used to cycle).
+    function setGridMode(mode: 'square' | 'iso' | 'off') {
+        ensureIsoMeta();
+        if (editorData.value.meta!.iso!.mode === mode) return;
+        editorData.value.meta!.iso!.mode = mode;
+        saveState();
+        applyIsoToAllBoards();
+    }
+
     function setGridCell(width: number | string, height: number | string) {
         ensureIsoMeta();
         const w = Math.min(32, Math.max(1, Math.floor(Number(width) || 1)));
@@ -2388,6 +2397,7 @@ export const useEditor = defineStore('editor', () => {
         loadAnimationFrames,
         allFrames,
         cycleGridMode,
+        setGridMode,
         setGridCell,
         paintIsoLine,
         clearVirtualLayer,

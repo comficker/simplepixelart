@@ -336,6 +336,134 @@ function deskIsLight(): boolean {
   return (0.299 * r + 0.587 * g + 0.114 * b) > 140;
 }
 // Grid line colour: the user's pick, else an auto contrast tint over the desk bg.
+// ── Board checker + guides (workspace prefs, persisted with the desk) ──
+// The "board grid" is the white/gray transparency checker the art sits on —
+// these knobs set how many art pixels one checker cell spans and its two
+// colours ('' = the defaults).
+const checkerSize = ref(1);
+const checkerA = ref('');
+const checkerB = ref('');
+const guideColor = ref('');                                    // '' = auto (blue)
+
+function setCheckerSize(v: string | number) {
+  checkerSize.value = Math.max(1, Math.min(64, Math.round(Number(v) || 1)));
+}
+
+// ── Custom guides (Photoshop-style) ───────────────────────────────────
+// Arbitrary vertical/horizontal alignment lines, stored on the BOARD
+// (meta.guides {v:[], h:[]}) so they travel and sync with the artwork.
+// Added from the Canvas menu, dragged with the SELECT tool (only — the same
+// reason Photoshop reserves guide-dragging for its Move tool: a brush stroke
+// near a guide must never grab it), snapped to whole art pixels, removed by
+// dropping them outside the board. Position changes are saveState'd, so a
+// guide move is undoable like any other edit.
+const draggingGuide = ref<{ axis: 'v' | 'h'; index: number } | null>(null);
+const hoverGuide = ref<{ axis: 'v' | 'h'; index: number } | null>(null);
+const GUIDE_HIT_PX = 5;
+
+function boardGuides(): { v: number[]; h: number[] } {
+  const meta: any = editorData.value.meta || (editorData.value.meta = {} as any);
+  if (!meta.guides) meta.guides = {v: [], h: []};
+  if (!Array.isArray(meta.guides.v)) meta.guides.v = [];
+  if (!Array.isArray(meta.guides.h)) meta.guides.h = [];
+  return meta.guides;
+}
+
+function addGuide(axis: 'v' | 'h') {
+  const g = boardGuides();
+  const max = axis === 'v' ? editorData.value.width : editorData.value.height;
+  g[axis].push(Math.round(max / 2));
+  store.saveState();
+  scheduleDraw();
+}
+
+// Center / Thirds are quick-adds, not overlays: they mint the same movable
+// guides the +V/+H buttons do (already-present positions are skipped), so
+// every line on the board can be dragged or thrown away afterwards.
+function addGuidePreset(kind: 'center' | 'thirds') {
+  const g = boardGuides();
+  const w = editorData.value.width, h = editorData.value.height;
+  const want = kind === 'center'
+      ? {v: [w / 2], h: [h / 2]}
+      : {v: [w / 3, (2 * w) / 3], h: [h / 3, (2 * h) / 3]};
+  let added = 0;
+  for (const axis of ['v', 'h'] as const) {
+    for (const p of want[axis]) {
+      const pos = Math.round(p);
+      if (!g[axis].includes(pos)) { g[axis].push(pos); added++; }
+    }
+  }
+  if (!added) return;
+  store.saveState();
+  scheduleDraw();
+}
+
+function clearGuides() {
+  const g = boardGuides();
+  if (!g.v.length && !g.h.length) return;
+  g.v = [];
+  g.h = [];
+  store.saveState();
+  scheduleDraw();
+}
+
+const guideCount = computed(() => {
+  const g: any = editorData.value.meta?.guides;
+  return (g?.v?.length || 0) + (g?.h?.length || 0);
+});
+
+// Art-space pointer position, unclamped and fractional (getPixelPos floors
+// and is meant for painting).
+function artPos(e: MouseEvent | TouchEvent): { x: number; y: number } {
+  const rect = canvas.value!.getBoundingClientRect();
+  const {x: cx, y: cy} = getClientPos(e);
+  const {x: ox, y: oy} = artOffset.value;
+  return {x: (cx - rect.left - ox) / zoom.value, y: (cy - rect.top - oy) / zoom.value};
+}
+
+// The guide under the pointer (select tool only), or null.
+function guideAt(e: MouseEvent | TouchEvent): { axis: 'v' | 'h'; index: number } | null {
+  if (store.currentTool !== 'select') return null;
+  const g: any = editorData.value.meta?.guides;
+  if (!g || (!g.v?.length && !g.h?.length)) return null;
+  const p = artPos(e);
+  const z = zoom.value;
+  const w = editorData.value.width, h = editorData.value.height;
+  const m = (GUIDE_HIT_PX + 3) / z;                 // small margin outside the board
+  if (p.x < -m || p.x > w + m || p.y < -m || p.y > h + m) return null;
+  const tol = GUIDE_HIT_PX / z;
+  for (let i = 0; i < (g.v || []).length; i++) {
+    if (Math.abs(g.v[i] - p.x) <= tol) return {axis: 'v', index: i};
+  }
+  for (let i = 0; i < (g.h || []).length; i++) {
+    if (Math.abs(g.h[i] - p.y) <= tol) return {axis: 'h', index: i};
+  }
+  return null;
+}
+
+function doGuideDrag(e: MouseEvent) {
+  const d = draggingGuide.value;
+  if (!d) return;
+  const g = boardGuides();
+  const p = artPos(e);
+  g[d.axis][d.index] = Math.round(d.axis === 'v' ? p.x : p.y);
+  scheduleDraw();
+}
+
+function endGuideDrag() {
+  const d = draggingGuide.value;
+  if (!d) return;
+  const g = boardGuides();
+  const max = d.axis === 'v' ? editorData.value.width : editorData.value.height;
+  const pos = g[d.axis][d.index]!;
+  // Dropped outside the board = removed, the Photoshop gesture.
+  if (pos < 0 || pos > max) g[d.axis].splice(d.index, 1);
+  draggingGuide.value = null;
+  window.removeEventListener('mousemove', doGuideDrag);
+  store.saveState();
+  scheduleDraw();
+}
+
 function deskGridColorEff(): string {
   if (deskGridColor.value) return deskGridColor.value;
   return deskIsLight() ? 'rgba(0,0,0,0.16)' : 'rgba(255,255,255,0.13)';
@@ -377,7 +505,7 @@ let bgImageUrlCache = '';
 // ===== Background picker (modal) =====
 // Settings dropdown is a drill-down panel (no modals): 'main' list → a deeper
 // view per option, with a Back button. Reset to 'main' each time it opens.
-const settingsView = ref<'main' | 'resize' | 'bg' | 'canvas'>('main');
+const settingsView = ref<'main' | 'resize' | 'bg' | 'canvas' | 'board'>('main');
 const bgTab = ref<'none' | 'transparent' | 'solid' | 'art'>('none');
 const bgSolidColor = ref('#FFFFFF');
 const myArts = ref<Array<{id: string; name: string; thumb: string}>>([]);
@@ -934,13 +1062,6 @@ function getIsoPath(): Path2D | null {
   return path;
 }
 
-const gridIconClass = computed(() => {
-  const mode = editorData.value.meta?.iso?.mode ?? 'square';
-  if (mode === 'iso') return 'icon icon-grid iso-rotated';
-  if (mode === 'off') return 'icon icon-grid grid-off';
-  return 'icon icon-grid';
-});
-
 // The active board (the one the tools edit).
 const activeBoard = computed(() => store.boards.find(b => b.id === store.activeBoardId) || null)
 
@@ -1446,6 +1567,16 @@ function startDraw(e: any) {
     if ('preventDefault' in e) e.preventDefault();
     return;
   }
+  // Select tool grabs a guide line under the pointer (before any board/tool
+  // logic — the guide sits on top of the art).
+  const ghit = guideAt(e);
+  if (ghit) {
+    draggingGuide.value = ghit;
+    window.addEventListener('mousemove', doGuideDrag);
+    window.addEventListener('mouseup', endGuideDrag, {once: true});
+    if ('preventDefault' in e) e.preventDefault();
+    return;
+  }
   // Multi-board: a press on another board (or its name/frame) just activates
   // it. A drag on truly empty desk marquees out a new board. Only presses on
   // the active board draw.
@@ -1589,6 +1720,12 @@ function draw(e: any) {
     store.moveBoard(moveBoardId.value, boardMoveStart.value.bx + dx, boardMoveStart.value.by + dy);
     scheduleDraw();
     return;
+  }
+  // Guide under the pointer (select tool) → col/row-resize cursor via class.
+  if (!isStarted.value && !draggingGuide.value) {
+    const gh = guideAt(e);
+    const prev = hoverGuide.value;
+    if ((gh?.axis !== prev?.axis) || (gh?.index !== prev?.index)) hoverGuide.value = gh;
   }
   // Track hover position for brush-preview overlay
   const pos = getPixelPos(e);
@@ -1992,7 +2129,7 @@ function renderBackgroundCache(): HTMLCanvasElement | null {
   // the shared stack itself (then it's the live art buffer, drawn plain).
   const showShared = store.sharedLayers.length > 0 && !store.editingShared;
 
-  const key = `${w}_${h}|${mode}|${bg.type}|${bg.color}|${bgUrl}|sh${showShared ? store.sharedRev : 'x'}`;
+  const key = `${w}_${h}|${mode}|${bg.type}|${bg.color}|${bgUrl}|ck${checkerSize.value}_${checkerA.value}_${checkerB.value}|sh${showShared ? store.sharedRev : 'x'}`;
   if (key === bgCacheKey && bgCanvas) return bgCanvas;
 
   if (!bgCanvas) {
@@ -2017,9 +2154,12 @@ function renderBackgroundCache(): HTMLCanvasElement | null {
   } else if (bg.type === 'transparent') {
     // no fill, no checker — the desk shows through, so only the art reads
   } else if (mode === 'square') {
+    const cs = Math.max(1, checkerSize.value);
+    const ca = checkerA.value || EDITOR_CELL_A;
+    const cb = checkerB.value || EDITOR_CELL_B;
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
-        c.fillStyle = (x + y) % 2 === 0 ? EDITOR_CELL_A : EDITOR_CELL_B;
+        c.fillStyle = (Math.floor(x / cs) + Math.floor(y / cs)) % 2 === 0 ? ca : cb;
         c.fillRect(x, y, 1, 1);
       }
     }
@@ -2184,9 +2324,12 @@ function boardComposite(b: any): HTMLCanvasElement | null {
   } else if (bg?.type === 'transparent') {
     // no fill, no checker — art only
   } else if (mode === 'square') {
+    const cs = Math.max(1, checkerSize.value);
+    const ca = checkerA.value || EDITOR_CELL_A;
+    const cb = checkerB.value || EDITOR_CELL_B;
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
-        cx.fillStyle = (x + y) % 2 === 0 ? EDITOR_CELL_A : EDITOR_CELL_B;
+        cx.fillStyle = (Math.floor(x / cs) + Math.floor(y / cs)) % 2 === 0 ? ca : cb;
         cx.fillRect(x, y, 1, 1);
       }
   } else {
@@ -2388,6 +2531,52 @@ function drawReference(): void {
   ctx.globalAlpha = 1;
 }
 
+// Custom (Photoshop-style) guide lines of the active board — solid cyan,
+// pixel-snapped, spanning the board. Drawn even when the preset guides are
+// off; the dragged one carries its coordinate as a label.
+function drawCustomGuides(): void {
+  const g: any = editorData.value.meta?.guides;
+  if (!ctx || !g || (!g.v?.length && !g.h?.length)) return;
+  const z = zoom.value;
+  const w = editorData.value.width, h = editorData.value.height;
+  const {x: ox, y: oy} = artOffset.value;
+  const bw = w * z, bh = h * z;
+  if (ox + bw < 0 || oy + bh < 0 || ox > stageW.value || oy > stageH.value) return;
+  const d = draggingGuide.value;
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  const line = (axis: 'v' | 'h', pos: number, activeLine: boolean) => {
+    ctx!.strokeStyle = activeLine ? '#F472B6' : (guideColor.value || '#38BDF8');
+    ctx!.beginPath();
+    if (axis === 'v') {
+      const x = Math.round(ox + pos * z) + 0.5;
+      ctx!.moveTo(x, oy);
+      ctx!.lineTo(x, oy + bh);
+    } else {
+      const y = Math.round(oy + pos * z) + 0.5;
+      ctx!.moveTo(ox, y);
+      ctx!.lineTo(ox + bw, y);
+    }
+    ctx!.stroke();
+  };
+  (g.v || []).forEach((pos: number, i: number) => line('v', pos, d?.axis === 'v' && d.index === i));
+  (g.h || []).forEach((pos: number, i: number) => line('h', pos, d?.axis === 'h' && d.index === i));
+  if (d) {
+    const pos = g[d.axis][d.index];
+    const label = `${d.axis === 'v' ? 'x' : 'y'} = ${pos}`;
+    const lx = d.axis === 'v' ? ox + pos * z + 6 : ox + 6;
+    const ly = d.axis === 'h' ? oy + pos * z - 6 : oy + 14;
+    ctx.font = '11px system-ui, sans-serif';
+    const tw = ctx.measureText(label).width;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(lx - 3, ly - 11, tw + 6, 15);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(label, lx, ly);
+  }
+  ctx.restore();
+}
+
 function drawIsoOverlay(): void {
   if (!ctx) return;
   const path = getIsoPath();
@@ -2507,6 +2696,7 @@ function drawEditor() {
   drawOnion();
   drawPixels();            // active board live pixels
   drawIsoOverlay();
+  drawCustomGuides();      // draggable Photoshop-style guide lines
   drawBrushPreview();
   drawSelection();
   drawBoardChrome();       // frames, labels, active ring (on top)
@@ -3049,6 +3239,13 @@ onMounted(async () => {
           height: Math.max(1, Math.min(64, Math.round(d.cell.height))),
         };
       }
+      const hexOk = (v: any) => typeof v === 'string' && (v === '' || /^#[0-9a-fA-F]{6}$/.test(v));
+      if (d.checker) {
+        if (Number.isFinite(d.checker.size)) checkerSize.value = Math.max(1, Math.min(64, Math.round(d.checker.size)));
+        if (hexOk(d.checker.a)) checkerA.value = d.checker.a;
+        if (hexOk(d.checker.b)) checkerB.value = d.checker.b;
+      }
+      if (d.guides && hexOk(d.guides.color)) guideColor.value = d.guides.color;
     }
   } catch { /* ignore */ }
   initCanvas()
@@ -3200,15 +3397,20 @@ watch(() => store.boardsRev, () => {
 })
 
 // Desk appearance is a persisted workspace preference; redraw on change.
-watch([deskBg, deskGrid, deskGridStyle, deskGridShape, deskGridColor, deskGridCell], () => {
+watch([deskBg, deskGrid, deskGridStyle, deskGridShape, deskGridColor, deskGridCell,
+  checkerSize, checkerA, checkerB, guideColor], () => {
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem('workspace_desk', JSON.stringify({
         bg: deskBg.value, grid: deskGrid.value, style: deskGridStyle.value,
         shape: deskGridShape.value, color: deskGridColor.value, cell: deskGridCell.value,
+        checker: {size: checkerSize.value, a: checkerA.value, b: checkerB.value},
+        guides: {color: guideColor.value},
       }));
     } catch { /* quota */ }
   }
+  // Inactive boards bake the checker into their cached composites — drop them.
+  boardBuffers.clear();
   scheduleDraw();
 });
 
@@ -3347,11 +3549,11 @@ watch(
               <button class="file-menu-item" @click="openBgPicker">
                 <span class="icon icon-image"/><span>Background</span><span class="icon icon-angle-right settings-chev"/>
               </button>
-              <button class="file-menu-item" @click="store.cycleGridMode(); scheduleDraw()">
-                <span :class="gridIconClass"/><span>Grid mode</span>
-              </button>
               <button class="file-menu-item" @click="settingsView = 'canvas'">
                 <span class="icon icon-grid"/><span>Canvas</span><span class="icon icon-angle-right settings-chev"/>
+              </button>
+              <button class="file-menu-item" @click="settingsView = 'board'">
+                <span class="icon icon-square"/><span>Board</span><span class="icon icon-angle-right settings-chev"/>
               </button>
               <button class="file-menu-item" @click="toggleBoardChrome">
                 <span class="icon" :class="showBoardChrome ? 'icon-eye-cross' : 'icon-eye'"/>
@@ -3490,7 +3692,7 @@ watch(
                   </div>
                 </div>
                 <div class="cv-field">
-                  <label class="cv-label">Grid</label>
+                  <label class="cv-label">Desk grid</label>
                   <div class="cv-opts cols-2">
                     <button class="cv-opt" :class="{ active: !deskGrid }" @click="deskGrid = false">Off</button>
                     <button class="cv-opt" :class="{ active: deskGrid }" @click="deskGrid = true">On</button>
@@ -3534,6 +3736,106 @@ watch(
                     </div>
                   </div>
                 </template>
+
+              </div>
+            </div>
+
+            <!-- Board: the active board's grid + guides -->
+            <div v-else-if="settingsView === 'board'" class="file-menu settings-sub" @click.stop>
+              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>Board</span></button>
+              <div class="settings-body">
+                <!-- Grid mode: how the art itself is laid out (square cells,
+                     the dimetric/iso lattice, or none). Moved here from the
+                     toolbar's blind cycle button. -->
+                <div class="cv-field">
+                  <label class="cv-label">Grid mode</label>
+                  <div class="cv-opts cols-3">
+                    <button
+                        v-for="m in (['square','iso','off'] as const)"
+                        :key="m"
+                        class="cv-opt cv-cap"
+                        :class="{ active: (editorData.meta?.iso?.mode ?? 'square') === m }"
+                        @click="store.setGridMode(m); scheduleDraw()"
+                    >{{ m === 'iso' ? 'isometric' : m }}</button>
+                  </div>
+                </div>
+                <div v-if="(editorData.meta?.iso?.mode ?? 'square') === 'iso'" class="cv-field">
+                  <label class="cv-label">Iso cell size</label>
+                  <div class="resize-fields">
+                    <label class="resize-field">
+                      <span class="resize-field-label">Width</span>
+                      <input
+                          class="resize-input wide" type="number" min="1" max="32"
+                          :value="(editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).width"
+                          @change="store.setGridCell(($event.target as HTMLInputElement).value, (editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).height); scheduleDraw()"
+                      >
+                    </label>
+                    <label class="resize-field">
+                      <span class="resize-field-label">Height</span>
+                      <input
+                          class="resize-input wide" type="number" min="1" max="32"
+                          :value="(editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).height"
+                          @change="store.setGridCell((editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).width, ($event.target as HTMLInputElement).value); scheduleDraw()"
+                      >
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Board grid = the white/gray transparency checker under
+                     the art: cell size in art pixels + its two colours. -->
+                <div class="cv-field">
+                  <label class="cv-label">Board grid size</label>
+                  <div class="cv-opts cols-4">
+                    <button v-for="n in [1, 2, 4, 8]" :key="n" class="cv-opt" :class="{ active: checkerSize === n }" @click="setCheckerSize(n)">{{ n }}</button>
+                  </div>
+                  <div class="resize-fields">
+                    <label class="resize-field">
+                      <span class="resize-field-label">Custom (px)</span>
+                      <input class="resize-input wide" type="number" min="1" max="64" :value="checkerSize" @input="setCheckerSize(($event.target as HTMLInputElement).value)">
+                    </label>
+                  </div>
+                </div>
+                <div class="cv-field">
+                  <label class="cv-label">Board grid colors</label>
+                  <div class="cv-opts cols-3">
+                    <button class="cv-opt" :class="{ active: !checkerA && !checkerB }" @click="checkerA = ''; checkerB = ''">Default</button>
+                    <label class="cv-opt cv-swatch">
+                      <span class="desk-sw" :style="{ background: checkerA || '#ffffff' }"/><span>A</span>
+                      <input type="color" class="cv-swatch-input" :value="checkerA || '#ffffff'" @input="checkerA = ($event.target as HTMLInputElement).value">
+                    </label>
+                    <label class="cv-opt cv-swatch">
+                      <span class="desk-sw" :style="{ background: checkerB || '#cccccc' }"/><span>B</span>
+                      <input type="color" class="cv-swatch-input" :value="checkerB || '#cccccc'" @input="checkerB = ($event.target as HTMLInputElement).value">
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Every guide is a movable line: drag with the Select tool,
+                     drop outside the board to remove. Center/Thirds just add
+                     lines at those positions. -->
+                <div class="cv-field">
+                  <label class="cv-label">Guides <template v-if="guideCount">({{ guideCount }})</template></label>
+                  <div class="cv-opts cols-2">
+                    <button class="cv-opt" title="Add a vertical guide line" @click="addGuide('v')">+ Vertical</button>
+                    <button class="cv-opt" title="Add a horizontal guide line" @click="addGuide('h')">+ Horizontal</button>
+                  </div>
+                  <div class="cv-opts cols-3" style="margin-top: 4px">
+                    <button class="cv-opt" title="Add centre cross guides" @click="addGuidePreset('center')">Center</button>
+                    <button class="cv-opt" title="Add rule-of-thirds guides" @click="addGuidePreset('thirds')">Thirds</button>
+                    <button class="cv-opt" :disabled="!guideCount" @click="clearGuides">Clear</button>
+                  </div>
+                  <p class="cv-hint">Drag a line with the Select tool — drop it outside the board to remove.</p>
+                </div>
+                <div class="cv-field">
+                  <label class="cv-label">Guide color</label>
+                  <div class="cv-opts cols-2">
+                    <button class="cv-opt" :class="{ active: !guideColor }" @click="guideColor = ''">Auto</button>
+                    <label class="cv-opt cv-swatch" :class="{ active: !!guideColor }">
+                      <span class="desk-sw" :style="{ background: guideColor || '#38BDF8' }"/><span>Custom</span>
+                      <input type="color" class="cv-swatch-input" :value="guideColor || '#38BDF8'" @input="guideColor = ($event.target as HTMLInputElement).value">
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </template>
@@ -3570,29 +3872,6 @@ watch(
           <button class="toolbar-btn zoom-readout" aria-label="Reset zoom to 100%" @click="zoomTo100">{{ Math.round(zoom * 100) }}%</button>
         </ui-tooltip>
       </div>
-      <!-- Inline iso cell editor when iso grid is active -->
-      <template v-if="(editorData.meta?.iso?.mode ?? 'square') === 'iso'">
-        <div class="toolbar-sep"/>
-        <div class="toolbar-group items-center">
-          <input
-              class="resize-input"
-              type="number"
-              min="1"
-              max="32"
-              :value="(editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).width"
-              @change="store.setGridCell(($event.target as HTMLInputElement).value, (editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).height); scheduleDraw()"
-          >
-          <span class="text-xs">×</span>
-          <input
-              class="resize-input"
-              type="number"
-              min="1"
-              max="32"
-              :value="(editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).height"
-              @change="store.setGridCell((editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).width, ($event.target as HTMLInputElement).value); scheduleDraw()"
-          >
-        </div>
-      </template>
       <span class="toolbar-info">{{ editorData.width }}×{{ editorData.height }}</span>
       <!-- Pinned to the strip's right edge — stays put while the strip scrolls. -->
       <div class="toolbar-fs">
@@ -3746,7 +4025,7 @@ watch(
             >
               <canvas
                   ref="canvas"
-                  :class="[store.currentTool, { panning: spacePressed, 'sel-drag': hoverInSelection }]"
+                  :class="[store.currentTool, { panning: spacePressed, 'sel-drag': hoverInSelection, 'guide-v': hoverGuide?.axis === 'v' || draggingGuide?.axis === 'v', 'guide-h': hoverGuide?.axis === 'h' || draggingGuide?.axis === 'h' }]"
                   @mousedown="startDraw"
                   @dblclick="onDblClick"
                   @mousemove="draw"
@@ -4229,6 +4508,17 @@ canvas.select.sel-drag:not(.panning) {
   cursor: move;
 }
 
+.cv-hint {
+  margin: 6px 2px 0;
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs-lh);
+  color: var(--muted);
+}
+
+/* Hovering/dragging a guide line with the select tool. */
+canvas.guide-v:not(.panning) { cursor: col-resize; }
+canvas.guide-h:not(.panning) { cursor: row-resize; }
+
 .pick-readout {
   display: inline-flex;
   align-items: center;
@@ -4453,7 +4743,14 @@ canvas.select.sel-drag:not(.panning) {
    a Back header + the option's form, inline in the same panel (no modal). */
 .settings-chev { margin-left: auto; font-size: 14px; opacity: 0.45; }
 
-.settings-sub { width: 290px; max-width: 86vw; }
+.settings-sub {
+  width: 290px;
+  max-width: 86vw;
+  /* The Canvas panel grew (board grid + guides): cap it to the viewport and
+     scroll inside — a menu taller than the screen had unreachable controls. */
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+}
 
 .settings-back {
   display: flex;
