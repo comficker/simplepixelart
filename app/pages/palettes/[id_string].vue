@@ -16,12 +16,6 @@ if (!palette.value) {
   throw createError({statusCode: 404, statusMessage: 'Palette not found', fatal: true})
 }
 
-// Supplementary, below-the-fold data fetched in ONE parallel SSR round-trip
-// (was two sequential). Each branch falls back gracefully on error.
-//  - "artworks using": status=public restricts to public for EVERY viewer (the
-//    guard is skipped for staff but the filterset still applies); template__isnull
-//    keeps only unique originals → matches usage_count.
-//  - related: similar palettes (shared tags, fallback color count).
 const pid = palette.value.id
 const {data: extra} = await useAsyncData(`palette-extra-${pid}`, () => Promise.all([
   useNativeFetch<ResponseSharedPage>(`/coloring/shared-pages/`, {
@@ -32,8 +26,6 @@ const {data: extra} = await useAsyncData(`palette-extra-${pid}`, () => Promise.a
 
 const colors = computed(() => palette.value?.colors || [])
 const usedResults = computed(() => extra.value?.[0]?.results || [])
-// Headline count = number of PUBLIC artworks (matches the grid). usage_count can
-// include drafts/templates, so it's not what we show here.
 const usedCount = computed(() => extra.value?.[0]?.count || 0)
 const relatedList = computed(() => extra.value?.[1] || [])
 
@@ -42,9 +34,6 @@ const likeCount = ref(palette.value?.like_count || 0)
 const liking = ref(false)
 
 async function toggleLike() {
-  // Hearts are open to everyone — no login required. The backend caps each
-  // visitor at one heart per palette per day, so a repeat click is a harmless
-  // no-op (counted: false) and we just keep the heart filled.
   if (liking.value || liked.value) return
   liking.value = true
   try {
@@ -82,8 +71,6 @@ async function copy(text: string, label: string) {
 
 const copyAll = () => copy(colors.value.join('\n'), `${colors.value.length} colors`)
 
-// Derived palette insights: dominant (most vivid) color, warm/cool tone,
-// overall brightness + saturation, and the darkest→lightest range.
 const insights = computed(() => {
   const cs = colors.value
   if (cs.length < 2) return null
@@ -99,7 +86,7 @@ const insights = computed(() => {
       if (h < 75 || h >= 300) warm++
       else if (h >= 140 && h <= 270) cool++
     }
-    const score = s - Math.abs(l - 0.5) * 0.5   // favor vivid mid-tones
+    const score = s - Math.abs(l - 0.5) * 0.5
     if (score > dom.score) dom = {score, hex}
     const lum = 0.299 * R + 0.587 * G + 0.114 * B
     if (lum < dark.lum) dark = {lum, hex}
@@ -344,7 +331,6 @@ useCustomSeoMeta({
   color: var(--primary);
 }
 
-/* Mirrors .art-swatch on the art detail page for a consistent palette UI. */
 .pd-swatches {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -364,8 +350,6 @@ useCustomSeoMeta({
   font: inherit;
   transition: transform 200ms cubic-bezier(.34, 1.56, .64, 1), border-color 160ms ease, box-shadow 160ms ease;
 }
-
-
 
 .pd-sw-color {
   display: block;

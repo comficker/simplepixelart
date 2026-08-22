@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import {toast} from 'vue-sonner'
 
-// Missions screen — definitions come from backend config (/coloring/economy/),
-// so new missions appear here without a frontend deploy.
 const auth = useAuthStore()
 
 interface Mission {
@@ -41,8 +39,6 @@ const loading = ref(false)
 const claiming = ref('')
 
 async function load() {
-  // Public endpoint — guests get pricing/ai_enabled (drives the Soon ribbons),
-  // signed-in users additionally get balance/missions/referral.
   loading.value = true
   try {
     sum.value = await useNativeFetch<Summary>('/coloring/economy/')
@@ -88,8 +84,6 @@ async function claimMission(m: Mission) {
   }
 }
 
-// Referral invite link — carries the username (readable, shareable); the
-// backend also accepts the numeric id from older links.
 const inviteLink = computed(() => {
   if (!auth.logged?.username || import.meta.server) return ''
   return `${location.origin}/?ref=${encodeURIComponent(auth.logged.username)}`
@@ -106,7 +100,6 @@ async function copyInvite() {
 }
 
 onMounted(async () => {
-  // A pending ?ref may still be waiting if sign-in happened elsewhere.
   await attachPendingReferral()
   load()
 })
@@ -137,7 +130,6 @@ watch(() => auth.isLogged, (v) => {
           or gift them to artists you love.
         </p>
 
-        <!-- What credits power — shown to everyone, guests included -->
         <div class="msn-uses">
           <div class="msn-use">
             <span v-if="!sum?.ai_image_enabled" class="msn-soon">Soon</span>
@@ -168,7 +160,6 @@ watch(() => auth.isLogged, (v) => {
           </div>
         </div>
 
-        <!-- Guests: the economy starts at sign-in -->
         <div v-if="!auth.isLogged" class="msn-empty">
           <span class="icon icon-coin empty-icon"/>
           <h2 class="msn-empty-title">Sign in to earn credits</h2>
@@ -183,7 +174,7 @@ watch(() => auth.isLogged, (v) => {
         <template v-else-if="sum">
           <h2 class="msn-section-title">Earn credits</h2>
           <div class="msn-list">
-            <!-- Daily bonus is just the first "mission" of the day -->
+
             <div class="msn-row">
               <div class="msn-row-main">
                 <div class="msn-row-title">Daily bonus</div>
@@ -221,7 +212,6 @@ watch(() => auth.isLogged, (v) => {
             </div>
           </div>
 
-          <!-- Referral: the only unbounded earner — the loudest card on the page -->
           <div v-if="sum.referral?.signup_reward" class="msn-invite">
             <div class="msn-invite-head">
               <span class="icon icon-gift msn-invite-ic"/>
@@ -301,7 +291,6 @@ watch(() => auth.isLogged, (v) => {
   margin-bottom: var(--space-4);
 }
 
-/* What credits power — one card per use case */
 .msn-uses {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -311,7 +300,7 @@ watch(() => auth.isLogged, (v) => {
 
 .msn-use {
   position: relative;
-  overflow: hidden;   /* clips the corner ribbon */
+  overflow: hidden;   
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -330,7 +319,6 @@ watch(() => auth.isLogged, (v) => {
   font-weight: 700;
 }
 
-/* Diagonal "Soon" ribbon across the card's top-right corner. */
 .msn-use-link {
   color: var(--primary);
   font-weight: 600;
@@ -459,8 +447,6 @@ watch(() => auth.isLogged, (v) => {
   margin-top: var(--space-4);
 }
 
-/* Invite friends — the one accent card on the page: primary-tinted face so it
-   reads as the headline earner, not another list row. */
 .msn-invite {
   display: flex;
   flex-direction: column;

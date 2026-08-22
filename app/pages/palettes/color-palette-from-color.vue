@@ -12,7 +12,7 @@ const type = ref<SchemeType>('complementary')
 const count = ref(6)
 const tone = ref<'subtle' | 'medium' | 'strong'>('medium')
 const colors = ref<string[]>([])
-const variant = ref(0) // 0 = canonical palette; bumped to re-roll a variation
+const variant = ref(0)
 
 const toneSpread = computed(() => TONE_OPTIONS.find(t => t.key === tone.value)?.spread ?? 0.34)
 
@@ -20,16 +20,12 @@ function regen() {
   colors.value = generatePalette(base.value, type.value, count.value, toneSpread.value, variant.value)
 }
 
-// Pure math → SSR-safe. Manual changes reset to the canonical palette, so the
-// server render (variant = 0) stays deterministic — no hydration drift.
 watch([base, type, count, tone], () => { variant.value = 0; regen() }, {immediate: true})
 
 const activeHint = computed(() => SCHEME_TYPES.find(s => s.key === type.value)?.hint || '')
 
 const PRESETS = ['#FF5C5C', '#FF9F1C', '#FFD23F', '#2EC4B6', '#4F7CFF', '#7B5CFF', '#FF5C9E', '#1B2430']
 
-// Refresh: keep the chosen base color, roll a new variation of the palette.
-// Client-only (user action) → never runs during SSR/hydration.
 function shuffle() {
   variant.value = variant.value + 1
   regen()

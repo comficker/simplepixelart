@@ -1,20 +1,3 @@
-// Engine-ready sidecars for the packed tileset PNG.
-//
-// The sheet the editor renders is already a uniform cell grid (every block is
-// cell-aligned, terrains occupy one square of slots each), so both formats here
-// describe THAT image — no second layout pass, no re-packing:
-//
-//   Godot 4 → .tres  TileSet with a TileSetAtlasSource + terrain sets, so
-//                    auto-tiling works in the TileMapLayer terrain brush.
-//   Tiled   → .tsx   tileset with Wang sets, so the terrain brush works there.
-//
-// Our masks say "the neighbour on this side is the same terrain", which is
-// exactly what a Godot peering bit and a Tiled wangid index mean, so the
-// terrain data survives the trip. wang16 (sides only) maps to Godot
-// MATCH_SIDES / Tiled type="edge"; blob47 (sides + corners) maps to
-// MATCH_CORNERS_AND_SIDES / type="mixed".
-//
-// Pure string builders — no DOM — so they stay testable outside the app.
 
 import {MASK_E, MASK_N, MASK_NE, MASK_NW, MASK_S, MASK_SE, MASK_SW, MASK_W, type TerrainType} from '~/helper/autotile'
 
@@ -23,7 +6,7 @@ export interface EngineTile {
   y: number
   w: number
   h: number
-  prob?: number    // random-group weight (1 = default, omitted)
+  prob?: number
 }
 
 export interface EngineTerrain {
@@ -34,14 +17,13 @@ export interface EngineTerrain {
 
 export interface EngineSheet {
   name: string
-  image: string                 // PNG filename shipped alongside the sidecar
+  image: string
   cell: { w: number; h: number }
   size: { w: number; h: number }
-  tiles: EngineTile[]           // plain-group tiles (native px, cell-aligned)
+  tiles: EngineTile[]
   terrains: EngineTerrain[]
 }
 
-// Stable, readable colour per terrain name — engines show it as the brush swatch.
 function terrainColor(name: string, i: number) {
   let hash = 0
   for (let k = 0; k < name.length; k++) hash = (hash * 31 + name.charCodeAt(k)) >>> 0
@@ -58,9 +40,6 @@ function num(n: number) {
   return Number.isInteger(n) ? `${n}.0` : String(Math.round(n * 1000) / 1000)
 }
 
-// ── Godot 4 ──────────────────────────────────────────────────────────
-
-// Mask bit → TileData peering-bit property, in the order Godot itself writes.
 const GODOT_BITS: [number, string][] = [
   [MASK_E, 'right_side'],
   [MASK_SE, 'bottom_right_corner'],
@@ -72,7 +51,6 @@ const GODOT_BITS: [number, string][] = [
   [MASK_NE, 'top_right_corner'],
 ]
 
-// TileSet.TerrainMode
 const MODE_CORNERS_AND_SIDES = 0
 const MODE_SIDES = 2
 
@@ -80,23 +58,12 @@ function esc(s: string) {
   return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 }
 
-/**
- * Godot 4 TileSet resource. Terrains of the same flavour share one terrain set
- * (Godot only matches terrains within a set, and a set has a single mode), so
- * wang16 terrains land in one set and blob47 terrains in another.
- *
- * Returns the file text plus how many tiles had to be dropped: an atlas cell
- * can hold exactly one tile, so free-positioned art that overlaps another tile
- * on the board can't be represented — it stays visible in the PNG, it just
- * doesn't become its own atlas tile.
- */
 export function buildGodotTileSet(sheet: EngineSheet): { text: string; skipped: number } {
   const {w, h} = sheet.cell
   const used = new Set<string>()
   const body: string[] = []
   let skipped = 0
 
-  // Terrain sets, keyed by mode so same-mode terrains can blend with each other.
   const modes: number[] = []
   const counts: number[] = []
   const placed = sheet.terrains.map((terrain) => {
@@ -109,7 +76,6 @@ export function buildGodotTileSet(sheet: EngineSheet): { text: string; skipped: 
     return {terrain, set, index: counts[set]++}
   })
 
-  // Claim every cell a tile covers; refuse the tile if any cell is taken.
   function claim(x: number, y: number, cw: number, ch: number) {
     const cx = Math.round(x / w)
     const cy = Math.round(y / h)
@@ -130,7 +96,6 @@ export function buildGodotTileSet(sheet: EngineSheet): { text: string; skipped: 
       skipped++
       continue
     }
-    // size_in_atlas comes before the tile line — the order Godot writes.
     if (cw > 1 || ch > 1) body.push(`${at.cx}:${at.cy}/size_in_atlas = Vector2i(${cw}, ${ch})`)
     body.push(`${at.cx}:${at.cy}/0 = 0`)
     if (t.prob != null && t.prob !== 1) body.push(`${at.cx}:${at.cy}/0/probability = ${num(t.prob)}`)
@@ -182,10 +147,6 @@ export function buildGodotTileSet(sheet: EngineSheet): { text: string; skipped: 
   return {text, skipped}
 }
 
-// ── Tiled ────────────────────────────────────────────────────────────
-
-// wangid order is fixed by the TMX format: top, top-right, right, bottom-right,
-// bottom, bottom-left, left, top-left. 0 = unset, 1 = our single Wang colour.
 const TILED_BITS = [MASK_N, MASK_NE, MASK_E, MASK_SE, MASK_S, MASK_SW, MASK_W, MASK_NW]
 
 function xml(s: string) {
@@ -196,7 +157,6 @@ function hex(n: number) {
   return Math.round(Math.max(0, Math.min(1, n)) * 255).toString(16).padStart(2, '0')
 }
 
-/** Tiled .tsx: the PNG sliced on the cell grid, terrains as Wang sets. */
 export function buildTiledTileset(sheet: EngineSheet): string {
   const {w, h} = sheet.cell
   const cols = Math.max(1, Math.floor(sheet.size.w / w))

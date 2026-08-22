@@ -38,7 +38,6 @@ useCustomSeoMeta({
   description: `A pixel art tileset with ${tiles.value.length} tiles on SimplePixelArt${data.value?.username ? ` by @${data.value.username}` : ''}. Clone it and paint your own worlds in the free tilemap editor.`,
   canonical: tilesetUrl,
   robots: isPublic.value ? 'index, follow' : 'noindex, follow',
-  // Structured data only for public tilesets (private ones are noindex anyway).
   script: isPublic.value ? [{
     type: 'application/ld+json',
     innerHTML: JSON.stringify({
@@ -60,7 +59,6 @@ useCustomSeoMeta({
   }] : [],
 })
 
-// Non-owners clone the tileset into their own account, then edit the copy.
 const cloning = ref(false)
 async function cloneTileset() {
   if (!auth.isLogged) {

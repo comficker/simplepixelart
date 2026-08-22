@@ -62,7 +62,6 @@ type CollectionLike = {
   id_string?: string
 }
 
-// No `collection` → create mode (POST); with one → edit mode (PATCH).
 const props = defineProps<{ collection?: CollectionLike }>()
 const emit = defineEmits<{ close: []; updated: [collection: CollectionLike]; created: [collection: CollectionLike] }>()
 
@@ -95,7 +94,6 @@ async function save() {
               desc: form.value.desc,
               status: form.value.status,
               name: title,
-              // Only send when set — the backend re-slugs it (empty would wipe it).
               ...(slug ? {id_string: slug} : {}),
             },
           },

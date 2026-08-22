@@ -3,7 +3,6 @@ import {defu} from 'defu'
 import {unref} from 'vue'
 import useStatefulCookie from "~/composables/useStatefulCookie";
 
-
 function getParams<T>(url: string, options: any = {}) {
   const config = useRuntimeConfig()
   const _headers = useRequestHeaders(['cookie'])
@@ -16,11 +15,6 @@ function getParams<T>(url: string, options: any = {}) {
   if (authToken.value) {
     headers['Authorization'] = `Bearer ${authToken.value}`
   }
-  // useFetch is wrapped in a single call site, so its automatic per-call-site
-  // key can't distinguish calls. Derive a key from url + params so two fetches
-  // to the SAME url with DIFFERENT params don't collide on one cache entry
-  // (which made distinct sections render identical data). Callers can still
-  // pass an explicit `key` (it wins via defu).
   const q = options?.query ?? options?.params
   const qVal = q ? unref(q) : undefined
   const defaultKey = qVal ? `${url}?${JSON.stringify(qVal)}` : url

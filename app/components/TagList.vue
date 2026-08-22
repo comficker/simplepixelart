@@ -2,7 +2,6 @@
 export interface TagItem {
   label: string
   to: string
-  /** Optional count shown as a small badge inside the ticket. */
   count?: number
 }
 
@@ -30,8 +29,6 @@ defineProps<{ items: TagItem[] }>()
   gap: var(--space-2);
 }
 
-/* Ticket style: pointed left tip (::before triangle) + punched hole
- * (::after circle). Borderless so the triangle needs no diagonal outline. */
 .tag-list-item {
   position: relative;
   display: inline-flex;
@@ -49,7 +46,6 @@ defineProps<{ items: TagItem[] }>()
   transition: background 160ms ease, color 160ms ease;
 }
 
-/* Pointed tip on the left. */
 .tag-list-item::before {
   content: "";
   position: absolute;
@@ -61,7 +57,6 @@ defineProps<{ items: TagItem[] }>()
   clip-path: polygon(100% 0, 100% 100%, 0 50%);
 }
 
-/* Punched hole near the tip — the page shows through. */
 .tag-list-item::after {
   content: "";
   position: absolute;

@@ -39,8 +39,6 @@ const canonicalUrl = computed(() =>
 
 const isPublic = computed(() => data.value?.status === 'public')
 
-
-// Share/preview image: the first piece's social card, so links unfurl with art.
 const coverItem = computed(() => items.value[0])
 const ogImage = computed(() =>
     coverItem.value?.id_string
@@ -109,14 +107,11 @@ const shareMeta = computed(() => ({
   desc: desc.value || title.value,
 }))
 
-// ── Manage mode (owner only): stage add/remove locally, commit on Save ──
 const managing = ref(false)
 const savingManage = ref(false)
 const myArts = ref<SharedPage[]>([])
 const loadingMyArts = ref(false)
 const failedThumb = reactive<Record<number, boolean>>({})
-// Snapshot taken on entering manage mode — Cancel restores it, Save diffs
-// against it to know which add-item/remove-item calls to send.
 let originalItems: SharedPage[] = []
 
 const addableArts = computed<SharedPage[]>(() => {
@@ -124,7 +119,6 @@ const addableArts = computed<SharedPage[]>(() => {
   return myArts.value.filter(a => !inColl.has(a.id))
 })
 
-// Leaving manage mode goes through saveManage/cancelManage.
 function startManage() {
   originalItems = [...items.value]
   managing.value = true
@@ -146,8 +140,6 @@ async function fetchMyArts() {
   }
 }
 
-// Local-only staging — nothing hits the API until Save.
-// useFetch data is a shallowRef in Nuxt 4 — replace the object, don't mutate.
 function removeItem(item: SharedPage) {
   if (!data.value) return
   data.value = {...data.value, items: items.value.filter(i => i.id !== item.id)}
@@ -182,7 +174,6 @@ async function saveManage() {
     toast.success('Collection updated')
     managing.value = false
   } catch {
-    // Partial failure possible — refetch nothing, just let the user retry.
     toast.error('Could not save changes')
   } finally {
     savingManage.value = false
@@ -199,17 +190,12 @@ function thumbUrl(item: SharedPage): string {
   return `${config.public.api}/coloring/files/art-original/${item.id_string}.png`
 }
 
-// ── Edit collection (settings modal, opened from the cog in manage mode) ──
 const showEditModal = ref(false)
 
 function onCollectionUpdated(updated: Partial<CollectionDetail>) {
   showEditModal.value = false
   if (!data.value) return
-  // shallowRef — replace, don't mutate. Keep the hydrated items array: the
-  // settings PATCH doesn't touch items and its response may serialize them
-  // differently (ids instead of objects).
   data.value = {...data.value, ...updated, items: items.value}
-  // Slug change moves the page URL; keep it in sync without a full reload.
   if (updated.id_string && updated.id_string !== route.params.id_string) {
     navigateTo(`/collections/${updated.id_string}`, {replace: true})
   }
@@ -310,7 +296,6 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
         </div>
       </section>
 
-      <!-- Manage mode: add your artworks to this collection -->
       <section v-if="managing && isOwner" class="cl-manage-add">
         <header class="section-head">
           <h2 class="section-title">Add your artworks</h2>
@@ -446,7 +431,6 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
   margin-left: auto;
 }
 
-/* Square icon-only button, same height as .btn */
 .cl-icon-btn {
   padding: 0.5rem;
 }
@@ -469,7 +453,6 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
   }
 }
 
-/* ===== Manage mode ===== */
 .cl-manage-cell {
   position: relative;
 }
@@ -536,8 +519,6 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
   cursor: pointer;
   transition: border-color var(--transition);
 }
-
-
 
 .cl-manage-add-img {
   width: 100%;

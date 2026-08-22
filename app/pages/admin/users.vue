@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import {toast} from 'vue-sonner'
 
-// Staff user manager — search, browse, and gift credits. The API
-// hard-gates on is_staff; the client gate below is just UX.
 const auth = useAuthStore()
 
 useCustomSeoMeta({
@@ -51,7 +49,6 @@ function go(p: number) {
   load()
 }
 
-// ── Give tokens ──
 const giving = ref<Row | null>(null)
 const giveAmount = ref(1)
 const sending = ref(false)
@@ -251,7 +248,6 @@ watch(isStaff, (v) => { if (v) load() })
   font-size: var(--text-xs);
 }
 
-/* Search */
 .usr-search {
   position: relative;
   max-width: 320px;
@@ -270,7 +266,6 @@ watch(isStaff, (v) => { if (v) load() })
 
 .usr-search .adm-input { padding-left: 28px; }
 
-/* Rows */
 .usr-name {
   display: flex;
   align-items: center;
@@ -303,7 +298,6 @@ watch(isStaff, (v) => { if (v) load() })
   white-space: nowrap;
 }
 
-/* Pager */
 .usr-pager {
   display: flex;
   align-items: center;
@@ -317,7 +311,6 @@ watch(isStaff, (v) => { if (v) load() })
   font-variant-numeric: tabular-nums;
 }
 
-/* Give modal */
 .usr-give-form {
   display: flex;
   flex-direction: column;

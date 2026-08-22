@@ -16,9 +16,6 @@ const route = useRoute()
 const router = useRouter()
 const config = useRuntimeConfig()
 
-// Which tileset the ACTIVE board belongs to. Read from the art's own data
-// (meta.tileset), stamped when it's opened from a tileset — so the strip follows
-// board switches and no longer depends on the (soon-rewritten) ?tileset= URL.
 const activeTilesetId = computed<string | null>(() => store.editorData?.meta?.tileset?.id || null)
 
 const googleAuthUrl = computed(() => {
@@ -31,12 +28,10 @@ const googleAuthUrl = computed(() => {
 const showPublishModal = ref(false)
 const publishStep = ref<'edit' | 'done'>('edit')
 
-// PNG export scale picker
 const showPngModal = ref(false)
 const PNG_SCALES = [1, 2, 4, 8, 16, 32]
 const pngScale = ref(8)
 
-// Delete-this-art flow
 const showDeleteConfirm = ref(false)
 const deleting = ref(false)
 const tileStripRef = ref<{
@@ -66,40 +61,30 @@ const socialUrls = computed(() => {
 const auth = useAuthStore()
 const showLoginPrompt = ref(false)
 
-// The current art is addable to a tileset only once it's a saved cloud art.
 const isCurrentArtSaved = computed(() =>
     auth.isLogged && typeof editorData.value.id === 'number' && !!editorData.value.id_string,
 )
 
-// Open a tileset-strip tile. If it's already on the canvas as a board, just
-// focus that board (activate + pan into view) — no reload, no duplicate.
-// Otherwise bring the tile onto the canvas as a NEW board. `tsId` (the tileset
-// the tile was opened from) keeps the new board bound to that tileset.
 async function loadTileRef(idStr: string, tsId?: string) {
   if (!idStr) return
-  // Live active board matches → re-center it.
   const live = editorData.value
   if (live && (String(live.id) === idStr || live.id_string === idStr)) {
     focusActiveBoard()
     return
   }
-  // Another open board holds this art → make it active and pan it into view.
   const board = store.boards.find(b => b.id === idStr || b.data?.id_string === idStr)
   if (board) {
     store.setActiveBoard(board.id)
     focusActiveBoard()
     return
   }
-  // Not on the canvas yet → add it as a new board. (store.load would rebuild the
-  // whole workspace from the saved snapshot and DISCARD the clicked tile — that
-  // was the "wrong board loads" bug.)
   canvasReady.value = false
   try {
     let data: any = null
     let ws: Record<string, any> = {}
     try { ws = JSON.parse(localStorage.getItem('workspaces') || '{}') } catch { /* ignore */ }
     if (ws[idStr]) {
-      data = JSON.parse(JSON.stringify(ws[idStr]))        // guest tile (already staged)
+      data = JSON.parse(JSON.stringify(ws[idStr]))
     } else {
       const res = await useNativeFetch<any>(`/coloring/shared-pages/${idStr}/`)
       const mine = auth.logged?.id === res?.user?.id
@@ -107,14 +92,12 @@ async function loadTileRef(idStr: string, tsId?: string) {
           ? {id: res.id, id_string: res.id_string, template: null}
           : {id: generateUUID(), id_string: '', template: res.id})
     }
-    // Keep it bound to the tileset it was opened from (widget stays put).
     if (tsId) data.meta = {...(data.meta || {}), tileset: {id: tsId}}
     store.addBoardWithData(data)
     focusActiveBoard()
   } catch {
     toast.error('Could not open that tile')
   } finally {
-    // Reveal once the next frame has painted the loaded art.
     if (typeof requestAnimationFrame !== 'undefined') {
       requestAnimationFrame(() => { canvasReady.value = true })
     } else {
@@ -123,7 +106,6 @@ async function loadTileRef(idStr: string, tsId?: string) {
   }
 }
 
-// Wipe local traces of an art so a deleted one can't be re-POSTed on reload.
 function purgeLocalArt(id: string | number) {
   const key = id.toString()
   try {
@@ -135,8 +117,6 @@ function purgeLocalArt(id: string | number) {
   if (localStorage.getItem('workspace_current') === key) localStorage.setItem('workspace_current', '')
 }
 
-// Delete the current art. If the tileset strip is showing sibling tiles, open
-// one of them; otherwise clear the canvas to a fresh blank art.
 async function destroyCurrent() {
   if (deleting.value) return
   deleting.value = true
@@ -144,7 +124,6 @@ async function destroyCurrent() {
   const idString = editorData.value.id_string
   const isCloud = auth.isLogged && typeof id === 'number' && !!idString
 
-  // Prefer opening a sibling tile from the tileset shown in the strip.
   const nextIdStr = isCloud ? (tileStripRef.value?.siblingId(idString) || null) : null
 
   try {
@@ -158,7 +137,6 @@ async function destroyCurrent() {
   }
 
   purgeLocalArt(id)
-  // Drop the deleted art from the collection strip's cached thumbnails.
   tileStripRef.value?.removeItem(id)
   if (idString) tileStripRef.value?.removeItem(idString)
   showDeleteConfirm.value = false
@@ -184,9 +162,6 @@ async function destroyCurrent() {
   deleting.value = false
 }
 
-// Visibility is a status, not a boolean — the list is data so new states
-// (unlisted, scheduled…) slot in without touching the layout. `pending`
-// isn't offered: the backend assigns it (moderation) on non-staff publishes.
 const PUBLISH_STATUSES = [
   {value: 'public', label: 'Public — listed in the gallery', action: 'Publish'},
   {value: 'draft', label: 'Private draft — only you can see it', action: 'Save draft'},
@@ -206,10 +181,6 @@ function openPublish() {
   loadEconomyForPublish()
 }
 
-// ── AI auto-fill (publish flow) ──────────────────────────────────────
-// One call fills title/description/tags from the artwork itself — costs the
-// configured gen_meta price (1 credit). The button only shows when the
-// backend has an AI key (ai_enabled) — checked on modal open.
 const aiMeta = ref<{ enabled: boolean; cost: number; balance: number } | null>(null)
 const aiBusy = ref(false)
 
@@ -228,7 +199,6 @@ async function genMetaWithAI() {
   if (aiBusy.value || !aiMeta.value?.enabled) return
   aiBusy.value = true
   try {
-    // Raw 1:1 art PNG — the server upscales nearest-neighbor for the model.
     const tmp = document.createElement('canvas')
     tmp.width = editorData.value.width
     tmp.height = editorData.value.height
@@ -248,9 +218,6 @@ async function genMetaWithAI() {
     editorData.value.name = res.title
     editorData.value.desc = res.description
     if (res.tags?.length) editorData.value.tags = res.tags
-    // A draft auto-saves before it has a title, so its URL is stuck on the
-    // "untitled-<n>" slug the backend minted. Take the title's slug instead —
-    // but never for published art: that link is already out in the world.
     if (res.slug && !editorData.value.is_public) editorData.value.id_string = res.slug
     if (aiMeta.value) aiMeta.value.balance = res.balance
     toast.success(`Filled by AI · −${aiMeta.value?.cost ?? 1} credit`)
@@ -264,12 +231,9 @@ async function genMetaWithAI() {
 }
 
 async function saveArt() {
-  // Drafts auto-save all along — this modal only decides the status.
   editorData.value.is_public = publishStatus.value === 'public'
   store.saveState(false)
   await store.saveNow()
-  // Either way it's now on the cloud with a slug, so offer the share step — the
-  // link works for unlisted art too, it just isn't listed in the gallery.
   if (editorData.value.id_string) {
     publishStep.value = 'done'
   } else {
@@ -288,37 +252,26 @@ const EDITOR_SIZE = ref(384)
 const MINIMAP_SIZE = ref(80)
 const newSize = ref({width: 16, height: 16})
 const zoom = ref(29);
-// ── Infinite-canvas camera (Phase 1) ──────────────────────────────────────
-// The stage is a FIXED viewport; content is positioned by a camera instead of
-// resizing the canvas to the art + scrolling. `cam` = screen-space (CSS px)
-// where the board's (0,0) pixel lands; `zoom` is now fractional (px per art
-// pixel). Draw math stays `screen = cam + artCoord * zoom`; `artOffset` is kept
-// as an alias to `cam` so every existing draw fn keeps working unchanged.
 const cam = ref({x: 0, y: 0});
-const stageW = ref(384);   // stage CSS width  (set by fitCanvasToStage)
-const stageH = ref(384);   // stage CSS height
+const stageW = ref(384);
+const stageH = ref(384);
 let dpr = 1;
-const ZOOM_MIN = 0.1;      // overview: whole board(s) small
-const ZOOM_MAX = 64;       // deep pixel editing
-const BOARD_ACTIVE = '#4f46e5';   // active-board ring + label accent
-const DOT_W = 18, DOT_H = 16;     // kebab menu dot on each board's label row
+const ZOOM_MIN = 0.1;
+const ZOOM_MAX = 64;
+const BOARD_ACTIVE = '#4f46e5';
+const DOT_W = 18, DOT_H = 16;
 
-// Touch/pen pointers can't hit the tiny kebab dot — grow its tap target then.
-// Detected in onMounted (SSR-safe default = false).
 const coarsePointer = ref(false);
 
-// Per-board options popover (kebab dot / right-click). Screen coords (viewport).
 const boardMenu = ref<{ id: string; x: number; y: number } | null>(null);
 
-// Desk (infinite-canvas) appearance — workspace-level, persisted separately,
-// configured via the Canvas modal (Settings → Canvas).
 const DESK_BG = { dark: '#1b1b1f', light: '#eceef1' };
-const deskBg = ref(DESK_BG.dark);                               // any hex color
+const deskBg = ref(DESK_BG.dark);
 const deskGrid = ref(true);
 const deskGridStyle = ref<'solid' | 'dashed' | 'dots'>('solid');
-const deskGridShape = ref<'square' | 'iso'>('square');         // world grid lattice
-const deskGridColor = ref('');                                 // '' = auto (contrast with bg)
-const deskGridCell = ref({ width: 1, height: 1 });             // cell size in art-px
+const deskGridShape = ref<'square' | 'iso'>('square');
+const deskGridColor = ref('');
+const deskGridCell = ref({ width: 1, height: 1 });
 const isCustomDeskBg = computed(() => {
   const c = deskBg.value.toLowerCase();
   return c !== DESK_BG.dark && c !== DESK_BG.light;
@@ -328,35 +281,21 @@ function setDeskCell(axis: 'width' | 'height', v: string) {
   deskGridCell.value = { ...deskGridCell.value, [axis]: n };
 }
 
-// Grid line/dot color that stays visible against the chosen background.
 function deskIsLight(): boolean {
   const h = deskBg.value.replace('#', '');
   if (h.length < 6) return false;
   const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
   return (0.299 * r + 0.587 * g + 0.114 * b) > 140;
 }
-// Grid line colour: the user's pick, else an auto contrast tint over the desk bg.
-// ── Board checker + guides (workspace prefs, persisted with the desk) ──
-// The "board grid" is the white/gray transparency checker the art sits on —
-// these knobs set how many art pixels one checker cell spans and its two
-// colours ('' = the defaults).
 const checkerSize = ref(1);
 const checkerA = ref('');
 const checkerB = ref('');
-const guideColor = ref('');                                    // '' = auto (blue)
+const guideColor = ref('');
 
 function setCheckerSize(v: string | number) {
   checkerSize.value = Math.max(1, Math.min(64, Math.round(Number(v) || 1)));
 }
 
-// ── Custom guides (Photoshop-style) ───────────────────────────────────
-// Arbitrary vertical/horizontal alignment lines, stored on the BOARD
-// (meta.guides {v:[], h:[]}) so they travel and sync with the artwork.
-// Added from the Canvas menu, dragged with the SELECT tool (only — the same
-// reason Photoshop reserves guide-dragging for its Move tool: a brush stroke
-// near a guide must never grab it), snapped to whole art pixels, removed by
-// dropping them outside the board. Position changes are saveState'd, so a
-// guide move is undoable like any other edit.
 const draggingGuide = ref<{ axis: 'v' | 'h'; index: number } | null>(null);
 const hoverGuide = ref<{ axis: 'v' | 'h'; index: number } | null>(null);
 const GUIDE_HIT_PX = 5;
@@ -377,9 +316,6 @@ function addGuide(axis: 'v' | 'h') {
   scheduleDraw();
 }
 
-// Center / Thirds are quick-adds, not overlays: they mint the same movable
-// guides the +V/+H buttons do (already-present positions are skipped), so
-// every line on the board can be dragged or thrown away afterwards.
 function addGuidePreset(kind: 'center' | 'thirds') {
   const g = boardGuides();
   const w = editorData.value.width, h = editorData.value.height;
@@ -412,8 +348,6 @@ const guideCount = computed(() => {
   return (g?.v?.length || 0) + (g?.h?.length || 0);
 });
 
-// Art-space pointer position, unclamped and fractional (getPixelPos floors
-// and is meant for painting).
 function artPos(e: MouseEvent | TouchEvent): { x: number; y: number } {
   const rect = canvas.value!.getBoundingClientRect();
   const {x: cx, y: cy} = getClientPos(e);
@@ -421,7 +355,6 @@ function artPos(e: MouseEvent | TouchEvent): { x: number; y: number } {
   return {x: (cx - rect.left - ox) / zoom.value, y: (cy - rect.top - oy) / zoom.value};
 }
 
-// The guide under the pointer (select tool only), or null.
 function guideAt(e: MouseEvent | TouchEvent): { axis: 'v' | 'h'; index: number } | null {
   if (store.currentTool !== 'select') return null;
   const g: any = editorData.value.meta?.guides;
@@ -429,7 +362,7 @@ function guideAt(e: MouseEvent | TouchEvent): { axis: 'v' | 'h'; index: number }
   const p = artPos(e);
   const z = zoom.value;
   const w = editorData.value.width, h = editorData.value.height;
-  const m = (GUIDE_HIT_PX + 3) / z;                 // small margin outside the board
+  const m = (GUIDE_HIT_PX + 3) / z;
   if (p.x < -m || p.x > w + m || p.y < -m || p.y > h + m) return null;
   const tol = GUIDE_HIT_PX / z;
   for (let i = 0; i < (g.v || []).length; i++) {
@@ -456,7 +389,6 @@ function endGuideDrag() {
   const g = boardGuides();
   const max = d.axis === 'v' ? editorData.value.width : editorData.value.height;
   const pos = g[d.axis][d.index]!;
-  // Dropped outside the board = removed, the Photoshop gesture.
   if (pos < 0 || pos > max) g[d.axis].splice(d.index, 1);
   draggingGuide.value = null;
   window.removeEventListener('mousemove', doGuideDrag);
@@ -471,8 +403,6 @@ function deskGridColorEff(): string {
 const referenceImage = ref<HTMLImageElement | null>(null);
 const referenceVisible = ref(true);
 const referenceOpacity = 0.5;
-// View preference: the title + kebab options drawn above each board. Persisted;
-// loaded in onMounted (SSR-safe default = shown).
 const showBoardChrome = ref(true);
 const spacePressed = ref(false);
 const panStart = ref({x: 0, y: 0});
@@ -488,11 +418,8 @@ const linkResize = ref(false);
 const isPinching = ref(false);
 const moveStart = ref({x: 0, y: 0});
 const needSave = ref(false);
-// False until the first canvas render completes (after async load). Drives the
-// loading overlay so users never see an empty canvas while content loads.
 const canvasReady = ref(false);
 const hoverPos = ref<{ x: number; y: number } | null>(null);
-// Select tool: hovering inside the active selection advertises drag-to-move.
 const hoverInSelection = computed(() =>
     store.currentTool === 'select' &&
     store.selectionState.bounds.active &&
@@ -502,16 +429,12 @@ const hoverInSelection = computed(() =>
 const bgImage = ref<HTMLImageElement | null>(null);
 let bgImageUrlCache = '';
 
-// ===== Background picker (modal) =====
-// Settings dropdown is a drill-down panel (no modals): 'main' list → a deeper
-// view per option, with a Back button. Reset to 'main' each time it opens.
 const settingsView = ref<'main' | 'resize' | 'bg' | 'canvas' | 'board'>('main');
 const bgTab = ref<'none' | 'transparent' | 'solid' | 'art'>('none');
 const bgSolidColor = ref('#FFFFFF');
 const myArts = ref<Array<{id: string; name: string; thumb: string}>>([]);
 const loadingMyArts = ref(false);
 const myArtsLoaded = ref(false);
-// Background-picker thumbs 404 for art with no rendered image — show a clean tile.
 const failedBgThumb = reactive<Record<string, boolean>>({});
 
 function openBgPicker() {
@@ -595,9 +518,6 @@ async function loadMyArts() {
   }
 }
 
-// ===== Load an existing art onto the canvas as a new board =====
-// Own state (separate from the bg picker's myArts). The LoadBrowser modal does
-// search/order client-side, so we just fetch the 100 most-recent arts.
 const showArtPicker = ref(false);
 const loadingArtInsert = ref(false);
 const pickerArts = ref<Array<{id: string; name: string; thumb: string; status?: string; updated?: string}>>([]);
@@ -636,8 +556,6 @@ async function loadArtIntoBoard(art: {id: string; name: string}) {
   loadingArtInsert.value = true;
   try {
     const res = await useNativeFetch<any>(`/coloring/shared-pages/${art.id}/`);
-    // Own art → keep its id + slug so edits on the board save back to it.
-    // Someone else's → bring an independent copy (fresh id, template link).
     const mine = auth.logged?.id === res?.user?.id;
     const data = sharedPage2EditorData(res, mine
         ? {id: res.id, id_string: res.id_string, template: null}
@@ -653,25 +571,19 @@ async function loadArtIntoBoard(art: {id: string; name: string}) {
   }
 }
 
-// ===== ?tileset=<id> — open every tile of a tileset as its own board =====
-const TILESET_BOARDS_MAX = 60;  // cap so a huge tileset can't hang the editor
+const TILESET_BOARDS_MAX = 60;
 
-// Stamp the tileset membership onto an art so the editor (and the tileset
-// strip) knows which tileset/tile it is, independent of the URL. It rides in
-// `meta` → persists to the cloud art / local tile / workspace snapshot.
 function stampTileset(ed: any, tsId: string, tid: number | string | null) {
   ed.meta = {...(ed.meta || {}), tileset: {id: tsId, ...(tid != null ? {tid} : {})}};
   return ed;
 }
 
 async function collectTilesetEds(tsId: string): Promise<any[]> {
-  // Guest local-library tileset → the tiles carry their own pixel data.
   if (tsId.startsWith('local:')) {
     const ts = useLocalTilesets().get(tsId);
     return (ts?.tiles || []).slice(0, TILESET_BOARDS_MAX)
         .map(t => stampTileset(JSON.parse(JSON.stringify(t.ed)), tsId, t.tid));
   }
-  // Cloud tileset → registry (id → slug); fetch the arts in parallel (capped).
   try {
     const t = await useNativeFetch<any>(`/coloring/tilesets/${tsId}/`);
     const slugs = ([...new Set(Object.values(t?.meta?.registry || {}))] as string[]).slice(0, TILESET_BOARDS_MAX);
@@ -682,10 +594,9 @@ async function collectTilesetEds(tsId: string): Promise<any[]> {
         const ed = sharedPage2EditorData(res, mine
             ? {id: res.id, id_string: res.id_string, template: null}
             : {id: generateUUID(), id_string: '', template: res.id});
-        // Registry key is the page's numeric id (add-tile stores it as such).
         return stampTileset(ed, tsId, res.id);
       } catch {
-        return null;   // skip a missing tile
+        return null;
       }
     }));
     return settled.filter(Boolean);
@@ -697,7 +608,6 @@ async function collectTilesetEds(tsId: string): Promise<any[]> {
 async function loadTilesetBoards(tsId: string) {
   const eds = await collectTilesetEds(tsId);
   if (!eds.length) { await store.load(undefined); return; }
-  // Lay the arts out on a grid, then rebuild the multi-board workspace.
   const cols = Math.ceil(Math.sqrt(eds.length));
   const cellW = Math.max(...eds.map(e => e.width || 16));
   const cellH = Math.max(...eds.map(e => e.height || 16));
@@ -714,11 +624,10 @@ async function loadTilesetBoards(tsId: string) {
     localStorage.setItem('workspaces', JSON.stringify(ws));
     localStorage.setItem('workspace_current', String(eds[0].id));
   } catch { /* ignore quota */ }
-  await saveWorkspaceFull({boards, activeIndex: 0});   // IndexedDB — no quota ceiling
+  await saveWorkspaceFull({boards, activeIndex: 0});
   await store.load(undefined);
 }
 
-// Guests have no cloud account — their boards live in localStorage.workspaces.
 const localBoards = ref<Array<{id: string; name: string; status?: string; updated?: string; previewImgs: string[]}>>([]);
 
 function boardThumb(ed: any): string {
@@ -747,7 +656,6 @@ function buildLocalBoards() {
       });
 }
 
-// Signed in → cloud arts; guest → local boards. Both feed the shared browser.
 const browseBoards = computed(() =>
     auth.isLogged
         ? pickerArts.value.map(a => ({id: a.id, name: a.name, status: a.status, updated: a.updated, previewImgs: [a.thumb]}))
@@ -892,7 +800,6 @@ function cancelScheduledDraw() {
   }
 }
 
-// Background image loader — client-only (Image / rAF unavailable in SSR)
 watch(
     () => [store.bgConfig.type, store.bgConfig.artUrl] as const,
     ([type, url]) => {
@@ -930,13 +837,6 @@ watch(() => [store.bgConfig.type, store.bgConfig.color], () => {
   scheduleMiniMap();
 });
 
-// Offscreen art buffer at 1px-per-art-pixel, blitted (scaled, crisp) to the
-// main canvas and minimap. The buffer PERSISTS across frames: a full rebuild
-// (layers2MapNumbers over the whole canvas) costs ~10ms at 128² and must never
-// run per frame. Instead, brush/eraser strokes patch only the pixels they
-// touched — the store reports them via consumeRenderDirty() — so a drawing
-// frame costs O(brush size), not O(canvas). A full rebuild happens only on
-// structural changes (resize, undo/redo, color edits, layer ops, move/iso).
 let artCanvas: HTMLCanvasElement | null = null;
 let artCtx: CanvasRenderingContext2D | null = null;
 let artImg: ImageData | null = null;
@@ -944,9 +844,6 @@ let artTurn = -1;
 let artW = -1;
 let artH = -1;
 
-// Top-most painted color index at a canvas coordinate (respecting layer order
-// + offsets). Used to recompute a single pixel after an edit/erase without
-// re-merging the whole canvas. O(layers) — typically 1–3.
 function topColorIndexAt(ed: any, cx: number, cy: number): number {
   const layers = ed.layers;
   for (let i = layers.length - 1; i >= 0; i--) {
@@ -975,7 +872,6 @@ function ensureArtBuffer(): HTMLCanvasElement | null {
     artImg = artCtx.createImageData(w, h);
     sizeChanged = true;
   }
-  // Already current for this draw-turn — nothing new to apply.
   if (artTurn === store.drawTurn && !sizeChanged) return artCanvas;
 
   const {full, keys} = store.consumeRenderDirty();
@@ -983,7 +879,6 @@ function ensureArtBuffer(): HTMLCanvasElement | null {
   const rgb = ed.colors.map(c => hexToRgb(c));
 
   if (full || sizeChanged) {
-    // Full rebuild — only on structural changes, never mid-stroke.
     data.fill(0);
     const map = layers2MapNumbers(ed);
     for (const k in map) {
@@ -999,7 +894,6 @@ function ensureArtBuffer(): HTMLCanvasElement | null {
       data[off + 3] = 255;
     }
   } else {
-    // Incremental — patch only the pixels this stroke touched.
     for (const k of keys) {
       const sep = k.indexOf('_');
       const x = +k.slice(0, sep);
@@ -1030,21 +924,14 @@ function getArtCanvas(): HTMLCanvasElement | null {
   return ensureArtBuffer();
 }
 
-// Offscreen cache for the static background (base fill + checker / solid / art).
-// Re-rendered only when canvas size, zoom, art size, grid mode or bg config
-// change — not on every frame. Each draw then blits it with one drawImage.
 let bgCanvas: HTMLCanvasElement | null = null;
 let bgCtx: CanvasRenderingContext2D | null = null;
 let bgCacheKey = '';
-let sharedBgCanvas: HTMLCanvasElement | null = null;  // scratch for shared-layer composite
+let sharedBgCanvas: HTMLCanvasElement | null = null;
 
 let isoPathCache: Path2D | null = null;
 let isoCacheKey = '';
 
-// Below this on-screen diamond width the lattice is illegible noise — and the
-// per-diamond path (O(cols×rows) segments per board) gets catastrophically
-// expensive when zoomed out over many boards (a FIT could stroke 250k+
-// diamonds and freeze for seconds). Cull it instead.
 const ISO_MIN_CELL_PX = 6;
 
 function getIsoPath(): Path2D | null {
@@ -1062,12 +949,8 @@ function getIsoPath(): Path2D | null {
   return path;
 }
 
-// The active board (the one the tools edit).
 const activeBoard = computed(() => store.boards.find(b => b.id === store.activeBoardId) || null)
 
-// Where the ACTIVE board's origin lands on screen (CSS px) = camera + the
-// board's world position × zoom. Kept named `artOffset` so every active-board
-// draw fn (`screen = artOffset + coord*zoom`) and getPixelPos work unchanged.
 const artOffset = computed(() => {
   const b = activeBoard.value
   const bx = b ? b.x : 0
@@ -1075,13 +958,10 @@ const artOffset = computed(() => {
   return {x: cam.value.x + bx * zoom.value, y: cam.value.y + by * zoom.value}
 })
 
-// Screen top-left (CSS px) of any board at world position (bx,by).
 function boardScreen(bx: number, by: number) {
   return {x: Math.round(cam.value.x + bx * zoom.value), y: Math.round(cam.value.y + by * zoom.value)}
 }
 
-// Stage-local rect of a board's kebab-menu dot (top-right of the label row),
-// or null when the board is too narrow to place it without hitting the name.
 function boardDotRect(b: any): { x: number; y: number; w: number; h: number } | null {
   const bw = b.data.width * zoom.value;
   if (bw < 44) return null;
@@ -1089,9 +969,6 @@ function boardDotRect(b: any): { x: number; y: number; w: number; h: number } | 
   return {x: sx + bw - DOT_W, y: sy - DOT_H - 2, w: DOT_W, h: DOT_H};
 }
 
-// Tap target for the kebab dot. Same as the drawn dot for a mouse; on touch it
-// grows up + left into the empty label gutter (never over the board's pixels)
-// so a finger can reliably open the board menu.
 function boardDotHitRect(b: any): { x: number; y: number; w: number; h: number } | null {
   const r = boardDotRect(b);
   if (!r || !coarsePointer.value) return r;
@@ -1099,9 +976,8 @@ function boardDotHitRect(b: any): { x: number; y: number; w: number; h: number }
   return {x: r.x - padX, y: r.y - padY, w: r.w + padX, h: r.h + padY};
 }
 
-// Board whose menu-dot is under the pointer (null = none). Topmost first.
 function boardDotAt(e: MouseEvent | TouchEvent): any {
-  if (!showBoardChrome.value) return null;   // dot is hidden → right-click still opens the menu
+  if (!showBoardChrome.value) return null;
   const {x: clientX, y: clientY} = getClientPos(e);
   const rect = canvas.value!.getBoundingClientRect();
   const px = clientX - rect.left, py = clientY - rect.top;
@@ -1114,7 +990,6 @@ function boardDotAt(e: MouseEvent | TouchEvent): any {
 }
 
 function openBoardMenu(id: string, clientX: number, clientY: number) {
-  // Keep the ~180px popover on-screen near the right/bottom edges.
   const x = typeof window !== 'undefined' ? Math.min(clientX, window.innerWidth - 190) : clientX;
   const y = typeof window !== 'undefined' ? Math.min(clientY, window.innerHeight - 90) : clientY;
   boardMenu.value = {id, x, y};
@@ -1122,16 +997,13 @@ function openBoardMenu(id: string, clientX: number, clientY: number) {
 
 function closeBoardMenu() { boardMenu.value = null; }
 
-// Right-click a board (its pixels or chrome) → open its options panel.
 function onContextMenu(e: MouseEvent) {
   const b = boardAt(e) || boardChromeAt(e);
-  if (!b) return;   // empty desk → leave the native menu alone
+  if (!b) return;
   e.preventDefault();
   openBoardMenu(b.id, e.clientX, e.clientY);
 }
 
-// Hide (remove) a board from the workspace. The art itself is untouched on the
-// server — reopen it any time via File → Load art.
 function hideBoard(id: string) {
   closeBoardMenu();
   if (store.boards.length <= 1) {
@@ -1143,11 +1015,9 @@ function hideBoard(id: string) {
   toast.success(`Hid “${b?.data?.name || 'board'}” — reopen it from File → Load art`);
 }
 
-// ── Drag-resize of the active board (bottom-right anchored, matching the
-// store's top-left-anchored resize) ────────────────────────────────────────
 const isResizingBoard = ref(false);
 const resizeMode = ref<'' | 'e' | 's' | 'se'>('');
-const HANDLE_HIT = 11;   // grab tolerance (screen px)
+const HANDLE_HIT = 11;
 
 function activeBoardRect(): { sx: number; sy: number; bw: number; bh: number } | null {
   const b = activeBoard.value;
@@ -1157,10 +1027,9 @@ function activeBoardRect(): { sx: number; sy: number; bw: number; bh: number } |
   return {sx, sy, bw: b.data.width * z, bh: b.data.height * z};
 }
 
-// Which resize handle (if any) is under the pointer.
 function handleAt(e: MouseEvent | TouchEvent): '' | 'e' | 's' | 'se' {
   const r = activeBoardRect();
-  if (!r || r.bw < 36 || r.bh < 36) return '';   // too small to grab
+  if (!r || r.bw < 36 || r.bh < 36) return '';
   const {x: clientX, y: clientY} = getClientPos(e);
   const rect = canvas.value!.getBoundingClientRect();
   const px = clientX - rect.left, py = clientY - rect.top;
@@ -1185,8 +1054,6 @@ function doResizeBoard(e: MouseEvent | TouchEvent) {
   w = Math.max(1, Math.min(256, w));
   h = Math.max(1, Math.min(256, h));
   if (w !== editorData.value.width || h !== editorData.value.height) {
-    // live mutation (no history) — the size watcher is suppressed while resizing;
-    // ensureArtBuffer/bg cache rebuild on the size change. History recorded on drop.
     editorData.value.width = w;
     editorData.value.height = h;
     scheduleDraw();
@@ -1206,14 +1073,11 @@ function stopResizeBoard() {
   isResizingBoard.value = false;
   resizeMode.value = '';
   window.removeEventListener('mousemove', doResizeBoard);
-  // Only commit (history entry + save) when the size actually changed — a
-  // grab-and-release used to push a no-op undo step.
   if (active && (editorData.value.width !== resizeStartSize.w || editorData.value.height !== resizeStartSize.h)) {
     store.resize({width: editorData.value.width, height: editorData.value.height});
   }
 }
 
-// Topmost board under a pointer event (world hit-test), or null (empty desk).
 function boardAt(e: MouseEvent | TouchEvent): any {
   const {x: clientX, y: clientY} = getClientPos(e);
   const rect = canvas.value!.getBoundingClientRect();
@@ -1226,8 +1090,6 @@ function boardAt(e: MouseEvent | TouchEvent): any {
   return null;
 }
 
-// Board whose CHROME (the name label above it + a small frame margin) is under
-// the pointer — used so clicking a board's name/edge also activates it.
 function boardChromeAt(e: MouseEvent | TouchEvent): any {
   const {x: clientX, y: clientY} = getClientPos(e);
   const rect = canvas.value!.getBoundingClientRect();
@@ -1236,25 +1098,21 @@ function boardChromeAt(e: MouseEvent | TouchEvent): any {
     const b = store.boards[i]!;
     const {x: sx, y: sy} = boardScreen(b.x, b.y);
     const bw = b.data.width * zoom.value, bh = b.data.height * zoom.value;
-    // board rect grown up by ~20px (label strip) and 6px on the other sides
     if (px >= sx - 6 && px <= sx + bw + 6 && py >= sy - 20 && py <= sy + bh + 6) return b;
   }
   return null;
 }
 
-// ── Move a board: drag its label bar (chrome) to reposition on the canvas ──
 const isMovingBoard = ref(false);
 const moveBoardId = ref('');
-const boardMoveStart = ref({mx: 0, my: 0, bx: 0, by: 0});   // pointer world + board world at grab
-let boardDidMove = false;                                    // distinguishes a drag (move) from a click (activate)
+const boardMoveStart = ref({mx: 0, my: 0, bx: 0, by: 0});
+let boardDidMove = false;
 
-// ── Marquee-create: drag out a rectangle on empty desk to make a new board ──
 const isMarquee = ref(false);
-const marqueeStart = ref({x: 0, y: 0});   // world coords (art px, float)
+const marqueeStart = ref({x: 0, y: 0});
 const marqueeCur = ref({x: 0, y: 0});
-const MARQUEE_MIN = 3;                     // min art-px per side to count as a create gesture
+const MARQUEE_MIN = 3;
 
-// Pointer → world position (art px, unrounded), independent of the active board.
 function worldPos(e: MouseEvent | TouchEvent): { x: number, y: number } {
   const {x: clientX, y: clientY} = getClientPos(e);
   const rect = canvas.value!.getBoundingClientRect();
@@ -1264,7 +1122,6 @@ function worldPos(e: MouseEvent | TouchEvent): { x: number, y: number } {
   };
 }
 
-// ================================================== //
 function getClientPos(event: MouseEvent | TouchEvent): { x: number, y: number } {
   const clientX = 'touches' in event ? event!.touches[0]!.clientX : event.clientX;
   const clientY = 'touches' in event ? event!.touches[0]!.clientY : event.clientY;
@@ -1280,7 +1137,6 @@ function getPixelPos(event: MouseEvent | TouchEvent): { x: number, y: number } {
   };
 }
 
-// ================================================== //
 function toggleSelect() {
   if (store.currentTool === 'select' && store.selectionState.bounds.active) {
     store.selectionState.bounds.active = false;
@@ -1290,7 +1146,6 @@ function toggleSelect() {
   }
 }
 
-// Center + fit the active board in the stage (load / "fit" action).
 function centerView() {
   const b = activeBoard.value;
   const bx = b ? b.x : 0;
@@ -1311,7 +1166,6 @@ function centerView() {
   };
 }
 
-// Pan (keep zoom) so the active board is centered — used after adding a board.
 function focusActiveBoard() {
   const b = activeBoard.value;
   if (!b) return;
@@ -1326,11 +1180,8 @@ function focusActiveBoard() {
   scheduleMiniMap();
 }
 
-// Fit ALL boards in the stage (workspace overview).
 function fitAllBoards() {
   const bs = store.boards;
-  // centerView only sets zoom/cam — without an explicit redraw the stage
-  // stays stale until the pointer re-enters the canvas ("FIT does nothing").
   if (bs.length <= 1) { centerView(); scheduleDraw(); scheduleMiniMap(); return; }
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const b of bs) {
@@ -1356,16 +1207,11 @@ function fitAllBoards() {
   scheduleMiniMap();
 }
 
-// Add a blank board of the given size, then show the whole workspace so the
-// new board AND the existing ones are visible together.
 function onAddBoard(size: number) {
   store.addBoard(size, size);
   fitAllBoards();
 }
 
-// Import file(s): pick first, then a small modal collects intent — pixel
-// filter vs original 1:1 pixels, and where the files land (boards / animation
-// frames / replace the current canvas).
 const showImportModal = ref(false);
 const importPicked = ref<File[]>([]);
 const importProcess = ref<'filter' | 'original'>('filter');
@@ -1412,7 +1258,6 @@ async function confirmImport() {
   }
 }
 
-// Size the canvas backing store to its CSS box × DPR, drawing in CSS px.
 function updateCanvasSize() {
   const el = canvas.value;
   if (!el) return;
@@ -1427,8 +1272,6 @@ function updateCanvasSize() {
   if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-// ================================================== //
-// Zoom toward a fixed stage point (ax,ay in CSS px) — keeps that point put.
 function setZoomAnchored(newZoom: number, ax: number, ay: number) {
   const nz = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, newZoom));
   const f = nz / zoom.value;
@@ -1441,8 +1284,6 @@ function setZoomAnchored(newZoom: number, ax: number, ay: number) {
   scheduleDraw();
 }
 
-// Geometric steps so zooming out from a high pixel-zoom (e.g. 29×) reaches an
-// overview in a few clicks; snap to whole numbers ≥1 to keep pixels crisp.
 function zoomBy(factor: number) {
   let nz = zoom.value * factor;
   nz = nz >= 1 ? Math.max(1, Math.round(nz)) : nz;
@@ -1451,43 +1292,24 @@ function zoomBy(factor: number) {
 
 function zoomIn() { zoomBy(1.5); }
 function zoomOut() { zoomBy(1 / 1.5); }
-// 100% = 1 art pixel : 1 CSS pixel, anchored at the stage centre.
 function zoomTo100() { setZoomAnchored(1, stageW.value / 2, stageH.value / 2); }
 
-// OS-aware modifier label for tooltips (detected after mount — SSR renders the
-// Ctrl variant; tooltips only show on interaction, so no visible mismatch).
 const isMacUA = ref(false);
 const modK = computed(() => isMacUA.value ? '⌘' : 'Ctrl+');
 const shiftK = computed(() => isMacUA.value ? '⇧' : 'Shift+');
 
-// ── Fullscreen ─────────────────────────────────────────────────────────────
-// Two modes: 'os' = the browser Fullscreen API (immersive, hides browser
-// chrome); 'window' = a CSS-maximize overlay that fills the browser viewport
-// but keeps tabs/URL bar. The layout is driven by a class on <html>
-// (editor-fullscreen) rather than a class on the reactive .editor node, so it
-// can be applied BEFORE first paint (setup + a pre-paint head script) — no
-// flash when arriving at the editor, and no hydration mismatch on .editor.
 const FS_KEY = 'editor_fullscreen';
 const editorRoot = ref<HTMLElement | null>(null);
 const fsMode = ref<'off' | 'os' | 'window'>('off');
-// Restore a saved session synchronously (client) so the very first render is
-// already fullscreen. OS FS needs a user gesture, so restore as in-window.
 if (typeof window !== 'undefined') {
   try { const v = localStorage.getItem(FS_KEY); if (v && v !== 'off') fsMode.value = 'window'; } catch { /* ignore */ }
 }
 const isFullscreen = computed(() => fsMode.value !== 'off');
 
-// The fullscreen boot veil lives globally (useEditorBoot): the router guard in
-// app.vue raises it over the screen you're leaving the instant you navigate
-// into the editor with fullscreen on, so the layout re-flow is hidden from the
-// click — not flashed as a loader on the editor. Here we only clear it once the
-// canvas has painted, keeping it up a small minimum so a fast load can't flash.
 const editorBoot = useEditorBoot();
 const fsBootAt = typeof performance !== 'undefined' ? performance.now() : 0;
 const FS_BOOT_MIN_MS = 400;
 
-// Reflect fullscreen onto <html> so layout CSS + scroll-lock apply from the
-// first paint (immediate). Guarded for SSR.
 watch(isFullscreen, (v) => {
   if (typeof document !== 'undefined') document.documentElement.classList.toggle('editor-fullscreen', v);
 }, {immediate: true});
@@ -1495,9 +1317,9 @@ watch(isFullscreen, (v) => {
 function enterOsFullscreen() {
   const el = editorRoot.value;
   if (el?.requestFullscreen) {
-    el.requestFullscreen().catch(() => { fsMode.value = 'window'; });  // blocked → in-window
+    el.requestFullscreen().catch(() => { fsMode.value = 'window'; });
   }
-  fsMode.value = 'os';   // optimistic; onFsChange keeps native state in sync
+  fsMode.value = 'os';
 }
 
 function enterWindowFullscreen() {
@@ -1506,33 +1328,26 @@ function enterWindowFullscreen() {
 
 function exitFullscreen() {
   if (document.fullscreenElement && document.exitFullscreen) {
-    document.exitFullscreen();   // → onFsChange sets 'off'
+    document.exitFullscreen();
   } else {
     fsMode.value = 'off';
   }
 }
 
-// Mirror native fullscreen exits (Escape / F11 / browser UI) — only affects OS mode.
 function onFsChange() {
   if (!document.fullscreenElement && fsMode.value === 'os') fsMode.value = 'off';
 }
 
-// The site header (with its nav) is hidden in fullscreen, so offer a way out:
-// back to the previous screen, or Home when the editor was opened directly.
 const hasPreviousScreen = ref(false);
 function goBack() {
   if (hasPreviousScreen.value) router.back();
   else router.push('/');
 }
 
-// Persist the fullscreen preference (restored synchronously above / by a
-// pre-paint head script). Saved as the current mode.
 watch(fsMode, (m) => {
   try { localStorage.setItem(FS_KEY, m); } catch { /* quota */ }
 });
 
-// Double-click a board → select it and engage its first layer (quick way out
-// of board scope into editing, without hunting for the Layers panel).
 function onDblClick(e: any) {
   const hit = boardAt(e);
   if (!hit) return;
@@ -1540,13 +1355,9 @@ function onDblClick(e: any) {
   store.activateLayer(0);
 }
 
-// ================================================== //
 function startDraw(e: any) {
-  // Space-drag pans the camera instead of drawing (see startPan).
   if (spacePressed.value) return;
-  // Right/middle mouse never draws — right-click is handled by onContextMenu.
   if ('button' in e && e.button !== 0) return;
-  // Kebab dot on a board's label row → open its options panel (not a draw).
   const dotBoard = boardDotAt(e);
   if (dotBoard) {
     const {x, y} = getClientPos(e);
@@ -1554,21 +1365,16 @@ function startDraw(e: any) {
     if ('preventDefault' in e) e.preventDefault();
     return;
   }
-  // Grab a resize handle on the active board?
   const hmode = handleAt(e);
   if (hmode) {
     isResizingBoard.value = true;
     resizeMode.value = hmode;
     resizeStartSize = {w: editorData.value.width, h: editorData.value.height};
-    // Track the drag on WINDOW: growing a board naturally pulls the pointer
-    // past the canvas edge, and canvas-only listeners froze the resize there.
     window.addEventListener('mousemove', doResizeBoard);
     window.addEventListener('mouseup', endResizeFromWindow, {once: true});
     if ('preventDefault' in e) e.preventDefault();
     return;
   }
-  // Select tool grabs a guide line under the pointer (before any board/tool
-  // logic — the guide sits on top of the art).
   const ghit = guideAt(e);
   if (ghit) {
     draggingGuide.value = ghit;
@@ -1577,14 +1383,10 @@ function startDraw(e: any) {
     if ('preventDefault' in e) e.preventDefault();
     return;
   }
-  // Multi-board: a press on another board (or its name/frame) just activates
-  // it. A drag on truly empty desk marquees out a new board. Only presses on
-  // the active board draw.
   const hit = boardAt(e);
   if (!hit) {
     const chrome = boardChromeAt(e);
     if (chrome) {
-      // Grab the label bar: a drag moves the board, a plain click activates it.
       isMovingBoard.value = true;
       moveBoardId.value = chrome.id;
       const w = worldPos(e);
@@ -1594,7 +1396,6 @@ function startDraw(e: any) {
       if ('preventDefault' in e) e.preventDefault();
       return;
     }
-    // Empty desk → start a marquee; a real drag creates a board on release.
     isMarquee.value = true;
     marqueeStart.value = worldPos(e);
     marqueeCur.value = {...marqueeStart.value};
@@ -1607,7 +1408,6 @@ function startDraw(e: any) {
     return;
   }
   const {x, y} = getPixelPos(e);
-  // Eyedropper: a click/touch on a pixel selects its colour (no draw, no hover).
   if (store.currentTool === 'picker') {
     const ci = store.colorIndexAt(x, y);
     if (ci >= 0) {
@@ -1618,15 +1418,11 @@ function startDraw(e: any) {
   }
   let resetSelection = false
   if (store.selectionState.bounds.active && store.currentTool == 'select') {
-    // Press inside the selection drags it (pixels + marquee) — the same
-    // gesture the move tool offers, without leaving the select tool.
     if (store.checkKeyInSelection(`${x}_${y}`)) {
       isMoving.value = true;
       store.immigrateVirtualLayer();
       const cp = getClientPos(e);
       moveStart.value = {x: cp.x, y: cp.y};
-      // needSave stays false until the drag actually moves — a plain click
-      // inside the selection must not mint a history entry.
       scheduleDraw();
       isStarted.value = true;
       return;
@@ -1643,9 +1439,6 @@ function startDraw(e: any) {
       }
       break;
     case "move": {
-      // Fallback board > layer > selection, driven by the active scope:
-      // no layer active (and no selection) → reposition the whole board;
-      // a layer active → move that layer; a selection active → move it.
       if (store.activeScope === 'board') {
         const b = store.boards.find(bb => bb.id === store.activeBoardId);
         isMovingBoard.value = true;
@@ -1656,7 +1449,7 @@ function startDraw(e: any) {
         isStarted.value = true;
         break;
       }
-      if (store.activeScope === 'selection' && !store.checkKeyInSelection(`${x}_${y}`)) break; // press outside selection → ignore
+      if (store.activeScope === 'selection' && !store.checkKeyInSelection(`${x}_${y}`)) break;
       isMoving.value = true;
       store.immigrateVirtualLayer();
       const cp = getClientPos(e);
@@ -1670,8 +1463,6 @@ function startDraw(e: any) {
     case "iso-line":
       isIsoLining.value = true;
       isoLineStart.value = getPixelPos(e);
-      // Empty preview overlay — never immigrate+clear here: that cut the
-      // whole layer into the virtual layer and threw it away (data loss).
       store.beginVirtualOverlay();
       {
         const cell = editorData.value.meta?.iso?.cell ?? { width: 2, height: 1 };
@@ -1686,7 +1477,7 @@ function startDraw(e: any) {
       break;
     default:
       isDrawing.value = true;
-      if (!isPanning.value) store.paint(getPixelPos(e));   // bucket has its own case above
+      if (!isPanning.value) store.paint(getPixelPos(e));
       break;
   }
   if (store.currentTool !== 'select') {
@@ -1697,20 +1488,17 @@ function startDraw(e: any) {
 }
 
 function draw(e: any) {
-  // Resizing the active board takes over the drag.
   if (isResizingBoard.value) {
     if ('touches' in e) e.preventDefault();
     doResizeBoard(e);
     return;
   }
-  // Marquee-creating a board takes over the drag.
   if (isMarquee.value) {
     if ('touches' in e) e.preventDefault();
     marqueeCur.value = worldPos(e);
     scheduleDraw();
     return;
   }
-  // Moving a board by its label bar takes over the drag.
   if (isMovingBoard.value) {
     if ('touches' in e) e.preventDefault();
     const w = worldPos(e);
@@ -1721,13 +1509,11 @@ function draw(e: any) {
     scheduleDraw();
     return;
   }
-  // Guide under the pointer (select tool) → col/row-resize cursor via class.
   if (!isStarted.value && !draggingGuide.value) {
     const gh = guideAt(e);
     const prev = hoverGuide.value;
     if ((gh?.axis !== prev?.axis) || (gh?.index !== prev?.index)) hoverGuide.value = gh;
   }
-  // Track hover position for brush-preview overlay
   const pos = getPixelPos(e);
   const inBounds = pos.x >= 0 && pos.x < editorData.value.width && pos.y >= 0 && pos.y < editorData.value.height
   if (inBounds) {
@@ -1742,7 +1528,6 @@ function draw(e: any) {
 
   if (!isStarted.value) return;
   if ('touches' in e) e.preventDefault();
-  // Reuse `pos` from above — avoids extra getBoundingClientRect (forced layout) per move.
   if (store.selectionState.selecting) {
     const {x, y} = pos;
     if (x >= 0 && x < editorData.value.width && y >= 0 && y < editorData.value.height) {
@@ -1753,7 +1538,7 @@ function draw(e: any) {
     const dx = Math.round((clientX - moveStart.value.x) / zoom.value);
     const dy = Math.round((clientY - moveStart.value.y) / zoom.value);
     if (dx !== 0 || dy !== 0) {
-      needSave.value = true;   // select-tool drags arm this lazily, on first real motion
+      needSave.value = true;
       if (store.selectionState.bounds.active) {
         store.move(dx, dy);
         store.selectionState.bounds.minX += dx;
@@ -1793,12 +1578,9 @@ function stopDraw() {
     const y0 = Math.min(marqueeStart.value.y, marqueeCur.value.y);
     const w = Math.abs(marqueeCur.value.x - marqueeStart.value.x);
     const h = Math.abs(marqueeCur.value.y - marqueeStart.value.y);
-    // A tiny drag (or plain click) is not a create gesture.
     if (w >= MARQUEE_MIN && h >= MARQUEE_MIN) {
       store.addBoard(Math.round(w), Math.round(h), {x: Math.round(x0), y: Math.round(y0)});
     } else {
-      // Plain click on empty desk → click-away: drop the active layer (and
-      // any selection) so the scope falls back to the board itself.
       store.layerActive = false;
       if (store.selectionState.bounds.active) {
         store.selectionState.bounds.active = false;
@@ -1813,15 +1595,15 @@ function stopDraw() {
   if (isMovingBoard.value) {
     isMovingBoard.value = false;
     isStarted.value = false;
-    needSave.value = false;                  // board move is layout, not art — no history entry
+    needSave.value = false;
     const id = moveBoardId.value;
     moveBoardId.value = '';
     if (boardDidMove) {
-      store.saveWorkspaceLayout();           // persist the new position
+      store.saveWorkspaceLayout();
     } else if (id !== store.activeBoardId) {
-      store.setActiveBoard(id);              // no drag → select the board (board scope)
+      store.setActiveBoard(id);
     } else {
-      store.layerActive = false;             // re-click own label → drop to board scope
+      store.layerActive = false;
     }
     cancelScheduledDraw();
     drawEditor();
@@ -1857,8 +1639,6 @@ function stopDraw() {
 }
 
 function leaveCanvas() {
-  // A resize drag legitimately crosses the canvas edge — its window-level
-  // listeners own the rest of the gesture; don't cut it short here.
   if (isResizingBoard.value) {
     if (hoverPos.value) { hoverPos.value = null; scheduleDraw(); }
     return;
@@ -1870,7 +1650,6 @@ function leaveCanvas() {
   }
 }
 
-// ================================================== //
 function startPan(e: any) {
   if (spacePressed.value) {
     isPanning.value = true;
@@ -1896,7 +1675,6 @@ function stopPan() {
   isPanning.value = false;
 }
 
-// Wheel: plain scroll pans the camera; ctrl/cmd + wheel zooms toward the cursor.
 function onWheel(e: WheelEvent) {
   if (!canvas.value) return;
   e.preventDefault();
@@ -1911,8 +1689,6 @@ function onWheel(e: WheelEvent) {
     scheduleDraw();
   }
 }
-
-// ================================================== //
 
 function startPinch(e: TouchEvent) {
   if (e.touches.length === 2) {
@@ -1930,9 +1706,8 @@ function pinch(e: TouchEvent) {
     const t1 = e.touches[0]!;
     const t2 = e.touches[1]!;
     const newDistance = Math.sqrt((t1.clientX - t2.clientX) ** 2 + (t1.clientY - t2.clientY) ** 2);
-    if (initialDistance.value < 1) return;   // degenerate pinch (both touches at one point) — no ratio
+    if (initialDistance.value < 1) return;
     const ratio = newDistance / initialDistance.value;
-    // Anchor the zoom to the pinch midpoint (stage-local CSS px).
     const rect = canvas.value!.getBoundingClientRect();
     const ax = (t1.clientX + t2.clientX) / 2 - rect.left;
     const ay = (t1.clientY + t2.clientY) / 2 - rect.top;
@@ -1944,8 +1719,6 @@ function pinch(e: TouchEvent) {
 function stopPinch() {
   isPinching.value = false;
 }
-
-// ================================================== //
 
 function handleTouchStart(e: TouchEvent) {
   if (e.touches.length === 2) {
@@ -1978,7 +1751,6 @@ function handleKeyUp(e: any) {
   }
 }
 
-// Single-key tool shortcuts (see handleKeyDown). 'm' routes via toggleSelect.
 const TOOL_KEYS: Record<string, string> = {
   b: 'brush', l: 'iso-line', g: 'bucket', v: 'move', m: 'select',
 };
@@ -1991,14 +1763,12 @@ function handleKeyDown(e: any) {
 
   if (isInputActive) return;
 
-  // Escape leaves in-window fullscreen (OS fullscreen handles its own Escape).
   if (e.key === 'Escape' && fsMode.value === 'window') {
     fsMode.value = 'off';
     e.preventDefault();
     return;
   }
 
-  // Hold Space to pan the camera by dragging (grab cursor via .panning).
   if (e.code === 'Space') {
     spacePressed.value = true;
     e.preventDefault();
@@ -2006,22 +1776,17 @@ function handleKeyDown(e: any) {
   }
 
   const mod = e.ctrlKey || e.metaKey;
-  const key = (e.key || '').toLowerCase();   // Shift makes e.key uppercase — normalize
+  const key = (e.key || '').toLowerCase();
 
-  // Mid-drag (mouse held), history/tool/delete shortcuts would yank the state
-  // out from under the in-flight virtual layer — swallow them until mouseup.
-  // (Space-pan and Escape are handled above and stay available.)
   if (isStarted.value && (mod || TOOL_KEYS[key] || key === 'e' || key === ',' || key === '.' || e.key === 'Backspace' || e.key === 'Delete')) {
     e.preventDefault();
     return;
   }
 
   if (mod && key === 'z') {
-    // Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z redo.
     e.shiftKey ? doRedo() : doUndo();
     e.preventDefault();
   } else if (mod && key === 'y') {
-    // Ctrl+Y — Windows-style redo.
     doRedo();
     e.preventDefault();
   } else if (mod && key === 'c' && !e.shiftKey && !e.altKey) {
@@ -2037,13 +1802,10 @@ function handleKeyDown(e: any) {
     zoomOut();
     e.preventDefault();
   } else if (!mod && !e.altKey && TOOL_KEYS[key] && !e.repeat) {
-    // Single-key tool switching (industry-standard letters; tooltips teach them).
     if (key === 'm') toggleSelect();
     else store.setTool(TOOL_KEYS[key]!);
     e.preventDefault();
   } else if (!mod && !e.altKey && key === 'e' && !e.repeat) {
-    // The eraser lives in the palette — E picks the transparent "color"
-    // (same as clicking the palette's eraser swatch).
     store.currentColorIndex = -1;
     e.preventDefault();
   } else if (!mod && !e.altKey && key >= '1' && key <= '5'
@@ -2051,14 +1813,10 @@ function handleKeyDown(e: any) {
     store.setBrushSize(Number(key));
     e.preventDefault();
   } else if (!mod && !e.altKey && (key === ',' || key === '.') && store.isAnimated) {
-    // Frame stepping (Aseprite keys): , previous · . next
     store.isPlaying = false;
     store.setActiveFrame(Math.max(0, store.currentFrameIndex) + (key === ',' ? -1 : 1));
     e.preventDefault();
   } else if (!mod && (e.key === 'Backspace' || e.key === 'Delete')) {
-    // Act on the active scope. Board scope (no layer active) → remove the board
-    // from the editor; selection/layer scope → clear (clearCurrentLayer already
-    // limits itself to the selection when one is active, else the whole layer).
     if (store.activeScope === 'board' && store.boards.length > 1) {
       hideBoard(store.activeBoardId);
     } else {
@@ -2069,9 +1827,6 @@ function handleKeyDown(e: any) {
   // Anything else (Cmd+R, Cmd+F, Cmd+S, …) is left to the browser.
 }
 
-// Backgrounding a tab (app switch, lock, tab close) freezes pending timers and,
-// on mobile, usually skips beforeunload — so the debounced artwork save and the
-// camera timer would be lost. Persist both synchronously when the page hides.
 function flushOnHide() {
   if (camSaveTimer) { clearTimeout(camSaveTimer); camSaveTimer = null; }
   try { localStorage.setItem('workspace_camera', JSON.stringify({x: cam.value.x, y: cam.value.y, z: zoom.value})); } catch { /* quota */ }
@@ -2082,8 +1837,6 @@ function onVisibilityChange() {
   if (typeof document !== 'undefined' && document.visibilityState === 'hidden') flushOnHide();
 }
 
-// Losing window focus eats the Space keyup — reset the pan modifier so the
-// editor doesn't come back stuck in grab/pan mode.
 function onWindowBlur() {
   spacePressed.value = false;
 }
@@ -2106,27 +1859,17 @@ function clearListeners() {
   window.removeEventListener('pagehide', flushOnHide);
 }
 
-// ================================================== //
-// Fixed editor colors — independent of theme
 const EDITOR_BG = '#1a1a1a';
 const EDITOR_CELL_A = '#ffffff';
 const EDITOR_CELL_B = '#cccccc';
 const EDITOR_ART_BG_SOLID = '#ffffff';
 
-// Renders the static background into an offscreen canvas and caches it. The
-// expensive checkerboard loop (O(width*height) fillRects) only runs when an
-// input actually changes, instead of on every rAF frame.
-// Board background rendered at ART resolution (1px per art pixel), cached on
-// art config only — NOT on cam/zoom, so panning/zooming never rebuilds it.
-// It is blitted (scaled by zoom) onto the stage at the camera offset.
 function renderBackgroundCache(): HTMLCanvasElement | null {
   const w = editorData.value.width;
   const h = editorData.value.height;
   const mode = editorData.value.meta?.iso?.mode ?? 'square';
   const bg = store.bgConfig;
   const bgUrl = bg.type === 'art' && bgImage.value ? bgImageUrlCache : '';
-  // Shared background layers are baked into the cached bg — UNLESS we're editing
-  // the shared stack itself (then it's the live art buffer, drawn plain).
   const showShared = store.sharedLayers.length > 0 && !store.editingShared;
 
   const key = `${w}_${h}|${mode}|${bg.type}|${bg.color}|${bgUrl}|ck${checkerSize.value}_${checkerA.value}_${checkerB.value}|sh${showShared ? store.sharedRev : 'x'}`;
@@ -2145,7 +1888,6 @@ function renderBackgroundCache(): HTMLCanvasElement | null {
   c.imageSmoothingEnabled = false;
   c.clearRect(0, 0, w, h);
 
-  // Art-area content (solid / image / transparency checker / iso fallback)
   if (bg.type === 'solid') {
     c.fillStyle = bg.color;
     c.fillRect(0, 0, w, h);
@@ -2168,7 +1910,6 @@ function renderBackgroundCache(): HTMLCanvasElement | null {
     c.fillRect(0, 0, w, h);
   }
 
-  // Shared static-background layers, composited beneath every frame.
   if (showShared) {
     if (!sharedBgCanvas) sharedBgCanvas = document.createElement('canvas');
     compositeFrame(sharedBgCanvas, toRaw(store.sharedLayers), w, h, toRaw(editorData.value.colors));
@@ -2180,7 +1921,6 @@ function renderBackgroundCache(): HTMLCanvasElement | null {
   return bgCanvas;
 }
 
-// Desk — the infinite canvas the boards float on (color + optional world grid).
 function drawDesk(): void {
   if (!ctx) return;
   const sw = stageW.value, sh = stageH.value;
@@ -2190,17 +1930,11 @@ function drawDesk(): void {
   if (!deskGrid.value) return;
   const color = deskGridColorEff();
   if (deskGridShape.value === 'iso') { drawDeskGridIso(sw, sh, color); return; }
-  // Rectangular world grid at the chosen cell size, each axis coarsened (×2)
-  // independently so it never becomes a solid fill when zoomed out.
   let cw = Math.max(1, deskGridCell.value.width), ch = Math.max(1, deskGridCell.value.height);
   let sx = cw * zoom.value, sy = ch * zoom.value;
   while (sx > 0 && sx < 6) { cw *= 2; sx = cw * zoom.value; }
   while (sy > 0 && sy < 6) { ch *= 2; sy = ch * zoom.value; }
   if (!isFinite(sx) || !isFinite(sy) || sx < 4 || sy < 4) return;
-  // Anchor to the WORLD origin (camera), not the active board's origin. The grid
-  // is locked to the desk's pixel coordinates, so it lines up with every board's
-  // pixels AND stays put when you drag a single board around (only that board
-  // moves). Panning moves grid + boards together, so they never drift apart.
   const baseX = Math.round(cam.value.x);
   const baseY = Math.round(cam.value.y);
   const ox = ((baseX % sx) + sx) % sx;
@@ -2230,16 +1964,13 @@ function drawDesk(): void {
   ctx.setLineDash([]);
 }
 
-// Isometric (dimetric) world lattice — two diagonal line families, anchored to
-// the world origin like the square grid so it stays locked to the desk. Diamond
-// spans the chosen cell size (width×height art-px); a 2×1 cell gives classic 2:1.
 function drawDeskGridIso(sw: number, sh: number, color: string): void {
   if (!ctx) return;
   let cw = Math.max(1, deskGridCell.value.width), ch = Math.max(1, deskGridCell.value.height);
-  let W = cw * zoom.value, H = ch * zoom.value;   // diamond width/height on screen
+  let W = cw * zoom.value, H = ch * zoom.value;
   while (W > 0 && (W < 8 || H < 6)) { cw *= 2; ch *= 2; W = cw * zoom.value; H = ch * zoom.value; }
   if (!isFinite(W) || !isFinite(H) || W < 6 || H < 4) return;
-  const m = H / W;                         // edge slope
+  const m = H / W;
   const cx = cam.value.x, cy = cam.value.y;
   if (deskGridStyle.value === 'dots') {
     ctx.fillStyle = color;
@@ -2248,7 +1979,7 @@ function drawDeskGridIso(sw: number, sh: number, color: string): void {
     const q0 = Math.floor(-cy / hy) - 1, q1 = Math.ceil((sh - cy) / hy) + 1;
     for (let p = p0; p <= p1; p++) {
       for (let q = q0; q <= q1; q++) {
-        if (((p + q) & 1) !== 0) continue;   // only diamond vertices
+        if (((p + q) & 1) !== 0) continue;
         ctx.fillRect(Math.round(cx + p * hx) - 0.5, Math.round(cy + q * hy) - 0.5, 1.5, 1.5);
       }
     }
@@ -2258,12 +1989,12 @@ function drawDeskGridIso(sw: number, sh: number, color: string): void {
   ctx.lineWidth = 1;
   ctx.setLineDash(deskGridStyle.value === 'dashed' ? [3, 4] : []);
   ctx.beginPath();
-  const b0 = cy - m * cx;                                   // family ↘ (slope +m)
+  const b0 = cy - m * cx;
   for (let b = b0 + Math.ceil((-m * sw - b0) / H) * H; b <= sh; b += H) {
     ctx.moveTo(0, Math.round(b) + 0.5);
     ctx.lineTo(sw, Math.round(m * sw + b) + 0.5);
   }
-  const c0 = cy + m * cx;                                   // family ↗ (slope -m)
+  const c0 = cy + m * cx;
   for (let c = c0 + Math.ceil((-c0) / H) * H; c <= sh + m * sw; c += H) {
     ctx.moveTo(0, Math.round(c) + 0.5);
     ctx.lineTo(sw, Math.round(-m * sw + c) + 0.5);
@@ -2272,7 +2003,6 @@ function drawDeskGridIso(sw: number, sh: number, color: string): void {
   ctx.setLineDash([]);
 }
 
-// Shadowed white sheet so a board reads as paper on the desk.
 function drawSheet(sx: number, sy: number, bw: number, bh: number): void {
   if (!ctx) return;
   ctx.save();
@@ -2284,7 +2014,6 @@ function drawSheet(sx: number, sy: number, bw: number, bh: number): void {
   ctx.restore();
 }
 
-// The ACTIVE board's sheet + background (its live pixels come from drawPixels).
 function drawBackground(): void {
   if (!ctx) return;
   const w = editorData.value.width;
@@ -2292,7 +2021,6 @@ function drawBackground(): void {
   const z = zoom.value;
   const ox = Math.round(artOffset.value.x);
   const oy = Math.round(artOffset.value.y);
-  // Transparent bg: no paper sheet either, so only the art shows on the desk.
   if (store.bgConfig.type !== 'transparent') drawSheet(ox, oy, w * z, h * z);
   const bg = renderBackgroundCache();
   if (bg) {
@@ -2301,9 +2029,6 @@ function drawBackground(): void {
   }
 }
 
-// Per-board composite (bg + pixels) at ART resolution, cached until the board
-// set changes (boardsRev). Only NON-active boards use it — the active board is
-// drawn live. Cheap: rebuilt lazily, one drawImage to blit.
 const boardBuffers = new Map<string, HTMLCanvasElement>();
 let boardBufRev = -1;
 function boardComposite(b: any): HTMLCanvasElement | null {
@@ -2355,23 +2080,16 @@ function drawInactiveBoards(): void {
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(comp, 0, 0, w, h, sx, sy, w * z, h * z);
     }
-    // Iso overlay per board — grid mode is a workspace setting, so every board
-    // (not just the active one) shows the iso lattice when the mode is iso.
     drawBoardIsoOverlay(b.data, sx, sy);
   }
 }
 
-// Iso lattice for one board's rect, in screen space. No-op unless that board is
-// in iso mode. Uses a fresh Path2D (the active board's getIsoPath cache is
-// keyed to the live art, so we don't touch it here).
 function drawBoardIsoOverlay(data: any, sx: number, sy: number): void {
   if (!ctx) return;
   const iso = data?.meta?.iso;
   if (!iso || iso.mode !== 'iso') return;
   const w = data.width, h = data.height;
   const cell = iso.cell ?? {width: 2, height: 1};
-  // LOD + viewport cull (see ISO_MIN_CELL_PX): sub-pixel lattices are noise and
-  // stroking them per board per frame is what made zoomed-out views crawl.
   if (cell.width * zoom.value < ISO_MIN_CELL_PX) return;
   const bw = w * zoom.value, bh = h * zoom.value;
   if (sx + bw < 0 || sy + bh < 0 || sx > stageW.value || sy > stageH.value) return;
@@ -2388,7 +2106,6 @@ function drawBoardIsoOverlay(data: any, sx: number, sy: number): void {
   ctx.restore();
 }
 
-// Frames + name labels + the active-board ring, drawn on top of everything.
 function drawBoardChrome(): void {
   if (!ctx) return;
   const z = zoom.value;
@@ -2397,8 +2114,6 @@ function drawBoardChrome(): void {
     const {x: sx, y: sy} = boardScreen(b.x, b.y);
     const bw = w * z, bh = h * z;
     const active = b.id === store.activeBoardId;
-    // Transparent boards carry no paper sheet, so no frame border either — just
-    // the art floating on the desk.
     if (b.data.meta?.bg?.type !== 'transparent') {
       ctx.strokeStyle = active ? BOARD_ACTIVE : 'rgba(0,0,0,0.35)';
       ctx.lineWidth = active ? 2 : 1;
@@ -2406,15 +2121,12 @@ function drawBoardChrome(): void {
       ctx.strokeRect(sx + inset, sy + inset, bw - inset * 2, bh - inset * 2);
     }
     if (showBoardChrome.value) {
-      // Label above the board (name + size); readable at reasonable zoom.
       ctx.font = '600 11px system-ui, -apple-system, sans-serif';
       ctx.fillStyle = active ? BOARD_ACTIVE : 'rgba(120,120,132,0.95)';
       ctx.textBaseline = 'bottom';
       const label = `${b.data.name || 'Untitled'}  ${w}×${h}`;
       ctx.fillText(label, sx, sy - 5);
 
-      // Kebab options dot on the label row (top-right) — click/right-click to
-      // open the board's panel. Same colour as the label.
       const dr = boardDotRect(b);
       if (dr) {
         const cx = dr.x + dr.w / 2, cy = dr.y + dr.h / 2;
@@ -2427,7 +2139,6 @@ function drawBoardChrome(): void {
       }
     }
 
-    // Resize handles on the active board (bottom-right, right, bottom).
     if (active && bw >= 36 && bh >= 36) {
       const hs = 7;
       const dot = (hx: number, hy: number) => {
@@ -2437,15 +2148,13 @@ function drawBoardChrome(): void {
         ctx!.fillRect(hx - hs / 2, hy - hs / 2, hs, hs);
         ctx!.strokeRect(hx - hs / 2, hy - hs / 2, hs, hs);
       };
-      dot(sx + bw, sy + bh);          // se corner
-      dot(sx + bw, sy + bh / 2);      // right edge
-      dot(sx + bw / 2, sy + bh);      // bottom edge
+      dot(sx + bw, sy + bh);
+      dot(sx + bw, sy + bh / 2);
+      dot(sx + bw / 2, sy + bh);
     }
   }
 }
 
-// Dashed preview of the board being marquee-dragged on empty desk, with a live
-// pixel-size readout so the user knows what board they'll get.
 function drawMarquee(): void {
   if (!ctx || !isMarquee.value) return;
   const z = zoom.value;
@@ -2517,8 +2226,6 @@ function drawReference(): void {
   const z = zoom.value;
   const w = editorData.value.width;
   const h = editorData.value.height;
-  // Contain-fit: scale by the limiting (largest) dimension and center — never
-  // stretch the image to the board, a squished reference is useless to trace.
   const img = referenceImage.value;
   const iw = img.naturalWidth || img.width;
   const ih = img.naturalHeight || img.height;
@@ -2531,9 +2238,6 @@ function drawReference(): void {
   ctx.globalAlpha = 1;
 }
 
-// Custom (Photoshop-style) guide lines of the active board — solid cyan,
-// pixel-snapped, spanning the board. Drawn even when the preset guides are
-// off; the dragged one carries its coordinate as a label.
 function drawCustomGuides(): void {
   const g: any = editorData.value.meta?.guides;
   if (!ctx || !g || (!g.v?.length && !g.h?.length)) return;
@@ -2606,7 +2310,6 @@ function drawBrushPreview(): void {
   const ox = artOffset.value.x;
   const oy = artOffset.value.y;
 
-  // Clip preview to canvas bounds
   const startX = Math.max(0, hoverPos.value.x - offset);
   const startY = Math.max(0, hoverPos.value.y - offset);
   const endX = Math.min(editorData.value.width, hoverPos.value.x - offset + size);
@@ -2622,7 +2325,6 @@ function drawBrushPreview(): void {
   const currentColor = editorData.value.colors[store.currentColorIndex];
 
   ctx.save();
-  // Soft fill that hints what's about to land (color for brush, red for eraser)
   if (isEraser) {
     ctx.fillStyle = 'rgba(239, 68, 68, 0.18)';
   } else if (currentColor) {
@@ -2634,7 +2336,6 @@ function drawBrushPreview(): void {
   ctx.fillRect(px, py, w, h);
   ctx.globalAlpha = 1;
 
-  // Outline — dashed for eraser to read as "removing"
   ctx.strokeStyle = isEraser ? 'rgba(239, 68, 68, 0.95)' : 'rgba(0, 0, 0, 0.7)';
   ctx.lineWidth = 1.5;
   if (isEraser) ctx.setLineDash([4, 3]);
@@ -2642,16 +2343,11 @@ function drawBrushPreview(): void {
   ctx.restore();
 }
 
-// Onion skin — faded, color-tinted ghosts of the previous/next frames drawn
-// under the current frame so you can animate against neighbours. Skipped while
-// drawing (distracting) and during playback.
 let onionPrevCanvas: HTMLCanvasElement | null = null;
 let onionNextCanvas: HTMLCanvasElement | null = null;
 
 function drawOnion(): void {
   if (!ctx) return;
-  // Preview playback leaves the editor interactive — onion stays useful there;
-  // only main-canvas playback suppresses it.
   if (!store.onionSkin || !store.isAnimated || (store.isPlaying && !playbackOnPreview) || isDrawing.value) return;
   const fr = store.frames;
   const cur = store.currentFrameIndex;
@@ -2665,7 +2361,6 @@ function drawOnion(): void {
   const ghost = (frame: any, scratch: HTMLCanvasElement, alpha: number, tint: string) => {
     if (!frame) return scratch;
     compositeFrame(scratch, toRaw(frame.layers), w, h, colors);
-    // Directional tint: keep the art readable but hint prev (red) / next (blue).
     const sctx = scratch.getContext('2d');
     if (sctx) {
       sctx.save();
@@ -2689,28 +2384,22 @@ function drawOnion(): void {
 }
 
 function drawEditor() {
-  drawDesk();              // infinite-canvas backdrop
-  drawInactiveBoards();    // other boards (frozen composites)
-  drawBackground();        // active board sheet + bg
+  drawDesk();
+  drawInactiveBoards();
+  drawBackground();
   drawReference();
   drawOnion();
-  drawPixels();            // active board live pixels
+  drawPixels();
   drawIsoOverlay();
-  drawCustomGuides();      // draggable Photoshop-style guide lines
+  drawCustomGuides();
   drawBrushPreview();
   drawSelection();
-  drawBoardChrome();       // frames, labels, active ring (on top)
-  drawMarquee();           // new-board drag preview (topmost)
+  drawBoardChrome();
+  drawMarquee();
   // Minimap is decoupled — it only redraws on content/viewport change
   // (via scheduleMiniMap), not on every hover/brush-preview frame.
 }
 
-// ===== Pre-rendered playback =====
-// Each frame is composited once into an offscreen canvas; the loop just blits
-// the right buffer. On desktop the animation plays in the PREVIEW widget
-// (Aseprite-style) and the editor stays fully interactive; mobile hides the
-// preview (height 0), so playback falls back to taking over the main canvas.
-// Driven by the shared store.isPlaying flag.
 let playbackBuffers: HTMLCanvasElement[] = [];
 let playbackTimer: ReturnType<typeof setTimeout> | null = null;
 let playbackIndex = 0;
@@ -2720,9 +2409,6 @@ function buildPlaybackBuffers() {
   const ed = toRaw(editorData.value);
   const colors = toRaw(ed.colors);
   const list = store.frames.length ? store.frames : [{layers: ed.layers}];
-  // Preview playback is self-contained, so the shared background is baked
-  // into each buffer. Main-canvas playback keeps buffers frame-only — the
-  // cached bg blitted behind them already carries the shared stack.
   const shared = playbackOnPreview ? toRaw(store.sharedLayers) : [];
   playbackBuffers = (list as any[]).map((f) => {
     const c = document.createElement('canvas');
@@ -2731,8 +2417,6 @@ function buildPlaybackBuffers() {
   });
 }
 
-// While the preview loops, edits land on the current frame — recomposite just
-// that buffer (trailing-debounced off drawTurn) so the loop picks them up.
 let playbackRefreshTimer: ReturnType<typeof setTimeout> | null = null;
 function refreshPlaybackBuffer() {
   if (playbackRefreshTimer) clearTimeout(playbackRefreshTimer);
@@ -2755,7 +2439,6 @@ function refreshPlaybackBuffer() {
 function renderPlaybackFrame(i: number) {
   const buf = playbackBuffers[i];
   if (playbackOnPreview) {
-    // Blit into the preview widget (same bg treatment as the minimap).
     if (!miniMap.value || !miniMapCtx || !buf) return;
     const mmW = miniMap.value.width;
     const mmH = miniMap.value.height;
@@ -2789,8 +2472,6 @@ function renderPlaybackFrame(i: number) {
   drawBoardChrome();
 }
 
-// A selected tag scopes playback to its frame range and direction (Aseprite
-// behavior); with no tag the whole timeline plays forward.
 let pingpongDir: 1 | -1 = 1;
 
 function playbackRange(): { lo: number; hi: number; dir: 'forward' | 'reverse' | 'pingpong' } {
@@ -2799,19 +2480,17 @@ function playbackRange(): { lo: number; hi: number; dir: 'forward' | 'reverse' |
   return {lo: 0, hi: store.frameCount - 1, dir: 'forward'};
 }
 
-// Next frame index, or null when a non-looping run just finished.
 function playbackNext(cur: number): number | null {
   const {lo, hi, dir} = playbackRange();
   if (hi <= lo) return store.loopAnimation ? lo : null;
   if (dir === 'forward') return cur + 1 > hi ? (store.loopAnimation ? lo : null) : cur + 1;
   if (dir === 'reverse') return cur - 1 < lo ? (store.loopAnimation ? hi : null) : cur - 1;
-  // pingpong — bounce at the ends without showing the end frame twice
   let next = cur + pingpongDir;
   if (next > hi) {
     pingpongDir = -1;
     next = cur - 1;
   } else if (next < lo) {
-    if (!store.loopAnimation) return null;   // completed there-and-back
+    if (!store.loopAnimation) return null;
     pingpongDir = 1;
     next = cur + 1;
   }
@@ -2825,9 +2504,6 @@ function playbackTick() {
     const next = playbackNext(playbackIndex);
     if (next === null) { store.isPlaying = false; return; }
     playbackIndex = next;
-    // Preview playback leaves the editing frame alone — the user may be
-    // drawing while it loops. Main-canvas playback keeps the timeline
-    // highlight in step (plain ref — no recomposite).
     if (!playbackOnPreview) store.currentFrameIndex = next;
     renderPlaybackFrame(next);
     playbackTick();
@@ -2836,14 +2512,10 @@ function playbackTick() {
 
 function startPlayback() {
   if (!store.isAnimated) { store.isPlaying = false; return; }
-  // Desktop plays in the Preview widget and keeps the editor interactive;
-  // mobile hides the preview (height 0) so playback takes the main canvas.
   playbackOnPreview = !!(miniMap.value && miniMap.value.clientHeight > 0);
   buildPlaybackBuffers();
   const {lo, hi, dir} = playbackRange();
   pingpongDir = 1;
-  // Resume from the current frame when it's inside the range; else enter at
-  // the range's natural starting end.
   let start = store.currentFrameIndex;
   if (start < lo || start > hi) start = dir === 'reverse' ? hi : lo;
   playbackIndex = start;
@@ -2862,10 +2534,9 @@ function stopPlayback() {
   playbackBuffers = [];
   if (playbackOnPreview) {
     playbackOnPreview = false;
-    drawMiniMap();               // hand the preview back to the minimap
+    drawMiniMap();
     return;
   }
-  // Re-bind editing layers to the frame we paused on, then draw normally.
   store.setActiveFrame(store.currentFrameIndex);
 }
 
@@ -2876,7 +2547,6 @@ watch(() => store.isPlaying, (v) => {
 
 function drawMiniMap() {
   if (!miniMap.value || !canvas.value || !miniMapCtx) return;
-  // While the animation plays in the preview, playback owns this canvas.
   if (store.isPlaying && playbackOnPreview) return;
 
   const mmW = miniMap.value.width;
@@ -2886,7 +2556,6 @@ function drawMiniMap() {
   const cellW = mmW / artW;
   const cellH = mmH / artH;
 
-  // Clear, then apply art background (mirrors main canvas)
   miniMapCtx.clearRect(0, 0, mmW, mmH);
   const bg = store.bgConfig;
   if (bg.type === 'solid') {
@@ -2896,23 +2565,17 @@ function drawMiniMap() {
     miniMapCtx.drawImage(bgImage.value, 0, 0, mmW, mmH);
   }
 
-  // Blit the shared art buffer, scaled to the minimap. Nearest-neighbor keeps
-  // the pixel-art look and costs one drawImage regardless of pixel count.
   const art = getArtCanvas();
   if (art) {
     miniMapCtx.imageSmoothingEnabled = false;
     miniMapCtx.drawImage(art, 0, 0, artW, artH, 0, 0, mmW, mmH);
   }
 
-  // Viewport indicator — which art-pixels of the ACTIVE board the camera shows.
-  // Measured from the board's own origin on screen (artOffset), so it stays
-  // correct for boards that aren't at world (0,0).
   const visiblePixelX = (0 - artOffset.value.x) / zoom.value;
   const visiblePixelY = (0 - artOffset.value.y) / zoom.value;
   const visiblePixelW = stageW.value / zoom.value;
   const visiblePixelH = stageH.value / zoom.value;
 
-  // Skip rect when the whole art is visible (zoomed out enough to fit)
   const showsEverything = visiblePixelW >= artW && visiblePixelH >= artH;
   if (showsEverything) return;
 
@@ -2935,19 +2598,15 @@ function initCanvas() {
   miniMapCtx!.imageSmoothingEnabled = false;
 }
 
-// Size the minimap canvas to the active board's aspect ratio so the preview
-// isn't stretched. Called on setup AND on board switch (different-shape boards).
 function sizeMiniMap() {
   if (!miniMap.value) return;
   const parentW = miniMap.value.parentElement!.clientWidth;
   const parentH = miniMap.value.parentElement!.clientHeight || parentW;
   const artRatio = editorData.value.width / editorData.value.height;
   if (artRatio >= 1) {
-    // Wider or square — fit width
     miniMap.value.width = parentW;
     miniMap.value.height = parentW / artRatio;
   } else {
-    // Taller — fit height
     miniMap.value.height = parentH;
     miniMap.value.width = parentH * artRatio;
   }
@@ -2955,14 +2614,13 @@ function sizeMiniMap() {
 }
 
 function setupCanvas() {
-  updateCanvasSize();   // fit canvas backing store to the stage box
-  centerView();         // fit + center the board in the stage
+  updateCanvasSize();
+  centerView();
   sizeMiniMap();
   drawEditor();
   drawMiniMap();
 }
 
-// ================================================== //
 function importReferenceImage() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -3011,10 +2669,6 @@ function onMergeBlock() {
   toast.success(`Merged — canvas is now ${res.w}×${res.h}`)
 }
 
-// ── Multi-select layers → merge ─────────────────────────────────────
-// Toggled by the check button next to Add layer, or transiently by holding
-// Shift while clicking layers. With 2+ selected, a merge button appears in
-// the tools rail.
 const multiSelectLayers = ref(false)
 const selectedLayers = ref<Set<number>>(new Set())
 
@@ -3044,8 +2698,6 @@ function onMergeLayers() {
   toast.success('Merged layers into one')
 }
 
-// Layer indices go stale whenever the stack changes shape or the active
-// frame/art swaps — drop the selection rather than merge the wrong layers.
 watch([() => editorData.value.layers, () => editorData.value.layers.length, () => store.currentFrameIndex],
     () => { if (selectedLayers.value.size) selectedLayers.value = new Set() })
 
@@ -3075,7 +2727,6 @@ function onTrimHidden() {
 
 function exportFile(type: string) {
   if (type === 'png') {
-    // PNG opens a modal so the user can pick an export scale.
     openPngExport()
     return
   }
@@ -3093,7 +2744,6 @@ function openPngExport() {
 }
 
 function exportPng(scale: number) {
-  // Render art-only canvas (no grid/bg/offset), upscaled by `scale`.
   const tmp = document.createElement('canvas')
   tmp.width = editorData.value.width * scale
   tmp.height = editorData.value.height * scale
@@ -3107,7 +2757,6 @@ function exportPng(scale: number) {
 }
 
 function animationFrames() {
-  // Use real frames when animated; fall back to the single current frame.
   const fr = store.frames.length
       ? store.frames
       : [{id: 'f0', layers: editorData.value.layers, duration: 100}];
@@ -3164,9 +2813,6 @@ async function exportSpritesheet() {
   }
 }
 
-// Game-engine export: 1× spritesheet + Aseprite-format JSON (frame rects,
-// per-frame durations, frameTags). Phaser/Unity/Godot importers consume the
-// pair directly. Two downloads, like Aseprite's own sheet export.
 async function exportGame() {
   try {
     const {framesToSpritesheet, framesToAsepriteJSON} = await import('~/helper/anim-export');
@@ -3189,7 +2835,6 @@ async function exportGame() {
     });
     sheet.toBlob((blob) => {
       if (blob) downloadBlob(blob, `${name}-sheet.png`);
-      // Fire the JSON after the PNG so browsers don't swallow the second download.
       setTimeout(() => {
         downloadBlob(new Blob([json], {type: 'application/json'}), `${name}-sheet.json`);
       }, 300);
@@ -3201,15 +2846,9 @@ async function exportGame() {
   }
 }
 
-// ================================================== //
 watch(
     () => editorData.value.id,
     () => {
-      // Keep the URL pointed at the active cloud art. When a local-only art
-      // (e.g. forwarded from Tileset Slicer) is first saved, its id changes
-      // from a local UUID to a real id and it gains an id_string — replace the
-      // route so F5 reloads the saved cloud art instead of the stale local copy
-      // (which would otherwise create a duplicate on the next save).
       const idStr = editorData.value.id_string
       if (idStr && route.query.id !== idStr) {
         router.replace({query: {id: idStr}}).catch(() => {})
@@ -3217,14 +2856,12 @@ watch(
     },
 )
 
-// Refit the canvas backing store whenever the stage box changes size.
 let stageRO: ResizeObserver | null = null;
 let stageInited = false;
 
 onMounted(async () => {
   try { coarsePointer.value = window.matchMedia('(pointer: coarse)').matches; } catch { /* no matchMedia */ }
   try { showBoardChrome.value = localStorage.getItem('editor_board_chrome') !== '0'; } catch { /* ignore */ }
-  // Restore desk appearance before the first paint.
   try {
     const d = JSON.parse(localStorage.getItem('workspace_desk') || 'null');
     if (d) {
@@ -3250,10 +2887,8 @@ onMounted(async () => {
   } catch { /* ignore */ }
   initCanvas()
   if (route.query.tileset) {
-    // Open every tile of a tileset as its own board (from the tileset editor).
     await loadTilesetBoards(String(route.query.tileset))
   } else if (route.query.new === 'true') {
-    // Load current workspace, save it, then reset for a fresh artwork
     await store.load(undefined)
     const hasContent = editorData.value.layers?.some(l => Object.keys(l.pixels || {}).length > 0)
     if (hasContent) {
@@ -3268,9 +2903,6 @@ onMounted(async () => {
   } else {
     await store.load(route.query.id?.toString())
   }
-  // Open-in-editor from a palette page (?palette=<id_string>): apply the chosen
-  // palette to the freshly loaded art and link it, then drop the query param.
-  // AI generation lives on /generate now — forward any old ?ai= link there.
   if (route.query.ai) {
     navigateTo(`/generate?prompt=${encodeURIComponent(String(route.query.ai).slice(0, 300))}`)
     return
@@ -3283,8 +2915,6 @@ onMounted(async () => {
     const q = {...route.query}; delete q.palette
     router.replace({query: q}).catch(() => {})
   }
-  // Open-in-editor with an ad-hoc palette (?colors=RRGGBB,RRGGBB,…) from the
-  // color tools (scheme / image extract) — apply without publishing first.
   if (route.query.colors) {
     const list = route.query.colors.toString().split(',')
         .map(c => '#' + c.replace(/[^0-9a-fA-F]/g, '').slice(0, 6).toUpperCase())
@@ -3294,9 +2924,6 @@ onMounted(async () => {
     router.replace({query: q}).catch(() => {})
   }
   setupCanvas()
-  // Keep the fixed-viewport canvas in sync with its stage box. The first
-  // callback (fired on observe) is authoritative for the initial size, so we
-  // re-center the board there; later resizes only refit (camera unchanged).
   if (typeof ResizeObserver !== 'undefined' && canvas.value?.parentElement) {
     stageRO = new ResizeObserver(() => {
       updateCanvasSize();
@@ -3306,19 +2933,13 @@ onMounted(async () => {
     });
     stageRO.observe(canvas.value.parentElement);
   }
-  // Restore the saved camera (pan + zoom) so a refresh reopens the exact view —
-  // for a single board too, not just multi-board. ?new=true starts fresh; with
-  // no saved camera we fall back to the fitted centerView from setupCanvas.
-  // ?id= means "open THIS art" (e.g. from /work) — skip the old camera so the
-  // first ResizeObserver pass centerView()s onto the requested board instead
-  // of wherever the workspace was last panned.
   if (route.query.new !== 'true' && !route.query.id) {
     try {
       const sc = JSON.parse(localStorage.getItem('workspace_camera') || 'null');
       if (sc && isFinite(sc.z) && isFinite(sc.x) && isFinite(sc.y)) {
         cam.value = {x: sc.x, y: sc.y};
         zoom.value = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, sc.z));
-        stageInited = true;   // don't let the ResizeObserver re-center over this
+        stageInited = true;
         scheduleDraw();
         scheduleMiniMap();
       }
@@ -3326,21 +2947,12 @@ onMounted(async () => {
   }
   setupKeyListeners()
 
-  // Is there an in-app screen to go back to? (Vue Router records the previous
-  // route on history.state.back; null on a direct load → offer Home instead.)
   hasPreviousScreen.value = !!(window.history.state && window.history.state.back);
   isMacUA.value = /Mac|iPhone|iPad/.test(navigator.platform);
 
-  // Reveal the canvas only after its first frame is painted, so the loading
-  // overlay fades out onto real content (no flash of empty canvas). A second
-  // frame drops the fullscreen boot veil once the re-flowed layout has settled.
   if (typeof requestAnimationFrame !== 'undefined') {
     requestAnimationFrame(() => {
       canvasReady.value = true
-      // Clear the fullscreen boot veil once the canvas has painted, but keep it
-      // up a minimum ~0.4s so a fast load doesn't flash it. If the load already
-      // took that long, it clears immediately (no artificial delay). No-op when
-      // the veil was never raised (hard load / non-fullscreen nav).
       if (!editorBoot.value) return
       const elapsed = (typeof performance !== 'undefined' ? performance.now() : 0) - fsBootAt
       const wait = Math.max(0, FS_BOOT_MIN_MS - elapsed)
@@ -3376,27 +2988,23 @@ onUnmounted(() => {
   store.isPlaying = false
   store.resetEditorData()
   clearListeners()
-  // Leaving the editor drops fullscreen layout from <html> (also handles the
-  // back/home navigation while fullscreen).
   if (typeof document !== 'undefined') document.documentElement.classList.remove('editor-fullscreen')
 })
 
 watch(() => store.drawTurn, () => {
   if (store.isPlaying) {
-    if (!playbackOnPreview) return   // main-canvas playback drives the canvas itself
-    refreshPlaybackBuffer()          // keep the looping preview fresh with live edits
+    if (!playbackOnPreview) return
+    refreshPlaybackBuffer()
   }
   scheduleDraw()
   scheduleMiniMap()
 })
 
-// Board set changed (add / remove / switch) — redraw the whole workspace.
 watch(() => store.boardsRev, () => {
   scheduleDraw()
   scheduleMiniMap()
 })
 
-// Desk appearance is a persisted workspace preference; redraw on change.
 watch([deskBg, deskGrid, deskGridStyle, deskGridShape, deskGridColor, deskGridCell,
   checkerSize, checkerA, checkerB, guideColor], () => {
   if (typeof window !== 'undefined') {
@@ -3409,12 +3017,10 @@ watch([deskBg, deskGrid, deskGridStyle, deskGridShape, deskGridColor, deskGridCe
       }));
     } catch { /* quota */ }
   }
-  // Inactive boards bake the checker into their cached composites — drop them.
   boardBuffers.clear();
   scheduleDraw();
 });
 
-// Persist the camera (pan + zoom) so the workspace reopens where you left it.
 let camSaveTimer: ReturnType<typeof setTimeout> | null = null;
 watch([cam, zoom], () => {
   if (typeof window === 'undefined') return;
@@ -3426,13 +3032,8 @@ watch([cam, zoom], () => {
   }, 400);
 }, {deep: true});
 
-// Onion-skin toggle changes what's drawn under the current frame.
 watch(() => store.onionSkin, () => scheduleDraw())
 
-// Undo/redo restore a snapshot — that's not a layout gesture, so the camera
-// must stay put even when the snapshot changes the board size (undo across a
-// resize/merge/trim). The flag rides through the size watcher below and is
-// dropped after the flush.
 let restoringHistory = false;
 
 function doUndo() {
@@ -3447,23 +3048,13 @@ function doRedo() {
   nextTick(() => { restoringHistory = false; });
 }
 
-// Refit only when the ACTIVE board is genuinely resized — NOT when switching to
-// a different-size board (that would jump the zoom on every board click; we keep
-// the user's current camera instead).
 let lastActiveBoardId = '';
 watch(
-    // Size key is "WxH" (not a sum — 16×32 → 32×16 must still fire).
     () => [store.activeBoardId, `${editorData.value.width}x${editorData.value.height}`] as const,
     ([id]) => {
       const switched = id !== lastActiveBoardId;
       lastActiveBoardId = id;
       newSize.value = {width: editorData.value.width, height: editorData.value.height};
-      // Board switch keeps the camera; live drag-resize handles its own redraw;
-      // undo/redo restore state, not layout — none should trigger a setupCanvas
-      // refit (that would jump the view). But ALL must re-fit the minimap to the
-      // new aspect: on resize-drop the size no longer changes (store.resize
-      // commits the same dims), so skipping sizeMiniMap here would leave the
-      // preview stretched for good.
       if (switched || isResizingBoard.value || restoringHistory) { sizeMiniMap(); scheduleDraw(); scheduleMiniMap(); return; }
       setupCanvas();
     }
@@ -3473,7 +3064,7 @@ watch(
 
 <template>
   <div ref="editorRoot" class="editor" :style="{'--editor-width': EDITOR_SIZE + 'px','--editor-minimap-size': MINIMAP_SIZE + 'px'}">
-    <!-- Top toolbar -->
+
     <div class="editor-toolbar">
       <div class="toolbar-start">
         <ui-tooltip class="fs-only" :text="hasPreviousScreen ? 'Back' : 'Home'">
@@ -3541,7 +3132,7 @@ watch(
             <button class="toolbar-btn" aria-label="Settings" @click="settingsView = 'main'"><span class="icon icon-cog"/></button>
           </ui-tooltip>
           <template #menu>
-            <!-- Main list -->
+
             <div v-if="settingsView === 'main'" class="file-menu" @click.stop>
               <button class="file-menu-item" @click="openResize">
                 <span class="icon icon-ruler"/><span>Resize canvas</span><span class="icon icon-angle-right settings-chev"/>
@@ -3601,7 +3192,6 @@ watch(
               </button>
             </div>
 
-            <!-- Resize -->
             <div v-else-if="settingsView === 'resize'" class="file-menu settings-sub" @click.stop>
               <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>Resize canvas</span></button>
               <div class="settings-body">
@@ -3630,7 +3220,6 @@ watch(
               </div>
             </div>
 
-            <!-- Background -->
             <div v-else-if="settingsView === 'bg'" class="file-menu settings-sub" @click.stop>
               <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>Background</span></button>
               <div class="settings-body">
@@ -3672,7 +3261,6 @@ watch(
               </div>
             </div>
 
-            <!-- Canvas (desk) appearance -->
             <div v-else-if="settingsView === 'canvas'" class="file-menu settings-sub" @click.stop>
               <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>Canvas</span></button>
               <div class="settings-body">
@@ -3740,13 +3328,10 @@ watch(
               </div>
             </div>
 
-            <!-- Board: the active board's grid + guides -->
             <div v-else-if="settingsView === 'board'" class="file-menu settings-sub" @click.stop>
               <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>Board</span></button>
               <div class="settings-body">
-                <!-- Grid mode: how the art itself is laid out (square cells,
-                     the dimetric/iso lattice, or none). Moved here from the
-                     toolbar's blind cycle button. -->
+
                 <div class="cv-field">
                   <label class="cv-label">Grid mode</label>
                   <div class="cv-opts cols-3">
@@ -3781,8 +3366,6 @@ watch(
                   </div>
                 </div>
 
-                <!-- Board grid = the white/gray transparency checker under
-                     the art: cell size in art pixels + its two colours. -->
                 <div class="cv-field">
                   <label class="cv-label">Board grid size</label>
                   <div class="cv-opts cols-4">
@@ -3810,9 +3393,6 @@ watch(
                   </div>
                 </div>
 
-                <!-- Every guide is a movable line: drag with the Select tool,
-                     drop outside the board to remove. Center/Thirds just add
-                     lines at those positions. -->
                 <div class="cv-field">
                   <label class="cv-label">Guides <template v-if="guideCount">({{ guideCount }})</template></label>
                   <div class="cv-opts cols-2">
@@ -3840,7 +3420,7 @@ watch(
             </div>
           </template>
         </ui-dropdown-menu>
-        <!-- AI gets its own section — next to File it caught mis-clicks. -->
+
         <div class="toolbar-sep"/>
         <ui-tooltip text="Generate with AI">
           <nuxt-link to="/generate" class="toolbar-btn" aria-label="Generate with AI">
@@ -3873,7 +3453,7 @@ watch(
         </ui-tooltip>
       </div>
       <span class="toolbar-info">{{ editorData.width }}×{{ editorData.height }}</span>
-      <!-- Pinned to the strip's right edge — stays put while the strip scrolls. -->
+
       <div class="toolbar-fs">
         <ui-dropdown-menu class="fs-hide" position="right" label="Fullscreen">
           <ui-tooltip text="Fullscreen">
@@ -3906,7 +3486,7 @@ watch(
     </div>
 
     <div class="editor-body">
-      <!-- Tool rail (left on desktop, horizontal strip on mobile) -->
+
       <Widget class="tool-rail">
         <div class="tools tools-rail no-scrollbar">
           <ui-tooltip text="Brush (B)">
@@ -3994,7 +3574,6 @@ watch(
             </Square>
           </ui-tooltip>
 
-          <!-- Animation: edits apply to all frames -->
           <template v-if="store.isAnimated">
             <div class="tools-sep"/>
             <Square
@@ -4008,7 +3587,6 @@ watch(
         </div>
       </Widget>
 
-      <!-- Canvas + palette column -->
       <div class="canvas-col">
         <Widget>
           <Square>
@@ -4085,7 +3663,6 @@ watch(
         </Widget>
       </div>
 
-      <!-- Right sidebar (Preview + Layers only) -->
       <div class="editor-sidebar">
         <Widget title="Preview" class="preview-widget">
           <template #ctl>
@@ -4098,9 +3675,6 @@ watch(
           </Square>
         </Widget>
 
-        <!-- Collection + Layers split the canvas-driven leftover equally.
-             The inner is absolute-filled so its (possibly tall) content never
-             inflates the sidebar past the canvas column. -->
         <div class="sidebar-stack">
           <div class="sidebar-stack-inner">
             <EditorTilesetStrip
@@ -4165,16 +3739,13 @@ watch(
       </div>
     </div>
 
-    <!-- Animation timeline (frames) -->
     <EditorTimeline class="editor-timeline"/>
 
-    <!-- Palette library / image-extract / save-current -->
     <EditorPalettePicker v-model:open="showPalettePicker"/>
     <EditorStripImport v-model:open="showStripImport"/>
 
-    <!-- Publish modal -->
     <UiModal v-if="showPublishModal" @close="showPublishModal = false">
-          <!-- Step 1: Edit info -->
+
           <template v-if="publishStep === 'edit'">
             <h3 class="publish-heading">Publish your pixel art</h3>
             <div class="publish-form">
@@ -4211,7 +3782,7 @@ watch(
                     class="publish-input"
                 />
               </div>
-              <!-- Quiet assistant, not a headline: fills the fields above. -->
+
               <button
                   v-if="aiMeta?.enabled"
                   class="publish-ai-row"
@@ -4238,7 +3809,6 @@ watch(
             </div>
           </template>
 
-          <!-- Step 2: Share result -->
           <template v-if="publishStep === 'done'">
             <div class="publish-done-header">
               <h3 class="text-sm font-bold">{{ editorData.is_public ? 'Published!' : 'Saved — unlisted' }}</h3>
@@ -4280,7 +3850,6 @@ watch(
           </template>
       </UiModal>
 
-    <!-- Onboarding / Get started -->
     <UiModal
         v-if="showOnboarding"
         class="onb-modal"
@@ -4349,7 +3918,6 @@ watch(
       </div>
     </UiModal>
 
-    <!-- PNG export scale -->
     <UiModal v-if="showPngModal" class="png-modal" @close="showPngModal = false">
           <h3 class="publish-heading">Download PNG</h3>
           <p class="publish-sub">Pick an export scale — bigger scale = sharper, larger file.</p>
@@ -4380,7 +3948,6 @@ watch(
           <button class="share-dismiss" @click="showPngModal = false">Cancel</button>
       </UiModal>
 
-    <!-- Import options: how to read pixels + where the files land -->
     <UiModal v-if="showImportModal" class="png-modal" @close="showImportModal = false">
       <h3 class="publish-heading">Import {{ importPicked.length }} file{{ importPicked.length > 1 ? 's' : '' }}</h3>
       <p class="publish-sub">Choose how to read the pixels and where they go.</p>
@@ -4431,7 +3998,6 @@ watch(
       <button class="share-dismiss" @click="showImportModal = false">Cancel</button>
     </UiModal>
 
-    <!-- Delete confirm -->
     <UiModal v-if="showDeleteConfirm" class="del-modal" @close="showDeleteConfirm = false">
           <h3 class="publish-heading">Delete this art?</h3>
           <p class="publish-sub">
@@ -4445,7 +4011,6 @@ watch(
           <button class="share-dismiss" @click="showDeleteConfirm = false">Cancel</button>
       </UiModal>
 
-    <!-- Load art onto the canvas as a new board -->
     <EditorLoadBrowser
         v-if="showArtPicker"
         title="Load board"
@@ -4459,7 +4024,6 @@ watch(
         @close="showArtPicker = false"
     />
 
-    <!-- Per-board options popover (kebab dot / right-click) -->
     <Teleport to="body">
       <div
           v-if="boardMenu"
@@ -4480,7 +4044,6 @@ watch(
       </div>
     </Teleport>
 
-    <!-- Login prompt -->
     <UiModal v-if="showLoginPrompt" @close="showLoginPrompt = false">
           <h3 class="login-heading">Login to share</h3>
           <p class="login-msg">Sign in to publish and share your pixel art. Your local work will be synced to the cloud.</p>
@@ -4498,12 +4061,11 @@ watch(
 </template>
 
 <style scoped>
-/* ===== Find-color (picker) tool ===== */
+
 canvas.picker {
   cursor: crosshair;
 }
 
-/* Inside an active selection the select tool drags it — space-pan still wins. */
 canvas.select.sel-drag:not(.panning) {
   cursor: move;
 }
@@ -4515,7 +4077,6 @@ canvas.select.sel-drag:not(.panning) {
   color: var(--muted);
 }
 
-/* Hovering/dragging a guide line with the select tool. */
 canvas.guide-v:not(.panning) { cursor: col-resize; }
 canvas.guide-h:not(.panning) { cursor: row-resize; }
 
@@ -4523,7 +4084,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  margin-right: auto; /* keep the action buttons pinned right */
+  margin-right: auto; 
   padding: 0 0.25rem;
   font-size: var(--text-xs);
   line-height: var(--text-xs-lh);
@@ -4543,14 +4104,13 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   color: var(--muted);
 }
 
-/* ===== Canvas loading overlay ===== */
 .canvas-loading {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Matches the editor canvas background so the reveal feels seamless */
+
   background: #1a1a1a;
   z-index: 3;
 }
@@ -4582,7 +4142,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   }
 }
 
-/* Fade the overlay out once the first frame is painted */
 .canvas-fade-leave-active {
   transition: opacity 0.45s ease;
 }
@@ -4606,7 +4165,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   margin-bottom: 0.5rem;
 }
 
-/* ===== PNG export modal ===== */
 .png-modal .publish-heading {
   margin-bottom: 0;
 }
@@ -4629,7 +4187,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   margin-left: 0.25rem;
   font-size: var(--text-xs);
 }
-
 
 .del-modal .publish-heading {
   margin-bottom: 0;
@@ -4659,7 +4216,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   color: #ef4444;
 }
 
-/* Per-board options popover (kebab dot / right-click) */
 .board-menu-backdrop {
   position: fixed;
   inset: 0;
@@ -4739,15 +4295,12 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   border-radius: var(--radius-sm);
 }
 
-/* Settings dropdown drill-down: main list has trailing chevrons; a sub-view is
-   a Back header + the option's form, inline in the same panel (no modal). */
 .settings-chev { margin-left: auto; font-size: 14px; opacity: 0.45; }
 
 .settings-sub {
   width: 290px;
   max-width: 86vw;
-  /* The Canvas panel grew (board grid + guides): cap it to the viewport and
-     scroll inside — a menu taller than the screen had unreachable controls. */
+
   max-height: min(70vh, 560px);
   overflow-y: auto;
 }
@@ -4838,7 +4391,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   background: linear-gradient(135deg, var(--primary), color-mix(in oklab, var(--primary) 50%, var(--foreground)));
 }
 
-/* Transparent (no background): a diagonal "none" stroke on a plain swatch. */
 .bg-tab-preview-none {
   background:
     linear-gradient(to top right, transparent calc(50% - 1px), var(--muted) calc(50% - 1px), var(--muted) calc(50% + 1px), transparent calc(50% + 1px)),
@@ -4864,7 +4416,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   padding: 2rem 1rem;
 }
 
-/* Solid color tab */
 .bg-color-row {
   display: flex;
   align-items: center;
@@ -4909,7 +4460,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   transition: transform 140ms ease, border-color 140ms ease;
 }
 
-/* Art picker tab */
 .bg-art-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -4971,8 +4521,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 </style>
 
 <style>
-/* Modal variant sizing — unscoped: these classes land on UiModal's
-   inner div (rendered by the shared component, outside this scope). */
+
 .png-modal {
   max-width: 360px;
   display: flex;

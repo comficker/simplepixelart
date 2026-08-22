@@ -7,11 +7,6 @@
 
 type RGB = [number, number, number];
 
-/**
- * Read an image 1:1 — every source pixel becomes one cell, no resampling, no
- * palette guessing. Transparent pixels (alpha < 128) come back as null.
- * Refuses images larger than maxSide per axis (that's converter territory).
- */
 export async function dataUrlToOriginalGrid(dataUrl: string, maxSide = 256): Promise<{
     grid: (RGB | null)[][];
     tooLarge: boolean;
@@ -48,11 +43,6 @@ export async function dataUrlToOriginalGrid(dataUrl: string, maxSide = 256): Pro
     }
 }
 
-// ═══ Legacy sampled-import pipeline ═════════════════════════════════════════
-// Restored for the editor's file-import ('filter') and Insert image flows —
-// the gradient-erosion + line-score sampler handles those inputs better than
-// the pixel-reconstruct port (which /convert and the tile slicer still use).
-// Constants for better maintainability
 const COLOR_DIFFERENCE_THRESHOLD = 0.05;
 const TRANSPARENT_COLOR_ATTEMPTS = 30;
 const GRADIENT_EROSION_ITERATIONS = 50;
@@ -70,14 +60,12 @@ const NORMALIZATION_FACTOR = 200;
 type CropBounds = { x1: number; y1: number; x2: number; y2: number };
 type SamplesGrid = RGB[][];
 
-// Memory pool for color processing to reduce GC pressure
 const colorProcessingPool = {
     histogram: new Map<string, number>(),
     clear() {
         this.histogram.clear();
     }
 };
-// Helper functions for optimized image processing
 async function loadImage(dataUrl: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -92,7 +80,6 @@ function findUnusedColor(imageData: ImageData): RGB | null {
     const usedColors = new Set<string>();
     const {data} = imageData;
 
-    // First pass: collect all used colors
     for (let i = 0; i < data.length; i += 4) {
         if (data[i + 3] > 0) { // Only non-transparent pixels
             const key = `${data[i]},${data[i + 1]},${data[i + 2]}`;
@@ -100,7 +87,6 @@ function findUnusedColor(imageData: ImageData): RGB | null {
         }
     }
 
-    // Find unused color
     for (let attempts = 0; attempts < TRANSPARENT_COLOR_ATTEMPTS; attempts++) {
         const color: RGB = [
             Math.floor(Math.random() * 256),
@@ -138,13 +124,11 @@ function handleTransparency(imageData: ImageData, ctx: CanvasRenderingContext2D)
 function calculateLineScore(line: number[], centerIndex: number): number {
     let score = 1;
 
-    // Check forward direction
     for (let i = centerIndex + 1; i < line.length; i++) {
         if (line[i] > 0) score++;
         else break;
     }
 
-    // Check backward direction
     for (let i = centerIndex - 1; i >= 0; i--) {
         if (line[i] > 0) score++;
         else break;
@@ -161,7 +145,6 @@ function processCellColorsOptimized(ctx: CanvasRenderingContext2D, cells: Array<
 
     for (const cell of cells) {
         try {
-            // Early bounds checking
             if (cell.width <= 0 || cell.height <= 0) {
                 results.push([255, 255, 255]);
                 continue;
@@ -170,7 +153,6 @@ function processCellColorsOptimized(ctx: CanvasRenderingContext2D, cells: Array<
             const imageData = ctx.getImageData(cell.x, cell.y, cell.width, cell.height);
             histogram.clear();
 
-            // Optimized histogram building
             const {data} = imageData;
             for (let i = 0; i < data.length; i += 4) {
                 if (data[i + 3] > 0) {
@@ -179,7 +161,6 @@ function processCellColorsOptimized(ctx: CanvasRenderingContext2D, cells: Array<
                 }
             }
 
-            // Find most common color
             let maxCount = 0;
             let bestColor = '255,255,255';
 
@@ -211,7 +192,6 @@ export async function dataUrlToSamplesGrid(dataUrl: string): Promise<{
     let colorThatRepresentsTransparent: RGB | null = null;
 
     try {
-        // Optimized image loading
         const img = await new Promise<HTMLImageElement>((resolve, reject) => {
             const img = new Image();
             img.onload = () => resolve(img);
@@ -220,12 +200,10 @@ export async function dataUrlToSamplesGrid(dataUrl: string): Promise<{
             if (img.complete) resolve(img);
         });
 
-        // Early return for invalid dimensions
         if (!img.width || !img.height || img.width < 1 || img.height < 1) {
             return {rgbSamplesGrid: [], colorThatRepresentsTransparent: null};
         }
 
-        // Handle small images - optimized path
         if (img.width < 70 || img.height < 70) {
             const canvas = document.createElement("canvas");
             canvas.width = img.width;
@@ -241,7 +219,6 @@ export async function dataUrlToSamplesGrid(dataUrl: string): Promise<{
         canvas.width = img.width;
         canvas.height = img.height;
 
-        // Optimized context options
         const ctx = canvas.getContext("2d", {
             willReadFrequently: true,
             desynchronized: true
@@ -253,7 +230,6 @@ export async function dataUrlToSamplesGrid(dataUrl: string): Promise<{
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         colorThatRepresentsTransparent = handleTransparency(imageData, ctx);
 
-        // Avoid re-encoding if no changes made
         const processedDataUrl = colorThatRepresentsTransparent
             ? canvas.toDataURL('image/png')
             : dataUrl;
@@ -286,7 +262,6 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
     const {width: pixelWidth, height: pixelHeight} = canvasIn;
     const gradientData = computeImageDataGradient(imageDataIn, COLOR_DIFFERENCE_THRESHOLD);
 
-    // Optimized gradient erosion
     const pixelsToProcess: Array<{ x: number, y: number }> = [];
     for (let y = 0; y < gradientData.length; y++) {
         if (!gradientData[y]) continue;
@@ -315,13 +290,11 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
 
         if (erasures.length === 0) break;
 
-        // Batch erasure
         for (const {x, y} of erasures) {
             gradientData[y][x] = 0;
         }
     }
 
-    // Update output image data
     for (let py = 0; py < pixelHeight; py++) {
         if (!gradientData[py]) continue;
         for (let px = 0; px < pixelWidth; px++) {
@@ -336,7 +309,6 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
     }
     ctxOut.putImageData(imageDataOut, 0, 0);
 
-    // Calculate crop bounds based on gradient image
     const crop: CropBounds = {
         x1: canvasIn.width / 2,
         y1: canvasIn.height / 2,
@@ -371,7 +343,6 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         }
     }
 
-    // Calculate row and column scores
     const rowScores: number[] = [];
     for (let i = 0; i < croppedGradientData.length; i++) {
         const row = croppedGradientData[i];
@@ -398,7 +369,6 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         columnScores[c] = score;
     }
 
-    // Erode scores to remove noise
     const rowScoreSum = rowScores.reduce((a, v) => a + v, 0);
     const columnScoreSum = columnScores.reduce((a, v) => a + v, 0);
 
@@ -418,7 +388,6 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         remainingPortion = columnScores.reduce((a, v) => a + v, 0) / columnScoreSum;
     }
 
-    // Pool contiguous score groups
     for (const scores of [rowScores, columnScores]) {
         let batchMax = 0;
         let batchMaxIndex: number | null = null;
@@ -443,7 +412,6 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         }
     }
 
-    // Get gap histograms
     const rowGapHist: { [key: string]: number } = {};
     const columnGapHist: { [key: string]: number } = {};
 
@@ -464,7 +432,6 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
     let columnGap: number;
 
     if (Object.values(rowGapHist).reduce((a, v) => a + v, 0) < MIN_SAMPLES || Object.values(columnGapHist).reduce((a, v) => a + v, 0) < MIN_SAMPLES) {
-        // Fallback to simple grid
         rowGap = 3;
         columnGap = 3;
         crop.x1 = 0;
@@ -484,7 +451,6 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         ? Math.min(rowGap, columnGap)
         : Math.round((rowGap + columnGap) / 2);
 
-    // Fill in gaps and remove outliers
     for (const scores of [rowScores, columnScores]) {
         let indexOfLastNonZero = -1;
         let processedFirstNonZero = false;
@@ -503,7 +469,7 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
                     }
                 }
                 if (multiple < 0.5 && processedFirstNonZero) {
-                    scores[i] = -1; // Delete line
+                    scores[i] = -1;
                 } else {
                     indexOfLastNonZero = i;
                 }
@@ -512,13 +478,11 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         }
     }
 
-    // Get cropped image data for sampling
     const croppedOrigImageData = ctxIn.getImageData(crop.x1, crop.y1, crop.x2 - crop.x1, crop.y2 - crop.y1);
     canvasOut.width = crop.x2 - crop.x1;
     canvasOut.height = crop.y2 - crop.y1;
     ctxOut.putImageData(croppedOrigImageData, 0, 0);
 
-    // Optimized sampling with batch processing
     const samplesGrid: SamplesGrid = [];
     const cellBounds: Array<{ x: number, y: number, width: number, height: number }> = [];
     const cellMap = new Map<string, number>();
@@ -527,7 +491,6 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
     let lastNonZeroColumnIndex = -1;
     let rowIndex = 0;
 
-    // First pass: collect all cell bounds
     for (let r = 0; r < rowScores.length; r++) {
         if (rowScores[r] > 0 || r === rowScores.length - 1) {
             if (r - lastNonZeroRowIndex < CENTER_SAMPLE_RATIO * gap) {
@@ -573,10 +536,8 @@ async function base64ImageUrlToRGBSamplesGrid(url: string): Promise<SamplesGrid>
         }
     }
 
-    // Second pass: batch process all cells
     const cellColors = processCellColorsOptimized(ctxOut, cellBounds);
 
-    // Third pass: reconstruct grid
     for (let r = 0; r < rowIndex; r++) {
         samplesGrid[r] = [];
         for (let c = 0; ; c++) {
@@ -601,13 +562,11 @@ function extractCardinalLinesAtPoint(grid: number[][], cx: number, cy: number, l
     const v: number[] = [];
     const h: number[] = [];
 
-    // Horizontal line
     for (let x = cx - radius; x <= cx + radius; x++) {
         const value = (grid[cy] && grid[cy][x] !== undefined) ? grid[cy][x] : 0;
         h.push(value);
     }
 
-    // Vertical line
     for (let y = cy - radius; y <= cy + radius; y++) {
         const value = (grid[y] && grid[y][cx] !== undefined) ? grid[y][cx] : 0;
         v.push(value);
@@ -637,7 +596,6 @@ function computeImageDataGradient(imageData: ImageData, threshold: number): numb
     const {width: pixelWidth, height: pixelHeight, data} = imageData;
     const gradientData: number[][] = Array(pixelHeight).fill(null).map(() => Array(pixelWidth).fill(0));
 
-    // Initialize gradientData grid
     for (let py = 0; py < pixelHeight; py++) {
         gradientData[py] = Array(pixelWidth).fill(0);
     }
@@ -647,19 +605,15 @@ function computeImageDataGradient(imageData: ImageData, threshold: number): numb
         for (let px = 1; px < pixelWidth; px++) {
             const pixelIndex = (px + py * pixelWidth) * 4;
 
-            // Bounds checking for neighboring pixels
             if (pixelIndex - 4 < 0 || pixelIndex - pixelWidth * 4 < 0) continue;
 
-            // Horizontal gradient
             const rgb1: RGB = [data[pixelIndex], data[pixelIndex + 1], data[pixelIndex + 2]];
             const rgb2: RGB = [data[pixelIndex - 4], data[pixelIndex - 3], data[pixelIndex - 2]];
             const hDiff = deltaE(rgb1, rgb2);
 
-            // Vertical gradient
             const rgb3: RGB = [data[pixelIndex - pixelWidth * 4], data[pixelIndex - pixelWidth * 4 + 1], data[pixelIndex - pixelWidth * 4 + 2]];
             const vDiff = deltaE(rgb1, rgb3);
 
-            // Combined and normalized gradient
             const gradientValue = (vDiff + hDiff) / NORMALIZATION_FACTOR;
             gradientData[py][px] = gradientValue < threshold ? 0 : gradientValue;
         }
@@ -708,17 +662,14 @@ function rgb2lab(rgb: RGB): [number, number, number] | null {
     let g = gRaw / 255;
     let b = bRaw / 255;
 
-    // Convert RGB to linear RGB
     r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
     g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
     b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
 
-    // Convert linear RGB to XYZ
     let x = (r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047;
     let y = (r * 0.2126 + g * 0.7152 + b * 0.0722);
     let z = (r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883;
 
-    // Convert XYZ to Lab
     const xyzToLab = (val: number): number =>
         val > 0.008856 ? Math.pow(val, 1 / 3) : (7.787 * val) + 16 / 116;
 

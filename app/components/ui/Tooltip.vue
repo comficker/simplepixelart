@@ -39,21 +39,14 @@ const props = defineProps({
 
 const show = ref(false)
 const wrap = ref(null)
-// The bubble is position:fixed so it can escape scrollable/clipping
-// ancestors (.toolbar-main, panels, modals). Anchor point = the edge of
-// the wrapped control matching `position`, captured on hover.
 const pt = ref({ x: 0, y: 0 })
 
 function onFocus() {
-  // Keyboard focus only. Click/programmatic focus (e.g. a modal restoring
-  // focus to the button that opened it) must not pop a tooltip that then
-  // lingers over the UI until the next blur.
   if (wrap.value && !wrap.value.matches(':focus-visible')) return
   onEnter()
 }
 
 function onEnter() {
-  // Skip tooltips on touch devices
   if (typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches) return
   const r = wrap.value?.getBoundingClientRect()
   if (!r) return
@@ -83,8 +76,7 @@ function onEnter() {
   line-height: 1.3;
   font-weight: 600;
   letter-spacing: 0.01em;
-  /* max-content keeps short labels on one line; long descriptions wrap
-     instead of running across the viewport. */
+
   width: max-content;
   max-width: min(260px, 80vw);
   white-space: normal;
@@ -108,7 +100,6 @@ function onEnter() {
   to   { opacity: 1; }
 }
 
-/* Positions — offsets from the fixed anchor point on the control's edge. */
 .tooltip-top {
   --tip-from: translate(-50%, -100%) translateY(-6px);
   transform: translate(-50%, -100%) translateY(-8px);

@@ -6,7 +6,7 @@ export const debounce = <T extends Function>(fn: T, ms: number = 300): T => {
     return function (this: any, ...args: any[]) {
         clearTimeout(timeoutId);
         timeoutId = setTimeout(() => fn.apply(this, args), ms);
-    } as unknown as T; // Cast the result back to the original function type
+    } as unknown as T;
 };
 
 export function cloneDeep<T>(value: T): T {
@@ -119,9 +119,6 @@ export function getStorageItem(key: string) {
     }
     return {}
 }
-// Cap per-slug localStorage keys (e.g. `tm_view:<slug>`): entries stamp a `t`
-// (Date.now) when written; over the cap, the oldest are dropped. Call once per
-// page mount — enumerating every key on each save would be wasted work.
 export function pruneStorageKeys(prefix: string, max = 30) {
     if (typeof localStorage === 'undefined') return
     try {

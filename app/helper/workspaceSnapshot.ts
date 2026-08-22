@@ -1,12 +1,3 @@
-// Heavy multi-board snapshot (`workspace_full`) storage.
-//
-// The snapshot inlines every board's pixel data, so with many/large boards it
-// used to blow the ~5 MB localStorage quota and fail SILENTLY — freezing board
-// positions/backgrounds at the last save that happened to fit. IndexedDB gives
-// orders-of-magnitude more room, so the snapshot lives here instead.
-//
-// The tiny `workspace_layout` (positions + per-board bg/iso) stays in
-// localStorage as the always-available fast-path overlay (see editor.store).
 
 const DB_NAME = 'simplepixelart'
 const STORE = 'kv'
@@ -61,8 +52,6 @@ function lsRead(): any | null {
   try { return JSON.parse(localStorage.getItem(KEY) || 'null') } catch { return null }
 }
 
-// Read the snapshot. Migrates (and clears) a legacy localStorage copy written by
-// versions before the IndexedDB move, so existing multi-board workspaces survive.
 export async function loadWorkspaceFull(): Promise<any | null> {
   if (typeof localStorage === 'undefined') return null
   if (!hasIdb()) return lsRead()
@@ -88,7 +77,6 @@ export async function saveWorkspaceFull(payload: any): Promise<void> {
     return
   }
   try { await idbPut(payload) } catch { /* ignore */ }
-  // Never leave a stale legacy copy around to shadow the IndexedDB one.
   try { localStorage.removeItem(KEY) } catch { /* ignore */ }
 }
 

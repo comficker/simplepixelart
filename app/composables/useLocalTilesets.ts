@@ -3,39 +3,31 @@ import type {EditorData} from '~/types'
 import {cloneDeep, generateUUID} from '~/helper/utils'
 import {layers2MapNumbers} from '~/helper/canvas'
 
-// Guest (signed-out) tilesets live entirely in localStorage: the picker in the
-// Tileset Slicer and the editor's tileset strip read/write here, and everything
-// is pushed to the cloud once the user signs in (then the local copy is dropped).
 const KEY = 'sp_local_tilesets'
 
 export interface LocalTile {
-  key: string        // unique within the tileset
-  tid: number        // stable numeric id — the tileset-editor registry key
+  key: string
+  tid: number
   name: string
-  thumb: string      // dataURL, for the strip/picker preview
-  ed: EditorData     // full pixel data — replayable in the editor + uploadable
+  thumb: string
+  ed: EditorData
 }
 
 export interface LocalTileset {
-  id: string         // 'local:<uuid>'
+  id: string
   name: string
-  tiles: LocalTile[] // local-pixel tiles (from the slicer / editor strip)
+  tiles: LocalTile[]
   created: number
-  // The full tileset-editor state saved back here — the ONE source of truth for
-  // a guest tileset (also what /work + the load browser read). `registry` may
-  // reference cloud slugs too; `tiles` supplies the pixel data for local ones.
   meta?: {
     registry?: Record<string, string>
     groups?: any[]
     cell?: { w: number; h: number }
-    iso?: boolean          // tiles are isometric diamonds (drives the tilemap's mode)
+    iso?: boolean
     board?: any
     pends?: any
   }
 }
 
-// Shared across every consumer so the slicer, the strip and the login-sync all
-// see the same list. Client-only (guarded); the server never populates it.
 const list = ref<LocalTileset[]>([])
 let loaded = false
 let syncing = false
@@ -58,7 +50,6 @@ function write() {
 function ensureLoaded() {
   if (loaded || typeof localStorage === 'undefined') return
   const data = read()
-  // Backfill stable numeric tids on tiles saved before the editor bridge.
   let changed = false
   for (const ts of data) {
     let next = Math.max(0, ...ts.tiles.map((t: any) => t.tid || 0))
@@ -71,8 +62,6 @@ function ensureLoaded() {
   if (changed) write()
 }
 
-// Paint an EditorData onto a 1:1 canvas → PNG dataURL (fallback thumbnail when
-// the caller hasn't already rendered one).
 function edToThumb(ed: EditorData): string {
   if (typeof document === 'undefined') return ''
   const cv = document.createElement('canvas')
@@ -120,8 +109,6 @@ export function useLocalTilesets() {
     const ed = cloneDeep(tile.ed)
     const thumb = tile.thumb || edToThumb(ed)
     const name = tile.name || ed.name || 'Tile'
-    // Idempotent: the same art (matched by ed.id) is never duplicated — update
-    // the existing tile in place so a re-add just refreshes it.
     const existing = ed.id != null ? ts.tiles.find(t => t.ed.id === ed.id) : undefined
     let result: LocalTile
     if (existing) {
@@ -134,23 +121,16 @@ export function useLocalTilesets() {
       result = {key: generateUUID(), tid: nextTid, name, thumb, ed}
       ts.tiles.push(result)
     }
-    list.value = [...list.value]   // reassign so watchers/computed refresh
+    list.value = [...list.value]
     write()
     return result
   }
 
-  // ── Tileset-editor bridge ──────────────────────────────────────────
-  // Local tiles have no cloud slug, so the editor renders them from their
-  // stored thumbnails. `ed.id` doubles as the registry "slug"; the editor
-  // pre-caches an <img> from `thumbs[slug]` under that key.
   function editorModel(id: string) {
     const ts = get(id)
     if (!ts) return null
-    // Thumbnails for local-pixel tiles, keyed by their slug (ed.id).
     const thumbs: Record<string, string> = {}
     for (const t of ts.tiles) thumbs[t.ed.id] = t.thumb
-    // Prefer the editor's saved registry (has cloud slugs too); else derive it
-    // from the local tiles (fresh entry that's only been fed by the slicer).
     const registry: Record<string, string> = ts.meta?.registry
       ? {...ts.meta.registry}
       : Object.fromEntries(ts.tiles.filter(t => t.tid != null).map(t => [String(t.tid), t.ed.id]))
@@ -161,7 +141,6 @@ export function useLocalTilesets() {
     return {id: ts.id, name: ts.name, registry, groups, cell, iso: !!ts.meta?.iso, thumbs, board: ts.meta?.board, pends: ts.meta?.pends}
   }
 
-  // Persist the editor's full state back to the local entry (the source of truth).
   function saveEditorModel(id: string, patch: {name?: string; registry?: Record<string, string>; groups?: any[]; cell?: {w: number; h: number}; iso?: boolean; board?: any; pends?: any}) {
     const ts = get(id)
     if (!ts) return
@@ -186,11 +165,6 @@ export function useLocalTilesets() {
     write()
   }
 
-  // The pixel editor saves an art to `workspaces`, not here — so when a guest
-  // edits an art that's a tile in a local tileset, push the new pixels + a fresh
-  // thumbnail back into every tileset that references it (matched by ed.id).
-  // Keeps the tileset editor / ?tileset= reload in sync with edits. No-op (and
-  // no thumbnail render) when the art isn't a tile anywhere.
   function syncEditedArt(ed: EditorData, thumb?: string): boolean {
     if (!ed?.id) return false
     ensureLoaded()
@@ -207,9 +181,6 @@ export function useLocalTilesets() {
     return changed
   }
 
-  // Find a tile's EditorData by its ed.id across every local tileset. Lets the
-  // editor open a guest tile straight from a /work link (or any id lookup)
-  // without it having been staged into `workspaces` first.
   function findTileEd(id: string): EditorData | null {
     for (const ts of list.value) {
       const t = ts.tiles.find(x => String(x.ed.id) === String(id))
@@ -218,8 +189,6 @@ export function useLocalTilesets() {
     return null
   }
 
-  // Stage a local tile into the editor's local workspace so store.load(id)
-  // opens it — the same code path cloud tiles use via their id_string.
   function stageForEditor(tile: LocalTile): string {
     if (typeof localStorage !== 'undefined') {
       try {
@@ -231,8 +200,6 @@ export function useLocalTilesets() {
     return tile.ed.id
   }
 
-  // On sign-in: upload each local tileset (+ its tiles) to the cloud, then drop
-  // the local copy. Best-effort per item — a failed upload stays local to retry.
   async function syncToCloud(): Promise<number> {
     if (syncing || !auth.isLogged) return 0
     ensureLoaded()
@@ -246,11 +213,9 @@ export function useLocalTilesets() {
             method: 'POST',
             body: {name: ts.name, meta: {registry: {}, cell: ts.meta?.cell || {w: 16, h: 16}, groups: [{id: 'g0', name: 'Tiles', kind: 'group', tiles: []}]}},
           })
-          // Local-pixel tiles must survive — losing one is permanent data loss,
-          // so the local copy is only dropped when EVERY local tile uploaded.
           let localFailed = 0
           const localSlugs = new Set(ts.tiles.map(t => t.ed.id))
-          const slugMap: Record<string, string> = {}   // local ed.id → cloud id_string
+          const slugMap: Record<string, string> = {}
           for (const tile of ts.tiles) {
             try {
               const page = await useNativeFetch<any>('/coloring/shared-pages/', {
@@ -269,8 +234,6 @@ export function useLocalTilesets() {
               if (page?.id_string) slugMap[tile.ed.id] = page.id_string
             } catch { localFailed++ }
           }
-          // Cloud-slug tiles (e.g. public art added in the editor) — best-effort
-          // attach; a failure here isn't data loss (the art still exists in cloud).
           for (const slug of Object.values(ts.meta?.registry || {})) {
             if (localSlugs.has(slug)) continue
             try {
@@ -280,9 +243,6 @@ export function useLocalTilesets() {
             } catch { /* keep going — not a local loss */ }
           }
           if (!localFailed) {
-            // Carry the editor state over — groups reference stable tids, the
-            // registry's LOCAL slugs remap to the freshly created cloud slugs.
-            // Best-effort: tiles are already safe in the cloud either way.
             const remapped: Record<string, string> = {}
             if (ts.meta?.registry) {
               for (const [tid, slug] of Object.entries(ts.meta.registry)) {

@@ -2,7 +2,6 @@
 import type {ResponsePalette} from "~/types";
 import {debounce} from "~/helper/utils";
 
-// Tags actually used by public palettes (empty tags excluded), with counts.
 const {data: tagData} = await useAuthFetch<{ name: string; id_string: string; count: number }[]>(
     `/coloring/palettes/tags/`, {key: 'palette-tag-counts'})
 const browseTags = computed(() => tagData.value || [])
@@ -208,7 +207,7 @@ useCustomSeoMeta({
 </template>
 
 <style scoped>
-/* App-icon tile cards, same language as home .studio-paths. */
+
 .pal-create-row {
   display: flex;
   flex-wrap: wrap;
@@ -247,7 +246,6 @@ useCustomSeoMeta({
   font-size: var(--text-xs);
 }
 
-/* Sort + Colors dropdowns, pushed to the toolbar's right edge. */
 .pal-toolbar-end {
   display: flex;
   gap: var(--space-2);

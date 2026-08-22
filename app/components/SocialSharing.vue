@@ -7,7 +7,6 @@ type Meta = {
   desc?: string
   imgSrcOrigin?: string
   imgSrc?: string
-  // Square (1080×1080) render — used for Instagram / native share sheets.
   imgSquare?: string
 }
 
@@ -41,9 +40,6 @@ const redditUrl = computed(() => `https://www.reddit.com/submit?url=${encodeURIC
 const pinterestUrl = computed(() => `https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(withUtm('pinterest'))}&media=${encodedImg.value}&description=${encodedDesc.value}`)
 const telegramUrl = computed(() => `https://t.me/share/url?url=${encodeURIComponent(withUtm('telegram'))}&text=${encodedTitle.value}`)
 
-// Instagram has no web share endpoint. On mobile, hand the square image to the
-// OS share sheet (Instagram shows up as a target); on desktop, save the square
-// PNG so the user can attach it to a post manually.
 const igBusy = ref(false)
 const squareSrc = computed(() => props.meta?.imgSquare || props.meta?.imgSrcOrigin || props.meta?.imgSrc || '')
 
@@ -110,9 +106,7 @@ async function shareInstagram() {
 </template>
 
 <style scoped>
-/* Match the app's dropdown item rows (icon + label, flush, own separators
- * come from the global .dropdown-menu > * + * rule). a.drop-item keeps the
- * specificity above the global `.dropdown .drop-item` rule. */
+
 a.drop-item,
 button.drop-item {
   align-items: center;
@@ -125,9 +119,6 @@ button.drop-item {
   font: inherit;
 }
 
-/* The icon-only variant owns its square padding — callers don't restyle it.
- * NB: class is "is-icon-only", NOT "icon-only" — the icons.css generator turns
- * any `icon-<x>` token into a mask-image rule, which would mask the button away. */
 .share-trigger.is-icon-only {
   padding: 0.5rem;
 }

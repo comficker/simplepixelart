@@ -25,7 +25,6 @@ function startEditing() {
   nextTick(() => {
     if (textRef.value) {
       textRef.value.focus()
-      // Select all text
       const range = document.createRange()
       range.selectNodeContents(textRef.value)
       const selection = window.getSelection()

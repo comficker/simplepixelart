@@ -3,7 +3,6 @@ export default defineNuxtPlugin(() => {
 
   const config = useRuntimeConfig().public.firebase as Record<string, string>
 
-  // Defer Firebase init until browser is idle to unblock LCP.
   const init = async () => {
     try {
       const {initializeApp, getApps, getApp} = await import('firebase/app')

@@ -14,11 +14,7 @@ type WorkItem = (SharedPage | EditorData) & {
   height?: number
   status?: string
   updated?: string
-  // Server flag: false when the page has no renderable data yet (empty draft),
-  // so we skip the /files/art-original/ request that would 400.
   has_image?: boolean
-  // Tileset artifact vs standalone art. Server-provided for cloud rows; for
-  // guests it's derived when building the list (boards = false, tiles = true).
   is_tile?: boolean
 }
 
@@ -37,8 +33,6 @@ const router = useRouter()
 const TABS: Tab[] = ['artworks', 'tilesets', 'worlds', 'collections']
 const tab = ref<Tab>(TABS.includes(route.query.tab as Tab) ? route.query.tab as Tab : 'artworks')
 
-// Label + icon per tab; `auth` marks tabs that need a signed-in user. Tilesets
-// and worlds work for guests too (local drafts), so only collections is gated.
 const TAB_META: Record<Tab, { label: string; icon: string; auth?: boolean }> = {
   artworks: {label: 'Artworks', icon: 'icon-grid'},
   tilesets: {label: 'Tilesets', icon: 'icon-select'},
@@ -59,13 +53,11 @@ watch(tab, (v) => {
   router.replace({query: q})
 })
 
-// ===== Multi-select mode: bulk delete on whichever tab is active =====
 const selectMode = ref(false)
 const selectedIds = ref<Set<string | number>>(new Set())
 const confirmingBulk = ref(false)
 let bulkConfirmTimer: ReturnType<typeof setTimeout> | null = null
 const bulkDeleting = ref(false)
-// Anchor for shift-click range selection.
 let lastSelectedId: string | number | null = null
 
 const selectedCount = computed(() => selectedIds.value.size)
@@ -90,8 +82,6 @@ function toggleSelected(id: string | number) {
   confirmingBulk.value = false
 }
 
-// Shift-click selects the whole range between the last-clicked card and this
-// one, in the order the active tab currently renders them.
 const visibleIds = computed<(string | number)[]>(() => {
   if (tab.value === 'artworks') return filteredWorks.value.map(w => w.id)
   if (tab.value === 'collections') return pagedColls.value.map(c => c.id as number)
@@ -118,7 +108,6 @@ function onSelectClick(e: MouseEvent, id: string | number) {
   lastSelectedId = id
 }
 
-// Selection is per-tab — switching tabs exits the mode.
 watch(tab, () => {
   selectMode.value = false
   deselectAll()
@@ -126,7 +115,6 @@ watch(tab, () => {
 
 async function bulkDelete() {
   if (!selectedCount.value || bulkDeleting.value) return
-  // Same click-twice confirm as single deletes.
   if (!confirmingBulk.value) {
     confirmingBulk.value = true
     if (bulkConfirmTimer) clearTimeout(bulkConfirmTimer)
@@ -139,9 +127,6 @@ async function bulkDelete() {
   const ids = new Set(selectedIds.value)
   try {
     if (tab.value === 'artworks') {
-      // Operate on the selected ids directly — selection persists across page
-      // changes (server-paginated), so filtering the CURRENT page's rows would
-      // silently skip items selected on other pages.
       await Promise.all([...ids].map(async (id) => {
         if (auth.isLogged && typeof id === 'number') {
           await useNativeFetch(`/coloring/shared-pages/${id}/`, {method: 'DELETE'})
@@ -167,7 +152,6 @@ async function bulkDelete() {
       const rows = tilesetsList.value.filter(t => ids.has(t.id))
       if (auth.isLogged) {
         await Promise.all(rows.map(t => useNativeFetch(`/coloring/tilesets/${t.id_string}/`, {method: 'DELETE'})))
-        // Child worlds die with their tileset (backend cascades the soft delete).
         const slugs = new Set(rows.map(t => t.id_string))
         worldsList.value = worldsList.value.filter(w => !slugs.has(w.tileset_id_string))
       } else {
@@ -179,7 +163,6 @@ async function bulkDelete() {
     deselectAll()
   } catch {
     toast.error('Some deletes failed')
-    // Resync the active tab — optimistic state may be wrong now.
     if (tab.value === 'artworks') fetchWorks()
     else if (tab.value === 'collections') fetchCollections()
     else if (tab.value === 'worlds') fetchWorlds()
@@ -197,7 +180,6 @@ useCustomSeoMeta({
   robots: 'noindex, follow',
 })
 
-// ===== Sort (shared by all tabs; cloud artworks sort server-side) =====
 type SortKey = 'newest' | 'oldest' | 'name-az' | 'name-za'
 const sortBy = ref<SortKey>('newest')
 const SORT_META: Record<SortKey, { label: string; ordering: string }> = {
@@ -207,10 +189,6 @@ const SORT_META: Record<SortKey, { label: string; ordering: string }> = {
   'name-za': {label: 'Name Z–A', ordering: '-name'},
 }
 
-// Client-side comparator for everything not server-paginated (guest artworks,
-// collections, worlds, tilesets). Collections label with `title`, not `name`;
-// local drafts always have `updated` (the editor stamps it on every save), but
-// tolerate rows without one (sorted last on Newest).
 function sortItems<T extends { name?: string; title?: string; updated?: string }>(list: T[]): T[] {
   const name = (i: T) => (i.name || (i as any).title || '').toLowerCase()
   const time = (i: T) => Date.parse(i.updated || '') || 0
@@ -224,17 +202,13 @@ function sortItems<T extends { name?: string; title?: string; updated?: string }
   return sorted
 }
 
-// ===== Artworks =====
 const workspaces = ref<WorkItem[]>([])
 const loadingWorks = ref(false)
 const workFilter = ref<'all' | 'public' | 'private'>('all')
-// Artworks type filter: all, standalone art only, or tileset tiles only.
 const workTileFilter = ref<'all' | 'art' | 'tiles'>('all')
 const confirmingWorkId = ref<string | number | null>(null)
 let workConfirmTimer: ReturnType<typeof setTimeout> | null = null
 
-// 30 items per page. Cloud works paginate server-side (status filter included);
-// local (logged-out) works and collections slice client-side.
 const PAGE_SIZE = 30
 const workPage = ref(1)
 const workNumPages = ref(1)
@@ -260,10 +234,6 @@ async function fetchWorks() {
       workspaces.value = res.results as WorkItem[]
       workNumPages.value = res.num_pages || 1
     } else {
-      // Guest: /work merges pixel-editor boards (localStorage.workspaces) with
-      // tileset tiles (sp_local_tilesets) so imported/generated tiles show here
-      // too — parity with the cloud flow. Tiles win a duplicate id (a tile that
-      // was also opened as a board is classed as a tile).
       localTs.reload()
       const tiles = localTs.list.value.flatMap(ts =>
           ts.tiles.map(t => ({...t.ed, is_tile: true} as WorkItem)))
@@ -282,7 +252,6 @@ watch([workFilter, workTileFilter], () => {
   workPage.value = 1
   if (auth.logged?.id) fetchWorks()
 })
-// Sort applies to every tab: reset all pagers; cloud artworks re-sort server-side.
 watch(sortBy, () => {
   workPage.value = 1
   collPage.value = 1
@@ -298,8 +267,6 @@ function isCloud(item: WorkItem): boolean {
   return typeof item.id === 'number' && !!item.id_string
 }
 
-// Thumbnails 404 for art with no rendered image yet (empty drafts) — track
-// failures per id so we can show a clean placeholder instead of a broken img.
 const failedThumb = reactive<Record<string | number, boolean>>({})
 const failedCover = reactive<Record<string | number, boolean>>({})
 
@@ -311,13 +278,10 @@ function thumbUrl(item: WorkItem): string {
   return artUrl(item.id_string!)
 }
 
-// Up-to-4 tile slugs from a tileset/world registry → 2×2 collage preview.
 function registryPreview(reg: Record<string, string> | null | undefined): string[] {
   return Object.values(reg || {}).slice(0, 4)
 }
 
-// Wipe every local trace of an art so a deleted one can't be resurrected
-// (re-POSTed as a duplicate) from a stale workspace copy on the next load.
 async function purgeLocalArt(id: string | number) {
   const key = id.toString()
   try {
@@ -331,21 +295,17 @@ async function purgeLocalArt(id: string | number) {
       delete hs[key]
       localStorage.setItem('histories', JSON.stringify(hs))
     }
-    // Also drop it from the multi-board infinite-canvas snapshot (IndexedDB), or
-    // it reloads as a stale board in the editor (and could be resurrected on save).
     const full = await loadWorkspaceFull()
     if (full && Array.isArray(full.boards)) {
       const kept = full.boards.filter((b: any) => String(b?.data?.id) !== key)
       if (kept.length !== full.boards.length) {
         if (kept.length <= 1) {
-          // The snapshot only exists with >1 board — drop it and fall back to
-          // the single remaining art (if any) as the current workspace.
           await clearWorkspaceFull()
           if (kept[0]?.data?.id != null) localStorage.setItem('workspace_current', String(kept[0].data.id))
         } else {
           const removedIdx = full.boards.findIndex((b: any) => String(b?.data?.id) === key)
           let ai = full.activeIndex ?? 0
-          if (removedIdx <= ai) ai = Math.max(0, ai - 1) // keep pointing at the same board
+          if (removedIdx <= ai) ai = Math.max(0, ai - 1)
           await saveWorkspaceFull({boards: kept, activeIndex: Math.min(ai, kept.length - 1)})
         }
       }
@@ -356,9 +316,6 @@ async function purgeLocalArt(id: string | number) {
   } catch { /* storage unavailable / malformed — ignore */ }
 }
 
-// Guest artworks-tab rows can come from local tilesets (merged in fetchWorks as
-// is_tile). Deleting one must also remove the tile from sp_local_tilesets, or
-// it resurrects on the next reload.
 function purgeLocalTile(id: string | number) {
   const key = String(id)
   for (const ts of localTs.list.value) {
@@ -383,8 +340,6 @@ async function destroyWork(item: WorkItem) {
   if (idx !== -1) workspaces.value.splice(idx, 1)
 
   try {
-    // Cloud art → delete server-side; then always clear local traces (covers
-    // both cloud arts that were edited locally and local-only drafts).
     if (auth.isLogged && typeof item.id === 'number') {
       await useNativeFetch<APIResponse<SharedPage>>(`/coloring/shared-pages/${item.id}/`, {
         method: "DELETE",
@@ -393,7 +348,6 @@ async function destroyWork(item: WorkItem) {
     await purgeLocalArt(item.id)
     purgeLocalTile(item.id)
     toast.success('Deleted')
-    // Deleted the page's last item → step back a page (refetches for cloud).
     if (!workspaces.value.length && workPage.value > 1) workPage.value--
   } catch {
     toast.error('Delete failed')
@@ -411,8 +365,6 @@ function statusClass(w: {status?: string}): string {
   return 'badge-draft'
 }
 
-// Logged-out only: both the status filter and the type (art/tiles) filter run
-// client-side over the merged local list.
 const localFilteredWorks = computed(() => {
   let list = workspaces.value
   if (workTileFilter.value === 'art') list = list.filter(w => !w.is_tile)
@@ -425,7 +377,7 @@ const localFilteredWorks = computed(() => {
 })
 
 const filteredWorks = computed(() => {
-  if (auth.logged?.id) return workspaces.value // server already filtered + paged
+  if (auth.logged?.id) return workspaces.value
   const start = (workPage.value - 1) * PAGE_SIZE
   return localFilteredWorks.value.slice(start, start + PAGE_SIZE)
 })
@@ -434,14 +386,11 @@ const workNumPagesShown = computed(() =>
     auth.logged?.id ? workNumPages.value : Math.max(1, Math.ceil(localFilteredWorks.value.length / PAGE_SIZE)),
 )
 
-// ===== Collections =====
 const collections = ref<CollectionItem[]>([])
 const loadingColls = ref(false)
 const collFilter = ref<'all' | 'public' | 'private'>('all')
 const confirmingCollId = ref<number | null>(null)
 let collConfirmTimer: ReturnType<typeof setTimeout> | null = null
-// Creation uses the shared CollectionEditModal; editing (fields + items)
-// lives on the collection detail page (/collections/<slug>, manage mode).
 const showCreateColl = ref(false)
 
 async function fetchCollections() {
@@ -508,7 +457,6 @@ const filteredColls = computed(() => {
   return sortItems(list)
 })
 
-// Client-side paging (collections are fetched in one go).
 const collPage = ref(1)
 watch(collFilter, () => { collPage.value = 1 })
 const collNumPages = computed(() => Math.max(1, Math.ceil(filteredColls.value.length / PAGE_SIZE)))
@@ -517,14 +465,11 @@ const pagedColls = computed(() => {
   return filteredColls.value.slice(start, start + PAGE_SIZE)
 })
 
-
-// ===== Tilesets =====
 const tilesetsList = ref<any[]>([])
 const loadingTilesets = ref(false)
 const confirmingTilesetId = ref<number | string | null>(null)
 let tilesetConfirmTimer: ReturnType<typeof setTimeout> | null = null
 
-// Guest tilesets live in localStorage (created via the slicer / editor strip).
 const localTs = useLocalTilesets()
 
 async function fetchTilesets() {
@@ -538,7 +483,6 @@ async function fetchTilesets() {
         editUrl: `/tilesets/editor?id=${t.id_string}`,
       }))
     } else {
-      // Guest: the local tileset library (view + delete; no cloud editor home).
       tilesetsList.value = localTs.list.value.map(t => ({
         id: t.id, id_string: t.id, name: t.name, status: 'draft', local: true,
         tileCount: t.tiles.length,
@@ -571,7 +515,6 @@ async function destroyTileset(t: any) {
   }
   try {
     await useNativeFetch(`/coloring/tilesets/${t.id_string}/`, {method: 'DELETE'})
-    // Child worlds die with the tileset (backend cascades the soft delete).
     worldsList.value = worldsList.value.filter(w => w.tileset_id_string !== t.id_string)
     toast.success('Deleted')
   } catch {
@@ -580,13 +523,11 @@ async function destroyTileset(t: any) {
   }
 }
 
-// ===== Worlds =====
 const worldsList = ref<any[]>([])
 const loadingWorlds = ref(false)
 const confirmingWorldId = ref<number | string | null>(null)
 let worldConfirmTimer: ReturnType<typeof setTimeout> | null = null
 
-// Signed-out maps autosave to one browser-local "free-style" draft.
 const FREESTYLE_KEY = 'spa_tilemap_freestyle_v1'
 
 function readLocalWorld(): any[] {
@@ -649,7 +590,6 @@ async function destroyWorld(w: any) {
   }
 }
 
-// ===== Unified controlbar (new / filter / paging shared by all tabs) =====
 type StatusFilter = 'all' | 'public' | 'private'
 const worldFilter = ref<StatusFilter>('all')
 const tilesetFilter = ref<StatusFilter>('all')
@@ -670,7 +610,6 @@ const filteredTilesets = computed(() => sortItems(tilesetFilter.value === 'all'
 const tilesetNumPages = computed(() => Math.max(1, Math.ceil(filteredTilesets.value.length / PAGE_SIZE)))
 const pagedTilesets = computed(() => filteredTilesets.value.slice((tilesetPage.value - 1) * PAGE_SIZE, tilesetPage.value * PAGE_SIZE))
 
-// One proxy per concern keeps the controlbar template tab-agnostic.
 const curFilter = computed<StatusFilter>({
   get: () => tab.value === 'artworks' ? workFilter.value
       : tab.value === 'collections' ? collFilter.value
@@ -699,15 +638,12 @@ const curNumPages = computed(() => tab.value === 'artworks' ? workNumPagesShown.
     : tab.value === 'collections' ? collNumPages.value
         : tab.value === 'worlds' ? worldNumPages.value : tilesetNumPages.value)
 
-// Item count for the footer when the paginator hides (single page — the
-// filtered list then IS the full set, so the count is exact).
 const curCount = computed(() => tab.value === 'artworks' ? filteredWorks.value.length
     : tab.value === 'collections' ? filteredColls.value.length
         : tab.value === 'worlds' ? filteredWorlds.value.length : filteredTilesets.value.length)
 
 const privateChipLabel = computed(() => tab.value === 'artworks' ? 'Draft' : 'Private')
 
-// Status shown as an icon chip on cards (label lives in the title/panel).
 function statusIcon(status?: string): string {
   if (status === 'public') return 'icon-earth'
   if (status === 'pending') return 'icon-clock'
@@ -722,19 +658,19 @@ function statusTitle(status?: string): string {
 
 onMounted(() => {
   fetchWorks()
-  fetchTilesets()          // guest → local library, signed-in → cloud
-  fetchWorlds()            // guest → local free-style draft, signed-in → cloud
+  fetchTilesets()
+  fetchWorlds()
   if (auth.isLogged) fetchCollections()
 })
 </script>
 
 <template>
   <div class="page work-page">
-    <!-- Card wrapper: control bar in the header, tab content in the body. -->
+
     <section class="readme work-panel">
       <div class="readme-head work-head">
         <div class="work-controlbar">
-      <!-- Workspace scope: which kind of item this page lists. -->
+
       <ui-dropdown-menu class="work-sel work-sel-tab">
         <button class="btn work-sel-btn">
           <span class="icon" :class="activeTabMeta.icon"/>
@@ -760,7 +696,7 @@ onMounted(() => {
           </div>
         </template>
       </ui-dropdown-menu>
-      <!-- Status filter (All / Public / Draft|Private) -->
+
       <ui-dropdown-menu class="work-sel">
         <button class="btn work-sel-btn">
           <span>{{ curFilter === 'all' ? 'All' : curFilter === 'public' ? 'Public' : privateChipLabel }}</span>
@@ -782,7 +718,7 @@ onMounted(() => {
           </div>
         </template>
       </ui-dropdown-menu>
-      <!-- Type filter (All / Art / Tiles) — artworks only -->
+
       <ui-dropdown-menu v-if="tab === 'artworks'" class="work-sel">
         <button class="btn work-sel-btn">
           <span>{{ workTileFilter === 'all' ? 'All types' : workTileFilter === 'art' ? 'Art' : 'Tiles' }}</span>
@@ -804,8 +740,7 @@ onMounted(() => {
           </div>
         </template>
       </ui-dropdown-menu>
-      <!-- Sort — its own concern, kept apart from the filter group: pushed to
-           the right edge, next to the primary action. -->
+
       <ui-dropdown-menu class="work-sel work-sel-sort">
         <button class="btn work-sel-btn" title="Sort by">
           <span>{{ SORT_META[sortBy].label }}</span>
@@ -847,7 +782,7 @@ onMounted(() => {
       </div>
 
       <div class="work-body">
-    <!-- ====== ARTWORKS TAB ====== -->
+
     <template v-if="tab === 'artworks'">
       <div v-if="loadingWorks" class="work-grid" aria-busy="true">
         <div v-for="i in 10" :key="i" class="skeleton skeleton-square"/>
@@ -924,8 +859,7 @@ onMounted(() => {
                   <nuxt-link v-if="item.id_string" class="file-menu-item" :to="`/art/${item.id_string}`">
                     <span class="icon icon-link"/><span>Open page</span>
                   </nuxt-link>
-                  <!-- data-keep-open: the first click only arms the confirm, so the menu
-                       must survive it (see ui/DropdownMenu.vue). -->
+
                   <button class="file-menu-item" data-keep-open @click="destroyWork(item)">
                     <span class="icon" :class="confirmingWorkId === item.id ? 'icon-check' : 'icon-trash'"/>
                     <span>{{ confirmingWorkId === item.id ? 'Confirm delete' : 'Delete' }}</span>
@@ -941,7 +875,6 @@ onMounted(() => {
       </div>
     </template>
 
-    <!-- ====== COLLECTIONS TAB ====== -->
     <template v-else-if="tab === 'collections'">
       <div v-if="loadingColls" class="work-grid" aria-busy="true">
         <div v-for="i in 10" :key="i" class="skeleton skeleton-square"/>
@@ -1028,7 +961,6 @@ onMounted(() => {
       </div>
     </template>
 
-    <!-- ====== WORLDS TAB ====== -->
     <template v-else-if="tab === 'worlds'">
       <div v-if="loadingWorlds" class="work-grid" aria-busy="true">
         <div v-for="i in 8" :key="i" class="skeleton skeleton-square"/>
@@ -1100,7 +1032,6 @@ onMounted(() => {
       </TransitionGroup>
     </template>
 
-    <!-- ====== TILESETS TAB ====== -->
     <template v-else>
       <div v-if="loadingTilesets" class="work-grid" aria-busy="true">
         <div v-for="i in 8" :key="i" class="skeleton skeleton-square"/>
@@ -1172,7 +1103,7 @@ onMounted(() => {
       </TransitionGroup>
     </template>
       </div>
-      <!-- Footer: select-mode controls on the left, paging pinned far right. -->
+
       <div class="readme-foot work-foot">
         <div class="work-foot-sel">
           <button
@@ -1207,31 +1138,25 @@ onMounted(() => {
       </div>
     </section>
 
-    <!-- Collection create modal (editing lives on the collection page) -->
     <CollectionEditModal v-if="showCreateColl" @close="showCreateColl = false" @created="onCollCreated"/>
   </div>
 </template>
 
 <style scoped>
-/* New / filter / paging row in the card header; paging pinned right. */
+
 .work-controlbar {
   display: flex;
   align-items: center;
   gap: var(--space-1);
 }
 
-/* Tab + status selectors: a .btn trigger with a muted caret. Fixed min-width +
-   space-between so the bar doesn't jump when the selected label changes length
-   (e.g. "All" → "All types") — the caret stays pinned to the right edge. */
 .work-sel-btn {
   gap: var(--space-2);
   justify-content: space-between;
   min-width: 120px;
-  white-space: nowrap;   /* labels never wrap — the bar stays a single row */
+  white-space: nowrap;   
 }
 
-/* The scope tab cycles longer labels ("Worlds" … "Collections") + an icon, so it
-   needs a real fixed width — min-width alone still lets it grow past 120px. */
 .work-sel-tab .work-sel-btn {
   width: 160px;
 }
@@ -1241,20 +1166,15 @@ onMounted(() => {
   color: var(--muted);
 }
 
-/* Sort is not a filter — separate it from the filter group by pushing it to
-   the right edge, beside the primary New action. */
 .work-sel-sort {
   margin-left: auto;
 }
 
-/* README-style card: control bar in the header, tab content in the body. The
-   panel fills the viewport (see the :has(.work-page) rules below) as a fixed
-   three-row layout — head pinned top, body scrolls, foot pinned bottom. */
 .work-panel {
-  margin-top: 0;       /* flush to the wrapper — no gap above the control bar */
-  overflow: visible;   /* card ⋯ menus render inline — must not be clipped */
-  flex: 1 1 auto;      /* grow to fill the page height */
-  min-height: 480px;   /* …but never collapse below a usable height */
+  margin-top: 0;       
+  overflow: visible;   
+  flex: 1 1 auto;      
+  min-height: 480px;   
   display: flex;
   flex-direction: column;
 }
@@ -1262,17 +1182,16 @@ onMounted(() => {
 .work-head {
   display: block;
   padding: var(--space-2) var(--space-4);
-  flex: 0 0 auto;      /* fixed header row */
+  flex: 0 0 auto;      
 }
 
 .work-body {
   padding: var(--space-4);
-  flex: 1 1 auto;      /* takes the leftover height between head and foot */
-  min-height: 0;       /* allow it to shrink so overflow can scroll */
+  flex: 1 1 auto;      
+  min-height: 0;       
   overflow-y: auto;
 }
 
-/* Footer strip: select-mode controls on the left, paging pinned far right. */
 .work-foot {
   display: flex;
   align-items: center;
@@ -1280,7 +1199,7 @@ onMounted(() => {
   gap: var(--space-3);
   padding: var(--space-2) var(--space-4);
   border-top: 1px solid var(--border);
-  flex: 0 0 auto;      /* fixed footer row */
+  flex: 0 0 auto;      
 }
 
 .work-foot-sel {
@@ -1289,13 +1208,10 @@ onMounted(() => {
   gap: var(--space-3);
 }
 
-/* Base .paginator has `margin: 1rem auto 0` — zero it out; space-between on the
- * footer already pins the pager (and its next button) to the far right edge. */
 .work-foot .work-paging {
   margin: 0;
 }
 
-/* Single-page fallback where the pager would sit: quiet item count. */
 .work-count {
   font-size: var(--text-xs);
   line-height: var(--text-xs-lh);
@@ -1311,7 +1227,7 @@ onMounted(() => {
   gap: var(--space-3);
   padding-top: 3rem;
   padding-bottom: 3rem;
-  min-height: 100%;   /* centre the message in the now full-height body */
+  min-height: 100%;   
 }
 
 .empty-icon {
@@ -1332,14 +1248,10 @@ onMounted(() => {
   margin-top: 0.75rem;
 }
 
-/* A card with its ... menu open must rise above later siblings' chips/folds —
- * cards can become stacking contexts (masks/transitions), which caps the
- * menu's z-index inside the card. */
 .work-card:has(.dropdown.active) {
   z-index: 5;
 }
 
-/* minmax(0, 1fr): item min-content (long names/info) must never skew tracks. */
 .work-grid {
   display: grid;
   gap: var(--space-3);
@@ -1352,14 +1264,8 @@ onMounted(() => {
   }
 }
 
-/* ===== Mobile (<768px): keep the header controls inside the viewport ===== */
 @media (max-width: 767px) {
-  /* Keep every control on one line: no wrap, triggers drop their fixed width and
-     shrink to content with tighter padding, and the New button collapses to its
-     icon to reclaim room. */
-  /* Five controls on artworks (tab, status, sort, type, New) no longer fit one
-     line — wrap to a second row instead of overflowing. overflow-x: auto is NOT
-     an option: it would clip the absolutely-positioned dropdown menus. */
+
   .work-controlbar {
     flex-wrap: wrap;
   }
@@ -1370,7 +1276,7 @@ onMounted(() => {
     padding-right: var(--space-2);
   }
   .work-sel-tab .work-sel-btn {
-    width: auto;   /* drop the desktop fixed width so the row fits one line */
+    width: auto;   
   }
   .work-controlbar .btn.primary {
     padding-left: var(--space-2);
@@ -1383,8 +1289,7 @@ onMounted(() => {
 
 .work-card {
   position: relative;
-  /* Surface face like home cards, with the fold corner cut baked into the
-   * background gradient itself — no mask, so children (dropdown) never clip. */
+
   --fold-size: 14px;
   transition: --fold-size 220ms cubic-bezier(.22,.61,.36,1);
   background: linear-gradient(225deg, transparent calc(var(--fold-size) * 0.7071 - 0.25px), var(--surface) calc(var(--fold-size) * 0.7071 + 0.25px));
@@ -1392,14 +1297,10 @@ onMounted(() => {
   box-shadow: var(--shadow);
 }
 
-/* ===== Multi-select mode ===== */
-/* While selecting, the per-card ⋯ menus are noise — hide them (visibility
-   keeps the meta row layout stable). */
 .work-grid.selecting .work-card :deep(.dropdown) {
   visibility: hidden;
 }
 
-/* Full-card hit target: covers links + menus so a click can only select. */
 .work-select-hit {
   position: absolute;
   inset: 0;
@@ -1438,7 +1339,6 @@ onMounted(() => {
   height: 13px;
 }
 
-/* Flat icon-only footer controls — no button chrome, state = icon + color. */
 .work-ic-btn {
   display: inline-flex;
   align-items: center;
@@ -1459,7 +1359,6 @@ onMounted(() => {
   color: var(--primary);
 }
 
-/* Tiny count riding on the trash icon — the only "label" the button needs. */
 .work-bulk-n {
   font-size: var(--text-2xs);
   font-weight: 700;
@@ -1472,16 +1371,11 @@ onMounted(() => {
   color: var(--danger);
 }
 
-/* Clip contents on the inner box so corner cuts can sit over the border. */
 .work-card .square {
   border-radius: calc(var(--radius-sm) - 1px);
   overflow: hidden;
 }
 
-/* Folded "file" corner (same as art cards); collections get a folder shape instead. */
-/* Card chrome (border + fold cut) lives on ::before: a mask on the card itself
- * would clip overflowing children (mask-clip hides everything outside the
- * border box), killing the ... dropdown menu. The pseudo has no children. */
 .work-card:not(.work-card-folder)::before {
   content: "";
   position: absolute;
@@ -1507,8 +1401,7 @@ onMounted(() => {
   right: 0;
   width: var(--fold-size);
   height: var(--fold-size);
-  /* Same as home cards: transparent until the cut line (home gets this from the
-   * card mask, which work cards can't use — it would clip the dropdown menus). */
+
   background: linear-gradient(
     225deg,
     transparent calc(var(--fold-size) * 0.7071 - 0.25px),
@@ -1522,9 +1415,6 @@ onMounted(() => {
   z-index: 1;
 }
 
-/* Folder card (collections): macOS-style folder icon with the name below.
- * The folder silhouette masks ONLY the canvas — the meta row (name + menu)
- * lives outside it, so the dropdown isn't clipped by the mask. */
 .work-card-folder {
   border: 0;
   background: transparent;
@@ -1535,8 +1425,7 @@ onMounted(() => {
   display: block;
   background: color-mix(in oklab, var(--primary) 55%, var(--surface));
   border-radius: var(--radius-sm);
-  /* Layers: tab strip · slanted tab edge · body (right edge inset 5px) ·
-   * right column below the corner · radial disc rounding the body's top-right. */
+
   -webkit-mask:
     linear-gradient(#000, #000) 0 0 / 40% 17px no-repeat,
     linear-gradient(to top right, #000 calc(50% - 0.5px), transparent calc(50% + 0.5px)) calc(40% + 5.1px) 0 / 14px 17px no-repeat,
@@ -1551,7 +1440,6 @@ onMounted(() => {
     radial-gradient(circle 5px at calc(100% - 5px) 21px, #000 4.5px, transparent 5px) 0 0 / 100% 100% no-repeat;
 }
 
-/* Paper sheet peeking out between the folder back and front panel. */
 .work-card-folder .work-canvas .inside {
   inset: 24% 12% 34%;
   padding: 4%;
@@ -1564,7 +1452,6 @@ onMounted(() => {
   background: transparent;
 }
 
-/* Tile collage rides the paper sheet — it already has folder padding. */
 .work-card-folder .tile-collage {
   padding: 0;
   gap: 2px;
@@ -1574,7 +1461,6 @@ onMounted(() => {
   object-fit: contain;
 }
 
-/* Front panel of the folder. */
 .work-card-folder .work-canvas::after {
   content: "";
   position: absolute;
@@ -1590,7 +1476,6 @@ onMounted(() => {
   z-index: 1;
 }
 
-/* Status badge sits on the front panel (like a folder label), not over the tab. */
 .work-card-folder .work-status {
   top: auto;
   bottom: calc(30px + 12px);
@@ -1598,13 +1483,11 @@ onMounted(() => {
   z-index: 2;
 }
 
-/* Cover art fills the paper edge-to-edge like a photo print. */
 .work-card-folder .work-canvas .inside img {
   object-fit: cover;
   border-radius: 2px;
 }
 
-/* Name + actions row under the folder icon. */
 .work-card-folder .work-meta {
   display: flex;
   align-items: center;
@@ -1682,7 +1565,6 @@ onMounted(() => {
   font-size: 32px;
 }
 
-/* Footer strip below the thumbnail: name + actions menu (all tabs). */
 .work-meta {
   display: flex;
   align-items: center;
@@ -1729,7 +1611,6 @@ onMounted(() => {
   pointer-events: none;
 }
 
-/* Status as an icon chip (labels live in the ... panel and title attr). */
 .work-status.badge-ic {
   display: inline-flex;
   align-items: center;
@@ -1738,7 +1619,7 @@ onMounted(() => {
   height: 22px;
   padding: 0;
   border-radius: var(--radius-pill);
-  pointer-events: auto; /* let the title tooltip surface the status label */
+  pointer-events: auto; 
 }
 
 .work-status.badge-ic .icon {
@@ -1746,7 +1627,6 @@ onMounted(() => {
   height: 13px;
 }
 
-/* Artworks: the ... menu floats top-left next to the status chip (no meta row). */
 .work-more-tl {
   position: absolute;
   top: 0.4rem;
@@ -1763,9 +1643,6 @@ onMounted(() => {
   color: var(--muted);
 }
 
-/* 2×2 collage of the first registry tiles, framing the set like art cards. */
-/* minmax(0, 1fr) tracks: one oversized image can't stretch its row/column
- * and skew the collage. */
 .tile-collage {
   display: grid;
   width: 100%;
@@ -1789,16 +1666,9 @@ onMounted(() => {
 }
 </style>
 
-<!-- Global (unscoped): let the panel's height propagate from the viewport down
-     the layout chain, scoped to this route via :has(.work-page) so no other
-     page is affected. The browser computes "viewport − header − footer − chrome"
-     for us — no magic numbers. -->
 <style>
 .main-wrapper:has(.work-page) {
-  height: 100dvh;   /* cap the chain to the viewport so the body scrolls inside.
-                       On a viewport too short for the panel's min-height, the
-                       flex items overflow (visible) and the page scrolls — the
-                       min-height floor still wins. */
+  height: 100dvh;   
 }
 .main-wrapper:has(.work-page) > .main {
   flex: 1 1 auto;

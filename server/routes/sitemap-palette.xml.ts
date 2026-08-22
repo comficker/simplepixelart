@@ -11,7 +11,6 @@ export default defineEventHandler(async (event) => {
 
     const tags = await ofetch<{ id_string: string }[]>(`${api}/coloring/palettes/tags/`).catch(() => [])
 
-    // Tag landing pages first (high-value hubs).
     for (const t of (tags || [])) {
         if (!t.id_string) continue
         out += '<url>' +
@@ -20,8 +19,6 @@ export default defineEventHandler(async (event) => {
             '<changefreq>weekly</changefreq><priority>0.6</priority></url>'
     }
 
-    // All palettes — page through until exhausted (bounded for safety; one
-    // sitemap file stays well under the 50k-URL limit).
     const PER = 500
     const MAX_PAGES = 25
     for (let page = 1; page <= MAX_PAGES; page++) {

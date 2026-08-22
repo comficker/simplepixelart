@@ -1,7 +1,6 @@
 import {ofetch} from "ofetch";
 import {APIResponse, SharedPage} from "~/types";
 
-
 const domain = "simplepixelart.com"
 
 export default defineEventHandler(async (event) => {

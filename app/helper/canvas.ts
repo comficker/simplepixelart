@@ -2,11 +2,6 @@
 import type {EditorData, Layer} from "~/types";
 import {hexToRgb} from "~/helper/color";
 
-/**
- * Composite a frame's layers into a 1px-per-pixel canvas (transparent where
- * empty). Reused by onion skin, playback, and the public animated preview.
- * Pass a reusable canvas to avoid per-call allocation. Client-only (ImageData).
- */
 export function compositeFrame(
     canvas: HTMLCanvasElement,
     layers: Layer[],
@@ -37,10 +32,6 @@ export function compositeFrame(
     ctx.putImageData(img, 0, 0);
     return canvas;
 }
-
-
-// Type definitions
-
 
 export function layers2MapNumbers(editorData: EditorData): { [key: string]: number } {
     const {width, height, layers} = editorData;
@@ -79,14 +70,6 @@ export function drawThumbnail(canvas: HTMLCanvasElement, editorData: EditorData,
     }
 }
 
-// ── SVG export ─────────────────────────────────────────────────────────────
-// Trace a set of filled cells ("x_y" keys) into closed rectilinear outlines
-// and return an SVG path `d`. Every cell side facing an empty neighbor
-// becomes a directed unit edge (interior kept on a consistent side); chaining
-// the edges yields the region outlines, with hole loops falling out naturally
-// (rendered via fill-rule="evenodd"). At a pinched corner — two cells of the
-// set touching only diagonally — the sharpest right turn is taken so each
-// loop hugs its own region. Collinear steps merge into single h/v commands.
 function traceCellLoops(cells: Set<string>): string {
     const edges = new Map<string, [number, number][]>();
     const addEdge = (x1: number, y1: number, x2: number, y2: number) => {
@@ -111,8 +94,8 @@ function traceCellLoops(cells: Set<string>): string {
             const sx = +startKey.slice(0, sep);
             const sy = +startKey.slice(sep + 1);
             let [cx, cy] = starts.pop()!;
-            let runDx = cx - sx, runDy = cy - sy;   // direction of the pending run
-            let run = 1;                            // pending run length (unit steps)
+            let runDx = cx - sx, runDy = cy - sy;
+            let run = 1;
             d += `M${sx} ${sy}`;
             while (cx !== sx || cy !== sy) {
                 const outs = edges.get(`${cx}_${cy}`)!;
@@ -120,7 +103,6 @@ function traceCellLoops(cells: Set<string>): string {
                 if (outs.length === 1) {
                     next = outs.pop()!;
                 } else {
-                    // Pinched corner: prefer the right turn relative to travel.
                     const rx = cx - runDy, ry = cy + runDx;
                     const i = outs.findIndex(([ex, ey]) => ex === rx && ey === ry);
                     next = i >= 0 ? outs.splice(i, 1)[0]! : outs.pop()!;
@@ -137,7 +119,7 @@ function traceCellLoops(cells: Set<string>): string {
                 cx = next[0];
                 cy = next[1];
             }
-            d += 'z';   // z draws the final straight run back to the M point
+            d += 'z';
         }
     }
     return d;
@@ -146,10 +128,6 @@ function traceCellLoops(cells: Set<string>): string {
 const escapeXml = (s: string) =>
     s.replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]!));
 
-// Multi-layer art exports one <g> per layer (bottom→top, painter's order —
-// pixels hidden under upper layers stay intact in their own group), one path
-// per color inside. Single-layer art has no structure worth keeping, so each
-// 4-connected same-color region becomes its own editable path instead.
 export function editorDataToSVGMarkup(editorData: EditorData): string {
     const w = editorData.width;
     const h = editorData.height;
@@ -159,8 +137,6 @@ export function editorDataToSVGMarkup(editorData: EditorData): string {
         const usedIds = new Set<string>();
         editorData.layers.forEach((layer, li) => {
             const byColor = new Map<number, Set<string>>();
-            // Legacy arts from the API can lack layer offsets — NaN coords
-            // would silently clip every pixel out of the export.
             const lx = layer.x || 0;
             const ly = layer.y || 0;
             for (const [key, ci] of Object.entries(layer.pixels)) {
@@ -175,8 +151,6 @@ export function editorDataToSVGMarkup(editorData: EditorData): string {
             }
             if (!byColor.size) return;
             const name = layer.name || `Layer ${li + 1}`;
-            // Vector editors read <g id> as the layer name (spaces aren't valid
-            // in XML ids — data-name carries the original, as Illustrator does).
             let id = name.replace(/[^A-Za-z0-9_-]+/g, '_') || `layer_${li + 1}`;
             while (usedIds.has(id)) id += '_';
             usedIds.add(id);
@@ -227,14 +201,6 @@ export function editorDataToJSON(editorData: EditorData) {
     return URL.createObjectURL(blob);
 }
 
-
-/**
- * Builds the iso diamond lattice into the given `Path2D`. Path coordinates
- * are in canvas pixels relative to (0, 0) — callers translate to artOffset
- * before stroking. Caller is responsible for any clipping.
- *
- * Guards: returns without writing if cellW<1, cellH<1, or art smaller than cell.
- */
 export function buildIsoPath(
     path: Path2D,
     zoom: number,
@@ -249,17 +215,12 @@ export function buildIsoPath(
     const artPxW = artW * zoom;
     const artPxH = artH * zoom;
 
-    // The diamond lattice IS two families of parallel lines (slope ±cellH/cellW),
-    // so emit long lines instead of per-diamond quads — O(rows+cols) segments,
-    // not O(rows×cols), and every shared edge drawn once. The caller clips to
-    // the board rect, so lines just span the full width.
-    const s = cellH / cellW;                 // |slope| of both families
-    const step = cellH * zoom;               // vertical spacing between parallels
-    const halfH = cellH * zoom / 2;          // lattice phase (diamond vertices)
-    const y0 = (x: number, c: number) => s * x + c;   // family "+": y = s·x + c
-    const y1 = (x: number, c: number) => -s * x + c;  // family "−": y = −s·x + c
+    const s = cellH / cellW;
+    const step = cellH * zoom;
+    const halfH = cellH * zoom / 2;
+    const y0 = (x: number, c: number) => s * x + c;
+    const y1 = (x: number, c: number) => -s * x + c;
 
-    // Family +s: c = y − s·x over the art rect ⇒ c ∈ [−s·W, H], phased at −halfH.
     {
         const cMin = -s * artPxW - halfH;
         const cMax = artPxH + halfH;
@@ -269,7 +230,6 @@ export function buildIsoPath(
             path.lineTo(Math.round(artPxW) + 0.5, Math.round(y0(artPxW, c)) + 0.5);
         }
     }
-    // Family −s: c = y + s·x ⇒ c ∈ [0, H + s·W], phased at +halfH.
     {
         const cMax = artPxH + s * artPxW + halfH;
         const first = Math.ceil((0 - halfH) / step) * step + halfH;

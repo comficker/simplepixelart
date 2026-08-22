@@ -1,15 +1,5 @@
 import type {ResponseSharedPage} from '~/types'
 
-// The shared-pages listing fetch behind every <item-list> grid — ONE home for
-// its params + payload key so a page can PREWARM the same fetch in parallel
-// with its own SSR lookups (same key → Nuxt dedupes into one request) instead
-// of waterfalling behind them. GSC flagged high LCP on /arts/size-WxH; the
-// grid fetch used to start only after the page's own three lookups finished.
-//
-// The inputs MUST mirror the <item-list> props on the page that prewarms
-// (limit/status/ordering/hideIp — see pages/arts/[id_string].vue): the key
-// includes ordering+limit, and a mismatched prewarm would either be wasted or
-// seed the wrong payload under the component's key.
 export function useArtListFetch(opts: {
     limit?: number
     status?: string
@@ -49,14 +39,9 @@ export function useArtListFetch(opts: {
     )
 
     const params = computed(() => ({
-        // /arts shows only approved (public) art. The "new" feed also surfaces
-        // pending (awaiting-review) submissions; the backend caps non-owners to
-        // public+pending so drafts never leak.
         status: isNewView.value ? 'public,pending' : status,
         slug: isNewView.value ? '/arts' : route.path,
         page: route.query.page ? Number.parseInt(route.query.page.toString()) : 1,
-        // When IP filtering is on, over-fetch a buffer so client-side drops still
-        // leave ~`limit` items to show (otherwise e.g. 10 fetched → 7 rendered).
         page_size: hideIp ? limit + 6 : limit,
         search: search.value,
         ordering: ordering || (isNewView.value ? '-updated' : undefined),

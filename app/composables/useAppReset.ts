@@ -1,7 +1,3 @@
-// Wipe all local app state — the "get me unstuck" escape hatch, shared by the
-// command palette and the settings screen. Clears cache / storage / IndexedDB,
-// then reloads. Confirms first: this also drops unsynced guest art + tilesets
-// (the signed-in session lives in a cookie, so it stays).
 export async function resetAppData() {
   if (typeof window === 'undefined') return
   const ok = window.confirm(

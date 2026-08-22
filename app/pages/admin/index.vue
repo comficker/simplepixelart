@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import {toast} from 'vue-sonner'
 
-// Staff dashboard — system stats (users / arts / tokens, daily + monthly)
-// and the economy & missions manager. The API hard-gates on is_staff;
-// the client gate below is just UX.
 const auth = useAuthStore()
 
 useCustomSeoMeta({
@@ -44,7 +41,6 @@ async function load() {
     config.value = e.config
     checks.value = e.checks
     if (!Array.isArray(config.value.missions)) config.value.missions = []
-    // Backend treats a missing `enabled` as true — make the checkbox agree.
     config.value.missions.forEach((m: Mission) => { m.enabled = m.enabled !== false })
     if (!config.value.referral) config.value.referral = {signup_reward: 1, purchase_rate: 0.1}
     if (!config.value.ai) config.value.ai = {enabled: true}
@@ -59,8 +55,6 @@ async function load() {
 
 const missions = computed<Mission[]>(() => config.value?.missions || [])
 
-// Mirror of the backend's action_cost: explicit tokens override wins, else
-// derive from usd × margin / base — so admins see the live charged price.
 function chargedCost(spec: { usd?: number; tokens?: number }): number {
   if (spec.tokens != null && spec.tokens !== ('' as any)) return Math.max(1, Math.floor(spec.tokens))
   const base = Number(config.value?.base_usd_per_token) || 0.0005
@@ -97,7 +91,6 @@ async function saveConfig() {
   }
 }
 
-// Mini bar charts — max-scaled per series.
 function bars(rows: DayRow[], key: keyof DayRow) {
   const vals = rows.map(r => Number(r[key]) || 0)
   const max = Math.max(1, ...vals)
@@ -139,7 +132,7 @@ watch(isStaff, (v) => { if (v) load() })
         </div>
 
         <template v-else-if="stats">
-          <!-- ── Overview ── -->
+
           <div class="adm-cards">
             <div class="adm-card">
               <div class="adm-card-n">{{ stats.totals.users }}</div>
@@ -163,7 +156,6 @@ watch(isStaff, (v) => { if (v) load() })
             </div>
           </div>
 
-          <!-- ── Daily (30d) ── -->
           <h2 class="adm-section-title">Last 30 days</h2>
           <div class="adm-charts">
             <div v-for="c in CHARTS" :key="c.key" class="adm-chart">
@@ -180,7 +172,6 @@ watch(isStaff, (v) => { if (v) load() })
             </div>
           </div>
 
-          <!-- ── Monthly ── -->
           <h2 class="adm-section-title">Monthly</h2>
           <div class="adm-table-wrap">
             <table class="adm-table">
@@ -199,7 +190,6 @@ watch(isStaff, (v) => { if (v) load() })
             </table>
           </div>
 
-          <!-- ── Economy knobs ── -->
           <template v-if="config">
             <h2 class="adm-section-title">Economy</h2>
             <div class="adm-knobs">
@@ -223,8 +213,7 @@ watch(isStaff, (v) => { if (v) load() })
                 <span>Margin ×</span>
                 <input v-model.number="config.margin" type="number" min="1" step="0.5" class="adm-input">
               </label>
-              <!-- API key + model id live in the shared vault (ninosaur
-                   dashboard) — this is just the economy-side kill switch. -->
+
               <label class="adm-knob adm-knob-check" title="Kill switch — hides every AI button even with an API key set">
                 <span>AI enabled</span>
                 <input v-model="config.ai.enabled" type="checkbox">
@@ -235,7 +224,6 @@ watch(isStaff, (v) => { if (v) load() })
               </label>
             </div>
 
-            <!-- ── Action pricing ── -->
             <h2 class="adm-section-title">Action pricing</h2>
             <div class="adm-table-wrap">
               <table class="adm-table">
@@ -247,7 +235,7 @@ watch(isStaff, (v) => { if (v) load() })
                   <td>{{ code }}</td>
                   <td><input v-model.number="spec.usd" type="number" min="0" step="0.001" class="adm-input adm-input-n"></td>
                   <td>
-                    <!-- Blank = derive from usd × margin / base. -->
+
                     <input
                         :value="spec.tokens"
                         type="number" min="1" placeholder="auto"
@@ -261,7 +249,6 @@ watch(isStaff, (v) => { if (v) load() })
               </table>
             </div>
 
-            <!-- ── Missions manager ── -->
             <h2 class="adm-section-title">Missions</h2>
             <div class="adm-table-wrap">
               <table class="adm-table adm-missions">
@@ -357,7 +344,6 @@ watch(isStaff, (v) => { if (v) load() })
   padding-top: var(--space-4);
 }
 
-/* Overview cards */
 .adm-cards {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -390,7 +376,6 @@ watch(isStaff, (v) => { if (v) load() })
   margin-top: 2px;
 }
 
-/* Mini bar charts */
 .adm-charts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -425,7 +410,6 @@ watch(isStaff, (v) => { if (v) load() })
   border-radius: 1px;
 }
 
-/* Tables */
 .adm-table-wrap { overflow-x: auto; }
 
 .adm-table {
@@ -449,7 +433,6 @@ watch(isStaff, (v) => { if (v) load() })
   border-bottom: 1px solid var(--border);
 }
 
-/* Economy knobs */
 .adm-knobs {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));

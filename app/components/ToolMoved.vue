@@ -1,7 +1,4 @@
 <script setup lang="ts">
-// Notice shown at a tool's old URL after it moved. Renders a short "moved"
-// card (so bookmarks aren't a dead end) and forwards to the new path,
-// carrying any query string (e.g. ?world=…) across.
 const props = defineProps<{ to: string; name: string }>()
 const route = useRoute()
 

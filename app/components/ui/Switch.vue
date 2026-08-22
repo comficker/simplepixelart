@@ -40,7 +40,7 @@ function toggle() {
     </button>
     <span class="label" v-if="$slots.default" @click.prevent="toggle"><slot /></span>
   </label>
-  
+
 </template>
 
 <style scoped>
@@ -92,7 +92,6 @@ function toggle() {
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Sizes */
 .size-sm .track { width: 28px; height: 16px; }
 .size-sm .thumb { width: 12px; height: 12px; }
 .size-md .track { width: 36px; height: 20px; }
@@ -100,7 +99,6 @@ function toggle() {
 .size-lg .track { width: 48px; height: 28px; }
 .size-lg .thumb { width: 24px; height: 24px; }
 
-/* ON state */
 .ui-switch.on .track { background: var(--primary, #ffb800); }
 .ui-switch.on .thumb { background: var(--primary-foreground, #1a1033); }
 .size-sm .ui-switch.on .thumb { transform: translate(12px, -50%); }

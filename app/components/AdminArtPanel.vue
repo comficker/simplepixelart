@@ -18,7 +18,6 @@ const busy = ref(false)
 const ipFlagged = computed(() => !!(props.data.meta && props.data.meta.ip_flag))
 const ipFlagSource = computed(() => (props.data.meta && props.data.meta.ip_flag_source) || null)
 
-// Form is a local working copy; nothing is committed until "Save changes".
 const form = reactive({
   name: '',
   desc: '',
@@ -96,7 +95,7 @@ async function destroy() {
 </script>
 
 <template>
-  <!-- The ONLY thing shown inline: a single admin trigger. -->
+
   <button type="button" class="admin-trigger" @click="openPanel">
     <span class="admin-trigger-tag">ADMIN</span>
     <span class="icon icon-adjust"/>
@@ -117,7 +116,7 @@ async function destroy() {
         </header>
 
         <div class="admin-modal-body">
-          <!-- Status -->
+
           <div class="admin-group">
             <span class="admin-group-label">Status</span>
             <div class="admin-seg" role="group" aria-label="Status">
@@ -133,7 +132,6 @@ async function destroy() {
             </div>
           </div>
 
-          <!-- IP flag -->
           <div class="admin-group">
             <span class="admin-group-label">IP flag</span>
             <div class="admin-flag">
@@ -155,7 +153,6 @@ async function destroy() {
             </div>
           </div>
 
-          <!-- Name -->
           <label class="admin-group">
             <span class="admin-group-label">Name</span>
             <input
@@ -168,7 +165,6 @@ async function destroy() {
             />
           </label>
 
-          <!-- Description -->
           <label class="admin-group">
             <span class="admin-group-label">Description</span>
             <textarea
@@ -200,7 +196,7 @@ async function destroy() {
 </template>
 
 <style scoped>
-/* ===== Trigger ===== */
+
 .admin-trigger {
   display: inline-flex;
   align-items: center;
@@ -237,7 +233,6 @@ async function destroy() {
   border-radius: calc(var(--radius-sm) - 1px);
 }
 
-/* ===== Modal ===== */
 .admin-modal {
   display: flex;
   flex-direction: column;
@@ -331,7 +326,6 @@ async function destroy() {
   color: var(--muted);
 }
 
-/* Segmented status */
 .admin-seg {
   display: inline-flex;
   align-self: flex-start;
@@ -365,7 +359,6 @@ async function destroy() {
 .admin-seg-btn.seg-draft.active { color: #fff; background: #6b7280; }
 .admin-seg-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* IP flag toggle */
 .admin-flag {
   display: inline-flex;
   align-items: center;
@@ -424,7 +417,6 @@ async function destroy() {
   color: var(--muted);
 }
 
-/* Inputs */
 .admin-input {
   width: 100%;
   padding: 0.5rem 0.75rem;
@@ -448,7 +440,6 @@ async function destroy() {
   line-height: 1.5;
 }
 
-/* Footer */
 .admin-modal-foot {
   display: flex;
   align-items: center;

@@ -1,10 +1,4 @@
 <script setup lang="ts">
-/**
- * Shared pager. Two modes:
- *  - Link mode: pass `prev-to` / `next-to` hrefs (URL-driven paging, SSR-friendly).
- *  - Model mode: bind `v-model:page` with `:pages` (state-driven paging).
- * Renders nothing when there's only one page.
- */
 const props = defineProps<{
   page: number
   pages: number

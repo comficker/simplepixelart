@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import {toast} from 'vue-sonner'
 
-// Settings — account (username / display name / bio), password, appearance
-// (theme) and local data. Appearance + data work for guests too; account
-// sections need a session.
 const auth = useAuthStore()
 const {current, setTheme, themes} = useTheme() as any
 
@@ -14,7 +11,6 @@ useCustomSeoMeta({
   robots: 'noindex, follow',
 })
 
-// ── Account ──────────────────────────────────────────────────────────
 const form = reactive({username: '', first_name: '', last_name: '', bio: ''})
 const savingProfile = ref(false)
 
@@ -48,7 +44,6 @@ async function saveProfile() {
   }
 }
 
-// ── Password ─────────────────────────────────────────────────────────
 const pw = reactive({current: '', next: '', confirm: ''})
 const savingPw = ref(false)
 const hasPassword = computed(() => !!(auth.logged as any)?.has_password)
@@ -96,7 +91,7 @@ watch(() => auth.logged, fillForm)
       </div>
 
       <div class="set-body">
-        <!-- ── Account ── -->
+
         <section class="set-section">
           <h2 class="set-section-title">Account</h2>
           <div v-if="!auth.isLogged" class="set-signin">
@@ -134,7 +129,6 @@ watch(() => auth.logged, fillForm)
           </form>
         </section>
 
-        <!-- ── Password ── -->
         <section v-if="auth.isLogged" class="set-section">
           <h2 class="set-section-title">Password</h2>
           <p v-if="!hasPassword" class="text-xs text-muted">
@@ -163,7 +157,6 @@ watch(() => auth.logged, fillForm)
           </form>
         </section>
 
-        <!-- ── Appearance ── -->
         <section class="set-section">
           <h2 class="set-section-title">Appearance</h2>
           <div class="set-themes">
@@ -184,7 +177,6 @@ watch(() => auth.logged, fillForm)
           </div>
         </section>
 
-        <!-- ── Data ── -->
         <section class="set-section">
           <h2 class="set-section-title">App data</h2>
           <p class="text-xs text-muted">
@@ -309,7 +301,6 @@ watch(() => auth.logged, fillForm)
   gap: var(--space-3);
 }
 
-/* Theme picker — same swatch language as the command palette. */
 .set-themes {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

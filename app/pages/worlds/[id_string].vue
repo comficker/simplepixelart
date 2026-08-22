@@ -19,8 +19,6 @@ const isOwner = computed(() =>
 )
 const sceneConfig = computed(() => data.value?.meta?.config || null)
 
-// Tile id → art id_string is all the showcase needs to resolve images:
-// the tileset registry plus the world's own extra tiles (meta.tiles).
 const tileItems = computed(() =>
     Object.entries({...(data.value?.registry || {}), ...(data.value?.meta?.tiles || {})}).map(([id, id_string]) => ({
       id: Number(id), id_string: id_string as string,

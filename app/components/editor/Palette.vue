@@ -5,8 +5,6 @@ const store = useEditor()
 
 const isModify = defineModel<boolean>('modify', {default: false})
 
-// "Find color" tool: keep the highlighted swatch scrolled into view (horizontal
-// only, so the page never jumps) as the cursor moves over the art.
 const wrapperRef = ref<HTMLElement | null>(null)
 watch(() => store.pickedColorIndex, (idx) => {
   if (idx == null) return
@@ -100,7 +98,7 @@ defineExpose({addColor, toggleModify, removeColor})
 
 <style scoped>
 .palette {
-  /* Swatch size + the items row's vertical padding. */
+
   height: calc(2.5rem + 2 * var(--space-2));
   position: relative;
   font-size: var(--text-2xl);
@@ -131,8 +129,6 @@ input.item {
   padding: var(--space-1);
 }
 
-/* Hairline ring so light swatches (white, pale tints) stay visible on the
-   white panel; the active outline still draws over it. */
 .color-item {
   box-shadow: inset 0 0 0 1px var(--border);
 }
@@ -142,7 +138,6 @@ input.item {
   outline-offset: -2px;
 }
 
-/* Eyedropper toggle sitting beside the eraser. */
 .tool-item {
   color: var(--muted);
   cursor: pointer;
@@ -151,7 +146,6 @@ input.item {
 .tool-item.active {
   color: var(--primary);
 }
-
 
 .palette .item {
   width: 2.5rem;

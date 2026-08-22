@@ -17,9 +17,6 @@ export const useAuthStore = defineStore('auth', () => {
         authTokenRefresh.value = ""
     }
 
-    // Logout wipes ALL locally cached work, so the next person on this browser
-    // doesn't inherit the previous account's boards/tilesets (the editor
-    // restores them from these keys + the IndexedDB snapshot on load).
     const resetStorage = () => {
         localStorage.setItem('workspace_current', "")
         localStorage.setItem('histories', "{}")

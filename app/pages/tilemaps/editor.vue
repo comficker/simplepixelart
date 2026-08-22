@@ -21,9 +21,6 @@ useCustomSeoMeta({
   description: 'Free online tilemap maker. Paint pixel-art maps on a grid or isometric grid with stacked layers of ground tiles and sprites — using your own art or any piece from the gallery. No signup, runs in your browser.',
   keywords: 'tilemap editor, tilemap maker, pixel art map maker, isometric tilemap creator, free online tilemap tool, grid map maker, 2d game map editor, tile map builder, sprite map maker, isometric pixel art',
   canonical: 'https://simplepixelart.com/tilemaps/editor',
-  // The bare tool is the landing page we want indexed. Per-world views
-  // (?world=…) require login and target private data, so they're
-  // noindex; the canonical consolidates every variant back to /tilemaps/editor.
   robots: () => route.query.world ? 'noindex, follow' : 'index, follow',
   script: [
     {
@@ -88,21 +85,18 @@ useCustomSeoMeta({
 
 type Coll = { id: number; id_string: string; title: string; count: number }
 
-// ── Collection (optional — null = free style) ──────────────────────
 const loadingList = ref(true)
-const sizeOpen = ref(false)   // Map-settings modal
+const sizeOpen = ref(false)
 const BG_PRESETS = ['#FFFFFF', '#000000', '#1B1B2E', '#0F380F', '#2A0D4D', '#FFE4B5', '#B0E0E6', '#F5F5F5']
 const freeStyle = computed(() => !world.value)
 
-// ── Active map ─────────────────────────────────────────────────────
 const loadingDetail = ref(false)
-const items = ref<SharedPage[]>([])           // tileset registry palette
+const items = ref<SharedPage[]>([])
 const config = reactive<TilemapConfig>(normalizeTilemap(null))
 const activeLayerId = ref('')
 const activeLayer = computed(() =>
     config.layers.find(l => l.id === activeLayerId.value) || config.layers[config.layers.length - 1] || null)
 const brush = ref<number | 'erase' | `terrain:${string}` | `random:${string}`>('erase')
-// What was painted with before the eraser, so the eraser button can toggle off.
 let prevBrush: typeof brush.value | null = null
 watch(brush, (_, old) => { if (old !== 'erase') prevBrush = old })
 function toggleEraser() {
@@ -115,30 +109,24 @@ function toggleEraser() {
   }
   tool.value = 'paint'
 }
-// The previous brush can go stale when the palette/tileset changes underneath it.
 function brushStillValid(b: typeof brush.value): boolean {
   if (typeof b === 'number') return !!knownTiles[b]
   if (b.startsWith('terrain:')) return terrains.value.some(t => t.id === b.slice('terrain:'.length))
   if (b.startsWith('random:')) return variantGroups.value.some(v => v.id === b.slice('random:'.length))
   return false
 }
-// Random-variant groups from the tileset: painting picks a random member.
 const variantGroups = ref<{ id: string; name: string; tiles: number[]; weights: Record<string, number> }[]>([])
-// Tools: paint (default) or marquee select (grid mode). Brush is 1–4 cells.
 const tool = ref<'paint' | 'select' | 'fill' | 'line' | 'rect' | 'pick'>('paint')
 const brushSize = ref(1)
 const dirty = ref(false)
 const saving = ref(false)
 
-// Free-style palette: searched / browsed public art.
 const PALETTE_PER = 24
 const searchQuery = ref('')
 const searchResults = ref<SharedPage[]>([])
 const searchCount = ref(0)
 const searching = ref(false)
 const palettePage = ref(1)
-// id → id_string for every art seen or placed, so placed tiles keep rendering
-// after the palette changes (search) or after a reload.
 const knownTiles = reactive<Record<number, string>>({})
 
 const canvas = ref<HTMLCanvasElement | null>(null)
@@ -148,36 +136,23 @@ const pendingImages = ref(0)
 const tilesLoading = computed(() => pendingImages.value > 0)
 let painting = false
 let eraseStroke = false
-// Multi-touch: 1 finger paints, 2 fingers pan + pinch-zoom.
 const pointers = new Map<number, { x: number; y: number }>()
 let gesture: { dist: number; midX: number; midY: number; sl: number; st: number } | null = null
-// Cells changed by the current stroke, so we can undo it if a 2nd finger turns
-// the touch into a pan/zoom gesture instead of a paint.
 let stroke: { undo: Map<string, number | undefined> } | null = null
 
 const geom = computed(() => computeGeometry(config))
-// Layers shown top-first (last drawn = on top).
 const layersTopFirst = computed(() => [...config.layers].slice().reverse())
 const topLayerId = computed(() => config.layers[config.layers.length - 1]?.id || '')
 const bottomLayerId = computed(() => config.layers[0]?.id || '')
 
-// Palette source: 'tiles' = the open tileset/collection; 'search' = any public
-// art (paint with anything — painted tiles join the registry on save). Pure
-// free style (nothing open) is always search.
 const paletteTab = ref<'tiles' | 'search'>('tiles')
-// A guest's palette comes from a LOCAL tileset (no cloud world). When set, the
-// "Tiles" tab is available just like it is for a loaded world.
 const guestTileset = ref<{ id: string; name: string } | null>(null)
 const hasTilesSource = computed(() => !!world.value || !!guestTileset.value)
-// There's a Tiles/Search toggle to show whenever a tileset can be chosen — even
-// before one is picked (so the picker is reachable). Pure free-style (no tilesets
-// at all) has nothing to toggle and stays on search.
 const hasSeg = computed(() => myTilesets.value.length > 0 || !!world.value)
 const paletteMode = computed<'tiles' | 'search'>(() =>
     hasSeg.value ? paletteTab.value : 'search',
 )
 
-// Current page of tiles: search is server-paginated; tiles page client-side.
 const paletteItems = computed(() => paletteMode.value === 'search'
     ? searchResults.value
     : items.value.slice((palettePage.value - 1) * PALETTE_PER, palettePage.value * PALETTE_PER))
@@ -188,14 +163,11 @@ const totalPages = computed(() => {
 const paletteLoading = computed(() => paletteMode.value === 'search' ? searching.value : loadingDetail.value)
 const ready = computed(() => !loadingDetail.value)
 
-// ── Zoom (view-only; the board scrolls inside the square stage) ────
 const ZMIN = 0.25, ZMAX = 4
 const zoom = ref(1)
 const stageEl = ref<HTMLElement | null>(null)
 const dispW = computed(() => Math.max(1, Math.round(geom.value.width * zoom.value)))
 const dispH = computed(() => Math.max(1, Math.round(geom.value.height * zoom.value)))
-// Whole-pixel zoom: integer when ≥1 (1,2,3…) or unit fraction when <1 (1/2,1/3…),
-// so every source pixel maps to a uniform block — no broken/soft pixels.
 function snapScale(s: number): number {
   return s >= 1 ? Math.max(1, Math.round(s)) : 1 / Math.max(1, Math.round(1 / s))
 }
@@ -215,15 +187,11 @@ function fitZoom() {
   const aw = el.clientWidth - 32, ah = el.clientHeight - 32
   if (aw <= 0 || ah <= 0) return
   const fit = Math.min(aw / g.width, ah / g.height)
-  // snap DOWN to a whole-pixel scale so it never overflows
   zoom.value = Math.max(ZMIN, Math.min(ZMAX, fit >= 1 ? Math.floor(fit) : 1 / Math.ceil(1 / fit)))
 }
 
-// Layers float as a collapsible island over the stage.
 const layersOpen = ref(true)
 
-// ── Editor view state — browser-local, per world (like the tileset editor's
-// tsx_view): zoom, layer-island collapse, tool, brush size, stage scroll.
 const viewKey = () => `tm_view:${world.value?.id_string || 'freestyle'}`
 function saveViewState() {
   if (typeof localStorage === 'undefined') return
@@ -260,19 +228,13 @@ function restoreViewState(): boolean {
 }
 watch([zoom, layersOpen, tool, brushSize], () => debouncedViewSave())
 
-// Guest tiles have no server PNG — they render from a stored dataURL keyed by
-// their slug (the local art's ed.id). Built from the whole local library so
-// even a reloaded free-style map with local tiles still paints.
 const localThumbs = reactive<Record<string, string>>({})
-// Bumped by "Refresh" to cache-bust cloud tile PNGs after art is edited elsewhere.
 const tileRev = ref(0)
 function refreshLocalThumbs() {
   for (const ts of localTs.list.value) {
     for (const t of ts.tiles) if (t?.ed?.id && t.thumb) localThumbs[t.ed.id] = t.thumb
   }
 }
-// A tile image source: the local dataURL when it's a guest tile, else the
-// server-rendered PNG for a cloud slug (cache-busted after a Refresh).
 function srcFor(slug: string) {
   const local = slug && localThumbs[slug]
   if (local) return local
@@ -286,7 +248,6 @@ function registerTiles(arts: { id: number; id_string: string }[]) {
   for (const a of arts) if (a && a.id && a.id_string) knownTiles[a.id] = a.id_string
 }
 
-// Lazy-load the image for one art id (uses the registry, not the live palette).
 function ensureImage(id: number) {
   if (tileImages.has(id) || !knownTiles[id]) return
   const img = new Image()
@@ -303,8 +264,6 @@ function loadImages() {
   draw()
 }
 
-// ── Collections data ───────────────────────────────────────────────
-// ── Free style (no collection — browse/search public art) ──────────
 const LS_KEY = 'spa_tilemap_freestyle_v1'
 
 function restoreFreeStyle(): string | null {
@@ -340,17 +299,12 @@ function saveFreeStyle() {
 }
 const debouncedFreeStyleSave = debounce(saveFreeStyle, 600)
 
-// One cheap hook for every map mutation: mark dirty, batch a redraw and
-// autosave signed-out free-style maps. Replaces the old watchers that
-// JSON.stringify'd the whole config (all layers' cells) on every change —
-// which ran twice per painted cell while dragging.
 function touch() {
   dirty.value = true
   scheduleDraw()
   if (freeStyle.value && !world.value) debouncedFreeStyleSave()
 }
 
-// ── Worlds: cloud persistence (Tilemap project → many World scenes) ─
 interface WorldRow { id: number; id_string: string; name: string; status: string; tileset_id_string: string; tileset_name: string }
 
 const world = ref<WorldRow | null>(null)
@@ -363,9 +317,6 @@ function buildRegistry(): Record<string, string> {
   return registry
 }
 
-// The tileset is read-only from here (a world only *refers* to it). Tiles
-// painted from Search that aren't in the tileset live in the world's own
-// meta.tiles so the scene reloads without touching the tileset.
 const tilesetRegistry = ref<Record<string, string>>({})
 
 function extraTiles(): Record<string, string> {
@@ -398,12 +349,10 @@ async function loadWorld(slug: string): Promise<boolean> {
       status: w.status, tileset_id_string: w.tileset_id_string,
       tileset_name: w.tileset_name || 'Tileset',
     }
-    // Registry → known tiles (renders even if arts left the collection).
     tilesetRegistry.value = {...(w.registry || {})}
     for (const [id, ids] of Object.entries(w.registry || {})) {
       if (typeof ids === 'string') knownTiles[Number(id)] = ids
     }
-    // Plus the world's own extra tiles (painted from Search, not in the tileset).
     for (const [id, ids] of Object.entries(w.meta?.tiles || {})) {
       if (typeof ids === 'string') knownTiles[Number(id)] = ids
     }
@@ -420,9 +369,6 @@ async function loadWorld(slug: string): Promise<boolean> {
             }))
             .filter((g: any) => g.tiles.length)
         : []
-    // Terrain/variant brushes resolve tiles into cells at paint time — those
-    // ids may never appear in the visible palette page, so preload them or
-    // freshly painted auto-tiles render as nothing.
     for (const t of terrains.value) {
       for (const id of Object.values(t.map || {})) ensureImage(Number(id))
     }
@@ -431,7 +377,6 @@ async function loadWorld(slug: string): Promise<boolean> {
     }
     const rawCfg = w.meta?.config
     Object.assign(config, normalizeTilemap(rawCfg))
-    // Fresh world → inherit the tileset's native tile size + orientation.
     if ((!rawCfg || !rawCfg.cellW) && tsMeta.cell?.w) {
       config.cellW = Math.max(MIN_CELL, Math.min(MAX_CELL, Number(tsMeta.cell.w) || config.cellW))
       config.cellH = Math.max(MIN_CELL, Math.min(MAX_CELL, Number(tsMeta.cell.h) || config.cellW))
@@ -445,7 +390,6 @@ async function loadWorld(slug: string): Promise<boolean> {
     dirty.value = false
     resetHistory()
     selRect.value = null
-    // Palette = the tileset registry; the Search tab covers everything else.
     paletteTab.value = 'tiles'
     items.value = Object.entries(w.registry || {}).map(([id, ids]) => ({
       id: Number(id), id_string: ids as string, name: ids as string,
@@ -467,11 +411,9 @@ async function loadWorld(slug: string): Promise<boolean> {
   }
 }
 
-// ── Tileset picker (open one of my tilesets as the project) ─────────
 const myTilesets = ref<{ id_string: string; name: string; count: number; worlds: { id_string: string }[]; local?: boolean }[]>([])
 
 async function fetchMyTilesets() {
-  // Guest: offer the browser-local tileset library (no cloud worlds).
   if (!auth.isLogged) {
     refreshLocalThumbs()
     myTilesets.value = localTs.list.value.map(t => ({
@@ -490,9 +432,6 @@ async function fetchMyTilesets() {
   } catch { myTilesets.value = [] }
 }
 
-// The palette's source <select>: '' = free style, '__manage__' = editor link.
-// The DOM select is re-synced afterwards — a cancelled dirty-confirm (or the
-// manage shortcut) must not leave it showing a source we never switched to.
 async function onSourceSelect(v: string, el: HTMLSelectElement) {
   if (v === '__manage__') {
     el.value = world.value?.tileset_id_string || ''
@@ -505,8 +444,6 @@ async function onSourceSelect(v: string, el: HTMLSelectElement) {
 }
 
 function selectSource(id: null) {
-  // Back to pure free style (search palette). For a guest, just drop the local
-  // tileset palette; for a signed-in user, leave the open world.
   if (guestTileset.value && !world.value) {
     guestTileset.value = null
     items.value = []
@@ -524,7 +461,6 @@ function selectSource(id: null) {
 }
 
 async function selectTileset(slug: string) {
-  // Guest local tileset → its tiles become the palette; the map stays free-style.
   if (slug.startsWith('local:')) { loadLocalTilesetPalette(slug); return }
   if (world.value?.tileset_id_string === slug) return
   if (dirty.value && !confirm('Discard unsaved changes to the current world?')) return
@@ -547,9 +483,6 @@ async function selectTileset(slug: string) {
   }
 }
 
-// Use a guest's LOCAL tileset as the palette (plain tiles + terrain auto-tile
-// groups + random-variant groups). No cloud world is created — the current
-// free-style map keeps its cells, only the palette changes.
 function loadLocalTilesetPalette(localId: string) {
   const m = localTs.editorModel(localId)
   if (!m) { toast.error('That tileset is no longer available'); return }
@@ -557,7 +490,6 @@ function loadLocalTilesetPalette(localId: string) {
   const reg: Record<string, string> = m.registry || {}
   tilesetRegistry.value = {...reg}
   for (const [id, slug] of Object.entries(reg)) knownTiles[Number(id)] = slug
-  // Terrain (auto-tile) groups → terrain brushes, same as cloud tilesets.
   terrains.value = Array.isArray(m.groups)
       ? m.groups
           .filter((g: any) => g?.kind === 'terrain' && g?.map && Object.keys(g.map).length)
@@ -579,16 +511,12 @@ function loadLocalTilesetPalette(localId: string) {
           }))
           .filter((g: any) => g.tiles.length)
       : []
-  // Preload terrain/variant tiles — auto-tile brushes resolve ids at paint time
-  // that may never show in the visible palette page, else they render as nothing.
   for (const t of terrains.value) for (const id of Object.values(t.map || {})) ensureImage(Number(id))
   for (const vg of variantGroups.value) for (const id of vg.tiles) ensureImage(id)
   items.value = Object.entries(reg).map(([id, slug]) => ({
     id: Number(id), id_string: slug, name: slug,
   })) as any
   guestTileset.value = {id: localId, name: m.name || 'Tileset'}
-  // Match the map to the tileset's cell + orientation — but only while it's
-  // still empty, so picking a tileset never reflows a map you've painted.
   if (placedIds(config).length === 0) {
     if (m.cell?.w) {
       config.cellW = Math.max(MIN_CELL, Math.min(MAX_CELL, Number(m.cell.w) || config.cellW))
@@ -604,19 +532,14 @@ function loadLocalTilesetPalette(localId: string) {
   brush.value = items.value.length ? (items.value[0]!.id as number) : 'erase'
   loadImages()
   scheduleDraw()
-  if (!auth.isLogged) debouncedFreeStyleSave()   // remember the choice (no dirty churn)
+  if (!auth.isLogged) debouncedFreeStyleSave()
 }
 
-// The selected tileset's editor URL (cloud slug or guest local id) — for the
-// "Edit" button that opens the tileset editor in a new tab.
 const editTilesetUrl = computed(() => {
   const id = world.value?.tileset_id_string || guestTileset.value?.id
   return id ? `/tilesets/editor?id=${id}` : null
 })
 
-// Re-render the current tileset's tiles after they've been edited elsewhere
-// (pixel/tileset editor in another tab). Cache-busts cloud PNGs; re-reads the
-// local library for guests. Leaves the map, brush and view untouched.
 function refreshTiles() {
   tileRev.value++
   if (!auth.isLogged) { localTs.reload(); refreshLocalThumbs() }
@@ -653,8 +576,6 @@ async function newWorld() {
   }
 }
 
-// New map: a signed-in cloud world spawns a sibling world; a free-style map
-// (guest, or unsaved) just resets to an empty canvas.
 function newMap() {
   if (world.value) { newWorld(); return }
   if (dirty.value && !confirm('Discard unsaved changes to this map?')) return
@@ -666,8 +587,6 @@ function onWorldSelect(v: string) {
   else switchWorld(v)
 }
 
-// ── Load-tilemap browser modal ──────────────────────────────────────
-// Signed in → all the account's worlds; guest → the single local free-style map.
 const showLoadTm = ref(false)
 const myWorlds = ref<any[]>([])
 
@@ -686,7 +605,6 @@ const browseTilemaps = computed(() => {
       previewImgs: Object.values(w.registry || {}).slice(0, 4).map((s: any) => tileImageUrl(apiBase, s)),
     }))
   }
-  // Guest: the single local free-style map (only if something's placed).
   const reg: Record<number, string> = {}
   for (const id of placedIds(config)) if (knownTiles[id]) reg[id] = knownTiles[id]
   if (!Object.keys(reg).length) return []
@@ -704,11 +622,10 @@ function openLoadTilemap() {
 function pickTilemap(id: string) {
   showLoadTm.value = false
   if (id === '__new__') { newMap(); return }
-  if (id === 'freestyle') return   // guests already see the free-style map
+  if (id === 'freestyle') return
   onWorldSelect(id)
 }
 
-// ── Export: PNG snapshot + engine-friendly JSON ─────────────────────
 function downloadBlob(name: string, blob: Blob) {
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
@@ -736,9 +653,6 @@ function exportPNG() {
   cv.toBlob(b => { if (b) downloadBlob(`${exportName()}.png`, b) })
 }
 
-// Engine-friendly JSON: the full grid model (layers of cell → tile id,
-// terrain marks, cell metrics) plus an id → image-URL atlas — enough to
-// rebuild the map in a Godot/Unity/Phaser importer.
 function exportJSON() {
   const tiles: Record<string, string> = {}
   for (const id of placedIds(config)) {
@@ -790,7 +704,6 @@ async function runSearch(page = 1) {
 const debouncedSearch = debounce(() => runSearch(1), 350)
 function onSearchInput() { debouncedSearch() }
 
-// Page the tile palette. Free style refetches; collections re-slice + load images.
 function goPage(p: number) {
   const next = Math.max(1, Math.min(totalPages.value, p))
   if (next === palettePage.value) return
@@ -810,7 +723,6 @@ function enterFreeStyle(opts?: {fresh?: boolean}) {
   items.value = []
   tileImages.clear()
   pendingImages.value = 0
-  // fresh → an empty default map (New); otherwise reopen the saved free-style map.
   let savedTs: string | null = null
   if (opts?.fresh) {
     Object.assign(config, normalizeTilemap(null))
@@ -822,9 +734,6 @@ function enterFreeStyle(opts?: {fresh?: boolean}) {
   dirty.value = false
   searchQuery.value = ''
   router.replace({query: {}})
-  // Re-apply a previously chosen local tileset palette; else land on the Tiles
-  // tab (so the tileset picker is visible) when there are tilesets to pick,
-  // otherwise pure search.
   if (savedTs && !auth.isLogged && localTs.get(savedTs)) {
     loadLocalTilesetPalette(savedTs)
   } else {
@@ -832,12 +741,9 @@ function enterFreeStyle(opts?: {fresh?: boolean}) {
     runSearch(1)
   }
   loadImages()
-  nextTick(() => { if (!restoreViewState()) fitZoom() })   // saved view, else fit
+  nextTick(() => { if (!restoreViewState()) fitZoom() })
 }
 
-// Shortcuts: ⌘Z undo, ⇧⌘Z redo, ⌘C/⌘V copy/paste selection, Del clear,
-// P/B paint, G fill, L line, R rect, I eyedropper, M select, E eraser,
-// W/S cycle layers, Esc drop selection.
 function onHotkey(e: KeyboardEvent) {
   const t = e.target as HTMLElement
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return
@@ -892,21 +798,16 @@ function onHotkey(e: KeyboardEvent) {
 onMounted(async () => {
   document.addEventListener('keydown', onHotkey)
   pruneStorageKeys('tm_view:')
-  await fetchMyTilesets()   // cloud tilesets (signed in) or the local library (guest)
+  await fetchMyTilesets()
   loadingList.value = false
   const qWorld = String(route.query.world || '')
   if (route.query.new == null && qWorld) {
     const ok = await loadWorld(qWorld)
     if (ok) return
   }
-  // ?new → a fresh empty map; otherwise reopen the saved free-style map.
   enterFreeStyle({fresh: route.query.new != null})
 })
-// Auth resolves (or flips) after mount — repopulate the picker for the new
-// identity: cloud tilesets when signed in, the local library when a guest.
 watch(() => auth.isLogged, () => { fetchMyTilesets() })
-// Signed-out free-style maps have no cloud home → autosave to localStorage.
-// (A cloud world being open takes precedence — its Save goes to the API.)
 watch(paletteTab, (t) => {
   palettePage.value = 1
   if (t === 'search' && !searchResults.value.length) runSearch(1)
@@ -916,7 +817,6 @@ onBeforeUnmount(() => {
   if (drawReq && typeof cancelAnimationFrame !== 'undefined') cancelAnimationFrame(drawReq)
 })
 
-// ── Map mutations ──────────────────────────────────────────────────
 function key(col: number, row: number) { return `${col}_${row}` }
 
 function pruneCells() {
@@ -932,8 +832,6 @@ function pruneCells() {
   }
 }
 
-// How many cells a tile's art spans (grid ground layers only — iso and
-// sprite layers keep single-cell anchors since they draw centered/bottom).
 function tileSpan(id: number, layer: {kind?: string} | null) {
   if (config.mode !== 'grid' || layer?.kind === 'sprite') return {cols: 1, rows: 1}
   const img = tileImages.get(id)
@@ -966,8 +864,6 @@ function paintCell(col: number, row: number, erase: boolean) {
       touch()
       return
     }
-    // Prop erase: the cell may be covered by a bigger tile anchored up-left —
-    // removing any covered cell removes the whole prop.
     for (let dr = 0; dr < MAX_SPAN; dr++) {
       for (let dc = 0; dc < MAX_SPAN; dc++) {
         if (!dc && !dr) continue
@@ -996,15 +892,11 @@ function paintCell(col: number, row: number, erase: boolean) {
     return
   }
 
-  // Resolve the tile: plain brush uses it directly; a random brush rolls a
-  // variant once per cell per stroke (no churn while the pointer lingers).
   let tileId = brush.value as number
   if (isRandomBrush) {
     if (stroke?.undo.has(k)) return
     const vg = variantGroups.value.find(v => v.id === (brush.value as string).slice('random:'.length))
     if (!vg?.tiles.length) return
-    // Weighted pick (weight 1 unless the tileset says otherwise). A map seed
-    // makes the pick deterministic per cell — repainting never churns tiles.
     const wOf = (id: number) => Math.max(1, Number(vg.weights[String(id)]) || 1)
     const rnd = config.seed ? cellRoll(config.seed, col, row) : Math.random()
     let roll = rnd * vg.tiles.reduce((s, id) => s + wOf(id), 0)
@@ -1021,13 +913,11 @@ function paintCell(col: number, row: number, erase: boolean) {
   if (map[k] !== tileId) {
     remember()
     map[k] = tileId
-    // Manual tile placement overrides any terrain mark on the cell.
     if (k in layer.terrain) {
       delete layer.terrain[k]
       reflowTerrain(layer, terrains.value, col, row)
       map[k] = tileId
     }
-    // Prop placement: a multi-cell tile claims the cells its art covers.
     const span = tileSpan(tileId, layer)
     for (let dr = 0; dr < span.rows; dr++) {
       for (let dc = 0; dc < span.cols; dc++) {
@@ -1049,7 +939,6 @@ function paintCell(col: number, row: number, erase: boolean) {
   }
 }
 
-// Cell-size readout: iso shows its scaled diamond; grid shows W×H.
 const cellLabel = computed(() => config.mode === 'iso'
     ? `${config.cellW}×${Math.round(config.cellW * config.isoRatio)}`
     : `${config.cellW}×${config.cellH}`)
@@ -1065,7 +954,7 @@ function setMode(m: TilemapMode) {
   if (config.mode === m) return
   config.mode = m
   if (m === 'iso') {
-    tool.value = 'paint'   // marquee is grid-only
+    tool.value = 'paint'
     selRect.value = null
   }
   touch()
@@ -1103,14 +992,12 @@ function clearLayer() {
   redraw()
 }
 
-// ── Layers ─────────────────────────────────────────────────────────
 function newLayerId() {
   return `l-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`
 }
 function addLayer() {
   if (config.layers.length >= MAX_LAYERS) return
   pushHistory()
-  // Added on top → default to a sprite (object) layer; toggle to ground anytime.
   const layer = makeLayer(`Layer ${config.layers.length + 1}`, newLayerId(), 'sprite')
   config.layers.push(layer)
   activeLayerId.value = layer.id
@@ -1122,13 +1009,11 @@ function setLayerKind(id: string, kind: LayerKind) {
   if (l && l.kind !== kind) { l.kind = kind; touch(); redraw() }
 }
 
-// Toggle a layer's Y-sort (foot-Y depth ordering) — see TilemapLayer.ySort.
 function toggleYSort(id: string) {
   const l = config.layers.find(x => x.id === id)
   if (l) { l.ySort = !l.ySort; touch(); redraw() }
 }
 
-// Inline rename
 const editingLayerId = ref('')
 const renameInput = ref<HTMLInputElement | null>(null)
 function startRename(id: string) {
@@ -1154,7 +1039,6 @@ function toggleLayer(id: string) {
   const l = config.layers.find(x => x.id === id)
   if (l) { l.visible = !l.visible; touch(); redraw() }
 }
-// dir +1 = move toward top (later in array); -1 = toward bottom.
 function moveLayer(id: string, dir: number) {
   const i = config.layers.findIndex(l => l.id === id)
   const j = i + dir
@@ -1166,9 +1050,6 @@ function moveLayer(id: string, dir: number) {
   redraw()
 }
 
-// ── Rendering ──────────────────────────────────────────────────────
-// Grid lines drawn at a true 1px in device space (positions = native × zoom),
-// so they stay crisp at any zoom instead of being stretched with the bitmap.
 function drawGridOverlay(ctx: CanvasRenderingContext2D) {
   const g = geom.value, z = zoom.value
   const W = g.width * z, H = g.height * z
@@ -1184,10 +1065,6 @@ function drawGridOverlay(ctx: CanvasRenderingContext2D) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke()
     }
   } else {
-    // One long stroke per grid line (not per-cell diamonds): shared edges
-    // aren't double-drawn, so the anti-aliasing stays clean and even.
-    // Lines run through the diamonds' TOP corners — cellCenter y minus hh —
-    // so the grid sits exactly on the cells the hover/tiles draw into.
     const hw = g.tileW / 2 * z, hh = g.tileH / 2 * z
     const ox = g.originX * z, oy = g.originY * z - hh
     ctx.beginPath()
@@ -1221,7 +1098,6 @@ function drawHover(ctx: CanvasRenderingContext2D) {
   }
 }
 
-// Line/rect drag preview — the cells the shape will paint on release.
 function drawShapePreview(ctx: CanvasRenderingContext2D) {
   if (!shape) return
   const g = geom.value, z = zoom.value
@@ -1241,7 +1117,6 @@ function drawShapePreview(ctx: CanvasRenderingContext2D) {
   }
 }
 
-// Marquee overlay: floating region while moving + dashed selection frame.
 function drawSelection(ctx: CanvasRenderingContext2D) {
   if (tool.value !== 'select' || !selRect.value || config.mode !== 'grid') return
   const g = geom.value, z = zoom.value
@@ -1278,8 +1153,6 @@ function draw() {
   const cv = canvas.value
   if (!cv) return
   const g = geom.value, z = zoom.value
-  // Back the canvas at device resolution so diagonals (iso grid) render with
-  // real anti-aliasing instead of being nearest-neighbor upscaled on retina.
   const dpr = window.devicePixelRatio || 1
   cv.width = Math.max(1, Math.round(g.width * z * dpr))
   cv.height = Math.max(1, Math.round(g.height * z * dpr))
@@ -1294,31 +1167,25 @@ function draw() {
   drawSelection(ctx)
 }
 
-// rAF-batched draw: any number of triggers in a frame collapse into one
-// full-canvas render, and painting stays one draw per frame while dragging.
 let drawReq = 0
 function scheduleDraw() {
   if (drawReq || typeof requestAnimationFrame === 'undefined') return
   drawReq = requestAnimationFrame(() => { drawReq = 0; draw() })
 }
 function redraw() { scheduleDraw() }
-watch(zoom, () => scheduleDraw())   // zoom re-rasterizes (scale pixels), not a CSS stretch
+watch(zoom, () => scheduleDraw())
 
-// ── Pointer ────────────────────────────────────────────────────────
 function eventCell(e: PointerEvent) {
   const cv = canvas.value
   if (!cv) return null
   const rect = cv.getBoundingClientRect()
   if (!rect.width || !rect.height) return null
-  // Map CSS px straight to native map units via the geometry — the canvas
-  // backing store is dpr-scaled, so cv.width is NOT the displayed size.
   const g = geom.value
   const x = (e.clientX - rect.left) * (g.width / rect.width)
   const y = (e.clientY - rect.top) * (g.height / rect.height)
   return cellAt(config, g, x, y)
 }
 
-// ── Two-finger pan + pinch-zoom ─────────────────────────────────────
 function gPts() { return [...pointers.values()] }
 function gMid() { const [a, b] = gPts(); return {x: (a.x + b.x) / 2, y: (a.y + b.y) / 2} }
 function gDist() { const [a, b] = gPts(); return Math.hypot(a.x - b.x, a.y - b.y) }
@@ -1326,9 +1193,6 @@ function baseGesture() {
   const el = stageEl.value, m = gMid()
   gesture = {dist: gDist(), midX: m.x, midY: m.y, sl: el?.scrollLeft || 0, st: el?.scrollTop || 0}
 }
-// Step the whole-pixel zoom around a screen point, keeping that point fixed.
-// The board resizes reactively, so the scroll anchor + gesture re-base happen
-// next tick; `gesture` is nulled meanwhile so runGesture pauses (no fighting).
 function zoomAround(sx: number, sy: number, dir: number) {
   const el = stageEl.value
   if (!el) return
@@ -1348,14 +1212,13 @@ function runGesture() {
   const el = stageEl.value
   if (!el || !gesture || pointers.size < 2) return
   const m = gMid(), d = gDist()
-  el.scrollLeft = gesture.sl - (m.x - gesture.midX)   // pan with the fingers
+  el.scrollLeft = gesture.sl - (m.x - gesture.midX)
   el.scrollTop = gesture.st - (m.y - gesture.midY)
   if (gesture.dist > 0) {                              // pinch → stepped zoom
     const r = d / gesture.dist
     if (r > 1.35 || r < 0.74) zoomAround(m.x, m.y, r > 1 ? 1 : -1)
   }
 }
-// Undo a paint stroke that turned out to be the start of a 2-finger gesture.
 function cancelStroke() {
   if (stroke) {
     const layer = activeLayer.value
@@ -1368,7 +1231,6 @@ function cancelStroke() {
   shape = null
 }
 
-// ── Shape tools: line / rect drag preview, committed on release ──────
 let shape: { start: { col: number; row: number }; end: { col: number; row: number } } | null = null
 
 function shapeCells(): [number, number][] {
@@ -1381,7 +1243,6 @@ function shapeCells(): [number, number][] {
     for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) out.push([c, r])
     return out
   }
-  // Bresenham between the two cells.
   let x0 = start.col, y0 = start.row
   const x1 = end.col, y1 = end.row
   const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0)
@@ -1404,16 +1265,12 @@ function commitShape() {
   pushHistory()
   stroke = {undo: new Map()}
   for (const [c, r] of cells) {
-    // A line respects the brush size; a rect is already an area.
     if (tool.value === 'line') paintBrush(c, r, eraseStroke)
     else paintCell(c, r, eraseStroke)
   }
   stroke = null
 }
 
-// Bucket fill: repaint the 4-connected region sharing the clicked cell's
-// value (terrain mark first, else placed tile, else emptiness) on the
-// active layer. paintCell keeps terrain reflow + random variants correct.
 function floodFill(cell: { col: number; row: number }, erase: boolean) {
   const layer = activeLayer.value
   if (!layer) return
@@ -1428,8 +1285,6 @@ function floodFill(cell: { col: number; row: number }, erase: boolean) {
   const queue: [number, number][] = [[cell.col, cell.row]]
   while (queue.length) {
     const [c, r] = queue.pop()!
-    // Neighbours are checked before painting, so mutations (terrain reflow
-    // rewriting resolved tiles) never distort the region test.
     for (const [dc, dr] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
       const nc = c + dc, nr = r + dr
       if (nc < 0 || nr < 0 || nc >= config.cols || nr >= config.rows) continue
@@ -1443,8 +1298,6 @@ function floodFill(cell: { col: number; row: number }, erase: boolean) {
   stroke = null
 }
 
-// Eyedropper: pick the cell's terrain (preferred) or tile — props resolve
-// to their up-left anchor — then hop back to the brush.
 function pickAt(cell: { col: number; row: number }) {
   const layer = activeLayer.value
   if (!layer) return
@@ -1472,7 +1325,6 @@ function pickAt(cell: { col: number; row: number }) {
   tool.value = 'paint'
 }
 
-// Brush footprint: size × size cells around the pointer.
 function paintBrush(col: number, row: number, erase: boolean) {
   const n = Math.max(1, Math.min(4, brushSize.value))
   const off = Math.floor((n - 1) / 2)
@@ -1491,7 +1343,7 @@ function onDown(e: PointerEvent) {
   if (!cv) return
   cv.setPointerCapture?.(e.pointerId)
   pointers.set(e.pointerId, {x: e.clientX, y: e.clientY})
-  if (pointers.size >= 2) { cancelStroke(); baseGesture(); draw(); return }   // 2 fingers → gesture
+  if (pointers.size >= 2) { cancelStroke(); baseGesture(); draw(); return }
   const cell = eventCell(e)
   if (!cell) return
   e.preventDefault()
@@ -1525,8 +1377,6 @@ function onDown(e: PointerEvent) {
 
 function onMove(e: PointerEvent) {
   if (pointers.has(e.pointerId)) pointers.set(e.pointerId, {x: e.clientX, y: e.clientY})
-  // Two fingers down → pan/zoom only, never paint (gesture may be briefly null
-  // while a zoom step re-anchors next tick).
   if (pointers.size >= 2) { if (gesture) runGesture(); return }
   const cell = eventCell(e)
   const changed = (cell?.col !== hover.value?.col) || (cell?.row !== hover.value?.row)
@@ -1560,7 +1410,6 @@ function onUp(e: PointerEvent) {
 }
 function onLeave() { hover.value = null; scheduleDraw() }
 
-// ── History: whole-scene snapshots (strokes, layer ops, marquee ops) ─
 const undoStack: string[] = []
 const redoStack: string[] = []
 const canUndo = ref(false)
@@ -1571,7 +1420,6 @@ function syncHistory() {
   canRedo.value = redoStack.length > 0
 }
 
-// Call BEFORE mutating the scene.
 function pushHistory() {
   undoStack.push(JSON.stringify(config))
   if (undoStack.length > 60) undoStack.shift()
@@ -1609,7 +1457,6 @@ function redo() {
   syncHistory()
 }
 
-// ── Marquee: select / move / copy / paste / delete on the active layer ─
 const selRect = ref<{ c0: number; r0: number; c1: number; r1: number } | null>(null)
 let selAction: {
   mode: 'select' | 'move'
@@ -1632,7 +1479,6 @@ function selDown(cell: { col: number; row: number }) {
   if (!layer) return
   if (!layer.terrain) layer.terrain = {}
   if (inSelRect(cell.col, cell.row)) {
-    // Lift the region — it floats with the pointer until release.
     pushHistory()
     const s = selRect.value!
     const cells: Record<string, number> = {}
@@ -1772,11 +1618,8 @@ function deleteSelection() {
   draw()
 }
 
-// ── Save ───────────────────────────────────────────────────────────
 async function save() {
   if (saving.value) return
-  // A cloud world is open → save the scene only. The tileset is a shared,
-  // referenced project — saving a world must never rewrite its structure.
   if (world.value) {
     saving.value = true
     try {
@@ -1793,8 +1636,6 @@ async function save() {
     }
     return
   }
-  // Logged in, nothing open yet → first save creates the Tilemap project
-  // (tileset) and its first World.
   if (auth.isLogged) {
     saving.value = true
     try {
@@ -1823,7 +1664,6 @@ async function save() {
     }
     return
   }
-  // Signed out → browser-local draft.
   saveFreeStyle()
   toast.success('Saved in this browser')
 }
@@ -1839,7 +1679,7 @@ const faq = [
 
 <template>
   <div class="page tm-page">
-    <!-- Loading the collection list -->
+
     <div v-if="loadingList" class="tm-skeleton" aria-busy="true" aria-label="Loading">
       <div class="skel skel-controls"/>
       <div class="tm-layout">
@@ -1849,7 +1689,7 @@ const faq = [
 
     <template v-else>
         <div class="tm-editor flat-editor">
-        <!-- Toolbar — the art editor's .editor-toolbar chrome -->
+
         <div class="editor-toolbar">
           <div class="toolbar-start">
             <ui-dropdown-menu>
@@ -1937,7 +1777,7 @@ const faq = [
         </div>
 
         <div class="tm-layout tm-layout-rail">
-          <!-- Tool rail — same chrome as the pixel editor's .tools-rail -->
+
           <Widget class="tool-rail">
             <div class="tools tools-rail no-scrollbar">
               <ui-tooltip text="Paint (P) — Alt-click picks a tile" position="right">
@@ -2004,7 +1844,6 @@ const faq = [
             </div>
           </Widget>
 
-          <!-- Artboard + floating layers island -->
           <div class="tm-stage-wrap">
           <div class="tm-island" :class="{open: layersOpen}">
             <div
@@ -2073,7 +1912,6 @@ const faq = [
             </div>
           </div>
 
-          <!-- Artboard -->
           <div ref="stageEl" class="tm-stage no-scrollbar" @scroll.passive="debouncedViewSave()">
           <div v-if="loadingDetail" class="skel skel-board"/>
 
@@ -2109,7 +1947,6 @@ const faq = [
           </div>
         </div>
 
-        <!-- Tile palette — bottom bar, same idea as the editor's color palette -->
         <div class="tm-tilesbar">
           <div class="tm-tilesbar-ctl">
             <div v-if="hasSeg" class="tm-seg tm-palette-seg">
@@ -2219,7 +2056,7 @@ const faq = [
     <Widget title="More tools" class="tool-more">
       <ToolPaths exclude="tilemap"/>
     </Widget>
-    <!-- SEO content -->
+
     <ToolReadme>
       <h1>Tilemap Editor</h1>
       <p>
@@ -2247,7 +2084,6 @@ const faq = [
       <QnA :items="faq"/>
     </ToolReadme>
 
-    <!-- Map settings modal -->
     <UiModal v-if="sizeOpen" class="tm-settings-modal" @close="sizeOpen = false">
           <h3 class="publish-heading">Map settings</h3>
           <div class="tm-settings-body">
@@ -2365,7 +2201,6 @@ const faq = [
           </div>
       </UiModal>
 
-    <!-- Load tilemap: browse the account's worlds (or the local free-style map) -->
     <EditorLoadBrowser
         v-if="showLoadTm"
         title="Load tilemap"
@@ -2384,19 +2219,11 @@ const faq = [
 
 <style scoped>
 .tm-page { display: flex; flex-direction: column; gap: var(--space-3); }
-/* Cancel the column gap above "More tools" so it docks flush onto the editor. */
+
 .tm-page > .tool-more { margin-top: calc(var(--space-3) * -1 - 1px); }
 
-
-/* Controls + artboard as one block with even gaps */
-/* Disable the browser's own pinch / double-tap zoom over the editor (the
-   board has its own +/− zoom); scrolling still works. The SEO copy below
-   stays normally zoomable since it's outside .tm-editor. */
 .tm-editor, .tm-skeleton { touch-action: pan-x pan-y; }
-/* Flat editor: toolbar + layout sit flush inside one frame (see .flat-editor
-   in main.css); regions divide with 1px rules, no gaps. No overflow clip —
-   the File/Settings dropdowns must escape (frame corners stay clean because
-   the regions are transparent over the frame surface). */
+
 .tm-editor { display: flex; flex-direction: column; gap: 0; }
 
 .tm-palette-seg button { flex: 1; }
@@ -2421,14 +2248,9 @@ const faq = [
   color: var(--muted);
 }
 
-
-/* Tile-source select — sits after the Tiles/Search toggle, sizes to content. */
 .tm-src-select {
   max-width: 100%;
 }
-
-
-/* Map-settings modal (Teleported — needs its own --tm-ctl scale). */
 
 .tm-settings-body {
   display: flex;
@@ -2438,28 +2260,20 @@ const faq = [
   overflow-y: auto;
 }
 
-/* ── Body: tool rail + narrow panel + fixed square artboard ─────────── */
-/* --tm-sq is the artboard side: a screen-driven square, bounded so the rail
-   (48px) + panel (232px) + gaps always fit beside it. */
 .tm-layout {
   display: grid; gap: 0; grid-template-columns: 1fr;
 }
 @media (min-width: 768px) {
-  /* The stage takes everything left of the tool rail.
-     align-items: stretch so the rail divider spans the full row height. */
+
   .tm-layout { align-items: stretch; }
   .tm-layout-rail { grid-template-columns: 48px minmax(0, 1fr); }
 }
 
-/* Stage wrapper anchors the floating layers island (the stage itself scrolls,
-   so an overlay inside it would drift with the map). */
 .tm-stage-wrap { position: relative; min-width: 0; }
 .tm-stage-wrap .tm-stage { width: 100%; }
 
-/* Wider-than-tall workspace (overrides the shared square .tm-stage). */
 .tm-stage { aspect-ratio: 4 / 3; }
 
-/* Layers — collapsible island floating over the artboard. */
 .tm-island {
   position: absolute; top: 0.75rem; left: 0.75rem; z-index: 6;
   max-width: calc(100% - 1.5rem);
@@ -2484,7 +2298,6 @@ const faq = [
 .tm-island:not(.open) .tm-island-caret { margin-left: var(--space-2); }
 .tm-island .tm-layers { background: var(--surface); }
 
-
 .tm-chips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.3rem; }
 .tm-chips button {
   height: var(--tm-ctl); padding: 0; border: 1px solid var(--border);
@@ -2492,10 +2305,9 @@ const faq = [
   font-size: var(--text-xs); font-weight: 600; color: var(--foreground);
   transition: border-color var(--transition), color var(--transition), background var(--transition);
 }
-/* selected → filled, no border */
+
 .tm-chips button.active { border-color: transparent; color: var(--primary); background: color-mix(in oklab, var(--primary) 14%, var(--surface)); }
 
-/* Numeric width/height inputs for the cell size */
 .tm-cell-input {
   width: 100%; height: var(--tm-ctl); padding: 0 0.5rem; box-sizing: border-box;
   border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -2525,7 +2337,6 @@ const faq = [
 .tm-num-ctl button:hover { background: var(--surface-2); color: var(--foreground); }
 .tm-num-ctl span { text-align: center; font-weight: 700; font-size: var(--text-sm); }
 
-/* Background settings (inside the cog dropdown, editor-style) */
 .tm-bg-opts { display: flex; flex-direction: column; gap: var(--space-3); }
 .tm-bg-sw {
   width: 20px; height: 20px; flex: none; border-radius: var(--radius-sm);
@@ -2552,10 +2363,9 @@ const faq = [
 
 .tm-hint { font-size: var(--text-xs); line-height: 1.5; color: var(--muted); margin: 0; }
 
-/* ── Layers ───────────────────────────────────────────────────────── */
 .tm-layers {
   display: flex; flex-direction: column; gap: 2px;
-  /* 3 rows (~31.6px each) + gaps + padding — more layers scroll. */
+
   max-height: 106px; overflow-y: auto;
   border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px;
 }
@@ -2578,7 +2388,7 @@ const faq = [
 }
 .tm-layer-kind:hover { color: var(--foreground); background: var(--surface-2); }
 .tm-layer.active .tm-layer-kind { color: var(--primary); }
-/* Y-sort toggle reflects its OWN state (primary = on), not the active layer. */
+
 .tm-layer-ysort { color: var(--muted); }
 .tm-layer-ysort.tm-layer-ysort-on,
 .tm-layer.active .tm-layer-ysort.tm-layer-ysort-on { color: var(--primary); }
@@ -2600,7 +2410,6 @@ const faq = [
 .tm-layer-add:hover:not(:disabled) { color: var(--primary); }
 .tm-layer-add:disabled { opacity: 0.4; cursor: default; }
 
-/* Per-row actions — revealed on hover / for the active row (replace the count). */
 .tm-layer-actions { display: none; align-items: center; gap: 2px; flex: none; }
 .tm-layer:hover .tm-layer-actions, .tm-layer.active .tm-layer-actions { display: flex; }
 .tm-layer:hover .tm-layer-count, .tm-layer.active .tm-layer-count { display: none; }
@@ -2613,7 +2422,6 @@ const faq = [
 .tm-la-btn:disabled { opacity: 0.3; cursor: default; }
 .tm-la-btn.danger:hover:not(:disabled) { color: #ef4444; }
 
-/* Bottom tile palette bar — same idea as the editor's color palette strip. */
 .tm-tilesbar {
   --tm-ctl: 34px;
   display: flex; flex-direction: column; gap: 0.5rem;
@@ -2622,7 +2430,7 @@ const faq = [
 }
 .tm-tilesbar-ctl { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .tm-tilesbar-ctl .tm-search { flex: 1; min-width: 160px; margin-bottom: 0; }
-/* Scroll viewport; the grid inside is normal-flow so rows keep their size. */
+
 .tm-tiles { max-height: 138px; min-height: 0; overflow-y: auto; }
 .tm-tiles-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
@@ -2630,7 +2438,6 @@ const faq = [
 }
 .tm-tiles-empty { grid-column: 1 / -1; }
 
-/* Tile palette paginator — hugs the right edge of the control row. */
 .tm-pager { display: flex; align-items: center; gap: var(--space-1); flex: none; margin-left: auto; }
 .tm-pager-btn {
   width: var(--tm-ctl, 34px); height: var(--tm-ctl, 34px);
@@ -2640,7 +2447,7 @@ const faq = [
 }
 .tm-pager-btn .icon { width: 12px; height: 12px; }
 .tm-pager-btn:disabled { opacity: 0.4; cursor: default; }
-/* Tiles are filled (surface-2, framing the art) → no border; selection = ring. */
+
 .tm-tile {
   aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
   padding: var(--space-1); border: 0; border-radius: var(--radius-sm);
@@ -2653,17 +2460,12 @@ const faq = [
 .tm-tile.active { box-shadow: inset 0 0 0 2px var(--primary); }
 .tm-tile-skel { aspect-ratio: 1; border-radius: var(--radius-sm); }
 
-/* ── Artboard ─────────────────────────────────────────────────────── */
-/* Fixed square workspace; the board scrolls inside it when zoomed past its edges.
-   `safe center` keeps the board centred but still lets you scroll to every edge
-   when it overflows (plain center would clip the top/left). */
 @media (max-width: 767px) {
-  /* Artboard first so the map is what you see and paint; tools follow it. */
+
   .tm-stage-wrap { order: -1; }
   .tm-stage { width: 100%; }
   .tm-tile { padding: 2px; }
 
-  /* ≥16px stops iOS Safari from auto-zooming the page when an input is focused. */
   .tm-cell-input, .tm-search input, .tm-layer-input { font-size: 16px; }
 }
 .tm-board {
@@ -2699,7 +2501,6 @@ const faq = [
 .tm-fade-enter-active, .tm-fade-leave-active { transition: opacity 0.2s ease; }
 .tm-fade-enter-from, .tm-fade-leave-to { opacity: 0; }
 
-/* ── Skeleton ─────────────────────────────────────────────────────── */
 .tm-skeleton { display: flex; flex-direction: column; gap: var(--space-3); }
 .skel {
   background: linear-gradient(90deg,
@@ -2716,7 +2517,6 @@ const faq = [
 </style>
 
 <style>
-/* Modal variant sizing — unscoped: these classes land on UiModal's
-   inner div (rendered by the shared component, outside this scope). */
+
 .tm-settings-modal { --tm-ctl: 34px; }
 </style>

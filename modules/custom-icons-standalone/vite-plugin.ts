@@ -61,8 +61,6 @@ export default function iconStylesOptimized(options: {
   async function rebuildCSS() {
     const rules: string[] = []
     for (const cls of iconNames) {
-      // Tokens without a matching SVG (e.g. modifier classes like `cl-icon-btn`)
-      // must not emit a rule: a mask-image pointing at a 404 hides the element.
       try {
         await fs.access(path.join(root, 'public/icons', `${cls}.svg`))
         rules.push(`.icon-${cls} {mask-image: url("/icons/${cls}.svg");}`)

@@ -17,15 +17,13 @@ const tileImages = new Map<number, HTMLImageElement>()
 
 const cfg = computed<TilemapConfig>(() => normalizeTilemap(props.config))
 
-// Only items actually placed on the map need loading.
 const usedIds = computed(() => new Set<number>(placedIds(cfg.value)))
 
-// --- Zoom: 1 = fit-to-frame; zoom in up to 8x, pan via native scroll. ---
 const ZOOM_MIN = 1
 const ZOOM_MAX = 8
 const ZOOM_STEP = 1.25
 const zoom = ref(1)
-const baseW = ref(0) // canvas display width (px) at zoom 1 (fitted)
+const baseW = ref(0)
 
 const canvasStyle = computed(() =>
     baseW.value > 0 ? {width: `${Math.round(baseW.value * zoom.value)}px`} : undefined,
@@ -35,8 +33,6 @@ function zoomIn() { zoom.value = Math.min(ZOOM_MAX, zoom.value * ZOOM_STEP) }
 function zoomOut() { zoom.value = Math.max(ZOOM_MIN, zoom.value / ZOOM_STEP) }
 function zoomReset() { zoom.value = 1 }
 
-// Fit = shrink-to-frame, never upscale past intrinsic pixels (same as the old
-// max-width/max-height behaviour).
 function measure() {
   const el = viewport.value
   const cv = canvas.value
@@ -124,13 +120,12 @@ watch([cfg, () => props.items], loadImages, {deep: true})
 
 .tm-showcase-canvas {
   display: block;
-  margin: auto; /* centers when smaller than the frame, scrolls cleanly when zoomed */
+  margin: auto; 
   max-width: 100%;
   max-height: 100%;
   image-rendering: pixelated;
 }
 
-/* Once measured, the inline width takes over — lift the fit constraints. */
 .tm-showcase-canvas[style] {
   max-width: none;
   max-height: none;

@@ -2,21 +2,12 @@ import {ofetch} from "ofetch";
 
 const domain = "simplepixelart.com"
 
-// Canvas-size listing pages (/arts/size-WxH). They are the best-performing
-// cluster in Search Console — 22% of impressions at 3.61% CTR, the highest of
-// any large bucket — and until now they appeared in no sitemap at all; Google
-// found them through internal links only, and the cluster was losing clicks.
-//
-// The URL list comes from /coloring/shared-pages/sizes, which counts exactly what
-// a /arts/size-WxH page counts. That matters: the page noindexes itself when its
-// listing is empty, so a hardcoded guess would put noindex URLs in the sitemap.
 export default defineEventHandler(async (event) => {
     defaultContentType(event, "text/xml")
     setHeader(event, 'cache-control', 'public, max-age=3600, stale-while-revalidate=86400')
 
     let sizes: { width: number; height: number; count: number }[] = []
     try {
-        // Trailing slash matters — without it the API 301s.
         sizes = await ofetch(`https://touch.ninosaur.com/coloring/shared-pages/sizes/`)
     } catch {
         // Serve a valid empty urlset rather than a 500 — a broken sitemap is worse
