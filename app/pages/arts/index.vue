@@ -4,14 +4,11 @@ import type {APIResponse, TagSchema} from "~/types";
 const route = useRoute()
 const page = computed(() => route.query.page ? Number.parseInt(route.query.page.toString()) : 1)
 
-// Any of these query params turns the listing into a near-duplicate of the base
-// page — strip them from canonical and noindex so Google consolidates the URL.
 const hasFilterQuery = computed(() =>
     !!(route.query.width || route.query.height || route.query.is_iso || route.query.search),
 )
 
 const {data: tagsRes} = await useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {
-  // has_pages=1 → only tags with public artworks (skip empty tags that 404).
   params: {page_size: 30, has_pages: 1},
   key: 'arts-tags',
 })

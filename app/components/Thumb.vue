@@ -21,11 +21,9 @@ function draw() {
   canvas.value.width = cw
   canvas.value.height = cw
 
-  // White bg (fills whole square)
   ctx.value.fillStyle = '#ffffff'
   ctx.value.fillRect(0, 0, cw, cw)
 
-  // Center art in square
   const ox = Math.floor((size - w) / 2) * zoom
   const oy = Math.floor((size - h) / 2) * zoom
 

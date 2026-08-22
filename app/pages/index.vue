@@ -8,7 +8,6 @@ type WorkItem = (SharedPage | EditorData) & {
   name?: string
   width?: number
   height?: number
-  // Server flag: false for empty drafts with no renderable PNG yet.
   has_image?: boolean
 }
 
@@ -29,7 +28,6 @@ function isCloudWork(item: WorkItem): boolean {
   return typeof item.id === 'number' && !!item.id_string
 }
 
-// Empty drafts have no rendered PNG (404) — show a placeholder, not a broken img.
 const failedThumb = reactive<Record<string | number, boolean>>({})
 
 function workThumbUrl(item: WorkItem): string {
@@ -61,10 +59,6 @@ async function loadUserWorks() {
   }
 }
 
-// Every size here has public art. 9x9 and 64x64 used to be in this list and have
-// none — an empty size page noindexes itself, so the homepage was spending its
-// link equity on two dead ends. 15x15 and 18x18 replace them: both hold art and
-// both already draw search traffic.
 const sizes = ["8x8", "10x10", "12x12", "13x13", "15x15", "16x16", "18x18", "20x20", "24x24", "32x32"];
 
 const faq = [
@@ -146,11 +140,6 @@ onMounted(() => {
   loadUserWorks()
 })
 
-// "Simple Pixel Art" is load-bearing: it's an exact-phrase match that earns
-// 186 clicks/month at 8.88% CTR. "Easy" is the other half of the same demand —
-// queries containing it are 46% of all impressions (11,294), and the page ranks
-// 4.5-7.4 for them while converting at 0.42-1.16% because nothing in the snippet
-// matched the word. Both phrases have to appear; don't drop either.
 useCustomSeoMeta({
   title: "Simple Pixel Art — Easy Free Online Pixel Art Maker",
   description: "Simple Pixel Art is a free online pixel art maker built for easy pixel art. Draw on a grid, convert photos, remix easy templates, and share in seconds — no signup, no skill required.",
@@ -233,7 +222,7 @@ useCustomSeoMeta({
 
 <template>
   <div class="page home">
-    <!-- Hero -->
+
     <section class="home-hero">
       <div class="home-hero-inner">
         <span class="home-hero-eyebrow">
@@ -260,7 +249,7 @@ useCustomSeoMeta({
           </button>
         </form>
         <div class="studio-tools">
-          <!-- AI sits in the prompt form right above — no need to repeat it. -->
+
           <ToolPaths exclude="ai"/>
         </div>
         <p v-if="auth.logged" class="home-hero-greeting">
@@ -283,7 +272,6 @@ useCustomSeoMeta({
       </div>
     </section>
 
-    <!-- Studio: recent works (tools moved to the hero) -->
     <section v-if="hasWorks || loadingWorks" class="studio readme">
       <div class="readme-head">
         <div class="readme-tabs">
@@ -295,7 +283,7 @@ useCustomSeoMeta({
       </div>
 
       <div class="studio-body">
-      <!-- Has recent works: grid -->
+
       <div v-if="hasWorks" class="studio-grid">
         <nuxt-link to="/editor?new=true" class="studio-new" title="New blank canvas">
           <span class="icon icon-plus studio-new-icon"/>
@@ -330,7 +318,6 @@ useCustomSeoMeta({
         </nuxt-link>
       </div>
 
-      <!-- Loading skeleton -->
       <div v-else-if="loadingWorks" class="studio-loading">
         <div v-for="i in 6" :key="i" class="skeleton skeleton-square"/>
       </div>
@@ -338,7 +325,6 @@ useCustomSeoMeta({
       </div>
     </section>
 
-    <!-- Library: new -->
     <section class="library readme">
       <div class="readme-head">
         <div class="readme-tabs">
@@ -357,7 +343,6 @@ useCustomSeoMeta({
       <AdSlot slot="6499761093"/>
     </ClientOnly>
 
-    <!-- README: project overview + Q&A, page bottom -->
     <ToolReadme :toc="false" :guidelines="false">
       <h1>Simple Pixel Art</h1>
       <div class="readme-badges">
@@ -421,8 +406,6 @@ useCustomSeoMeta({
   margin-top: var(--space-2);
 }
 
-/* === Hero === */
-/* Boxed hero: card panel on a subtle accent wash. */
 .home-hero {
   padding: var(--space-4);
   background:
@@ -480,7 +463,6 @@ useCustomSeoMeta({
   }
 }
 
-/* AI prompt → editor hand-off */
 .home-ai {
   display: flex;
   gap: var(--space-2);
@@ -561,7 +543,6 @@ useCustomSeoMeta({
   }
 }
 
-/* === Section heads (shared) === */
 .section-head {
   display: flex;
   align-items: center;
@@ -602,7 +583,6 @@ useCustomSeoMeta({
   }
 }
 
-/* === Studio + Library: wrapped in the README card; plain padded body === */
 .studio-body,
 .library-body { padding: var(--space-4); }
 
@@ -660,7 +640,7 @@ useCustomSeoMeta({
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   transition: border-color var(--transition);
-  /* Folded "file" corner, same as art cards. */
+
   --fold-size: 14px;
   transition: --fold-size 220ms cubic-bezier(.22,.61,.36,1);
   -webkit-mask: linear-gradient(225deg, transparent calc(var(--fold-size) * 0.7071 - 0.25px), #000 calc(var(--fold-size) * 0.7071 + 0.25px));
@@ -697,8 +677,6 @@ useCustomSeoMeta({
   z-index: 1;
 }
 
-
-
 .studio-canvas {
   display: block;
   background: var(--surface);
@@ -725,7 +703,6 @@ useCustomSeoMeta({
   height: 28px;
 }
 
-/* === Studio: loading skeleton === */
 .studio-loading {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -739,7 +716,6 @@ useCustomSeoMeta({
   }
 }
 
-/* === Studio: always-visible tool paths === */
 .studio-tools {
   width: 100%;
 }

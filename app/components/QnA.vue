@@ -1,14 +1,12 @@
 <script setup lang="ts">
 export interface QnAItem {
   q: string
-  /** Answer as an HTML fragment (paragraphs, lists, links allowed). */
   a: string
 }
 
 withDefaults(defineProps<{
   items: QnAItem[]
   title?: string
-  /** Right-side hint; pass "" to hide it. */
   hint?: string
 }>(), {
   title: 'Frequently asked questions',
@@ -36,8 +34,7 @@ withDefaults(defineProps<{
 </template>
 
 <style scoped>
-/* Section header (matches the home "Questions & answers" block). The .qa-*
- * item styles live globally in main.css, shared by every consumer. */
+
 .section-head {
   display: flex;
   align-items: center;
@@ -68,7 +65,6 @@ withDefaults(defineProps<{
   color: var(--muted);
 }
 
-/* Mobile: the hint would squeeze the title in the fixed row — hide it. */
 @media (max-width: 640px) {
   .section-hint {
     display: none;

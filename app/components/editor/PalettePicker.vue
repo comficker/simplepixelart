@@ -13,7 +13,6 @@ type Tab = 'browse' | 'save' | 'image'
 const tab = ref<Tab>('browse')
 const mode = ref<'replace' | 'append'>('replace')
 
-// ----- Browse -----
 const q = ref('')
 const sort = ref('-score')
 const palettes = ref<Palette[]>([])
@@ -46,7 +45,6 @@ function applyLibrary(p: Palette) {
   open.value = false
 }
 
-// ----- Save current -----
 const saveName = ref('')
 const saveTags = ref<string[]>([])
 const saving = ref(false)
@@ -76,7 +74,6 @@ async function saveCurrent() {
   }
 }
 
-// ----- From image -----
 const count = ref(16)
 const detecting = ref(false)
 const detected = ref<string[]>([])
@@ -135,7 +132,6 @@ watch(open, (v) => {
           </button>
         </header>
 
-        <!-- Apply mode (browse + image) -->
         <div v-if="tab !== 'save'" class="pp-mode">
           <span class="pp-mode-label">Apply as</span>
           <div class="pp-seg">
@@ -144,7 +140,6 @@ watch(open, (v) => {
           </div>
         </div>
 
-        <!-- BROWSE -->
         <div v-if="tab === 'browse'" class="pp-body">
           <div class="pp-toolbar">
             <input type="text" class="pp-search" placeholder="Search palettes..." @input="onSearch"/>
@@ -167,7 +162,6 @@ watch(open, (v) => {
           </div>
         </div>
 
-        <!-- SAVE CURRENT -->
         <div v-else-if="tab === 'save'" class="pp-body">
           <p class="pp-hint">Save the current {{ store.editorData.colors.length }}-color palette to the library and link it to this artwork.</p>
           <div class="pp-cur-strip">
@@ -188,7 +182,6 @@ watch(open, (v) => {
           </button>
         </div>
 
-        <!-- FROM IMAGE -->
         <div v-else class="pp-body">
           <label class="pp-drop">
             <input type="file" accept="image/*" class="pp-file" @change="onFile"/>

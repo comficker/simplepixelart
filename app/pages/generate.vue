@@ -6,9 +6,6 @@ import {aiImageToGrid} from '~/helper/pixel'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
 import type {EditorData} from '~/types'
 
-// Text prompt → pixel art, as a tool page in its own right (it used to be a
-// modal inside the editor). Same shape as /convert: preview on the left,
-// settings on the right, one hand-off button into the editor.
 const auth = useAuthStore()
 const config = useRuntimeConfig()
 const requestURL = useRequestURL()
@@ -46,19 +43,13 @@ useCustomSeoMeta({
   ],
 })
 
-// Same Google OAuth entry the command palette uses — there is no /auth page.
 const googleAuthUrl = computed(() => {
   const apiBase = (config.public.api as string) || ''
   return `${apiBase}/auth/google?state=${encodeURIComponent(`${requestURL.origin}/auth/callback`)}`
 })
 
-// 'auto' = the size the model natively drew at (detected from the picture,
-// usually 40-110) — the option for users who want the art as large as it
-// really is. The prompt then asks for the finest grid we offer.
 const SIZES: (number | 'auto')[] = ['auto', 16, 32, 64, 128]
 const COLOR_COUNTS = [8, 16, 32]
-// Whitelisted prompt modifiers (mirrored server-side) — steer the model
-// without asking users to write prompt-engineering incantations.
 const STYLES = [
   {v: 'sprite', l: 'Sprite'},
   {v: 'icon', l: 'Icon'},
@@ -71,9 +62,6 @@ const VIEWS = [
   {v: 'side', l: 'Side'},
   {v: 'isometric', l: 'Iso'},
 ]
-// Background handling, one control: cut it to transparency (default), keep it
-// as a painted colour, or leave the model's ground alone when the removal
-// misjudges a subject.
 const BG_MODES = [
   {v: 'cut', l: 'Cut', t: 'Remove the background — the sprite lands with transparency around it'},
   {v: 'keep', l: 'Keep', t: 'Remove it, then paint the colour the model used back in'},
@@ -91,10 +79,6 @@ const bgMode = ref<BgMode>('cut')
 const fillGrid = ref(true)
 const previewMode = ref<'pixel' | 'original'>('pixel')
 
-// ── History: every paid generation, saved to the account (cloud) ─────
-// The backend records each success (options + thumb + the picture itself);
-// the attached reference image is never stored. Reopening an entry re-runs
-// the free local conversion — no credits involved.
 type GenHistoryItem = {
   id: number
   prompt: string
@@ -102,28 +86,22 @@ type GenHistoryItem = {
   options: { size?: number; style?: string; view?: string; outline?: boolean; colors?: number }
 }
 const history = ref<GenHistoryItem[]>([])
-const historyId = ref<number | null>(null)   // the entry currently on the stage
-// Restoring assigns several watched settings at once — hold the watchers below
-// so they neither re-convert per knob nor reset the restored backdrop.
+const historyId = ref<number | null>(null)
 let restoring = false
 
-// A scene fills the frame — keeping its background makes more sense.
 watch(style, (v) => { if (!restoring) bgMode.value = v === 'scene' ? 'keep' : 'cut' })
 
 const busy = ref(false)
 const converting = ref(false)
 const claiming = ref(false)
 const summary = ref<{ enabled: boolean; cost: number; balance: number; dailyClaimed: boolean; dailyGrant: number } | null>(null)
-const resultUrl = ref('')            // the picture credits were spent on
+const resultUrl = ref('')
 const previewCanvas = ref<HTMLCanvasElement | null>(null)
 const promptEl = ref<HTMLInputElement | null>(null)
 
-// ── Reference image (optional, image-to-image) ───────────────────────
-// The model conditions on the attached picture, so it only has to be legible:
-// downscale to 768px before sending and the request stays small.
 const REF_SIDE = 768
 const fileEl = ref<HTMLInputElement | null>(null)
-const reference = ref('')          // data URL sent with the next generation
+const reference = ref('')
 const referenceName = ref('')
 
 async function pickReference(file: File | null | undefined) {
@@ -158,7 +136,7 @@ async function pickReference(file: File | null | undefined) {
 
 function onRefPick(e: Event) {
   pickReference((e.target as HTMLInputElement).files?.[0])
-  ;(e.target as HTMLInputElement).value = ''      // same file twice still fires
+  ;(e.target as HTMLInputElement).value = ''
 }
 
 function clearReference() {
@@ -166,17 +144,15 @@ function clearReference() {
   referenceName.value = ''
 }
 
-// Dropping a picture on the composer is the other obvious gesture.
 function onRefDrop(e: DragEvent) {
   e.preventDefault()
   pickReference(e.dataTransfer?.files?.[0])
 }
-const grid = ref<number[][]>([])     // indexed pixels of the converted result
+const grid = ref<number[][]>([])
 const palette = ref<string[]>([])
 
 const BG = 0
 const hasResult = computed(() => !!resultUrl.value && grid.value.length > 0)
-// Not enough credits for one generation — the earn path takes over.
 const broke = computed(() =>
     auth.isLogged && !!summary.value?.enabled && summary.value.balance < summary.value.cost)
 
@@ -194,14 +170,12 @@ async function loadSummary() {
 }
 
 onMounted(() => {
-  // Prefill from the home hero form.
   const seed = route.query.prompt
   if (typeof seed === 'string' && seed.trim()) prompt.value = seed.slice(0, 300)
   loadSummary()
   if (auth.isLogged) loadHistory()
 })
 
-// Instant top-up right here — the daily bonus is the fastest earn.
 async function claimDaily() {
   if (claiming.value || !summary.value) return
   claiming.value = true
@@ -219,13 +193,6 @@ async function claimDaily() {
   }
 }
 
-// ── Convert: the model's picture → an indexed N×N grid ───────────────
-// aiImageToGrid (see ~/helper/pixel) flood-fills the model's flat
-// ground to transparency from the border, crops to the subject, then resamples
-// by cell majority keeping the model's own flat colours. Index 0 is the
-// background and palette[0] holds the ground colour, so "Keep" can paint it in.
-// Same guard as /convert: conversions are async and knob changes can
-// interleave — only the latest call may publish.
 let convertRun = 0
 
 async function convertResult() {
@@ -248,15 +215,13 @@ async function convertResult() {
   }
 }
 
-// Every knob re-runs the conversion on the picture already paid for — adjusting
-// never spends another credit, a size change included.
 watch([bgMode, maxColors, fillGrid, size], () => { if (resultUrl.value && !restoring) convertResult() })
 watch(previewMode, (m) => { if (m === 'pixel') nextTick(drawPreview) })
 
 function drawPreview() {
   const cv = previewCanvas.value
   if (!cv || !grid.value.length) return
-  const n = grid.value.length          // = size, or whatever Auto detected
+  const n = grid.value.length
   const scale = Math.max(1, Math.floor(384 / n))
   cv.width = n * scale
   cv.height = n * scale
@@ -296,7 +261,7 @@ async function generate() {
     if (summary.value) summary.value.balance = res.balance
     await convertResult()
     historyId.value = res.history_id ?? null
-    loadHistory()                    // the backend recorded it — refresh the strip
+    loadHistory()
   } catch (e: any) {
     const s = e?.status ?? e?.response?.status
     const codes = e?.data ?? e?.response?._data
@@ -314,7 +279,6 @@ async function generate() {
   }
 }
 
-// ── History plumbing (cloud — /coloring/economy/gen-image/history/) ──
 async function loadHistory() {
   try {
     const res = await useNativeFetch<{ results: GenHistoryItem[] }>(
@@ -323,8 +287,6 @@ async function loadHistory() {
   } catch { /* strip just stays as it is */ }
 }
 
-// Reopen a past generation: the stored picture and its options come back, and
-// re-converting is free — no credits involved.
 async function restoreFromHistory(h: GenHistoryItem) {
   if (busy.value || converting.value) return
   let original = ''
@@ -344,19 +306,16 @@ async function restoreFromHistory(h: GenHistoryItem) {
   outline.value = !!h.options.outline
   size.value = h.options.size || 32
   maxColors.value = h.options.colors || 16
-  // Conversion knobs are client-side and not part of the stored request —
-  // rederive them the way a fresh generation would.
   bgMode.value = style.value === 'scene' ? 'keep' : 'cut'
   fillGrid.value = true
   resultUrl.value = original
   previewMode.value = 'pixel'
   historyId.value = h.id
-  await nextTick()                   // let the held watchers flush first
+  await nextTick()
   restoring = false
   await convertResult()
 }
 
-// Removing an entry only forgets it — whatever is on the stage stays.
 function deleteFromHistory(id: number) {
   history.value = history.value.filter(e => e.id !== id)
   if (historyId.value === id) historyId.value = null
@@ -364,16 +323,11 @@ function deleteFromHistory(id: number) {
       .catch(() => { /* it comes back on the next load if the delete failed */ })
 }
 
-// Hand off to the editor the same way the other tools do: park the artwork in
-// the local workspace store and open it by id.
 async function sendToEditor() {
   if (!grid.value.length) return
   let g = grid.value
   let pal = palette.value
   let skip = bgMode.value === 'cut' ? BG : -1
-  // The tab picks what you take with you: Pixel art hands off the converted
-  // sprite; Original hands off the model's own picture — native size (Auto
-  // detection), framing and background kept, a generous palette.
   if (previewMode.value === 'original' && resultUrl.value) {
     converting.value = true
     try {
@@ -382,7 +336,7 @@ async function sendToEditor() {
       if (!q) { toast.error('Could not read the generated image'); return }
       g = q.indexed
       pal = q.palette.map(c => rgbToHex(c[0], c[1], c[2]).toUpperCase())
-      skip = -1                        // the background is part of the original
+      skip = -1
     } finally {
       converting.value = false
     }
@@ -449,12 +403,11 @@ const faq = [
 <template>
   <div class="page">
     <div class="gen-grid flat-editor">
-      <!-- Preview -->
+
       <div class="gen-main">
         <Widget title="Preview">
           <div class="preview-wrapper">
-            <!-- Overlaid on the stage, not in the header: the toggle belongs to
-                 the picture it switches. -->
+
             <div v-if="hasResult" class="tm-seg gen-viewseg">
               <button :class="{active: previewMode === 'pixel'}" @click="previewMode = 'pixel'">Pixel art</button>
               <button :class="{active: previewMode === 'original'}" @click="previewMode = 'original'">Original</button>
@@ -469,7 +422,6 @@ const faq = [
               <img v-if="previewMode === 'original'" :src="resultUrl" alt="Generated picture" class="gen-original">
             </template>
 
-            <!-- Empty state, the way /convert puts its dropzone here -->
             <div v-else class="gen-empty">
               <span class="icon icon-auto-fix gen-empty-icon"/>
               <p class="text-sm">Describe a sprite and generate it</p>
@@ -496,13 +448,8 @@ const faq = [
           </button>
         </div>
 
-        <!-- Composer: the prompt sits at the bottom of the work area, the way a
-             chat does, so the same box starts the first sprite and asks for the
-             next one. One line, Enter sends — a prompt is a sentence, and a
-             textarea's line box never sat level with the buttons. -->
         <div class="gen-composer" @drop="onRefDrop" @dragover.prevent>
-          <!-- Attached reference sits above the input, the way a chat shows the
-               file you are about to send. -->
+
           <div v-if="reference" class="gen-ref">
             <img :src="reference" alt="" class="gen-ref-thumb">
             <span class="gen-ref-name">{{ referenceName || 'Reference image' }}</span>
@@ -547,8 +494,7 @@ const faq = [
               <span class="gen-cost"><span class="icon icon-coin"/>{{ summary?.cost ?? 60 }}</span>
             </button>
           </div>
-          <!-- Only what stands in the way: the site header already shows the
-               balance, so nothing is echoed here. -->
+
           <div v-if="broke || (summary && !summary.enabled)" class="gen-composer-foot">
             <template v-if="broke">
               <span class="text-2xs text-muted">Need 🪙{{ summary!.cost }}</span>
@@ -565,7 +511,6 @@ const faq = [
         </div>
       </div>
 
-      <!-- Settings -->
       <div class="gen-settings">
         <Widget title="Look">
           <div class="settings-row">
@@ -586,9 +531,6 @@ const faq = [
           </label>
         </Widget>
 
-        <!-- Size, colours and backdrop all re-convert the picture already paid
-             for, so they share one panel and carry no cost badge — the title
-             attributes say so on hover instead of a paragraph of copy. -->
         <Widget title="Output">
           <div class="settings-row" title="Canvas size — Auto keeps the model's native detail; re-converts for free">
             <label v-for="s in SIZES" :key="s" class="pill" :class="{active: size === s}">
@@ -605,8 +547,7 @@ const faq = [
               <span>{{ c }}c</span>
             </label>
           </div>
-          <!-- Only in the one case where it matters: a photo's subject cannot
-               survive 16 or 32 cells (measured in test_gemini). -->
+
           <p v-if="reference && size !== 'auto' && size < 64" class="tool-note">
             A photo holds up better at 64+
           </p>
@@ -625,7 +566,6 @@ const faq = [
           </label>
         </Widget>
 
-        <!-- Every paid generation, reopenable for free. Saved to the account. -->
         <Widget v-if="history.length" title="History">
           <div class="gen-hist">
             <div v-for="h in history" :key="h.id" class="gen-hist-item" :class="{active: h.id === historyId}">
@@ -643,12 +583,10 @@ const faq = [
       </div>
     </div>
 
-    <!-- More tools -->
     <Widget title="More tools" class="tool-more">
       <ToolPaths exclude="ai"/>
     </Widget>
 
-    <!-- SEO content -->
     <ToolReadme>
       <h1>AI Pixel Art Generator</h1>
       <p>Describe a sprite, get pixel art you can actually edit — a canvas of pixels with a real palette, not a picture of pixel art.</p>
@@ -683,8 +621,7 @@ const faq = [
 </template>
 
 <style scoped>
-/* Flat editor: preview + settings flush inside one frame (.flat-editor in
-   main.css), split by 1px dividers — same as /convert and the slicer. */
+
 .gen-grid {
   display: grid;
   gap: 0;
@@ -716,14 +653,12 @@ const faq = [
   border-top: 1px solid var(--border);
 }
 
-/* The stage is flush with the widget frame — no body padding, no own padding:
-   the picture goes edge to edge. */
 .gen-main :deep(.widget-body) {
   padding: 0;
 }
 
 .preview-wrapper {
-  position: relative;                /* anchors the view toggle overlay */
+  position: relative;                
   display: flex;
   align-items: center;
   justify-content: center;
@@ -738,7 +673,6 @@ const faq = [
   height: auto;
 }
 
-/* Square art in a square stage — fill it, and stay crisp doing so. */
 .gen-preview { width: 100%; }
 
 .gen-original {
@@ -752,14 +686,10 @@ const faq = [
       0 0 / 16px 16px;
 }
 
-/* Re-converting takes ~150ms — dim rather than swap in a spinner. */
 .gen-preview.busy { opacity: 0.55; }
 
 .gen-original { border-radius: var(--radius-sm); }
 
-/* Overlaid top-right on the stage. .tm-seg defaults to a 34px box with 13px
-   labels and no horizontal padding — kept compact here for the same reason it
-   was in the header: the control must not compete with the picture. */
 .gen-viewseg {
   position: absolute;
   top: var(--space-3);
@@ -794,7 +724,6 @@ const faq = [
   margin-bottom: var(--space-1);
 }
 
-/* ── Composer (chat-style, bottom of the work area) ───────────────── */
 .gen-ref {
   display: flex;
   align-items: center;
@@ -850,9 +779,6 @@ const faq = [
   color: var(--foreground);
 }
 
-/* Square, and exactly as tall as the send button so the bar reads as one row
-   (it was 30px against the button's 38px, centres 4px apart, with an icon that
-   was bigger than the send icon on the smaller button). */
 .gen-attach {
   flex: none;
   display: inline-flex;
@@ -868,7 +794,6 @@ const faq = [
   transition: background var(--transition), color var(--transition);
 }
 
-/* Same optical weight as the send button's icon. */
 .gen-attach .icon {
   width: 1.125rem;
   height: 1.125rem;
@@ -884,7 +809,6 @@ const faq = [
   outline-offset: -2px;
 }
 
-/* A picture is attached — the button carries that state, not just the chip. */
 .gen-attach.active {
   color: var(--primary);
   background: color-mix(in oklab, var(--primary) 12%, transparent);
@@ -915,7 +839,7 @@ const faq = [
 .gen-input {
   flex: 1;
   min-width: 0;
-  height: 2.375rem;               /* same as the attach and send buttons */
+  height: 2.375rem;               
   border: 0;
   background: transparent;
   color: var(--foreground);
@@ -924,9 +848,6 @@ const faq = [
   padding: 0 var(--space-1);
 }
 
-/* The global textarea:focus rule paints a 3px primary ring — inside the
-   composer that ring floats in the middle of the bar. The bar itself carries
-   the focus signal (border-color on :focus-within), so the field stays bare. */
 .gen-input:focus,
 .gen-input:focus-visible {
   outline: none;
@@ -958,7 +879,7 @@ const faq = [
 }
 
 @media (max-width: 479px) {
-  .gen-send-label { display: none; }   /* icon + price is enough on a phone */
+  .gen-send-label { display: none; }   
 }
 
 .gen-hint {
@@ -992,7 +913,6 @@ const faq = [
   cursor: pointer;
 }
 
-/* ── History (settings column): click a tile to reload it, free ───── */
 .gen-hist {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1032,7 +952,6 @@ const faq = [
   box-shadow: 0 0 0 1px var(--primary);
 }
 
-/* Corner remove — revealed on hover where hover exists, always there on touch. */
 .gen-hist-x {
   position: absolute;
   top: -5px;
@@ -1063,7 +982,6 @@ const faq = [
   .gen-hist-x { opacity: 1; }
 }
 
-/* Local copy of the tool-page pill (scoped in /convert and the slicer too). */
 .pill {
   display: flex;
   align-items: center;

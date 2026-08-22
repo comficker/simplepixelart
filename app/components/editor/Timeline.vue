@@ -5,19 +5,12 @@ import type {AnimationFrame, AnimationTag} from "~/types";
 
 const store = useEditor()
 
-// When the art is still static, show a single implicit frame (the current art)
-// plus an "add" affordance so the feature is discoverable.
 const displayFrames = computed<AnimationFrame[]>(() =>
     store.frames.length
         ? (store.frames as AnimationFrame[])
         : [{id: '_static', layers: store.editorData.layers}]
 )
 
-// ===== Cel grid shape (Aseprite timeline: rows = layers, columns = frames) =====
-// Frames each own an independent layer stack; rows align stacks BY INDEX (the
-// same convention all-frames drawing uses), so "layer 2 of every frame" reads
-// as one row and can be animated on its own. Row order and numbering mirror
-// the Layers panel (index 0 on top, numbered N..1 — highest index paints on top).
 const maxLayers = computed(() => displayFrames.value.reduce((m, f) => Math.max(m, f.layers.length), 0))
 const rowIndexes = computed(() => Array.from({length: maxLayers.value}, (_, i) => i))
 
@@ -35,13 +28,9 @@ function rowNum(li: number) {
   return maxLayers.value - li
 }
 
-// Column geometry, shared with the tag lane so spans stay aligned.
 const CEL = 34
 const GAP = 2
 
-// ===== Cel thumbnails =====
-// One tiny canvas per (frame, layer) intersection, registered in a plain Map
-// (never reactive — canvases are render targets, not state).
 const celEls = new Map<string, HTMLCanvasElement>()
 
 function setCelEl(el: any, j: number, li: number) {
@@ -63,7 +52,6 @@ function renderCel(j: number, li: number) {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
   ctx.clearRect(0, 0, w, h)
-  // Single-layer thumbnail (raw data to skip proxy overhead).
   drawThumbnail(canvas, {
     width: w,
     height: h,
@@ -105,11 +93,6 @@ function renderAllThumbs() {
 
 onMounted(renderAllThumbs)
 
-// drawTurn bumps on EVERY brush move — recomposing every cel each move froze
-// big animated art. Mid-stroke only the ACTIVE frame's cels can change, so
-// repaint just that column, trailing-debounced. A palette recolor touches
-// every cel's look without changing anything structural — the cheap
-// fingerprint catches it.
 let thumbTimer: ReturnType<typeof setTimeout> | null = null
 let lastPalette = ''
 watch(() => store.drawTurn, () => {
@@ -129,8 +112,6 @@ watch(() => store.drawTurn, () => {
     renderFrameCels(Math.max(0, store.currentFrameIndex))
   }, 120)
 })
-// Structural changes (frame/layer ops, undo/redo via sharedRev, palette size)
-// are rare — those still repaint everything.
 watch(() => [store.frameCount, maxLayers.value, store.editorData.colors.length, store.sharedRev], () => {
   nextTick(renderAllThumbs)
 })
@@ -141,9 +122,6 @@ function editShared() {
   store.editShared()
 }
 
-// ===== Playback =====
-// PXEditor owns the actual loop (pre-rendered frame buffers blitted to the main
-// canvas). Here we just flip the shared `store.isPlaying` flag.
 const playing = computed(() => store.isPlaying)
 
 function togglePlay() {
@@ -151,14 +129,11 @@ function togglePlay() {
   store.isPlaying = !store.isPlaying
 }
 
-// ===== Selection =====
 function selectFrame(j: number) {
   store.isPlaying = false
   store.setActiveFrame(j)
 }
 
-// Clicking a cel jumps to that frame AND activates that layer — the core
-// Aseprite gesture for animating components independently.
 function selectCel(j: number, li: number) {
   selectFrame(j)
   if (store.frames[j]?.layers[li] || (!store.isAnimated && store.editorData.layers[li])) {
@@ -170,7 +145,6 @@ function selectRow(li: number) {
   selectCel(Math.max(0, store.currentFrameIndex), li)
 }
 
-// ===== Frame ops (act on the current frame; stop playback first) =====
 function addFrame() {
   store.isPlaying = false
   store.addFrame(true)
@@ -191,15 +165,11 @@ function moveCur(dir: -1 | 1) {
   store.moveFrame(store.currentFrameIndex, store.currentFrameIndex + dir)
 }
 
-// Transport stepping (same as the , / . keys).
 function step(dir: -1 | 1) {
   store.isPlaying = false
   store.setActiveFrame(Math.max(0, store.currentFrameIndex) + dir)
 }
 
-// Live draft for the duration slider/input. We commit (which saveStates) only
-// on release/change, not on every drag tick — otherwise dragging the slider
-// would flood history + autosave.
 const durationDraft = ref(100)
 watch(
     () => store.frames[store.currentFrameIndex]?.duration ?? Math.round(1000 / store.fps),
@@ -211,7 +181,6 @@ function commitDuration() {
   store.setFrameDuration(store.currentFrameIndex, Number(durationDraft.value))
 }
 
-// Same live-draft pattern for the global speed (fps) slider.
 const fpsDraft = ref(10)
 watch(() => store.fps, v => { fpsDraft.value = v }, {immediate: true})
 
@@ -219,9 +188,6 @@ function commitFps() {
   store.setFps(Number(fpsDraft.value))
 }
 
-// ===== Tags (named frame ranges) =====
-// The tag lane sits above the frame headers inside the same scroll container,
-// so spans stay aligned while scrolling. Span geometry mirrors the columns.
 function tagStyle(t: AnimationTag) {
   const len = t.to - t.from + 1
   return {
@@ -236,7 +202,7 @@ const DIR_GLYPHS: Record<AnimationTag['direction'], string> = {forward: '→', r
 function selectTag(t: AnimationTag) {
   store.isPlaying = false
   if (store.activeTagId === t.id) {
-    store.activeTagId = null      // click again → back to whole-timeline playback
+    store.activeTagId = null
     return
   }
   store.activeTagId = t.id
@@ -256,7 +222,6 @@ function onDeleteTag() {
   if (store.activeTagId) store.deleteTag(store.activeTagId)
 }
 
-// Header cells inside the selected tag's range pick up its color as a hint.
 function colheadStyle(j: number) {
   const t = store.activeTag
   if (!t || j < t.from || j > t.to || j === store.currentFrameIndex) return undefined
@@ -273,12 +238,9 @@ onUnmounted(() => { store.isPlaying = false })
 <template>
   <Widget title="Animation frames" class="timeline">
     <div class="tl-bar">
-      <!-- Playback + settings (only meaningful once animated).
-           Transport first, then the two timing numbers, then view toggles;
-           the rarer per-frame edits live in the ⋯ menu so the row stays one
-           line. -->
+
       <div class="tl-controls" v-if="store.isAnimated">
-        <!-- Transport -->
+
         <div class="tl-group">
           <button class="tl-op" title="Previous frame (,)" :disabled="store.currentFrameIndex <= 0" @click="step(-1)">
             <span class="icon icon-angle-left"/>
@@ -301,7 +263,6 @@ onUnmounted(() => { store.isPlaying = false })
 
         <span class="tl-divider"/>
 
-        <!-- Timing: global speed + the selected frame's own duration -->
         <div class="tl-group">
           <label class="tl-field" title="Playback speed — frames without their own duration use this">
             <span>Speed</span>
@@ -317,7 +278,6 @@ onUnmounted(() => { store.isPlaying = false })
 
         <span class="tl-divider"/>
 
-        <!-- View toggles + tagging -->
         <div class="tl-group">
           <button
               class="tl-toggle"
@@ -352,8 +312,6 @@ onUnmounted(() => { store.isPlaying = false })
           </button>
         </div>
 
-        <!-- Per-frame edits: labelled menu instead of four mystery icons.
-             `bottom` opens it upward — the timeline sits at the screen edge. -->
         <ui-dropdown-menu class="tl-more" position="bottom" label="Frame actions">
           <button class="tl-op" title="Frame actions" aria-label="Frame actions">
             <span class="icon icon-dots"/>
@@ -382,7 +340,6 @@ onUnmounted(() => { store.isPlaying = false })
         </ui-dropdown-menu>
       </div>
 
-      <!-- Selected-tag editor: name, 1-based range, direction, delete -->
       <div v-if="store.activeTag" class="tl-tagedit">
         <span class="tl-tag-dot" :style="{background: store.activeTag.color}"/>
         <input
@@ -417,9 +374,8 @@ onUnmounted(() => { store.isPlaying = false })
         </button>
       </div>
 
-      <!-- Cel grid: rows = layers, columns = frames (Aseprite timeline) -->
       <div class="tl-grid no-scrollbar">
-        <!-- Tag lane: colored spans over their frame ranges -->
+
         <div v-if="store.isAnimated && store.tags.length" class="tl-tags">
           <button
               v-for="t in store.tags"
@@ -432,7 +388,6 @@ onUnmounted(() => { store.isPlaying = false })
           >{{ t.name }} <i>{{ DIR_GLYPHS[t.direction] }}</i></button>
         </div>
 
-        <!-- Frame-number header row -->
         <div class="tl-hrow">
           <div class="tl-corner">Layers</div>
           <button
@@ -452,7 +407,6 @@ onUnmounted(() => { store.isPlaying = false })
           </button>
         </div>
 
-        <!-- Layer rows -->
         <div
             v-for="li in rowIndexes"
             :key="`r${li}`"
@@ -478,7 +432,6 @@ onUnmounted(() => { store.isPlaying = false })
           </button>
         </div>
 
-        <!-- Shared background row (drawn beneath every frame) -->
         <div v-if="store.isAnimated" class="tl-lrow tl-bgrow" :class="{'row-active': store.editingShared}">
           <button class="tl-rowname" title="Static background — drawn behind every frame" @click="editShared">
             <b>BG</b>
@@ -560,7 +513,6 @@ onUnmounted(() => { store.isPlaying = false })
   margin: 0 1px;
 }
 
-/* Current-frame operation buttons */
 .tl-op {
   display: inline-flex;
   align-items: center;
@@ -578,8 +530,6 @@ onUnmounted(() => { store.isPlaying = false })
 .tl-op:hover:not(:disabled) { color: var(--foreground); }
 .tl-op:disabled { opacity: 0.35; cursor: not-allowed; }
 
-/* Compact numeric setting: [Label] [input] [unit]. Replaces the two range
-   sliders — they ate ~380px of the row for values users type once. */
 .tl-field {
   display: inline-flex;
   align-items: center;
@@ -618,7 +568,6 @@ onUnmounted(() => { store.isPlaying = false })
   color: var(--muted);
 }
 
-/* The ⋯ menu is pushed to the end of the row. */
 .tl-more {
   margin-left: auto;
 }
@@ -648,7 +597,6 @@ onUnmounted(() => { store.isPlaying = false })
   background: color-mix(in oklab, var(--primary) 10%, var(--surface));
 }
 
-/* ===== Selected-tag editor row ===== */
 .tl-tagedit {
   display: flex;
   align-items: center;
@@ -735,9 +683,6 @@ onUnmounted(() => { store.isPlaying = false })
 
 .tl-tagdel:hover { border-color: var(--danger); color: var(--danger); }
 
-/* ===== Cel grid ===== */
-/* Column advance = 34px cel + 2px gap; the name column is 96px + 2px. Tag
-   spans and the BG strip compute against the same numbers (CEL/GAP consts). */
 .tl-grid {
   overflow: auto;
   max-height: 240px;
@@ -747,7 +692,6 @@ onUnmounted(() => { store.isPlaying = false })
   position: relative;
 }
 
-/* Tag lane rides the same horizontal scroll, offset past the name column. */
 .tl-tags {
   position: relative;
   height: 18px;
@@ -791,7 +735,6 @@ onUnmounted(() => { store.isPlaying = false })
   box-shadow: 0 0 0 2px color-mix(in oklab, var(--foreground) 60%, transparent);
 }
 
-/* Header row: frame numbers + durations */
 .tl-hrow,
 .tl-lrow {
   display: flex;
@@ -877,7 +820,6 @@ onUnmounted(() => { store.isPlaying = false })
 .tl-addcol .icon { font-size: 12px; }
 .tl-addcol:hover { color: var(--primary); border-color: var(--primary); }
 
-/* Layer rows */
 .tl-rowname {
   display: flex;
   align-items: center;
@@ -925,7 +867,6 @@ onUnmounted(() => { store.isPlaying = false })
   color: var(--primary-foreground, #fff);
 }
 
-/* Cels */
 .tl-cel {
   flex: none;
   width: 34px;
@@ -953,7 +894,6 @@ onUnmounted(() => { store.isPlaying = false })
   display: block;
 }
 
-/* Column of the current frame reads as one unit down the grid. */
 .tl-cel.col {
   border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
 }
@@ -968,7 +908,6 @@ onUnmounted(() => { store.isPlaying = false })
   cursor: default;
 }
 
-/* Shared background row */
 .tl-bgrow .tl-rowname { border-style: dashed; }
 
 .tl-bgcel {

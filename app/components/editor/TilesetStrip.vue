@@ -4,27 +4,26 @@ import type {EditorData} from '~/types'
 import type {LocalTile} from '~/composables/useLocalTilesets'
 
 interface Ts {
-  id: number | string    // cloud pk, or 'local:<uuid>' for guest tilesets
+  id: number | string
   id_string: string
   title: string
   local?: boolean
 }
 
-// A display tile: cloud (thumb by slug) or local (dataURL + pixel data).
 interface DispTile {
   key: string | number
   src: string
   active: boolean
   local: boolean
-  selectId?: string      // cloud: the id_string to open
-  tile?: LocalTile       // local: the stored tile (staged into the editor on click)
+  selectId?: string
+  tile?: LocalTile
 }
 
 const props = defineProps<{
-  activeId?: number | string       // the art open in the editor (highlight)
-  activeSaved?: boolean            // current art is a saved cloud art
-  activeData?: EditorData | null   // current art data (for a guest "Add current art")
-  activeTilesetId?: string | null  // the tileset this editor session belongs to
+  activeId?: number | string
+  activeSaved?: boolean
+  activeData?: EditorData | null
+  activeTilesetId?: string | null
 }>()
 
 const emit = defineEmits<{ select: [idString: string, tilesetId: string]; 'tileset-change': [id: string] }>()
@@ -33,17 +32,14 @@ const config = useRuntimeConfig()
 const auth = useAuthStore()
 const localTs = useLocalTilesets()
 
-const tilesets = ref<Ts[]>([])              // signed-in → cloud, guest → local
+const tilesets = ref<Ts[]>([])
 const selectedId = ref<number | string | null>(null)
-// The tileset the current art actually belongs to. When set, the picker acts as
-// "move this art": choosing another tileset reassigns the art to it.
 const boundId = ref<number | string | null>(null)
 const moving = ref(false)
 const tiles = ref<DispTile[]>([])
 const loadingItems = ref(false)
 const failedThumb = reactive<Record<string, boolean>>({})
 
-// Picker dropdown (teleported, Pinterest-style — same as the Tileset Slicer).
 const pickerRoot = ref<HTMLElement | null>(null)
 const pickerPanel = ref<HTMLElement | null>(null)
 const pickerOpen = ref(false)
@@ -61,13 +57,11 @@ function cloudThumb(slug: string): string {
 
 async function loadTilesets() {
   if (!auth.isLogged) {
-    // Guest: mirror the local tileset library.
     tilesets.value = localTs.list.value.map(t => ({id: t.id, id_string: t.id, title: t.name, local: true}))
     await bindToActive()
     return
   }
   try {
-    // Tileset list is owner-only server-side, so no ?mine needed.
     const res = await useNativeFetch<{ results: any[] }>('/coloring/tilesets/', {
       params: {page_size: 100, ordering: '-updated'},
     })
@@ -78,23 +72,17 @@ async function loadTilesets() {
   await bindToActive()
 }
 
-// id_string of the currently bound tileset (to compare against the prop).
 function boundIdString(): string | null {
   if (boundId.value == null) return null
   const t = tilesets.value.find(x => x.id === boundId.value)
   return t ? (t.id_string || String(t.id)) : String(boundId.value)
 }
 
-// Follow the active board's tileset (`activeTilesetId` = its meta.tileset.id):
-// show that tileset + its tiles in the widget. Rebinds when the active board
-// switches to an art from another tileset; clears to "None" for an art that
-// belongs to no tileset.
 async function bindToActive() {
   const want = props.activeTilesetId || null
   if (want === boundIdString()) return
   if (!want) { boundId.value = null; selectedId.value = null; return }
   let match = tilesets.value.find(t => t.id_string === want || String(t.id) === want)
-  // Owned tileset beyond the first 100 (or just not in the list yet) — fetch it.
   if (!match && auth.isLogged && !want.startsWith('local:')) {
     try {
       const t = await useNativeFetch<any>(`/coloring/tilesets/${want}/`)
@@ -122,7 +110,6 @@ async function loadTiles() {
   try {
     const t = await useNativeFetch<any>(`/coloring/tilesets/${ts.id_string}/`)
     const registry: Record<string, string> = t?.meta?.registry || {}
-    // Newest first — registry preserves insertion order (ascending id).
     tiles.value = Object.entries(registry).map(([id, slug]) => ({
       key: Number(id),
       src: cloudThumb(String(slug)),
@@ -138,11 +125,7 @@ async function loadTiles() {
 }
 
 watch(selectedId, loadTiles)
-// Follow the active board: rebind whenever its tileset changes (incl. to none).
 watch(() => props.activeTilesetId, () => { bindToActive() })
-// Switching the active board (outside the strip) should move the highlight AND
-// bring the matching tile into view — the reverse of clicking a tile to focus
-// its board.
 const thumbsWrap = ref<HTMLElement | null>(null)
 watch(() => props.activeId, () => {
   for (const t of tiles.value) {
@@ -155,8 +138,6 @@ watch(() => props.activeId, () => {
   })
 })
 
-// The id_string of the tileset currently shown in the widget — passed along so
-// a freshly-opened tile stays bound to it.
 function shownTilesetIdString(): string {
   const t = selectedTs.value
   return t ? (t.id_string || String(t.id)) : ''
@@ -168,25 +149,20 @@ function openTile(item: DispTile) {
   else if (item.selectId) emit('select', item.selectId, ts)
 }
 
-// The picker IS the art↔tileset relation. Choosing a tileset adds the current
-// art to it (or moves it from its old one); choosing "None" detaches it. Every
-// change writes the membership back onto the art (`tileset-change` → the art's
-// meta.tileset), so it survives a refresh and can't be double-added.
 async function pick(id: number | string | null) {
   pickerOpen.value = false
   showNew.value = false
   const cur = boundId.value
-  if (id === cur) { selectedId.value = id ?? null; return }   // already there
+  if (id === cur) { selectedId.value = id ?? null; return }
   if (moving.value) return
   moving.value = true
   try {
     const from = cur != null ? tilesets.value.find(t => t.id === cur) : null
     const to = id != null ? tilesets.value.find(t => t.id === id) : null
 
-    // Detach — "None" while the art is in a tileset.
     if (id == null) {
       if (from) await removeFromTileset(from)
-      emit('tileset-change', '')           // clears the art's meta.tileset
+      emit('tileset-change', '')
       boundId.value = null
       selectedId.value = null
       if (from) toast.success(`Removed from “${from.title}”`)
@@ -194,9 +170,8 @@ async function pick(id: number | string | null) {
     }
     if (!to) return
 
-    // Move: drop it from the old tileset first (best-effort), then add.
     if (from && from.id !== to.id) await removeFromTileset(from)
-    if (!(await addToTileset(to))) return   // guarded (unsaved cloud art, etc.)
+    if (!(await addToTileset(to))) return
     emit('tileset-change', String(to.id_string || to.id))
     boundId.value = to.id
     selectedId.value = to.id
@@ -206,8 +181,6 @@ async function pick(id: number | string | null) {
   }
 }
 
-// Add the current art to a tileset. Guest → local library (idempotent);
-// signed-in → cloud registry (keyed by page id, so re-add is a no-op too).
 async function addToTileset(to: Ts): Promise<boolean> {
   if (to.local) {
     const ed = props.activeData
@@ -228,7 +201,6 @@ async function addToTileset(to: Ts): Promise<boolean> {
   }
 }
 
-// Remove the current art from a tileset (best-effort — a missing tile is fine).
 async function removeFromTileset(from: Ts): Promise<void> {
   if (from.local) {
     const ed = props.activeData
@@ -248,8 +220,6 @@ async function removeFromTileset(from: Ts): Promise<void> {
 
 function togglePicker() {
   if (pickerOpen.value) { pickerOpen.value = false; showNew.value = false; return }
-  // Drop below the cog, but align the panel to the widget's LEFT edge and span
-  // its full width (the cog sits at the top-right of the widget).
   const cog = pickerRoot.value?.getBoundingClientRect()
   const host = (pickerRoot.value?.closest('.widget') as HTMLElement | null)?.getBoundingClientRect()
   if (cog) {
@@ -309,7 +279,6 @@ function onMove(e?: Event) {
 
 onMounted(() => {
   loadTilesets()
-  // Signed in with leftover guest tilesets → upload them, then refresh.
   if (auth.isLogged) localTs.syncToCloud().then(n => { if (n) loadTilesets() })
   document.addEventListener('click', onOutside)
   window.addEventListener('scroll', onMove, true)
@@ -320,7 +289,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', onMove, true)
   window.removeEventListener('resize', onMove)
 })
-// On sign-in, push any local (guest) tilesets to the cloud, then reload.
 watch(() => auth.isLogged, async (v) => {
   if (v) {
     await localTs.syncToCloud()
@@ -329,17 +297,14 @@ watch(() => auth.isLogged, async (v) => {
   await loadTilesets()
 })
 
-// Drop a deleted art from the shown list without refetching.
 function removeItem(idOrString: string | number) {
   tiles.value = tiles.value.filter(r => r.selectId !== idOrString && r.key !== idOrString)
 }
 
-// Re-fetch the current tileset's tiles (e.g. after adding one).
 function refresh() {
   loadTiles()
 }
 
-// Another tile in the shown tileset (used to open a sibling after a delete).
 function siblingId(excludeIdStr?: string | number): string | null {
   const sib = tiles.value.find(t => {
     const openId = t.selectId ?? t.tile?.ed.id
@@ -451,7 +416,7 @@ defineExpose({removeItem, refresh, siblingId})
 </template>
 
 <style scoped>
-/* ===== Picker (in widget header) ===== */
+
 .cstrip-pick {
   display: inline-flex;
 }
@@ -606,13 +571,11 @@ defineExpose({removeItem, refresh, siblingId})
   justify-content: flex-end;
 }
 
-/* ===== Items ===== */
 .cstrip-body {
   display: flex;
   flex-direction: column;
 }
 
-/* Mobile: one horizontal row of fixed 64px tiles, scroll if they overflow. */
 .cstrip-thumbs {
   display: flex;
   gap: var(--space-2);
@@ -625,7 +588,7 @@ defineExpose({removeItem, refresh, siblingId})
   width: 64px;
   height: 64px;
   padding: 0;
-  /* Faint divider between items (not a highlight frame). */
+
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -635,7 +598,6 @@ defineExpose({removeItem, refresh, siblingId})
   transition: opacity var(--transition);
 }
 
-/* Desktop sidebar: 4 tiles per row, filling the column width. */
 @media (min-width: 768px) {
   .cstrip-thumbs {
     display: grid;
@@ -670,7 +632,6 @@ defineExpose({removeItem, refresh, siblingId})
   height: 40%;
 }
 
-/* The art currently open in the editor — dimmed, no highlight border. */
 .cstrip-thumb.active {
   opacity: 0.4;
 }

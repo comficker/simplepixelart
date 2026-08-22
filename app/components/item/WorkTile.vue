@@ -1,20 +1,15 @@
 <script setup lang="ts">
-// A clickable card that matches the /work list tiles (fold-corner surface,
-// square tile-collage preview, status chip, name). Shared by the editors'
-// load browsers so the picker looks identical to /work.
 import {reactive, computed} from 'vue'
 
 const props = withDefaults(defineProps<{
   name: string
   previewImgs: string[]
   status?: string
-  folder?: boolean       // macOS-folder card (tilesets / worlds, like /work)
+  folder?: boolean
   emptyIcon?: string
 }>(), {emptyIcon: 'icon-image'})
 defineEmits<{ click: [] }>()
 
-// Drop thumbnails that fail to load (e.g. an art with no rendered PNG yet) so
-// the card shows the placeholder instead of a broken-image glyph.
 const failed = reactive<Record<string, boolean>>({})
 const imgs = computed(() => props.previewImgs.slice(0, 4).filter(s => !failed[s]))
 
@@ -49,8 +44,7 @@ function statusBadge(s?: string) {
 </template>
 
 <style scoped>
-/* Fold-corner surface — identical treatment to /work's art cards. The chrome
-   lives on ::before/::after so it never clips children. */
+
 .work-card {
   position: relative;
   display: block;
@@ -95,7 +89,6 @@ function statusBadge(s?: string) {
   z-index: 1;
 }
 
-/* ===== Folder card (tilesets / worlds) — macOS-style folder, matches /work. */
 .work-card-folder {
   background: transparent;
   box-shadow: none;
@@ -131,7 +124,6 @@ function statusBadge(s?: string) {
 .work-card-folder .tile-collage { padding: 0; gap: 2px; }
 .work-card-folder .tile-collage img { object-fit: contain; }
 
-/* Front panel of the folder. */
 .work-card-folder .work-canvas::after {
   content: "";
   position: absolute;
@@ -159,8 +151,6 @@ function statusBadge(s?: string) {
   padding: var(--space-2) var(--space-1) 0;
 }
 
-/* Hover: only the fold grows, and only on flat (non-folder) cards — folder cards
-   never change their fold. Intentionally minimal (no shadow lift, no ring). */
 @media (hover: hover) and (pointer: fine) {
   .work-card:not(.work-card-folder):hover { --fold-size: 28px; }
 }
@@ -168,7 +158,7 @@ function statusBadge(s?: string) {
 .work-card .square {
   display: block;
   position: relative;
-  padding-top: 100%;   /* the global .square rule needs a block box to size */
+  padding-top: 100%;   
   border-radius: calc(var(--radius-sm) - 1px);
   overflow: hidden;
 }
@@ -185,7 +175,6 @@ function statusBadge(s?: string) {
   padding: 10px;
 }
 
-/* 2×2 collage of the first tiles — same framing as /work. */
 .tile-collage {
   display: grid;
   width: 100%;
@@ -218,7 +207,6 @@ function statusBadge(s?: string) {
   font-size: 32px;
 }
 
-/* Status chip, top-left — same icons as /work. */
 .work-status {
   position: absolute;
   top: .4rem;

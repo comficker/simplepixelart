@@ -16,9 +16,7 @@ const googleAuthUrl = computed(() => {
     <div class="container footer-bar">
       <div class="footer-left">
         <span class="footer-copy">© {{ year }} SimplePixelArt.com</span>
-        <!-- Minimal set: Privacy/Terms must stay visible (AdSense + legal),
-             Contact for trust. About/Guidelines/DMCA remain reachable via the
-             command palette and the contact page. -->
+
         <nav class="footer-links" aria-label="Footer">
           <nuxt-link to="/contact">Contact</nuxt-link>
           <nuxt-link to="/privacy">Privacy</nuxt-link>
@@ -80,7 +78,6 @@ const googleAuthUrl = computed(() => {
   transition: color 160ms ease;
 }
 
-/* GitHub / X get first-class placement: icon buttons on the right. */
 .footer-actions {
   display: flex;
   align-items: center;
@@ -121,7 +118,6 @@ const googleAuthUrl = computed(() => {
   }
 }
 
-/* Small screens: stack centered — copyright, links, then the action row. */
 @media (max-width: 640px) {
   .footer-bar {
     flex-direction: column;

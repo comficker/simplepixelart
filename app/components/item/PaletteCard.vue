@@ -3,7 +3,6 @@ import type {Palette} from "~/types";
 
 const {value} = defineProps<{ value: Palette }>()
 
-// Cap the swatches shown so a 200-color palette doesn't render hair-thin slivers.
 const MAX_SWATCHES = 24
 const shown = computed(() => value.colors.slice(0, MAX_SWATCHES))
 const overflow = computed(() => Math.max(0, value.colors.length - MAX_SWATCHES))
@@ -40,8 +39,6 @@ const overflow = computed(() => Math.max(0, value.colors.length - MAX_SWATCHES))
   overflow: hidden;
   transition: transform 220ms cubic-bezier(.22,.61,.36,1), border-color 180ms ease;
 }
-
-
 
 .pcard-strip {
   display: flex;

@@ -27,8 +27,6 @@ const {data: collectionsRes} = await useAuthFetch<APIResponse<CreatorCollection>
     },
 )
 
-// Just the count of public artworks — drives noindex on empty creator profiles
-// so we don't ship a thin templated page for usernames with no public output.
 const {data: worksCount} = await useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
   params: {
     slug: `/creator/${username.value}`,
@@ -42,8 +40,6 @@ const collections = computed(() => collectionsRes.value?.results || [])
 const totalWorks = computed(() => worksCount.value?.count || 0)
 const isEmptyCreator = computed(() => totalWorks.value === 0 && collections.value.length === 0)
 
-// Covers 404 when the first piece has no rendered image yet — fall back to the
-// placeholder instead of a broken <img>.
 const coverFailed = reactive<Record<string, boolean>>({})
 
 function coverUrl(c: CreatorCollection): string | null {

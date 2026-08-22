@@ -14,17 +14,8 @@ export const useEditor = defineStore('editor', () => {
     const auth = useAuthStore()
     const localTs = useLocalTilesets()
 
-    // The pixel dictionaries are the hot, high-cardinality data. We keep them
-    // OUT of Vue's reactivity via markRaw so the drawing flow never pays for
-    // proxying, deep-watch traversal, or devtools mutation logging (Pinia
-    // deep-watches store state in dev). editorData itself stays reactive so the
-    // UI (layer list, palette, size) updates normally; rendering is driven by
-    // the `drawTurn` signal, not by pixel reactivity. Call this after any
-    // editorData (re)assignment so restored/loaded pixels stay non-reactive.
     function markRawPixels(ed: EditorData): EditorData {
         ed.layers?.forEach(l => { l.pixels = markRaw(l.pixels || {}) })
-        // Frames + shared background carry their own layer stacks — keep their
-        // pixels non-reactive too.
         ed.meta?.animation?.frames?.forEach(f => {
             f.layers?.forEach(l => { l.pixels = markRaw(l.pixels || {}) })
         })
@@ -44,11 +35,6 @@ export const useEditor = defineStore('editor', () => {
         y: 0
     });
 
-    // Shallow on purpose: both hold full EditorData blobs (every pixel of
-    // every art / undo snapshot). Deep-proxying them buys nothing — nothing
-    // renders them reactively — and costs real main-thread time: every read
-    // through a deep ref walks proxy traps over hundreds of thousands of
-    // pixel entries (clone/stringify during autosave got measurably slower).
     const localWS = shallowRef<{ [key: string]: EditorData }>({})
 
     const histories = shallowRef<{
@@ -59,24 +45,13 @@ export const useEditor = defineStore('editor', () => {
         }
     }>({})
 
-    // History holds up to MAX_HISTORY full snapshots. Kept in a shallowRef so
-    // Vue does NOT deeply proxy every pixel of every snapshot — on large
-    // canvases (64×64+) deep-reactive history is what blows up memory and
-    // crashes the tab on bulk edits. Nothing renders `history` reactively;
-    // it's only read by undo/redo and persistence.
     const MAX_HISTORY = 50;
     const history = shallowRef<EditorData[]>([]);
     const historyIndex = ref(-1);
 
-    // ── Multi-board workspace (Phase 2) ────────────────────────────────────
-    // The infinite canvas holds N boards; each board IS an independent art. The
-    // live editorData/history/currentLayerIndex/… always describe the ACTIVE
-    // board. Switching stashes the live OBJECTS back into the active board (no
-    // clone → no divergence) and loads the target's. Non-active boards are
-    // frozen and rendered from their stored `data`.
     type Board = {
         id: string
-        x: number           // world position (art px) of the board's top-left
+        x: number
         y: number
         data: EditorData
         history: EditorData[]
@@ -86,7 +61,7 @@ export const useEditor = defineStore('editor', () => {
     }
     const boards = ref<Board[]>([])
     const activeBoardId = ref('')
-    const boardsRev = ref(0)   // bumps on add/remove/switch → renderer rebuilds non-active buffers
+    const boardsRev = ref(0)
 
     function stashActiveBoard() {
         const cur = boards.value.find(b => b.id === activeBoardId.value)
@@ -109,14 +84,13 @@ export const useEditor = defineStore('editor', () => {
         linkActiveFrame()
         selectionState.value.bounds.active = false
         selectionState.value.selecting = false
-        layerActive.value = false          // selecting a board → board scope, no layer active
+        layerActive.value = false
         sharedRev.value++
         markFullRedraw()
         drawTurn.value++
         boardsRev.value++
     }
 
-    // Rebuild the board list around the freshly loaded/reset single art.
     function initBoardsFromCurrent() {
         boards.value = [{
             id: editorData.value.id.toString(),
@@ -140,7 +114,6 @@ export const useEditor = defineStore('editor', () => {
         saveWorkspaceLayout()
     }
 
-    // Where a new auto-placed board lands: right of the rightmost, small gap.
     function nextBoardX(): number {
         const gap = 8
         let x = 0
@@ -148,8 +121,6 @@ export const useEditor = defineStore('editor', () => {
         return x
     }
 
-    // Append `data` as a new board (at `pos` if given, else auto-placed), make
-    // it active, and seed its undo history. Shared by addBoard/addBoardWithData.
     function pushBoard(data: EditorData, pos?: { x: number, y: number }): string {
         stashActiveBoard()
         const x = pos ? Math.round(pos.x) : nextBoardX()
@@ -160,15 +131,13 @@ export const useEditor = defineStore('editor', () => {
         }
         boards.value.push(board)
         loadBoardLive(board)
-        saveState(false)                    // seed the new board's history
+        saveState(false)
         board.history = history.value
         board.historyIndex = historyIndex.value
         saveWorkspaceLayout()
         return board.id
     }
 
-    // A blank board of the given size. `pos` (world art-px) places it exactly —
-    // used by the marquee-create gesture; omitted → auto-placed by the menu.
     function addBoard(width = 16, height = 16, pos?: { x: number, y: number }): string {
         const w = Math.max(1, Math.min(256, Math.round(width) || 16))
         const h = Math.max(1, Math.min(256, Math.round(height) || 16))
@@ -181,18 +150,12 @@ export const useEditor = defineStore('editor', () => {
         return pushBoard(data, pos)
     }
 
-    // Bring an existing art (already converted to EditorData) onto the canvas as
-    // its own board. If a board already holds this art, just activate it (no dup)
-    // so its edits don't fork.
     function addBoardWithData(data: EditorData, pos?: { x: number, y: number }): string {
         const existing = boards.value.find(b => b.id === data.id.toString())
         if (existing) { setActiveBoard(existing.id); return existing.id }
         return pushBoard(markRawPixels(data), pos)
     }
 
-    // Reposition a board on the infinite canvas (world art-px). Position only —
-    // content is unchanged, so we don't bump boardsRev (keeps the composite
-    // cache warm); the caller redraws.
     function moveBoard(id: string, x: number, y: number) {
         const b = boards.value.find(b => b.id === id)
         if (!b) return
@@ -211,25 +174,12 @@ export const useEditor = defineStore('editor', () => {
         saveWorkspaceLayout()
     }
 
-    // ── Workspace persistence (local) ──────────────────────────────────────
-    // The whole multi-board workspace is snapshotted SELF-CONTAINED into one
-    // key (`workspace_full`): each board's position + full data inline, plus
-    // which board is active. This sidesteps the id remapping the cloud save
-    // does to the active art — restore rebuilds directly from the snapshot and
-    // never has to reconcile ids across stores. (Each art still saves to the
-    // server independently via performSave for sharing/gallery.)
-    // A board's persisted position + appearance, minus the heavy pixel data.
     function boardLayoutEntry(b: Board) {
         const data = b.id === activeBoardId.value ? editorData.value : b.data
         return { id: String(b.id), x: b.x, y: b.y, bg: data?.meta?.bg ?? null, iso: data?.meta?.iso ?? null }
     }
 
     function saveWorkspaceLayout() {
-        // Lightweight layout (positions + per-board appearance) — written FIRST and
-        // always, so it survives even when the heavy snapshot below hits the
-        // localStorage quota. `applyWorkspaceLayoutOverlay` reapplies it on restore,
-        // which is why a moved board / bg change persists across a reload even with
-        // many big boards. A few hundred bytes per board — never near quota.
         try {
             localStorage.setItem('workspace_layout', JSON.stringify({
                 boards: boards.value.map(boardLayoutEntry),
@@ -237,11 +187,6 @@ export const useEditor = defineStore('editor', () => {
             }))
         } catch { /* ignore */ }
 
-        // The multi-board snapshot (full data inline) is a >1-board-only invariant
-        // (the /work delete + slicer flows rely on it). It lives in IndexedDB now
-        // (not localStorage) so many/large boards no longer hit the ~5 MB quota;
-        // writes are fire-and-forget (the lightweight layout above is the source
-        // of truth for positions/appearance regardless).
         if (boards.value.length <= 1) {
             void clearWorkspaceFull()
             return
@@ -259,9 +204,6 @@ export const useEditor = defineStore('editor', () => {
     async function restoreWorkspaceLayout(preferId?: string) {
         const payload = await loadWorkspaceFull()
         if (!payload || !Array.isArray(payload.boards) || payload.boards.length <= 1) return
-        // The board load() just resolved (the single entry initBoardsFromCurrent
-        // built). When the URL explicitly asked for it (?id= from /work), the
-        // snapshot must not bury it: it stays loaded, active, and fresh.
         const fresh = preferId ? boards.value.find(b => b.id === preferId) : undefined
         const rebuilt: Board[] = payload.boards
             .filter((e: any) => e && e.data)
@@ -278,12 +220,9 @@ export const useEditor = defineStore('editor', () => {
         if (fresh) {
             const idx = rebuilt.findIndex(b => b.id === fresh.id)
             if (idx >= 0) {
-                // Same art already on the desk — keep its position, use the
-                // fresh load's data (cloud/localStorage is what /work showed).
                 rebuilt[idx] = {...fresh, x: rebuilt[idx]!.x, y: rebuilt[idx]!.y}
                 ai = idx
             } else {
-                // Not on the desk yet — place it right of the rightmost board.
                 const gap = 8
                 let x = 0
                 for (const b of rebuilt) x = Math.max(x, b.x + b.data.width + gap)
@@ -299,10 +238,6 @@ export const useEditor = defineStore('editor', () => {
         if (fresh) saveWorkspaceLayout()
     }
 
-    // Reapply the lightweight layout (positions + per-board bg/iso) over whatever
-    // the boards were rebuilt as. This is the source of truth for those props: it
-    // always persists, so it corrects a stale/failed `workspace_full` snapshot
-    // (the reason a moved board or a bg change used to be lost with many boards).
     function applyWorkspaceLayoutOverlay() {
         let layout: any
         try { layout = JSON.parse(localStorage.getItem('workspace_layout') || 'null') } catch { return }
@@ -334,7 +269,6 @@ export const useEditor = defineStore('editor', () => {
         brushSize.value = Math.min(8, Math.max(1, Math.floor(size) || 1));
     }
 
-    // Background config — persisted in editorData.meta.bg so it saves with the art
     const bgConfig = computed(() => {
         const bg = editorData.value?.meta?.bg;
         return {
@@ -350,20 +284,16 @@ export const useEditor = defineStore('editor', () => {
         if (!editorData.value.meta) editorData.value.meta = {};
         const next = { ...bgConfig.value, ...partial };
         editorData.value.meta.bg = next;
-        // Background is a workspace-wide appearance — mirror it onto every board.
         for (const b of boards.value) {
             if (b.id === activeBoardId.value) continue;
             const meta = b.data.meta || (b.data.meta = {});
             meta.bg = { ...next };
         }
-        boardsRev.value++;             // per-board composites re-render with the new bg
+        boardsRev.value++;
         saveState();
         saveWorkspaceLayout();
     }
 
-    // Record (or clear) which tileset/tile this art belongs to. Lives in meta so
-    // it persists with the art (cloud meta / local tile / workspace snapshot) —
-    // the editor no longer depends on the ?tileset= URL to know the association.
     function setArtTileset(id: string | null, tid?: number | string | null) {
         if (!editorData.value) return;
         const meta = {...(editorData.value.meta || {})};
@@ -374,36 +304,23 @@ export const useEditor = defineStore('editor', () => {
     }
 
     const currentColorIndex = ref(0);
-    // "Find color" tool: palette index of the pixel currently under the cursor
-    // (null = nothing / empty pixel). Drives the palette highlight + readout.
     const pickedColorIndex = ref<number | null>(null);
     const currentLayerIndex = ref(0);
     const drawTurn = ref(0)
 
-    // ===== Animation =====
-    // Model: when animated, editorData.layers IS the SAME array reference as
-    // meta.animation.frames[currentFrameIndex].layers, so every drawing tool
-    // edits the active frame directly with zero syncing. Switching frames just
-    // rebinds editorData.layers. cloneDeep (utils) preserves shared refs via its
-    // `visited` map, so this link survives history snapshots and save/load.
     const MAX_FRAMES = 64
-    const currentFrameIndex = ref(0)   // -1 = editing the shared background stack
-    const onionSkin = ref(false)   // ephemeral view pref (not persisted)
-    const isPlaying = ref(false)   // ephemeral playback state
-    const sharedRev = ref(0)       // bumps when shared layers may have changed (bg cache key)
+    const currentFrameIndex = ref(0)
+    const onionSkin = ref(false)
+    const isPlaying = ref(false)
+    const sharedRev = ref(0)
     const frames = computed(() => editorData.value.meta?.animation?.frames ?? [])
     const frameCount = computed(() => frames.value.length)
     const isAnimated = computed(() => frameCount.value > 1)
     const fps = computed(() => editorData.value.meta?.animation?.fps ?? 10)
     const loopAnimation = computed(() => editorData.value.meta?.animation?.loop ?? true)
-    // Shared "static background" layers, composited beneath every frame.
     const sharedLayers = computed(() => editorData.value.meta?.animation?.shared ?? [])
     const editingShared = computed(() => currentFrameIndex.value === -1)
 
-    // ===== Tags (named frame ranges, Aseprite-style) =====
-    // Tags persist in meta.animation; the selection is ephemeral. A selected
-    // tag scopes playback to its range/direction and is highlighted in the
-    // timeline. Ranges are positional — frame moves don't drag tags along.
     const tags = computed(() => editorData.value.meta?.animation?.tags ?? [])
     const activeTagId = ref<string | null>(null)
     const activeTag = computed(() => tags.value.find(t => t.id === activeTagId.value) ?? null)
@@ -453,8 +370,6 @@ export const useEditor = defineStore('editor', () => {
         saveState()
     }
 
-    // Frame inserted at index k (duplicate of frame k-1): ranges after shift
-    // right; a range containing the source frame grows to adopt the copy.
     function shiftTagsOnInsert(k: number) {
         const anim = editorData.value.meta?.animation
         anim?.tags?.forEach(t => {
@@ -463,8 +378,6 @@ export const useEditor = defineStore('editor', () => {
         })
     }
 
-    // Frame removed at index i: ranges after shift left; a range containing
-    // the frame shrinks, and a range reduced to nothing is dropped.
     function shiftTagsOnDelete(i: number) {
         const anim = editorData.value.meta?.animation
         if (!anim?.tags) return
@@ -483,8 +396,6 @@ export const useEditor = defineStore('editor', () => {
         if (!anim.shared.length) anim.shared.push({name: 'Background', pixels: markRaw({}), x: 0, y: 0})
     }
 
-    // Iterate every layer across all frames + shared (or just current layers when
-    // static). Used for canvas-wide ops like palette remap.
     function forEachLayer(fn: (layer: Layer) => void) {
         const anim = editorData.value.meta?.animation
         if (anim?.frames?.length) {
@@ -495,7 +406,6 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
-    // Bind editorData.layers to the active frame (or the shared stack at idx -1).
     function linkActiveFrame() {
         const anim = editorData.value.meta?.animation
         if (!anim?.frames?.length) return
@@ -515,7 +425,6 @@ export const useEditor = defineStore('editor', () => {
     function ensureAnimation() {
         if (!editorData.value.meta) editorData.value.meta = {}
         if (!editorData.value.meta.animation) {
-            // Promote the current static art to frame 0 — keep the SAME layers ref.
             editorData.value.meta.animation = {
                 fps: 10,
                 loop: true,
@@ -536,14 +445,12 @@ export const useEditor = defineStore('editor', () => {
         } else {
             currentFrameIndex.value = Math.max(0, Math.min(anim.frames.length - 1, i))
         }
-        // Leaving the shared editor → its content may have changed; let the bg cache rebuild.
         if (wasShared && currentFrameIndex.value !== -1) sharedRev.value++
         linkActiveFrame()
         markFullRedraw()
         drawTurn.value++
     }
 
-    // Enter the shared-background editor (creates the stack lazily).
     function editShared() {
         ensureAnimation()
         setActiveFrame(-1)
@@ -597,8 +504,6 @@ export const useEditor = defineStore('editor', () => {
         anim.frames.splice(i, 1)
         shiftTagsOnDelete(i)
         if (anim.frames.length === 1) {
-            // Collapse back to a static artwork. Bake any shared background
-            // beneath the surviving frame so it isn't lost.
             const survivor = anim.frames[0]!
             const shared = anim.shared || []
             editorData.value.layers = shared.length ? [...shared, ...survivor.layers] : survivor.layers
@@ -608,8 +513,8 @@ export const useEditor = defineStore('editor', () => {
             drawTurn.value++
         } else {
             let next = currentFrameIndex.value
-            if (i < next) next--                              // keep the SAME frame active after the shift
-            next = Math.min(next, anim.frames.length - 1)     // deleted the last → clamp
+            if (i < next) next--
+            next = Math.min(next, anim.frames.length - 1)
             setActiveFrame(next)
         }
         saveState()
@@ -633,7 +538,6 @@ export const useEditor = defineStore('editor', () => {
         const f = anim?.frames?.[i]
         if (!f) return
         const v = Math.max(10, Math.min(10000, Math.round(ms) || 100))
-        // All-frames mode: one duration for the whole animation.
         if (allFrames.value) {
             anim!.frames.forEach(fr => { fr.duration = v })
         } else {
@@ -655,11 +559,6 @@ export const useEditor = defineStore('editor', () => {
         saveState()
     }
 
-    // Incremental render tracking. Reconverting the whole pixel map every frame
-    // costs ~10ms at 128² — over the 60fps budget. Brush/eraser strokes only
-    // touch a few pixels per frame, so we record the changed canvas coords and
-    // let the renderer patch just those into its buffer. Structural changes
-    // (resize, undo/redo, color edits, layer ops, move/iso) flag a full redraw.
     let dirtyPixels = new Set<string>()
     let needFullRedraw = true
     function markDirtyPixel(cx: number, cy: number) { dirtyPixels.add(`${cx}_${cy}`) }
@@ -679,19 +578,12 @@ export const useEditor = defineStore('editor', () => {
         bounds: {minX: 0, minY: 0, maxX: 0, maxY: 0, active: false}
     });
 
-    // ── Active scope (priority: selection > layer > board) ──────────────────
-    // Keys/operations act on whatever is active. Selecting a board drops to
-    // board scope (no layer active) — Delete then removes the board. Drawing or
-    // picking a layer activates the layer; a selection outranks both.
-    // Defaults true so a freshly opened single art edits its layer right away;
-    // the act of selecting/creating a board (loadBoardLive) drops to board scope.
     const layerActive = ref(true)
     const activeScope = computed<'selection' | 'layer' | 'board'>(() => {
         if (selectionState.value.bounds.active) return 'selection'
         if (layerActive.value) return 'layer'
         return 'board'
     })
-    // Pick a layer as the active target (Layers panel click / after drawing).
     function activateLayer(index?: number) {
         if (typeof index === 'number') currentLayerIndex.value = index
         layerActive.value = true
@@ -799,10 +691,6 @@ export const useEditor = defineStore('editor', () => {
         return colors.length - 1;
     }
 
-    // Pure conversion: RGB grid → a fresh EditorData (no store mutation). Cells
-    // may be null (already-resolved transparency: 1:1 import); when
-    // `transparentHandled` is set the ignore-color/white heuristics are skipped
-    // so genuinely white pixels survive. Shared by single- and multi-file import.
     function gridToEditorData(
         pxColor: (number[] | null)[][],
         ignoreColor: number[] | null,
@@ -839,9 +727,6 @@ export const useEditor = defineStore('editor', () => {
         return data;
     }
 
-    // Replace the artwork with an animation built from sliced sprite-strip
-    // frames (see helper/strip.ts). One shared palette across all frames —
-    // the editor's colors array is artwork-global. null pixels = transparent.
     function loadAnimationFrames(frameGrids: (number[] | null)[][][]) {
         if (!frameGrids.length) return
 
@@ -884,8 +769,6 @@ export const useEditor = defineStore('editor', () => {
         } else {
             converted.layers = frames[0]!.layers
         }
-        // In-place swap of the ACTIVE board — other boards survive (the old
-        // resetEditorData() path collapsed the whole workspace).
         replaceCanvasWith(converted)
     }
 
@@ -901,16 +784,11 @@ export const useEditor = defineStore('editor', () => {
         });
     }
 
-    // One image file → a null-transparent RGB grid, via the chosen pipeline
-    // preset in ~/helper/pixel: 'filter' = the legacy sampled engine (grid
-    // detection + ground normalization), 'original' = pixels 1:1 (≤256/side —
-    // larger returns null and counts as skipped).
     async function fileToGrid(file: File, process: ImportProcess): Promise<(number[] | null)[][] | null> {
         const dataUrl = await readFileAsDataUrl(file);
         return process === 'original' ? importOriginalGrid(dataUrl) : importFileGrid(dataUrl);
     }
 
-    // Parse one picked file into a fresh EditorData (JSON export or any image).
     async function fileToEditorData(file: File, process: ImportProcess): Promise<EditorData | null> {
         const baseName = file.name.replace(/\.[^.]+$/, '')
         if (file.name.toLowerCase().endsWith('.json')) {
@@ -936,9 +814,6 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
-    // Import picked files with explicit intent (the editor collects the options
-    // in a modal): each file → its own board, all files → frames of ONE new
-    // animation on the active board, or (single file) replace the active canvas.
     async function importFiles(
         files: File[],
         opts: { process: ImportProcess; dest: ImportDest },
@@ -949,7 +824,7 @@ export const useEditor = defineStore('editor', () => {
         if (opts.dest === 'frames') {
             const frameGrids: (number[] | null)[][][] = [];
             for (const file of files) {
-                if (file.name.toLowerCase().endsWith('.json')) { skipped++; continue; }  // frames are image-only
+                if (file.name.toLowerCase().endsWith('.json')) { skipped++; continue; }
                 try {
                     const grid = await fileToGrid(file, opts.process);
                     if (grid) frameGrids.push(grid);
@@ -973,16 +848,12 @@ export const useEditor = defineStore('editor', () => {
         for (const file of files) {
             const data = await fileToEditorData(file, opts.process);
             if (!data) { skipped++; continue; }
-            addBoardWithData(data);   // auto-placed right of the rightmost
+            addBoardWithData(data);
             added++;
         }
         return {added, skipped};
     }
 
-    // Single-file import keeps the historical semantics — the imported art
-    // replaces the CURRENT canvas (as a new artwork, fresh id) — but only the
-    // ACTIVE board: the rest of the multi-board workspace stays put (the old
-    // resetEditorData() path collapsed every other board).
     function replaceCanvasWith(converted: EditorData) {
         const idx = boards.value.findIndex(b => b.id === activeBoardId.value);
         editorData.value = converted;
@@ -1007,14 +878,10 @@ export const useEditor = defineStore('editor', () => {
         }
         markFullRedraw()
         drawTurn.value++;
-        saveState();          // seed history + persist AFTER the swap
+        saveState();
         saveWorkspaceLayout();
     }
 
-    // Stamp a null-transparent cell grid onto the current frame's active layer,
-    // scaled to fit (contain) the canvas and centered. Unlike loadFromFile this
-    // keeps the existing canvas/size/palette and overlays the image — null
-    // (transparent) source cells leave whatever is underneath untouched.
     const insertFromGrid = (cells: (number[] | null)[][]) => {
         if (!cells?.length) return;
 
@@ -1026,11 +893,6 @@ export const useEditor = defineStore('editor', () => {
         const cw = editorData.value.width;
         const ch = editorData.value.height;
 
-        // Pixel art only survives INTEGER scaling, so stamp 1:1 whenever the
-        // image fits (what "paste" means everywhere else) and shrink by a whole
-        // factor 1/den only when it's too big for the canvas. The old
-        // fractional contain-fit rendered the same 1px source detail 2 wide
-        // here and 3 wide there — the art came out mushy and off-grid.
         const den = (gw <= cw && gh <= ch)
             ? 1
             : Math.max(1, Math.ceil(Math.max(gw / cw, gh / ch)));
@@ -1049,7 +911,7 @@ export const useEditor = defineStore('editor', () => {
             for (let tx = 0; tx < targetW; tx++) {
                 const sx = Math.min(srcRow.length - 1, tx * den);
                 const cell = srcRow[sx];
-                if (!cell) continue;   // transparent — keep what's underneath
+                if (!cell) continue;
 
                 const cx = offsetX + tx;
                 const cy = offsetY + ty;
@@ -1064,9 +926,6 @@ export const useEditor = defineStore('editor', () => {
         saveState();
     }
 
-    // Like importImage, but inserts the picked image into the current frame
-    // (overlay) instead of replacing the artwork. Images only — a .json is a
-    // whole-document format, so it stays an "import".
     async function insertImage() {
         const input = document.createElement('input');
         input.type = 'file';
@@ -1080,8 +939,6 @@ export const useEditor = defineStore('editor', () => {
             reader.onload = async (ev) => {
                 try {
                     const dataUrl = ev.target?.result as string;
-                    // Same preset as "Import files" — one engine, one
-                    // normalization (see ~/helper/pixel).
                     const grid = await importFileGrid(dataUrl);
                     if (grid) insertFromGrid(grid);
                 } catch (error) {
@@ -1110,9 +967,6 @@ export const useEditor = defineStore('editor', () => {
                     id: tempId, id_string: idString, template
                 })
             } catch (e: any) {
-                // A deleted (404) art shouldn't dead-end — open a fresh canvas,
-                // but tell the user it was removed rather than silently swapping
-                // in a blank. Transient/other errors stay silent (not "deleted").
                 const code = e?.statusCode ?? e?.response?.status
                 if (code === 404 && typeof window !== 'undefined') {
                     toast.info('That artwork was deleted — opening a new canvas')
@@ -1125,9 +979,6 @@ export const useEditor = defineStore('editor', () => {
             }
         }
 
-        // An explicit id (e.g. /editor?id= from /work) must end up as the
-        // active, focused board; the workspace_current fallback below is just
-        // "reopen where I was" and carries no such intent.
         const explicitId = !!id
         try {
             histories.value = getStorageItem('histories')
@@ -1138,17 +989,11 @@ export const useEditor = defineStore('editor', () => {
                 if (temp) {
                     editorData.value = cloneDeep(temp)
                 } else {
-                    // A guest tile lives only in the local tileset library, not
-                    // in `workspaces` — resolve it there before falling back to
-                    // a cloud fetch (lets /work tile links open for guests).
                     const localTile = localTs.findTileEd(id)
                     editorData.value = localTile ? localTile : await loadCloudPage(id)
                 }
             }
             markRawPixels(editorData.value)
-            // Bind editorData.layers to the active frame (frame 0 on load). For
-            // cloud loads the top-level `layers` is just the still; the editable
-            // truth lives in meta.animation.frames.
             currentFrameIndex.value = 0
             linkActiveFrame()
             ensureIsoMeta();
@@ -1165,7 +1010,7 @@ export const useEditor = defineStore('editor', () => {
             foldStrayVirtual()
             initBoardsFromCurrent()
             await restoreWorkspaceLayout(explicitId ? editorData.value.id.toString() : undefined)
-            applyWorkspaceLayoutOverlay()   // positions + bg/iso win over a stale snapshot
+            applyWorkspaceLayoutOverlay()
         } catch (error) {
             resetEditorData()
         }
@@ -1173,11 +1018,7 @@ export const useEditor = defineStore('editor', () => {
 
     async function performSave() {
         async function save2Cloud() {
-            // Read from the raw object — layers2MapNumbers and JSON serialization
-            // over the reactive proxy are slow on large canvases.
             const ed = toRaw(editorData.value)
-            // For animated art, the representative still (thumbnail / OG / gallery)
-            // is frame 0. The full animation rides in meta.animation.
             const anim = ed.meta?.animation
             const primaryLayers = anim?.frames?.length ? anim.frames[0]!.layers : ed.layers
             const payload = {
@@ -1189,16 +1030,12 @@ export const useEditor = defineStore('editor', () => {
                 colors: ed.colors,
                 layers: primaryLayers,
                 template: ed.template,
-                // Persist the art↔palette link when the user picked one.
                 palette: ed.palette ?? null,
                 id_string: ed.id_string,
                 map_numbers: layers2MapNumbers({...ed, layers: primaryLayers}),
                 is_public: ed.is_public,
                 meta: ed.meta ?? {},
             }
-            // Create a brand-new cloud art (fresh canvas, Tileset Slicer hand-off,
-            // or an imported file). Never send a carried-over slug on create — let
-            // the backend mint a fresh, unique one.
             async function createCloud() {
                 const oldLocalKey = editorData.value.id.toString()
                 const result = await useNativeFetch<SharedPage>(`/coloring/shared-pages/`, {
@@ -1211,11 +1048,6 @@ export const useEditor = defineStore('editor', () => {
                     item.id = result.id
                 })
                 editorData.value.updated = result.updated
-                // Re-key the board that held this art under its local UUID —
-                // board identity must follow the cloud id, or the workspace
-                // snapshot and addBoardWithData's dedupe keep seeing the
-                // retired UUID and every later open of this art spawns a
-                // duplicate board (which then autosaves as a duplicate art).
                 const promoted = boards.value.find(b => b.id === oldLocalKey)
                 if (promoted) {
                     promoted.id = result.id.toString()
@@ -1223,8 +1055,6 @@ export const useEditor = defineStore('editor', () => {
                     boardsRev.value++
                     saveWorkspaceLayout()
                 }
-                // Drop the stale local workspace so F5 doesn't reload it (which
-                // would look like an unsaved local art and POST a duplicate).
                 if (localWS.value[oldLocalKey]) {
                     delete localWS.value[oldLocalKey]
                     try {
@@ -1235,19 +1065,8 @@ export const useEditor = defineStore('editor', () => {
                 }
             }
 
-            // A cloud record exists only when we hold its numeric pk *and* slug
-            // (same invariant as destroyCurrent / the work page). A truthy
-            // id_string paired with a local UUID id — e.g. after importing an
-            // image over a previously-saved art — is NOT a server record:
-            // PUTting to /shared-pages/{uuid}/ would 404. Treat it as new (POST).
             const existsOnServer = typeof editorData.value.id === 'number' && !!editorData.value.id_string
             if (!existsOnServer) {
-                // A blank, unnamed, never-saved canvas isn't an artwork yet —
-                // POSTing it would litter /work with empty "Untitled" arts
-                // every time a fresh board or a reset autosaves. It still
-                // persists locally below; the first pixel (or a name) creates
-                // the cloud record. Existing arts can be erased to empty and
-                // PUT fine — this guards creation only.
                 const frames = anim?.frames?.length ? anim.frames : [{layers: ed.layers}]
                 const hasPixels = frames.some(f =>
                     (f?.layers || []).some(l => Object.keys(l?.pixels || {}).length > 0))
@@ -1263,10 +1082,6 @@ export const useEditor = defineStore('editor', () => {
                 editorData.value.updated = result.updated
                 editorData.value.id_string = result.id_string
             } catch (e: any) {
-                // The record is gone (deleted from Your Work while still open
-                // here, or a stale local copy). Don't silently resurrect it
-                // under the old identity — keep the user's work by saving it as
-                // a brand-new artwork, and say so.
                 const code = e?.statusCode ?? e?.response?.status
                 if (code !== 404) throw e
                 await createCloud()
@@ -1275,9 +1090,6 @@ export const useEditor = defineStore('editor', () => {
         }
 
         function save2Local(forcePrivate = true) {
-            // Logged-out work is always private. When logged in this is just a
-            // local mirror of the already-synced art, so keep its real status
-            // (never flip a published piece private, which a later PUT would sync).
             if (forcePrivate) editorData.value.is_public = false
             const snapshot = cloneDeep(toRaw(editorData.value))
             if (forcePrivate) snapshot.is_public = false
@@ -1285,9 +1097,6 @@ export const useEditor = defineStore('editor', () => {
             try {
                 localStorage.setItem('workspaces', JSON.stringify(localWS.value))
             } catch (e) {
-                // Quota exceeded (large canvas). Free the space taken by undo
-                // history and retry — the artwork matters more than persisted
-                // undo on a storage-limited origin.
                 console.warn('workspaces save hit storage limit, dropping histories:', e)
                 try {
                     localStorage.removeItem('histories')
@@ -1305,16 +1114,10 @@ export const useEditor = defineStore('editor', () => {
                 console.error('Failed to save to cloud, keeping local copy:', e);
                 toast.error('Cloud save failed — saved locally')
             }
-            // Always keep a local mirror of the synced art: instant, offline-safe
-            // reloads. It carries the numeric id + id_string, so a restore is a
-            // server record (next save PUTs, never a duplicate POST).
             save2Local(false)
         } else {
             save2Local()
         }
-        // Mirror the edit into any guest local tileset that holds this art, so
-        // the tileset editor / ?tileset= reload reflect it (no-op if it's not a
-        // tile anywhere). Never let a tileset write-back failure block the save.
         try { localTs.syncEditedArt(toRaw(editorData.value)) } catch (e) { /* non-fatal */ }
         const wsId = editorData.value.id.toString()
         localStorage.setItem('workspace_current', wsId)
@@ -1322,13 +1125,6 @@ export const useEditor = defineStore('editor', () => {
         persistHistories(wsId)
     }
 
-    // Persist the undo tail so it survives a reload. This stringify is the
-    // single heaviest main-thread cost in the app on big art (hundreds of ms
-    // for a deep tail — and it used to build a 25MB+ payload just to bounce
-    // off the localStorage quota and rebuild AGAIN in the catch). Now it is
-    // (a) size-budgeted: one snapshot is measured first and the tail shrinks
-    // to what can actually fit, and (b) deferred to idle time, so it never
-    // rides a save call mid-stroke. In-memory undo is unaffected either way.
     const HISTORY_BUDGET = 3 * 1024 * 1024
     let histIdleId: number | null = null
     function persistHistories(wsId: string) {
@@ -1337,8 +1133,6 @@ export const useEditor = defineStore('editor', () => {
             try {
                 const one = JSON.stringify(history.value[historyIndex.value] ?? null)
                 if (one.length > HISTORY_BUDGET) {
-                    // One snapshot alone can't fit — undo just won't survive a
-                    // reload for this art. Drop any stale persisted tail.
                     localStorage.removeItem('histories')
                     return
                 }
@@ -1366,11 +1160,6 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
-    // Serialize saves: a create (POST) must finish — and set id_string — before
-    // the next save runs, otherwise a save that overlaps an in-flight create
-    // still sees an empty id_string and POSTs a *duplicate*. Calls that arrive
-    // while a save is running collapse into a single trailing re-save that
-    // captures the latest state (and, by then, the real id_string → PUT).
     let saveInFlight: Promise<void> | null = null
     let resaveQueued = false
 
@@ -1387,42 +1176,26 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
-    // Track whether a debounced save is still waiting. Mobile browsers freeze
-    // timers when the tab is backgrounded (and often skip beforeunload), so the
-    // trailing debounce would never run — flush() forces it out on page-hide.
     let savePending = false
     const debouncedSave = debounce(() => { savePending = false; void saveNow() }, 1000)
     function save() { savePending = true; debouncedSave() }
 
-    // Persist any pending edit immediately. Safe to call from a visibilitychange
-    // /pagehide handler: the localStorage writes in performSave run synchronously
-    // (logged-out work is fully saved before the tab can be discarded), and the
-    // logged-in cloud PUT is at least fired before the page freezes.
     function flush(): void {
         if (!savePending) return
         savePending = false
         void saveNow()
     }
 
-    // Writes a single pixel. pixels is markRaw (non-reactive), so this is a
-    // plain object write — no proxy, no devtools, no deep-watch. It does NOT
-    // bump drawTurn; the calling operation (paint/bucketFill) bumps it once at
-    // the end, so a brush move emits one render signal instead of ~100.
     function setPixelByIndex(x: number, y: number, paletteIndex: number): void {
-        layerActive.value = true   // drawing engages the layer as the active target
+        layerActive.value = true
         const layer = editorData.value.layers[currentLayerIndex.value]!
         if (paletteIndex === -1) {
             delete layer.pixels[`${x}_${y}`]
         } else {
             layer.pixels[`${x}_${y}`] = paletteIndex;
         }
-        // Record the affected canvas coordinate for incremental rendering.
         markDirtyPixel(x + layer.x, y + layer.y)
 
-        // All-frames mode: replicate the write into every other frame's
-        // matching layer (same index, else its first). Covers brush, eraser,
-        // bucket and iso-line — they all funnel through here. Other frames
-        // aren't rendered live, so no extra dirty-marking is needed.
         if (allFrames.value && currentFrameIndex.value >= 0) {
             const anim = editorData.value.meta?.animation
             if (anim?.frames?.length) {
@@ -1442,12 +1215,6 @@ export const useEditor = defineStore('editor', () => {
 
     function saveState(isSync: boolean = true): void {
         editorData.value.version = historyIndex.value
-        // Clone from the raw object — avoids walking reactive proxies (much
-        // faster) and yields a plain, non-reactive snapshot. Re-mark the
-        // clone's pixel maps (cloneDeep drops the non-enumerable markRaw
-        // flag): snapshots flow into boards[].history — a deep ref — and
-        // unmarked pixels would get proxy-wrapped and deep-traversed there,
-        // a real main-thread cost on big art.
         const snapshot = markRawPixels(cloneDeep<EditorData>(toRaw(editorData.value)))
         const next = history.value.slice(0, historyIndex.value + 1);
         next.push(snapshot);
@@ -1457,22 +1224,14 @@ export const useEditor = defineStore('editor', () => {
             historyIndex.value--;
         }
         history.value = next;
-        // A committed change can touch anything (color edits, layer ops, …) —
-        // reconcile the render buffer fully on the next frame.
         markFullRedraw()
         drawTurn.value++
         if (isSync) save();
     }
 
-    // Reactive availability of undo/redo for the ACTIVE board (history +
-    // historyIndex are swapped per board on switch, so these track it).
     const canUndo = computed(() => historyIndex.value > 0)
     const canRedo = computed(() => historyIndex.value < history.value.length - 1)
 
-    // A stray "Virtual" layer (from a pre-fix polluted snapshot, or a crash
-    // mid-drag) gets folded back into its host so it never surfaces in the
-    // Layers panel. mergeVirtualLayer finds it by reference, so adopt the very
-    // object from the array first.
     function foldStrayVirtual() {
         const vi = editorData.value.layers.findIndex(l => l.name === 'Virtual')
         if (vi < 0) return
@@ -1482,10 +1241,6 @@ export const useEditor = defineStore('editor', () => {
         mergeVirtualLayer()
     }
 
-    // Undo/redo REPLACE the editorData object — the active board entry must
-    // follow, or hit-testing and board rendering (which read b.data) keep the
-    // retired snapshot: after an undo across a canvas resize (e.g. merge
-    // pixels) the board stays the old size and the editor stops responding.
     function rebindActiveBoard() {
         const b = boards.value.find(x => x.id === activeBoardId.value)
         if (b && b.data !== editorData.value) {
@@ -1553,12 +1308,9 @@ export const useEditor = defineStore('editor', () => {
 
     function setTool(tool: string) {
         currentTool.value = tool
-        // Leaving the picker clears its highlight.
         if (tool !== 'picker') pickedColorIndex.value = null
     }
 
-    // Topmost visible palette index at a canvas coordinate (used by the "find
-    // color" tool). Walks layers top→bottom; returns -1 when the pixel is empty.
     function colorIndexAt(x: number, y: number): number {
         const layers = editorData.value.layers
         for (let i = layers.length - 1; i >= 0; i--) {
@@ -1569,10 +1321,6 @@ export const useEditor = defineStore('editor', () => {
         return -1
     }
 
-    // Grid mode/cell is a WORKSPACE setting, not a per-board one: every board on
-    // the canvas shares the same iso mode + cell so a tileset reads consistently.
-    // Push the active board's iso onto every other board, then invalidate their
-    // cached composites (checker↔solid bg) and persist the workspace snapshot.
     function applyIsoToAllBoards() {
         const src = editorData.value.meta!.iso!;
         for (const b of boards.value) {
@@ -1580,11 +1328,10 @@ export const useEditor = defineStore('editor', () => {
             const meta = b.data.meta || (b.data.meta = {});
             meta.iso = { mode: src.mode, cell: { width: src.cell.width, height: src.cell.height } };
         }
-        boardsRev.value++;             // per-board composites re-render with the new mode
+        boardsRev.value++;
         saveWorkspaceLayout();
     }
 
-    // Grid mode is part of history — undo/redo includes mode changes, consistent with setGridCell.
     function cycleGridMode() {
         ensureIsoMeta();
         const order: Array<'square' | 'iso' | 'off'> = ['square', 'iso', 'off'];
@@ -1595,7 +1342,6 @@ export const useEditor = defineStore('editor', () => {
         applyIsoToAllBoards();
     }
 
-    // Direct setter for the Board settings panel (the toolbar used to cycle).
     function setGridMode(mode: 'square' | 'iso' | 'off') {
         ensureIsoMeta();
         if (editorData.value.meta!.iso!.mode === mode) return;
@@ -1646,7 +1392,6 @@ export const useEditor = defineStore('editor', () => {
                 }
             }
         }
-        // One render signal per brush move (not per pixel).
         drawTurn.value++;
     }
 
@@ -1701,35 +1446,6 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
-    /**
-     * Generates a pixel-perfect line into virtualLayer, with the angle SNAPPED
-     * to whichever pixel-art axis the (start → end) cursor vector is closest to:
-     *
-     *   horizontal · iso diagonal (cellH:cellW, e.g. 2:1) · true diagonal (1:1)
-     *   · steep iso diagonal (cellW:cellH swapped, e.g. 1:2) · vertical
-     *
-     * — each in all four quadrants. Boundaries sit at the angular midpoints
-     * between neighbouring axes, so the chosen slope follows the cursor live:
-     * drag at ~45° for a clean 1:1 diagonal, shallower for the iso stair,
-     * near-flat/near-plumb for straight edges.
-     *
-     * Stair algorithm (slope = h per w):
-     *  - k = max(floor(|dx|/w), floor(|dy|/h)) — number of stair cells.
-     *  - For each cell c ∈ [0, k]: paint a horizontal tread of w pixels.
-     *  - For c ∈ [1, k]: paint a vertical riser of (h - 1) pixels connecting
-     *    the previous tread's end column to the current tread's start row.
-     *  (w=h=1 degenerates to the true 1:1 diagonal.)
-     *
-     * Emits pixels via writeVirtualPixel which honors mirror flags, selection,
-     * and canvas bounds.
-     */
-    // Segmented pixel line: both drag endpoints land EXACTLY on the line, and
-    // the long axis divides into one run per short-axis step — as equal as
-    // possible, consecutive runs sharing their junction pixel row/column
-    // (4-connected corners, like hand-drawn joined segments). Uneven lengths
-    // bias toward the END. E.g. (0,0)→(1,4) becomes (0,0)-(0,2) + (1,2)-(1,4).
-    // (cellW/cellH kept for call compatibility — the line no longer snaps to
-    // the iso cell ratio; it follows the cursor.)
     function paintIsoLine(
         start: { x: number; y: number },
         end: { x: number; y: number },
@@ -1745,7 +1461,6 @@ export const useEditor = defineStore('editor', () => {
         const adx = Math.abs(dx);
         const ady = Math.abs(dy);
 
-        // U = long axis (runs), V = short axis (one step per run).
         const steep = ady > adx;
         const aU = steep ? ady : adx;
         const aV = steep ? adx : ady;
@@ -1754,24 +1469,19 @@ export const useEditor = defineStore('editor', () => {
             : (u: number, v: number) => writeVirtualPixel(start.x + sx * u, start.y + sy * v, colorIndex);
 
         if (aU === aV) {
-            // True diagonal — plain 1px steps (0,0 → 1,1 → 2,2 …). The
-            // junction-sharing below would double every step into an L.
             for (let i = 0; i <= aU; i++) put(i, i);
         } else {
             const runs = aV + 1;
-            // Each junction pixel belongs to BOTH neighbouring runs, so the
-            // total painted length is span + (runs − 1).
             const total = (aU + 1) + (runs - 1);
             const base = Math.floor(total / runs);
             const extra = total % runs;
             let u = 0;
             for (let i = 0; i < runs; i++) {
-                const len = base + (i >= runs - extra ? 1 : 0);   // remainder → end runs
+                const len = base + (i >= runs - extra ? 1 : 0);
                 for (let j = 0; j < len; j++) put(u + j, i);
-                u += len - 1;   // next run starts on this run's junction pixel
+                u += len - 1;
             }
         }
-        // Iso-line previews live in the virtual layer with offsets — rebuild fully.
         markFullRedraw()
         drawTurn.value++;
     }
@@ -1800,7 +1510,6 @@ export const useEditor = defineStore('editor', () => {
 
     function removeColor(index: number) {
         if (editorData.value.colors.length <= 1) return
-        // Palette is shared across all frames — remap every frame's layers.
         forEachLayer(layer => {
             const next: { [key: string]: number } = {}
             Object.keys(layer.pixels).forEach(key => {
@@ -1854,10 +1563,6 @@ export const useEditor = defineStore('editor', () => {
         saveState()
     }
 
-    // Drop pixels that ended up outside the canvas — a resize-down or a layer
-    // move can strand big chunks of art off-canvas where they never render
-    // but every draw/serialize pass still walks them (lag, bloated saves).
-    // Runs over every frame + shared layer of the active board; undoable.
     function trimHiddenPixels(): number {
         const w = editorData.value.width, h = editorData.value.height
         let removed = 0
@@ -1881,18 +1586,12 @@ export const useEditor = defineStore('editor', () => {
         return removed
     }
 
-    // Merge pixels by block: the active selection defines both the block SIZE
-    // and the grid PHASE — the selected bw×bh cells collapse into 1 pixel and
-    // the whole canvas re-tiles in bw×bh blocks anchored at the selection
-    // (partial edge blocks merge too). Each block keeps its majority color;
-    // the canvas shrinks accordingly. Runs over every frame; undoable.
     function mergeSelectedBlock(): { w: number; h: number } | null {
         const b = selectionState.value.bounds
         if (!b.active) return null
-        // Selection bounds are INCLUSIVE (maxX is the last selected pixel).
         const bw = Math.max(1, b.maxX - b.minX + 1)
         const bh = Math.max(1, b.maxY - b.minY + 1)
-        if (bw <= 1 && bh <= 1) return null   // 1×1 merges nothing
+        if (bw <= 1 && bh <= 1) return null
         const w = editorData.value.width, h = editorData.value.height
         const phaseX = ((b.minX % bw) + bw) % bw
         const phaseY = ((b.minY % bh) + bh) % bh
@@ -1901,9 +1600,6 @@ export const useEditor = defineStore('editor', () => {
         const outW = leadX + Math.max(1, Math.ceil((w - phaseX) / bw))
         const outH = leadY + Math.max(1, Math.ceil((h - phaseY) / bh))
 
-        // A destination cell's slot count = its block clipped to the canvas —
-        // needed so transparency can win the vote (a block that is mostly
-        // empty must merge to empty, or sparse art densifies into mush).
         const cellSlots = (X: number, Y: number): number => {
             const x0 = leadX && X === 0 ? 0 : phaseX + (X - leadX) * bw
             const x1 = Math.min(w, leadX && X === 0 ? phaseX : phaseX + (X - leadX + 1) * bw)
@@ -1914,7 +1610,6 @@ export const useEditor = defineStore('editor', () => {
 
         forEachLayer(layer => {
             const lx = layer.x || 0, ly = layer.y || 0
-            // Majority vote per destination cell (off-canvas strays drop).
             const votes = new Map<string, Map<number, number>>()
             for (const key of Object.keys(layer.pixels)) {
                 const {x: kx, y: ky} = key2Point(key)
@@ -1934,7 +1629,7 @@ export const useEditor = defineStore('editor', () => {
                 m.forEach((n, v) => { painted += n; if (n > bestN) { bestN = n; best = v } })
                 if (best < 0) return
                 const {x: X, y: Y} = key2Point(cell)
-                if (painted * 2 < cellSlots(X, Y)) return   // mostly empty → empty
+                if (painted * 2 < cellSlots(X, Y)) return
                 next[cell] = best
             })
             layer.pixels = markRaw(next)
@@ -1952,9 +1647,6 @@ export const useEditor = defineStore('editor', () => {
         return {w: outW, h: outH}
     }
 
-    // Merge the given layers of the ACTIVE frame into one. Pixels compose in
-    // stack order (higher index sits on top and wins), the result lands on
-    // the bottom-most selected layer and the other layers are removed.
     function mergeLayers(indices: number[]): boolean {
         const list = [...new Set(indices)]
             .filter(i => i >= 0 && i < editorData.value.layers.length)
@@ -1984,11 +1676,6 @@ export const useEditor = defineStore('editor', () => {
         return true
     }
 
-    // ── Clipboard (internal) ────────────────────────────────────────
-    // Copy follows the active scope (selection > layer > board). Pixels are
-    // stored as HEX (palette-independent), so pasting across boards with
-    // different palettes just works. Paste: selection/layer → a new layer on
-    // the active board at the same coords; a copied board → a new board.
     const clipboard = shallowRef<null | {
         kind: 'selection' | 'layer' | 'board'
         width: number
@@ -2011,7 +1698,6 @@ export const useEditor = defineStore('editor', () => {
                 if (hex) out[`${ax}_${ay}`] = hex
             }
         } else {
-            // Board: the visible composite — top layer wins per pixel.
             for (let i = editorData.value.layers.length - 1; i >= 0; i--) {
                 const layer = editorData.value.layers[i]!
                 const lx = layer.x || 0, ly = layer.y || 0
@@ -2054,8 +1740,6 @@ export const useEditor = defineStore('editor', () => {
             addBoardWithData(data)
             return 'board'
         }
-        // Selection/layer content → a fresh layer, same coordinates, so the
-        // paste is movable and never overwrites what's underneath.
         const colors = editorData.value.colors
         const pixels: { [key: string]: number } = {}
         for (const key of Object.keys(clip.pixels)) {
@@ -2071,14 +1755,6 @@ export const useEditor = defineStore('editor', () => {
         return 'layer'
     }
 
-    // Apply a library palette to the current artwork.
-    //  - 'replace': recolor by index — palette slot i takes the new color, so
-    //    existing pixels recolor in place. Any slots the new palette doesn't
-    //    cover keep the old color, so no pixel can point past the array.
-    //  - 'append': add the palette's colors (de-duped) after the current ones;
-    //    pixels are left untouched.
-    // `paletteId` records the chosen library palette so it persists as the
-    // art↔palette link on save (null = ad-hoc colors, clears any link).
     function applyPalette(colors: string[], mode: 'replace' | 'append' = 'replace', paletteId: number | null = null) {
         const incoming = (colors || []).filter(Boolean).map(c => c.toUpperCase())
         if (!incoming.length) return
@@ -2111,9 +1787,6 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
-    // Mirror axis: selection bounds are inclusive (width = maxX - minX), but the
-    // whole-canvas fallback uses the exclusive canvas size — subtract 1 there so
-    // column/row 0 maps to the last one instead of one past it.
     function flipSpan(size: number): number {
         return selectionState.value.bounds.active ? size : size - 1
     }
@@ -2152,11 +1825,6 @@ export const useEditor = defineStore('editor', () => {
         saveState();
     }
 
-    // Start a move/iso-line drag: CUT the affected content into the virtual
-    // layer and splice it in just above the current layer. Deliberately no
-    // saveState here — a drag start isn't a commit, and snapshotting now would
-    // bake the transient "Virtual" layer into history (undo then resurrects a
-    // ghost layer). The single history entry lands at mergeVirtualLayer time.
     function immigrateVirtualLayer() {
         virtualLayer.value.pixels = markRaw(getContentInBound(true));
         editorData.value.layers.splice(currentLayerIndex.value + 1, 0, virtualLayer.value);
@@ -2164,11 +1832,6 @@ export const useEditor = defineStore('editor', () => {
         drawTurn.value++;
     }
 
-    // An EMPTY scratch overlay above the current layer, for stroke previews
-    // (iso-line). Unlike immigrateVirtualLayer it does NOT cut the host
-    // content out — the old immigrate+clear combo cut the whole layer into
-    // the virtual layer and then threw it away, so drawing one iso line
-    // erased everything already on the layer.
     function beginVirtualOverlay() {
         clearVirtualLayer()
         editorData.value.layers.splice(currentLayerIndex.value + 1, 0, virtualLayer.value)
@@ -2176,11 +1839,6 @@ export const useEditor = defineStore('editor', () => {
         drawTurn.value++
     }
 
-    // All-frames mode: when ON, edits apply to every frame at once —
-    // paint/erase/bucket replicate each pixel write (see setPixelByIndex),
-    // and committing a whole-layer move translates every layer of every frame
-    // (+ shared) by the same offset (e.g. recenter after a canvas resize).
-    // Selection moves stay per-frame regardless.
     const allFrames = ref(false)
 
     function translateLayer(layer: Layer, dx: number, dy: number) {
@@ -2193,11 +1851,6 @@ export const useEditor = defineStore('editor', () => {
     }
 
     function mergeVirtualLayer() {
-        // Locate the in-flight layer BY REFERENCE — never splice blind by
-        // index. If it isn't in the current art (undo / board switch / import
-        // replaced editorData mid-drag), the pre-drag pixels are already back
-        // via that snapshot: dropping the in-flight copy is the only merge
-        // that neither duplicates pixels nor eats an innocent layer.
         const vi = editorData.value.layers.indexOf(virtualLayer.value)
         if (vi <= 0) {
             virtualLayer.value.pixels = markRaw({})
@@ -2208,7 +1861,7 @@ export const useEditor = defineStore('editor', () => {
             return
         }
 
-        const host = editorData.value.layers[vi - 1]!   // the layer it was cut from
+        const host = editorData.value.layers[vi - 1]!
         const dx = virtualLayer.value.x
         const dy = virtualLayer.value.y
         Object.keys(virtualLayer.value.pixels).forEach((key) => {
@@ -2239,7 +1892,6 @@ export const useEditor = defineStore('editor', () => {
     function move(dx: number, dy: number): void {
         virtualLayer.value.x += dx
         virtualLayer.value.y += dy
-        // Moving shifts the whole composited layer — rebuild fully.
         markFullRedraw()
         drawTurn.value++;
     }
@@ -2247,9 +1899,6 @@ export const useEditor = defineStore('editor', () => {
     function resize({width, height}: { width: number; height: number }): void {
         editorData.value.width = width
         editorData.value.height = height
-        // A selection lives in canvas pixel coords (inclusive bounds) — after
-        // a shrink it can point at pixels that no longer exist. Clamp it into
-        // the new canvas, or drop it when it falls entirely outside.
         const b = selectionState.value.bounds
         if (b.active) {
             if (b.minX > width - 1 || b.minY > height - 1) {
@@ -2300,9 +1949,6 @@ export const useEditor = defineStore('editor', () => {
             }
         }
         if (failed.length === 0) {
-            // Everything migrated — clear local storage, including the multi-board
-            // snapshot and its lightweight layout, or the editor would rebuild
-            // stale boards keyed by the now-migrated (dead) local ids on next load.
             localStorage.setItem('workspaces', '{}')
             localStorage.setItem('histories', '{}')
             localStorage.setItem('workspace_current', '')
@@ -2311,8 +1957,6 @@ export const useEditor = defineStore('editor', () => {
             localWS.value = {}
             histories.value = {}
         } else {
-            // Partial failure: keep ONLY the failed items locally (they'd be lost
-            // otherwise) — the synced ones now live in the cloud.
             const keep: { [key: string]: EditorData } = {}
             for (const key of failed) keep[key] = workspaces[key]!
             try { localStorage.setItem('workspaces', JSON.stringify(keep)) } catch { /* quota */ }
@@ -2326,7 +1970,6 @@ export const useEditor = defineStore('editor', () => {
 
     return {
         editorData,
-        // Multi-board workspace
         boards,
         activeBoardId,
         boardsRev,
@@ -2401,7 +2044,6 @@ export const useEditor = defineStore('editor', () => {
         setGridCell,
         paintIsoLine,
         clearVirtualLayer,
-        // Animation
         currentFrameIndex,
         onionSkin,
         isPlaying,

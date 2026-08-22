@@ -1,8 +1,6 @@
 <script setup lang="ts">
 const route = useRoute()
 
-// When ?id=X present, editor loads an existing artwork — canonical to its detail page.
-// Also noindex these variants to avoid duplicate content in GSC.
 const editId = computed(() => route.query.id?.toString() || '')
 const canonical = computed(() =>
     editId.value
@@ -10,12 +8,6 @@ const canonical = computed(() =>
         : 'https://simplepixelart.com/editor'
 )
 
-// "Maker" leads, not "Editor". The homepage was taking every tool query and
-// ranking badly with them — pixel art maker pos 26.9, make pixel art pos 41.3,
-// online pixel art pos 34.0, free pixel art pos 35.2 — while this page, the
-// actual tool, drew a single impression for any of them. Tool intent is the
-// highest-CTR bucket in the data (4.03%), so it belongs on the tool page.
-// Title stays under ~39 chars because titleTemplate appends 21 more.
 useCustomSeoMeta({
   title: "Pixel Art Maker — Free Online Editor",
   description: "Make pixel art online free — draw on a pixel grid with brushes, fill, layers, mirror mode and custom palettes, then export a PNG. No download, no signup, runs in your browser.",

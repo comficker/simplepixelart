@@ -22,19 +22,12 @@
 </template>
 
 <script setup lang="ts">
-// One modal chrome for the whole app: share-overlay/share-modal look,
-// close X top-right, Escape to close. Width/child tweaks come from the
-// caller's class (attrs land on the .share-modal div).
 defineOptions({inheritAttrs: false})
 defineProps<{ title?: string; sub?: string; width?: string; ariaLabel?: string }>()
 const emit = defineEmits<{ close: [] }>()
 
-// SSR-stable id so aria-labelledby points at the heading (dialog needs a name).
 const headingId = useId()
 
-// Stacked modals: every instance listens on `document`, so Escape would close
-// all of them at once (stopPropagation doesn't affect other listeners on the
-// same node). Track mount order and let only the topmost respond.
 const stackId = Symbol('ui-modal')
 
 function onKey(e: KeyboardEvent) {
@@ -56,18 +49,15 @@ onBeforeUnmount(() => {
 </script>
 
 <script lang="ts">
-// Module scope — one stack shared by every UiModal instance.
 const modalStack: symbol[] = []
 </script>
 
 <style>
-/* Unscoped on purpose: .ui-modal is rendered under <body> via Teleport and
-   these are the shared chrome rules every modal inherits. */
+
 .ui-modal {
   position: relative;
 }
 
-/* Room for the X so titles never run underneath it. */
 .ui-modal .publish-heading {
   padding-right: 2rem;
 }

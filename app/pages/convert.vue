@@ -124,13 +124,11 @@ const maxColors = ref(16)
 const brightness = ref(0)
 const contrast = ref(0)
 const saturation = ref(0)
-// Backdrop → transparency, and ordered dithering for photos (both off by
-// default: they change the output's nature, not just its quality).
 const bgCut = ref(false)
 const dither = ref(false)
 
 const pixels = ref<number[][]>([])
-const isNative = ref(false)          // the input's own grid was detected
+const isNative = ref(false)
 const palette = ref<RGB[]>([])
 const selectedColorIndex = ref<number>(-1)
 
@@ -139,9 +137,6 @@ const hasImage = computed(() => !!sourceImage.value)
 const sizeOptions: (number | 'auto')[] = ['auto', 8, 12, 16, 20, 24, 32, 48, 64]
 const colorOptions = [4, 8, 16, 32, 64]
 
-// ================================================================
-// Image load
-// ================================================================
 function openFileDialog() {
   fileInput.value?.click()
 }
@@ -152,7 +147,7 @@ function onFileSelect(e: Event) {
   loadFile(file)
 }
 
-const sourceUrl = ref('')      // kept for the native fast-path in the preset
+const sourceUrl = ref('')
 
 function loadFile(file: File) {
   const reader = new FileReader()
@@ -175,13 +170,6 @@ function onDrop(e: DragEvent) {
   if (file && file.type.startsWith('image/')) loadFile(file)
 }
 
-// ================================================================
-// Conversion pipeline — the shared preset in ~/helper/pixel: uniform-margin
-// crop, adjustment bake, two-stage label-vote reconstruction.
-// ================================================================
-// Converts run async and can interleave (rapid pill clicks): the token makes
-// sure only the LATEST call may publish its result — an older convert landing
-// late must not overwrite a newer one.
 let convertRun = 0
 
 async function convert() {
@@ -236,9 +224,6 @@ function mergeColor(fromIdx: number, toIdx: number) {
   toast.success('Colors merged')
 }
 
-// ================================================================
-// Preview
-// ================================================================
 function drawPreview() {
   if (!previewCanvas.value || !pixels.value.length) return
   const cv = previewCanvas.value
@@ -256,7 +241,7 @@ function drawPreview() {
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const idx = pixels.value[y]![x]!
-      if (idx < 0) continue                       // cut background — stays clear
+      if (idx < 0) continue
       const rgb = palette.value[idx]!
       ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`
       ctx.fillRect(x * cellW, y * cellH, Math.ceil(cellW), Math.ceil(cellH))
@@ -264,9 +249,6 @@ function drawPreview() {
   }
 }
 
-// ================================================================
-// Send to editor
-// ================================================================
 function sendToEditor() {
   if (!pixels.value.length) return
   const h = pixels.value.length
@@ -276,7 +258,7 @@ function sendToEditor() {
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const idx = pixels.value[y]![x]!
-      if (idx < 0) continue                       // transparent stays empty
+      if (idx < 0) continue
       layerPixels[`${x}_${y}`] = idx
     }
   }
@@ -294,8 +276,6 @@ function sendToEditor() {
     }],
     updated: new Date().toISOString(),
   }
-  // Write to localStorage workspaces so editor picks it up (getStorageItem
-  // survives a corrupted value instead of throwing).
   const ws = getStorageItem('workspaces')
   ws[id] = data
   localStorage.setItem('workspaces', JSON.stringify(ws))
@@ -303,11 +283,6 @@ function sendToEditor() {
   navigateTo(`/editor?id=${id}`)
 }
 
-// ================================================================
-// Watch settings → re-convert
-// ================================================================
-// Debounced: the range sliders fire continuously while dragging, and each
-// convert() re-samples + re-quantizes the full output grid.
 const debouncedConvert = debounce(() => { if (sourceImage.value) convert() }, 150)
 watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], () => debouncedConvert())
 
@@ -323,9 +298,9 @@ const faq = [
 
 <template>
   <div class="page">
-    <!-- Main UI (always visible; empty state lives inside the Pixel Preview) -->
+
     <div class="convert-grid flat-editor">
-      <!-- Preview -->
+
       <div class="convert-preview">
         <Widget title="Pixel Preview">
           <template #ctl>
@@ -348,7 +323,6 @@ const faq = [
           </div>
         </Widget>
 
-        <!-- Actions -->
         <div v-if="hasImage" class="convert-actions">
           <button class="btn primary block" @click="sendToEditor">
             <span class="icon icon-pen"/>
@@ -361,7 +335,6 @@ const faq = [
         </div>
       </div>
 
-      <!-- Settings -->
       <div class="convert-settings">
         <Widget title="Size">
           <div class="settings-row" title="Auto reads the image's own pixel grid when it has one">
@@ -391,7 +364,6 @@ const faq = [
             <span class="text-xs">Dithering</span>
           </label>
         </Widget>
-
 
         <Widget title="Adjust">
           <div class="slider-row">
@@ -453,12 +425,10 @@ const faq = [
         @change="onFileSelect"
     />
 
-    <!-- More tools -->
     <Widget title="More tools" class="tool-more">
       <ToolPaths exclude="convert"/>
     </Widget>
 
-    <!-- SEO content -->
     <ToolReadme>
       <h1>Image to Pixel Art Converter</h1>
       <p>Turn any photo into pixel art in seconds — free, no signup, and everything runs in your browser.</p>
@@ -504,7 +474,7 @@ const faq = [
 </template>
 
 <style scoped>
-/* Empty state fills the Pixel Preview square (drop zone + choose-file button). */
+
 .upload-zone {
   display: flex;
   flex-direction: column;
@@ -533,8 +503,6 @@ const faq = [
   color: var(--primary);
 }
 
-/* Flat editor: preview + settings sit flush inside one frame (see
-   .flat-editor in main.css), split by 1px dividers instead of gaps. */
 .convert-grid {
   display: grid;
   gap: 0;
@@ -603,7 +571,6 @@ const faq = [
   cursor: pointer;
 }
 
-/* Transparent-background mode: show the classic checkerboard through the art. */
 .pixel-preview.checker {
   background:
       repeating-conic-gradient(color-mix(in oklab, var(--muted) 18%, transparent) 0% 25%, transparent 0% 50%)
@@ -673,8 +640,6 @@ const faq = [
 .palette-swatch.mergeable {
   border: 1px solid var(--border);
 }
-
-
 
 .merge-hint {
   margin-top: 0.75rem;

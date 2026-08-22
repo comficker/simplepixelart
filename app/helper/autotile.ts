@@ -1,36 +1,18 @@
-// Bitmask auto-tiling ("terrain" brushes) — two flavours:
-//
-//   wang16 (default): 4-bit N/E/S/W edges, 16 tiles, borders mid-tile —
-//     suits top-down maps.
-//   blob47: 8-bit edges + corners, 47 canonical tiles, borders at tile
-//     edges — suits platformers/side-scrollers. A corner bit only counts
-//     when both adjacent edges are set, which collapses 256 masks to 47.
-//
-// Painting stores the terrain id per cell (layer.terrain) and writes the
-// RESOLVED tile id into layer.cells — rendering and public pages never need
-// to know auto-tiling exists.
 
 import type {TilemapLayer} from '~/helper/tilemap'
 
 export type TerrainType = 'wang16' | 'blob47'
 
-// Data-driven terrain relations. A neighbour of terrain U counts as
-// connected for a cell of terrain T when U is in T's connects list AND
-// U's priority >= T's priority. That single rule covers:
-//   mutual connect, equal priority   → seamless merge (grass ⇔ grass-2)
-//   mutual connect, U higher         → T fills underneath, U draws its
-//                                      transition edge over T (grass on dirt)
-//   not listed                       → hard boundary both sides (grass | water)
 export interface TerrainRelations {
-  connects: string[]   // terrain ids this terrain merges with / runs under
-  priority: number     // higher draws its transition over lower (default 0)
+  connects: string[]
+  priority: number
 }
 
 export interface Terrain {
   id: string
   name: string
-  type?: TerrainType            // missing → wang16
-  map: Record<string, number>   // canonical mask -> SharedPage tile id
+  type?: TerrainType
+  map: Record<string, number>
   relations?: TerrainRelations
 }
 
@@ -43,11 +25,8 @@ export const MASK_SE = 32
 export const MASK_SW = 64
 export const MASK_NW = 128
 
-// Slot order for the editor's 4×4 assignment grid (simply 0..15; the glyph
-// on each slot explains the connections).
 export const TERRAIN_SLOTS = Array.from({length: 16}, (_, i) => i)
 
-// A corner only matters when both adjacent edges connect — canonical form.
 export function canonicalBlobMask(m: number): number {
   if (!((m & MASK_N) && (m & MASK_E))) m &= ~MASK_NE
   if (!((m & MASK_S) && (m & MASK_E))) m &= ~MASK_SE
@@ -56,7 +35,6 @@ export function canonicalBlobMask(m: number): number {
   return m
 }
 
-// The 47 canonical blob masks, ordered edges-first for a stable editor grid.
 export const BLOB_SLOTS: number[] = (() => {
   const out: number[] = []
   for (let m = 0; m < 256; m++) {
@@ -82,9 +60,6 @@ function key(col: number, row: number) {
   return `${col}_${row}`
 }
 
-// Neighbour-connectivity predicate for terrain `tid` from the relation data —
-// see TerrainRelations for the rule. Without a terrain list only exact-id
-// matches connect (legacy behaviour).
 export function connectsPredicate(tid: string, terrains?: Terrain[]): (other: string) => boolean {
   const self = terrains?.find(t => t.id === tid)
   const rel = self?.relations
@@ -120,9 +95,6 @@ export function terrainMask(terrain: Record<string, string>, col: number, row: n
 
 const ALL_BITS = [MASK_N, MASK_E, MASK_S, MASK_W, MASK_NE, MASK_SE, MASK_SW, MASK_NW]
 
-// Pick the tile for a mask; fall back to the nearest assigned variant so a
-// partially-filled terrain still paints (prefer masks sharing the most bits;
-// edge bits count double since they matter more than corners).
 export function resolveTerrainTile(t: Terrain, mask: number): number | null {
   const exact = t.map[String(mask)]
   if (exact) return exact
@@ -143,7 +115,6 @@ export function resolveTerrainTile(t: Terrain, mask: number): number | null {
   return best
 }
 
-// Recompute the resolved tile for one cell from its terrain mark (or clear it).
 function resolveCell(layer: TilemapLayer, terrains: Terrain[], col: number, row: number) {
   const k = key(col, row)
   const tid = layer.terrain[k]
@@ -158,8 +129,6 @@ function resolveCell(layer: TilemapLayer, terrains: Terrain[], col: number, row:
   else delete layer.cells[k]
 }
 
-// After painting/erasing at (col,row): re-resolve that cell and its eight
-// neighbours (their masks may have changed; corners matter for blob47).
 export function reflowTerrain(layer: TilemapLayer, terrains: Terrain[], col: number, row: number) {
   for (let dr = -1; dr <= 1; dr++) {
     for (let dc = -1; dc <= 1; dc++) {

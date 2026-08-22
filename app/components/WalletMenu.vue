@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import {toast} from 'vue-sonner'
 
-// Header wallet: credit balance + daily grant + missions, backed by
-// /coloring/economy/. Renders nothing for guests — the economy is a
-// signed-in feature.
 const auth = useAuthStore()
 
 interface Mission {
@@ -54,8 +51,6 @@ async function claimDaily() {
   }
 }
 
-// Claimable missions surface as a badge on the Missions link — claiming
-// itself lives on the /missions screen.
 const claimableCount = computed(() =>
     (sum.value?.missions || []).filter(m => m.done && !m.claimed).length
     + (sum.value && !sum.value.daily_claimed ? 1 : 0))
@@ -193,7 +188,6 @@ watch(() => auth.isLogged, (v) => {
   gap: var(--space-2);
 }
 
-/* Claimable count riding the Missions link. */
 .wallet-badge {
   min-width: 18px;
   height: 18px;

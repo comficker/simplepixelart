@@ -81,24 +81,20 @@ type RGB = [number, number, number]
 type Box = { x: number; y: number; w: number; h: number }
 type Pt = { x: number; y: number }
 
-// ── Source ─────────────────────────────────────────────────────────
 const fileInput = ref<HTMLInputElement | null>(null)
 const sourceImage = ref<HTMLImageElement | null>(null)
-const imageData = ref('')   // dataURL of the loaded sheet, persisted so F5 keeps the work
-const rawImageData = ref('') // the original upload, kept so "editor import" can re-derive
-const sourceName = ref('')   // upload's basename — names the animation art
+const imageData = ref('')
+const rawImageData = ref('')
+const sourceName = ref('')
 const hasImage = computed(() => !!sourceImage.value)
 
-// Run the same image pipeline the editor uses on import (de-upscale, crop,
-// quantize to dominant colours) on the sheet before slicing it.
 const editorProcess = ref(false)
-const sheetKeepBg = ref(false)   // clean without knocking the backdrop out
-const sheetInfo = ref('')        // "8× → 128×96" after a clean
+const sheetKeepBg = ref(false)
+const sheetInfo = ref('')
 const processing = ref(false)
 
 const mode = ref<'grid' | 'auto' | 'select'>('select')
 
-// ── Grid params (source pixels) ────────────────────────────────────
 const tileW = ref(16)
 const tileH = ref(16)
 const spacing = ref(0)
@@ -119,7 +115,6 @@ const rows = computed(() => {
 })
 const tileCount = computed(() => cols.value * rows.value)
 
-// ── Auto-detect params ─────────────────────────────────────────────
 const bg = ref<RGB>([0, 0, 0])
 const tolerance = ref(24)
 const minSize = ref(14)
@@ -127,48 +122,36 @@ const mergeGap = ref(2)
 const boxes = ref<Box[]>([])
 const detecting = ref(false)
 
-// ── Manual select ──────────────────────────────────────────────────
 const regions = ref<Box[]>([])
 const selectedRegion = ref(-1)
 const dragging = ref(false)
 const dragStart = ref<Pt | null>(null)
 const draft = ref<Box | null>(null)
-// Selection shape: free rectangle, 1:1 square (drag grows both axes equally),
-// or fixed size (click drops a fixedW×fixedH box at the click point).
 const selectShape = ref<'free' | 'square' | 'fixed'>('free')
 const fixedW = ref(16)
 const fixedH = ref(16)
 const fixedLink = ref(true)
-// Drag an existing region to reposition it (grab from inside the box).
 const movingRegion = ref(-1)
 const hoverRegion = ref(-1)
 let moveGrab = {dx: 0, dy: 0}
 
-// ── Cleanup (applied to every extracted sprite) ────────────────────
-// Neutral by default: what you slice is exactly what the sheet shows, so the
-// "Clean sheet on load" toggle visibly drives preview + output. Per-tile
-// cleanup is an explicit opt-in from the settings modal.
-const crispFactor = ref<'auto' | number>(1)      // round pixels: de-upscale factor
-const mergeTol = ref(0)                           // merge near-identical colours (0 = off)
-const cleanInfo = ref('')                         // "16×16 · 8 colors" after processing
+const crispFactor = ref<'auto' | number>(1)
+const mergeTol = ref(0)
+const cleanInfo = ref('')
 const crispOptions: { v: 'auto' | number; l: string }[] = [
   {v: 'auto', l: 'Auto'}, {v: 1, l: '1×'}, {v: 2, l: '2×'}, {v: 3, l: '3×'}, {v: 4, l: '4×'},
 ]
-const removeBg = ref(false)      // knock out the background colour → transparent
+const removeBg = ref(false)
 const removeBgTol = ref(30)
-const picking = ref(false)       // eyedropper: next sheet click sets bg colour
-const despeckle = ref(false)     // replace stray/orphan pixels with their majority neighbour
-const median = ref(false)        // 3×3 vector-median smoothing (edge-preserving denoise)
-const quantize = ref(0)          // reduce to N colours via median-cut (0 = off)
+const picking = ref(false)
+const despeckle = ref(false)
+const median = ref(false)
+const quantize = ref(0)
 const quantOptions: { v: number; l: string }[] = [
   {v: 0, l: 'Off'}, {v: 4, l: '4'}, {v: 8, l: '8'}, {v: 16, l: '16'}, {v: 32, l: '32'},
 ]
-// Cut method + cleanup live in a modal opened from the toolbar cog.
 const showSettings = ref(false)
 
-// ── Tilesets + sync ────────────────────────────────────────────────
-// Signed in → the user's cloud tilesets. Guest → local tilesets kept in
-// localStorage (they upload to the cloud on sign-in). `local` flags which.
 type Ts = { id: number | string; id_string: string; title: string; local?: boolean }
 const localTs = useLocalTilesets()
 const tilesets = ref<Ts[]>([])
@@ -180,37 +163,29 @@ const creatingTs = ref(false)
 const pickerRef = ref<{ close: () => void } | null>(null)
 const selectedTs = computed(() => tilesets.value.find(c => c.id === selectedTilesetId.value) || null)
 const currentTsName = computed(() => selectedTilesetId.value == null ? 'No tileset' : (selectedTs.value?.title || 'Tileset'))
-// tileKey → the cloud art it became, so synced tiles show a check across reloads
 const syncedTiles = ref<Record<string, { id: number; id_string: string }>>({})
 const syncingKey = ref<string | null>(null)
 
-// ── Display / selection ────────────────────────────────────────────
 const sheetCanvas = ref<HTMLCanvasElement | null>(null)
 const tilePreview = ref<HTMLCanvasElement | null>(null)
 const wrapEl = ref<HTMLElement | null>(null)
-const wrapSize = ref(0)         // square viewport side, in CSS px
-const zoom = ref(1)             // render scale: display px per source px (whole-pixel only)
+const wrapSize = ref(0)
+const zoom = ref(1)
 let resizeObs: ResizeObserver | null = null
 
 function measureWrap() {
-  // offsetWidth is independent of content overflow, so a scrollbar appearing
-  // at high zoom won't feed back into the fit calculation.
   if (wrapEl.value) {
     wrapSize.value = wrapEl.value.offsetWidth
     drawSheet()
   }
 }
 
-// Whole-pixel zoom: the render scale is always an integer (≥1) or a unit
-// fraction (1/n), so every source pixel maps to a uniform block — no broken /
-// uneven pixels at fractional scales.
 function fitScale(): number {
   const img = sourceImage.value
   if (!img || !wrapSize.value) return 1
   return wrapSize.value / Math.max(img.width, img.height)
 }
 
-// Largest whole-pixel scale that still fits (snap fit DOWN so it never overflows).
 function snapDown(s: number): number {
   return s >= 1 ? Math.max(1, Math.floor(s)) : 1 / Math.ceil(1 / s)
 }
@@ -233,10 +208,6 @@ function nextZoomOut(s: number): number {
   return s > 1 ? s - 1 : 1 / (Math.round(1 / s) + 1)
 }
 
-// Zoom keeping a viewport point fixed (the cursor for wheel zoom, the centre
-// for the toolbar buttons) — same feel as the editor. Pan here is the wrap's
-// native scroll, so "keep the point still" is one scroll adjustment after the
-// canvas re-renders at the new scale.
 function setZoomAt(next: number, clientX?: number, clientY?: number) {
   const wrap = wrapEl.value
   const cv = sheetCanvas.value
@@ -247,7 +218,6 @@ function setZoomAt(next: number, clientX?: number, clientY?: number) {
   const px = clientX ?? wrapRect.left + wrapRect.width / 2
   const py = clientY ?? wrapRect.top + wrapRect.height / 2
   const cvRect = cv.getBoundingClientRect()
-  // Source point currently under the anchor.
   const sx = (px - cvRect.left) * (img.width / cvRect.width)
   const sy = (py - cvRect.top) * (img.height / cvRect.height)
   setZoom(clamped)
@@ -262,14 +232,12 @@ function zoomIn() { setZoomAt(nextZoomIn(zoom.value)) }
 function zoomOut() { setZoomAt(nextZoomOut(zoom.value)) }
 
 function onWheel(e: WheelEvent) {
-  if (!e.ctrlKey && !e.metaKey) return  // plain wheel scrolls the viewport
+  if (!e.ctrlKey && !e.metaKey) return
   e.preventDefault()
   const next = e.deltaY < 0 ? nextZoomIn(zoom.value) : nextZoomOut(zoom.value)
   setZoomAt(next, e.clientX, e.clientY)
 }
 
-// ── Pan: hold Space (or the middle mouse button) and drag — the editor's
-// gesture, on top of the wrap's native scrollbars/trackpad scrolling. ──
 const spacePressed = ref(false)
 const panning = ref(false)
 let panStart = {x: 0, y: 0, sl: 0, st: 0}
@@ -316,12 +284,9 @@ onMounted(() => {
   }
   restoreState()
   loadTilesets()
-  // Signed in with leftover guest tilesets → upload them, then refresh.
   if (auth.isLogged) localTs.syncToCloud().then(n => { if (n) loadTilesets() })
 })
 
-// Auth may resolve after mount (client plugin). On sign-in, push any local
-// (guest) tilesets to the cloud, then reload from the cloud.
 watch(() => auth.isLogged, async (v) => {
   if (v) {
     await localTs.syncToCloud()
@@ -341,7 +306,6 @@ const selectedBox = ref(-1)
 const hoverBox = ref(-1)
 let displayScale = 1
 
-// Selected region in source pixels, whatever the mode.
 const activeBox = computed<Box | null>(() => {
   if (mode.value === 'grid') {
     if (!selectedCell.value) return null
@@ -352,24 +316,13 @@ const activeBox = computed<Box | null>(() => {
   return regions.value[selectedRegion.value] || null
 })
 
-// Source dims (+ processed result) shown as a tooltip on the preview.
 const previewInfo = computed(() => {
   const b = activeBox.value
   if (!b) return ''
   return `${b.w}×${b.h}px${cleanInfo.value ? ` → ${cleanInfo.value}` : ''}`
 })
 
-// ── Persist state across reloads ───────────────────────────────────
-// The sheet (as a dataURL) plus every setting/region is mirrored to
-// localStorage so a page refresh restores the work in progress. Auto-detected
-// boxes are re-derived on restore (cheap + deterministic) rather than stored.
 const STORAGE_KEY = 'tileset_state_v1'
-// The source sheet (base64 dataURL, can be MBs) lives under its own key and is
-// only rewritten when the image itself changes — not on every settings tweak.
-// v1 stored the *displayed* (possibly cleaned) sheet, losing the original —
-// after a refresh the toggle could never restore the raw upload. v2 stores the
-// RAW upload; the cleaned sheet is re-derived on restore (deterministic, so
-// saved regions/selections still line up).
 const IMG_KEY = 'tileset_img_v1'
 const RAW_KEY = 'tileset_img_v2'
 let restoring = false
@@ -401,15 +354,11 @@ function saveState() {
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshotState()))
   } catch (e) {
-    // Quota exceeded (very large sheet) — degrade gracefully, just don't persist.
     console.warn('Tileset: could not save state', e)
   }
 }
 const debouncedSave = debounce(saveState, 400)
 
-// The heavy part — persisted only when the image actually changes. The raw
-// upload is the source of truth; the legacy processed-sheet key is dropped so
-// old states can't shadow it.
 watch(rawImageData, (v) => {
   if (restoring || typeof localStorage === 'undefined') return
   try {
@@ -425,9 +374,6 @@ async function restoreState() {
   if (typeof localStorage === 'undefined') return
   let s: any = null
   try { s = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') } catch { return }
-  // RAW_KEY is the raw upload (current format). IMG_KEY / `s.img` are legacy
-  // states that only kept the displayed sheet — used as-is, never re-cleaned
-  // (double-processing them would shift the saved regions).
   const rawSrc = (s && localStorage.getItem(RAW_KEY)) || ''
   const legacySrc = (s && (localStorage.getItem(IMG_KEY) || s.img)) || ''
   if (!s || (!rawSrc && !legacySrc)) return
@@ -450,18 +396,12 @@ async function restoreState() {
     sheetKeepBg.value = !!s.clean.sheetKeepBg
     removeBg.value = s.clean.removeBg; removeBgTol.value = s.clean.removeBgTol
     despeckle.value = s.clean.despeckle; median.value = s.clean.median; quantize.value = s.clean.quantize
-    // States saved before cleanup became opt-in carry the old always-on
-    // defaults (Auto + merge 16) — indistinguishable from a deliberate
-    // choice, but the old values were never chosen by anyone, so map them
-    // to today's neutral defaults instead of silently mangling extracts.
     if (s.clean.crispFactor === 'auto' && s.clean.mergeTol === 16) {
       crispFactor.value = 1; mergeTol.value = 0
     }
   }
   if (s.tilesetId != null) selectedTilesetId.value = s.tilesetId
   if (s.synced) syncedTiles.value = s.synced
-  // Displayed sheet: the raw upload, re-cleaned when the toggle was on —
-  // deterministic, so the regions/selection restored above still line up.
   let display = rawSrc || legacySrc
   if (rawSrc && editorProcess.value) {
     const url = await cleanSheet(rawSrc)
@@ -485,8 +425,6 @@ async function restoreState() {
   img.src = display
 }
 
-// Mirror any change to storage (debounced). Object/array refs use getters so we
-// avoid a deep watcher while still reacting to region edits and bg picks.
 watch(
     [
       mode, tileW, tileH, spacing, offsetX, offsetY, linkSize,
@@ -501,13 +439,10 @@ watch(
     debouncedSave,
 )
 
-// ── Load image ─────────────────────────────────────────────────────
 function openFileDialog() {
   fileInput.value?.click()
 }
 
-// Discard the loaded sheet and every selection, back to the empty dropzone.
-// The imageData/state watchers drop the localStorage snapshot automatically.
 function clearImage() {
   sourceImage.value = null
   imageData.value = ''
@@ -542,8 +477,6 @@ function loadFile(file: File) {
   reader.readAsDataURL(file)
 }
 
-// Render the editor pipeline's sample grid back to a 1:1 pixel-art dataURL.
-// Cells matching the pipeline's transparent placeholder become transparent.
 function gridToDataUrl(grid: RGB[][], transparent: RGB | null): string {
   const h = grid.length
   let w = 0
@@ -558,7 +491,7 @@ function gridToDataUrl(grid: RGB[][], transparent: RGB | null): string {
     for (let x = 0; x < w; x++) {
       const px = row[x]
       const i = (y * w + x) * 4
-      if (!px) continue // leaves it transparent (alpha 0)
+      if (!px) continue
       const [r, g, b] = px
       if (transparent && r === transparent[0] && g === transparent[1] && b === transparent[2]) continue
       out.data[i] = r!; out.data[i + 1] = g!; out.data[i + 2] = b!; out.data[i + 3] = 255
@@ -568,9 +501,6 @@ function gridToDataUrl(grid: RGB[][], transparent: RGB | null): string {
   return cv.toDataURL('image/png')
 }
 
-// The shared import pipeline (bg knockout, de-upscale, crop) over a raw data
-// URL → a cleaned data URL, or '' when it fails. Shared by the toggle flow
-// and the state restore, which must re-derive the same sheet from the raw.
 async function cleanSheet(raw: string): Promise<string> {
   processing.value = true
   try {
@@ -587,8 +517,6 @@ async function cleanSheet(raw: string): Promise<string> {
   }
 }
 
-// Build the working sheet from the raw upload — optionally through the editor's
-// import pipeline first — then load it as the source image.
 async function applySource() {
   const raw = rawImageData.value
   if (!raw) return
@@ -640,7 +568,6 @@ function pickCornerColor(img: HTMLImageElement): RGB {
   return [d[0]!, d[1]!, d[2]!]
 }
 
-// ── Auto-detect: connected-component bounding boxes ────────────────
 function detect() {
   if (!sourceImage.value) return
   detecting.value = true
@@ -754,18 +681,15 @@ function runDetect(img: HTMLImageElement) {
   hoverBox.value = -1
 }
 
-// ── Draw sheet + overlay ───────────────────────────────────────────
 function drawSheet() {
   const cv = sheetCanvas.value
   const img = sourceImage.value
   if (!cv || !img) return
-  // Resolution-match the canvas to the zoomed on-screen size so overlay lines
-  // stay a crisp 1px at any zoom (1 bitmap px == 1 CSS px, no CSS upscaling).
   const longest = Math.max(img.width, img.height)
   displayScale = Math.min(zoom.value, 8192 / longest)
   const cw = Math.max(1, Math.round(img.width * displayScale))
   const ch = Math.max(1, Math.round(img.height * displayScale))
-  displayScale = cw / img.width  // exact rendered scale → overlay aligns with bitmap
+  displayScale = cw / img.width
   cv.width = cw; cv.height = ch
   const ctx = cv.getContext('2d')!
   ctx.imageSmoothingEnabled = false
@@ -795,18 +719,10 @@ function drawGrid(ctx: CanvasRenderingContext2D) {
   ctx.lineWidth = 1
   const cw = ctx.canvas.width, ch = ctx.canvas.height
   if (spacing.value === 0) {
-    // No spacing (the normal case): full-canvas line families, one long stroke
-    // per boundary — same grid style as the tilemap/pixel editors' world grid.
-    // The modulo start extends lines across offset margins and partial edge
-    // cells, so the lattice fills the whole sheet. Black + white pass keeps it
-    // readable on any image.
     for (const [color, shift] of [['rgba(0,0,0,0.55)', 0], ['rgba(255,255,255,0.35)', 1]] as const) {
       ctx.strokeStyle = color
       ctx.beginPath()
       for (let x = ((mx % spanX) + spanX) % spanX; x <= cw + 1; x += spanX) {
-        // A 1px line is centered on its coordinate: at the right/bottom edge
-        // the +0.5 crisping offset pushes it outside the bitmap — clamp the
-        // black/white pair back inside.
         let px = Math.round(x) + 0.5 + shift
         if (px > cw - 0.5) px = cw - 0.5 - shift
         ctx.moveTo(px, 0)
@@ -821,8 +737,6 @@ function drawGrid(ctx: CanvasRenderingContext2D) {
       ctx.stroke()
     }
   } else {
-    // With spacing, cells are separated by gaps a continuous lattice can't
-    // express — outline each cell, clamping edge cells inside the bitmap.
     const maxX = cw - 0.5, maxY = ch - 0.5
     for (const [color, inset] of [['rgba(0,0,0,0.55)', 0], ['rgba(255,255,255,0.35)', 1]] as const) {
       ctx.strokeStyle = color
@@ -871,7 +785,6 @@ function drawRegions(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = '#6366f1'; ctx.fillRect(x, y, 15, 14)
     ctx.fillStyle = '#fff'; ctx.fillText(String(i + 1), x + 4, y + 2)
   }
-  // Resize handles on the selected region — 8 white squares, editor-style.
   if (mode.value === 'select' && selectedRegion.value >= 0) {
     const b = regions.value[selectedRegion.value]
     if (b) {
@@ -895,16 +808,12 @@ function drawRegions(ctx: CanvasRenderingContext2D) {
   }
 }
 
-// ── Pointer helpers ────────────────────────────────────────────────
 function eventToSource(e: MouseEvent): Pt | null {
   const cv = sheetCanvas.value
   const img = sourceImage.value
   if (!cv || !img) return null
   const rect = cv.getBoundingClientRect()
   if (!rect.width || !rect.height) return null
-  // Map the displayed canvas box straight to source pixels. The canvas always
-  // shows the whole image, so this is exact at any zoom (no displayScale, no
-  // rounding drift).
   return {
     x: (e.clientX - rect.left) * (img.width / rect.width),
     y: (e.clientY - rect.top) * (img.height / rect.height),
@@ -925,7 +834,6 @@ function rectFrom(a: Pt, b: Pt): Box {
   }
 }
 
-// Keep a box inside the image bounds.
 function clampBox(b: Box): Box {
   const img = sourceImage.value!
   let {x, y, w, h} = b
@@ -936,7 +844,6 @@ function clampBox(b: Box): Box {
   return {x, y, w, h}
 }
 
-// Build the draft box for the active selection shape.
 function shapeBox(start: Pt, cur: Pt): Box {
   if (selectShape.value === 'fixed') {
     return clampBox({x: Math.round(start.x), y: Math.round(start.y), w: fixedW.value, h: fixedH.value})
@@ -970,13 +877,11 @@ function smallestBoxAt(list: Box[], sx: number, sy: number): number {
   return best
 }
 
-// ── Region resize handles (select mode) ───────────────────────────
-// The selected region grows 8 handles; grabbing one resizes instead of moving.
 type HandleMode = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 const resizingRegion = ref<{ index: number; mode: HandleMode } | null>(null)
 const hoverHandle = ref<HandleMode | ''>('')
 let resizeAnchor = {x: 0, y: 0, w: 0, h: 0}
-const HANDLE_TOL_PX = 6                       // screen px around a handle
+const HANDLE_TOL_PX = 6
 
 const HANDLE_CURSOR: Record<HandleMode, string> = {
   n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize',
@@ -1027,19 +932,16 @@ function applyRegionResize(p: Pt) {
   drawSheet()
 }
 
-// ── Pointer handlers ───────────────────────────────────────────────
 let gridStartOffset = {x: 0, y: 0}
 let dragMoved = false
 
 function onDown(e: MouseEvent) {
-  // Space-drag / middle-drag pans the viewport — same gesture as the editor.
   if (spacePressed.value || e.button === 1) { startPan(e); return }
   if (e.button !== 0) return
-  if (picking.value) return  // eyedropper handled on click (onUp)
+  if (picking.value) return
   const p = eventToSource(e)
   if (!p) return
   if (mode.value === 'select') {
-    // A resize handle on the selected region wins over move/draw.
     const hmode = handleAtRegion(e)
     if (hmode) {
       const b = regions.value[selectedRegion.value]!
@@ -1052,7 +954,6 @@ function onDown(e: MouseEvent) {
     dragging.value = true
     dragStart.value = clampPt(p)
     dragMoved = false
-    // Grabbing inside an existing region moves it; otherwise draw/drop a new box.
     const hit = smallestBoxAt(regions.value, p.x, p.y)
     if (hit >= 0) {
       movingRegion.value = hit
@@ -1064,11 +965,9 @@ function onDown(e: MouseEvent) {
       nextTick(drawTilePreview)
       return
     }
-    // Fixed size: a plain click is enough — seed the draft so onUp commits it.
     draft.value = selectShape.value === 'fixed' ? shapeBox(dragStart.value, dragStart.value) : null
     if (draft.value) drawSheet()
   } else if (mode.value === 'grid') {
-    // Grab the grid to pan it; a click without movement selects a tile.
     dragging.value = true
     dragStart.value = p
     gridStartOffset = {x: offsetX.value, y: offsetY.value}
@@ -1100,7 +999,6 @@ function onMove(e: MouseEvent) {
       drawSheet()
       return
     }
-    // Idle hover: show a move cursor when over an existing region.
     const h = smallestBoxAt(regions.value, p.x, p.y)
     if (h !== hoverRegion.value) hoverRegion.value = h
     return
@@ -1149,7 +1047,6 @@ function onUp(e: MouseEvent) {
     drawSheet()
     return
   }
-  // select: finalize a resize, a move, a drawn box, or a click-select
   dragging.value = false
   if (resizingRegion.value) {
     selectedRegion.value = resizingRegion.value.index
@@ -1189,7 +1086,6 @@ function onLeave() {
         return
       }
       if (movingRegion.value >= 0) {
-        // Keep the region at its current position; just end the move.
         movingRegion.value = -1
         nextTick(drawTilePreview)
       } else {
@@ -1213,7 +1109,6 @@ function onLeave() {
   if (changed) drawSheet()
 }
 
-// ── Region list actions ────────────────────────────────────────────
 function selectRegion(i: number) {
   selectedRegion.value = i
   drawSheet()
@@ -1233,7 +1128,6 @@ function clearRegions() {
   drawSheet()
 }
 
-// Unified list of extractable tiles for the current mode.
 const tiles = computed<Box[]>(() => {
   if (mode.value === 'select') return regions.value
   if (mode.value === 'auto') return boxes.value
@@ -1275,7 +1169,6 @@ function isActiveTile(i: number): boolean {
   return !!cell && i === cell.r * cols.value + cell.c
 }
 
-// ── Crop + extract ─────────────────────────────────────────────────
 function cropBox(b: Box): HTMLCanvasElement | null {
   const img = sourceImage.value
   if (!img || b.w <= 0 || b.h <= 0) return null
@@ -1291,13 +1184,6 @@ function cropActive(): HTMLCanvasElement | null {
   return activeBox.value ? cropBox(activeBox.value) : null
 }
 
-// ── Cleanup: round pixels (de-upscale) + merge similar colours ─────
-// Factor + phase detection and mode-downscale live in the shared core
-// (~/helper/pixel) — the same code drives the editor import
-// and the /convert page.
-
-// Cluster similar colours, seeding from the most frequent ones so each cluster's
-// representative is the dominant (clean) colour rather than a noisy outlier.
 function mergeSimilar(data: Uint8ClampedArray, w: number, h: number, tol: number): Uint8ClampedArray {
   const t2 = tol * tol
   const N = w * h
@@ -1330,8 +1216,6 @@ function mergeSimilar(data: Uint8ClampedArray, w: number, h: number, tol: number
   return out
 }
 
-// Remove orphan pixels: a pixel sharing no colour with its 4 neighbours is
-// replaced by the majority neighbour colour (kills scattered artefacts).
 function despeckleImg(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
   const out = new Uint8ClampedArray(data)
   const key = (o: number) => (data[o]! << 16) | (data[o + 1]! << 8) | data[o + 2]!
@@ -1362,13 +1246,10 @@ function despeckleImg(data: Uint8ClampedArray, w: number, h: number): Uint8Clamp
   return out
 }
 
-// Remove the background by flood-filling from the edges: only background-coloured
-// pixels CONNECTED to the border are cleared, so interior areas that happen to
-// match the background colour (windows, shadows) are preserved.
 function knockoutBg(data: Uint8ClampedArray, w: number, h: number, c: RGB, tol: number) {
   const t2 = (tol * 2) ** 2
   const N = w * h
-  const bgLike = new Uint8Array(N)  // background colour or already transparent
+  const bgLike = new Uint8Array(N)
   for (let i = 0; i < N; i++) {
     const o = i * 4
     if (data[o + 3]! < 16) { bgLike[i] = 1; continue }
@@ -1403,9 +1284,6 @@ function pickBgAt(p: Pt) {
   bg.value = [d[0]!, d[1]!, d[2]!]
 }
 
-// 3×3 vector-median filter: replace each pixel with the neighbourhood colour
-// closest to all the others. Removes salt-and-pepper noise, preserves edges,
-// and never invents a new colour.
 function medianFilter(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
   const out = new Uint8ClampedArray(data)
   for (let y = 0; y < h; y++) {
@@ -1440,7 +1318,6 @@ function medianFilter(data: Uint8ClampedArray, w: number, h: number): Uint8Clamp
   return out
 }
 
-// Reduce to k colours via median-cut, then map every pixel to the nearest.
 function quantizeColors(data: Uint8ClampedArray, w: number, h: number, k: number): Uint8ClampedArray {
   const pts: number[][] = []
   for (let i = 0; i < w * h; i++) {
@@ -1494,13 +1371,11 @@ function processCanvas(src: HTMLCanvasElement): HTMLCanvasElement {
   const idata = src.getContext('2d', {willReadFrequently: true})!.getImageData(0, 0, src.width, src.height)
   let dat: Uint8ClampedArray = idata.data
   let w = idata.width, h = idata.height
-  if (removeBg.value) knockoutBg(dat, w, h, bg.value, removeBgTol.value)  // before downscale
+  if (removeBg.value) knockoutBg(dat, w, h, bg.value, removeBgTol.value)
   const det = crispFactor.value === 'auto'
       ? detectPixelScale(dat, w, h)
       : bestPhase(dat, w, h, crispFactor.value as number)
   if (det.f > 1) {
-    // Align to the detected phase first — a hand-drawn crop rarely starts on
-    // a block boundary, and a misaligned downscale shreds every edge.
     if (det.ox || det.oy) {
       const s = shiftCrop(dat, w, h, det.ox, det.oy)
       dat = s.data; w = s.w; h = s.h
@@ -1550,7 +1425,6 @@ function rgbToHex(r: number, g: number, b: number): string {
   return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase()
 }
 
-// Convert a processed tile canvas → EditorData (pixel map + palette).
 function canvasToEditorData(crop: HTMLCanvasElement, name = 'Tile'): EditorData | null {
   const w = crop.width, h = crop.height
   const data = crop.getContext('2d')!.getImageData(0, 0, w, h).data
@@ -1585,12 +1459,10 @@ async function openInEditor() {
   ws[editorData.id] = editorData
   localStorage.setItem('workspaces', JSON.stringify(ws))
   localStorage.setItem('workspace_current', editorData.id)
-  await clearWorkspaceFull()   // single art → no multi-board snapshot
+  await clearWorkspaceFull()
   navigateTo(`/editor?id=${editorData.id}`)
 }
 
-// Open EVERY cut tile in the pixel editor at once — one board per tile, laid out
-// on a grid. The editor rebuilds a multi-board workspace from `workspace_full`.
 async function openAllInEditor() {
   const boxes = tiles.value
   if (!boxes.length) { toast.error('No tiles to open'); return }
@@ -1612,7 +1484,6 @@ async function openAllInEditor() {
     navigateTo(`/editor?id=${eds[0]!.id}`)
     return
   }
-  // Grid layout in native (unzoomed) pixels; the editor fits the view on load.
   const cols = Math.ceil(Math.sqrt(eds.length))
   const cellW = Math.max(...eds.map(e => e.width))
   const cellH = Math.max(...eds.map(e => e.height))
@@ -1628,12 +1499,7 @@ async function openAllInEditor() {
   navigateTo('/editor')
 }
 
-// Group every cut tile into ONE animated art: each tile becomes a frame with a
-// shared palette (the editor's colors array is artwork-global), then the piece
-// opens in the editor with its timeline ready. Same meta.animation shape the
-// editor's own loadAnimationFrames builds.
-const MAX_ANIM_FRAMES = 64  // editor's MAX_FRAMES cap
-// "Open editor" shape toggle: boards per tile (off) vs one animated art (on).
+const MAX_ANIM_FRAMES = 64
 const openAsAnim = ref(false)
 async function openAsAnimation() {
   const boxes = tiles.value
@@ -1659,8 +1525,6 @@ async function openAsAnimation() {
         pixels[`${x}_${y}`] = idx
       }
     }
-    // Empty cells (grid margins, blank sheet areas) would become blank frames —
-    // drop them, same as openAllInEditor drops empty tiles.
     if (!Object.keys(pixels).length) continue
     fw = Math.max(fw, cv.width); fh = Math.max(fh, cv.height)
     frames.push({id: generateUUID(), layers: [{name: 'Layer 1', pixels, x: 0, y: 0}], duration: 100})
@@ -1680,20 +1544,17 @@ async function openAsAnimation() {
   ws[ed.id] = ed
   localStorage.setItem('workspaces', JSON.stringify(ws))
   localStorage.setItem('workspace_current', ed.id)
-  await clearWorkspaceFull()   // single (animated) art → no multi-board snapshot
+  await clearWorkspaceFull()
   navigateTo(`/editor?id=${ed.id}`)
 }
 
-// ── Tilesets ───────────────────────────────────────────────────────
 async function loadTilesets() {
   if (!auth.isLogged) {
-    // Guest: mirror the local tileset library.
     tilesets.value = localTs.list.value.map(t => ({id: t.id, id_string: t.id, title: t.name, local: true}))
     return
   }
   loadingTs.value = true
   try {
-    // Tileset list is owner-only server-side, so no ?mine needed.
     const res = await useNativeFetch<{ results: any[] }>('/coloring/tilesets/', {
       params: {page_size: 100, ordering: '-updated'},
     })
@@ -1739,7 +1600,6 @@ function chooseTs(id: number | string | null) {
   pickerRef.value?.close()
 }
 
-// ── Add a tile to a tileset (cloud when signed in, local for guests) ──
 async function syncTile(box: Box, index: number) {
   const key = tileKey(box)
   if (syncedTiles.value[key] || syncingKey.value) return
@@ -1750,9 +1610,6 @@ async function syncTile(box: Box, index: number) {
   if (!ed) { toast.error('That tile is empty'); return }
   const sel = selectedTs.value
 
-  // Guest: with a tileset selected the tile goes into it; without one it still
-  // syncs — into the local workspace as a draft (parity with the signed-in
-  // flow, which creates the cloud art regardless of tileset).
   if (!auth.isLogged) {
     syncingKey.value = key
     try {
@@ -1772,7 +1629,6 @@ async function syncTile(box: Box, index: number) {
     return
   }
 
-  // Signed in: create the cloud art, then add it to the chosen cloud tileset.
   syncingKey.value = key
   try {
     const page = await useNativeFetch<{ id: number; id_string: string }>('/coloring/shared-pages/', {
@@ -1832,9 +1688,6 @@ function canvasToPngBytes(cv: HTMLCanvasElement): Promise<Uint8Array | null> {
 
 const exporting = ref(false)
 
-// ZIP every cut tile — all three modes (grid cells, auto boxes, regions).
-// Fully-transparent cells (grid margins, blank sheet areas) are skipped so the
-// archive only contains real sprites.
 async function downloadAllZip() {
   const boxes = tiles.value
   if (!boxes.length || exporting.value) return
@@ -1863,7 +1716,6 @@ async function downloadAllZip() {
   }
 }
 
-// ── Watchers ───────────────────────────────────────────────────────
 const debouncedDetect = debounce(detect, 250)
 
 watch(mode, () => {
@@ -1903,7 +1755,6 @@ watch([crispFactor, mergeTol, removeBg, removeBgTol, despeckle, median, quantize
 
 watch(zoom, () => { if (sourceImage.value) drawSheet() })
 
-// Toggling "editor import" re-derives the sheet from the original upload.
 watch([editorProcess, sheetKeepBg], () => { if (!restoring && rawImageData.value) applySource() })
 
 const faq = [
@@ -1919,7 +1770,7 @@ const faq = [
 <template>
   <div class="page">
     <div class="ts-slicer flat-editor">
-      <!-- Top toolbar — File · Slice settings · zoom (spans both columns) -->
+
       <div class="editor-toolbar">
         <div class="toolbar-start">
           <ui-dropdown-menu>
@@ -1972,8 +1823,6 @@ const faq = [
         </div>
       </div>
 
-      <!-- Slice settings: an inline panel, NOT a modal — every knob previews
-           live on the canvas below, so nothing may cover it. -->
       <div v-if="showSettings" class="ts-settings-bar">
         <button class="ts-settings-x" aria-label="Close settings" @click="showSettings = false">
           <span class="icon icon-close"/>
@@ -1988,7 +1837,7 @@ const faq = [
           </div>
 
           <div class="ts-params">
-            <!-- Grid -->
+
             <template v-if="mode === 'grid'">
               <label class="ts-sub">Tile size</label>
               <div class="settings-row">
@@ -2013,7 +1862,6 @@ const faq = [
               </div>
             </template>
 
-            <!-- Auto-detect -->
             <template v-else-if="mode === 'auto'">
               <div class="ts-bg-row">
                 <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
@@ -2034,7 +1882,6 @@ const faq = [
               </div>
             </template>
 
-            <!-- Select by hand -->
             <template v-else>
               <label class="ts-sub">Selection shape</label>
               <div class="tm-seg">
@@ -2117,9 +1964,8 @@ const faq = [
       </div>
       </div>
 
-      <!-- Body: canvas stage + control rail — editor-style flex row -->
       <div class="ts-body">
-      <!-- Stage: 1:1 canvas (or the drop target until a sheet loads), then a divided status foot -->
+
       <div class="ts-stage">
         <Widget>
           <div class="ts-stage-inner">
@@ -2155,9 +2001,8 @@ const faq = [
         </div>
       </div>
 
-      <!-- Control rail: selected · tiles · cleanup -->
       <div class="ts-side">
-        <!-- The sprite under the cursor -->
+
         <Widget title="Selected">
           <ui-tooltip v-if="activeBox" :text="previewInfo" position="bottom" class="ts-preview-tip">
             <div class="ts-preview-box">
@@ -2172,7 +2017,6 @@ const faq = [
           </div>
         </Widget>
 
-        <!-- 3 · Every cut tile — review, sync and export -->
         <Widget title="Tiles" class="ts-tiles-widget">
           <template #ctl>
             <button v-if="mode === 'select' && regions.length" class="ts-clear-btn" @click="clearRegions">Clear all</button>
@@ -2187,8 +2031,7 @@ const faq = [
                 @click="selectTile(i)"
             >
               <span class="ts-region-num">{{ i + 1 }}</span>
-              <!-- Grid cells are all the same size — the row/col position is the
-                   useful identifier; free boxes keep their (varied) dimensions. -->
+
               <span class="ts-region-dim">{{ mode === 'grid' ? `R${Math.floor(i / Math.max(1, cols)) + 1} · C${(i % Math.max(1, cols)) + 1}` : `${t.w}×${t.h}` }}</span>
               <button
                   class="ts-sync"
@@ -2209,12 +2052,8 @@ const faq = [
             <template v-else>Set a tile size to slice the grid.</template>
           </p>
 
-          <!-- Tile actions: pick a tileset to sync to + open all in the editor. -->
           <div class="ts-tiles-foot">
-            <!-- One action, two shapes: boards per tile, or (toggled) one
-                 animated art where every tile becomes a frame. The toggle sits
-                 first — as an animation the tiles bypass tilesets entirely, so
-                 the picker below hides. -->
+
             <ui-switch
                 v-model="openAsAnim"
                 size="sm"
@@ -2270,7 +2109,6 @@ const faq = [
           </div>
         </Widget>
 
-        <!-- Export bar: pinned to the rail bottom, aligned with the canvas foot -->
         <div class="ts-zip-bar">
           <button class="btn primary wide ts-zip-btn" :disabled="!tiles.length || exporting" @click="downloadAllZip">
             <span class="icon icon-download"/>
@@ -2318,14 +2156,11 @@ const faq = [
 
     <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileSelect">
 
-    <!-- Slice settings modal: how to cut (left) · cleanup (right) -->
-
   </div>
 </template>
 
 <style scoped>
 
-/* Empty state — the stage itself is the drop target until a sheet loads. */
 .ts-dropzone {
   display: flex;
   flex-direction: column;
@@ -2358,16 +2193,12 @@ const faq = [
   color: var(--foreground);
 }
 
-/* Flat editor: toolbar + body sit flush inside one frame (see .flat-editor in
-   main.css), mirroring the pixel editor's column layout. Every Widget divides
-   from its neighbour with a 1px rule. */
 .ts-slicer {
   display: flex;
   flex-direction: column;
   gap: 0;
 }
 
-/* Body row: canvas stage + control rail — matches .editor-body. */
 .ts-body {
   display: flex;
   flex-direction: column;
@@ -2385,8 +2216,6 @@ const faq = [
   border-top: 1px solid var(--border);
 }
 
-/* Canvas fills the stage flush (editor-style): drop the widget-body padding so
-   the 1:1 viewport meets the section edges, no inner card. */
 .ts-stage :deep(.widget-body) {
   padding: 0;
 }
@@ -2395,9 +2224,7 @@ const faq = [
   aspect-ratio: 1;
   width: 100%;
   overflow: auto;
-  /* Center the sheet on both axes. flex + margin:auto (not place-items) so a
-     zoomed-in canvas larger than the viewport stays fully scrollable — auto
-     margins collapse to 0 on overflow instead of clipping the top/left. */
+
   display: flex;
   background:
       repeating-conic-gradient(color-mix(in oklab, var(--foreground) 8%, transparent) 0% 25%, transparent 0% 50%)
@@ -2429,8 +2256,6 @@ const faq = [
   cursor: grabbing;
 }
 
-/* Status foot: its own section below the canvas, divided by a 1px rule above
-   (like a widget divider) — contextual hint left, sheet-clean toggle right. */
 .ts-stage-foot {
   display: flex;
   flex-wrap: wrap;
@@ -2447,8 +2272,6 @@ const faq = [
   font-variant-numeric: tabular-nums;
 }
 
-/* Tiles list widget grows to fill the rail between the fixed sections; its list
-   fills and scrolls (desktop) so the export bar stays pinned at the bottom. */
 .ts-tiles-widget {
   flex: 1;
   min-height: 0;
@@ -2463,7 +2286,6 @@ const faq = [
   flex-direction: column;
 }
 
-/* Small "Clear all" text button in the widget header (like the Layers ctl). */
 .ts-clear-btn {
   font-size: var(--text-2xs);
   font-weight: 600;
@@ -2477,8 +2299,6 @@ const faq = [
   }
 }
 
-/* Tile actions inside the Tiles widget (picker + open editor), pinned below the
-   scrolling list. Reuses .btn + .file-menu; stacked to fit the narrow rail. */
 .ts-tiles-foot {
   display: flex;
   flex-direction: column;
@@ -2493,8 +2313,6 @@ const faq = [
   gap: var(--space-2);
 }
 
-/* Export bar (download): full-bleed button pinned to the rail bottom, the same
-   height as the canvas foot so the two bottom bars line up across the columns. */
 .ts-zip-bar {
   margin-top: auto;
   display: flex;
@@ -2514,7 +2332,6 @@ const faq = [
   border-radius: 0;
 }
 
-/* Picker trigger reuses .btn; laid out like a select (name + caret). */
 .ts-pick,
 .ts-pick :deep(.dropdown-trigger-wrap) {
   display: block;
@@ -2543,9 +2360,6 @@ const faq = [
   font-weight: 400;
 }
 
-/* The picker lives inside the Tiles widget (overflow:hidden), so the menu must
-   not exceed the widget width — override the global 13rem min so it can't spill
-   past the rail and get clipped. */
 .ts-pick :deep(.dropdown-menu) {
   min-width: 0;
   width: 100%;
@@ -2553,8 +2367,6 @@ const faq = [
   overflow-y: auto;
 }
 
-/* "Create tileset" form: input over a full-width button so nothing overflows
-   the narrow menu. */
 .ts-pick-new {
   display: flex;
   flex-direction: column;
@@ -2567,7 +2379,6 @@ const faq = [
   justify-content: center;
 }
 
-/* Match .btn's box model so the input and the Add button are the same height. */
 .ts-pick-input {
   width: 100%;
   box-sizing: border-box;
@@ -2585,13 +2396,10 @@ const faq = [
   outline: none;
 }
 
-/* Preview tooltip wrapper stays full-width so the 1:1 box keeps its size. */
 .ts-preview-tip {
   display: block;
 }
 
-/* Slice-settings modal: how to cut (left) · cleanup (right). Single column on
-   narrow screens, two divided columns once there's room. */
 .ts-set {
   display: grid;
   grid-template-columns: 1fr;
@@ -2614,7 +2422,6 @@ const faq = [
   }
 }
 
-/* Section eyebrow, matching the flush Widget label. */
 .ts-set-label {
   display: block;
   margin-bottom: var(--space-3);
@@ -2625,8 +2432,6 @@ const faq = [
   color: var(--muted);
 }
 
-/* Inline settings bar between the toolbar and the stage — the canvas stays
-   visible while every knob is turned. */
 .ts-settings-bar {
   position: relative;
   padding: 0;
@@ -2642,7 +2447,6 @@ const faq = [
   max-width: 56rem;
 }
 
-/* The wider inline column let the toggles flow onto one line — stack them. */
 .ts-settings-bar :deep(.ui-switch-wrapper) {
   display: flex;
   width: fit-content;
@@ -2672,7 +2476,6 @@ const faq = [
   color: var(--foreground);
 }
 
-/* The params hug their section heading. */
 .ts-set-col .ts-params {
   margin-top: var(--space-3);
 }
@@ -2681,7 +2484,6 @@ const faq = [
   position: relative;
 }
 
-/* Canvas column — mirrors .canvas-col: grows to fill, divider to the rail. */
 .ts-stage {
   flex: 1;
   display: flex;
@@ -2698,7 +2500,6 @@ const faq = [
   }
 }
 
-/* Control rail — mirrors .editor-sidebar: full width stacked, 24%/190px beside. */
 .ts-side {
   display: flex;
   flex-direction: column;
@@ -2741,7 +2542,6 @@ const faq = [
   margin-top: 0;
 }
 
-/* Small text button that rides at the end of a control row (e.g. Re-detect). */
 .ts-inline-btn {
   margin-left: auto;
   font-size: var(--text-xs);
@@ -2867,9 +2667,6 @@ const faq = [
   border-radius: var(--radius-sm);
 }
 
-/* Region list — fills the rail; an absolutely-positioned inner box does the
-   scrolling (desktop) so the flex height is honoured without a max-height cap.
-   On mobile it flows normally and the page scrolls. */
 .ts-region-list {
   display: flex;
   flex-direction: column;
@@ -2881,9 +2678,6 @@ const faq = [
   gap: 3px;
 }
 
-/* Mobile: hundreds of grid cells must not swallow the page — cap the list and
-   scroll inside it, and keep the selected-tile preview from claiming the whole
-   first screen. */
 @media (max-width: 767px) {
   .ts-region-scroll {
     max-height: 40vh;

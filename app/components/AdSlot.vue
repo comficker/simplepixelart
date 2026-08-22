@@ -19,16 +19,11 @@ const props = withDefaults(defineProps<Props>(), {
 const config = useRuntimeConfig()
 const adsEnabled = config.public.adsEnabled !== false
 
-// Skip rendering when slot ID is missing/placeholder so we don't ship broken <ins> tags.
 const hasValidSlot = computed(() => /^\d{6,}$/.test(props.slot))
 
 const insRef = ref<HTMLElement | null>(null)
 const pushed = ref(false)
 
-// Lazy-inject adsbygoogle.js on first AdSlot mount. AdSlot is only rendered on
-// content-rich pages (homepage, art detail with hasOriginalContent), so this
-// keeps the AdSense script — and any Auto Ads it would place — off thin pages
-// like /arts, /creator, /about, /privacy, etc. per AdSense content policy.
 function ensureScript() {
   if (typeof window === 'undefined') return
   const w = window as any
@@ -85,7 +80,7 @@ onMounted(() => {
 .ad-slot {
   margin-top: 1rem;
   margin-bottom: 1rem;
-  /* Reserve space to prevent CLS when ad lazy-loads */
+
   min-height: 280px;
   display: flex;
   flex-direction: column;

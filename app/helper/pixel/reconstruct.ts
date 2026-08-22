@@ -1,29 +1,9 @@
-// Core "fake pixel art → true pixel grid" toolkit, shared by the editor's
-// file import, Insert image, the /convert page, the AI generator and the
-// tileset slicer. The detection + reconstruction ideas are ports from
-// Retro-Diffusion/pixel-art-fixer (MIT,
-// https://github.com/Retro-Diffusion/pixel-art-fixer):
-//
-//   DETECTION — a true upscale factor survives a mode-downscale→upscale
-//   round-trip almost losslessly, a wrong one shreds edges. Score = changed
-//   pixels normalized by EDGE count (area normalization lets flat backgrounds
-//   dilute the damage), scanned over every phase offset (a crop rarely starts
-//   on a block boundary), largest factor within the minimum-error band wins
-//   (resolves the divisor/octave ambiguity: 4× art also scores 0 at 2×).
-//
-//   RECONSTRUCTION — two-stage: quantize the source to generous color LABELS,
-//   each output cell votes on a label (center-weighted, so bleeding cell
-//   borders count less), then the cell's color is the weighted mean of the
-//   ORIGINAL pixels carrying the winning label. Crisp region edges instead of
-//   the mush a plain average produces; hues never clamp to the label palette.
 
 export type RGB = [number, number, number]
 export type Cell = RGB | null
 
-const EDGE_TOL = 22 * 22 * 3      // "colors differ" threshold, squared RGB
-const ALPHA_ON = 16               // alpha ≥ this counts as opaque
-
-// ── Small shared primitives ─────────────────────────────────────────
+const EDGE_TOL = 22 * 22 * 3
+const ALPHA_ON = 16
 
 function medianCut(pixels: RGB[], k: number): RGB[] {
     function cut(bucket: RGB[], depth: number): RGB[] {
@@ -60,10 +40,6 @@ function nearest(p: RGB, palette: RGB[]): number {
     return best
 }
 
-// ── Scale / phase detection ─────────────────────────────────────────
-
-// Downsample by f using the most common colour per block (kills AA blur
-// cleanly; mostly-transparent blocks stay transparent).
 export function modeDownscale(data: Uint8ClampedArray, w: number, h: number, f: number) {
     const w2 = Math.max(1, Math.round(w / f)), h2 = Math.max(1, Math.round(h / f))
     const out = new Uint8ClampedArray(w2 * h2 * 4)
@@ -101,8 +77,6 @@ export function shiftCrop(data: Uint8ClampedArray, w: number, h: number, ox: num
     return {data: out, w: sw, h: sh}
 }
 
-// Color-boundary pixels — a near-flat image round-trips losslessly at ANY
-// factor, so without edge evidence no factor may be claimed.
 function edgeCount(data: Uint8ClampedArray, w: number, h: number): number {
     let edges = 0
     for (let y = 0; y < h - 1; y++) {
@@ -117,7 +91,6 @@ function edgeCount(data: Uint8ClampedArray, w: number, h: number): number {
     return edges
 }
 
-// Pixels the downscale→upscale round-trip changes.
 function roundTripChanged(data: Uint8ClampedArray, w: number, h: number, f: number): number {
     const down = modeDownscale(data, w, h, f)
     let changed = 0
@@ -136,9 +109,6 @@ function roundTripChanged(data: Uint8ClampedArray, w: number, h: number, f: numb
     return changed
 }
 
-// Best phase for one factor: the alignment whose round-trip changes the
-// fewest pixels (a correct factor at the wrong phase scores as badly as a
-// wrong factor, so phase must be solved per candidate).
 export function bestPhase(data: Uint8ClampedArray, w: number, h: number, f: number):
     { f: number; ox: number; oy: number; changed: number } {
     if (f <= 1) return {f: 1, ox: 0, oy: 0, changed: 0}
@@ -156,7 +126,7 @@ export function bestPhase(data: Uint8ClampedArray, w: number, h: number, f: numb
 export function detectPixelScale(data: Uint8ClampedArray, w: number, h: number):
     { f: number; ox: number; oy: number } {
     const edges = edgeCount(data, w, h)
-    if (edges < 16) return {f: 1, ox: 0, oy: 0}   // flat — nothing to say
+    if (edges < 16) return {f: 1, ox: 0, oy: 0}
     const cands: { f: number; ox: number; oy: number; e: number }[] = []
     for (let f = 2; f <= 8; f++) {
         if (w < f * 2 || h < f * 2) break
@@ -165,20 +135,12 @@ export function detectPixelScale(data: Uint8ClampedArray, w: number, h: number):
     }
     if (!cands.length) return {f: 1, ox: 0, oy: 0}
     const emin = Math.min(...cands.map(c => c.e))
-    if (emin > 0.15) return {f: 1, ox: 0, oy: 0}   // even the best factor is destructive
+    if (emin > 0.15) return {f: 1, ox: 0, oy: 0}
     const accepted = cands.filter(c => c.e <= Math.max(emin * 2, 0.02))
     const best = accepted.reduce((a, b) => (b.f > a.f ? b : a))
     return {f: best.f, ox: best.ox, oy: best.oy}
 }
 
-// ── Two-stage reconstruction ────────────────────────────────────────
-
-/**
- * Reconstruct an outW×outH cell grid from a source bitmap. Each cell maps to
- * the source rect [x0 + cx·cellW, …] — pass x0/y0/cellW/cellH to honor a
- * detected grid phase, or leave default to spread the whole bitmap evenly.
- * Cells whose weight is mostly transparent come back as null.
- */
 export function reconstructCells(
     src: ImageData, outW: number, outH: number,
     opts?: { x0?: number; y0?: number; cellW?: number; cellH?: number },
@@ -189,7 +151,6 @@ export function reconstructCells(
     const cellW = opts?.cellW ?? (sw - x0) / outW
     const cellH = opts?.cellH ?? (sh - y0) / outH
 
-    // Structure labels from a stride-sample of the opaque source.
     const stride = Math.max(1, Math.floor(Math.sqrt((sw * sh) / 65536)))
     const sample: RGB[] = []
     for (let y = 0; y < sh; y += stride) {
@@ -202,7 +163,7 @@ export function reconstructCells(
     const labels = medianCut(sample, 48)
     const L = labels.length
 
-    const labelOf = new Int16Array(sw * sh)   // -1 = transparent
+    const labelOf = new Int16Array(sw * sh)
     for (let i = 0; i < sw * sh; i++) {
         const o = i * 4
         labelOf[i] = data[o + 3]! < ALPHA_ON
@@ -257,13 +218,6 @@ export function reconstructCells(
     return out
 }
 
-/**
- * Palette-capped variant for callers with a fixed target size and color
- * budget (/convert, the AI generator). The source must be pre-flattened
- * (no alpha) — any transparent cell falls back to white.
- */
-/** Quantize an RGB|null cell grid to k colours (nulls read as white — the
- *  tool pages have no transparency concept). */
 export function quantizeCells(
     cells: Cell[][], k: number,
 ): { palette: RGB[]; indexed: number[][] } {
@@ -285,16 +239,11 @@ export function reconstructPixels(
     return {palette, indexed}
 }
 
-// ── One-stop import pipeline ────────────────────────────────────────
-
-// A JPG/opaque-PNG sprite usually sits on a solid ground. If one color owns
-// most of the border, knock it out to real transparency (images that already
-// carry meaningful alpha are left alone).
 function knockoutUniformBg(img: ImageData) {
     const {width: w, height: h, data} = img
     let transparent = 0
     for (let i = 3; i < data.length; i += 4) if (data[i]! < ALPHA_ON) transparent++
-    if (transparent > w * h * 0.02) return   // has real alpha already
+    if (transparent > w * h * 0.02) return
 
     const border: RGB[] = []
     for (let x = 0; x < w; x++) {
@@ -322,8 +271,6 @@ function knockoutUniformBg(img: ImageData) {
     }
 }
 
-// Detection is O(f² · pixels) — run it on the densest ≤256² window instead of
-// a big source. The phase found in the window translates back via its origin.
 function detectOnWindow(img: ImageData): { f: number; ox: number; oy: number } {
     const {width: w, height: h, data} = img
     const WIN = 256
@@ -353,8 +300,6 @@ function cropImageData(img: ImageData, x: number, y: number, w: number, h: numbe
     return {data: out, w, h}
 }
 
-// Distinct opaque colors, early-exiting past `cap` — separates hand-made
-// pixel art (dozens of colors) from photos/paintings (thousands).
 function distinctColors(img: ImageData, cap: number): number {
     const {data} = img
     const seen = new Set<number>()
@@ -378,12 +323,6 @@ function trimTransparentBorder(cells: Cell[][]): Cell[][] {
     return cells.slice(top, bottom + 1).map(r => r.slice(left, right + 1))
 }
 
-/**
- * Any image → a null-transparent RGB cell grid at its NATIVE pixel size:
- * load, knock out a solid background, detect the upscale factor + grid phase,
- * two-stage reconstruct one cell per art pixel, trim empty margins.
- * Falls back to a ≤maxOut resample when the image isn't grid art (photos).
- */
 export async function imageToCells(
     dataUrl: string,
     opts?: { maxOut?: number; knockoutBg?: boolean },
@@ -401,7 +340,6 @@ export async function imageToCells(
     } catch { return null }
     if (!img.naturalWidth || !img.naturalHeight) return null
 
-    // Halve oversized sources (2ⁿ keeps an upscale grid a grid).
     let dw = img.naturalWidth, dh = img.naturalHeight
     while (Math.max(dw, dh) > 1024) { dw = Math.round(dw / 2); dh = Math.round(dh / 2) }
     const cv = document.createElement('canvas')
@@ -414,9 +352,6 @@ export async function imageToCells(
     if (opts?.knockoutBg !== false) knockoutUniformBg(src)
 
     const det = detectOnWindow(src)
-    // Arbitration: JPEG noise can fool the round-trip detector into a tiny
-    // f=2 while the comb reads the true 8px pitch. When the comb sees a pitch
-    // at least twice the round-trip factor, the fine factor is a phantom.
     if (det.f > 1) {
         const pitch = estimateCellPx(src.data, dw, dh, 0, 0, dw - 1, dh - 1)
         if (pitch && pitch >= det.f * 2) det.f = 1
@@ -430,11 +365,6 @@ export async function imageToCells(
         cells = reconstructCells(src, cols, rows, {x0: det.ox, y0: det.oy, cellW: det.f, cellH: det.f})
     } else if (det.f <= 1
         && (() => {
-            // The round-trip detector is blind past f=8 and on wobbly grids
-            // (grid-lined shots have pitch cell+line; JPEG noise defeats its
-            // exact round trip). The comb pitch reader covers that range — and
-            // it is its own photo gate: a photo has too few stable colour runs
-            // to elect a pitch at all.
             const pitch = estimateCellPx(src.data, dw, dh, 0, 0, dw - 1, dh - 1)
             if (!pitch || pitch < 3) return false
             cols = Math.round(dw / pitch)
@@ -444,11 +374,9 @@ export async function imageToCells(
         cells = reconstructCells(src, cols, rows)
         scale = Math.max(2, Math.round(dw / cols))
     } else if (dw <= maxOut && dh <= maxOut && distinctColors(src, 1024) <= 1024) {
-        // Already native-size pixel art (limited palette) — read cells 1:1.
         cells = reconstructCells(src, dw, dh, {cellW: 1, cellH: 1})
         scale = 1
     } else {
-        // Not grid art (photo/painting) — resample to a workable size.
         const fit = Math.min(128 / dw, 128 / dh, 1)
         const ow = Math.max(1, Math.round(dw * fit)), oh = Math.max(1, Math.round(dh * fit))
         cells = reconstructCells(src, ow, oh)
@@ -458,26 +386,11 @@ export async function imageToCells(
     return cells.length && cells[0]!.length ? {cells, scale} : null
 }
 
-// ── AI-generated art → grid ─────────────────────────────────────────
-// Text-to-image models don't draw the N×N bitmap you asked for. Measured over
-// 21 Gemini generations (simplepixelart/test_gemini/report.md):
-//   · they never return real alpha, even when the prompt demands it (0 of 21),
-//   · they put the subject on a flat ground whose hue may also appear inside
-//     the subject (an orange ground next to a gold shield),
-//   · they sometimes frame the whole image in a solid band,
-//   · their "pixels" are 8–20 screen px wide, with a blended halo at every
-//     colour boundary.
-// So the ground is removed geometrically — flood filled from the border, which
-// can never punch a hole inside the subject — and only then is the art
-// resampled. The old path (smooth contain-fit → median cut → drop the
-// corner-majority colour) left the ground in the art in 12 of 21 cases.
-
-/** Peel the flat ground (and any frame around it) to real transparency. */
 export function peelGround(img: ImageData): RGB | null {
     const {width: W, height: H, data: D} = img
     const total = W * H
     const at = (x: number, y: number) => (y * W + x) * 4
-    const TOL = 46          // one flat colour, plus a shade of resampling drift
+    const TOL = 46
     let ground: RGB | null = null
 
     const opaqueCount = () => {
@@ -486,9 +399,6 @@ export function peelGround(img: ImageData): RGB | null {
         return k
     }
 
-    // The ring is sampled 2px INSIDE the opaque boundary: right after a peel the
-    // outermost pixels are the blend between the band just removed and whatever
-    // is under it, and that mixture hides the flat colour behind it.
     const ringColors = (): RGB[] | null => {
         const hist = new Map<string, { n: number; c: RGB }>()
         let sampled = 0
@@ -517,13 +427,7 @@ export function peelGround(img: ImageData): RGB | null {
         if (!sampled) return null
         const ranked = [...hist.values()].sort((a, b) => b.n - a.n)
         const first = ranked[0]!
-        // A flat ground owns almost the whole ring; a sprite outline never does.
-        // Without this gate, the round after the ground is gone samples the
-        // sprite itself and floods it away.
         if (first.n / sampled >= 0.7) return [first.c]
-        // Two-colour grounds happen: asked for transparency the model paints a
-        // grey/white checkerboard, and "pixel grid" wording makes it rule lines
-        // over the ground. Take both only when together they own the ring.
         const second = ranked[1]
         if (second && (first.n + second.n) / sampled >= 0.85) return [first.c, second.c]
         return null
@@ -556,7 +460,6 @@ export function peelGround(img: ImageData): RGB | null {
         return removed
     }
 
-    // Opaque content box — the frame test below compares it across a peel.
     const bbox = () => {
         let bx0 = W, by0 = H, bx1 = -1, by1 = -1
         for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -570,8 +473,6 @@ export function peelGround(img: ImageData): RGB | null {
         return bx1 < 0 ? null : {x0: bx0, y0: by0, x1: bx1, y1: by1}
     }
 
-    // A peeled band leaves a 1-2px blend ring standing, which SEALS the region
-    // behind it from the border — the next flood would remove nothing.
     const erodeHalo = (rounds: number) => {
         for (let r = 0; r < rounds; r++) {
             const drop: number[] = []
@@ -590,14 +491,11 @@ export function peelGround(img: ImageData): RGB | null {
         }
     }
 
-    const peeled: RGB[] = []                      // colours already peeled
+    const peeled: RGB[] = []
     for (let round = 0; round < 3; round++) {
         const bgs = ringColors()
-        if (!bgs) break                           // ring isn't a flat ground
+        if (!bgs) break
         const before = opaqueCount()
-        // A vignetted ground peels over several rounds — a follow-up round in
-        // the same colour family is a continuation, not a new band, and must
-        // not be gated like one.
         const continues = peeled.some(pc => bgs.some(bg => Math.sqrt(
             (pc[0] - bg[0]) ** 2 + (pc[1] - bg[1]) ** 2 + (pc[2] - bg[2]) ** 2) <= TOL * 2.5))
         const pre = (round && !continues) ? bbox() : null
@@ -635,13 +533,12 @@ export function peelGround(img: ImageData): RGB | null {
             }
         }
         peeled.push(...bgs)
-        if (!ground) ground = bgs[0]!             // first band = what to paint back
-        else if (removed > total * 0.15) ground = bgs[0]!   // the real ground, not a frame
+        if (!ground) ground = bgs[0]!
+        else if (removed > total * 0.15) ground = bgs[0]!
         const after = opaqueCount()
-        if (after / total < 0.10) break           // safety: never eat the sprite
+        if (after / total < 0.10) break
         if (before - after < total * 0.002) break
     }
-    // Final de-speckle: a pixel with ground on all four sides is a blend leftover.
     const drop: number[] = []
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const o = at(x, y)
@@ -686,11 +583,6 @@ export function estimateCellPx(
     x0: number, y0: number, x1: number, y1: number,
 ): number | null {
     const at = (x: number, y: number) => (y * W + x) * 4
-    // Lattice sites: the START of every stable colour run (≥4px — JPEG speckle
-    // forms 3px runs and elects phantom sub-pitches). The comb below works on
-    // start-to-start GAPS, not run lengths: a 1px grid line cuts every run to
-    // one cell and hides the period from lengths (runs say 8, the truth is 9),
-    // while start gaps carry the separator with them.
     const runs: number[] = []
     const LINES = 64
     const collect = (horizontal: boolean) => {
@@ -747,11 +639,6 @@ export function estimateCellPx(
     if (!best) return null
     const good = scores.filter(([, sc]) => sc >= best * 0.92)
     const c = good[good.length - 1]![0]
-    // Refine to the REAL period by fitting run ≈ a·m + b over what the elected
-    // candidate explains. The slope IS the pitch and the intercept absorbs a
-    // constant separator: a 5.5× upscale fits a=5.5 b=0 (no integer candidate
-    // exists), a grid-lined shot fits a=9 b=-1 (runs are 9m-1 — a plain mean
-    // under-read it by 7% and every size came out wrong).
     const tol = Math.max(1.5, c * 0.12)
     let n = 0, sm = 0, sr = 0, smm = 0, smr = 0
     for (const run of runs) {
@@ -766,7 +653,7 @@ export function estimateCellPx(
     }
     if (!n) return c
     const varM = smm - sm * sm / n
-    if (varM < 1e-6) return sr / sm               // one multiple only — plain mean
+    if (varM < 1e-6) return sr / sm
     const a = (smr - sm * sr / n) / varM
     return (a >= 3.2 && a <= 80) ? a : c
 }
@@ -798,9 +685,6 @@ export async function aiImageToGrid(
     const {width: W, height: H, data: D} = src
     const at = (x: number, y: number) => (y * W + x) * 4
 
-    // Crop to the subject, then contain-fit it into the grid with a 1px margin:
-    // the model leaves a wide margin of its own, and a sprite that fills the
-    // canvas is the whole point at 32².
     let x0 = W, y0 = H, x1 = -1, y1 = -1
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         if (D[at(x, y) + 3]! >= ALPHA_ON) {
@@ -810,11 +694,8 @@ export async function aiImageToGrid(
             if (y > y1) y1 = y
         }
     }
-    if (x1 < 0) { x0 = 0; y0 = 0; x1 = W - 1; y1 = H - 1 }   // nothing survived
+    if (x1 < 0) { x0 = 0; y0 = 0; x1 = W - 1; y1 = H - 1 }
 
-    // Auto = the size the model actually drew at: subject cells (+2 for the
-    // margin the contain-fit adds back), clamped to the tool's 16..128 range.
-    // No pitch found (photo-like output) → 64, the safe large default.
     let N: number
     if (n === 'auto') {
         const pitch = estimateCellPx(D, W, H, x0, y0, x1, y1)
@@ -827,10 +708,8 @@ export async function aiImageToGrid(
         N = n
     }
 
-    if (opts?.fillGrid === false) { x0 = 0; y0 = 0; x1 = W - 1; y1 = H - 1 }  // keep the model's framing
+    if (opts?.fillGrid === false) { x0 = 0; y0 = 0; x1 = W - 1; y1 = H - 1 }
     const cw = x1 - x0 + 1, ch = y1 - y0 + 1
-    // A cropped subject gets a 1px breathing margin; the model's own framing
-    // already has margins of its own, so it uses the full grid.
     const inner = opts?.fillGrid === false ? N : Math.max(1, N - 2)
     const f = Math.min(inner / cw, inner / ch)
     const tw = Math.max(1, Math.min(N, Math.round(cw * f)))
@@ -843,8 +722,6 @@ export async function aiImageToGrid(
         const sx1 = x0 + Math.max(Math.floor((x + 1) * cw / tw), Math.floor(x * cw / tw) + 1)
         const sy0 = y0 + Math.floor(y * ch / th)
         const sy1 = y0 + Math.max(Math.floor((y + 1) * ch / th), Math.floor(y * ch / th) + 1)
-        // Majority colour of the source block, averaged within its bucket — the
-        // model's "one flat colour" still drifts by a shade or two.
         const hist = new Map<string, { n: number; sum: [number, number, number] }>()
         let opaque = 0, count = 0
         for (let sy = sy0; sy < sy1 && sy < H; sy++) for (let sx = sx0; sx < sx1 && sx < W; sx++) {
@@ -860,7 +737,7 @@ export async function aiImageToGrid(
             e.sum[2] += D[o + 2]!
             hist.set(k, e)
         }
-        if (!opaque || opaque * 3 < count) continue      // mostly ground → stay empty
+        if (!opaque || opaque * 3 < count) continue
         let best: { n: number; sum: [number, number, number] } | null = null
         hist.forEach(e => { if (!best || e.n > best.n) best = e })
         if (!best) continue
@@ -871,9 +748,6 @@ export async function aiImageToGrid(
         ]
     }
 
-    // Palette by area, not by median cut: the source is already flat, so keeping
-    // the model's own colours avoids inventing in-between tones. A long tail of
-    // one-off blend colours is what makes a converted sprite look speckled.
     const freq = new Map<string, { n: number; c: RGB }>()
     for (const row of grid) for (const c of row) {
         if (!c) continue
@@ -884,9 +758,6 @@ export async function aiImageToGrid(
     }
     const ranked = [...freq.values()].sort((a, b) => b.n - a.n)
     const painted = ranked.reduce((a, e) => a + e.n, 0) || 1
-    // The share floor kills one-off blend speckle on a cropped sprite — but on
-    // a kept-frame image the flat background owns the area and would starve
-    // every detail colour, so such callers pass minShare: 0.
     const minShare = opts?.minShare ?? 0.01
     const keep = ranked
         .filter((e, i) => i < maxColors && (i < 6 || e.n / painted >= minShare))
@@ -902,8 +773,6 @@ export async function aiImageToGrid(
         return bi
     }
     return {
-        // Slot 0 = the background: transparent in the art, but the ground colour
-        // is kept so "Transparent background: off" can paint it back.
         palette: [ground ?? [255, 255, 255], ...keep],
         indexed: grid.map(row => row.map(c => (c ? nearest(c) + 1 : 0))),
     }

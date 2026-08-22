@@ -1,9 +1,4 @@
 <script setup lang="ts">
-// Shared "README.md"-style doc card for the SEO prose under each tool page.
-// Renders the GitHub file-view chrome (README tab + Guidelines + a table-of-
-// contents button); the page passes its content into the default slot as plain
-// semantic markup. All prose styling is global (.readme* in main.css).
-// `guidelines` / `toc` can be turned off for lighter contexts (e.g. Home).
 import { ref } from 'vue'
 
 withDefaults(defineProps<{ guidelines?: boolean; toc?: boolean }>(), {
@@ -19,7 +14,6 @@ function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 64) || 'section'
 }
 
-// Build the table of contents from the headings the page rendered into the body.
 function openToc() {
   const body = root.value?.querySelector('.readme-body')
   if (body) {

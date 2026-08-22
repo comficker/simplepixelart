@@ -20,9 +20,6 @@ useCustomSeoMeta({
   description: 'Free online tileset builder. Curate pixel-art tiles into groups, auto-generate Wang 16 and blob 47 terrain sets from one base tile, define terrain relations and weighted variants, then export a Godot 4 TileSet, a Tiled tileset or PNG + JSON.',
   keywords: 'tileset editor, tileset maker, autotile generator, wang tiles, blob tileset, terrain tileset, pixel art tileset builder, godot tileset export, tiled tsx export, tileset png export, 2d game tileset tool, auto tiling',
   canonical: 'https://simplepixelart.com/tilesets/editor',
-  // The bare tool is the landing page we want indexed. Per-tileset views
-  // (?id=…) target private data, so they're noindex; the canonical
-  // consolidates every variant back to /tilesets/editor.
   robots: () => route.query.id ? 'noindex, follow' : 'index, follow',
   script: [
     {
@@ -88,29 +85,19 @@ useCustomSeoMeta({
   ],
 })
 
-// ── Current tileset ─────────────────────────────────────────────────
-// Tiles live in the flat registry (id -> id_string); groups arrange them in
-// the workspace (character / decor / ...). A terrain is a special group:
-// instead of a free tile list it has the 16 auto-tile connection slots.
 interface TileGroup {
   id: string
   name: string
   kind: 'group' | 'terrain'
-  tiles: number[]                    // plain groups: member tile ids
-  // Free per-tile position inside the group (native px, cell-snapped).
-  // Tiles without an entry auto-pack; dragging a tile pins it here.
+  tiles: number[]
   pos?: Record<string, { x: number; y: number }>
-  // Plain groups: painting with this group in the tilemap picks a random tile.
   random?: boolean
-  // Optional per-tile weights for the random pick (default 1).
   weights?: Record<string, number>
-  map?: Record<string, number>       // terrain groups: mask -> tile id
-  type?: TerrainType                 // terrain groups: wang16 (default) | blob47
-  builder?: any                      // terrain groups: Build-borders recipe
-  // Terrain groups: which other terrains this one merges with / runs under,
-  // and its priority at boundaries (see TerrainRelations in autotile.ts).
+  map?: Record<string, number>
+  type?: TerrainType
+  builder?: any
   relations?: TerrainRelations
-  x?: number                         // free position on the board (native px)
+  x?: number
   y?: number
 }
 
@@ -130,9 +117,8 @@ interface TilesetRow {
   registry: Record<string, string>
   groups: TileGroup[]
   cell: { w: number; h: number }
-  iso: boolean          // tiles are isometric diamonds → tilemap opens in iso mode
+  iso: boolean
   worlds: { id_string: string; name: string; status: string }[]
-  // Set when this is a guest local-library tileset (edits + save stay local).
   localId?: string
 }
 
@@ -144,9 +130,6 @@ function cleanMap(raw: any, registry: Record<string, string>): Record<string, nu
   return out
 }
 
-// Normalize stored groups against the registry: drop unknown/duplicate ids,
-// lift legacy meta.terrains into terrain groups, sweep unassigned tiles into
-// the first plain group, always keep at least one plain group.
 function normGroups(rawGroups: any, rawTerrains: any, registry: Record<string, string>): TileGroup[] {
   const seen = new Set<number>()
   const groups: TileGroup[] = (Array.isArray(rawGroups) ? rawGroups : []).map((g: any, i: number) => {
@@ -201,15 +184,12 @@ function normGroups(rawGroups: any, rawTerrains: any, registry: Record<string, s
   if (!groups.some(g => g.kind === 'group')) {
     groups.unshift({id: 'g0', name: 'Tiles', kind: 'group', tiles: []})
   }
-  // Sweep unassigned tiles into the first plain group — except tiles that
-  // only live in terrain slots (e.g. generated border pieces).
   const inTerrain = new Set<number>()
   for (const g of groups) {
     if (g.kind === 'terrain') for (const id of Object.values(g.map || {})) inTerrain.add(Number(id))
   }
   const first = groups.find(g => g.kind === 'group')!
   first.tiles.push(...Object.keys(registry).map(Number).filter(id => !seen.has(id) && !inTerrain.has(id)))
-  // Relations may reference terrains that no longer exist — prune them.
   const terrainIds = new Set(groups.filter(g => g.kind === 'terrain').map(g => g.id))
   for (const g of groups) {
     if (!g.relations) continue
@@ -221,30 +201,23 @@ function normGroups(rawGroups: any, rawTerrains: any, registry: Record<string, s
 
 const CELL_CHOICES = [8, 16, 24, 32, 48, 64]
 
-// Starts as a local blank draft so the FULL editor chrome server-renders
-// (only the canvas is client-only); onMounted swaps in ?id / the user's
-// latest tileset. blankTileset() is hoisted — declared further down.
 const tileset = ref<TilesetRow | null>(blankTileset())
 const myTilesets = ref<any[]>([])
 const saving = ref(false)
 const dirty = ref(false)
 const showSettings = ref(false)
 
-// ── Board display: background + grid, mirroring the art editor's Canvas
-// settings. View prefs persisted in tileset.meta.board so they travel with it.
 const BOARD_PRESETS = [
   {name: 'Charcoal', color: '#1b1b1f'},
   {name: 'Slate', color: '#26272b'},
   {name: 'Paper', color: '#f5f5f4'},
   {name: 'White', color: '#ffffff'},
 ]
-const BOARD_GRID_STEPS = [1, 2, 4]              // grid line every N base cells
+const BOARD_GRID_STEPS = [1, 2, 4]
 const boardBg = ref('#1b1b1f')
 const boardGrid = ref(true)
 const boardGridStep = ref(1)
 const boardGridStyle = ref<'solid' | 'dashed' | 'dots'>('solid')
-// Group headers (name + count) drawn above each group on the canvas — a view
-// preference from Settings; persisted separately, loaded in onMounted.
 const showBoardChrome = ref(true)
 function toggleBoardChrome() {
   showBoardChrome.value = !showBoardChrome.value
@@ -253,7 +226,6 @@ function toggleBoardChrome() {
 }
 const showCanvasModal = ref(false)
 
-// Grid line/dot color that stays visible against the chosen background.
 function boardIsLight(): boolean {
   const h = boardBg.value.replace('#', '')
   if (h.length < 6) return false
@@ -268,15 +240,11 @@ function applyBoardMeta(board: any) {
   boardGridStyle.value = ['solid', 'dashed', 'dots'].includes(board?.gridStyle) ? board.gridStyle : 'solid'
 }
 
-// A board display change is a view pref: mark dirty (so Save keeps it) + repaint.
 function onBoardChange() {
   dirty.value = true
   scheduleDraw()
 }
 
-// ── Local view state: zoom + camera + board display persist per tileset so a
-// reload (F5) restores the exact view — even before the tileset is saved to
-// the backend (which is the only thing meta.board captures).
 const viewKey = () => `tsx_view:${tileset.value?.id_string || 'draft'}`
 
 function saveViewState() {
@@ -292,8 +260,6 @@ function saveViewState() {
 }
 const saveViewSoon = debounce(saveViewState, 400)
 
-// Apply a saved view over the just-loaded defaults. Returns true when zoom/cam
-// were restored, so the caller skips its default zoom + fit-to-view.
 function restoreViewState(): boolean {
   if (import.meta.server) return false
   try {
@@ -314,11 +280,8 @@ const tiles = computed(() =>
         : [],
 )
 
-// Guest local-library tiles have no cloud slug — the editor renders them from
-// their stored thumbnails, keyed by the tile's ed.id (used as the "slug").
 const localTs = useLocalTilesets()
 const localThumbs = new Map<string, string>()
-// Bumped by "Refresh" to cache-bust tile PNGs after art is edited elsewhere.
 const refreshToken = ref(0)
 
 function tileSrc(idString: string) {
@@ -328,12 +291,8 @@ function tileSrc(idString: string) {
   return refreshToken.value ? `${url}${url.includes('?') ? '&' : '?'}v=${refreshToken.value}` : url
 }
 
-// Reload all tile art (e.g. after editing it in the pixel editor in another tab).
 function refreshArt() {
   refreshToken.value++
-  // Guest tileset: tiles render from stored dataURLs, so cache-busting a URL
-  // does nothing — re-read the (possibly edited, possibly cross-tab) thumbnails
-  // from the local library instead.
   const lid = tileset.value?.localId
   if (lid) {
     localTs.reload()
@@ -359,14 +318,12 @@ async function fetchMyTilesets() {
   }
 }
 
-// Open a guest local-library tileset (from /work). Tiles render from their
-// stored thumbnails; edits + Save write back to the local library, not cloud.
 function loadLocalLibTileset(id: string): boolean {
   const m = localTs.editorModel(id)
   if (!m) return false
   localThumbs.clear()
   for (const [slug, thumb] of Object.entries(m.thumbs)) localThumbs.set(slug, thumb)
-  imgCache.clear()   // re-render tiles from the fresh local thumbnails
+  imgCache.clear()
   tileset.value = {
     id: 0, id_string: id, name: m.name, status: 'draft',
     registry: {...m.registry},
@@ -380,7 +337,6 @@ function loadLocalLibTileset(id: string): boolean {
   selectedTileId.value = null
   selectedGroupId.value = null
   pendingBuilds.clear()
-  // Restore unsaved border-build previews (composed variants → canvases).
   for (const [gid, p] of Object.entries<any>(m.pends || {})) {
     const variants = new Map<number, { colors: string[]; map: Record<string, number> }>(
         Object.entries(p.variants || {}).map(([mk, v]) => [Number(mk), v as any]))
@@ -401,7 +357,6 @@ function loadLocalLibTileset(id: string): boolean {
 }
 
 async function loadTileset(slug: string) {
-  // Guest local-library tilesets are addressed by their 'local:<uuid>' id.
   if (slug.startsWith('local:')) {
     if (!loadLocalLibTileset(slug)) { toast.error('Could not open that tileset'); openBlank() }
     return
@@ -424,19 +379,15 @@ async function loadTileset(slug: string) {
     applyBoardMeta(meta.board)
     selectedTileId.value = null
     selectedGroupId.value = null
-    pendingBuilds.clear()   // unsaved previews don't survive a switch
+    pendingBuilds.clear()
     tsUndo.length = 0
     tsRedo.length = 0
     syncHistory()
-    // Restore the last local view (zoom/cam/grid) for this tileset; fall back to
-    // a sensible default zoom + fit when there's nothing saved.
     const restored = restoreViewState()
     if (!restored) zoom.value = autoZoom(tileset.value.cell.w)
-    // Legacy tilesets have no board positions yet — lay them out once.
     if (tileset.value.groups.some(g => g.x == null || g.y == null)) autoArrange(false)
     dirty.value = false
     if (!restored) nextTick(fitView)
-    // Fire-and-forget: regenerate terrains whose base art changed since build.
     syncBuilders()
     router.replace({query: {id: t.id_string}})
   } catch {
@@ -453,8 +404,6 @@ async function onTilesetSelect(v: string) {
   }
 }
 
-// ── Load-tileset browser modal ──────────────────────────────────────
-// Signed in → the account's cloud tilesets; guest → the local library.
 const showLoad = ref(false)
 const browseTilesets = computed(() => {
   if (auth.isLogged) {
@@ -479,8 +428,6 @@ function pickLoad(idString: string) {
   onTilesetSelect(idString)
 }
 
-// A local, unsaved draft — the editor always opens with SOMETHING to edit.
-// It becomes a real backend row on first Save (or first create when logged in).
 function blankTileset(): TilesetRow {
   return {
     id: 0,
@@ -511,10 +458,6 @@ function openBlank() {
   router.replace({query: {}})
 }
 
-// ── Guest tilesets ──────────────────────────────────────────────────
-// Signed out, a tileset lives in the SHARED local library (sp_local_tilesets)
-// — the same store /work, the slicer and the editor strip use — so every
-// tileset is managed together. No separate one-off draft.
 function serializePends(): Record<string, any> {
   const pends: Record<string, any> = {}
   for (const [gid, p] of pendingBuilds) {
@@ -523,8 +466,6 @@ function serializePends(): Record<string, any> {
   return pends
 }
 
-// Persist the whole editor state to the guest's library entry. A blank tileset
-// materialises only once it has tiles, so /work never fills with empties.
 function saveLibState() {
   if (!tileset.value) return
   let id = tileset.value.localId
@@ -549,7 +490,6 @@ function saveLibState() {
 const debouncedLibSave = debounce(saveLibState, 600)
 function autosaveLocal() { debouncedLibSave() }
 
-// One-time migration: fold the legacy single draft into a library entry.
 function migrateLegacyDraft(): string | null {
   if (typeof localStorage === 'undefined') return null
   let saved: any = null
@@ -568,8 +508,6 @@ function migrateLegacyDraft(): string | null {
   return entry.id
 }
 
-// Guest open: migrate any legacy draft, then open the newest library tileset,
-// else a fresh blank (which becomes a library entry once it has tiles).
 function openGuestTileset() {
   const migrated = migrateLegacyDraft()
   if (migrated) { loadLocalLibTileset(migrated); return }
@@ -577,15 +515,11 @@ function openGuestTileset() {
   openBlank()
 }
 
-// Guest edits autosave to the draft (mirrors the tilemap's free style).
-// Signed in, the source short-circuits to '' so the whole-tileset
-// JSON.stringify never runs — it only pays off for guests.
 watch(() => (!auth.isLogged && tileset.value) ? JSON.stringify(tileset.value) : '', () => {
   if (!auth.isLogged && dirty.value) autosaveLocal()
 })
 
 async function createTileset() {
-  // Signed out → a new entry in the local library (so it shows in /work).
   if (!auth.isLogged) {
     const entry = localTs.create('My tileset')
     loadLocalLibTileset(entry.id)
@@ -603,7 +537,6 @@ async function createTileset() {
   }
 }
 
-// ── Undo/redo: whole-tileset snapshots, pushed before each mutation ──
 const tsUndo: string[] = []
 const tsRedo: string[] = []
 const canUndo = ref(false)
@@ -614,7 +547,6 @@ function syncHistory() {
   canRedo.value = tsRedo.length > 0
 }
 
-// Call BEFORE mutating the tileset.
 function commit() {
   if (!tileset.value) return
   tsUndo.push(JSON.stringify(tileset.value))
@@ -648,9 +580,8 @@ function redoTs() {
 
 async function save() {
   if (!tileset.value || saving.value) return
-  // Guest (or a local-library tileset) → the shared local library (shows in /work).
   if (tileset.value.localId || !auth.isLogged) {
-    await materializePendingBuilds()   // Build-Borders previews → real local tiles
+    await materializePendingBuilds()
     saveLibState()
     dirty.value = false
     toast.success('Saved in this browser')
@@ -658,7 +589,6 @@ async function save() {
   }
   saving.value = true
   try {
-    // A local draft becomes a real row on its first save.
     if (!tileset.value.id_string) {
       const t = await useNativeFetch<any>('/coloring/tilesets/', {
         method: 'POST',
@@ -669,7 +599,6 @@ async function save() {
       router.replace({query: {id: t.id_string}})
       fetchMyTilesets()
     }
-    // Pending Build-borders previews become real SharedPages only now.
     await materializePendingBuilds()
     await useNativeFetch(`/coloring/tilesets/${tileset.value.id_string}/`, {
       method: 'PATCH',
@@ -681,9 +610,7 @@ async function save() {
           cell: tileset.value.cell,
           iso: tileset.value.iso,
           groups: tileset.value.groups,
-          // Derived view consumed by the tilemap editor / world pages.
           terrains: terrains.value,
-          // Board display prefs (background + grid).
           board: {
             bg: boardBg.value,
             grid: boardGrid.value,
@@ -702,9 +629,6 @@ async function save() {
   }
 }
 
-// ── Canvas zoom: tiles render at true tile size × an integer zoom ───
-// Whole-pixel steps above 1× (2, 3, …), unit fractions below (1/2, 1/3, 1/4)
-// so you can zoom out for an overview of a large board.
 const ZMIN = 0.25
 const ZMAX = 8
 
@@ -714,7 +638,6 @@ function stepZoom(z: number, dir: 1 | -1) {
 }
 const zoom = ref(2)
 
-// Sensible default once the tileset (and its cell size) is known.
 function autoZoom(w: number) {
   return w <= 12 ? 4 : w <= 20 ? 3 : w <= 36 ? 2 : 1
 }
@@ -734,7 +657,6 @@ function zoomOut() {
   setZoomAnchored(stepZoom(zoom.value, -1), c.x, c.y)
 }
 
-// Content bounding box in native units.
 function contentBBox() {
   const ts = tileset.value
   if (!ts?.groups.length) return null
@@ -752,7 +674,6 @@ function contentBBox() {
   return {minX, minY, maxX, maxY}
 }
 
-// Reset zoom and center the content in the stage.
 function fitZoom() {
   zoom.value = autoZoom(tileset.value?.cell.w || 32)
   fitView()
@@ -773,8 +694,6 @@ function fitView() {
   }
 }
 
-// Fit all content in view — pick a zoom that frames the whole board, then
-// center it (matches the art editor's FIT button). The zoom/cam watcher repaints.
 function fitAll() {
   const el = stageEl.value
   const box = contentBBox()
@@ -795,19 +714,14 @@ function fitAll() {
   }
 }
 
-// ── Stage: drag to pan, ctrl/cmd+wheel (or trackpad pinch) to zoom ──
 const stageEl = ref<HTMLElement | null>(null)
 let pan: { x: number; y: number; sl: number; st: number; id: number } | null = null
 const panned = ref(false)
 
-// Camera: the canvas always fills the stage; pan/zoom move the camera, so
-// the board is effectively infinite and never resizes with content.
 const cam = ref({x: 48, y: 56})
 
 function stageDown(e: PointerEvent) {
   if (e.pointerType === 'mouse' && e.button !== 0) return
-  // The board canvas stops propagation when it owns the press (tile/slot/
-  // header); anything reaching here on a control is still off-limits.
   if ((e.target as HTMLElement).closest('button, a, input, select')) return
   const el = stageEl.value
   if (!el) return
@@ -833,7 +747,6 @@ function stageUp() {
   pan = null
 }
 
-// A drag that panned must not fall through as a tile click.
 function stageClickCapture(e: MouseEvent) {
   if (!panned.value) return
   e.stopPropagation()
@@ -841,7 +754,6 @@ function stageClickCapture(e: MouseEvent) {
   panned.value = false
 }
 
-// Zoom stepping anchored to a stage point (cursor or stage center).
 function setZoomAnchored(nz: number, ax: number, ay: number) {
   nz = Math.max(ZMIN, Math.min(ZMAX, nz))
   if (nz === zoom.value) return
@@ -850,8 +762,6 @@ function setZoomAnchored(nz: number, ax: number, ay: number) {
   zoom.value = nz
 }
 
-// Trackpad pinch arrives as ctrl+wheel with small deltas — accumulate.
-// A plain wheel/two-finger scroll pans the board.
 let wheelAcc = 0
 function onStageWheel(e: WheelEvent) {
   const el = stageEl.value
@@ -874,16 +784,11 @@ const cellPx = computed(() => ({
   h: (tileset.value?.cell.h || 32) * zoom.value,
 }))
 
-// Terrain slots track the zoomed cell size but stay clickable when tiny.
 const slotPx = computed(() => Math.max(32, cellPx.value.w))
 
-// Sheet layout: tiles pack edge-to-edge, near-square column count — the
-// on-screen arrangement IS the exported tileset PNG.
-// ── Groups: derived views + shared column count ─────────────────────
 const plainGroups = computed(() => tileset.value?.groups.filter(g => g.kind === 'group') ?? [])
 const terrainGroups = computed(() => tileset.value?.groups.filter(g => g.kind === 'terrain') ?? [])
 
-// The tilemap editor / world pages consume terrains in the legacy shape.
 const terrains = computed<Terrain[]>(() =>
     terrainGroups.value.map(g => ({
       id: g.id, name: g.name, type: g.type || 'wang16', map: {...(g.map || {})},
@@ -891,12 +796,8 @@ const terrains = computed<Terrain[]>(() =>
     })),
 )
 
-// One shared column count so every group packs to the same sheet width —
-// the workspace arrangement IS the exported tileset PNG.
 const sheetCols = computed(() => sheetColumns(plainGroups.value))
 
-// Layout reads art sizes from the loaded <img> cache; sizes are unknown until
-// an image arrives (helper then assumes 1×1) and the board relayouts after.
 const sheetSource = computed<SheetSource>(() => ({
   cell: tileset.value?.cell || {w: 32, h: 32},
   slugOf: (id: number) => tileset.value?.registry[String(id)] || null,
@@ -912,7 +813,6 @@ function layoutGroupTiles(g: TileGroup) {
 
 const exporting = ref(false)
 
-// Export scope: the selected group only, or the whole set.
 const exportGroups = computed(() => {
   const ts = tileset.value
   if (!ts) return []
@@ -931,8 +831,6 @@ function downloadBlob(blob: Blob, name: string) {
   URL.revokeObjectURL(a.href)
 }
 
-// Preload images (their natural sizes drive layout), then lay the chosen
-// groups out. Shared by every export.
 async function buildExport(groups: TileGroup[]) {
   const ts = tileset.value!
   const slugs = [...new Set(Object.values(ts.registry))]
@@ -950,7 +848,6 @@ async function buildExport(groups: TileGroup[]) {
   return buildSheet(groups, sheetSource.value)
 }
 
-// Draw the laid-out blocks into the packed sheet PNG.
 async function renderSheet(L: Awaited<ReturnType<typeof buildExport>>) {
   const cv = document.createElement('canvas')
   cv.width = L.w
@@ -960,7 +857,6 @@ async function renderSheet(L: Awaited<ReturnType<typeof buildExport>>) {
   for (const b of L.blocks) {
     const img = b.slug ? imgCache.get(b.slug) : null
     if (!img) continue
-    // 1:1 pixels, centered; scale down only if the art exceeds its block.
     const scale = Math.min(b.w / img.naturalWidth, b.h / img.naturalHeight, 1)
     const dw = Math.max(1, Math.round(img.naturalWidth * scale))
     const dh = Math.max(1, Math.round(img.naturalHeight * scale))
@@ -990,7 +886,6 @@ async function exportPNG() {
   }
 }
 
-// JSON sidecar: everything an engine importer needs to slice the PNG.
 async function exportJSON() {
   const ts = tileset.value
   if (!ts || !tiles.value.length || exporting.value) return
@@ -1043,7 +938,6 @@ Move the files apart and Godot will ask you to re-point the texture.
 `
 }
 
-// One zip per engine: the packed PNG + a sidecar the engine reads natively.
 async function exportEngine(kind: 'godot' | 'tiled') {
   const ts = tileset.value
   if (!ts || !tiles.value.length || exporting.value) return
@@ -1083,7 +977,6 @@ async function exportEngine(kind: 'godot' | 'tiled') {
     }
     files.push({name: 'README.txt', data: enc.encode(engineReadme(kind, ts.name, base, image))})
     downloadBlob(createZip(files), `${base}_${kind}.zip`)
-    // An atlas cell holds one tile — overlapping free-positioned art can't be one.
     if (skipped) toast.warning(`${skipped} overlapping tile${skipped > 1 ? 's' : ''} left out of the atlas`)
   } catch {
     toast.error('Could not export')
@@ -1092,13 +985,8 @@ async function exportEngine(kind: 'godot' | 'tiled') {
   }
 }
 
-// ── Selection (Tilesetter-style: pick a tile, then place it) ────────
-// Ordered multi-selection; the LAST picked tile is the primary one (used by
-// slot placement, fill, weights). Shift/⌘-click toggles membership.
 const selectedTileIds = ref<number[]>([])
 
-// Writable single-tile view over the multi-selection, so every consumer of
-// "the selected tile" keeps working unchanged.
 const selectedTileId = computed<number | null>({
   get: () => selectedTileIds.value.length ? selectedTileIds.value[selectedTileIds.value.length - 1]! : null,
   set: (v) => { selectedTileIds.value = v == null ? [] : [v] },
@@ -1114,8 +1002,6 @@ function isTileSelected(id: number) {
   return selectedTileIds.value.includes(id)
 }
 
-// Tile and group selection coexist: pick a terrain group (its tools appear
-// in the toolbar), then pick a tile to fill slots with.
 function selectTile(id: number, additive = false) {
   if (additive) {
     selectedTileIds.value = isTileSelected(id)
@@ -1165,7 +1051,6 @@ function onKeydown(e: KeyboardEvent) {
 let resizeObs: ResizeObserver | null = null
 onMounted(() => {
   document.addEventListener('keydown', onKeydown)
-  // The canvas mirrors the stage size — repaint whenever the stage resizes.
   resizeObs = new ResizeObserver(() => scheduleDraw())
   watch(stageEl, (el, _old, onCleanup) => {
     if (el) resizeObs?.observe(el)
@@ -1177,9 +1062,6 @@ onBeforeUnmount(() => {
   resizeObs?.disconnect()
 })
 
-// ── Tiles: add / remove ─────────────────────────────────────────────
-
-// Drop a tile from the registry, its group, and dangling terrain slots.
 function removeTileById(id: number) {
   if (!tileset.value) return
   delete tileset.value.registry[String(id)]
@@ -1200,7 +1082,6 @@ function inTileset(id: number) {
   return !!tileset.value?.registry[String(id)]
 }
 
-// ── Tile size ───────────────────────────────────────────────────────
 function setCell(px: number) {
   if (!tileset.value) return
   commit()
@@ -1216,14 +1097,12 @@ function setCellDim(field: 'w' | 'h', v: number) {
   dirty.value = true
 }
 
-// ── Groups: add / remove ────────────────────────────────────────────
 function addGroup(kind: 'group' | 'terrain') {
   const ts = tileset.value
   if (!ts) return
   commit()
   const id = `${kind === 'terrain' ? 't' : 'g'}${Date.now().toString(36)}`
   const n = ts.groups.filter(g => g.kind === kind).length + 1
-  // Place the new group below everything currently on the board.
   const bottom = ts.groups.length
       ? Math.max(...ts.groups.map(g => (g.y ?? 0) + groupSizeNative(g).h))
       : 0
@@ -1236,8 +1115,6 @@ function addGroup(kind: 'group' | 'terrain') {
   dirty.value = true
 }
 
-// Deleting a plain group keeps its tiles (they move to another plain group);
-// the last plain group can't be deleted.
 function removeGroup(gid: string) {
   const ts = tileset.value
   if (!ts) return
@@ -1250,7 +1127,6 @@ function removeGroup(gid: string) {
     other.tiles.push(...g.tiles)
   }
   ts.groups = ts.groups.filter(x => x.id !== gid)
-  // A deleted terrain also leaves every other terrain's connects list.
   for (const x of ts.groups) {
     if (x.relations?.connects.includes(gid)) {
       x.relations.connects = x.relations.connects.filter(id => id !== gid)
@@ -1261,13 +1137,11 @@ function removeGroup(gid: string) {
   dirty.value = true
 }
 
-// wang16 masks are a subset of blob masks, so switching keeps assignments.
 function toggleTerrainType(g: TileGroup) {
   if (g.kind !== 'terrain') return
   commit()
   g.type = g.type === 'blob47' ? 'wang16' : 'blob47'
   if (g.type === 'wang16' && g.map) {
-    // Drop corner-mask assignments that wang16 can't address.
     for (const m of Object.keys(g.map)) {
       if (Number(m) > 15) delete g.map[m]
     }
@@ -1282,7 +1156,6 @@ function toggleRandom(g: TileGroup) {
   dirty.value = true
 }
 
-// Weight of the selected tile inside a random group (1–9, default 1).
 const selectedWeight = computed(() => {
   const g = activeGroup.value
   const id = selectedTileId.value
@@ -1304,9 +1177,6 @@ function bumpWeight(delta: number) {
   scheduleDraw()
 }
 
-// ── Terrain relations: connects list + boundary priority ────────────
-// Stored on the terrain group, consumed by the tilemap through the derived
-// terrains view. Rule lives in autotile.ts (TerrainRelations).
 const showRelations = ref(false)
 
 const otherTerrains = computed(() =>
@@ -1316,7 +1186,6 @@ function isConnected(g: TileGroup, otherId: string) {
   return !!g.relations?.connects.includes(otherId)
 }
 
-// Drop the relations object entirely when it's back to the default.
 function tidyRelations(g: TileGroup) {
   if (g.relations && !g.relations.connects.length && !g.relations.priority) delete g.relations
 }
@@ -1345,8 +1214,6 @@ function bumpPriority(g: TileGroup, delta: number) {
   dirty.value = true
 }
 
-// Tilesetter-style quick start: stamp the selected tile into every empty
-// slot so the terrain paints immediately; replace slots with real art later.
 function fillTerrainFromSelected(g: TileGroup) {
   if (g.kind !== 'terrain' || selectedTileId.value == null) return
   commit()
@@ -1364,47 +1231,29 @@ function fillTerrainFromSelected(g: TileGroup) {
   }
 }
 
-// ── Build borders (auto mode): 1 base tile → a full terrain set ─────
-// Composes every mask variant in palette-index space (each result is a real
-// SharedPage the user can open in the pixel editor), assigns the slots, and
-// stores the recipe on the group so Generate can update in place later.
 const showBuild = ref(false)
 const building = ref(false)
 const buildProgress = ref('')
-// 'fill' = reuse the base for every mask (iso 3D blocks — the walls are the
-// border); 'auto' = algorithmic shading (grid, or flat iso diamond floors);
-// 'edge' = overlay hand-drawn edge art (grid only).
 const buildStyle = ref<'auto' | 'edge' | 'fill'>('auto')
-// Collapse advanced styles behind a "More" link — the default (Fill for iso,
-// Auto shade for grid) is all most builds need.
 const buildAdvanced = ref(false)
 const defaultBuildStyle = () => (tileset.value?.iso ? 'fill' : 'auto')
 function toggleBuildAdvanced() {
   buildAdvanced.value = !buildAdvanced.value
-  if (!buildAdvanced.value) buildStyle.value = defaultBuildStyle()   // collapsing = back to the simple default
+  if (!buildAdvanced.value) buildStyle.value = defaultBuildStyle()
 }
 const buildDepth = ref(2)
 const buildMode = ref<'darken' | 'lighten'>('darken')
 const buildRounded = ref(true)
 const buildDither = ref(true)
-// Picked source arts (tile ids from the registry).
 const buildBaseId = ref<number | null>(null)
 const buildEdgeId = ref<number | null>(null)
 const buildCornerId = ref<number | null>(null)
-// Transition underlay: another terrain's base drawn beneath open sides so
-// the border blends into it (grass fading into water).
 const buildUnderId = ref<number | null>(null)
-// blob47 inner-corner art (authored top-left) for edge style.
 const buildInnerId = ref<number | null>(null)
-// Edge cutoff: only the top N rows of the edge art apply (0 = whole art).
 const buildCut = ref(0)
-// Per-side edge overrides (all edge art is authored for the NORTH side and
-// auto-rotated; an override replaces the shared edge on that side only).
 const BUILD_SIDES = ['n', 'e', 's', 'w'] as const
 type BuildSide = typeof BUILD_SIDES[number]
 const buildSideIds = reactive<Record<BuildSide, number | null>>({n: null, e: null, s: null, w: null})
-// Edge variations: extra edge arts mixed with the main one, picked
-// deterministically per mask+side so rebuilds never churn.
 const buildVarIds = ref<number[]>([])
 
 interface ArtData { colors: string[]; grid: Record<string, number>; w: number; h: number; updated?: string }
@@ -1417,10 +1266,7 @@ const buildInner = ref<ArtData | null>(null)
 const buildSideArts = reactive<Record<BuildSide, ArtData | null>>({n: null, e: null, s: null, w: null})
 const buildVarArts = ref<ArtData[]>([])
 
-// Which source the next grid click assigns.
 const buildTarget = ref<'base' | 'edge' | 'corner' | 'under' | 'inner' | 'vars' | `side-${BuildSide}`>('base')
-// Search beyond the tileset: any public art can be a source. id -> slug for
-// picks that aren't in the registry yet (added on Generate).
 const buildSlugs = reactive<Record<number, string>>({})
 const buildQuery = ref('')
 const buildResults = ref<SharedPage[]>([])
@@ -1451,8 +1297,6 @@ async function buildSearch(page = 1) {
 }
 const debouncedBuildSearch = debounce(() => buildSearch(1), 350)
 
-// One grid: the set's own tiles first, then public art — searchable and
-// pageable so any art can become a source.
 const buildGridItems = computed(() => {
   const pub = buildResults.value.map(r => ({id: Number(r.id), id_string: r.id_string}))
   if (buildQuery.value.trim() || buildPage.value > 1) return pub
@@ -1465,13 +1309,11 @@ const BUILD_TARGET_REFS = {
   under: buildUnderId, inner: buildInnerId,
 } as const
 
-// Uniform slot cards for the Sources section — one shape for every source
-// keeps the grid aligned no matter the style/terrain type.
 const buildSlotDefs = computed(() => {
   const defs: { key: string; label: string; id: number | null; title: string }[] = [
     {key: 'base', label: 'Base', id: buildBaseId.value, title: 'Fill texture — the middle of the terrain (required)'},
   ]
-  if (buildStyle.value === 'fill') return defs   // Fill only reuses the base
+  if (buildStyle.value === 'fill') return defs
   defs.push({key: 'under', label: 'Under', id: buildUnderId.value, title: 'Transition underlay — the terrain this one blends into (optional)'})
   if (buildStyle.value === 'edge') {
     defs.push(
@@ -1492,7 +1334,6 @@ const buildSideDefs = computed(() => BUILD_SIDES.map(sd => ({
   title: `${({n: 'North', e: 'East', s: 'South', w: 'West'})[sd]} edge override (optional) — authored like the top edge, auto-rotated. Click a picked tile again to clear.`,
 })))
 
-// Where a library click lands — echoed next to the "Art library" heading.
 const buildTargetLabel = computed(() => {
   const t = buildTarget.value
   if (t === 'vars') return 'Variations'
@@ -1503,7 +1344,6 @@ const buildTargetLabel = computed(() => {
 function assignBuildPick(id: number) {
   const t = buildTarget.value
   if (t === 'vars') {
-    // Variations multi-pick: click toggles membership.
     const i = buildVarIds.value.indexOf(id)
     if (i >= 0) buildVarIds.value.splice(i, 1)
     else buildVarIds.value.push(id)
@@ -1515,7 +1355,6 @@ function assignBuildPick(id: number) {
     return
   }
   const r = BUILD_TARGET_REFS[t as keyof typeof BUILD_TARGET_REFS]
-  // Optional sources toggle off when re-picked.
   r.value = (t !== 'base' && t !== 'edge' && r.value === id) ? null : id
 }
 
@@ -1526,11 +1365,7 @@ function buildPickActive(id: number) {
   return BUILD_TARGET_REFS[t as keyof typeof BUILD_TARGET_REFS].value === id
 }
 
-// Seed every modal param from a stored recipe (or defaults when absent) —
-// shared by the modal and quickBuild so the two paths can't drift.
 function seedBuildParams(r: any) {
-  // Iso defaults to Fill (3D blocks self-border via their walls); Auto shade
-  // (flat floors) and Edge art (composited pieces) are opt-in.
   buildStyle.value = tileset.value?.iso
       ? (r?.style === 'auto' ? 'auto' : r?.style === 'edge' ? 'edge' : 'fill')
       : (r?.style === 'edge' ? 'edge' : 'auto')
@@ -1557,20 +1392,17 @@ function openBuild() {
   if (!g || g.kind !== 'terrain') return
   const r: any = g.builder
   seedBuildParams(r)
-  buildAdvanced.value = buildStyle.value !== defaultBuildStyle()   // reveal styles only if the saved build isn't the default
+  buildAdvanced.value = buildStyle.value !== defaultBuildStyle()
   buildBaseId.value = (r?.base && slugOf(Number(r.base)) ? Number(r.base) : null)
       ?? selectedTileId.value
       ?? (tiles.value[0]?.id ?? null)
   buildTarget.value = 'base'
   buildQuery.value = ''
-  buildSearch(1)   // browse mode: newest public art fills the grid tail
+  buildSearch(1)
   showBuild.value = true
 }
 
 async function fetchBaseData(idString: string): Promise<ArtData | null> {
-  // Guest / local-first tiles live only in the local library, never on the
-  // cloud — resolve their pixels from there before hitting the API (a cloud
-  // fetch for a local UUID just 404s, which is why guests saw no base source).
   const localEd = localTs.findTileEd(idString)
   if (localEd) {
     return {
@@ -1605,8 +1437,6 @@ function shadeHex(hex: string, f: number): string {
   return `#${out.toString(16).padStart(6, '0')}${m[2] || ''}`
 }
 
-// Screen (x,y) → source coords for an art authored for the NORTH side,
-// rotated to face a given side/corner (square-cell assumption).
 function rotCoord(x: number, y: number, W: number, H: number, rot: 0 | 90 | 180 | 270): [number, number] {
   if (rot === 90) return [y, W - 1 - x]
   if (rot === 180) return [W - 1 - x, H - 1 - y]
@@ -1614,15 +1444,6 @@ function rotCoord(x: number, y: number, W: number, H: number, rot: 0 | 90 | 180 
   return [x, y]
 }
 
-// Isometric variant: the tile is a diamond inscribed in the W×H cell, so a
-// border runs along the diamond's four slanted edges — not the cell's rectangle
-// sides — and everything outside the diamond stays transparent. Grid directions
-// map to diamond edges via the tilemap's projection (cellCenter():
-// E→down-right, W→up-left, N→up-right, S→down-left):
-//   N → top-right edge   E → bottom-right edge
-//   S → bottom-left edge W → top-left edge
-// Two styles: 'auto' shades the diamond edges algorithmically (flat floors);
-// 'edge' composites hand-drawn edge pieces onto them (Tilesetter-style).
 function composeMaskIso(base: NonNullable<typeof buildBase.value>, mask: number) {
   const cell = tileset.value!.cell
   const W = cell.w
@@ -1651,19 +1472,11 @@ function composeMaskIso(base: NonNullable<typeof buildBase.value>, mask: number)
     return hex ? merge(hex) : null
   }
 
-  // ── Edge-art overlay (Tilesetter-style compositing) ──────────────────────
-  // Keep the base sprite intact (no diamond clip → 3D blocks keep their walls)
-  // and stamp a hand-drawn edge piece onto every OPEN diamond edge. The default
-  // piece is authored for the N (top-right) edge and MIRRORED to the other three
-  // (iso edges are reflections, not 90° rotations like the grid). A per-side slot
-  // (buildSideArts) overrides one edge and is used exactly as authored.
   if (buildStyle.value === 'edge' && buildEdge.value) {
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const bi = base.grid[`${x % base.w}_${y % base.h}`]
       if (bi != null && bi !== -1) map[`${x}_${y}`] = bi
     }
-    // dir picks the reflection of the N-authored piece: W flips X, E flips Y,
-    // S flips both; N is identity (also used for per-side art authored in place).
     const stamp = (art: ArtData, dir: BuildSide) => {
       for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
         const u = (dir === 'w' || dir === 's') ? W - 1 - x : x
@@ -1676,8 +1489,8 @@ function composeMaskIso(base: NonNullable<typeof buildBase.value>, mask: number)
     const edge = buildEdge.value
     const sideStamp = (dir: BuildSide) => {
       const o = buildSideArts[dir]
-      if (o) stamp(o, 'n')      // per-side art is drawn for its own edge → no mirror
-      else stamp(edge, dir)     // default piece mirrored onto this edge
+      if (o) stamp(o, 'n')
+      else stamp(edge, dir)
     }
     if (!s.n) sideStamp('n')
     if (!s.e) sideStamp('e')
@@ -1686,39 +1499,35 @@ function composeMaskIso(base: NonNullable<typeof buildBase.value>, mask: number)
     return {colors, map}
   }
 
-  const a = W / 2, b = H / 2               // diamond half-extents
+  const a = W / 2, b = H / 2
   const d = Math.max(1, Math.min(Math.floor(Math.min(W, H) / 2), buildDepth.value))
-  const band = Math.min(0.9, d / ((a + b) / 2))   // shell thickness (fraction of the diamond)
+  const band = Math.min(0.9, d / ((a + b) / 2))
 
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
-      // Diamond coords: |dx| + |dy| <= 1 is inside; = 1 is the edge.
       const dx = (x + 0.5 - a) / a
       const dy = (y + 0.5 - b) / b
       const u = Math.abs(dx) + Math.abs(dy)
-      if (u > 1) continue                  // outside the diamond → transparent
+      if (u > 1) continue
       const bi = base.grid[`${x % base.w}_${y % base.h}`]
       const ci = (bi != null && bi !== -1) ? bi : underAt(x, y)
-      if (ci == null) continue             // base has a hole and no underlay → leave clear
+      if (ci == null) continue
       const k = `${x}_${y}`
       map[k] = ci
 
-      // The diamond quadrant this pixel sits in faces one grid direction; shade
-      // only when that neighbour is open (a border there).
       const open =
-          (dx >= 0 && dy < 0 && !s.n) ||   // top-right edge  → N
-          (dx >= 0 && dy >= 0 && !s.e) ||  // bottom-right    → E
-          (dx < 0 && dy >= 0 && !s.s) ||   // bottom-left     → S
-          (dx < 0 && dy < 0 && !s.w)       // top-left        → W
+          (dx >= 0 && dy < 0 && !s.n) ||
+          (dx >= 0 && dy >= 0 && !s.e) ||
+          (dx < 0 && dy >= 0 && !s.s) ||
+          (dx < 0 && dy < 0 && !s.w)
       if (!open || u < 1 - band) continue
 
-      // Rounded: bevel a diamond corner point where its two edges are both open.
       if (buildRounded.value) {
         const roundCorner =
-            (!s.n && !s.e && dx > 0 && Math.abs(dy) < band) ||   // right corner
-            (!s.e && !s.s && dy > 0 && Math.abs(dx) < band) ||   // bottom corner
-            (!s.s && !s.w && dx < 0 && Math.abs(dy) < band) ||   // left corner
-            (!s.w && !s.n && dy < 0 && Math.abs(dx) < band)      // top corner
+            (!s.n && !s.e && dx > 0 && Math.abs(dy) < band) ||
+            (!s.e && !s.s && dy > 0 && Math.abs(dx) < band) ||
+            (!s.s && !s.w && dx < 0 && Math.abs(dy) < band) ||
+            (!s.w && !s.n && dy < 0 && Math.abs(dx) < band)
         if (roundCorner) {
           const uu = underAt(x, y)
           if (uu != null) map[k] = uu
@@ -1726,7 +1535,6 @@ function composeMaskIso(base: NonNullable<typeof buildBase.value>, mask: number)
           continue
         }
       }
-      // Transition: the outer half of the band recedes into the underlay.
       if (under && u >= 1 - band / 2) {
         const uu = underAt(x, y)
         if (uu != null) { map[k] = uu; continue }
@@ -1737,14 +1545,7 @@ function composeMaskIso(base: NonNullable<typeof buildBase.value>, mask: number)
   return {colors, map}
 }
 
-// Compose one mask variant.
-// auto: base fill + shaded band along open sides, triangle-cut outer corners,
-//       shaded inner corners (blob47), dithered seam.
-// edge: base fill + edge art overlaid on every open side (rotated), optional
-//       corner art stamped where two open sides meet.
 function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, type: TerrainType) {
-  // Fill: every mask is just the base sprite, untouched — for 3D iso blocks where
-  // the tile's own walls read as the border (no per-edge variation needed).
   if (buildStyle.value === 'fill') return {colors: [...base.colors], map: {...base.grid}}
   if (tileset.value?.iso) return composeMaskIso(base, mask)
   const cell = tileset.value!.cell
@@ -1756,7 +1557,6 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
   const colors = [...base.colors]
   const map: Record<string, number> = {}
 
-  // Merge palettes by hex so overlays/underlays dedupe into one palette.
   const byHex = new Map<string, number>()
   colors.forEach((c, i) => { if (!byHex.has(c)) byHex.set(c, i) })
   const merge = (hex: string) => {
@@ -1767,7 +1567,6 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
     return byHex.get(hex)!
   }
 
-  // Transition underlay first: the other terrain shows wherever this one recedes.
   const under = buildUnder.value
   const underAt = (x: number, y: number): number | null => {
     if (!under) return null
@@ -1784,7 +1583,6 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
     }
   }
 
-  // Base fill (small textures repeat across the cell).
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const ci = base.grid[`${x % base.w}_${y % base.h}`]
@@ -1798,7 +1596,7 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
       for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
           const [u, v] = rotCoord(x, y, W, H, rot)
-          if (cut > 0 && v >= cut) continue      // cutoff: top rows only
+          if (cut > 0 && v >= cut) continue
           const ci = art.grid[`${u % art.w}_${v % art.h}`]
           if (ci == null || ci === -1) continue
           const hex = art.colors[ci]
@@ -1807,8 +1605,6 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
       }
     }
     const edge = buildEdge.value
-    // Per-side override wins; otherwise variations rotate through the pool
-    // deterministically per mask+side (stable across rebuilds).
     const edgeVariants = [edge, ...buildVarArts.value]
     const edgeFor = (side: BuildSide, rotIdx: number) =>
         buildSideArts[side]
@@ -1817,7 +1613,6 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
     if (!s.e) overlay(edgeFor('e', 1), 90)
     if (!s.s) overlay(edgeFor('s', 2), 180)
     if (!s.w) overlay(edgeFor('w', 3), 270)
-    // Outer corners: dedicated art wins over the two overlapping edges.
     const corner = buildCorner.value
     if (corner) {
       if (!s.n && !s.w) overlay(corner, 0)
@@ -1825,7 +1620,6 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
       if (!s.s && !s.e) overlay(corner, 180)
       if (!s.s && !s.w) overlay(corner, 270)
     }
-    // blob47 inner corners: edges connect but the diagonal doesn't.
     const inner = buildInner.value
     if (inner && type === 'blob47') {
       if (s.n && s.w && !s.nw) overlay(inner, 0)
@@ -1836,7 +1630,6 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
     return {colors, map}
   }
 
-  // Auto mode: algorithmic shading.
   const shaded = new Map<number, number>()
   const shade = (ci: number) => {
     if (!shaded.has(ci)) {
@@ -1854,8 +1647,6 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
       const ds = H - 1 - y
       const dw = x
       const de = W - 1 - x
-      // Rounded outer corners: cut a d-sized triangle where two open sides
-      // meet — the underlay terrain shows through when one is set.
       if (buildRounded.value) {
         if ((!s.n && !s.w && dn + dw < d) || (!s.n && !s.e && dn + de < d)
             || (!s.s && !s.w && ds + dw < d) || (!s.s && !s.e && ds + de < d)) {
@@ -1865,7 +1656,6 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
           continue
         }
       }
-      // Transition: the outer half of the band recedes into the underlay.
       if (under) {
         const distOpen = Math.min(!s.n ? dn : 99, !s.s ? ds : 99, !s.w ? dw : 99, !s.e ? de : 99)
         if (distOpen < Math.ceil(d / 2)) {
@@ -1877,7 +1667,6 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
         }
       }
       let band = (!s.n && dn < d) || (!s.s && ds < d) || (!s.w && dw < d) || (!s.e && de < d)
-      // blob47 inner corners: edges connect but the diagonal doesn't.
       if (!band && type === 'blob47') {
         band = (s.n && s.e && !s.ne && dn < d && de < d)
             || (s.s && s.e && !s.se && ds < d && de < d)
@@ -1888,7 +1677,6 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
         map[k] = shade(ci)
         continue
       }
-      // Dither seam: checker pattern on the row just inside the band.
       if (buildDither.value && (x + y) % 2 === 0) {
         const seam = (!s.n && dn === d) || (!s.s && ds === d) || (!s.w && dw === d) || (!s.e && de === d)
         if (seam) map[k] = shade(ci)
@@ -1898,14 +1686,9 @@ function composeMask(base: NonNullable<typeof buildBase.value>, mask: number, ty
   return {colors, map}
 }
 
-// Live preview, two canvases:
-//  - demo: a small painted scene resolved through the real auto-tile logic —
-//    this is what the terrain will look like on a map.
-//  - variants: every composed slot, for inspection.
 const buildDemoEl = ref<HTMLCanvasElement | null>(null)
 const buildPreviewEl = ref<HTMLCanvasElement | null>(null)
 
-// Covers center, edges, corners, a lone strip and an isolated cell.
 const DEMO_PATTERN = ['XXXX.X', 'XXXX..', 'XXXX.X', '......', 'XX.X..']
 
 function paintComposed(ctx: CanvasRenderingContext2D, composed: { colors: string[]; map: Record<string, number> }, ox: number, oy: number, pz: number) {
@@ -1929,8 +1712,6 @@ function drawBuildPreview() {
     return composedCache.get(mask)!
   }
 
-  // Painted demo scene — a staggered diamond layout for iso, a flat grid
-  // otherwise, so the preview reads the way the terrain will on a real map.
   const demo = buildDemoEl.value
   if (demo) {
     const ctx = demo.getContext('2d')
@@ -1950,11 +1731,10 @@ function drawBuildPreview() {
         demo.height = Math.ceil(((cols + rows) * hh + H) * pz)
         ctx.clearRect(0, 0, demo.width, demo.height)
         if (base) {
-          // Painter's order: back rows (smaller c+r) first so front tiles overlap.
           cells.sort((p, q) => (p[0] + p[1]) - (q[0] + q[1])).forEach(([c, r]) => {
             const mask = terrainMask(marks, c, r, 't', type)
             const cx = originX + (c - r) * hw
-            const cy = (c + r) * hh + hh   // + hh top pad
+            const cy = (c + r) * hh + hh
             paintComposed(ctx, composedFor(mask), Math.round((cx - hw) * pz), Math.round((cy - hh) * pz), pz)
           })
         }
@@ -1973,7 +1753,6 @@ function drawBuildPreview() {
     }
   }
 
-  // Variant grid.
   const cv = buildPreviewEl.value
   if (cv) {
     const ctx = cv.getContext('2d')
@@ -1993,7 +1772,6 @@ function drawBuildPreview() {
   }
 }
 
-// Refetch the source arts + redraw whenever the modal inputs change.
 async function fetchInto(target: typeof buildBase, id: number | null) {
   const slug = slugOf(id)
   target.value = slug ? await fetchBaseData(slug) : null
@@ -2034,10 +1812,6 @@ watch(
 )
 watch([buildStyle, buildDepth, buildMode, buildRounded, buildDither, buildCut, buildBase], () => nextTick(drawBuildPreview))
 
-// ── Local-first generation ──────────────────────────────────────────
-// Generate only COMPOSES locally: the variants render on the board as a
-// pending preview. Nothing touches the backend until the tileset is saved —
-// materializePendingBuilds() then creates/updates the real SharedPages.
 interface PendingBuild {
   recipe: any
   variants: Map<number, { colors: string[]; map: Record<string, number> }>
@@ -2061,7 +1835,6 @@ function renderComposedCanvas(composed: { colors: string[]; map: Record<string, 
 }
 
 function generateBorders(gArg?: TileGroup, silent = false) {
-  // Guard: a bare template binding would pass the click event here.
   const g = (gArg && typeof (gArg as any).kind === 'string') ? gArg : activeGroup.value
   const ts = tileset.value
   const base = buildBase.value
@@ -2070,7 +1843,6 @@ function generateBorders(gArg?: TileGroup, silent = false) {
   building.value = true
   try {
     commit()
-    // Sources picked from Search join the tileset (locally; saved with it).
     const ensureInSet = (id: number | null) => {
       if (id == null || ts.registry[String(id)]) return
       const slug = buildSlugs[id]
@@ -2087,8 +1859,6 @@ function generateBorders(gArg?: TileGroup, silent = false) {
       for (const sd of BUILD_SIDES) ensureInSet(buildSideIds[sd])
       for (const id of buildVarIds.value) ensureInSet(id)
     }
-    // Fill: no art generated — just point every mask at the base tile. The 3D
-    // block borders itself, and no duplicate tiles are created.
     if (buildStyle.value === 'fill') {
       const fillMap = g.map || (g.map = {})
       const fillMasks = terrainSlots(g)
@@ -2126,7 +1896,6 @@ function generateBorders(gArg?: TileGroup, silent = false) {
     })
     dirty.value = true
     showBuild.value = false
-    // pendingBuilds isn't reactive — the JSON autosave watch can't see it.
     if (!auth.isLogged) autosaveLocal()
     if (!silent) toast.success(`Borders composed — Save to create ${masks.length} tiles`)
     scheduleDraw()
@@ -2137,15 +1906,9 @@ function generateBorders(gArg?: TileGroup, silent = false) {
   }
 }
 
-// On Save: turn every pending build into real SharedPages (create new slots,
-// update ones generated before), then the tileset meta is persisted.
 async function materializePendingBuilds() {
   const ts = tileset.value
   if (!ts || !pendingBuilds.size) return
-  // Guests have no cloud → each variant becomes a local-library tile (pixel data
-  // inline). Signed-in → a real SharedPage per variant. Both paths carry the
-  // tileset's cell size, so isometric tilesets (e.g. 32×16) generate the right
-  // shape and the tilemap opens them in iso mode via the iso flag.
   const guest = !!ts.localId || !auth.isLogged
   const lid = guest ? ensureLocalTilesetId() : null
   for (const [gid, pend] of [...pendingBuilds]) {
@@ -2162,8 +1925,6 @@ async function materializePendingBuilds() {
       buildProgress.value = `${i + 1}/${entries.length}`
 
       if (guest && lid) {
-        // Reuse the stored ed.id on regenerate so the tile updates in place
-        // (addTile is idempotent by ed.id) — worlds/maps using it stay linked.
         const prev = pages[String(mask)]
         const ed = {
           ...cloneDeep(DEFAULT_EDITOR_DATA),
@@ -2178,7 +1939,7 @@ async function materializePendingBuilds() {
         if (tile) {
           pages[String(mask)] = ed.id
           ts.registry[String(tile.tid)] = ed.id
-          localThumbs.set(ed.id, tile.thumb)     // render on the board immediately
+          localThumbs.set(ed.id, tile.thumb)
           map[String(mask)] = tile.tid
         }
         continue
@@ -2194,14 +1955,10 @@ async function materializePendingBuilds() {
         layers: [{name: 'Layer 1', x: 0, y: 0, pixels: composed.map}],
         map_numbers: composed.map,
         is_public: false,
-        // Generated terrain tile — flagged so it's kept out of public feeds
-        // (belongs only to the terrain / tileset / tilemap). is_tile is read-only
-        // server-side, so regenerating (PUT) leaves it set.
         is_tile: true,
       }
       const existing = pages[String(mask)]
       if (existing && ts.registry[String(existing)]) {
-        // Regenerate in place — worlds already painted with it update too.
         await useNativeFetch(`/coloring/shared-pages/${existing}/`, {method: 'PUT', body})
       } else {
         const res = await useNativeFetch<any>('/coloring/shared-pages/', {method: 'POST', body: {...body, id_string: ''}})
@@ -2213,13 +1970,11 @@ async function materializePendingBuilds() {
     ;(g as any).builder = {...pend.recipe, pages}
     pendingBuilds.delete(gid)
   }
-  imgCache.clear()          // regenerated art must re-render on the board
+  imgCache.clear()
   buildProgress.value = ''
   scheduleDraw()
 }
 
-// Tilesetter-style instant build: dropping a tile on the fully-connected
-// (center) slot of an EMPTY terrain builds the whole set from it, no modal.
 function centerMask(g: TileGroup) {
   return g.type === 'blob47' ? 255 : 15
 }
@@ -2228,7 +1983,6 @@ async function quickBuild(g: TileGroup, baseId: number, silent = false) {
   if (building.value) return
   const slug = slugOf(baseId)
   if (!slug) return
-  // Recipe params if the group has one, defaults otherwise.
   seedBuildParams(g.builder)
   buildBaseId.value = baseId
   if (!silent) toast.info?.(`Building borders from ${slug}…`)
@@ -2237,9 +1991,6 @@ async function quickBuild(g: TileGroup, baseId: number, silent = false) {
   await generateBorders(g, silent)
 }
 
-// After the base art is edited in the pixel editor, regenerate every terrain
-// that was built from it. One batched list call (?ids=) checks timestamps;
-// legacy recipes without a stamp are stamped quietly instead of rebuilt.
 async function syncBuilders() {
   const ts = tileset.value
   if (!ts) return
@@ -2270,9 +2021,6 @@ async function syncBuilders() {
   }
 }
 
-// Click a slot: with a tile selected → place it (selection sticks, so you can
-// fill several slots in a row). Without a selection → clear the slot.
-// Placing onto the center slot of an EMPTY terrain auto-builds the whole set.
 function slotClick(g: TileGroup, mask: number) {
   const map = g.map || (g.map = {})
   if (selectedTileId.value != null) {
@@ -2295,25 +2043,21 @@ function slotTile(g: TileGroup, mask: number): string | null {
   return id != null ? (tileset.value?.registry[String(id)] || null) : null
 }
 
-// ── Board canvas: the workspace is drawn, not DOM ───────────────────
-// Layout → draw → hit-test; pointer drag moves tiles between groups, fills
-// terrain slots, and reorders groups.
 const boardEl = ref<HTMLCanvasElement | null>(null)
 
-const HEAD_H = 22          // group header band (screen px, zoom-independent)
-const GAP_N = 14           // native-px gap used by auto-arrange
-const SLOT_GAP_N = 0       // terrain slots sit flush; the per-slot grid line distinguishes them
+const HEAD_H = 22
+const GAP_N = 14
+const SLOT_GAP_N = 0
 
 interface HitRect {
   kind: 'tile' | 'slot' | 'head' | 'body'
   group: string
-  index: number            // tile position / slot mask; 0 for head/body
+  index: number
   x: number; y: number; w: number; h: number
 }
 
 let layoutRects: HitRect[] = []
 
-// Group content size in native (unzoomed) pixels.
 function groupSizeNative(g: TileGroup) {
   const cell = tileset.value?.cell || {w: 32, h: 32}
   if (g.kind === 'terrain') {
@@ -2331,7 +2075,6 @@ function computeLayout() {
   const z = zoom.value
   for (const g of ts.groups) {
     const size = groupSizeNative(g)
-    // Whole-pixel group origins keep pixel art and frames crisp while panning.
     const sx = Math.round(cam.value.x + (g.x ?? 0) * z)
     const sy = Math.round(cam.value.y + (g.y ?? 0) * z)
     const bw = size.w * z
@@ -2365,13 +2108,10 @@ function computeLayout() {
   return rects
 }
 
-// Shelf-pack all groups tightly; array order follows the visual arrangement
-// (top→bottom, left→right) so the exported sheet matches what you see.
 function autoArrange(markDirty = true) {
   const ts = tileset.value
   if (!ts || !ts.groups.length) return
   if (markDirty) commit()
-  // Unpin every tile so groups repack their contents tightly too.
   for (const g of ts.groups) delete g.pos
   const items = ts.groups.map(g => ({g, ...groupSizeNative(g)}))
   items.sort((a, b) => ((a.g.y ?? 0) - (b.g.y ?? 0)) || ((a.g.x ?? 0) - (b.g.x ?? 0)))
@@ -2398,7 +2138,6 @@ function autoArrange(markDirty = true) {
   scheduleDraw()
 }
 
-// Tile images load lazily; each arrival repaints.
 const imgCache = new Map<string, HTMLImageElement | null>()
 function boardImg(slug: string): HTMLImageElement | null {
   if (!imgCache.has(slug)) {
@@ -2440,7 +2179,6 @@ function drawTileImage(ctx: CanvasRenderingContext2D, slug: string | null, x: nu
   ctx.drawImage(img, x + Math.floor((w - dw) / 2), y + Math.floor((h - dh) / 2), dw, dh)
 }
 
-// Drag state (pointer-driven, drawn on the canvas).
 let press: { x: number; y: number; hit: HitRect; pid: number; add: boolean } | null = null
 const boardDrag = ref<{
   kind: 'tile' | 'head'
@@ -2451,12 +2189,10 @@ const boardDrag = ref<{
   py: number
   ox: number
   oy: number
-  // Multi-drag: the other selected tiles ride along at these native offsets.
   others?: { id: number; group: string; odx: number; ody: number }[]
 } | null>(null)
 let dropSpot: HitRect | null = null
 
-// Selection: a tile or a whole group (mutually exclusive).
 const selectedGroupId = ref<string | null>(null)
 
 function selectGroup(gid: string) {
@@ -2473,9 +2209,6 @@ function draw() {
   const host = stageEl.value
   if (!cv || !ts || !host) return
   layoutRects = computeLayout()
-  // The canvas always fills the stage — content position comes from the camera.
-  // Render at the device pixel ratio so lines and pixel art stay crisp on
-  // hi-dpi screens; all drawing below stays in CSS-pixel coordinates.
   const dpr = window.devicePixelRatio || 1
   const W = host.clientWidth
   const H = host.clientHeight
@@ -2491,7 +2224,6 @@ function draw() {
   ctx.imageSmoothingEnabled = false
   ctx.clearRect(0, 0, W, H)
 
-  // Board background (chosen in the Canvas settings — was the CSS stage bg).
   ctx.fillStyle = boardBg.value || '#1b1b1f'
   ctx.fillRect(0, 0, W, H)
 
@@ -2501,9 +2233,6 @@ function draw() {
   const checker = makeChecker(ctx)
   const d = boardDrag.value
 
-  // Base-cell grid across the whole board, aligned to the world origin.
-  // Step spans `boardGridStep` base cells; style/on-off come from Canvas
-  // settings. Hairlines snap to a device pixel and stroke exactly one.
   const gz = zoom.value
   const factor = Math.max(1, boardGridStep.value)
   const stepX = ts.cell.w * factor * gz
@@ -2541,7 +2270,6 @@ function draw() {
     const body = layoutRects.find(r => r.kind === 'body' && r.group === g.id)!
     const active = selectedGroupId.value === g.id || (d?.kind === 'head' && d.group === g.id)
 
-    // Header: NAME  count (a canvas chrome toggle can hide it)
     if (showBoardChrome.value) {
       ctx.font = '700 10px sans-serif'
       ctx.textBaseline = 'middle'
@@ -2562,8 +2290,6 @@ function draw() {
     }
 
     if (g.kind === 'group') {
-      // Sheet checker + frame — the frame just recolors to primary when the
-      // group is active (matches the art editor's selection cue; no outer ring).
       if (checker) {
         ctx.fillStyle = checker
         ctx.fillRect(body.x, body.y, body.w, body.h)
@@ -2583,8 +2309,6 @@ function draw() {
         const img = boardImg(ts.registry[String(id)] || '')
         if (d?.kind === 'tile' && (d.id === id || d.others?.some(o => o.id === id))) ctx.globalAlpha = 0.3
         if (img) {
-          // 1:1 pixels × zoom, centered in the tile's cell block — big art
-          // simply spans more cells.
           const z = zoom.value
           const dw = img.naturalWidth * z
           const dh = img.naturalHeight * z
@@ -2597,7 +2321,6 @@ function draw() {
           ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2)
           ctx.lineWidth = 1
         }
-        // Weight badge on random-variant groups (×2..×9).
         const wgt = g.random ? Number(g.weights?.[String(id)]) || 1 : 1
         if (wgt > 1 && r.w >= 24) {
           ctx.font = '700 9px sans-serif'
@@ -2608,17 +2331,12 @@ function draw() {
         }
       }
     } else {
-      // Terrain: 16 connection slots with N/E/S/W glyphs. Slots sit flush, so
-      // the grid is collected into one path and stroked ONCE after the tiles —
-      // shared neighbour edges then paint as a single crisp line (no doubling).
       const gridPath = new Path2D()
       const gsnap = (v: number) => Math.round(v * dpr) / dpr + 0.5 / dpr
       for (const r of layoutRects) {
         if (r.kind !== 'slot' || r.group !== g.id) continue
         const slug = slotTile(g, r.index)
         const pendCv = !slug ? pendingBuilds.get(g.id)?.canvases.get(r.index) : null
-        // Slots sit flush so the terrain reads as one continuous surface; the
-        // tile fills its whole cell and the grid line is stroked on top.
         if (checker && slug) {
           ctx.fillStyle = checker
           ctx.fillRect(r.x, r.y, r.w, r.h)
@@ -2626,13 +2344,9 @@ function draw() {
         if (slug) {
           drawTileImage(ctx, slug, r.x, r.y, r.w, r.h)
         } else if (pendCv) {
-          // Unsaved Build-borders preview — drawn straight from local pixels.
           ctx.drawImage(pendCv, r.x, r.y, r.w, r.h)
         }
-        // Collect this cell's outline; stroked as one path after the loop.
         gridPath.rect(gsnap(r.x), gsnap(r.y), gsnap(r.x + r.w) - gsnap(r.x), gsnap(r.y + r.h) - gsnap(r.y))
-        // Empty terrain: spotlight the center slot — dropping a base tile
-        // there auto-builds the entire set (Tilesetter-style).
         if (!Object.keys(g.map || {}).length && !pendingBuilds.has(g.id) && r.index === centerMask(g)) {
           ctx.strokeStyle = primary
           ctx.lineWidth = 2
@@ -2646,8 +2360,6 @@ function draw() {
           ctx.textAlign = 'left'
           ctx.globalAlpha = 1
         }
-        // Connection glyph (corner when filled, centered when empty).
-        // Skipped on the spotlighted BASE slot so the label stays readable.
         if (pendCv) continue
         if (!Object.keys(g.map || {}).length && !pendingBuilds.has(g.id) && r.index === centerMask(g)) continue
         const sides = slotSides(r.index)
@@ -2673,15 +2385,12 @@ function draw() {
           dot(-1, -1, sides.nw)
         }
       }
-      // Grid over all cells in one stroke — coincident interior edges paint once.
       ctx.strokeStyle = (selectedTileId.value != null || d?.kind === 'tile') ? primary : border
       ctx.globalAlpha = (selectedTileId.value != null || d?.kind === 'tile') ? 0.6 : 1
       ctx.lineWidth = 1 / dpr
       ctx.stroke(gridPath)
       ctx.globalAlpha = 1
       ctx.lineWidth = 1
-      // Active terrain → recolor a body frame primary (no outer ring), matching
-      // the plain-group selection cue.
       if (active) {
         ctx.strokeStyle = primary
         ctx.lineWidth = 1
@@ -2690,14 +2399,12 @@ function draw() {
     }
   }
 
-  // Drop indicator — terrain slots only (tiles place freely).
   if (d?.kind === 'tile' && dropSpot?.kind === 'slot') {
     ctx.strokeStyle = primary
     ctx.lineWidth = 2
     ctx.strokeRect(dropSpot.x + 1, dropSpot.y + 1, dropSpot.w - 2, dropSpot.h - 2)
     ctx.lineWidth = 1
   }
-  // Drag ghost (+ multi-drag companions at their offsets)
   if (d?.kind === 'tile') {
     const gz2 = zoom.value
     ctx.globalAlpha = 0.8
@@ -2727,22 +2434,17 @@ watch(
     {immediate: true},
 )
 
-// Persist the view (zoom / camera / board display) locally on any change so a
-// reload (F5) restores it. Debounced — pans and zooms fire rapidly.
 watch(
     () => `${zoom.value}|${cam.value.x},${cam.value.y}|${boardBg.value}|${boardGrid.value}|${boardGridStep.value}|${boardGridStyle.value}`,
     () => saveViewSoon(),
 )
 
-// ── Board pointer interactions ──────────────────────────────────────
 function boardPoint(e: PointerEvent) {
   const cv = boardEl.value!
   const rect = cv.getBoundingClientRect()
   return {x: e.clientX - rect.left, y: e.clientY - rect.top}
 }
 
-// Topmost interactive rect wins: tiles/slots first, then head/body of the
-// group drawn last (groups may overlap on a free canvas).
 function hitAt(x: number, y: number): HitRect | null {
   let fallback: HitRect | null = null
   for (let i = layoutRects.length - 1; i >= 0; i--) {
@@ -2762,7 +2464,7 @@ function boardDown(e: PointerEvent) {
   if (e.button !== 0) return
   const {x, y} = boardPoint(e)
   const hit = hitAt(x, y)
-  if (!hit) return           // empty board space → bubbles up to stage pan
+  if (!hit) return
   e.stopPropagation()
   boardEl.value?.setPointerCapture?.(e.pointerId)
   press = {x, y, hit, pid: e.pointerId, add: e.shiftKey || e.metaKey || e.ctrlKey}
@@ -2778,7 +2480,6 @@ function boardMove(e: PointerEvent) {
     if (h.kind === 'tile' && g?.kind === 'group') {
       commit()
       const dragId = g.tiles[h.index]!
-      // Dragging a tile that's part of a multi-selection moves the whole set.
       let others: { id: number; group: string; odx: number; ody: number }[] | undefined
       if (isTileSelected(dragId) && selectedTileIds.value.length > 1) {
         const z = zoom.value
@@ -2795,7 +2496,6 @@ function boardMove(e: PointerEvent) {
       }
       boardDrag.value = {kind: 'tile', group: h.group, index: h.index, id: dragId, px: x, py: y, ox: 0, oy: 0, others}
     } else if (h.kind === 'head' || h.kind === 'body') {
-      // Grab the whole group; offset from its content origin keeps the grip.
       const body = layoutRects.find(r => r.kind === 'body' && r.group === h.group)!
       commit()
       boardDrag.value = {kind: 'head', group: h.group, index: 0, id: 0, px: x, py: y, ox: press.x - body.x, oy: press.y - body.y}
@@ -2806,11 +2506,9 @@ function boardMove(e: PointerEvent) {
     d.px = x
     d.py = y
     if (d.kind === 'tile') {
-      // Tiles place freely; only terrain slots need a drop highlight.
       const hit = hitAt(x, y)
       dropSpot = hit && hit.kind === 'slot' ? hit : null
     } else {
-      // Free move: anywhere, no bounds — coords are camera-relative.
       const g = groupById(d.group)
       if (g) {
         const z = zoom.value
@@ -2833,13 +2531,10 @@ function boardUp(e: PointerEvent) {
   const ts = tileset.value
   const d = boardDrag.value
   if (d && ts) {
-    // Apply the drop
     if (d.kind === 'tile') {
       const from = groupById(d.group)
       const hit = hitAt(d.px, d.py)
       if (hit?.kind === 'slot' && groupById(hit.group)?.kind === 'terrain') {
-        // Onto a terrain slot → assign (copies; the tile stays where it was).
-        // Center slot of an empty terrain → build the entire set from it.
         const to = groupById(hit.group)!
         if (hit.index === centerMask(to) && !Object.keys(to.map || {}).length) {
           quickBuild(to, d.id)
@@ -2848,8 +2543,6 @@ function boardUp(e: PointerEvent) {
           dirty.value = true
         }
       } else if (from?.kind === 'group') {
-        // Free placement: land in whichever plain group is under the cursor,
-        // otherwise stay in the current group; position snaps to the cell grid.
         let to = from
         if (hit) {
           const under = groupById(hit.group)
@@ -2869,7 +2562,6 @@ function boardUp(e: PointerEvent) {
         const nx = Math.round((d.px - (c.cols * cell.w * z) / 2 - gx) / z / cell.w) * cell.w
         const ny = Math.round((d.py - (c.rows * cell.h * z) / 2 - gy) / z / cell.h) * cell.h
         ;(to.pos || (to.pos = {}))[String(d.id)] = {x: nx, y: ny}
-        // Companions of a multi-drag keep their relative offsets.
         for (const o of d.others || []) {
           const src = groupById(o.group)
           if (src?.kind === 'group' && src !== to) {
@@ -2886,8 +2578,6 @@ function boardUp(e: PointerEvent) {
         dirty.value = true
       }
     } else if (d.kind === 'head') {
-      // Group was moved freely — snap its landing spot to the base-cell grid
-      // so tiles inside stay aligned with the board grid.
       const g = groupById(d.group)
       if (g) {
         g.x = Math.round((g.x ?? 0) / ts.cell.w) * ts.cell.w
@@ -2896,7 +2586,6 @@ function boardUp(e: PointerEvent) {
       dirty.value = true
     }
   } else if (press && ts) {
-    // A press that never travelled → click
     const h = press.hit
     const g = groupById(h.group)
     if ((h.kind === 'head' || h.kind === 'body') && g) {
@@ -2918,21 +2607,17 @@ function boardUp(e: PointerEvent) {
   scheduleDraw()
 }
 
-// ── Manage tiles modal: search/collection as source, batch add + remove ──
 const showAdd = ref(false)
 const searchQuery = ref('')
 const searchResults = ref<SharedPage[]>([])
 const searching = ref(false)
 const collectionSel = ref('')
-// id -> id_string of tiles picked to add; id -> true marked for removal.
-// Both are committed together on "Apply".
 const picked = ref<Record<number, string>>({})
 const toRemove = ref<Record<number, boolean>>({})
 
 const pickedCount = computed(() => Object.keys(picked.value).length)
 const removeCount = computed(() => Object.keys(toRemove.value).length)
 
-// The "In tileset" section already shows owned tiles — keep results to new art.
 const freshResults = computed(() => searchResults.value.filter(a => !inTileset(Number(a.id))))
 
 const applyLabel = computed(() => {
@@ -2975,8 +2660,6 @@ async function fetchCollections() {
   } catch { collections.value = [] }
 }
 
-// A collection is just another source: load its items into the grid so the
-// user still hand-picks which ones become tiles.
 async function loadCollection(id: string) {
   if (!id) {
     runSearch()
@@ -3040,13 +2723,9 @@ function applyChanges() {
   showAdd.value = false
 }
 
-// ── Import PNG files as tiles ──────────────────────────────────────────────
-// Each selected image becomes ONE tile art (type "tile": meta.tile = true, so
-// it's hidden from general art listings and belongs only to this tileset).
-// Signed in → a cloud SharedPage per file; guest → the local library.
 const pngInput = ref<HTMLInputElement | null>(null)
 const importingPng = ref(false)
-const PNG_TILE_MAX = 256   // safety cap per side (matches the cell-size max)
+const PNG_TILE_MAX = 256
 
 function openPngImport() {
   pngInput.value?.click()
@@ -3056,7 +2735,6 @@ function rgbHex(r: number, g: number, b: number): string {
   return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase()
 }
 
-// Decode one image file → an EditorData tile (+ a PNG thumbnail dataURL).
 async function pngToTile(file: File): Promise<{ ed: EditorData; thumb: string } | null> {
   const url = URL.createObjectURL(file)
   try {
@@ -3069,7 +2747,6 @@ async function pngToTile(file: File): Promise<{ ed: EditorData; thumb: string } 
     const sw = img.naturalWidth || img.width
     const sh = img.naturalHeight || img.height
     if (!sw || !sh) return null
-    // Cap oversized images (keeps pixel maps + localStorage sane), nearest-neighbour.
     const scale = Math.min(1, PNG_TILE_MAX / Math.max(sw, sh))
     const w = Math.max(1, Math.round(sw * scale))
     const h = Math.max(1, Math.round(sh * scale))
@@ -3086,14 +2763,14 @@ async function pngToTile(file: File): Promise<{ ed: EditorData; thumb: string } 
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const i = (y * w + x) * 4
-        if (data[i + 3]! < 16) continue   // near-transparent → empty
+        if (data[i + 3]! < 16) continue
         const hex = rgbHex(data[i]!, data[i + 1]!, data[i + 2]!)
         let idx = cidx.get(hex)
         if (idx === undefined) { idx = colors.length; colors.push(hex); cidx.set(hex, idx) }
         pixels[`${x}_${y}`] = idx
       }
     }
-    if (!colors.length) return null   // fully transparent → skip
+    if (!colors.length) return null
     const name = (file.name.replace(/\.[^.]+$/, '') || 'Tile').slice(0, 60)
     const ed: EditorData = {
       ...cloneDeep(DEFAULT_EDITOR_DATA),
@@ -3109,7 +2786,6 @@ async function pngToTile(file: File): Promise<{ ed: EditorData; thumb: string } 
   }
 }
 
-// Guest tilesets materialise lazily — make sure one exists before adding tiles.
 function ensureLocalTilesetId(): string | null {
   if (!tileset.value) return null
   if (tileset.value.localId) return tileset.value.localId
@@ -3123,7 +2799,7 @@ function ensureLocalTilesetId(): string | null {
 async function onPngFiles(e: Event) {
   const input = e.target as HTMLInputElement
   const files = Array.from(input.files || [])
-  input.value = ''   // let the same files be re-selected later
+  input.value = ''
   if (!files.length || !tileset.value || importingPng.value) return
   const home = tileset.value.groups.find(g => g.kind === 'group')
   if (!home) { toast.error('No tile group to add to'); return }
@@ -3150,7 +2826,7 @@ async function onPngFiles(e: Event) {
           })
           tileset.value.registry[String(res.id)] = res.id_string
           home.tiles.push(res.id)
-          localThumbs.set(res.id_string, thumb)   // instant preview until the server renders
+          localThumbs.set(res.id_string, thumb)
           added++
         } catch { skipped++ }
       } else {
@@ -3184,8 +2860,6 @@ onMounted(async () => {
   fetchCollections()
   runSearch()
   const q = String(route.query.id || '')
-  // The editor always opens: ?new → a fresh blank; an explicit ?id; else the
-  // user's most recent tileset; else (guest) the newest local one or a blank.
   if (route.query.new != null) openBlank()
   else if (q) loadTileset(q)
   else if (myTilesets.value.length) loadTileset(myTilesets.value[0].id_string)
@@ -3194,7 +2868,6 @@ onMounted(async () => {
 })
 watch(() => auth.isLogged, async (v) => {
   if (!v) return
-  // On sign-in, upload the guest's local tilesets, then open the newest cloud one.
   await localTs.syncToCloud()
   await fetchMyTilesets()
   fetchCollections()
@@ -3215,9 +2888,9 @@ const faq = [
 <template>
   <div class="page tsx-page">
     <div class="editor">
-    <!-- Toolbar — the art editor's .editor-toolbar chrome -->
+
     <div v-if="tileset" class="editor-toolbar">
-      <!-- Kept outside the File dropdown so it stays mounted after the menu closes. -->
+
       <input ref="pngInput" type="file" accept="image/png,image/*" multiple hidden @change="onPngFiles">
       <div class="toolbar-start">
         <ui-dropdown-menu>
@@ -3301,7 +2974,7 @@ const faq = [
             </button>
           </ui-tooltip>
         </div>
-        <!-- Contextual tools for the selected group -->
+
         <template v-if="activeGroup">
           <div class="toolbar-sep"/>
           <div class="toolbar-group">
@@ -3379,10 +3052,8 @@ const faq = [
       </div>
     </div>
 
-    <!-- Workspace — always open: ?id, the user's latest tileset, or a draft.
-         .editor-body row: dock (editor-sidebar, ordered left) + desk. -->
     <div v-if="tileset" class="editor-body tsx-shell">
-      <!-- Desk: the sheet document -->
+
       <section class="tsx-main">
 
         <div class="tsx-deskwrap">
@@ -3418,7 +3089,6 @@ const faq = [
             </ClientOnly>
           </div>
 
-          <!-- Selection bar — floats over the desk, never disturbs layout -->
           <Transition name="tsx-pop">
             <div v-if="selectedTile" class="tsx-selbar">
               <img :src="tileSrc(selectedTile.id_string)" alt="" class="tsx-selbar-thumb">
@@ -3449,7 +3119,6 @@ const faq = [
 
       </section>
 
-      <!-- Dock: group settings -->
       <aside class="tm-panel tsx-dock editor-sidebar">
         <section class="tm-group">
           <span class="tm-label">
@@ -3484,7 +3153,6 @@ const faq = [
     </div>
     </div>
 
-    <!-- SEO: related tools, README, FAQ (indexable on the bare URL) -->
     <Widget title="More tools" class="tool-more">
       <ToolPaths exclude="tileset"/>
     </Widget>
@@ -3520,7 +3188,6 @@ const faq = [
       <QnA :items="faq"/>
     </ToolReadme>
 
-    <!-- Settings modal -->
     <UiModal v-if="showCanvasModal" class="canvas-modal" @close="showCanvasModal = false">
       <h3 class="publish-heading">Canvas</h3>
       <p class="publish-sub">Background &amp; grid of the board your tiles sit on.</p>
@@ -3646,7 +3313,6 @@ const faq = [
           </div>
       </UiModal>
 
-    <!-- Terrain relations modal -->
     <UiModal v-if="showRelations && activeGroup?.kind === 'terrain'" @close="showRelations = false">
           <h3 class="publish-heading">{{ activeGroup.name }} — relations</h3>
           <div class="publish-form">
@@ -3692,12 +3358,11 @@ const faq = [
           </div>
       </UiModal>
 
-    <!-- Build borders modal -->
     <UiModal v-if="showBuild && activeGroup?.kind === 'terrain'" class="tsx-build-modal" @close="showBuild = false">
           <h3 class="publish-heading">Build borders — {{ activeGroup.name }}</h3>
           <div class="tsx-build-cols">
             <div class="tsx-build-left">
-              <!-- Style decides which sources apply -->
+
               <div class="tsx-build-sec">
                 <span>Style</span>
                 <button type="button" class="tsx-build-morelink" @click="toggleBuildAdvanced">{{ buildAdvanced ? 'Less' : 'More' }}</button>
@@ -3726,7 +3391,6 @@ const faq = [
                 </template>
               </div>
 
-              <!-- Sources: click a card, then assign art from the library -->
               <div class="tsx-build-sec">Sources</div>
               <div class="tsx-build-slotgrid">
                 <ui-tooltip v-for="s in buildSlotDefs" :key="s.key" :text="s.title" position="bottom">
@@ -3809,7 +3473,6 @@ const faq = [
                 </ui-tooltip>
               </div>
 
-              <!-- One library for every source: tileset tiles, or public search -->
               <div class="tsx-build-sec">Art library <em>→ {{ buildTargetLabel }}</em></div>
               <div class="tm-search">
                 <span class="icon icon-search"/>
@@ -3864,7 +3527,6 @@ const faq = [
           </div>
       </UiModal>
 
-    <!-- Add tiles modal -->
     <UiModal v-if="showAdd && tileset" class="tsx-add-modal" @close="showAdd = false">
           <h3 class="publish-heading">Manage tiles</h3>
           <div class="tsx-add-src">
@@ -3930,7 +3592,6 @@ const faq = [
           </div>
       </UiModal>
 
-    <!-- Load tileset: browse the account's tilesets (or the local library) -->
     <EditorLoadBrowser
         v-if="showLoad"
         title="Load tileset"
@@ -3948,8 +3609,7 @@ const faq = [
 </template>
 
 <style scoped>
-/* Control scale: the toolbar is the art editor's .editor-toolbar chrome
- * (36px .toolbar-btn); --ctl-sm sizes the dock's micro controls. */
+
 .tsx-page {
   --ctl: 34px;
   --ctl-sm: 26px;
@@ -3959,18 +3619,10 @@ const faq = [
 .tsx-page .publish-toolbar-btn:disabled { opacity: 0.55; cursor: default; }
 .tsx-page .toolbar-end { gap: var(--space-1); }
 
-/* ===== Shell: desk + dock (dock matches the editor's widget column:
- * 24% capped at 190px) ===== */
-/* Shell reuses the art editor's .editor-body row (gap --space-3);
- * the dock reuses .editor-sidebar (24% capped at 190px) but sits LEFT —
- * order flips it without moving the DOM, so mobile keeps desk-first. */
 @media (min-width: 768px) {
-  /* align-items:start is a ROW concern (top-align desk + dock). On mobile the
-   * shell is a column; keep the default stretch so the desk and dock fill the
-   * width — otherwise both collapse to their content width and the desk (a
-   * square) shrinks to the tiny "No tiles yet" placeholder. */
+
   .tsx-shell { align-items: start; }
-  /* Stretch the dock to the row height so its right divider runs full-height. */
+
   .tsx-shell .tsx-dock { order: -1; flex-shrink: 0; align-self: stretch; }
 }
 
@@ -3982,17 +3634,14 @@ const faq = [
   min-width: 0;
 }
 
-/* Positioning context so the floating zoom pill doesn't scroll with the desk. */
 .tsx-deskwrap { position: relative; }
 
-/* The desk rides on .tm-stage (square); the camera pans inside it, so no
- * scrolling or padding — the canvas covers the whole surface. */
 .tsx-desk {
   padding: 0;
   overflow: hidden;
   touch-action: none;
   cursor: grab;
-  background-image: none;   /* the canvas draws its own base-cell grid */
+  background-image: none;   
 }
 
 .tsx-desk.panning { cursor: grabbing; }
@@ -4008,8 +3657,6 @@ const faq = [
   text-align: center;
 }
 
-/* The board: everything (groups, tiles, slots) is drawn on one canvas that
- * fills the stage; the camera makes it effectively infinite. */
 .tsx-boardwrap {
   position: absolute;
   inset: 0;
@@ -4029,7 +3676,6 @@ const faq = [
   font-variant-numeric: tabular-nums;
 }
 
-/* Selection bar — floats at the bottom of the desk. */
 .tsx-selbar {
   position: absolute;
   bottom: var(--space-3);
@@ -4091,7 +3737,6 @@ const faq = [
 .tsx-pop-enter-active, .tsx-pop-leave-active { transition: opacity 140ms ease, transform 140ms ease; }
 .tsx-pop-enter-from, .tsx-pop-leave-to { opacity: 0; transform: translateY(6px); }
 
-/* ===== Dock: one flat column, hairline-separated sections ===== */
 .tsx-dock {
   display: flex;
   flex-direction: column;
@@ -4114,8 +3759,6 @@ const faq = [
 
 .tsx-mini-btn:hover { color: var(--foreground); }
 .tsx-mini-btn .icon { width: 12px; height: 12px; }
-
-/* Add tiles modal */
 
 .tsx-add-src {
   display: flex;
@@ -4158,7 +3801,6 @@ const faq = [
 
 .tsx-add-all:hover { text-decoration: underline; }
 
-/* Fixed-height body: the modal never resizes while searching/filtering. */
 .tsx-add-body {
   display: flex;
   flex-direction: column;
@@ -4194,7 +3836,6 @@ const faq = [
   box-shadow: 0 0 0 1px var(--primary);
 }
 
-/* Already in the tileset: click marks it for removal. */
 .tsx-result.added {
   border-color: color-mix(in oklab, var(--primary) 40%, var(--border));
 }
@@ -4225,7 +3866,6 @@ const faq = [
   border-radius: var(--radius-sm);
 }
 
-/* Dock: group settings rows */
 .tsx-label-actions {
   display: flex;
   gap: var(--space-1);
@@ -4256,8 +3896,6 @@ const faq = [
 .tsx-page .file-menu-item,
 .tsx-page .file-menu-item span { white-space: nowrap; }
 
-/* Build borders modal */
-
 .tsx-build-cols {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -4283,7 +3921,6 @@ const faq = [
   align-content: start;
 }
 
-/* ui-tooltip wrappers stay layout-transparent in page containers. */
 .tsx-selbar .tooltip-wrapper,
 .tsx-label-actions .tooltip-wrapper,
 .tsx-build-pager .tooltip-wrapper,
@@ -4298,7 +3935,6 @@ const faq = [
 
 .tsx-build-slotgrid .tooltip-wrapper > .tsx-build-slot { flex: 1; width: 100%; }
 
-/* Section labels give both columns one consistent rhythm. */
 .tsx-build-sec {
   font-size: 10px;
   font-weight: 800;
@@ -4317,7 +3953,6 @@ const faq = [
   letter-spacing: 0;
 }
 
-/* Section header with a trailing "More/Less" toggle (Style). */
 .tsx-build-sec:has(.tsx-build-morelink) {
   display: flex;
   align-items: center;
@@ -4338,13 +3973,10 @@ const faq = [
 
 .tsx-build-morelink:hover { text-decoration: underline; }
 
-/* Style: a proper full-width segmented control, not two floating chips. */
 .tsx-build-modal .tsx-build-style { display: flex; width: 100%; }
 
 .tsx-build-modal .tsx-build-style button { flex: 1; min-width: 0; }
 
-/* Sources: uniform vertical cards on a fixed 5-column grid — every card the
- * same size, main row and override row align column-for-column. */
 .tsx-build-slotgrid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -4386,7 +4018,6 @@ const faq = [
   border-radius: 2px;
 }
 
-/* Unassigned slot: quiet dashed placeholder instead of a fake texture. */
 .tsx-build-slot-thumb.empty {
   background: none;
   border: 1px dashed var(--border, #ccc);
@@ -4406,7 +4037,6 @@ const faq = [
   font-variant-numeric: tabular-nums;
 }
 
-/* Why Generate is disabled — one quiet line above the actions. */
 .tsx-build-hint {
   margin: 0;
   font-size: 11px;
@@ -4424,8 +4054,6 @@ const faq = [
   font-variant-numeric: tabular-nums;
 }
 
-/* Roomier controls inside the Build modal — the compact dock sizes are too
- * small for a working dialog. */
 .tsx-build-modal .tsx-chips button {
   height: var(--ctl, 34px);
   min-width: 48px;
@@ -4513,7 +4141,6 @@ const faq = [
   font-variant-numeric: tabular-nums;
 }
 
-/* Relations modal rows — modal is Teleported, so no page-scoped vars here. */
 .tsx-rel-row {
   display: flex;
   align-items: center;
@@ -4536,7 +4163,6 @@ const faq = [
   line-height: 1.5;
 }
 
-/* 16/47 terrain-type toggle in the toolbar. */
 .tsx-tb-type {
   font-size: var(--text-2xs);
   font-weight: 800;
@@ -4562,7 +4188,6 @@ const faq = [
   outline: none;
 }
 
-/* Tile size */
 .tsx-chips {
   display: flex;
   flex-wrap: wrap;
@@ -4615,8 +4240,7 @@ const faq = [
 </style>
 
 <style>
-/* Modal variant sizing — unscoped: these classes land on UiModal's
-   inner div (rendered by the shared component, outside this scope). */
+
 .tsx-add-modal {
   max-width: 520px;
   width: calc(100vw - 2rem);

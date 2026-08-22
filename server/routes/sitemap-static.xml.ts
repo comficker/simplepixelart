@@ -1,8 +1,5 @@
 const domain = "simplepixelart.com"
 
-// Home, content listings and info/legal pages. Interactive tools live in
-// sitemap-tool.xml; tag / palette / collection / art detail URLs in their own
-// segments.
 const staticPages = [
     {loc: '/', changefreq: 'daily', priority: '1.0'},
     {loc: '/easy-pixel-art', changefreq: 'monthly', priority: '0.9'},

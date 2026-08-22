@@ -1,8 +1,5 @@
 const domain = "simplepixelart.com"
 
-// Interactive tool / function pages (the editor, converters, generators).
-// Kept in their own segment so these high-value landing pages aren't buried
-// among legal/info pages in sitemap-static.
 const toolPages = [
     {loc: '/editor', changefreq: 'weekly', priority: '0.9'},
     {loc: '/convert', changefreq: 'weekly', priority: '0.9'},

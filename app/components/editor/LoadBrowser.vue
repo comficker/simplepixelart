@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import {ref, computed} from 'vue'
 
-// One shared "load" browser for the pixel, tileset and tilemap editors so the
-// three pickers look and behave identically — /work-style cards + a control bar
-// with search, an optional status filter, and ordering.
 export interface LoadItem {
   id: string
   name: string
   previewImgs: string[]
-  status?: string     // enables the status filter chip on the card
-  updated?: string    // drives "Recent" ordering
+  status?: string
+  updated?: string
 }
 
 const props = defineProps<{
@@ -17,10 +14,10 @@ const props = defineProps<{
   items: LoadItem[]
   loading?: boolean
   emptyText?: string
-  newLabel?: string        // shows a "+ <newLabel>" action in the bar
-  filterable?: boolean     // shows the All / Public / Private filter
-  folder?: boolean         // folder-style cards (tilesets / worlds)
-  emptyIcon?: string       // per-type empty-preview icon
+  newLabel?: string
+  filterable?: boolean
+  folder?: boolean
+  emptyIcon?: string
 }>()
 
 const emit = defineEmits<{ select: [id: string]; create: []; close: [] }>()
@@ -171,8 +168,6 @@ const shown = computed(() => {
   color: var(--muted);
 }
 
-/* Fixed height so the modal doesn't jump between few and many results — the
-   grid area stays constant and scrolls internally. */
 .lb-body {
   height: 56vh;
   overflow-y: auto;

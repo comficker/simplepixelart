@@ -43,7 +43,6 @@ defineProps<{ title?: string }>()
   align-items: center;
 }
 
-/* Flush eyebrow label (same language as the editor panels) — no chip bg. */
 .widget-head .title {
   padding: 0;
   color: var(--muted);

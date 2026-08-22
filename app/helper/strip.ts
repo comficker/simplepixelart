@@ -1,13 +1,6 @@
-// Sprite-strip import: slice a spritesheet PNG (frames laid out on a grid)
-// into per-frame RGB grids for the editor's animation model.
 
-// One frame: rows of pixels; null = transparent.
 export type FrameGrid = (number[] | null)[][]
 
-// Guess the frame layout of a sheet.
-// 1. GameMaker naming convention: "..._strip<N>.png" → N frames in a row.
-// 2. Even multiple of a square: 96×24 → 4 frames of 24×24 (and the vertical twin).
-// 3. Give up → single frame (user adjusts cols/rows in the dialog).
 export function detectStripLayout(width: number, height: number, filename = ''): { cols: number; rows: number } {
     const m = /_strip(\d+)/i.exec(filename)
     if (m) {
@@ -25,9 +18,6 @@ export function detectStripLayout(width: number, height: number, filename = ''):
     return {cols: 1, rows: 1}
 }
 
-// Cut the image into cols×rows frames, reading pixels 1:1 (sprite strips are
-// true pixel art — no resampling). Alpha < 128 → transparent. Trailing frames
-// that are fully empty (unused sheet cells) are dropped.
 export function sliceStrip(img: HTMLImageElement, cols: number, rows: number): FrameGrid[] {
     const fw = Math.floor(img.naturalWidth / cols)
     const fh = Math.floor(img.naturalHeight / rows)

@@ -14,8 +14,6 @@
 </template>
 
 <script setup lang="ts">
-// The one list of studio tools — home and every tool page render from here.
-// Colors ride with the tool (not nth-child) so excluding one never reshuffles.
 const TOOLS = [
   {key: 'draw', to: '/editor?new=true', icon: 'icon-pen', title: 'Draw', c1: '#7c8cff', c2: '#4f46e5'},
   {key: 'ai', to: '/generate', icon: 'icon-auto-fix', title: 'AI', c1: '#a78bfa', c2: '#6d28d9'},
@@ -45,11 +43,10 @@ const shown = computed(() => {
 }
 
 @media (min-width: 900px) {
-  /* One row: as many columns as tools shown (7 on home, 6 inside a tool). */
+
   .studio-paths { grid-template-columns: repeat(var(--tp-cols, 7), minmax(0, 1fr)); }
 }
 
-/* App-icon tile card: colored rounded glyph tile above a small label. */
 .studio-path {
   display: flex;
   flex-direction: column;
@@ -80,7 +77,7 @@ const shown = computed(() => {
   flex-shrink: 0;
   font-size: 24px;
   color: #fff;
-  /* App-icon sheen: accent gradient (--ic) with a soft top highlight. */
+
   background:
     linear-gradient(160deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 55%),
     linear-gradient(160deg, var(--ic-1), var(--ic-2));

@@ -37,7 +37,7 @@ watch(count, () => {
 })
 
 onBeforeUnmount(() => {
-  clearTimeout(t)   // pending re-detect must not fire after unmount
+  clearTimeout(t)
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
 })
 

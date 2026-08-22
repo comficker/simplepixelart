@@ -90,7 +90,6 @@ function close() {
   reset()
 }
 
-// Fresh state each time the dialog opens.
 watch(open, (v) => { if (v) reset() })
 </script>
 
@@ -99,14 +98,12 @@ watch(open, (v) => { if (v) reset() })
         <h3 class="publish-heading">Import sprite strip</h3>
         <p class="si-sub">Slice a spritesheet PNG into animation frames.</p>
 
-        <!-- Pick state -->
         <button v-if="!dataUrl" type="button" class="si-drop" @click="pickFile">
           <span class="icon icon-upload"/>
           <span>Choose an image…</span>
           <span class="si-drop-hint">e.g. duck_strip4.png — frames laid out on a grid</span>
         </button>
 
-        <!-- Preview + layout -->
         <template v-else>
           <div class="si-preview" title="Click to choose another image" @click="pickFile">
             <div class="si-frame">
@@ -215,7 +212,6 @@ watch(open, (v) => { if (v) reset() })
   image-rendering: pixelated;
 }
 
-/* Frame boundaries — sized in % so it tracks the scaled image exactly. */
 .si-grid {
   position: absolute;
   inset: 0;
@@ -277,8 +273,7 @@ watch(open, (v) => { if (v) reset() })
 </style>
 
 <style>
-/* Modal variant sizing — unscoped: these classes land on UiModal's
-   inner div (rendered by the shared component, outside this scope). */
+
 .si-modal {
   max-width: 440px;
 }

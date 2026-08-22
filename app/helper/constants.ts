@@ -1,8 +1,6 @@
 import {cloneDeep, generateUUID} from "~/helper/utils";
 import type {EditorData} from "~/types";
 
-// Theme tags a creator can pick when saving a palette (the subjective "vibe"
-// labels — distinct from auto color-derived ones like Warm/Pastel/Neon).
 export const PALETTE_THEMES = [
     'Vintage', 'Retro', 'Summer', 'Fall', 'Winter', 'Spring', 'Happy', 'Nature',
     'Earth', 'Night', 'Space', 'Sunset', 'Sky', 'Sea', 'Kids', 'Skin', 'Food',

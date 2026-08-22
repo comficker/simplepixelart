@@ -1,24 +1,10 @@
 import {rgbToHex} from "~/helper/color";
 
-// Client-side palette extraction from an arbitrary image — the "image → palette"
-// tool. It mirrors the pixel-art importer's pipeline: first resample the image
-// down to a small grid with the browser's high-quality (averaging) scaler, then
-// median-cut that grid into representative colors.
-//
-// The downsample step is the important part: averaging each block collapses
-// anti-aliasing fringes and gradient noise, so the palette reflects the image's
-// *structural* colors rather than every stray pixel of a full-resolution photo.
-
 type RGB = [number, number, number];
 
-/**
- * Resample an image to a small grid using the browser's high-quality scaler
- * (the same "import image" step the converter/editor use). Never upscales.
- * Returns the opaque pixels as [r,g,b] tuples (transparent pixels skipped).
- */
 function imageToGrid(img: HTMLImageElement, maxSide: number): RGB[] {
     const longest = Math.max(img.width, img.height) || 1;
-    const side = Math.min(maxSide, longest); // never upscale a small image
+    const side = Math.min(maxSide, longest);
     const ratio = (img.width / img.height) || 1;
     let w = side, h = side;
     if (ratio >= 1) h = Math.max(1, Math.round(side / ratio));
@@ -36,24 +22,18 @@ function imageToGrid(img: HTMLImageElement, maxSide: number): RGB[] {
     const {data} = ctx.getImageData(0, 0, w, h);
     const out: RGB[] = [];
     for (let i = 0; i < data.length; i += 4) {
-        if (data[i + 3]! < 128) continue; // skip (near-)transparent pixels
+        if (data[i + 3]! < 128) continue;
         out.push([data[i]!, data[i + 1]!, data[i + 2]!]);
     }
     return out;
 }
 
-/**
- * Greedy median cut: recursively split the box holding the most pixels along
- * its longest channel at the median, then average each final box. Returns up to
- * `count` de-duped #RRGGBB colors.
- */
 export function medianCut(pixels: RGB[], count: number): string[] {
     const target = Math.max(1, Math.min(64, count | 0));
     if (!pixels.length) return [];
 
     let boxes: RGB[][] = [pixels];
     while (boxes.length < target) {
-        // Split the most-populated box (greedy — good quality for any count).
         let idx = -1, max = -1;
         for (let i = 0; i < boxes.length; i++) {
             if (boxes[i]!.length > max && boxes[i]!.length > 1) {
@@ -92,10 +72,6 @@ export function medianCut(pixels: RGB[], count: number): string[] {
     return out;
 }
 
-/**
- * Extract up to `count` representative colors from an image File. Downsamples
- * the image (importer-style) before quantizing so the palette is clean. Browser-only.
- */
 export function extractPaletteFromFile(file: File, count: number): Promise<string[]> {
     return new Promise((resolve, reject) => {
         const url = URL.createObjectURL(file);

@@ -44,7 +44,6 @@ onMounted(() => {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const saved = JSON.parse(raw)
-      // Re-apply prior choice so Consent Mode reflects it on every page load.
       applyConsent(saved.choice === 'accepted')
       return
     }
@@ -79,10 +78,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  /* Above page content but BELOW modal overlays (.share-overlay z-50,
-     .cmdk-overlay z-100) so it can't cover a dialog's bottom edge. The
-     fullscreen-editor override (z-9999) lives in main.css with the other
-     html.editor-fullscreen rules. */
+
   z-index: 45;
   padding: var(--space-4);
   display: flex;

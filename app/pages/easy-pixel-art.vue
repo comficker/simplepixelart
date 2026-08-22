@@ -1,13 +1,4 @@
 <script setup lang="ts">
-// Queries containing "easy" are 46% of all impressions (11,294) but the homepage
-// converts them at 0.42-1.16% while ranking 4.5-7.4 — nothing in its snippet
-// matched the word. This page owns that intent so the homepage doesn't have to
-// carry seven of them at once.
-//
-// It is a hub + how-to, deliberately NOT another gallery: /arts already lists
-// everything, and a second thin listing is the doorway-page pattern. Every size
-// linked below was checked to have public art — an empty size page noindexes
-// itself, so linking one wastes the strongest internal link source on the site.
 const EASY_SIZES = [
   {slug: '8x8', label: '8×8', note: 'icons, hearts, tiny sprites'},
   {slug: '10x10', label: '10×10', note: 'simple faces and fruit'},

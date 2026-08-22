@@ -12,7 +12,6 @@ const {limit, showFilter, status, hideIp, ordering, hidePaginator} = defineProps
     type: Boolean,
     default: false
   },
-  // Hide the prev/next pager (e.g. homepage feed, where paging makes no sense).
   hidePaginator: {
     type: Boolean,
     default: false
@@ -21,14 +20,10 @@ const {limit, showFilter, status, hideIp, ordering, hidePaginator} = defineProps
     type: String,
     default: 'public'
   },
-  // When true, items whose name looks like protected IP are dropped client-side
-  // (used on the homepage featured spots reviewed by AdSense).
   hideIp: {
     type: Boolean,
     default: false
   },
-  // Explicit ordering override (e.g. '-updated' for a "What's new" feed).
-  // Falls back to the route-derived ordering when empty.
   ordering: {
     type: String,
     default: ''
@@ -40,8 +35,6 @@ const router = useRouter()
 
 const search = ref('')
 
-// Params + payload key + fetch live in useArtListFetch (shared with the pages
-// that prewarm this exact fetch in parallel with their own SSR lookups).
 const {
   fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive,
 } = useArtListFetch({limit, status, ordering, hideIp, search})
@@ -66,7 +59,6 @@ const {data, pending} = await listFetch
 const visibleResults = computed(() => {
   const items = data.value?.results || []
   if (!hideIp) return items
-  // Drop protected-IP names, then cap to `limit` (we over-fetched a buffer).
   return items.filter(it => !looksLikeProtectedIP(it.name)).slice(0, limit)
 })
 
@@ -75,8 +67,6 @@ const isEmpty = computed(() => !pending.value && data.value && visibleResults.va
 
 const pagination = computed(() => {
   const page = route.query.page ? Number.parseInt(route.query.page.toString()) : 1
-  // Keep the active filters (width/height/is_iso/q…) in the pager links —
-  // only the page param changes.
   const buildLink = (p: number) => {
     const q = new URLSearchParams()
     for (const [k, v] of Object.entries(route.query)) {

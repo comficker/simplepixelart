@@ -52,7 +52,7 @@ export interface SharedPage {
     created?: string
     db_status: number
     is_template: boolean
-    is_tile?: boolean       // tileset artifact (import PNG / terrain / slice), not standalone art
+    is_tile?: boolean
     name: string
     id_string: string
     desc: any
@@ -86,7 +86,6 @@ export interface ResponseSharedPage {
     results: SharedPage[]
 }
 
-// A Lospec-style library palette. `colors` is an ordered list of #RRGGBB.
 export interface Palette {
     id: number
     id_string: string
@@ -131,8 +130,6 @@ export interface User {
     }
 }
 
-
-
 export interface Options {
     color: number,
     pointer: string,
@@ -163,7 +160,6 @@ export interface Collection {
     featured: any[][]
 }
 
-
 export interface Layer {
     name: string;
     pixels: {
@@ -175,35 +171,31 @@ export interface Layer {
 
 export interface EditorBg {
     type: 'none' | 'solid' | 'art';
-    color?: string;        // hex when type === 'solid'
-    artId?: string;        // shared-page id_string when type === 'art'
-    artUrl?: string;       // resolved image URL (cached)
+    color?: string;
+    artId?: string;
+    artUrl?: string;
 }
 
-// One frame of an animation. Holds its own layer stack; canvas size + palette
-// are shared at EditorData level. `duration` overrides the global fps in ms.
 export interface AnimationFrame {
     id: string;
     layers: Layer[];
     duration?: number;
 }
 
-// Named frame range (Aseprite-style tag): "walk" = frames 2..5, played in the
-// given direction. Exported as meta.frameTags in the game JSON.
 export interface AnimationTag {
     id: string;
     name: string;
-    from: number;                                   // inclusive frame index
-    to: number;                                     // inclusive frame index
+    from: number;
+    to: number;
     direction: 'forward' | 'reverse' | 'pingpong';
-    color: string;                                  // tag chip color (hex)
+    color: string;
 }
 
 export interface EditorAnimation {
     fps: number;
     loop: boolean;
     frames: AnimationFrame[];
-    shared?: Layer[];          // static background stack drawn beneath every frame
+    shared?: Layer[];
     tags?: AnimationTag[];
 }
 
@@ -213,9 +205,6 @@ export interface EditorMeta {
         cell: { width: number; height: number };
     };
     bg?: EditorBg;
-    // Present only for animated artworks (frames.length > 1 logically). Rides in
-    // SharedPage.meta — no backend schema change. frames[0].layers is the same
-    // reference as EditorData.layers for the active frame; see editor.store.
     animation?: EditorAnimation;
 }
 
@@ -231,8 +220,6 @@ export interface EditorData {
     colors: string[];
     layers: Layer[];
     template?: number | null;
-    // Linked library palette id — set when the user picks/applies one; sent as
-    // `palette` on save so the art↔palette link persists. null = unlinked.
     palette?: number | null;
     updated: string;
     is_public: boolean;

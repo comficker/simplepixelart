@@ -1,13 +1,3 @@
-// Tileset sheet layout — where every tile sits in the packed PNG.
-//
-// The editor's board arrangement IS the exported sheet, so this is the single
-// source of truth for both: the page renders it to a canvas, and the offline
-// pack script (scripts/build-pack.ts) renders the same numbers with sharp.
-// Keep it DOM-free — it only needs each tile's natural pixel size.
-//
-// Groups stack top→bottom in order; a plain group shelf-packs its tiles into
-// rows that wrap at the shared sheet width, a terrain group lays its auto-tile
-// slots out in a square grid (4×4 for wang16, 7×7 for blob47).
 
 import {BLOB_SLOTS, TERRAIN_SLOTS, type TerrainType} from '~/helper/autotile'
 
@@ -16,7 +6,6 @@ export interface SheetCell {
   h: number
 }
 
-// Structural subset of the editor's TileGroup — everything layout depends on.
 export interface SheetGroup {
   id: string
   name: string
@@ -56,15 +45,13 @@ export interface SheetTerrain {
 }
 
 export interface Sheet {
-  blocks: SheetBlock[]      // what to draw, in paint order
-  tiles: SheetTile[]        // plain-group tiles, for the sidecars
-  terrains: SheetTerrain[]  // terrain slots, for the sidecars
+  blocks: SheetBlock[]
+  tiles: SheetTile[]
+  terrains: SheetTerrain[]
   w: number
   h: number
 }
 
-// How the caller resolves a tile id to art: its slug and that art's native size
-// (null while an image is still loading — layout then assumes one cell).
 export interface SheetSource {
   cell: SheetCell
   slugOf(id: number): string | null
@@ -79,13 +66,11 @@ export function terrainGridNOf(type?: TerrainType) {
   return type === 'blob47' ? 7 : 4
 }
 
-// One shared column count so every group packs to the same sheet width.
 export function sheetColumns(groups: SheetGroup[]) {
   const biggest = Math.max(1, ...groups.filter(g => g.kind === 'group').map(g => g.tiles.length))
   return Math.max(4, Math.ceil(Math.sqrt(biggest)))
 }
 
-// How many base cells an art occupies (its natural size snapped up to the grid).
 export function tileCells(id: number, src: SheetSource) {
   const {cell} = src
   const nat = src.sizeOf(src.slugOf(id))
@@ -98,8 +83,6 @@ export function tileCells(id: number, src: SheetSource) {
   }
 }
 
-// Tile rects inside a plain group (native units). Pinned tiles (g.pos) sit at
-// their free, cell-snapped position; the rest shelf-pack into wrapping rows.
 export function layoutGroup(g: SheetGroup, cols: number, src: SheetSource) {
   const {cell} = src
   const maxW = cols * cell.w
@@ -125,8 +108,6 @@ export function layoutGroup(g: SheetGroup, cols: number, src: SheetSource) {
     x += tw
     rowH = Math.max(rowH, th)
   }
-  // Bounding box — pinned tiles may sit anywhere, including left/above origin.
-  // An empty group still reserves a small box so its header stays grabbable.
   let minX = 0
   let minY = 0
   let maxX = cell.w * 3
@@ -140,7 +121,6 @@ export function layoutGroup(g: SheetGroup, cols: number, src: SheetSource) {
   return {rects, minX, minY, w: maxX - minX, h: maxY - minY}
 }
 
-/** Lay the chosen groups out as stacked blocks — the packed sheet. */
 export function buildSheet(groups: SheetGroup[], src: SheetSource): Sheet {
   const {w, h} = src.cell
   const cols = sheetColumns(groups)

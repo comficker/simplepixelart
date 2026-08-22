@@ -3,7 +3,6 @@ import {APIResponse, SharedPage} from "~/types";
 
 const domain = "simplepixelart.com"
 
-
 export default defineEventHandler(async (event) => {
     let out = '<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="/sitemap-template.xsl"?>'
     // has_pages=1 → only tags that actually have public artworks. Empty tag pages

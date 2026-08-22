@@ -21,17 +21,12 @@ import {
     reconstructCells as reconstructCellsFn,
 } from './reconstruct'
 
-// Only what a consumer actually imports; the engines' full APIs stay
-// reachable via ./legacy and ./reconstruct.
 export {
     aiImageToGrid, bestPhase, detectPixelScale, imageToCells, modeDownscale, shiftCrop,
 } from './reconstruct'
 
 export type Cell = [number, number, number] | null
 
-// A sampled import marks its ground with a representative colour (or white
-// when none was detected) — this is the single definition of "that cell is
-// really transparent" shared by every import flow.
 export function shouldIgnoreColor(hex: string, ignoreColor: number[] | null): boolean {
     if (ignoreColor) {
         const [r, g, b] = ignoreColor
@@ -41,8 +36,6 @@ export function shouldIgnoreColor(hex: string, ignoreColor: number[] | null): bo
     return hex === '#ffffff' || isSameColor('ffffff', hex.replace('#', ''))
 }
 
-/** One image → a null-transparent RGB grid via the legacy sampled engine
- *  (grid detection + ground normalization). Null on unusable input. */
 export async function importFileGrid(dataUrl: string): Promise<Cell[][] | null> {
     const {rgbSamplesGrid, colorThatRepresentsTransparent} = await dataUrlToSamplesGrid(dataUrl)
     if (!rgbSamplesGrid?.length) return null
@@ -53,16 +46,11 @@ export async function importFileGrid(dataUrl: string): Promise<Cell[][] | null> 
     }))
 }
 
-/** One image → cells 1:1 (no resampling); null when over the size guard. */
 export async function importOriginalGrid(dataUrl: string): Promise<Cell[][] | null> {
     const {grid, tooLarge} = await dataUrlToOriginalGrid(dataUrl)
     return (tooLarge || !grid.length) ? null : grid as Cell[][]
 }
 
-/** Replace pixels with no same-colour 4-neighbour by their majority
- *  neighbour — kills lone speckles without touching real 1px detail lines
- *  (those always have at least one same-colour neighbour). Returns the
- *  cleaned grid and how many cells changed. */
 export function cleanOrphanCells(indexed: number[][]): { grid: number[][]; changed: number } {
     const h = indexed.length
     const w = indexed[0]?.length ?? 0
@@ -94,12 +82,8 @@ export function cleanOrphanCells(indexed: number[][]): { grid: number[][]; chang
     return {grid, changed}
 }
 
-// ── /convert preset ───────────────────────────────────────────────────
 type RGBc = [number, number, number]
 
-/** The subject's box in source coords, when the image sits on a uniform
- *  ground/margin (screenshot padding, solid backdrop). Null for photos —
- *  measured on a ≤256px probe, so it's cheap for any input. */
 function contentBox(img: HTMLImageElement): { x: number; y: number; w: number; h: number } | null {
     const PROBE = 256
     const f = Math.min(1, PROBE / Math.max(img.naturalWidth, img.naturalHeight))
@@ -113,7 +97,6 @@ function contentBox(img: HTMLImageElement): { x: number; y: number; w: number; h
     ctx.drawImage(img, 0, 0, pw, ph)
     const {data: D} = ctx.getImageData(0, 0, pw, ph)
     const at = (x: number, y: number) => (y * pw + x) * 4
-    // Border mode colour — the ground candidate.
     const hist = new Map<string, { n: number; c: RGBc }>()
     let border = 0
     const tally = (x: number, y: number) => {
@@ -143,34 +126,27 @@ function contentBox(img: HTMLImageElement): { x: number; y: number; w: number; h
             if (y > y1) y1 = y
         }
     }
-    if (x1 < 0) return null                              // blank image
-    // Map back to source coords — tight box, no fudge (an extra pixel of
-    // margin shifts the whole cell phase of an aligned export).
+    if (x1 < 0) return null
     const inv = 1 / f
     const sx = Math.max(0, Math.floor(x0 * inv))
     const sy = Math.max(0, Math.floor(y0 * inv))
     const sw = Math.min(img.naturalWidth, Math.ceil((x1 + 1) * inv)) - sx
     const sh = Math.min(img.naturalHeight, Math.ceil((y1 + 1) * inv)) - sy
-    // A crop that barely cuts anything is noise — skip it.
     if (sw >= img.naturalWidth * 0.98 && sh >= img.naturalHeight * 0.98) return null
     return {x: sx, y: sy, w: sw, h: sh}
 }
 
-/** /convert: photo/screenshot → indexed grid. Crops a uniform margin first
- *  (a padded screenshot resampled blind put every cell off-grid), bakes the
- *  optional brightness/contrast/saturation into an integer-multiple working
- *  bitmap, then runs the two-stage label-vote reconstruction. */
 export async function convertImageToGrid(
     img: HTMLImageElement,
     opts: {
-        size: number | 'auto'    // 'auto': native grid when detected, else pitch/48
+        size: number | 'auto'
         maxColors: number
         brightness?: number
         contrast?: number
         saturation?: number
-        dataUrl?: string         // enables the native fast-path below
-        cutBackground?: boolean  // uniform ground → transparent (index -1)
-        dither?: boolean         // ordered Bayer on the photo path
+        dataUrl?: string
+        cutBackground?: boolean
+        dither?: boolean
     },
 ): Promise<{ palette: RGBc[]; indexed: number[][]; width: number; height: number; native?: boolean } | null> {
     // Pixel-art input? Read its OWN grid instead of resampling blind — an
@@ -183,9 +159,6 @@ export async function convertImageToGrid(
             const nat = await imageToCells(opts.dataUrl)
             if (nat && nat.scale > 1 && nat.cells.length) {
                 const nh = nat.cells.length, nw = nat.cells[0]!.length
-                // The native grid IS the artwork — Auto keeps it exactly.
-                // An explicit different size is honoured by cell→cell nearest
-                // mapping (lossy by definition, but the user asked).
                 const w = opts.size === 'auto' ? nw : opts.size
                 const h = opts.size === 'auto' ? nh : Math.max(1, Math.round(w * nh / nw))
                 const cells = (w === nw && h === nh) ? nat.cells
@@ -207,9 +180,6 @@ export async function convertImageToGrid(
     const ratio = sw / sh
     let w: number
     if (opts.size === 'auto') {
-        // No clean grid found — still try to read a pitch off the (cropped)
-        // subject so Auto lands near the art's real resolution; 48 is the
-        // fallback for true photos.
         let pitch: number | null = null
         try {
             const P = 1024
@@ -264,19 +234,12 @@ export async function convertImageToGrid(
             d[i + 2] = Math.max(0, Math.min(255, Math.round(b)))
         }
     }
-    // Photo path: optional ground peel to real transparency, then the
-    // two-stage label-vote reconstruction, then quantize (with optional
-    // ordered dithering — checkerboarded in-between tones fake the gradients
-    // a small palette can't hold).
     if (opts.cutBackground) peelGround(src)
     const cells = reconstructCellsFn(src, w, h)
     const q = quantizeGrid(cells, opts)
     return {...q, width: w, height: h}
 }
 
-// Cut the ground of a CELL grid: flood from the border cells whose colour
-// matches the border's dominant colour. Cell-space twin of peelGround — works
-// when the subject touches the edge (a full-border uniformity test can't).
 function cellFloodGround(cells: ([number, number, number] | null)[][]): ([number, number, number] | null)[][] {
     const h = cells.length, w = cells[0]?.length ?? 0
     if (!w) return cells
@@ -293,7 +256,7 @@ function cellFloodGround(cells: ([number, number, number] | null)[][]): ([number
         hist.set(k, e)
     }
     const top = [...hist.values()].sort((a, b) => b.n - a.n)[0]
-    if (!top) return cells                        // border already transparent
+    if (!top) return cells
     const TOL = 3 * 28 * 28
     const bg = top.c
     const out = cells.map(r => [...r])
@@ -316,7 +279,6 @@ function cellFloodGround(cells: ([number, number, number] | null)[][]): ([number
     return out
 }
 
-// Bayer 4×4 threshold matrix, zero-centred.
 const BAYER4 = [
     [0, 8, 2, 10],
     [12, 4, 14, 6],
@@ -324,9 +286,6 @@ const BAYER4 = [
     [15, 7, 13, 5],
 ].map(row => row.map(v => (v / 16 - 0.5)))
 
-/** Quantize an RGB|null cell grid per the preset options: median cut or a
- *  caller-fixed palette, optional Bayer dithering, nulls → -1 (transparent)
- *  when the background is being cut, white otherwise. */
 function quantizeGrid(
     cells: ([number, number, number] | null)[][],
     opts: {maxColors: number; cutBackground?: boolean; dither?: boolean},
@@ -338,8 +297,6 @@ function quantizeGrid(
         if (!opts.dither) return q as { palette: RGBc[]; indexed: number[][] }
         palette = q.palette as RGBc[]
     } else {
-        // Transparent background: derive the palette from the SUBJECT only —
-        // feeding the nulls in as white handed the ground a palette slot.
         const solid: [number, number, number][] = []
         for (const row of cells) for (const c of row) if (c) solid.push(c)
         palette = quantizeCells([solid.length ? solid : [[255, 255, 255]]], opts.maxColors).palette as RGBc[]
@@ -353,7 +310,7 @@ function quantizeGrid(
         }
         return bi
     }
-    const AMP = 40                       // dither spread, ≈ one palette step
+    const AMP = 40
     const indexed = cells.map((row, y) => row.map((c, x) => {
         if (!c) return keepNull ? -1 : nearest([255, 255, 255])
         if (!opts.dither) return nearest(c)

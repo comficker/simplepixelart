@@ -3,9 +3,6 @@ import {toast} from "vue-sonner";
 import {PALETTE_THEMES} from "~/helper/constants";
 import type {Palette} from "~/types";
 
-// Shared "result + publish" panel for the color tools (image extract + scheme
-// generator). The parent owns color generation; this component lets the user
-// fine-tune the swatches, then copy / open-in-editor / publish them.
 const props = withDefaults(defineProps<{
   source: string
   namePlaceholder?: string

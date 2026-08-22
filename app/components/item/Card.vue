@@ -47,7 +47,6 @@ const imgError = ref(false)
 const src = computed(() => {
   return `${config.public.api}/coloring/files/art-original/${value.id_string}.png`
 })
-// Reset the error state if the artwork (and thus its image URL) changes.
 watch(src, () => { imgError.value = false })
 const to = computed(() => {
   return (isDraw || isRemix) ? `/editor?id=${value.id_string || value.id}` : `/art/${value.id_string}`
@@ -65,8 +64,7 @@ const isAnim = computed(() => (((value.meta as any)?.animation?.frames?.length) 
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
   transition: --fold-size 220ms cubic-bezier(.22,.61,.36,1);
-  /* Truly cut the top-right corner: the page behind shows through, no color faking.
-   * 10px along the 225° axis = the diagonal of the 14px flap below. */
+
   --fold-size: 14px;
   -webkit-mask: linear-gradient(225deg, transparent calc(var(--fold-size) * 0.7071 - 0.25px), #000 calc(var(--fold-size) * 0.7071 + 0.25px));
   mask: linear-gradient(225deg, transparent calc(var(--fold-size) * 0.7071 - 0.25px), #000 calc(var(--fold-size) * 0.7071 + 0.25px));
@@ -78,13 +76,11 @@ const isAnim = computed(() => (((value.meta as any)?.animation?.frames?.length) 
   }
 }
 
-/* Clip contents on the inner box so the folded corner can sit over the border. */
 .card .square {
   border-radius: calc(var(--radius-sm) - 1px);
   overflow: hidden;
 }
 
-/* Folded "file" flap over the cut corner; its diagonal edge sits flush at the mask cut. */
 .card::after {
   content: "";
   position: absolute;
@@ -104,8 +100,6 @@ const isAnim = computed(() => (((value.meta as any)?.animation?.frames?.length) 
   z-index: 1;
 }
 
-
-
 .card .size-full {
   transition: transform 320ms cubic-bezier(.22,.61,.36,1);
 }
@@ -121,7 +115,6 @@ const isAnim = computed(() => (((value.meta as any)?.animation?.frames?.length) 
   justify-content: center;
 }
 
-/* Shown when the art has no rendered image yet (empty draft / 404). */
 .card-empty {
   display: flex;
   align-items: center;
@@ -140,7 +133,6 @@ const isAnim = computed(() => (((value.meta as any)?.animation?.frames?.length) 
   object-fit: contain;
 }
 
-/* Top-left: the folded file corner owns the top-right. */
 .card-anim-badge {
   position: absolute;
   top: 5px;

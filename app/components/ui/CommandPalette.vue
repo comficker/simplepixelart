@@ -8,12 +8,11 @@ type Cmd = {
   icon?: string
   group: 'Navigate' | 'Create' | 'Account' | 'Theme' | 'Help' | 'System'
   keywords?: string
-  swatch?: { ring: string; ink: string }   // Theme commands render as a colour circle
-  active?: boolean                          // currently-applied theme
+  swatch?: { ring: string; ink: string }
+  active?: boolean
   run: () => void | Promise<void>
 }
 
-// Group display order — Help / System sit at the very bottom.
 const GROUP_ORDER = ['Theme', 'Navigate', 'Create', 'Account', 'Help', 'System']
 
 const router = useRouter()
@@ -21,8 +20,6 @@ const { current, setTheme, themes } = useTheme() as any
 const auth = useAuthStore()
 const config = useRuntimeConfig()
 const requestURL = useRequestURL()
-// Sign-in URL — a guest near the storage ceiling can back local work up to the
-// cloud (which also frees local space).
 const googleAuthUrl = computed(() => {
   const apiBase = (config.public.api as string) || ''
   return `${apiBase}/auth/google?state=${encodeURIComponent(`${requestURL.origin}/auth/callback`)}`
@@ -34,10 +31,7 @@ const selected = ref(0)
 const inputEl = ref<HTMLInputElement | null>(null)
 const listEl = ref<HTMLElement | null>(null)
 
-// Local-storage usage readout — lets users see how full the browser store is
-// (the editor keeps boards/undo/art there; once it fills, saves silently
-// degrade — the "Reset app data" command below is the escape hatch).
-const STORAGE_LIMIT = 5 * 1024 * 1024   // conservative ~5 MB localStorage budget
+const STORAGE_LIMIT = 5 * 1024 * 1024
 const storage = ref<{ usedMB: string; pct: number; boards: number; arts: number } | null>(null)
 function computeStorage() {
   if (typeof localStorage === 'undefined') { storage.value = null; return }
@@ -47,7 +41,7 @@ function computeStorage() {
     if (k == null) continue
     chars += k.length + (localStorage.getItem(k)?.length || 0)
   }
-  const bytes = chars * 2   // localStorage holds UTF-16 code units
+  const bytes = chars * 2
   let boards = 0, arts = 0
   try {
     const wf = JSON.parse(localStorage.getItem('workspace_full') || 'null')
@@ -91,8 +85,6 @@ const baseCommands = computed<Cmd[]>(() => [
   { id: 'system:reset', label: 'Reset app data', hint: 'Clear cache & storage', icon: 'icon-broom', group: 'System', keywords: 'reset clear cache storage wipe localstorage indexeddb hard refresh fix stuck broken', run: resetAppData },
 ])
 
-// Account — what shows depends on the session. Guests get the bare trio
-// (sign in / settings / your work); signed-in users manage their presence.
 const accountCommands = computed<Cmd[]>(() => {
   const cmds: Cmd[] = []
   if (!auth.isLogged) {
@@ -144,7 +136,6 @@ const themeCommands = computed<Cmd[]>(() =>
       icon: 'icon-adjust',
       group: 'Theme' as const,
       keywords: `theme color ${t.id} ${t.name}`,
-      // ring = background colour, ink = text colour (inner dot)
       swatch: { ring: t.colors[0], ink: t.colors[2] },
       active: current.value === t.id,
       run: () => setTheme(t.id),
@@ -158,7 +149,6 @@ function score(cmd: Cmd, q: string): number {
   const haystack = `${cmd.label} ${cmd.keywords ?? ''} ${cmd.group}`.toLowerCase()
   const needle = q.toLowerCase().trim()
   if (haystack.includes(needle)) return 100 - haystack.indexOf(needle)
-  // sub-sequence match
   let i = 0
   for (const ch of haystack) {
     if (ch === needle[i]) i++
@@ -176,10 +166,6 @@ const filtered = computed(() => {
       .map(x => x.cmd)
 })
 
-// Group matches into blocks. Browsing (empty query) keeps the stable
-// GROUP_ORDER; while searching, groups are ordered by their best-scoring item
-// so an exact match (e.g. "terms" → Terms of Service in Help) lands on top and
-// Enter activates it — GROUP_ORDER must not beat relevance.
 const groupedBlocks = computed(() => {
   const map = new Map<string, Cmd[]>()
   filtered.value.forEach(cmd => {
@@ -199,28 +185,21 @@ const groupedBlocks = computed(() => {
   let index = 0
   for (const group of order) {
     const list = map.get(group)!
-    // Browsing lists each group A→Z so an entry's place is predictable;
-    // while searching, the relevance order above must survive untouched.
     if (!q) list.sort((a, b) => a.label.localeCompare(b.label))
     blocks.push({ group, items: list.map(cmd => ({ cmd, index: index++ })) })
   }
   return blocks
 })
 
-// Flat list in the SAME visual order — drives selection, keyboard nav, activate().
 const flatItems = computed(() => groupedBlocks.value.flatMap(b => b.items.map(i => i.cmd)))
 
 watch(query, () => { selected.value = 0 })
-
-// resetAppData lives in composables/useAppReset (shared with /settings).
 
 function openPalette() {
   open.value = true
   query.value = ''
   selected.value = 0
   computeStorage()
-  // Desktop only: on touch devices auto-focus pops the on-screen keyboard,
-  // which covers the command list. Users tap the input to search instead.
   if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
     nextTick(() => inputEl.value?.focus())
   }
@@ -298,7 +277,6 @@ onBeforeUnmount(() => {
               <div v-for="block in groupedBlocks" :key="block.group" class="cmdk-block">
                 <div class="cmdk-group">{{ block.group }}</div>
 
-                <!-- Theme: a single row of colour circles -->
                 <div v-if="block.group === 'Theme'" class="cmdk-theme-row">
                   <button
                       v-for="it in block.items"
@@ -316,7 +294,6 @@ onBeforeUnmount(() => {
                   />
                 </div>
 
-                <!-- Everything else: standard rows -->
                 <button
                     v-for="it in block.items"
                     v-else
@@ -495,7 +472,6 @@ onBeforeUnmount(() => {
   letter-spacing: 0.02em;
 }
 
-/* Theme picker: one row of colour circles (background ring + text-colour core) */
 .cmdk-theme-row {
   display: flex;
   flex-wrap: wrap;
@@ -525,13 +501,11 @@ onBeforeUnmount(() => {
   background: var(--sw-ink);
 }
 
-/* currently-applied theme */
 .cmdk-theme-swatch.current {
   border-color: var(--primary);
   border-width: 2px;
 }
 
-/* keyboard / hover selection */
 .cmdk-theme-swatch.active {
   box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary);
 }
@@ -551,7 +525,6 @@ onBeforeUnmount(() => {
   opacity: 0.6;
 }
 
-/* Storage-usage readout — a slim strip above the footer. */
 .cmdk-stat {
   display: flex;
   align-items: center;
@@ -639,7 +612,6 @@ onBeforeUnmount(() => {
   color: var(--primary);
 }
 
-/* Transitions */
 .cmdk-enter-active,
 .cmdk-leave-active {
   transition: opacity 180ms ease;
