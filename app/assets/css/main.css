@@ -1,7 +1,4 @@
-/* ==========================================================================
- * Preflight — minimal reset that replaces Tailwind's preflight.
- * Kept tight: no Tailwind, no PostCSS. Pure CSS.
- * ========================================================================== */
+
 *,
 *::before,
 *::after {
@@ -9,7 +6,6 @@
     border: 0 solid var(--border);
 }
 
-/* Respect user motion preference — kill animations/transitions for a11y. */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -21,7 +17,6 @@
     }
 }
 
-/* Global focus-visible baseline — keyboard users always see where they are. */
 :focus {
     outline: none;
 }
@@ -32,8 +27,6 @@
     border-radius: var(--radius-sm);
 }
 
-/* Form fields already signal focus with their border/caret — browsers apply
-   :focus-visible to them even on mouse click, so the ring is pure noise. */
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
@@ -87,17 +80,11 @@ a {
     text-decoration: none;
 }
 
-/* ==========================================================================
- * Theme tokens
- * Variables drive every component. Switch a theme by setting
- * data-theme="<name>" on <html>; :root is the Game Boy default.
- * ========================================================================== */
 :root {
     --radius: 6px;
     --radius-sm: 4px;
     --radius-pill: 999px;
 
-    /* Semantic status colors (theme-agnostic) */
     --danger: #dc2626;
     --danger-foreground: #ffffff;
     --success: #16a34a;
@@ -105,26 +92,21 @@ a {
     --warning: #d97706;
     --warning-foreground: #ffffff;
 
-    /* Spacing scale — linear 4px step: --space-N = N × 0.25rem. */
-    --space-1: 0.25rem;   /* 4px  */
-    --space-2: 0.5rem;    /* 8px  */
-    --space-3: 0.75rem;   /* 12px */
-    --space-4: 1rem;      /* 16px */
-    --space-5: 1.25rem;   /* 20px */
-    --space-6: 1.5rem;    /* 24px */
-    /* Flat / minimal: no resting or hover elevation. Only true overlays
-     * (modals, command palette, dropdowns) get a soft, single shadow. */
+    --space-1: 0.25rem;   
+    --space-2: 0.5rem;    
+    --space-3: 0.75rem;   
+    --space-4: 1rem;      
+    --space-5: 1.25rem;   
+    --space-6: 1.5rem;    
+
     --shadow: none;
     --shadow-hover: none;
     --shadow-modal: 0 8px 24px -12px rgba(0, 0, 0, 0.22);
     --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* Type families — swap these two vars to change every font in the app.
-     * Display: headings, brand, section titles. Body: everything else. */
     --font-display: "Bricolage Grotesque", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
     --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-    /* Type scale. Body stays at 16px; display sizes nudged up for more presence. */
     --text-2xs: 0.6875rem;
     --text-2xs-lh: 1rem;
     --text-xs: 0.8125rem;
@@ -214,8 +196,7 @@ a {
     --muted: #6b7280;
     --surface: #ffffff;
     --surface-2: #e5e7eb;
-    /* Darker green than base #16a34a so white-on-success and success-on-white
-       both clear WCAG AA (4.5:1) on the light theme. */
+
     --success: #15803d;
 }
 
@@ -247,9 +228,6 @@ a {
     --surface-2: #e0d2b8;
 }
 
-/* ==========================================================================
- * Base typography & globals
- * ========================================================================== */
 html, body {
     background: var(--surface);
     color: var(--foreground);
@@ -330,9 +308,6 @@ h6 {
     letter-spacing: 0.06em;
 }
 
-/* ==========================================================================
- * Form controls
- * ========================================================================== */
 input[type=text],
 input[type=number],
 textarea {
@@ -364,20 +339,12 @@ input[type=number] {
     padding: 0.125rem 0.5rem;
 }
 
-/* ==========================================================================
- * Layout primitives
- * ========================================================================== */
 .container {
     max-width: 748px !important;
     margin: 0 auto;
     width: 100%;
 }
 
-/* Folded-corner size for cards (art/studio/work). Registered as <length> so
- * hover growth transitions smoothly — gradients recompute per frame. */
-/* inherits MUST be true: with false, ::before/::after don't inherit the value
- * from their originating element — the flap would stay at initial 14px while
- * the element's own mask (the cut) animates. */
 @property --fold-size {
     syntax: '<length>';
     inherits: true;
@@ -400,23 +367,18 @@ footer {
     margin-top: var(--space-2);
 }
 
-/* Shared listing-page hero (gallery, palettes): the boxed .home-hero card, but
-   with a title half the size of the home hero's. */
 .page-hero {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-1);
-    padding: 1rem;
     background:
         radial-gradient(120% 120% at 100% 0%, color-mix(in oklab, var(--primary) 10%, transparent), transparent 60%),
         var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
 }
 
 .page-hero h1 {
-    font-size: clamp(0.875rem, 2.5vw, 1.375rem);   /* half of the home hero */
+    font-size: clamp(0.875rem, 2.5vw, 1.375rem);   
     line-height: 1.1;
     font-weight: 800;
     font-variation-settings: "wght" 800;
@@ -474,10 +436,6 @@ footer {
     image-rendering: pixelated;
 }
 
-/* ==========================================================================
- * Utilities — small, hand-picked set used inline in templates.
- * Anything not in this list should be a semantic component class.
- * ========================================================================== */
 .text-2xs { font-size: var(--text-2xs); line-height: var(--text-2xs-lh); }
 .text-xs { font-size: var(--text-xs); line-height: var(--text-xs-lh); }
 .text-sm { font-size: var(--text-sm); line-height: var(--text-sm-lh); }
@@ -520,7 +478,6 @@ footer {
 
 .gap-1 { gap: var(--space-1); }
 
-/* One-line helper note under a tool-page settings row (generate, convert). */
 .tool-note {
     display: block;
     margin: var(--space-2) 0 0;
@@ -599,9 +556,6 @@ footer {
 .space-y-2 > * + * { margin-top: 0.5rem; }
 .space-y-3 > * + * { margin-top: 0.75rem; }
 
-/* Background / colour overrides — kept here so any legacy text-gray-*
- * still resolves to the active theme token.
- */
 .bg-gray-50 { background-color: var(--surface); }
 .bg-gray-100 { background-color: var(--surface-2); }
 .bg-gray-200 { background-color: var(--primary); color: var(--primary-foreground); }
@@ -620,19 +574,14 @@ footer {
     .hover\:text-gray-800:hover { color: var(--primary); }
 }
 
-/* Centring helpers (legacy aliases). */
 .h-center { display: flex; align-items: center; }
 
-/* Responsive helpers (only the inline patterns actually used in templates). */
 @media (min-width: 768px) {
     .md\:text-4xl { font-size: var(--text-4xl); line-height: var(--text-4xl-lh); }
     .md\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .md\:flex-row { flex-direction: row; }
 }
 
-/* ==========================================================================
- * Buttons
- * ========================================================================== */
 .btn {
     display: flex;
     align-items: center;
@@ -697,9 +646,6 @@ footer {
     color: var(--foreground);
 }
 
-/* ==========================================================================
- * Keyboard hint chip — shared by Header, CommandPalette, error page
- * ========================================================================== */
 .kbd {
     display: inline-flex;
     align-items: center;
@@ -722,9 +668,6 @@ footer {
     background: var(--background);
 }
 
-/* ==========================================================================
- * Skeleton + empty state — reusable loading & nothing-here surfaces
- * ========================================================================== */
 .skeleton {
     position: relative;
     overflow: hidden;
@@ -819,9 +762,6 @@ footer {
     .skeleton::after { animation: none; }
 }
 
-/* ==========================================================================
- * Meta grid, tags, sections
- * ========================================================================== */
 .meta {
     display: grid;
     gap: var(--space-3);
@@ -869,9 +809,6 @@ footer {
     }
 }
 
-/* ==========================================================================
- * Results / paginator grids
- * ========================================================================== */
 .results {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -933,9 +870,6 @@ footer {
     font-variant-numeric: tabular-nums;
 }
 
-/* ==========================================================================
- * Dropdown
- * ========================================================================== */
 .dropdown {
     overflow: hidden;
     position: relative;
@@ -1027,11 +961,6 @@ footer {
     bottom: calc(100% + 10px);
 }
 
-/* Pointer caret bridging the trigger and the menu. It lives on the .dropdown
-   (relative, and overflow:unset once active) rather than inside the menu, whose
-   own overflow:hidden would clip it. A rotated square shows only its two outer
-   borders so the menu's border reads as continuing into a point; left:50% aims
-   it at the trigger centre for both default and right-aligned menus. */
 .dropdown::after {
     content: '';
     position: absolute;
@@ -1053,7 +982,6 @@ footer {
     opacity: 1;
 }
 
-/* Opens upward → caret sits on the menu's bottom edge, pointing down. */
 .dropdown.bottom::after {
     top: unset;
     bottom: calc(100% + 10px);
@@ -1064,9 +992,6 @@ footer {
     transform: translate(-50%, 50%) rotate(45deg);
 }
 
-/* ==========================================================================
- * Sonner toast
- * ========================================================================== */
 section[data-sonner-toaster],
 [data-sonner-toaster] {
     z-index: 2147483647 !important;
@@ -1114,9 +1039,6 @@ section[data-sonner-toaster],
 [data-sonner-toast][data-type='warning'] [data-icon] { color: #f59e0b; }
 [data-sonner-toast][data-type='info'] [data-icon] { color: var(--primary); }
 
-/* ==========================================================================
- * Editable text
- * ========================================================================== */
 .input {
     padding: 0.25rem 0;
     border: 1px solid transparent;
@@ -1131,14 +1053,6 @@ section[data-sonner-toaster],
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
 }
 
-/* ==========================================================================
- * Editor — pixel art canvas surface
- * ========================================================================== */
-/* One framed surface. Regions inside sit flush and are separated by 1px
-   dividers (see the "Flat panels" block below) rather than gaps + per-card
-   borders. No overflow:hidden here — the File/Settings/collection dropdowns
-   must escape the frame; the rounded corners work anyway because every inner
-   region is transparent over this same surface. */
 .editor {
     display: flex;
     flex-direction: column;
@@ -1152,9 +1066,6 @@ section[data-sonner-toaster],
     --editor-minimap-size: 80px;
 }
 
-/* Fullscreen editor. The `editor-fullscreen` class lives on <html> (set in
-   setup + a pre-paint head script) so this applies before first paint — no
-   flash arriving at the editor. Covers both OS and in-window modes. */
 html.editor-fullscreen .editor {
     position: fixed;
     inset: 0;
@@ -1172,21 +1083,12 @@ html.editor-fullscreen .editor .editor-body {
     min-height: 0;
 }
 
-/* Fullscreen-conditional toolbar bits. Both the enter (.fs-hide) and exit /
-   back-home (.fs-only) controls are always in the DOM and toggled purely by the
-   <html> class — so server and client render the same markup (no hydration
-   mismatch) while the correct set shows pre-paint (no flash). */
 .editor .fs-only { display: none; }
 html.editor-fullscreen .editor .fs-only { display: block; }
 html.editor-fullscreen .editor .fs-hide { display: none; }
-/* A dropdown's panel is teleported to <body> (see ui/DropdownMenu.vue), so the
-   `.editor`-scoped rule above can't reach it — hide the mirror too. */
+
 html.editor-fullscreen .dd-ghost.fs-hide { display: none; }
 
-/* Fullscreen (desktop AND mobile): the canvas stage fills the reclaimed space
-   (it's a camera-based infinite canvas, so it needn't stay a width-locked
-   square), while the palette keeps its natural height instead of being
-   squished — the editor grows to fit the whole screen. */
 html.editor-fullscreen .editor .canvas-col {
     min-height: 0;
 }
@@ -1226,23 +1128,12 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     }
 }
 
-/* ── Flat panels ──────────────────────────────────────────────────────────
-   Shared by the pixel editor (.editor) and the other canvas tools that opt in
-   with `.flat-editor` (convert, slicer, tilemap). The wrapper is one framed
-   surface; every Widget inside drops its own card chrome and becomes a flush
-   section separated from its neighbours by 1px dividers. Specificity of
-   `:is(.editor,.flat-editor) .widget` = 0-2-0 beats Widget.vue's base
-   (.widget = 0-1-0) regardless of style-injection order. */
 .flat-editor {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
 }
 
-/* "More tools" docks flush beneath the tool frame above it — one shared divider,
-   matching the editor. The frame (when a .tool-more follows it, possibly with a
-   hidden <input> between) squares its bottom corners; the widget squares its top
-   and overlaps the border by 1px so the two edges read as a single line. */
 :is(.editor, .flat-editor, .tool-card):has(~ .tool-more) {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
@@ -1252,7 +1143,6 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     margin-top: -1px;
 }
 
-/* .widget wins its own radius at 0-2-0, so match that to square the top. */
 .tool-more.widget {
     border-top-left-radius: 0;
     border-top-right-radius: 0;
@@ -1262,19 +1152,9 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     border: 0;
     border-radius: 0;
     background: transparent;
-    /* keep the base widget's overflow:hidden — the fixed-size canvas would
-       otherwise bleed 14px into the palette below; the File/Settings menus and
-       collection panel escape via the toolbar / a body Teleport, not here. */
+
 }
 
-/* Widget titles everywhere now use the flush eyebrow style (Widget.vue) —
-   no per-editor override needed. */
-
-/* tilemap & tileset editors: .tm-panel / .tm-stage carry their own card chrome
-   GLOBALLY (border + radius, shared by both pages). Inside a flat editor drop
-   it — the frame + dividers replace it, else the borders double up. The panel
-   keeps a single right divider: on desktop it sits left of the stage/desk;
-   on mobile it stacks above, so the divider flips to the bottom. */
 :is(.editor, .flat-editor) .tm-panel {
     background: transparent;
     border: 0;
@@ -1294,7 +1174,6 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     }
 }
 
-/* Dividers between flush sections (all beat the border:0 above at 0-2-0+). */
 .canvas-col > .widget + .widget {
     border-top: 1px solid var(--border);
 }
@@ -1352,7 +1231,6 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     border-left: 1px solid var(--border);
 }
 
-/* Right-aligned dropdown (corner controls) so the menu doesn't clip off-screen. */
 .dropdown.right .dropdown-menu {
     left: auto;
     right: 0;
@@ -1470,7 +1348,6 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     min-width: 0;
 }
 
-/* Stacked variant (menu headers): title on one line, hint below. */
 .file-menu-label.is-stacked {
     flex-direction: column;
     align-items: flex-start;
@@ -1478,9 +1355,6 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     gap: 2px;
 }
 
-
-/* Non-interactive section header inside a menu — reuses .file-menu-item so its
-   font/padding match the items (a bare label would inherit the big body font). */
 .file-menu-heading {
     cursor: default;
     pointer-events: none;
@@ -1494,9 +1368,6 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     background: var(--border);
 }
 
-/* Fullscreen cluster rides the right edge of the scrollable strip: pushed
-   there by the auto margin, kept visible by sticky while the strip scrolls
-   (the surface bg + soft shadow cover content sliding beneath). */
 .toolbar-fs {
     display: flex;
     align-items: center;
@@ -1544,7 +1415,6 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     outline: none;
 }
 
-/* Inputs in toolbar groups need breathing room around the × separator. */
 .toolbar-group:has(.resize-input) {
     gap: var(--space-2);
     align-items: center;
@@ -1557,7 +1427,6 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     line-height: 1;
 }
 
-/* Sidebar — preview + layers column. */
 .editor-sidebar {
     display: flex;
     flex-direction: column;
@@ -1566,9 +1435,6 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     min-height: 0;
 }
 
-/* On mobile, collapse preview — the canvas IS the preview.
-   Use height:0 + overflow:hidden instead of display:none
-   so the canvas ref stays mounted for miniMapCtx. */
 @media (max-width: 767px) {
     .mini-map {
         height: 0 !important;
@@ -1631,15 +1497,10 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     padding: 0;
 }
 
-/* The canvas Square must not inherit `.square .inside`'s thumbnail padding
-   (space-5) — the fixed-size canvas-container would then sit off-centre. */
 .canvas-col .square .inside {
     padding: 0;
 }
 
-/* Infinite-canvas stage: a fixed viewport that fills the Square. Panning/zoom
-   is done by a camera (no scrolling); the canvas fills the stage and its
-   backing store is sized to stage×DPR in JS. */
 .canvas-container {
     position: relative;
     width: 100%;
@@ -1677,15 +1538,12 @@ canvas.iso-line { cursor: crosshair; }
     margin: auto;
 }
 
-/* Preview widget — no card chrome, floating canvas only */
 .preview-widget {
     border: 0;
     background: transparent;
     overflow: visible;
 }
 
-/* The minimap fills its Square — `.square .inside`'s thumbnail padding is
-   dead space here (same override the canvas Square needs). */
 .preview-widget .square .inside {
     padding: 0;
 }
@@ -1693,10 +1551,6 @@ canvas.iso-line { cursor: crosshair; }
 .iso-rotated { transform: rotate(45deg); }
 .grid-off { opacity: 0.4; }
 
-/* Tool rail — vertical on desktop, horizontal strip on mobile.
-   Flush inside the editor frame; divider below (mobile) / right (desktop).
-   Scoped under .editor so it out-specifies the flat-panel `.editor .widget
-   { border:0 }` rule (tool-rail IS a widget). */
 :is(.editor, .flat-editor) .tool-rail {
     flex: none;
     padding: var(--space-1);
@@ -1719,7 +1573,6 @@ canvas.iso-line { cursor: crosshair; }
     gap: 2px;
 }
 
-/* ui-tooltip wrappers stay layout-transparent in the rail grid. */
 .tools-rail .tooltip-wrapper { min-width: 0; }
 
 .tools-rail .tooltip-wrapper > * { width: 100%; }
@@ -1728,7 +1581,6 @@ canvas.iso-line { cursor: crosshair; }
     background: var(--border);
 }
 
-/* Brush size picker — flat into the rail grid so each preset is its own cell */
 .brush-sizes {
     display: contents;
 }
@@ -1775,7 +1627,6 @@ canvas.iso-line { cursor: crosshair; }
     background: var(--primary);
 }
 
-/* All-frames mode toggle — tiny text badge inside a tool Square. */
 .move-all-label {
     font-size: 9px;
     font-weight: 800;
@@ -1783,7 +1634,6 @@ canvas.iso-line { cursor: crosshair; }
     line-height: 1;
 }
 
-/* "Fit all boards" — text label inside a toolbar button (no icon needed). */
 .fit-label {
     font-size: 10px;
     font-weight: 800;
@@ -1791,8 +1641,6 @@ canvas.iso-line { cursor: crosshair; }
     line-height: 1;
 }
 
-/* Live zoom % — click resets to 100%. Fixed-ish width + tabular digits so the
-   toolbar doesn't wiggle as the number changes. */
 .zoom-readout {
     width: auto;
     min-width: 3.25rem;
@@ -1804,14 +1652,12 @@ canvas.iso-line { cursor: crosshair; }
     color: var(--muted);
 }
 
-/* No room in the 356px mobile toolbar — pinch/FIT cover zooming there. */
 @media (max-width: 767px) {
     .zoom-readout {
         display: none;
     }
 }
 
-/* Desk background swatches in the Canvas menu. */
 .desk-sw {
     width: 14px;
     height: 14px;
@@ -1819,7 +1665,7 @@ canvas.iso-line { cursor: crosshair; }
     flex: none;
     box-shadow: inset 0 0 0 1px var(--border);
 }
-/* ── Canvas settings modal ─────────────────────────────────────────────── */
+
 .canvas-modal {
     max-width: 360px;
     text-align: left;
@@ -1879,7 +1725,7 @@ canvas.iso-line { cursor: crosshair; }
 }
 .cv-opt .desk-sw { width: 12px; height: 12px; }
 .cv-cap { text-transform: capitalize; }
-/* A cv-opt that doubles as a color picker: the native input fills it invisibly. */
+
 .cv-swatch { position: relative; overflow: hidden; }
 .cv-swatch-input {
     position: absolute;
@@ -1946,9 +1792,7 @@ canvas.iso-line { cursor: crosshair; }
         grid-auto-flow: column;
         overflow-x: auto;
         font-size: 1.5rem;
-        /* Scroll hint: edge shadows that appear only when content is clipped on
-         * that side. The surface-colored covers scroll with the content
-         * (attachment: local) and slide over the fixed shadows at either end. */
+
         background-image:
             linear-gradient(to right, var(--surface), var(--surface)),
             linear-gradient(to left, var(--surface), var(--surface)),
@@ -1983,8 +1827,6 @@ canvas.iso-line { cursor: crosshair; }
     flex: none;
 }
 
-/* Tool buttons: single source of inside padding (overrides .square .inside's
- * larger thumbnail padding, which this rule follows in the cascade). */
 .tools .inside {
     display: flex;
     align-items: center;
@@ -2009,7 +1851,6 @@ canvas.iso-line { cursor: crosshair; }
     border-color: var(--primary);
 }
 
-/* Override .tools default grid for the rail variant (must follow .tools rules). */
 .tools.tools-rail {
     grid-template-columns: repeat(11, minmax(36px, 1fr));
     grid-auto-flow: column;
@@ -2022,10 +1863,6 @@ canvas.iso-line { cursor: crosshair; }
     }
 }
 
-/* Layers panel. */
-/* Collection + Layers wrapper. On desktop the inner is absolute-filled so its
-   content can't inflate the sidebar past the canvas column; the two widgets
-   then split this region equally (each = 1/2 the old Layers box) and scroll. */
 .sidebar-stack-inner {
     display: flex;
     flex-direction: column;
@@ -2058,9 +1895,6 @@ canvas.iso-line { cursor: crosshair; }
     overflow-y: auto;
 }
 
-/* Reference-collections strip sits above Layers in the sidebar and shares the
-   leftover height equally with it; its body scrolls. min-height:0 on both keeps
-   the sidebar bounded by the canvas column (never taller than the editor). */
 .cstrip {
     display: flex;
     flex-direction: column;
@@ -2074,15 +1908,12 @@ canvas.iso-line { cursor: crosshair; }
     overflow-y: auto;
 }
 
-/* Widget head control buttons — hanging tabs that mirror the title tag */
 .widget-ctl-group {
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
 }
 
-/* Widget-head controls share the .cstrip-pick-btn ghost language: no chip
-   background, muted → primary on hover/active, color-only transition. */
 .widget-ctl-btn {
     display: inline-flex;
     align-items: center;
@@ -2123,7 +1954,6 @@ canvas.iso-line { cursor: crosshair; }
     outline-offset: 2px;
 }
 
-/* Compact "+" add layer button in the widget head — same ghost style. */
 .layer-add {
     display: inline-flex;
     align-items: center;
@@ -2154,7 +1984,6 @@ canvas.iso-line { cursor: crosshair; }
     outline-offset: 2px;
 }
 
-/* Layer stack */
 .layers ul {
     list-style: none;
     padding: 0;
@@ -2174,7 +2003,7 @@ canvas.iso-line { cursor: crosshair; }
     border-radius: var(--radius-sm);
     cursor: pointer;
     overflow: hidden;
-    /* Shift+click multi-selects layers — don't let it highlight the name. */
+
     user-select: none;
     transition:
         border-color 160ms ease,
@@ -2188,7 +2017,6 @@ canvas.iso-line { cursor: crosshair; }
     }
 }
 
-/* Number chip showing layer position in the stack */
 .layer-num {
     display: inline-flex;
     align-items: center;
@@ -2221,7 +2049,6 @@ canvas.iso-line { cursor: crosshair; }
     width: 100%;
 }
 
-/* Active layer: primary stripe + tinted bg */
 .layers li.active {
     background: color-mix(in oklab, var(--primary) 10%, var(--surface));
     border-color: color-mix(in oklab, var(--primary) 55%, var(--border));
@@ -2247,7 +2074,6 @@ canvas.iso-line { cursor: crosshair; }
     color: var(--foreground);
 }
 
-/* Multi-select (merge) state: check badge in place of the number. */
 .layers li.selected .layer-num.layer-check {
     color: var(--primary-foreground);
     background: var(--primary);
@@ -2264,15 +2090,12 @@ canvas.iso-line { cursor: crosshair; }
     background: color-mix(in oklab, var(--primary) 12%, transparent);
 }
 
-/* Both header buttons stay together on the right (widget-head is
-   space-between — unwrapped they'd spread apart). */
 .layer-ctl {
     display: inline-flex;
     align-items: center;
     gap: 2px;
 }
 
-/* Delete button: icon-only, red hover */
 .layers .layer-del {
     width: 24px;
     height: 24px;
@@ -2314,29 +2137,20 @@ canvas.iso-line { cursor: crosshair; }
     outline-offset: 1px;
 }
 
-/* ==========================================================================
- * Share / publish overlays + modal
- * ========================================================================== */
-/* Any open modal overlay locks body scroll (covers every modal app-wide,
-   present and future, so long as it uses one of these overlay classes). */
 body:has(.share-overlay),
 body:has(.onb-overlay),
 body:has(.cmdk-overlay) {
     overflow: hidden;
 }
 
-/* Fullscreen editor (class lives on <html> so it applies before first paint). */
 html.editor-fullscreen body {
     overflow: hidden;
 }
 
-/* Modals must sit above the fullscreen editor (z 9999), not behind it. */
 html.editor-fullscreen :is(.share-overlay, .onb-overlay, .cmdk-overlay) {
     z-index: 10000;
 }
 
-/* The consent banner (base z-45, below modals) must still show over the
-   fullscreen editor (z-9999); modals at 10000 stay on top of it. */
 html.editor-fullscreen .consent {
     z-index: 9999;
 }
@@ -2552,12 +2366,10 @@ html.editor-fullscreen .consent {
     margin-top: 0.5rem;
 }
 
-/* Get-started modal (UiModal) width + the new-editor tips block. */
 .onb-modal {
     max-width: 420px;
 }
 
-/* Even vertical rhythm between the modal's sections. */
 .onb-body {
     display: flex;
     flex-direction: column;
@@ -2576,7 +2388,7 @@ html.editor-fullscreen .consent {
     border-radius: var(--radius-sm);
     font-size: var(--text-xs);
     line-height: 1.4;
-    /* Darker than --muted so 13px text clears AA on the surface-2 panel. */
+
     color: color-mix(in oklab, var(--muted) 50%, var(--foreground));
 }
 
@@ -2593,7 +2405,6 @@ html.editor-fullscreen .consent {
     color: var(--muted);
 }
 
-/* Publish form. */
 .publish-heading {
     font-size: var(--text-sm);
     line-height: var(--text-sm-lh);
@@ -2648,8 +2459,6 @@ html.editor-fullscreen .consent {
     min-height: 48px;
 }
 
-/* AI auto-fill: a quiet assistant line under the fields, not a headline —
-   text-button chrome, muted until hover. */
 .publish-ai-row {
     display: flex;
     align-items: center;
@@ -2712,7 +2521,6 @@ html.editor-fullscreen .consent {
     }
 }
 
-/* Social buttons grid. */
 .social-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2742,7 +2550,6 @@ html.editor-fullscreen .consent {
     }
 }
 
-/* Publish CTA in toolbar. */
 .publish-toolbar-btn {
     display: flex;
     align-items: center;
@@ -2769,9 +2576,6 @@ html.editor-fullscreen .consent {
     }
 }
 
-/* Pixel-editor trigger: drafts autosave, so the button is about PUBLISHING —
-   a labeled pill, not a save-disk icon. Height matches the square icon
-   buttons beside it. */
 .tm-publish {
     align-self: center;
     height: 2.25rem;
@@ -2781,23 +2585,20 @@ html.editor-fullscreen .consent {
 
 @media (max-width: 479px) {
     .tm-publish-label {
-        display: none;   /* icon-only on tight toolbars */
+        display: none;   
     }
 }
 
-/* Modal helper rows used by PXEditor publish/share flow. */
 .publish-actions {
     display: flex;
     gap: var(--space-3);
     margin-top: 1rem;
 }
 
-/* Button labels never wrap. */
 .publish-actions .btn {
     white-space: nowrap;
 }
 
-/* Status select sits between the form and the action it drives. */
 .publish-status-row {
     margin-top: 1rem;
 }
@@ -2836,15 +2637,10 @@ html.editor-fullscreen .consent {
     justify-content: center;
 }
 
-/* ==========================================================================
- * Q&A details block (reusable across pages)
- * ========================================================================== */
-/* Quiet FAQ list: no card chrome, faint hairline dividers, muted toggle. */
 .qa-item {
     border-bottom: 1px solid var(--border);
 }
 
-/* Dividers separate items — the last row doesn't need a trailing line. */
 .qa-item:last-child {
     border-bottom: 0;
 }
@@ -2885,7 +2681,6 @@ html.editor-fullscreen .consent {
     transition: color var(--transition);
 }
 
-/* Chevron-right that rotates to point down when the item opens */
 .qa-chevron::before {
     content: "";
     position: absolute;
@@ -2953,10 +2748,6 @@ html.editor-fullscreen .consent {
     text-underline-offset: 2px;
 }
 
-/* ==========================================================================
- * Color tool pages (/palettes/color-palette-from-image, .../from-color) — shared shell so the
- * two generators stay visually in sync.
- * ========================================================================== */
 .tool-hero {
     display: flex;
     flex-direction: column;
@@ -2986,7 +2777,6 @@ html.editor-fullscreen .consent {
     line-height: var(--text-sm-lh);
 }
 
-/* Two-pane tool card: input on the left, result on the right, hairline split. */
 .tool-card {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -3044,9 +2834,6 @@ html.editor-fullscreen .consent {
     opacity: 0.6;
 }
 
-/* ==========================================================================
- * Shared page heading (h1 used across policy / about / gallery pages)
- * ========================================================================== */
 .page-title {
     font-size: var(--text-2xl);
     line-height: 1.1;
@@ -3064,7 +2851,6 @@ html.editor-fullscreen .consent {
     }
 }
 
-/* Lists used by policy pages (Terms, Privacy, Guidelines, DMCA, About). */
 .policy-list {
     list-style: none;
     display: flex;
@@ -3072,25 +2858,18 @@ html.editor-fullscreen .consent {
     gap: var(--space-3);
 }
 
-/* Meta line for page subtitles (date stamps, etc.). */
 .page-meta {
     font-size: var(--text-sm);
     line-height: var(--text-sm-lh);
     color: var(--muted);
 }
 
-/* ==========================================================================
- * Editor chrome — shared by the tilemap (/tilemaps/editor) and tileset
- * (/tilesets/editor) tools. One control scale (--tm-ctl), one toolbar, one
- * segmented control, one panel/label/search vocabulary.
- * ========================================================================== */
 .tm-seg {
   display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px;
   height: var(--tm-ctl, 34px); padding: 3px; box-sizing: border-box;
   background: var(--surface-2); border-radius: var(--radius-sm);
 }
-/* ui-tooltip wrappers stay layout-transparent inside chrome containers —
-   the wrapped control sizes exactly as if it were a direct child. */
+
 .tm-seg .tooltip-wrapper { display: flex; min-width: 0; }
 .tm-seg .tooltip-wrapper > button { flex: 1; width: 100%; }
 .tm-zoom .tooltip-wrapper { display: inline-flex; }
@@ -3135,7 +2914,6 @@ html.editor-fullscreen .consent {
   font-size: var(--text-xs); color: var(--foreground);
 }
 
-/* Compact icon-only toolbar buttons. */
 .tm-iconbtn {
   width: var(--tm-ctl, 34px);
   height: var(--tm-ctl, 34px);
@@ -3144,9 +2922,6 @@ html.editor-fullscreen .consent {
 }
 .tm-iconbtn .icon { width: 15px; height: 15px; }
 
-/* Unsaved indicator — a dot on the Save button instead of a label. */
-/* Icon save button: a square icon button (matches .toolbar-btn), not the
-   stretched text pill the .publish-toolbar-btn base assumes. */
 .tm-save {
   position: relative;
   align-self: center;
@@ -3170,7 +2945,6 @@ html.editor-fullscreen .consent {
   border: 2px solid var(--background);
 }
 
-/* Square artboard stage: the document pans/scrolls inside it. */
 .tm-stage {
   position: relative;
   display: flex; align-items: safe center; justify-content: safe center;
@@ -3182,7 +2956,6 @@ html.editor-fullscreen .consent {
   border: 1px solid var(--border); border-radius: var(--radius-sm);
 }
 
-/* Compact select that lives in the controls row (world/tileset switcher). */
 .tm-world-select {
   height: var(--tm-ctl, 34px); max-width: 160px; padding: 0 0.6rem;
   border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -3191,10 +2964,6 @@ html.editor-fullscreen .consent {
 }
 .tm-world-select:focus { border-color: var(--primary); }
 
-/* Public-page link floating on the artboard (top-right), zoom-pill styling —
-   shared by the tilemap and tileset editors. A plain positioning div that
-   WRAPS the ui-tooltip — never put this class on the tooltip wrapper itself
-   (its scoped `position: relative` would win the cascade). */
 .tm-stage-fab {
   position: absolute;
   top: 0.75rem;
@@ -3221,7 +2990,6 @@ html.editor-fullscreen .consent {
 
 .tm-stage-fab-btn .icon { width: 14px; height: 14px; }
 
-/* Floating zoom control (bottom-right of the artboard). */
 .tm-zoom {
   position: absolute; bottom: 0.75rem; right: 0.75rem;
   display: inline-flex; align-items: center; gap: 2px;
@@ -3243,8 +3011,6 @@ html.editor-fullscreen .consent {
 }
 .tm-zoom-val:hover { color: var(--foreground); }
 
-/* Zoom % / fit readout — a .toolbar-btn variant (auto width, tabular digits).
-   Shared by the slicer / tileset editor toolbars (was .ts-zoom-pct/.tsx-zoom-pct). */
 .zoom-pct {
   width: auto;
   min-width: 3.2rem;
@@ -3254,7 +3020,6 @@ html.editor-fullscreen .consent {
   font-variant-numeric: tabular-nums;
 }
 
-/* Shared canvas-tool form rows (was duplicated scoped in slicer + convert). */
 .settings-row {
   display: flex;
   flex-wrap: wrap;
@@ -3284,13 +3049,6 @@ html.editor-fullscreen .consent {
   accent-color: var(--primary);
 }
 
-/* ============================================================
-   Tool "README" doc card — one shared format for every tool page's SEO prose
-   (editor, converter, slicer, palette tools, …). A rendered-markdown look in
-   GitHub's file-view style; theme-safe via tokens. Rendered by the <ToolReadme>
-   component; content lives in .readme-body as plain semantic markup
-   (h1/h2/h3, p, ol/ul, code, a, strong, blockquote.gh-alert, .readme-badges).
-   ============================================================ */
 .readme {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -3298,7 +3056,6 @@ html.editor-fullscreen .consent {
   overflow: hidden;
 }
 
-/* File header: tab row (README active) + right-side action icons. */
 .readme-head {
   display: flex;
   align-items: stretch;
@@ -3315,7 +3072,7 @@ html.editor-fullscreen .consent {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) 0;
-  margin-bottom: -1px;                 /* sit the underline on the header rule */
+  margin-bottom: -1px;                 
   border-bottom: 2px solid transparent;
   font-size: var(--text-xs);
   font-weight: 800;
@@ -3347,7 +3104,6 @@ html.editor-fullscreen .consent {
 .readme-toc-btn:hover { color: var(--foreground); background: var(--surface-2); }
 .readme-toc-btn .icon { font-size: 17px; }
 
-/* Table-of-contents modal list. */
 .readme-toc { display: flex; flex-direction: column; }
 
 .readme-toc-item {
@@ -3369,7 +3125,7 @@ html.editor-fullscreen .consent {
 
 .readme-body {
   padding: var(--space-4);
-  color: var(--foreground);            /* GitHub body text is dark, not gray */
+  color: var(--foreground);            
   font-size: 14px;
   line-height: 1.6;
 }
@@ -3391,7 +3147,7 @@ html.editor-fullscreen .consent {
 
 .readme-body h1 { font-size: var(--text-2xl); line-height: 1.3; }
 .readme-body h2 { font-size: var(--text-lg); line-height: 1.3; margin-top: var(--space-6); }
-/* …except the QnA title, which already gets the block gap from its section. */
+
 .readme-body h2.section-title { margin-top: 0; }
 .readme-body h3 { font-size: var(--text-base); font-weight: 600; line-height: 1.3; }
 
@@ -3420,8 +3176,6 @@ html.editor-fullscreen .consent {
 .readme-body figure img { width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .readme-body figcaption { margin-top: var(--space-2); color: var(--muted); font-size: var(--text-xs); }
 
-/* QnA embedded in a README card: match the surrounding prose so answers read as
- * the same document, not a smaller, greyer widget. */
 .readme-body .qa-a p,
 .readme-body .qa-a ul li {
   font-size: inherit;
@@ -3429,10 +3183,8 @@ html.editor-fullscreen .consent {
   line-height: 1.6;
 }
 
-/* Keep the QnA answer's own dash bullet — don't stack the readme disc on top. */
 .readme-body .qa-a ul { list-style: none; padding-left: 0; }
 
-/* Shields-style two-tone badges. */
 .readme-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 
 .readme-badges .badge {
@@ -3449,7 +3201,6 @@ html.editor-fullscreen .consent {
 .readme-badges .badge .v { background: var(--surface-2); color: var(--foreground); }
 .readme-badges .badge .v.ok { background: var(--success); color: #fff; }
 
-/* GitHub-style alert (blockquote note/tip). */
 .readme-body .gh-alert { padding: var(--space-2) var(--space-4); border-left: 3px solid var(--border); }
 .readme-body .gh-alert > * + * { margin-top: 0.15rem; }
 .gh-alert-title { display: flex; align-items: center; gap: var(--space-2); font-weight: 600; }
@@ -3457,7 +3208,6 @@ html.editor-fullscreen .consent {
 .readme-body .gh-tip { border-left-color: var(--success); }
 .readme-body .gh-tip .gh-alert-title { color: var(--success); }
 
-/* QnA sits inside a README body — match its heading to the markdown h2. */
 .readme-body .section-head .section-title {
   font-family: inherit;
   font-weight: 600;

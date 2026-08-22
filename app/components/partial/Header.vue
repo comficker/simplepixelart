@@ -48,7 +48,7 @@ function openCommandPalette() {
 </template>
 
 <style>
-/* ============ Header layout ============ */
+
 header .hdr {
   display: flex;
   align-items: center;
@@ -70,34 +70,14 @@ header .hdr {
   background: var(--border);
 }
 
-/* ============ Brand ============ */
 header .brand {
-  position: relative;
   margin-left: -0.3rem;
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
   padding: 4px 6px;
   border-radius: var(--radius-sm);
-  isolation: isolate;
   flex-shrink: 0;
-  transition: transform 240ms cubic-bezier(.22,.61,.36,1);
-}
-
-header .brand::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    linear-gradient(135deg, color-mix(in oklab, var(--primary) 12%, transparent) 0%, transparent 55%);
-  opacity: 0;
-  transition: opacity 240ms ease;
-  z-index: -1;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  header .brand:hover::before { opacity: 1; }
 }
 
 header .brand-logo {
@@ -108,7 +88,6 @@ header .brand-logo {
   background: var(--background);
   padding: 3px;
   border: 1px solid var(--border);
-  transition: border-color 240ms ease;
 }
 
 header .brand-name {
@@ -122,7 +101,6 @@ header .brand-name {
   white-space: nowrap;
 }
 
-/* SIMPLE sticker — flat primary chip */
 header .brand-name-stamp {
   display: inline-block;
   padding: 3px 7px 3px 8px;
@@ -137,7 +115,6 @@ header .brand-name-stamp {
   border-radius: 3px;
 }
 
-/* PixelArt — chunky logotype */
 header .brand-name-main {
   display: block;
   font-size: 1rem;
@@ -147,7 +124,6 @@ header .brand-name-main {
   color: var(--foreground);
 }
 
-/* ============ Nav links (pill group) ============ */
 .hdr-link {
   display: inline-flex;
   align-items: center;
@@ -184,13 +160,12 @@ header .brand-name-main {
   color: var(--primary);
 }
 
-/* ============ ⌘K trigger ============ */
 .cmdk-trigger {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   padding: 7px 10px;
-  /* Flush with the container edge — the padding stays as hit area only. */
+
   margin-right: -10px;
   background: transparent;
   border: 0;
@@ -214,7 +189,6 @@ header .brand-name-main {
   gap: 2px;
 }
 
-/* ============ Responsive ============ */
 @media (max-width: 1023px) {
   .hdr-link-label { display: none; }
   .hdr-link { padding: 7px 10px; }
