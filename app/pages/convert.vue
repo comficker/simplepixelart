@@ -34,7 +34,6 @@ useCustomSeoMeta({
               'Auto size: detects the native pixel grid of upscaled pixel art',
               'Output sizes from 8x8 to 64x64 pixels',
               'Palette reduction 4 to 64 colors via median-cut quantization',
-              'Quantize into a community palette from the library',
               'Transparent background removal',
               'Ordered (Bayer) dithering for photo gradients',
               'Live brightness, contrast, saturation adjustment',
@@ -129,10 +128,6 @@ const saturation = ref(0)
 // default: they change the output's nature, not just its quality).
 const bgCut = ref(false)
 const dither = ref(false)
-// Lock quantization to a library palette ('' = automatic median cut).
-type LibPalette = { id_string: string; name: string; colors: string[] }
-const libPalettes = ref<LibPalette[]>([])
-const lockedPalette = ref<LibPalette | null>(null)
 
 const pixels = ref<number[][]>([])
 const isNative = ref(false)          // the input's own grid was detected
@@ -201,7 +196,6 @@ async function convert() {
     dataUrl: sourceUrl.value,
     cutBackground: bgCut.value,
     dither: dither.value,
-    palette: lockedPalette.value ? lockedPalette.value.colors.map(hexToRgb) : undefined,
   })
   if (!res || run !== convertRun) return
   isNative.value = !!res.native
@@ -315,23 +309,14 @@ function sendToEditor() {
 // Debounced: the range sliders fire continuously while dragging, and each
 // convert() re-samples + re-quantizes the full output grid.
 const debouncedConvert = debounce(() => { if (sourceImage.value) convert() }, 150)
-watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither, lockedPalette], () => debouncedConvert())
-
-// Popular library palettes for the quantize-into-palette lock. Best-effort —
-// the section simply stays hidden offline.
-onMounted(() => {
-  useNativeFetch<{ results: LibPalette[] }>('/coloring/palettes/', {
-    params: {ordering: '-score', page_size: 8},
-  }).then(r => { libPalettes.value = (r.results || []).filter(p => p.colors?.length >= 3) })
-      .catch(() => { /* hidden */ })
-})
+watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], () => debouncedConvert())
 
 const faq = [
   {q: 'Is this tool really free?', a: `<p>Yes. The entire converter runs in your browser. No account, no watermark, no upload to any server.</p>`},
   {q: 'What image formats are supported?', a: `<p>PNG, JPG, and WebP. Drag and drop a file onto the upload area or click to browse.</p>`},
   {q: 'How does the Pixel Cleaner work?', a: `<p>It scans the output for pixels that have no same-colored neighbors (orphans) and replaces each one with the majority color of its four-direction neighbors. This smooths out speckle that quantization often produces from photos.</p>`},
   {q: 'Can I edit the result after conversion?', a: `<p>Yes. Click <strong>Open in Editor</strong> to load the converted pixel art into our full online editor with brush, fill, layers, undo/redo, and export options.</p>`},
-  {q: "What's the difference between this and other pixel art converters?", a: `<p>Auto size that reads real pixel art back at its native resolution (most converters blindly resample it), transparent background removal, Bayer dithering, quantizing into community palettes, live preview on every setting change, color merge, an orphan-pixel cleaner, and a direct handoff to a full editor. No downloads, no signup.</p>`},
+  {q: "What's the difference between this and other pixel art converters?", a: `<p>Auto size that reads real pixel art back at its native resolution (most converters blindly resample it), transparent background removal, Bayer dithering, live preview on every setting change, color merge, an orphan-pixel cleaner, and a direct handoff to a full editor. No downloads, no signup.</p>`},
   {q: 'What does the Auto size do?', a: `<p>If your image is pixel art that was upscaled, screenshotted, JPEG-compressed, or captured with grid lines, Auto detects the original cell size and reads the art back cell for cell — no detail lost, no blur. For photos it estimates a sensible output size instead.</p>`},
 ]
 </script>
@@ -392,8 +377,8 @@ const faq = [
 
         <Widget title="Colors">
           <div class="settings-row">
-            <label v-for="c in colorOptions" :key="c" class="pill" :class="{active: maxColors === c, off: !!lockedPalette}">
-              <input type="radio" :value="c" v-model="maxColors" :disabled="!!lockedPalette">
+            <label v-for="c in colorOptions" :key="c" class="pill" :class="{active: maxColors === c}">
+              <input type="radio" :value="c" v-model="maxColors">
               <span>{{ c }}</span>
             </label>
           </div>
@@ -407,30 +392,6 @@ const faq = [
           </label>
         </Widget>
 
-        <!-- Quantize INTO a community palette instead of deriving one. -->
-        <Widget v-if="libPalettes.length" title="Library palette">
-          <div class="cv-libpal">
-            <button class="cv-libpal-row" :class="{active: !lockedPalette}" @click="lockedPalette = null">
-              <span class="text-xs">Auto (from image)</span>
-            </button>
-            <button
-                v-for="lp in libPalettes"
-                :key="lp.id_string"
-                class="cv-libpal-row"
-                :class="{active: lockedPalette?.id_string === lp.id_string}"
-                :title="lp.name"
-                @click="lockedPalette = lockedPalette?.id_string === lp.id_string ? null : lp"
-            >
-              <span class="cv-libpal-sws">
-                <span v-for="c in lp.colors.slice(0, 8)" :key="c" class="cv-libpal-sw" :style="{backgroundColor: c}"/>
-              </span>
-              <span class="cv-libpal-name text-2xs">{{ lp.name }}</span>
-            </button>
-          </div>
-          <p class="tool-note">
-            <nuxt-link to="/palettes">Browse all palettes →</nuxt-link>
-          </p>
-        </Widget>
 
         <Widget title="Adjust">
           <div class="slider-row">
@@ -521,7 +482,6 @@ const faq = [
         <li><strong>Auto size</strong> — pixel art that was exported at 8× or screenshotted with grid lines is read back at its true resolution, cell for cell, instead of being blindly resampled.</li>
         <li><strong>Transparent background</strong> — cut a uniform backdrop to real transparency; the sprite lands in the editor with nothing behind it.</li>
         <li><strong>Dithering</strong> — ordered (Bayer) dithering fakes the gradients a small palette can't hold; best on photos.</li>
-        <li><strong>Library palettes</strong> — quantize straight into a palette from the <a href="/palettes">community library</a>.</li>
         <li><strong>Color Swap &amp; Merge</strong> — click any palette swatch to pick a replacement color, or merge two palette colors into one to simplify your output.</li>
         <li><strong>One-click editor handoff</strong> — open the result in the full pixel art editor for touch-ups, layers, export to PNG/SVG/JSON, and sharing.</li>
       </ul>
@@ -642,56 +602,6 @@ const faq = [
   margin-top: var(--space-2);
   cursor: pointer;
 }
-
-/* Library palettes: one row per palette — swatch strip + name. */
-.cv-libpal {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.cv-libpal-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  cursor: pointer;
-  transition: border-color var(--transition), background var(--transition);
-}
-
-.cv-libpal-row:hover { border-color: var(--primary); }
-
-.cv-libpal-row.active {
-  border-color: var(--primary);
-  background: color-mix(in oklab, var(--primary) 8%, var(--surface));
-}
-
-.cv-libpal-sws {
-  display: inline-flex;
-  flex: none;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.cv-libpal-sw {
-  width: 10px;
-  height: 14px;
-}
-
-.cv-libpal-name {
-  flex: 1;
-  min-width: 0;
-  text-align: left;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--muted);
-}
-
-.pill.off { opacity: 0.45; }
 
 /* Transparent-background mode: show the classic checkerboard through the art. */
 .pixel-preview.checker {

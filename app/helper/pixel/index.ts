@@ -171,7 +171,6 @@ export async function convertImageToGrid(
         dataUrl?: string         // enables the native fast-path below
         cutBackground?: boolean  // uniform ground → transparent (index -1)
         dither?: boolean         // ordered Bayer on the photo path
-        palette?: RGBc[]         // quantize INTO this palette instead of median cut
     },
 ): Promise<{ palette: RGBc[]; indexed: number[][]; width: number; height: number; native?: boolean } | null> {
     // Pixel-art input? Read its OWN grid instead of resampling blind — an
@@ -330,13 +329,11 @@ const BAYER4 = [
  *  when the background is being cut, white otherwise. */
 function quantizeGrid(
     cells: ([number, number, number] | null)[][],
-    opts: {maxColors: number; cutBackground?: boolean; dither?: boolean; palette?: RGBc[]},
+    opts: {maxColors: number; cutBackground?: boolean; dither?: boolean},
 ): { palette: RGBc[]; indexed: number[][] } {
     const keepNull = !!opts.cutBackground
     let palette: RGBc[]
-    if (opts.palette?.length) {
-        palette = opts.palette
-    } else if (!keepNull) {
+    if (!keepNull) {
         const q = quantizeCells(cells, opts.maxColors)
         if (!opts.dither) return q as { palette: RGBc[]; indexed: number[][] }
         palette = q.palette as RGBc[]
