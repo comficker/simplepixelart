@@ -304,7 +304,10 @@ const faq = [
       <div class="convert-preview">
         <Widget title="Pixel Preview">
           <template #ctl>
-            <button v-if="hasImage" class="text-xs" @click="openFileDialog">Change image</button>
+            <button v-if="hasImage" class="widget-ctl-btn" @click="openFileDialog">
+              <span class="icon icon-image"/>
+              <span>Change image</span>
+            </button>
           </template>
           <div class="preview-wrapper">
             <canvas v-show="hasImage" ref="previewCanvas" class="pixel-preview" :class="{checker: bgCut}"/>

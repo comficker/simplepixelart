@@ -966,11 +966,11 @@ footer {
     position: absolute;
     left: 50%;
     top: calc(100% + 6px);
-    width: 10px;
-    height: 10px;
+    width: 11px;
+    height: 11px;
     background: var(--surface);
-    border-top: 1px solid var(--border);
-    border-left: 1px solid var(--border);
+    border-top: 1px solid color-mix(in oklab, var(--muted) 35%, var(--border));
+    border-left: 1px solid color-mix(in oklab, var(--muted) 35%, var(--border));
     transform: translate(-50%, -50%) rotate(45deg);
     z-index: 11;
     opacity: 0;
@@ -987,8 +987,8 @@ footer {
     bottom: calc(100% + 10px);
     border-top: 0;
     border-left: 0;
-    border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border);
+    border-bottom: 1px solid color-mix(in oklab, var(--muted) 35%, var(--border));
+    border-right: 1px solid color-mix(in oklab, var(--muted) 35%, var(--border));
     transform: translate(-50%, 50%) rotate(45deg);
 }
 
@@ -1939,6 +1939,13 @@ canvas.iso-line { cursor: crosshair; }
     height: 11px;
 }
 
+.widget-ctl-name {
+    max-width: 9rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 @media (hover: hover) and (pointer: fine) {
     .widget-ctl-btn:hover {
         color: var(--primary);
@@ -1950,36 +1957,6 @@ canvas.iso-line { cursor: crosshair; }
 }
 
 .widget-ctl-btn:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-}
-
-.layer-add {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 18px;
-    padding: 0;
-    color: var(--muted);
-    background: none;
-    border: 0;
-    cursor: pointer;
-    transition: color var(--transition);
-}
-
-.layer-add .icon {
-    width: 15px;
-    height: 15px;
-}
-
-@media (hover: hover) and (pointer: fine) {
-    .layer-add:hover {
-        color: var(--primary);
-    }
-}
-
-.layer-add:focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
 }
@@ -2083,17 +2060,6 @@ canvas.iso-line { cursor: crosshair; }
 .layer-check .icon {
     width: 11px;
     height: 11px;
-}
-
-.layer-add.active {
-    color: var(--primary);
-    background: color-mix(in oklab, var(--primary) 12%, transparent);
-}
-
-.layer-ctl {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
 }
 
 .layers .layer-del {

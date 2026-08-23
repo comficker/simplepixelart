@@ -40,10 +40,6 @@ const tiles = ref<DispTile[]>([])
 const loadingItems = ref(false)
 const failedThumb = reactive<Record<string, boolean>>({})
 
-const pickerRoot = ref<HTMLElement | null>(null)
-const pickerPanel = ref<HTMLElement | null>(null)
-const pickerOpen = ref(false)
-const pickerRect = ref({top: 0, left: 0, width: 0})
 const showNew = ref(false)
 const newTitle = ref('')
 const creating = ref(false)
@@ -150,7 +146,6 @@ function openTile(item: DispTile) {
 }
 
 async function pick(id: number | string | null) {
-  pickerOpen.value = false
   showNew.value = false
   const cur = boundId.value
   if (id === cur) { selectedId.value = id ?? null; return }
@@ -218,25 +213,6 @@ async function removeFromTileset(from: Ts): Promise<void> {
   } catch { /* not there — treat as removed */ }
 }
 
-function togglePicker() {
-  if (pickerOpen.value) { pickerOpen.value = false; showNew.value = false; return }
-  const cog = pickerRoot.value?.getBoundingClientRect()
-  const host = (pickerRoot.value?.closest('.widget') as HTMLElement | null)?.getBoundingClientRect()
-  if (cog) {
-    pickerRect.value = {
-      top: cog.bottom + 4,
-      left: host?.left ?? cog.left,
-      width: host?.width ?? Math.max(180, cog.width),
-    }
-  }
-  pickerOpen.value = true
-}
-
-function closePicker() {
-  pickerOpen.value = false
-  showNew.value = false
-}
-
 async function createTileset() {
   const title = newTitle.value.trim()
   if (!title || creating.value) return
@@ -256,7 +232,6 @@ async function createTileset() {
     }
     newTitle.value = ''
     showNew.value = false
-    pickerOpen.value = false
   } catch {
     /* ignore */
   } finally {
@@ -264,30 +239,9 @@ async function createTileset() {
   }
 }
 
-function onOutside(e: MouseEvent) {
-  if (!pickerOpen.value) return
-  const t = e.target as Node
-  if (pickerRoot.value?.contains(t) || pickerPanel.value?.contains(t)) return
-  closePicker()
-}
-
-function onMove(e?: Event) {
-  if (!pickerOpen.value) return
-  if (e?.target && pickerPanel.value?.contains(e.target as Node)) return
-  closePicker()
-}
-
 onMounted(() => {
   loadTilesets()
   if (auth.isLogged) localTs.syncToCloud().then(n => { if (n) loadTilesets() })
-  document.addEventListener('click', onOutside)
-  window.addEventListener('scroll', onMove, true)
-  window.addEventListener('resize', onMove)
-})
-onBeforeUnmount(() => {
-  document.removeEventListener('click', onOutside)
-  window.removeEventListener('scroll', onMove, true)
-  window.removeEventListener('resize', onMove)
 })
 watch(() => auth.isLogged, async (v) => {
   if (v) {
@@ -321,69 +275,56 @@ defineExpose({removeItem, refresh, siblingId})
 <template>
   <Widget class="cstrip" title="Tileset">
     <template #ctl>
-      <div ref="pickerRoot" class="cstrip-pick">
-        <button
-            class="cstrip-pick-btn"
-            type="button"
-            :class="{open: pickerOpen}"
-            :aria-expanded="pickerOpen"
-            :title="`Choose tileset (${selectedTitle})`"
-            @click="togglePicker"
-        >
-          <span class="icon icon-cog"/>
+      <ui-dropdown-menu>
+        <button type="button" class="widget-ctl-btn" :class="{active: boundId != null}" :title="`Choose tileset (${selectedTitle})`">
+          <span class="icon icon-grid"/>
+          <span class="widget-ctl-name">{{ selectedTitle }}</span>
+          <span class="icon icon-chevron-down"/>
         </button>
-
-        <Teleport to="body">
-          <div
-              v-if="pickerOpen"
-              ref="pickerPanel"
-              class="cstrip-panel"
-              :style="{top: pickerRect.top + 'px', left: pickerRect.left + 'px', width: pickerRect.width + 'px'}"
-              @click.stop
-          >
-            <div class="cstrip-panel-head">{{ boundId != null ? "Art's tileset" : 'Add to a tileset' }}</div>
-            <ul class="cstrip-panel-list no-scrollbar">
-              <li>
-                <button class="cstrip-opt" :class="{active: selectedId == null}" @click="pick(null)">
-                  <span class="cstrip-opt-name">None</span>
-                  <span v-if="selectedId == null" class="icon icon-check"/>
-                </button>
-              </li>
-              <li v-for="c in tilesets" :key="c.id">
-                <button class="cstrip-opt" :class="{active: selectedId === c.id}" @click="pick(c.id)">
-                  <span class="cstrip-opt-name">{{ c.title }}</span>
-                  <span v-if="selectedId === c.id" class="icon icon-check"/>
-                </button>
-              </li>
-              <li v-if="!tilesets.length" class="cstrip-opt-empty">No tilesets yet</li>
-            </ul>
-            <div class="cstrip-panel-create">
-              <div v-if="showNew" class="cstrip-new">
-                <input
-                    v-model="newTitle"
-                    class="cstrip-new-input"
-                    placeholder="Tileset name"
-                    maxlength="120"
-                    @keydown.enter="createTileset"
-                    @keydown.esc="showNew = false"
-                >
-                <div class="cstrip-new-actions">
-                  <button class="btn" @click="showNew = false">Cancel</button>
-                  <button class="btn primary" :disabled="!newTitle.trim() || creating" @click="createTileset">
-                    {{ creating ? '…' : 'Create' }}
-                  </button>
-                </div>
-              </div>
-              <button v-else class="cstrip-create-btn" @click="showNew = true">
-                <span class="icon icon-plus"/><span>Create tileset</span>
-              </button>
-            </div>
+        <template #menu>
+          <div class="file-menu">
+            <button class="file-menu-item" @click="pick(null)">
+              <span class="icon icon-close"/>
+              <span class="file-menu-label">
+                <span>None</span>
+                <span v-if="selectedId == null" class="icon icon-check"/>
+              </span>
+            </button>
+            <button v-for="c in tilesets" :key="c.id" class="file-menu-item" @click="pick(c.id)">
+              <span class="icon icon-grid"/>
+              <span class="file-menu-label">
+                <span class="widget-ctl-name">{{ c.title }}</span>
+                <span v-if="selectedId === c.id" class="icon icon-check"/>
+              </span>
+            </button>
+            <div class="file-menu-sep"/>
+            <button class="file-menu-item" @click="showNew = true">
+              <span class="icon icon-plus"/>
+              <span>Create tileset…</span>
+            </button>
           </div>
-        </Teleport>
-      </div>
+        </template>
+      </ui-dropdown-menu>
     </template>
 
     <div class="cstrip-body">
+      <div v-if="showNew" class="cstrip-new">
+        <input
+            v-model="newTitle"
+            class="cstrip-new-input"
+            placeholder="Tileset name"
+            maxlength="120"
+            @keydown.enter="createTileset"
+            @keydown.esc="showNew = false"
+        >
+        <div class="cstrip-new-actions">
+          <button class="btn" @click="showNew = false">Cancel</button>
+          <button class="btn primary" :disabled="!newTitle.trim() || creating" @click="createTileset">
+            {{ creating ? '…' : 'Create' }}
+          </button>
+        </div>
+      </div>
+
       <div v-if="loadingItems && !tiles.length" class="cstrip-thumbs">
         <div v-for="i in 8" :key="`s-${i}`" class="cstrip-thumb skeleton"/>
       </div>
@@ -417,136 +358,11 @@ defineExpose({removeItem, refresh, siblingId})
 
 <style scoped>
 
-.cstrip-pick {
-  display: inline-flex;
-}
-
-.cstrip-pick-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--muted);
-  cursor: pointer;
-  transition: color var(--transition);
-}
-
-.cstrip-pick-btn .icon {
-  width: 15px;
-  height: 15px;
-}
-
-.cstrip-pick-btn:hover,
-.cstrip-pick-btn.open {
-  color: var(--primary);
-}
-
-.cstrip-panel {
-  position: fixed;
-  z-index: 1000;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-modal, 0 8px 24px -12px rgba(0, 0, 0, 0.22));
-  overflow: hidden;
-}
-
-.cstrip-panel-head {
-  padding: var(--space-2) var(--space-3) var(--space-1);
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.cstrip-panel-list {
-  max-height: 220px;
-  overflow-y: auto;
-  padding: 0 var(--space-1);
-}
-
-.cstrip-opt {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-sm);
-  color: var(--foreground);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background var(--transition);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .cstrip-opt:hover {
-    background: var(--surface-2);
-  }
-}
-
-.cstrip-opt.active {
-  color: var(--primary);
-  font-weight: 600;
-}
-
-.cstrip-opt .icon {
-  flex-shrink: 0;
-  width: 0.85em;
-  height: 0.85em;
-  color: var(--primary);
-}
-
-.cstrip-opt-name {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.cstrip-opt-empty {
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-xs);
-  color: var(--muted);
-}
-
-.cstrip-panel-create {
-  padding: var(--space-1);
-  border-top: 1px solid var(--border);
-}
-
-.cstrip-create-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  padding: var(--space-3);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--foreground);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background var(--transition);
-}
-
-.cstrip-create-btn .icon {
-  width: 0.9em;
-  height: 0.9em;
-  color: var(--primary);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .cstrip-create-btn:hover {
-    background: var(--surface-2);
-  }
-}
-
 .cstrip-new {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  margin-bottom: var(--space-2);
 }
 
 .cstrip-new-input {

@@ -1,7 +1,7 @@
 <template>
   <div
       class="dropdown"
-      :class="[{ active: open }, position]"
+      :class="[{ active: open }, effPosition]"
       ref="root"
       v-bind="attrs"
       @keydown="onKeydown"
@@ -25,7 +25,7 @@
     <Teleport v-if="mounted" to="body">
       <div
           class="dropdown dd-ghost"
-          :class="[{ active: open }, position, attrs.class]"
+          :class="[{ active: open }, effPosition, attrs.class]"
           :style="ghostStyle"
           @keydown="onKeydown"
       >
@@ -34,6 +34,7 @@
             ref="menuEl"
             role="menu"
             :aria-hidden="!open"
+            :style="menuStyle"
             @click="onMenuClick"
         >
           <slot name="menu"/>
@@ -48,7 +49,7 @@ import {ref, computed, onMounted, onBeforeUnmount, nextTick, watch, useAttrs} fr
 
 defineOptions({inheritAttrs: false})
 
-defineProps({
+const props = defineProps({
   position: {
     type: String,
     default: '',
@@ -78,11 +79,56 @@ const ghostStyle = computed(() => ({
   pointerEvents: 'none',
 }))
 
+// Adaptive placement: the `position` prop is a preference; when the menu
+// would clip the viewport it flips vertically and clamps horizontally.
+const autoDir = ref('')
+const menuStyle = ref({})
+
+const effPosition = computed(() => {
+  const set = new Set((props.position || '').split(' ').filter(Boolean))
+  if (autoDir.value === 'up') set.add('bottom')
+  if (autoDir.value === 'down') set.delete('bottom')
+  return [...set].join(' ')
+})
+
+function updatePlacement() {
+  const m = menuEl.value
+  if (!open.value || !m || typeof window === 'undefined') return
+  const pad = 8
+  const gap = 10
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const r = rect.value
+  const mw = m.offsetWidth
+  const mh = m.scrollHeight
+  const spaceBelow = vh - (r.top + r.height) - gap - pad
+  const spaceAbove = r.top - gap - pad
+
+  const preferUp = (props.position || '').includes('bottom')
+  let up = preferUp
+  if (preferUp && mh > spaceAbove && spaceBelow > spaceAbove) up = false
+  if (!preferUp && mh > spaceBelow && spaceAbove > spaceBelow) up = true
+  autoDir.value = up ? 'up' : 'down'
+
+  const preferRight = (props.position || '').includes('right')
+  const natural = preferRight ? r.left + r.width - mw : r.left
+  const x = Math.min(Math.max(natural, pad), Math.max(pad, vw - pad - mw))
+
+  menuStyle.value = {
+    left: `${x - r.left}px`,
+    right: 'auto',
+    maxWidth: `${vw - pad * 2}px`,
+    maxHeight: `${Math.max(120, up ? spaceAbove : spaceBelow)}px`,
+    overflowY: 'auto',
+  }
+}
+
 function syncRect() {
   const el = triggerEl.value
   if (!el) return
   const r = el.getBoundingClientRect()
   rect.value = {left: r.left, top: r.top, width: r.width, height: r.height}
+  if (open.value) updatePlacement()
 }
 
 function bindTracking(on) {
@@ -126,6 +172,7 @@ async function openMenu(focusFirst = true) {
   open.value = true
   bindTracking(true)
   await nextTick()
+  updatePlacement()
   ensureItemsFocusable()
   if (focusFirst) focusIndex(0)
 }
