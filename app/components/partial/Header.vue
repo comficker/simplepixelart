@@ -24,11 +24,16 @@ function openCommandPalette() {
           <span class="icon icon-explore"/>
           <span class="hdr-link-label">Discovery</span>
         </nuxt-link>
+        <nuxt-link to="/challenges" class="hdr-link" title="Weekly challenges">
+          <span class="icon icon-flag"/>
+          <span class="hdr-link-label">Challenges</span>
+        </nuxt-link>
         <nuxt-link to="/work" class="hdr-link" title="Your work">
           <span class="icon icon-workspace"/>
           <span class="hdr-link-label">Your work</span>
         </nuxt-link>
         <span class="hdr-divider" aria-hidden="true"/>
+        <PartialNotifyBell/>
         <WalletMenu/>
         <button
             type="button"

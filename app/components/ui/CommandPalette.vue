@@ -66,6 +66,7 @@ const baseCommands = computed<Cmd[]>(() => [
   { id: 'nav:tilemap', label: 'Tilemap Editor', icon: 'icon-rhombus', hint: 'Grid / iso map', group: 'Navigate', keywords: 'tilemap map grid isometric tiles level scene world', run: () => router.push('/tilemaps/editor') },
   { id: 'nav:palettes', label: 'Palettes', icon: 'icon-bucket', group: 'Navigate', keywords: 'color palette swatches library', run: () => router.push('/palettes') },
   { id: 'nav:arts', label: 'Discovery', icon: 'icon-search', group: 'Navigate', keywords: 'gallery browse art', run: () => router.push('/arts') },
+  { id: 'nav:challenges', label: 'Weekly Challenges', icon: 'icon-flag', hint: 'Draw the theme', group: 'Navigate', keywords: 'challenge weekly theme contest vote', run: () => router.push('/challenges') },
   { id: 'nav:collections', label: 'Your collections', icon: 'icon-rhombus', group: 'Navigate', keywords: 'collection group theme album', run: () => router.push('/work?tab=collections') },
   { id: 'create:new', label: 'New pixel art', icon: 'icon-square', hint: 'Open editor', group: 'Create', keywords: 'start blank draw', run: () => router.push('/editor') },
   { id: 'create:convert', label: 'Convert an image', icon: 'icon-swap', group: 'Create', keywords: 'photo upload pixelate', run: () => router.push('/convert') },
