@@ -1460,6 +1460,14 @@ function startDraw(e: any) {
       const rootColorIndex = editorData.value.layers[store.currentLayerIndex]!.pixels[`${x}_${y}`] ?? -1;
       store.bucketFill(x, y, rootColorIndex);
       break;
+    case "stamp":
+      if (!store.stampData) return;
+      isDrawing.value = true;
+      if (!isPanning.value) {
+        store.stampAt({x, y});
+        lastStamp = {x, y};
+      }
+      break;
     case "iso-line":
       isIsoLining.value = true;
       isoLineStart.value = getPixelPos(e);
@@ -1560,9 +1568,27 @@ function draw(e: any) {
         store.currentColorIndex,
     );
   } else if (isDrawing.value) {
-    if (!isPanning.value && store.currentTool !== 'bucket') store.paint(pos);
+    if (!isPanning.value) {
+      if (store.currentTool === 'stamp') dragStamp(pos);
+      else if (store.currentTool !== 'bucket') store.paint(pos);
+    }
   }
   scheduleDraw();
+}
+
+let lastStamp = {x: 0, y: 0};
+
+// Drag-stamps snap to a lattice anchored at the first click so a dragged
+// stroke tiles the stamp edge-to-edge instead of smearing overlaps.
+function dragStamp(pos: { x: number; y: number }) {
+  const s = store.stampData;
+  if (!s) return;
+  const stepX = Math.trunc((pos.x - lastStamp.x) / s.w);
+  const stepY = Math.trunc((pos.y - lastStamp.y) / s.h);
+  if (!stepX && !stepY) return;
+  const p = {x: lastStamp.x + stepX * s.w, y: lastStamp.y + stepY * s.h};
+  store.stampAt(p);
+  lastStamp = p;
 }
 
 function stopDraw() {
@@ -1752,7 +1778,7 @@ function handleKeyUp(e: any) {
 }
 
 const TOOL_KEYS: Record<string, string> = {
-  b: 'brush', l: 'iso-line', g: 'bucket', v: 'move', m: 'select',
+  b: 'brush', l: 'iso-line', g: 'bucket', v: 'move', m: 'select', a: 'stamp',
 };
 
 function handleKeyDown(e: any) {
@@ -2343,6 +2369,56 @@ function drawBrushPreview(): void {
   ctx.restore();
 }
 
+let stampGhost: HTMLCanvasElement | null = null;
+let stampGhostFor: object | null = null;
+
+function stampGhostCanvas(s: NonNullable<typeof store.stampData>): HTMLCanvasElement {
+  if (stampGhostFor === s && stampGhost) return stampGhost;
+  const c = document.createElement('canvas');
+  c.width = s.w;
+  c.height = s.h;
+  const g = c.getContext('2d')!;
+  for (let y = 0; y < s.h; y++) {
+    const row = s.cells[y];
+    if (!row) continue;
+    for (let x = 0; x < s.w; x++) {
+      const hex = row[x];
+      if (!hex) continue;
+      g.fillStyle = hex;
+      g.fillRect(x, y, 1, 1);
+    }
+  }
+  stampGhost = c;
+  stampGhostFor = s;
+  return c;
+}
+
+function drawStampPreview(): void {
+  if (!ctx || !hoverPos.value) return;
+  if (store.currentTool !== 'stamp' || isPanning.value) return;
+  const s = store.stampData;
+  if (!s) return;
+
+  const z = zoom.value;
+  const w = editorData.value.width;
+  const h = editorData.value.height;
+  const px = artOffset.value.x + (hoverPos.value.x - Math.floor((s.w - 1) / 2)) * z;
+  const py = artOffset.value.y + (hoverPos.value.y - Math.floor((s.h - 1) / 2)) * z;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(artOffset.value.x, artOffset.value.y, w * z, h * z);
+  ctx.clip();
+  ctx.globalAlpha = 0.55;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(stampGhostCanvas(s), 0, 0, s.w, s.h, px, py, s.w * z, s.h * z);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(px + 0.5, py + 0.5, s.w * z - 1, s.h * z - 1);
+  ctx.restore();
+}
+
 let onionPrevCanvas: HTMLCanvasElement | null = null;
 let onionNextCanvas: HTMLCanvasElement | null = null;
 
@@ -2393,6 +2469,7 @@ function drawEditor() {
   drawIsoOverlay();
   drawCustomGuides();
   drawBrushPreview();
+  drawStampPreview();
   drawSelection();
   drawBoardChrome();
   drawMarquee();
@@ -3504,6 +3581,11 @@ watch(
               <span class="icon icon-bucket"/>
             </Square>
           </ui-tooltip>
+          <ui-tooltip text="Art brush (A) — stamp a tile or saved art">
+            <Square aria-label="Art brush" @click="store.setTool('stamp')" :class="{ active: store.currentTool === 'stamp' }">
+              <span class="icon icon-stamp"/>
+            </Square>
+          </ui-tooltip>
           <div
               v-if="store.currentTool === 'brush' || store.currentTool === 'eraser'"
               class="brush-sizes"
@@ -3666,7 +3748,7 @@ watch(
       <div class="editor-sidebar">
         <Widget title="Preview" class="preview-widget">
           <template #ctl>
-            <a v-if="editorData.id_string" target="_blank" :href="`/art/${editorData.id_string}`">
+            <a v-if="editorData.id_string" class="widget-ctl-btn" title="Open public page" target="_blank" :href="`/art/${editorData.id_string}`">
               <span class="icon icon-link"/>
             </a>
           </template>
@@ -3677,6 +3759,8 @@ watch(
 
         <div class="sidebar-stack">
           <div class="sidebar-stack-inner">
+            <EditorStampPicker v-if="store.currentTool === 'stamp'"/>
+
             <EditorTilesetStrip
                 ref="tileStripRef"
                 :active-id="editorData.id_string || String(editorData.id)"
@@ -3689,9 +3773,9 @@ watch(
 
             <Widget title="Layers" class="layers">
               <template #ctl>
-                <div class="layer-ctl">
+                <div class="widget-ctl-group">
                   <button
-                      class="layer-add"
+                      class="widget-ctl-btn"
                       :class="{ active: multiSelectLayers }"
                       title="Select multiple layers — or hold Shift and click"
                       aria-label="Select multiple layers"
@@ -3699,7 +3783,7 @@ watch(
                   >
                     <span class="icon icon-check"/>
                   </button>
-                  <button class="layer-add" @click="store.addLayer" title="Add new layer" aria-label="Add new layer">
+                  <button class="widget-ctl-btn" @click="store.addLayer" title="Add new layer" aria-label="Add new layer">
                     <span class="icon icon-plus"/>
                   </button>
                 </div>
@@ -4062,7 +4146,8 @@ watch(
 
 <style scoped>
 
-canvas.picker {
+canvas.picker,
+canvas.stamp:not(.panning) {
   cursor: crosshair;
 }
 

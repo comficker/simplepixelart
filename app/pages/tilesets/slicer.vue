@@ -2019,7 +2019,10 @@ const faq = [
 
         <Widget title="Tiles" class="ts-tiles-widget">
           <template #ctl>
-            <button v-if="mode === 'select' && regions.length" class="ts-clear-btn" @click="clearRegions">Clear all</button>
+            <button v-if="mode === 'select' && regions.length" class="widget-ctl-btn" @click="clearRegions">
+              <span class="icon icon-broom"/>
+              <span>Clear all</span>
+            </button>
           </template>
           <div v-if="tiles.length" class="ts-region-list">
             <ul class="ts-region-scroll no-scrollbar">
@@ -2284,19 +2287,6 @@ const faq = [
   min-height: 0;
   display: flex;
   flex-direction: column;
-}
-
-.ts-clear-btn {
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  color: var(--muted);
-  transition: color var(--transition);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .ts-clear-btn:hover {
-    color: var(--primary);
-  }
 }
 
 .ts-tiles-foot {

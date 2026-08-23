@@ -265,6 +265,42 @@ export const useEditor = defineStore('editor', () => {
     const mirrorHorizontal = ref(false);
     const mirrorVertical = ref(false);
 
+    const stampData = shallowRef<{
+        key: string
+        name: string
+        w: number
+        h: number
+        cells: (string | null)[][]
+    } | null>(null)
+
+    function setStamp(s: typeof stampData.value) {
+        stampData.value = s
+    }
+
+    function stampAt({x, y}: { x: number; y: number }) {
+        const s = stampData.value
+        if (!s) return
+        const ox = Math.floor((s.w - 1) / 2)
+        const oy = Math.floor((s.h - 1) / 2)
+        const colors = editorData.value.colors
+        const indexOf: Record<string, number> = {}
+        for (let sy = 0; sy < s.h; sy++) {
+            const row = s.cells[sy]
+            if (!row) continue
+            for (let sx = 0; sx < s.w; sx++) {
+                const hex = row[sx]
+                if (!hex) continue
+                const px = x - ox + sx
+                const py = y - oy + sy
+                if (px < 0 || px >= editorData.value.width || py < 0 || py >= editorData.value.height) continue
+                if (selectionState.value.bounds.active && !checkKeyInSelection(`${px}_${py}`)) continue
+                const ci = indexOf[hex] ?? (indexOf[hex] = findOrCreateColor(hex, colors))
+                setPixelByIndex(px, py, ci)
+            }
+        }
+        drawTurn.value++
+    }
+
     function setBrushSize(size: number) {
         brushSize.value = Math.min(8, Math.max(1, Math.floor(size) || 1));
     }
@@ -1982,6 +2018,9 @@ export const useEditor = defineStore('editor', () => {
         currentTool,
         brushSize,
         setBrushSize,
+        stampData,
+        setStamp,
+        stampAt,
         bgConfig,
         setBg,
         setArtTileset,

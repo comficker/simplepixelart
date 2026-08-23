@@ -72,8 +72,7 @@ export default function iconStylesOptimized(options: {
 
   async function handleFileChanged(file: string) {
     if (!file.endsWith('.vue')) return
-    if (!file.startsWith(path.join(root, 'pages')) &&
-      !file.startsWith(path.join(root, 'components'))) return
+    if (!TARGET_DIRS.some(dir => file.startsWith(path.join(root, dir)))) return
 
     await readFileContent(file)
     await rebuildCSS()

@@ -13,9 +13,10 @@
     <Teleport to="body">
       <div
           v-if="show"
+          ref="tipEl"
           class="tooltip"
-          :class="`tooltip-${position}`"
-          :style="{left: `${pt.x}px`, top: `${pt.y}px`}"
+          :class="`tooltip-${pos}`"
+          :style="tipStyle"
       >
         <slot name="content">{{ text }}</slot>
       </div>
@@ -24,12 +25,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 
 const props = defineProps({
   position: {
     type: String,
-    default: 'top', // top | bottom | left | right
+    default: 'top', // top | bottom | left | right — preferred side; flips/clamps to stay on screen
   },
   text: {
     type: String,
@@ -39,22 +40,76 @@ const props = defineProps({
 
 const show = ref(false)
 const wrap = ref(null)
+const tipEl = ref(null)
 const pt = ref({ x: 0, y: 0 })
+const pos = ref(props.position)
+const shift = ref(0)
+
+const tipStyle = computed(() => ({
+  left: `${pt.value.x}px`,
+  top: `${pt.value.y}px`,
+  ...(pos.value === 'top' || pos.value === 'bottom'
+      ? { marginLeft: `${shift.value}px` }
+      : { marginTop: `${shift.value}px` }),
+  '--tip-shift': `${shift.value}px`,
+}))
 
 function onFocus() {
   if (wrap.value && !wrap.value.matches(':focus-visible')) return
   onEnter()
 }
 
+function place(p) {
+  const r = wrap.value?.getBoundingClientRect()
+  if (!r) return false
+  pt.value = p === 'bottom' ? { x: r.left + r.width / 2, y: r.bottom }
+      : p === 'left' ? { x: r.left, y: r.top + r.height / 2 }
+          : p === 'right' ? { x: r.right, y: r.top + r.height / 2 }
+              : { x: r.left + r.width / 2, y: r.top }
+  return true
+}
+
+const FLIP = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }
+const PAD = 6
+
+function overflowsSide(p, t) {
+  if (p === 'top') return t.top < PAD
+  if (p === 'bottom') return t.bottom > window.innerHeight - PAD
+  if (p === 'left') return t.left < PAD
+  return t.right > window.innerWidth - PAD
+}
+
+function clampCross() {
+  const t = tipEl.value?.getBoundingClientRect()
+  if (!t) return
+  if (pos.value === 'top' || pos.value === 'bottom') {
+    const max = window.innerWidth - PAD
+    shift.value = t.left < PAD ? PAD - t.left : t.right > max ? max - t.right : 0
+  } else {
+    const max = window.innerHeight - PAD
+    shift.value = t.top < PAD ? PAD - t.top : t.bottom > max ? max - t.bottom : 0
+  }
+}
+
+function adjust() {
+  const t = tipEl.value?.getBoundingClientRect()
+  if (!t) return
+  if (overflowsSide(pos.value, t)) {
+    pos.value = FLIP[pos.value]
+    place(pos.value)
+    nextTick(clampCross)
+  } else {
+    clampCross()
+  }
+}
+
 function onEnter() {
   if (typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches) return
-  const r = wrap.value?.getBoundingClientRect()
-  if (!r) return
-  pt.value = props.position === 'bottom' ? { x: r.left + r.width / 2, y: r.bottom }
-      : props.position === 'left' ? { x: r.left, y: r.top + r.height / 2 }
-          : props.position === 'right' ? { x: r.right, y: r.top + r.height / 2 }
-              : { x: r.left + r.width / 2, y: r.top }
+  pos.value = props.position
+  shift.value = 0
+  if (!place(pos.value)) return
   show.value = true
+  nextTick(adjust)
 }
 </script>
 
@@ -106,7 +161,7 @@ function onEnter() {
 }
 .tooltip-top::after {
   bottom: -3px;
-  left: 50%;
+  left: calc(50% - var(--tip-shift, 0px));
   margin-left: -3.5px;
 }
 
@@ -116,7 +171,7 @@ function onEnter() {
 }
 .tooltip-bottom::after {
   top: -3px;
-  left: 50%;
+  left: calc(50% - var(--tip-shift, 0px));
   margin-left: -3.5px;
 }
 
@@ -126,7 +181,7 @@ function onEnter() {
 }
 .tooltip-left::after {
   right: -3px;
-  top: 50%;
+  top: calc(50% - var(--tip-shift, 0px));
   margin-top: -3.5px;
 }
 
@@ -136,7 +191,7 @@ function onEnter() {
 }
 .tooltip-right::after {
   left: -3px;
-  top: 50%;
+  top: calc(50% - var(--tip-shift, 0px));
   margin-top: -3.5px;
 }
 </style>
