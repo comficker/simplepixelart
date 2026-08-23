@@ -36,6 +36,47 @@ const {data: worksCount} = await useAuthFetch<ResponseSharedPage>('/coloring/sha
   key: `creator-works-count-${username.value}`,
 })
 
+interface CreatorProfile {
+  username: string
+  avatar: string | null
+  joined: string | null
+  arts: number
+  likes: number
+  followers: number
+  following_count: number
+  following: boolean
+}
+
+const {data: profile} = await useAuthFetch<CreatorProfile>(
+    `/coloring/creators/${username.value}/`,
+    {key: `creator-profile-${username.value}`},
+)
+
+const auth = useAuthStore()
+const followBusy = ref(false)
+
+async function toggleFollow() {
+  if (!auth.isLogged) { auth.authOAUTH(); return }
+  if (followBusy.value || !profile.value) return
+  followBusy.value = true
+  try {
+    const res = await useNativeFetch<{ following: boolean; followers: number }>(
+        '/activity/follow/', {method: 'POST', body: {username: username.value}},
+    )
+    profile.value = {...profile.value, following: res.following, followers: res.followers}
+  } catch { /* keep prior state */ } finally {
+    followBusy.value = false
+  }
+}
+
+const isSelf = computed(() => auth.logged?.username === username.value)
+
+const joinedText = computed(() => {
+  if (!profile.value?.joined) return ''
+  return new Date(`${profile.value.joined}T00:00:00`)
+      .toLocaleDateString('en-US', {month: 'short', year: 'numeric'})
+})
+
 const collections = computed(() => collectionsRes.value?.results || [])
 const totalWorks = computed(() => worksCount.value?.count || 0)
 const isEmptyCreator = computed(() => totalWorks.value === 0 && collections.value.length === 0)
@@ -114,8 +155,33 @@ useCustomSeoMeta({
 
 <template>
   <div class="page">
+    <section class="creator-head">
+      <div class="creator-avatar">
+        <img v-if="profile?.avatar" :src="profile.avatar" :alt="`@${username}`" loading="lazy">
+        <span v-else>{{ username.slice(0, 1).toUpperCase() }}</span>
+      </div>
+      <div class="creator-id">
+        <h1 class="page-title">@{{ username }}</h1>
+        <ul v-if="profile" class="creator-stats" aria-label="Creator stats">
+          <li><strong>{{ profile.arts }}</strong><span>{{ profile.arts === 1 ? 'art' : 'arts' }}</span></li>
+          <li><strong>{{ profile.likes }}</strong><span>{{ profile.likes === 1 ? 'like' : 'likes' }}</span></li>
+          <li><strong>{{ profile.followers }}</strong><span>{{ profile.followers === 1 ? 'follower' : 'followers' }}</span></li>
+          <li v-if="joinedText"><strong>{{ joinedText }}</strong><span>joined</span></li>
+        </ul>
+      </div>
+      <button
+          v-if="profile && !isSelf"
+          class="btn creator-follow"
+          :class="{primary: !profile.following}"
+          :disabled="followBusy"
+          @click="toggleFollow"
+      >
+        <span class="icon" :class="profile.following ? 'icon-check' : 'icon-plus'"/>
+        <span>{{ profile.following ? 'Following' : 'Follow' }}</span>
+      </button>
+    </section>
+
     <section>
-      <h1 class="page-title">@{{ username }}</h1>
       <p class="text-muted">Pixel art by @{{ username }} on SimplePixelArt — browse their sprites, 8-bit characters, and designs. Remix any piece in the editor.</p>
     </section>
 
@@ -157,6 +223,68 @@ useCustomSeoMeta({
 </template>
 
 <style scoped>
+.creator-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.creator-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.creator-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.creator-id {
+  min-width: 0;
+}
+
+.creator-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  list-style: none;
+  padding: 0;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+}
+
+.creator-stats li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+}
+
+.creator-stats strong {
+  color: var(--foreground);
+}
+
+.creator-stats span {
+  color: var(--muted);
+}
+
+.creator-follow {
+  margin-left: auto;
+  flex-shrink: 0;
+  gap: var(--space-2);
+}
+
 .creator-collections {
   display: flex;
   flex-direction: column;
