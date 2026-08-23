@@ -6,7 +6,7 @@ import {debounce, pruneStorageKeys} from '~/helper/utils'
 import {
   type TilemapConfig, type TilemapMode, type LayerKind, normalizeTilemap,
   CELL_PRESETS, MIN_CELL, MAX_CELL, ISO_RATIOS, MIN_DIM, MAX_DIM, MAX_LAYERS, makeLayer, placedIds,
-  computeGeometry, cellAt, cellCenter, tileImageUrl, drawPlacedTiles, cellRoll,
+  computeGeometry, cellAt, cellCenter, tileImageUrl, drawPlacedTiles, drawGround, cellRoll,
 } from '~/helper/tilemap'
 import {type Terrain, reflowTerrain} from '~/helper/autotile'
 
@@ -1128,12 +1128,7 @@ function drawSelection(ctx: CanvasRenderingContext2D) {
       const [c, r] = k.split('_').map(Number)
       const img = tileImages.get(id)
       if (!img?.complete || !img.naturalWidth) continue
-      ctx.drawImage(
-          img,
-          Math.round((c! + selAction.dc) * g.tileW * z),
-          Math.round((r! + selAction.dr) * g.tileH * z),
-          Math.round(img.naturalWidth * z), Math.round(img.naturalHeight * z),
-      )
+      drawGround(ctx, img, config, g, c! + selAction.dc, r! + selAction.dr, z)
     }
     ctx.globalAlpha = 1
   }

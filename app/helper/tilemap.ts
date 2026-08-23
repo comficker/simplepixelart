@@ -198,17 +198,24 @@ function ready(img?: HTMLImageElement): img is HTMLImageElement {
   return !!img && img.complete && img.naturalWidth > 0
 }
 
-function drawGround(ctx: CanvasRenderingContext2D, img: HTMLImageElement,
-                    c: TilemapConfig, g: TileGeometry, col: number, row: number, s: number) {
+// Tiles larger than one cell keep their size and span whole cells,
+// anchored bottom-left (bottom-center in iso) like Tiled, so tall props
+// rise above their anchor row and y-sorting stays correct. Tiles at or
+// below cell size keep stretching to fill exactly one cell.
+export function drawGround(ctx: CanvasRenderingContext2D, img: HTMLImageElement,
+                           c: TilemapConfig, g: TileGeometry, col: number, row: number, s: number) {
   if (c.mode === 'iso') {
-    const iw = Math.round(g.tileW * s)
-    const ih = Math.round(img.naturalHeight * (g.tileW / (img.naturalWidth || 1)) * s)
+    const span = Math.max(1, Math.round(img.naturalWidth / g.tileW))
+    const iw = Math.round(g.tileW * span * s)
+    const ih = Math.round(img.naturalHeight * ((g.tileW * span) / (img.naturalWidth || 1)) * s)
     const {x: cx, y: cy} = cellCenter(c, g, col, row)
     const baseY = cy + g.tileH / 2
     ctx.drawImage(img, Math.round(cx * s - iw / 2), Math.round(baseY * s - ih), iw, ih)
   } else {
-    const x0 = Math.round(col * g.tileW * s), x1 = Math.round((col + 1) * g.tileW * s)
-    const y0 = Math.round(row * g.tileH * s), y1 = Math.round((row + 1) * g.tileH * s)
+    const spanC = Math.max(1, Math.round(img.naturalWidth / g.tileW))
+    const spanR = Math.max(1, Math.round(img.naturalHeight / g.tileH))
+    const x0 = Math.round(col * g.tileW * s), x1 = Math.round((col + spanC) * g.tileW * s)
+    const y1 = Math.round((row + 1) * g.tileH * s), y0 = Math.round((row + 1 - spanR) * g.tileH * s)
     ctx.drawImage(img, x0, y0, x1 - x0, y1 - y0)
   }
 }
