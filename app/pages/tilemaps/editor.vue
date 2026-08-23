@@ -9,6 +9,8 @@ import {
   computeGeometry, cellAt, cellCenter, tileImageUrl, drawPlacedTiles, drawGround, cellRoll,
 } from '~/helper/tilemap'
 import {type Terrain, reflowTerrain} from '~/helper/autotile'
+import {buildTiledMap} from '~/helper/tilemap-export'
+import {createZip} from '~/helper/zip'
 
 const route = useRoute()
 const router = useRouter()
@@ -251,6 +253,9 @@ function registerTiles(arts: { id: number; id_string: string }[]) {
 function ensureImage(id: number) {
   if (tileImages.has(id) || !knownTiles[id]) return
   const img = new Image()
+  // Without this the canvas taints on the cross-origin tile PNGs and every
+  // toBlob-based export (PNG, Tiled zip) dies with a SecurityError.
+  img.crossOrigin = 'anonymous'
   pendingImages.value++
   const done = () => { pendingImages.value = Math.max(0, pendingImages.value - 1); scheduleDraw() }
   img.onload = done
@@ -677,6 +682,50 @@ function exportJSON() {
     tiles,
   }
   downloadBlob(`${exportName()}.json`, new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}))
+}
+
+function tiledReadme(base: string): string {
+  return [
+    `${world.value?.name || 'Tilemap'} — Tiled map export from https://simplepixelart.com`,
+    '',
+    `Files: ${base}.tmj (Tiled 1.10 JSON map) + one tileset PNG per tile size.`,
+    '',
+    'Tiled: File > Open and pick the .tmj — keep the PNGs next to it.',
+    '',
+    'Phaser 3:',
+    '  preload() {',
+    `    this.load.tilemapTiledJSON('map', '${base}.tmj')`,
+    "    this.load.image('tiles-16x16', 'tiles-16x16.png')  // one per PNG in this zip",
+    '  }',
+    '  create() {',
+    "    const map = this.make.tilemap({key: 'map'})",
+    "    const tiles = map.addTilesetImage('tiles-16x16', 'tiles-16x16')",
+    "    map.createLayer('Layer 1', tiles)",
+    '  }',
+    '',
+    'Godot 4: import the .tmj with a Tiled importer plugin (e.g. YATI).',
+    'Unity: import with SuperTiled2Unity.',
+    '',
+  ].join('\n')
+}
+
+async function exportTiled() {
+  const base = exportName()
+  const {tmj, images, missing} = buildTiledMap(config, tileImages, base)
+  if (!images.length) {
+    toast.error('Place some tiles first')
+    return
+  }
+  const enc = new TextEncoder()
+  const files: { name: string; data: Uint8Array }[] = [{name: `${base}.tmj`, data: enc.encode(tmj)}]
+  for (const im of images) {
+    const blob = await new Promise<Blob | null>(r => im.canvas.toBlob(r))
+    if (blob) files.push({name: im.name, data: new Uint8Array(await blob.arrayBuffer())})
+  }
+  files.push({name: 'README.txt', data: enc.encode(tiledReadme(base))})
+  downloadBlob(`${base}_tiled.zip`, createZip(files))
+  if (missing) toast.warning(`${missing} tile image${missing > 1 ? 's' : ''} not loaded yet — those cells were left empty`)
+  else toast.success('Exported Tiled map for Phaser, Tiled, Godot, Unity')
 }
 
 async function runSearch(page = 1) {
@@ -1703,6 +1752,9 @@ const faq = [
                   <button class="file-menu-item" @click="exportPNG">
                     <span class="icon icon-image"/><span>Download PNG</span>
                   </button>
+                  <button class="file-menu-item" @click="exportTiled" title="Tiled .tmj + tileset PNGs — loads in Phaser, Tiled, Godot (via importer), Unity">
+                    <span class="icon icon-rocket"/><span>Export for game engines</span>
+                  </button>
                   <button class="file-menu-item" @click="exportJSON">
                     <span class="icon icon-download"/><span>Export JSON</span>
                   </button>
@@ -2056,8 +2108,9 @@ const faq = [
       <h1>Tilemap Editor</h1>
       <p>
         Paint pixel-art maps on a grid or isometric grid. Stack layers of ground tiles and sprites
-        from your own collection — or any artwork in the gallery — then save your map.
-        Free, runs in your browser.
+        from your own collection — or any artwork in the gallery — then save your map or
+        export it as a Tiled <code>.tmj</code> that Phaser and Tiled load directly (Godot and
+        Unity via their Tiled importers). Free, runs in your browser.
       </p>
 
       <h2>Build pixel-art tilemaps, free in your browser</h2>
