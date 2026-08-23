@@ -413,7 +413,7 @@ useCustomSeoMeta({
         <li><strong>Draw sprites</strong> in the <a href="/editor">editor</a> — layers, animation frames with tags, mirror and iso modes.</li>
         <li><strong>Build tilesets</strong> — <a href="/tilesets/slicer">slice a sheet</a> or draw tiles, then generate terrain variants with autotiling in the <a href="/tilesets/editor">tileset editor</a>.</li>
         <li><strong>Paint tilemaps</strong> — grid or isometric maps with layers and terrain brushes in the <a href="/tilemaps/editor">tilemap editor</a>.</li>
-        <li><strong>Export game-ready</strong> — sprite sheets with Aseprite-format JSON for Phaser, Unity and Godot, plus Godot <code>.tres</code> and Tiled <code>.tsx</code> tileset files.</li>
+        <li><strong>Export game-ready</strong> — sprite sheets with Aseprite-format JSON for Phaser, Unity and Godot; Godot <code>.tres</code> and Tiled <code>.tsx</code> tilesets; and full maps as Tiled <code>.tmj</code> that Phaser and Tiled load directly.</li>
       </ol>
 
       <h2>What's inside</h2>
