@@ -79,12 +79,16 @@ export function framesToAsepriteJSON(
             format: 'RGBA8888',
             size: {w: w * frames.length, h},
             scale: String(s),
-            frameTags: (opts.tags ?? []).map(t => ({
-                name: t.name,
-                from: t.from,
-                to: t.to,
-                direction: t.direction,
-            })),
+            frameTags: (opts.tags ?? []).map(t => {
+                const last = frames.length - 1;
+                const from = Math.max(0, Math.min(last, Math.round(t.from) || 0));
+                return {
+                    name: t.name,
+                    from,
+                    to: Math.max(from, Math.min(last, Math.round(t.to) || 0)),
+                    direction: t.direction || 'forward',
+                };
+            }),
             layers: [],
             slices: [],
         },
