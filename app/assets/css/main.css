@@ -1853,7 +1853,28 @@ canvas.iso-line { cursor: crosshair; }
 
 .tools.tools-rail {
     grid-template-columns: repeat(11, minmax(36px, 1fr));
+    grid-auto-columns: minmax(36px, 1fr);
     grid-auto-flow: column;
+}
+
+/* Touch devices get comfortable ~44px targets on the tool rail, the editor
+   toolbar (via its --tm-ctl size token) and the publish button. */
+@media (pointer: coarse) and (max-width: 767px) {
+    .tools.tools-rail {
+        grid-template-columns: repeat(11, minmax(44px, 1fr));
+        grid-auto-columns: minmax(44px, 1fr);
+    }
+
+    .editor-toolbar .toolbar-btn {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        min-height: 42px;
+    }
+
+    .publish-toolbar-btn.tm-publish {
+        min-height: 42px;
+    }
 }
 
 @media (min-width: 768px) {
