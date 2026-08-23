@@ -128,6 +128,27 @@ const {data: aiEnabled} = await useAuthFetch<boolean>('/coloring/economy/', {
   transform: (s: any) => !!s?.ai_image_enabled,
   default: () => false,
 })
+
+// This week's challenge banner. Transform keeps the SSR payload to the few
+// fields the banner shows; key must not look like a route path (crawl trap).
+const {data: homeChallenge} = await useAuthFetch<any>('/coloring/challenges/', {
+  key: 'home-weekly-challenge',
+  transform: (s: any) => s?.current
+      ? {
+        id_string: s.current.id_string,
+        name: s.current.name,
+        ends: s.current.ends,
+        entries: s.current.entries_count,
+      }
+      : null,
+  default: () => null,
+})
+
+const challengeDaysLeft = computed(() => {
+  if (!homeChallenge.value?.ends) return 0
+  const end = new Date(`${homeChallenge.value.ends}T23:59:59`)
+  return Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400000))
+})
 const aiPrompt = ref('')
 
 function goGenerate() {
@@ -141,9 +162,9 @@ onMounted(() => {
 })
 
 useCustomSeoMeta({
-  title: "Simple Pixel Art — Easy Free Online Pixel Art Maker",
-  description: "Simple Pixel Art is a free online pixel art maker built for easy pixel art. Draw on a grid, convert photos, remix easy templates, and share in seconds — no signup, no skill required.",
-  keywords: "simple pixel art, simplepixelart, pixel art, pixel art maker, pixel art editor, free pixel art, pixel art online, pixel drawing tool, pixel art generator, 8-bit art, 16-bit art, retro art, create pixel art",
+  title: "Simple Pixel Art — Easy Free Pixel Art Maker for Game Sprites & Tilesets",
+  description: "Free online pixel art maker built for game assets: draw sprites, build tilesets with autotiling, paint tilemaps, and export for Godot, Unity, or Phaser. Convert photos and remix templates too — no signup.",
+  keywords: "simple pixel art, simplepixelart, pixel art, pixel art maker, pixel art editor, free pixel art, pixel art online, game sprites, tileset maker, tilemap editor, sprite editor, pixel art for games, 8-bit art, retro art, create pixel art",
   canonical: "https://simplepixelart.com",
   script: [
     {
@@ -233,7 +254,8 @@ useCustomSeoMeta({
           <span class="home-hero-title-accent">in seconds.</span>
         </h1>
         <p class="home-hero-tagline">
-          Draw from scratch, convert any photo into pixel art, or remix templates from a community library — all in one place.
+          Draw sprites, build tilesets, paint tilemaps, and export game-ready assets for Godot, Unity, or Phaser —
+          or just convert a photo and remix community templates. All free, in your browser.
         </p>
         <form v-if="aiEnabled" class="home-ai" @submit.prevent="goGenerate">
           <input
@@ -257,16 +279,16 @@ useCustomSeoMeta({
         </p>
         <ul class="home-hero-stats" aria-label="Highlights">
           <li>
-            <strong>8×8 → 64×64</strong>
-            <span>canvas sizes</span>
+            <strong>Sprites → tiles → maps</strong>
+            <span>one asset pipeline</span>
+          </li>
+          <li>
+            <strong>Godot · Unity · Phaser</strong>
+            <span>game-ready export</span>
           </li>
           <li>
             <strong>One-click</strong>
             <span>photo → pixel art</span>
-          </li>
-          <li>
-            <strong>Layered</strong>
-            <span>editor with mirror</span>
           </li>
         </ul>
       </div>
@@ -325,6 +347,17 @@ useCustomSeoMeta({
       </div>
     </section>
 
+    <section v-if="homeChallenge" class="home-challenge">
+      <nuxt-link :to="`/challenges/${homeChallenge.id_string}`" class="home-challenge-link">
+        <span class="home-challenge-tag"><span class="icon icon-flag"/>Weekly challenge</span>
+        <span class="home-challenge-name">{{ homeChallenge.name }}</span>
+        <span class="home-challenge-sub">
+          {{ challengeDaysLeft }} {{ challengeDaysLeft === 1 ? 'day' : 'days' }} left ·
+          {{ homeChallenge.entries }} {{ homeChallenge.entries === 1 ? 'entry' : 'entries' }} · Join →
+        </span>
+      </nuxt-link>
+    </section>
+
     <section class="library readme">
       <div class="readme-head">
         <div class="readme-tabs">
@@ -372,13 +405,26 @@ useCustomSeoMeta({
         <li><strong>Start from a palette</strong> — pick one of the <a href="/palettes">color palettes</a> and draw inside a fixed set of colors, the way most pixel art is made.</li>
       </ol>
 
+      <h2>Built for game developers</h2>
+      <p>
+        The whole game-asset pipeline lives here, end to end:
+      </p>
+      <ol>
+        <li><strong>Draw sprites</strong> in the <a href="/editor">editor</a> — layers, animation frames with tags, mirror and iso modes.</li>
+        <li><strong>Build tilesets</strong> — <a href="/tilesets/slicer">slice a sheet</a> or draw tiles, then generate terrain variants with autotiling in the <a href="/tilesets/editor">tileset editor</a>.</li>
+        <li><strong>Paint tilemaps</strong> — grid or isometric maps with layers and terrain brushes in the <a href="/tilemaps/editor">tilemap editor</a>.</li>
+        <li><strong>Export game-ready</strong> — sprite sheets with Aseprite-format JSON for Phaser, Unity and Godot, plus Godot <code>.tres</code> and Tiled <code>.tsx</code> tileset files.</li>
+      </ol>
+
       <h2>What's inside</h2>
       <ul>
         <li><strong>Full editor</strong> — brush, eraser, fill, selections, layers, and unlimited undo/redo.</li>
+        <li><strong>Animation</strong> — frame-by-frame with tags, onion skin, GIF and sprite-sheet export.</li>
         <li><strong>Mirror drawing</strong> — draw symmetric characters and icons in half the time.</li>
         <li><strong>Palette manager</strong> — build, save, and swap <a href="/palettes">color palettes</a> across the whole canvas.</li>
         <li><strong>Photo to pixel art</strong> — one-click conversion with adjustable resolution and colors.</li>
-        <li><strong>Tilesets &amp; worlds</strong> — assemble pixel tiles into grid or isometric scenes.</li>
+        <li><strong>Tilesets &amp; tilemaps</strong> — autotile terrain and assemble grid or isometric scenes.</li>
+        <li><strong>Weekly challenges</strong> — a fresh <a href="/challenges">theme every week</a>, community-voted winners.</li>
         <li><strong>Export anywhere</strong> — clean PNGs for games, NFTs, avatars, print, and more.</li>
       </ul>
 
@@ -541,6 +587,55 @@ useCustomSeoMeta({
     gap: var(--space-2);
     align-items: baseline;
   }
+}
+
+.home-challenge-link {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .home-challenge-link:hover {
+    border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+  }
+}
+
+.home-challenge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 2px 8px;
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+.home-challenge-tag .icon {
+  width: 0.9em;
+  height: 0.9em;
+}
+
+.home-challenge-name {
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+.home-challenge-sub {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .section-head {
