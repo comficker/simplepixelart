@@ -1077,13 +1077,19 @@ body::-webkit-scrollbar,
 
 .skeleton-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+    .skeleton-grid {
+        grid-template-columns: repeat(var(--results-cols, 6), minmax(0, 1fr));
+    }
 }
 
 @media (min-width: 1024px) {
     .skeleton-grid {
-        grid-template-columns: repeat(8, minmax(0, 1fr));
+        grid-template-columns: repeat(var(--results-cols, 8), minmax(0, 1fr));
     }
 }
 
@@ -1229,13 +1235,13 @@ body::-webkit-scrollbar,
 
 @media (min-width: 768px) {
     .results {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-columns: repeat(var(--results-cols, 6), minmax(0, 1fr));
     }
 }
 
 @media (min-width: 1024px) {
     .results {
-        grid-template-columns: repeat(8, minmax(0, 1fr));
+        grid-template-columns: repeat(var(--results-cols, 8), minmax(0, 1fr));
     }
 }
 

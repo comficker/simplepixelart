@@ -3,6 +3,7 @@ import {toast} from 'vue-sonner'
 
 const auth = useAuthStore()
 const {current, setTheme, themes} = useTheme() as any
+const {current: resultsCols, options: resultsColOptions, setResultsCols} = useResultsCols()
 
 useCustomSeoMeta({
   title: 'Settings - Simple Pixel Art',
@@ -174,6 +175,29 @@ watch(() => auth.logged, fillForm)
               <span>{{ t.name }}</span>
               <span v-if="current === t.id" class="icon icon-check"/>
             </button>
+          </div>
+
+          <div class="set-field">
+            <span class="set-label">Items per row</span>
+            <div class="settings-row">
+              <label class="pill" :class="{active: resultsCols === 'auto'}">
+                <input type="radio" value="auto" :checked="resultsCols === 'auto'" @change="setResultsCols('auto')">
+                <span>Auto</span>
+              </label>
+              <label
+                  v-for="n in resultsColOptions"
+                  :key="n"
+                  class="pill"
+                  :class="{active: resultsCols === n}"
+              >
+                <input type="radio" :value="n" :checked="resultsCols === n" @change="setResultsCols(n)">
+                <span>{{ n }}</span>
+              </label>
+            </div>
+            <p class="text-xs text-muted">
+              How many artworks each gallery row fits on tablet and desktop, four rows
+              per page. Phones always show 3.
+            </p>
           </div>
         </section>
 

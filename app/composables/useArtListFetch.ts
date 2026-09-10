@@ -14,6 +14,10 @@ export function useArtListFetch(opts: {
     const hideIp = opts.hideIp ?? false
     const search = opts.search ?? ref('')
 
+    const {pageSize} = useResultsCols()
+
+    const effectiveLimit = computed(() => pageSize(limit))
+
     const isNewView = computed(() => route.path === '/arts/new')
     const isDetailView = computed(() => route.path.startsWith('/art/'))
     const relatedId = computed(() => isDetailView.value ? route.params.id_string?.toString() : undefined)
@@ -42,7 +46,7 @@ export function useArtListFetch(opts: {
         status: isNewView.value ? 'public,pending' : status,
         slug: isNewView.value ? '/arts' : route.path,
         page: route.query.page ? Number.parseInt(route.query.page.toString()) : 1,
-        page_size: hideIp ? limit + 6 : limit,
+        page_size: hideIp ? effectiveLimit.value + 6 : effectiveLimit.value,
         search: search.value,
         ordering: ordering || (isNewView.value ? '-updated' : undefined),
         related: relatedId.value,
@@ -67,5 +71,5 @@ export function useArtListFetch(opts: {
         key: `item-list:${encodeURIComponent(route.fullPath)}:${ordering || 'default'}:${limit}`,
     })
 
-    return {fetch, isNewView, sizeSlugMatch, currentSize, isoActive, search}
+    return {fetch, isNewView, sizeSlugMatch, currentSize, isoActive, search, effectiveLimit}
 }
