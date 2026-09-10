@@ -8,6 +8,10 @@ const hasFilterQuery = computed(() =>
     !!(route.query.width || route.query.height || route.query.is_iso || route.query.search),
 )
 
+// Same-key kick-off so the artwork list and the tag list travel together
+// instead of the grid waiting a whole round trip for the tags.
+useArtListFetch({limit: 24})
+
 const {data: tagsRes} = await useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {
   params: {page_size: 30, has_pages: 1},
   key: 'arts-tags',
