@@ -57,6 +57,8 @@ useHead({
       </template>
     </nav>
     <div class="dash-top-ctl">
+      <PartialNotifyBell/>
+      <WalletMenu/>
       <PartialSocialAuth/>
     </div>
   </div>
