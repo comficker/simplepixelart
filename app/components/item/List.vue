@@ -2,7 +2,7 @@
 import BrowseLayout from "~/components/BrowseLayout.vue";
 import {looksLikeProtectedIP} from "~/helper/ip-denylist";
 
-const {limit, showFilter, status, hideIp, ordering, hidePaginator, title, desc} = defineProps({
+const {limit, showFilter, status, hideIp, exactLimit, ordering, hidePaginator, title, desc} = defineProps({
   title: {
     type: String,
     default: ''
@@ -31,6 +31,10 @@ const {limit, showFilter, status, hideIp, ordering, hidePaginator, title, desc} 
     type: Boolean,
     default: false
   },
+  exactLimit: {
+    type: Boolean,
+    default: false
+  },
   ordering: {
     type: String,
     default: ''
@@ -44,7 +48,7 @@ const search = ref('')
 
 const {
   fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive, effectiveLimit,
-} = useArtListFetch({limit, status, ordering, hideIp, search})
+} = useArtListFetch({limit, status, ordering, hideIp, exact: exactLimit, search})
 
 const SIZE_PRESETS = [
   {width: 8, height: 8},

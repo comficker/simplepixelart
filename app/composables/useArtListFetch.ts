@@ -5,6 +5,7 @@ export function useArtListFetch(opts: {
     status?: string
     ordering?: string
     hideIp?: boolean
+    exact?: boolean
     search?: Ref<string>
 } = {}) {
     const route = useRoute()
@@ -12,11 +13,12 @@ export function useArtListFetch(opts: {
     const status = opts.status ?? 'public'
     const ordering = opts.ordering ?? ''
     const hideIp = opts.hideIp ?? false
+    const exact = opts.exact ?? false
     const search = opts.search ?? ref('')
 
     const {pageSize} = useResultsCols()
 
-    const effectiveLimit = computed(() => pageSize(limit))
+    const effectiveLimit = computed(() => (exact ? limit : pageSize(limit)))
 
     const isNewView = computed(() => route.path === '/arts/new')
     const isDetailView = computed(() => route.path.startsWith('/art/'))

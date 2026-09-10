@@ -511,7 +511,7 @@ const previewStyle = computed(() => {
             <span class="widget-ctl-name">Browse all</span><span class="icon icon-angle-right"/>
           </nuxt-link>
         </template>
-        <item-list :limit="6"/>
+        <item-list :limit="6" exact-limit/>
       </Widget>
 
       <Widget>
