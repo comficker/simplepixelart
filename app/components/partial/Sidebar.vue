@@ -69,8 +69,6 @@ const PRIMARY = [
     </nav>
 
     <div class="dash-foot">
-      <PartialNotifyBell/>
-      <WalletMenu/>
       <button
           type="button"
           class="cmdk-trigger"
