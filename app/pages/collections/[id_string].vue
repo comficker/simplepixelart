@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const artImage = useArtImage()
 import {toast} from 'vue-sonner'
 import type {APIResponse, Collection, SharedPage} from "~/types";
 
@@ -179,7 +180,7 @@ function cancelManage() {
 }
 
 function thumbUrl(item: SharedPage): string {
-  return `${config.public.api}/coloring/files/art-original/${item.id_string}.png`
+  return artImage(item)
 }
 
 const showEditModal = ref(false)

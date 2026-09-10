@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const artImage = useArtImage()
 import type {APIResponse, SharedPage} from '~/types'
 
 interface Entry {
@@ -23,7 +24,6 @@ interface ChallengeDetail {
 
 const route = useRoute()
 const auth = useAuthStore()
-const config = useRuntimeConfig()
 const slug = computed(() => route.params.id_string?.toString() || '')
 
 const {data: challenge, error} = await useAuthFetch<ChallengeDetail>(
@@ -59,7 +59,7 @@ function fmtRange(): string {
 }
 
 function thumb(e: Entry): string {
-  return `${config.public.api}/coloring/files/art-original/${e.id_string}.png`
+  return artImage(e)
 }
 
 const medals = ['🥇', '🥈', '🥉']

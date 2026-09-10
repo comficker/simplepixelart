@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const artImage = useArtImage()
 import {toast} from 'vue-sonner'
 import type {EditorData} from '~/types'
 import type {LocalTile} from '~/composables/useLocalTilesets'
@@ -28,7 +29,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{ select: [idString: string, tilesetId: string]; 'tileset-change': [id: string] }>()
 
-const config = useRuntimeConfig()
 const auth = useAuthStore()
 const localTs = useLocalTilesets()
 
@@ -48,7 +48,7 @@ const selectedTs = computed(() => tilesets.value.find(c => c.id === selectedId.v
 const selectedTitle = computed(() => selectedTs.value?.title || 'Choose tileset')
 
 function cloudThumb(slug: string): string {
-  return `${config.public.api}/coloring/files/art-original/${slug}.png`
+  return artImage(slug)
 }
 
 async function loadTilesets() {

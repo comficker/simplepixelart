@@ -40,18 +40,18 @@ import type {SharedPage} from "~/types";
 const {value, isDraw, isRemix, priority, isAdding, added, showVote} = defineProps<{
   value: SharedPage, isDraw?: boolean, isRemix?: boolean, priority?: boolean, isAdding?: boolean, added?: boolean, showVote?: boolean
 }>()
-const config = useRuntimeConfig()
+const artImage = useArtImage()
 
 const imgError = ref(false)
 
-const src = computed(() => {
-  return `${config.public.api}/coloring/files/art-original/${value.id_string}.png`
-})
+const src = computed(() => artImage(value))
 watch(src, () => { imgError.value = false })
 const to = computed(() => {
   return (isDraw || isRemix) ? `/editor?id=${value.id_string || value.id}` : `/art/${value.id_string}`
 })
-const isAnim = computed(() => (((value.meta as any)?.animation?.frames?.length) || 0) > 1)
+// `is_anim` is annotated on list rows; detail payloads still carry meta.
+const isAnim = computed(() => value.is_anim
+    ?? ((((value.meta as any)?.animation?.frames?.length) || 0) > 1))
 </script>
 
 <style>

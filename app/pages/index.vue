@@ -12,7 +12,6 @@ type WorkItem = (SharedPage | EditorData) & {
 }
 
 const auth = useAuthStore()
-const config = useRuntimeConfig()
 
 const userWorks = ref<WorkItem[]>([])
 const loadingWorks = ref(false)
@@ -35,8 +34,10 @@ function isCloudWork(item: WorkItem): boolean {
 
 const failedThumb = reactive<Record<string | number, boolean>>({})
 
+const artImage = useArtImage()
+
 function workThumbUrl(item: WorkItem): string {
-  return `${config.public.api}/coloring/files/art-original/${item.id_string}.png`
+  return artImage(item as any)
 }
 
 async function loadUserWorks() {
@@ -124,24 +125,28 @@ const faq = [
   },
 ]
 
-const {data: aiEnabled} = await useAuthFetch<boolean>('/coloring/economy/', {
-  key: 'home-ai-image-enabled',
-  transform: (s: any) => !!s?.ai_image_enabled,
-  default: () => false,
-})
-
-const {data: homeChallenge} = await useAuthFetch<any>('/coloring/challenges/', {
-  key: 'home-weekly-challenge',
-  transform: (s: any) => s?.current
-      ? {
-        id_string: s.current.id_string,
-        name: s.current.name,
-        ends: s.current.ends,
-        entries: s.current.entries_count,
-      }
-      : null,
-  default: () => null,
-})
+// Awaited together: these two are independent, and awaiting them one after
+// the other made the server wait out both round trips before the artwork list
+// (fetched by item-list further down) could even start.
+const [{data: aiEnabled}, {data: homeChallenge}] = await Promise.all([
+  useAuthFetch<boolean>('/coloring/economy/', {
+    key: 'home-ai-image-enabled',
+    transform: (s: any) => !!s?.ai_image_enabled,
+    default: () => false,
+  }),
+  useAuthFetch<any>('/coloring/challenges/', {
+    key: 'home-weekly-challenge',
+    transform: (s: any) => s?.current
+        ? {
+          id_string: s.current.id_string,
+          name: s.current.name,
+          ends: s.current.ends,
+          entries: s.current.entries_count,
+        }
+        : null,
+    default: () => null,
+  }),
+])
 
 const challengeDaysLeft = computed(() => {
   if (!homeChallenge.value?.ends) return 0
