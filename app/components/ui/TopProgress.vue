@@ -1,14 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import {computed, ref, onMounted, onBeforeUnmount} from 'vue'
 
-const progress = ref(0)
+const {isLoading, progress} = useLoadingIndicator({throttle: 150})
+
+const navScale = computed(() => Math.min(1, progress.value / 100))
+const navDone = computed(() => progress.value >= 100)
+
+const scroll = ref(0)
 let raf = 0
 
 function update() {
   raf = 0
   const doc = document.documentElement
   const max = doc.scrollHeight - doc.clientHeight
-  progress.value = max > 0 ? Math.min(1, Math.max(0, doc.scrollTop / max)) : 0
+  scroll.value = max > 0 ? Math.min(1, Math.max(0, doc.scrollTop / max)) : 0
 }
 
 function onScroll() {
@@ -18,7 +23,7 @@ function onScroll() {
 
 onMounted(() => {
   update()
-  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('scroll', onScroll, {passive: true})
   window.addEventListener('resize', onScroll)
 })
 
@@ -30,13 +35,19 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="scroll-progress" aria-hidden="true">
-    <div class="scroll-progress-bar" :style="{ transform: `scaleX(${progress})` }"/>
+  <div class="top-progress" aria-hidden="true">
+    <div
+        v-show="isLoading"
+        class="top-progress-bar is-nav"
+        :class="{'is-done': navDone}"
+        :style="{ transform: `scaleX(${navScale})` }"
+    />
+    <div v-show="!isLoading" class="top-progress-bar" :style="{ transform: `scaleX(${scroll})` }"/>
   </div>
 </template>
 
 <style scoped>
-.scroll-progress {
+.top-progress {
   position: fixed;
   top: 0;
   left: 0;
@@ -47,7 +58,7 @@ onBeforeUnmount(() => {
   background: transparent;
 }
 
-.scroll-progress-bar {
+.top-progress-bar {
   height: 100%;
   width: 100%;
   transform-origin: left center;
@@ -61,7 +72,15 @@ onBeforeUnmount(() => {
   will-change: transform;
 }
 
+.top-progress-bar.is-nav {
+  transition: transform 150ms linear, opacity 300ms ease;
+}
+
+.top-progress-bar.is-done {
+  opacity: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .scroll-progress-bar { box-shadow: none; }
+  .top-progress-bar.is-nav { transition: opacity 300ms ease; }
 }
 </style>

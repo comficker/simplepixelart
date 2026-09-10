@@ -31,7 +31,7 @@ if (import.meta.client) {
 
 <template>
   <div class="main-wrapper dash" :class="{'side-collapsed': sideCollapsed}">
-    <UiScrollProgress/>
+    <UiTopProgress/>
     <PartialSidebar/>
     <div class="dash-main">
       <PartialHeader/>
