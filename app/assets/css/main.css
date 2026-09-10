@@ -1221,6 +1221,11 @@ body::-webkit-scrollbar,
     gap: var(--space-3);
 }
 
+.pal-skeleton {
+    height: 132px;
+    border-radius: var(--radius-sm);
+}
+
 @media (max-width: 520px) {
     .pal-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
