@@ -3,6 +3,7 @@ import {toast} from 'vue-sonner'
 
 const auth = useAuthStore()
 const {current, setTheme, themes} = useTheme() as any
+const googleAuthUrl = useGoogleAuthUrl()
 const {current: resultsCols, options: resultsColOptions, setResultsCols} = useResultsCols()
 
 useCustomSeoMeta({
@@ -97,7 +98,7 @@ watch(() => auth.logged, fillForm)
           <h2 class="set-section-title">Account</h2>
           <div v-if="!auth.isLogged" class="set-signin">
             <p class="text-xs text-muted">Sign in to manage your username, profile and password.</p>
-            <nuxt-link to="/auth" class="btn primary">Sign in</nuxt-link>
+            <a :href="googleAuthUrl" class="btn primary">Sign in</a>
           </div>
           <form v-else class="set-form" @submit.prevent="saveProfile">
             <label class="set-field">

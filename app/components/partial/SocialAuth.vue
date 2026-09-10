@@ -1,13 +1,6 @@
 <script setup lang="ts">
-const config = useRuntimeConfig()
 const auth = useAuthStore()
-
-const requestURL = useRequestURL()
-const googleAuthUrl = computed(() => {
-  const apiBase = (config.public.api as string) || ''
-  const next = `${requestURL.origin}/auth/callback`
-  return `${apiBase}/auth/google?state=${encodeURIComponent(next)}`
-})
+const googleAuthUrl = useGoogleAuthUrl()
 </script>
 
 <template>
