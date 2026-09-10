@@ -1,6 +1,6 @@
 import useStatefulCookie from '~/composables/useStatefulCookie'
 
-const MAX = 5
+const MAX = 11
 
 export function useHasWork() {
     const flag = useStatefulCookie('has_work')

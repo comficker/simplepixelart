@@ -23,6 +23,9 @@ export const useResultsCols = () => {
         pageSize: (fallback: number, rows = RESULTS_ROWS) =>
             current.value === 'auto' ? fallback : (current.value as number) * rows,
 
+        rowSize: (fallback: number, reserve = 0) =>
+            current.value === 'auto' ? fallback : Math.max(1, (current.value as number) - reserve),
+
         setResultsCols(v: ResultsCols) {
             cookie.value = v === 'auto' ? null : String(v)
         },
