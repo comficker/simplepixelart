@@ -18,10 +18,15 @@ const userWorks = ref<WorkItem[]>([])
 const loadingWorks = ref(false)
 
 const {hasWork, workCount, setWorkCount} = useHasWork()
+const {rowSize} = useResultsCols()
+
+const studioLimit = computed(() => rowSize(5, 1))
 
 const mounted = ref(false)
 
 const hasWorks = computed(() => userWorks.value.length > 0)
+const studioWorks = computed(() => userWorks.value.slice(0, studioLimit.value))
+const studioSkeletons = computed(() => Math.min(workCount.value, studioLimit.value) + 1)
 const showStudio = computed(() => hasWork.value || hasWorks.value)
 
 function isCloudWork(item: WorkItem): boolean {
@@ -41,7 +46,7 @@ async function loadUserWorks() {
       const res = await useNativeFetch<APIResponse<SharedPage>>('/coloring/shared-pages/', {
         params: {
           user: auth.logged.username,
-          page_size: 5,
+          page_size: studioLimit.value,
           is_template: true,
           ordering: '-updated',
         },
@@ -52,7 +57,7 @@ async function loadUserWorks() {
       userWorks.value = (ws
           .filter(w => w && w.id)
           .sort((a: any, b: any) => (b.updated || 0) - (a.updated || 0))
-          .slice(0, 5)) as WorkItem[]
+          .slice(0, studioLimit.value)) as WorkItem[]
     }
   } finally {
     loadingWorks.value = false
@@ -285,7 +290,7 @@ useCustomSeoMeta({
               <span class="studio-new-label">New canvas</span>
             </nuxt-link>
             <nuxt-link
-                v-for="item in userWorks"
+                v-for="item in studioWorks"
                 :key="item.id as any"
                 :to="`/editor?id=${item.id_string || item.id}`"
                 class="studio-card"
@@ -314,7 +319,7 @@ useCustomSeoMeta({
           </div>
 
           <div v-else class="studio-grid" aria-busy="true">
-            <div v-for="i in workCount + 1" :key="i" class="studio-card">
+            <div v-for="i in studioSkeletons" :key="i" class="studio-card">
               <div class="studio-canvas">
                 <div class="square">
                   <div class="inside"><span class="skeleton size-full"/></div>
@@ -563,9 +568,15 @@ useCustomSeoMeta({
   gap: var(--space-3);
 }
 
+@media (max-width: 767px) {
+  .studio-grid > :nth-child(n+4) {
+    display: none;
+  }
+}
+
 @media (min-width: 768px) {
   .studio-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--results-cols, 6), minmax(0, 1fr));
     gap: var(--space-4);
   }
 }
