@@ -209,7 +209,8 @@ const workTileFilter = ref<'all' | 'art' | 'tiles'>('all')
 const confirmingWorkId = ref<string | number | null>(null)
 let workConfirmTimer: ReturnType<typeof setTimeout> | null = null
 
-const PAGE_SIZE = 30
+const {pageSize} = useResultsCols()
+const PAGE_SIZE = computed(() => pageSize(30))
 const workPage = ref(1)
 const workNumPages = ref(1)
 
@@ -223,7 +224,7 @@ async function fetchWorks() {
         params: {
           user: auth.logged.username,
           page: workPage.value,
-          page_size: PAGE_SIZE,
+          page_size: PAGE_SIZE.value,
           is_template: true,
           ordering: SORT_META[sortBy.value].ordering,
           ...(status ? {status} : {}),
@@ -378,12 +379,12 @@ const localFilteredWorks = computed(() => {
 
 const filteredWorks = computed(() => {
   if (auth.logged?.id) return workspaces.value
-  const start = (workPage.value - 1) * PAGE_SIZE
-  return localFilteredWorks.value.slice(start, start + PAGE_SIZE)
+  const start = (workPage.value - 1) * PAGE_SIZE.value
+  return localFilteredWorks.value.slice(start, start + PAGE_SIZE.value)
 })
 
 const workNumPagesShown = computed(() =>
-    auth.logged?.id ? workNumPages.value : Math.max(1, Math.ceil(localFilteredWorks.value.length / PAGE_SIZE)),
+    auth.logged?.id ? workNumPages.value : Math.max(1, Math.ceil(localFilteredWorks.value.length / PAGE_SIZE.value)),
 )
 
 const collections = ref<CollectionItem[]>([])
@@ -459,10 +460,10 @@ const filteredColls = computed(() => {
 
 const collPage = ref(1)
 watch(collFilter, () => { collPage.value = 1 })
-const collNumPages = computed(() => Math.max(1, Math.ceil(filteredColls.value.length / PAGE_SIZE)))
+const collNumPages = computed(() => Math.max(1, Math.ceil(filteredColls.value.length / PAGE_SIZE.value)))
 const pagedColls = computed(() => {
-  const start = (collPage.value - 1) * PAGE_SIZE
-  return filteredColls.value.slice(start, start + PAGE_SIZE)
+  const start = (collPage.value - 1) * PAGE_SIZE.value
+  return filteredColls.value.slice(start, start + PAGE_SIZE.value)
 })
 
 const tilesetsList = ref<any[]>([])
@@ -601,14 +602,14 @@ watch(tilesetFilter, () => { tilesetPage.value = 1 })
 const filteredWorlds = computed(() => sortItems(worldFilter.value === 'all'
     ? worldsList.value
     : worldsList.value.filter(w => (w.status === 'public') === (worldFilter.value === 'public'))))
-const worldNumPages = computed(() => Math.max(1, Math.ceil(filteredWorlds.value.length / PAGE_SIZE)))
-const pagedWorlds = computed(() => filteredWorlds.value.slice((worldPage.value - 1) * PAGE_SIZE, worldPage.value * PAGE_SIZE))
+const worldNumPages = computed(() => Math.max(1, Math.ceil(filteredWorlds.value.length / PAGE_SIZE.value)))
+const pagedWorlds = computed(() => filteredWorlds.value.slice((worldPage.value - 1) * PAGE_SIZE.value, worldPage.value * PAGE_SIZE.value))
 
 const filteredTilesets = computed(() => sortItems(tilesetFilter.value === 'all'
     ? tilesetsList.value
     : tilesetsList.value.filter(t => (t.status === 'public') === (tilesetFilter.value === 'public'))))
-const tilesetNumPages = computed(() => Math.max(1, Math.ceil(filteredTilesets.value.length / PAGE_SIZE)))
-const pagedTilesets = computed(() => filteredTilesets.value.slice((tilesetPage.value - 1) * PAGE_SIZE, tilesetPage.value * PAGE_SIZE))
+const tilesetNumPages = computed(() => Math.max(1, Math.ceil(filteredTilesets.value.length / PAGE_SIZE.value)))
+const pagedTilesets = computed(() => filteredTilesets.value.slice((tilesetPage.value - 1) * PAGE_SIZE.value, tilesetPage.value * PAGE_SIZE.value))
 
 const curFilter = computed<StatusFilter>({
   get: () => tab.value === 'artworks' ? workFilter.value
@@ -672,6 +673,9 @@ onMounted(() => {
       </nuxt-link>
       <nuxt-link v-else-if="tab === 'tilesets'" to="/tilesets/editor" class="btn primary">
         <span class="icon icon-plus"/><span>New tileset</span>
+      </nuxt-link>
+      <nuxt-link v-else-if="tab === 'worlds'" to="/tilemaps/editor?new=true" class="btn primary">
+        <span class="icon icon-plus"/><span>New world</span>
       </nuxt-link>
       <button v-else-if="auth.isLogged" class="btn primary" @click="showCreateColl = true">
         <span class="icon icon-plus"/><span>New collection</span>

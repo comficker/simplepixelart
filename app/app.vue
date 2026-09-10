@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import useStatefulCookie from '~/composables/useStatefulCookie'
 const editorBoot = useEditorBoot()
+const {style: resultsColsStyle} = useResultsCols()
+useHead({htmlAttrs: {style: resultsColsStyle}})
 const sideState = useStatefulCookie('dash_side')
 const sideCollapsed = computed(() => sideState.value === 'collapsed')
 const editorBootBg = ref('#1b1b1f')
@@ -31,7 +33,7 @@ if (import.meta.client) {
 
 <template>
   <div class="main-wrapper dash" :class="{'side-collapsed': sideCollapsed}">
-    <UiScrollProgress/>
+    <UiTopProgress/>
     <PartialSidebar/>
     <div class="dash-main">
       <PartialHeader/>

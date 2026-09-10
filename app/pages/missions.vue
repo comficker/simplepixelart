@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const googleAuthUrl = useGoogleAuthUrl()
 import {toast} from 'vue-sonner'
 
 const auth = useAuthStore()
@@ -164,7 +165,7 @@ watch(() => auth.isLogged, (v) => {
           <span class="icon icon-coin empty-icon"/>
           <h2 class="msn-empty-title">Sign in to earn credits</h2>
           <p class="text-xs">Daily bonus, missions and invites reward you for creating and sharing pixel art.</p>
-          <nuxt-link to="/auth" class="btn primary">Sign in</nuxt-link>
+          <a :href="googleAuthUrl" class="btn primary">Sign in</a>
         </div>
 
         <div v-else-if="loading && !sum" class="msn-list" aria-busy="true">

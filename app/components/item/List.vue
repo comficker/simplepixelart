@@ -43,7 +43,7 @@ const router = useRouter()
 const search = ref('')
 
 const {
-  fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive,
+  fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive, effectiveLimit,
 } = useArtListFetch({limit, status, ordering, hideIp, search})
 
 const SIZE_PRESETS = [
@@ -64,7 +64,7 @@ const {data, pending} = await listFetch
 const visibleResults = computed(() => {
   const items = data.value?.results || []
   if (!hideIp) return items
-  return items.filter(it => !looksLikeProtectedIP(it.name)).slice(0, limit)
+  return items.filter(it => !looksLikeProtectedIP(it.name)).slice(0, effectiveLimit.value)
 })
 
 const isLoading = computed(() => pending.value && !data.value?.results?.length)
@@ -159,7 +159,7 @@ function isCurrentPreset(p: {width: number, height: number}): boolean {
     </template>
 
     <div v-if="isLoading" class="skeleton-grid">
-      <div v-for="i in limit" :key="`sk-${i}`" class="skeleton skeleton-square"/>
+      <div v-for="i in effectiveLimit" :key="`sk-${i}`" class="skeleton skeleton-square"/>
     </div>
     <div v-else-if="isEmpty" class="empty-state">
       <span class="empty-state-icon icon icon-search" aria-hidden="true"/>

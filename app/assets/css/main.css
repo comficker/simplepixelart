@@ -792,12 +792,16 @@ footer {
     display: inline-flex;
 }
 
+html,
+body,
 .no-scrollbar,
 .browse-filters {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
 
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar,
 .browse-filters::-webkit-scrollbar {
     display: none;
@@ -1073,13 +1077,19 @@ footer {
 
 .skeleton-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+    .skeleton-grid {
+        grid-template-columns: repeat(var(--results-cols, 6), minmax(0, 1fr));
+    }
 }
 
 @media (min-width: 1024px) {
     .skeleton-grid {
-        grid-template-columns: repeat(8, minmax(0, 1fr));
+        grid-template-columns: repeat(var(--results-cols, 8), minmax(0, 1fr));
     }
 }
 
@@ -1211,6 +1221,11 @@ footer {
     gap: var(--space-3);
 }
 
+.pal-skeleton {
+    height: 132px;
+    border-radius: var(--radius-sm);
+}
+
 @media (max-width: 520px) {
     .pal-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -1225,13 +1240,13 @@ footer {
 
 @media (min-width: 768px) {
     .results {
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-columns: repeat(var(--results-cols, 6), minmax(0, 1fr));
     }
 }
 
 @media (min-width: 1024px) {
     .results {
-        grid-template-columns: repeat(8, minmax(0, 1fr));
+        grid-template-columns: repeat(var(--results-cols, 8), minmax(0, 1fr));
     }
 }
 
@@ -2297,25 +2312,22 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     width: 100%;
     min-height: 220px;
     padding: var(--space-4);
-    border: 1px dashed var(--border);
     border-radius: var(--radius-sm);
     color: var(--muted);
     text-align: center;
     cursor: pointer;
     overflow: hidden;
-    transition: background var(--transition), border-color var(--transition);
+    transition: background var(--transition);
 }
 
 @media (hover: hover) and (pointer: fine) {
     .dropzone:hover {
         background: var(--surface-2);
-        border-color: var(--primary);
     }
 }
 
 .dropzone.filled {
     padding: 0;
-    border-style: solid;
 }
 
 .dropzone-icon {
