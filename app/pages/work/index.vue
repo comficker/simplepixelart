@@ -674,6 +674,9 @@ onMounted(() => {
       <nuxt-link v-else-if="tab === 'tilesets'" to="/tilesets/editor" class="btn primary">
         <span class="icon icon-plus"/><span>New tileset</span>
       </nuxt-link>
+      <nuxt-link v-else-if="tab === 'worlds'" to="/tilemaps/editor?new=true" class="btn primary">
+        <span class="icon icon-plus"/><span>New world</span>
+      </nuxt-link>
       <button v-else-if="auth.isLogged" class="btn primary" @click="showCreateColl = true">
         <span class="icon icon-plus"/><span>New collection</span>
       </button>
