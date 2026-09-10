@@ -2312,25 +2312,22 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     width: 100%;
     min-height: 220px;
     padding: var(--space-4);
-    border: 1px dashed var(--border);
     border-radius: var(--radius-sm);
     color: var(--muted);
     text-align: center;
     cursor: pointer;
     overflow: hidden;
-    transition: background var(--transition), border-color var(--transition);
+    transition: background var(--transition);
 }
 
 @media (hover: hover) and (pointer: fine) {
     .dropzone:hover {
         background: var(--surface-2);
-        border-color: var(--primary);
     }
 }
 
 .dropzone.filled {
     padding: 0;
-    border-style: solid;
 }
 
 .dropzone-icon {
