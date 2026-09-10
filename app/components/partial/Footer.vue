@@ -17,7 +17,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2) var(--space-4);
-  padding-top: var(--space-4);
+  padding-top: 0;
   padding-bottom: 0;
 }
 

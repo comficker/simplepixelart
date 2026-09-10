@@ -287,7 +287,7 @@ useCustomSeoMeta({
           <div v-if="hasWorks" class="studio-grid">
             <nuxt-link to="/editor?new=true" class="studio-new" title="New blank canvas">
               <span class="icon icon-plus studio-new-icon"/>
-              <span class="studio-new-label">New canvas</span>
+              <span class="studio-new-label">New</span>
             </nuxt-link>
             <nuxt-link
                 v-for="item in studioWorks"
@@ -550,6 +550,30 @@ useCustomSeoMeta({
   font-size: var(--text-xs);
   color: var(--muted);
   white-space: nowrap;
+}
+
+/* Phones: the row cannot hold all three parts, and the auto margin left the
+   wrapped line pinned right. Lay it out as two rows instead. */
+@media (max-width: 767px) {
+  .home-challenge-link {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    row-gap: var(--space-1);
+  }
+
+  .home-challenge-name {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .home-challenge-sub {
+    grid-column: 1 / -1;
+    margin-left: 0;
+    white-space: normal;
+  }
 }
 
 .home-library {
