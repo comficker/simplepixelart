@@ -65,9 +65,4 @@ withDefaults(defineProps<{
   color: var(--muted);
 }
 
-@media (max-width: 640px) {
-  .section-hint {
-    display: none;
-  }
-}
 </style>

@@ -172,8 +172,8 @@ input.item {
 
 @media (hover: hover) and (pointer: fine) {
   .palette-remove:hover {
-    color: #fff;
-    background: #ef4444;
+    color: var(--danger-foreground);
+    background: var(--danger);
   }
 }
 

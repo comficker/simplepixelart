@@ -1,4 +1,4 @@
-import {cloneDeep, generateUUID} from "~/helper/utils";
+import {cloneDeep} from "~/helper/utils";
 import type {EditorData} from "~/types";
 
 export const PALETTE_THEMES = [

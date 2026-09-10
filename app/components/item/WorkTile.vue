@@ -223,7 +223,7 @@ function statusBadge(s?: string) {
 
 .work-status .icon { width: 13px; height: 13px; }
 .badge-public { background: var(--primary); color: var(--primary-foreground); }
-.badge-pending { background: #f59e0b; color: #1a1a1a; }
+.badge-pending { background: var(--warning); color: var(--warning-foreground); }
 .badge-draft { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
 
 .work-meta {

@@ -7,8 +7,8 @@ import {cloneDeep, debounce, generateUUID, getStorageItem} from '~/helper/utils'
 import {cleanOrphanCells, convertImageToGrid} from '~/helper/pixel'
 
 useCustomSeoMeta({
-  title: 'Image to Pixel Art Converter - Free Online Tool',
-  description: 'Convert any photo or image into pixel art in seconds. Free online tool with palette control (4–64 colors), pixel cleaner, color swap, and live preview. No signup required.',
+  title: 'Image to Pixel Art Converter',
+  description: 'Convert any photo into pixel art in seconds. Free online tool with palette control (4–64 colors), pixel cleaner, color swap and live preview.',
   keywords: 'image to pixel art, photo to pixel art converter, pixelate image online, pixel art generator, convert jpg to pixel art, png to pixel art, free pixel art maker, 8-bit converter, 16-bit art generator',
   canonical: 'https://simplepixelart.com/convert',
   script: [
@@ -297,11 +297,11 @@ const faq = [
 </script>
 
 <template>
-  <div class="page">
+  <ToolLayout title="Convert">
 
-    <div class="convert-grid flat-editor">
+    <div class="editor-body flat-editor">
 
-      <div class="convert-preview">
+      <div class="canvas-col">
         <Widget title="Pixel Preview">
           <template #ctl>
             <button v-if="hasImage" class="widget-ctl-btn" @click="openFileDialog">
@@ -313,14 +313,14 @@ const faq = [
             <canvas v-show="hasImage" ref="previewCanvas" class="pixel-preview" :class="{checker: bgCut}"/>
             <div
                 v-if="!hasImage"
-                class="upload-zone"
+                class="dropzone"
                 @click="openFileDialog"
                 @drop="onDrop"
                 @dragover.prevent
             >
-              <span class="icon icon-upload upload-icon"/>
-              <p class="text-sm">Click or drop an image here</p>
-              <p class="text-xs text-muted">PNG, JPG, or WebP</p>
+              <span class="icon icon-upload dropzone-icon"/>
+              <p class="dropzone-title">Click or drop an image here</p>
+              <p class="dropzone-hint">PNG, JPG, or WebP</p>
               <button class="btn primary" @click.stop="openFileDialog">Choose file</button>
             </div>
           </div>
@@ -338,7 +338,7 @@ const faq = [
         </div>
       </div>
 
-      <div class="convert-settings">
+      <div class="editor-sidebar">
         <Widget title="Size">
           <div class="settings-row" title="Auto reads the image's own pixel grid when it has one">
             <label v-for="s in sizeOptions" :key="s" class="pill" :class="{active: outputSize === s}">
@@ -358,11 +358,11 @@ const faq = [
               <span>{{ c }}</span>
             </label>
           </div>
-          <label class="cv-check" title="Cut a uniform backdrop to transparency — the sprite lands in the editor with nothing behind it">
+          <label class="editor-check" title="Cut a uniform backdrop to transparency — the sprite lands in the editor with nothing behind it">
             <input v-model="bgCut" type="checkbox">
             <span class="text-xs">Transparent background</span>
           </label>
-          <label class="cv-check" title="Ordered (Bayer) dithering — fakes gradients a small palette can't hold; best on photos">
+          <label class="editor-check" title="Ordered (Bayer) dithering — fakes gradients a small palette can't hold; best on photos">
             <input v-model="dither" type="checkbox">
             <span class="text-xs">Dithering</span>
           </label>
@@ -428,11 +428,19 @@ const faq = [
         @change="onFileSelect"
     />
 
-    <Widget title="More tools" class="tool-more">
-      <ToolPaths exclude="convert"/>
-    </Widget>
 
-    <ToolReadme>
+    <template #status>
+      <p class="editor-foot-hint text-xs text-muted">
+        <template v-if="hasImage">
+          {{ sourceImage?.naturalWidth }}×{{ sourceImage?.naturalHeight }}px →
+          {{ pixels[0]?.length || 0 }}×{{ pixels.length }}px ·
+          {{ palette.length }} colors<template v-if="isNative"> · native grid</template>
+        </template>
+        <template v-else>No image yet — drop one to convert</template>
+      </p>
+    </template>
+
+    <template #doc>
       <h1>Image to Pixel Art Converter</h1>
       <p>Turn any photo into pixel art in seconds — free, no signup, and everything runs in your browser.</p>
 
@@ -472,70 +480,12 @@ const faq = [
       </figure>
 
       <QnA :items="faq"/>
-    </ToolReadme>
-  </div>
+    </template>
+  </ToolLayout>
 </template>
 
 <style scoped>
 
-.upload-zone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  flex: 1;
-  align-self: stretch;
-  width: 100%;
-  cursor: pointer;
-  padding: var(--space-4);
-  border: 2px dashed var(--border);
-  background: var(--surface);
-  border-radius: var(--radius-sm);
-  transition: border-color var(--transition), background var(--transition);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .upload-zone:hover {
-    background: var(--surface-2);
-  }
-}
-
-.upload-icon {
-  font-size: 48px;
-  color: var(--primary);
-}
-
-.convert-grid {
-  display: grid;
-  gap: 0;
-  grid-template-columns: 1fr;
-  align-items: stretch;
-}
-
-@media (min-width: 768px) {
-  .convert-grid {
-    grid-template-columns: 1fr 190px;
-  }
-}
-
-.convert-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  border-bottom: 1px solid var(--border);
-}
-
-@media (min-width: 768px) {
-  .convert-preview {
-    border-bottom: 0;
-    border-right: 1px solid var(--border);
-  }
-}
-
-.convert-settings :deep(.widget + .widget) {
-  border-top: 1px solid var(--border);
-}
 
 .preview-wrapper {
   display: flex;
@@ -560,50 +510,11 @@ const faq = [
   border-top: 1px solid var(--border);
 }
 
-.convert-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.cv-check {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-  cursor: pointer;
-}
 
 .pixel-preview.checker {
   background:
       repeating-conic-gradient(color-mix(in oklab, var(--muted) 18%, transparent) 0% 25%, transparent 0% 50%)
       0 0 / 16px 16px;
-}
-
-.pill {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
-  min-width: 36px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--foreground);
-  border-radius: var(--radius-sm);
-  transition: background var(--transition), color var(--transition), border-color var(--transition);
-}
-
-.pill input {
-  display: none;
-}
-
-.pill.active {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-color: var(--primary);
 }
 
 .palette-grid {

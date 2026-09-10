@@ -30,7 +30,7 @@ import { ref, computed, nextTick } from 'vue'
 const props = defineProps({
   position: {
     type: String,
-    default: 'top', // top | bottom | left | right — preferred side; flips/clamps to stay on screen
+    default: 'top',
   },
   text: {
     type: String,

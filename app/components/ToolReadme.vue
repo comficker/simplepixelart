@@ -52,7 +52,7 @@ function goTo(id: string) {
       <div v-if="toc" class="readme-actions">
         <button
             type="button"
-            class="readme-toc-btn"
+            class="widget-ctl-btn"
             title="Table of contents"
             aria-label="Table of contents"
             @click="openToc"
@@ -61,7 +61,7 @@ function goTo(id: string) {
         </button>
       </div>
     </div>
-    <div class="readme-body">
+    <div class="readme-body prose">
       <slot/>
     </div>
 

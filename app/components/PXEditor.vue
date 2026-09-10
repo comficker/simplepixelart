@@ -82,7 +82,7 @@ async function loadTileRef(idStr: string, tsId?: string) {
   try {
     let data: any = null
     let ws: Record<string, any> = {}
-    try { ws = JSON.parse(localStorage.getItem('workspaces') || '{}') } catch { /* ignore */ }
+    try { ws = JSON.parse(localStorage.getItem('workspaces') || '{}') } catch {  }
     if (ws[idStr]) {
       data = JSON.parse(JSON.stringify(ws[idStr]))
     } else {
@@ -113,7 +113,7 @@ function purgeLocalArt(id: string | number) {
     if (ws[key] !== undefined) { delete ws[key]; localStorage.setItem('workspaces', JSON.stringify(ws)) }
     const hs = JSON.parse(localStorage.getItem('histories') || '{}')
     if (hs[key] !== undefined) { delete hs[key]; localStorage.setItem('histories', JSON.stringify(hs)) }
-  } catch { /* ignore */ }
+  } catch {  }
   if (localStorage.getItem('workspace_current') === key) localStorage.setItem('workspace_current', '')
 }
 
@@ -500,7 +500,7 @@ async function loadMyArts() {
             user: auth.logged.username,
             page_size: 24,
             ordering: '-updated',
-            is_tile: false,          // background picker shows artworks, not tiles
+            is_tile: false,
           },
         }
     );
@@ -511,8 +511,8 @@ async function loadMyArts() {
     }));
     myArtsLoaded.value = true;
   } catch {
-    // Fetch failed — leave myArtsLoaded false so reopening the picker retries;
-    // without this catch the fire-and-forget call is an unhandled rejection.
+
+
   } finally {
     loadingMyArts.value = false;
   }
@@ -623,7 +623,7 @@ async function loadTilesetBoards(tsId: string) {
     ws[String(eds[0].id)] = eds[0];
     localStorage.setItem('workspaces', JSON.stringify(ws));
     localStorage.setItem('workspace_current', String(eds[0].id));
-  } catch { /* ignore quota */ }
+  } catch {  }
   await saveWorkspaceFull({boards, activeIndex: 0});
   await store.load(undefined);
 }
@@ -669,7 +669,7 @@ function onPickBoard(id: string) {
     return;
   }
   let ws: Record<string, any> = {};
-  try { ws = JSON.parse(localStorage.getItem('workspaces') || '{}'); } catch { /* ignore */ }
+  try { ws = JSON.parse(localStorage.getItem('workspaces') || '{}'); } catch {  }
   const ed = ws[id];
   if (!ed) { toast.error('Could not open that board'); return; }
   store.addBoardWithData(JSON.parse(JSON.stringify(ed)));
@@ -1302,7 +1302,7 @@ const FS_KEY = 'editor_fullscreen';
 const editorRoot = ref<HTMLElement | null>(null);
 const fsMode = ref<'off' | 'os' | 'window'>('off');
 if (typeof window !== 'undefined') {
-  try { const v = localStorage.getItem(FS_KEY); if (v && v !== 'off') fsMode.value = 'window'; } catch { /* ignore */ }
+  try { const v = localStorage.getItem(FS_KEY); if (v && v !== 'off') fsMode.value = 'window'; } catch {  }
 }
 const isFullscreen = computed(() => fsMode.value !== 'off');
 
@@ -1345,7 +1345,7 @@ function goBack() {
 }
 
 watch(fsMode, (m) => {
-  try { localStorage.setItem(FS_KEY, m); } catch { /* quota */ }
+  try { localStorage.setItem(FS_KEY, m); } catch {  }
 });
 
 function onDblClick(e: any) {
@@ -1578,8 +1578,6 @@ function draw(e: any) {
 
 let lastStamp = {x: 0, y: 0};
 
-// Drag-stamps snap to a lattice anchored at the first click so a dragged
-// stroke tiles the stamp edge-to-edge instead of smearing overlaps.
 function dragStamp(pos: { x: number; y: number }) {
   const s = store.stampData;
   if (!s) return;
@@ -1850,12 +1848,12 @@ function handleKeyDown(e: any) {
     }
     e.preventDefault();
   }
-  // Anything else (Cmd+R, Cmd+F, Cmd+S, …) is left to the browser.
+
 }
 
 function flushOnHide() {
   if (camSaveTimer) { clearTimeout(camSaveTimer); camSaveTimer = null; }
-  try { localStorage.setItem('workspace_camera', JSON.stringify({x: cam.value.x, y: cam.value.y, z: zoom.value})); } catch { /* quota */ }
+  try { localStorage.setItem('workspace_camera', JSON.stringify({x: cam.value.x, y: cam.value.y, z: zoom.value})); } catch {  }
   store.flush();
 }
 
@@ -1920,7 +1918,7 @@ function renderBackgroundCache(): HTMLCanvasElement | null {
   } else if (bg.type === 'art' && bgImage.value) {
     c.drawImage(bgImage.value, 0, 0, w, h);
   } else if (bg.type === 'transparent') {
-    // no fill, no checker — the desk shows through, so only the art reads
+
   } else if (mode === 'square') {
     const cs = Math.max(1, checkerSize.value);
     const ca = checkerA.value || EDITOR_CELL_A;
@@ -2073,7 +2071,7 @@ function boardComposite(b: any): HTMLCanvasElement | null {
   if (bg?.type === 'solid') {
     cx.fillStyle = bg.color; cx.fillRect(0, 0, w, h);
   } else if (bg?.type === 'transparent') {
-    // no fill, no checker — art only
+
   } else if (mode === 'square') {
     const cs = Math.max(1, checkerSize.value);
     const ca = checkerA.value || EDITOR_CELL_A;
@@ -2473,8 +2471,8 @@ function drawEditor() {
   drawSelection();
   drawBoardChrome();
   drawMarquee();
-  // Minimap is decoupled — it only redraws on content/viewport change
-  // (via scheduleMiniMap), not on every hover/brush-preview frame.
+
+
 }
 
 let playbackBuffers: HTMLCanvasElement[] = [];
@@ -2728,7 +2726,7 @@ function toggleReference() {
 
 function toggleBoardChrome() {
   showBoardChrome.value = !showBoardChrome.value;
-  try { localStorage.setItem('editor_board_chrome', showBoardChrome.value ? '1' : '0'); } catch { /* quota */ }
+  try { localStorage.setItem('editor_board_chrome', showBoardChrome.value ? '1' : '0'); } catch {  }
   scheduleDraw();
 }
 
@@ -2900,7 +2898,7 @@ async function exportGame() {
         editorData.value.width,
         editorData.value.height,
         toRaw(editorData.value.colors),
-        1,                                   // native pixels — engines scale themselves
+        1,
         toRaw(store.sharedLayers),
     );
     const json = framesToAsepriteJSON(frames, editorData.value.width, editorData.value.height, {
@@ -2933,12 +2931,22 @@ watch(
     },
 )
 
-let stageRO: ResizeObserver | null = null;
 let stageInited = false;
 
+const stageWrap = computed(() => canvas.value?.parentElement ?? null);
+useSettledResize(stageWrap, () => {
+  updateCanvasSize();
+  if (!stageInited) {
+    stageInited = true;
+    centerView();
+  }
+  scheduleDraw();
+  scheduleMiniMap();
+});
+
 onMounted(async () => {
-  try { coarsePointer.value = window.matchMedia('(pointer: coarse)').matches; } catch { /* no matchMedia */ }
-  try { showBoardChrome.value = localStorage.getItem('editor_board_chrome') !== '0'; } catch { /* ignore */ }
+  try { coarsePointer.value = window.matchMedia('(pointer: coarse)').matches; } catch {  }
+  try { showBoardChrome.value = localStorage.getItem('editor_board_chrome') !== '0'; } catch {  }
   try {
     const d = JSON.parse(localStorage.getItem('workspace_desk') || 'null');
     if (d) {
@@ -2961,7 +2969,7 @@ onMounted(async () => {
       }
       if (d.guides && hexOk(d.guides.color)) guideColor.value = d.guides.color;
     }
-  } catch { /* ignore */ }
+  } catch {  }
   initCanvas()
   if (route.query.tileset) {
     await loadTilesetBoards(String(route.query.tileset))
@@ -2988,7 +2996,7 @@ onMounted(async () => {
     try {
       const pal = await useNativeFetch<any>(`/coloring/palettes/${route.query.palette}/`)
       if (pal?.colors?.length) store.applyPalette(pal.colors, 'replace', pal.id)
-    } catch (e) { /* palette gone — ignore */ }
+    } catch (e) {  }
     const q = {...route.query}; delete q.palette
     router.replace({query: q}).catch(() => {})
   }
@@ -3001,15 +3009,6 @@ onMounted(async () => {
     router.replace({query: q}).catch(() => {})
   }
   setupCanvas()
-  if (typeof ResizeObserver !== 'undefined' && canvas.value?.parentElement) {
-    stageRO = new ResizeObserver(() => {
-      updateCanvasSize();
-      if (!stageInited) { stageInited = true; centerView(); }
-      scheduleDraw();
-      scheduleMiniMap();
-    });
-    stageRO.observe(canvas.value.parentElement);
-  }
   if (route.query.new !== 'true' && !route.query.id) {
     try {
       const sc = JSON.parse(localStorage.getItem('workspace_camera') || 'null');
@@ -3020,7 +3019,7 @@ onMounted(async () => {
         scheduleDraw();
         scheduleMiniMap();
       }
-    } catch { /* ignore */ }
+    } catch {  }
   }
   setupKeyListeners()
 
@@ -3060,8 +3059,6 @@ onUnmounted(() => {
   if (camSaveTimer) clearTimeout(camSaveTimer);
   window.removeEventListener('mousemove', doResizeBoard);
   window.removeEventListener('mouseup', endResizeFromWindow);
-  stageRO?.disconnect();
-  stageRO = null;
   store.isPlaying = false
   store.resetEditorData()
   clearListeners()
@@ -3092,7 +3089,7 @@ watch([deskBg, deskGrid, deskGridStyle, deskGridShape, deskGridColor, deskGridCe
         checker: {size: checkerSize.value, a: checkerA.value, b: checkerB.value},
         guides: {color: guideColor.value},
       }));
-    } catch { /* quota */ }
+    } catch {  }
   }
   boardBuffers.clear();
   scheduleDraw();
@@ -3105,7 +3102,7 @@ watch([cam, zoom], () => {
   camSaveTimer = setTimeout(() => {
     try {
       localStorage.setItem('workspace_camera', JSON.stringify({x: cam.value.x, y: cam.value.y, z: zoom.value}));
-    } catch { /* ignore quota */ }
+    } catch {  }
   }, 400);
 }, {deep: true});
 
@@ -3529,8 +3526,6 @@ watch(
           <button class="toolbar-btn zoom-readout" aria-label="Reset zoom to 100%" @click="zoomTo100">{{ Math.round(zoom * 100) }}%</button>
         </ui-tooltip>
       </div>
-      <span class="toolbar-info">{{ editorData.width }}×{{ editorData.height }}</span>
-
       <div class="toolbar-fs">
         <ui-dropdown-menu class="fs-hide" position="right" label="Fullscreen">
           <ui-tooltip text="Fullscreen">
@@ -4282,9 +4277,9 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 }
 
 .del-confirm-btn {
-  color: #fff;
-  background: #ef4444;
-  border-color: #ef4444;
+  color: var(--danger-foreground);
+  background: var(--danger);
+  border-color: var(--danger);
 }
 
 @media (hover: hover) and (pointer: fine) {

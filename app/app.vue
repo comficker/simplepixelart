@@ -1,23 +1,19 @@
 <script setup lang="ts">
-// Fullscreen boot veil (see useEditorBoot). When navigating into the editor
-// with fullscreen already on, cover the screen we're LEAVING with the loader
-// the instant navigation starts, so the fullscreen layout re-flow never flashes
-// a loader on the editor. PXEditor clears it once the canvas has painted.
+import useStatefulCookie from '~/composables/useStatefulCookie'
 const editorBoot = useEditorBoot()
-// Paint the veil in the editor's desk colour so the reveal is a same-tone
-// cross-fade instead of a bright→dark flash. Desk bg is persisted in
-// workspace_desk; default to the desk dark (#1b1b1f).
+const sideState = useStatefulCookie('dash_side')
+const sideCollapsed = computed(() => sideState.value === 'collapsed')
 const editorBootBg = ref('#1b1b1f')
 if (import.meta.client) {
   const router = useRouter()
   const FS_KEY = 'editor_fullscreen'
   router.beforeEach((to, from) => {
     if (to.path !== '/editor') return
-    // Skip a hard load (nothing to leave) — that path renders the fullscreen
-    // layout pre-paint via the <html> class + head script, so no veil is needed.
+
+
     if (!from.matched.length || from.path === '/editor') return
     let fsOn = false
-    try { const v = localStorage.getItem(FS_KEY); fsOn = !!v && v !== 'off' } catch { /* ignore */ }
+    try { const v = localStorage.getItem(FS_KEY); fsOn = !!v && v !== 'off' } catch {  }
     if (!fsOn) return
     try {
       const d = JSON.parse(localStorage.getItem('workspace_desk') || 'null')
@@ -25,8 +21,8 @@ if (import.meta.client) {
     } catch { editorBootBg.value = '#1b1b1f' }
     editorBoot.value = true
   })
-  // If navigation ends up somewhere other than the editor (redirect / cancel),
-  // drop the veil so it can't get stuck up.
+
+
   router.afterEach((to) => {
     if (to.path !== '/editor') editorBoot.value = false
   })
@@ -34,15 +30,19 @@ if (import.meta.client) {
 </script>
 
 <template>
-  <div class="main-wrapper">
+  <div class="main-wrapper dash" :class="{'side-collapsed': sideCollapsed}">
     <UiScrollProgress/>
-    <PartialHeader/>
-    <main class="main">
-      <div class="container">
-        <NuxtPage :transition="{ name: 'page', mode: 'out-in' }"/>
-      </div>
-    </main>
-    <PartialFooter/>
+    <PartialSidebar/>
+    <div class="dash-main">
+      <PartialHeader/>
+      <PartialTopbar/>
+      <main class="main">
+        <div class="container">
+          <NuxtPage :transition="{ name: 'page', mode: 'out-in' }"/>
+        </div>
+      </main>
+      <PartialFooter/>
+    </div>
     <UiCommandPalette/>
     <ClientOnly>
       <PartialConsentBanner/>
@@ -67,9 +67,6 @@ if (import.meta.client) {
 </template>
 
 <style>
-/* Fullscreen boot veil — a global overlay raised over the outgoing screen while
-   the editor comes up in fullscreen (see useEditorBoot). Above everything; it
-   fades out once PXEditor clears it. */
 .editor-boot-veil {
   position: fixed;
   inset: 0;
@@ -77,10 +74,8 @@ if (import.meta.client) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1b1b1f; /* fallback; matched to the editor desk via inline style */
+  background: #1b1b1f;
 }
-/* Gentle cross-fade on both ends: quick fade-in over the outgoing screen,
-   slower fade-out onto the (colour-matched) editor so the reveal never flashes. */
 .editor-boot-enter-active {
   transition: opacity 0.18s ease;
 }

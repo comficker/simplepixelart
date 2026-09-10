@@ -82,10 +82,10 @@ const meta = computed(() => {
   const tagList = data.value.taxonomies?.map(t => t.title).filter(Boolean) || []
 
   const title = name
-      ? `${name} — ${size} Pixel Art by ${author}`
+      ? `${name} — ${size} Pixel Art`
       : tagList.length
-          ? `${tagList.slice(0, 2).join(' ')} Pixel Art — ${size} by ${author}`
-          : `${size} Pixel Art by ${author} — ${data.value.id_string}`
+          ? `${tagList.slice(0, 2).join(' ')} Pixel Art — ${size}`
+          : `${size} Pixel Art by ${author}`
   const desc = data.value.desc?.trim() || ''
   const descFallback = `${name || 'A'} ${size} pixel art with ${pixelCount} pixels${tagList.length ? `, tagged ${tagList.slice(0, 3).join(', ')}` : ''}, by ${author}. Remix it in the free online editor on SimplePixelArt.`
 
@@ -174,21 +174,10 @@ useCustomSeoMeta({
           keywords: meta.value.tags
         }
       }) : ''
-    },
-    {
-      type: 'application/ld+json',
-      innerHTML: () => data.value ? JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          {"@type": "ListItem", position: 1, name: "Home", item: `${config.public.siteUrl}/`},
-          {"@type": "ListItem", position: 2, name: "Gallery", item: `${config.public.siteUrl}/arts`},
-          {"@type": "ListItem", position: 3, name: meta.value.title, item: meta.value.url}
-        ]
-      }) : ''
     }
   ]
 })
+
 
 const shareBtnMeta = computed(() => ({
   ...meta.value,
@@ -317,242 +306,236 @@ const previewStyle = computed(() => {
 </script>
 
 <template>
-  <div class="page art-page">
+  <div v-if="pending" class="page art-state">
+    <div class="skeleton skeleton-square art-state-skeleton"/>
+    <p class="art-state-caption">Loading pixel art…</p>
+  </div>
 
-    <div v-if="pending" class="art-state">
-      <div class="skeleton skeleton-square art-state-skeleton"/>
-      <p class="art-state-caption">Loading pixel art…</p>
-    </div>
+  <div v-else-if="error || !data" class="page empty-state">
+    <span class="empty-state-icon icon icon-search" aria-hidden="true"/>
+    <div class="empty-state-title">Artwork not found</div>
+    <p class="empty-state-body">This pixel art couldn’t be found or may have been removed.</p>
+    <nuxt-link to="/arts" class="btn primary empty-state-action">Browse gallery</nuxt-link>
+  </div>
 
-    <div v-else-if="error || !data" class="empty-state">
-      <span class="empty-state-icon icon icon-search" aria-hidden="true"/>
-      <div class="empty-state-title">Artwork not found</div>
-      <p class="empty-state-body">This pixel art couldn’t be found or may have been removed.</p>
-      <nuxt-link to="/arts" class="btn primary empty-state-action">Browse gallery</nuxt-link>
-    </div>
+  <ToolLayout
+      v-else
+        :title="data.name || `${data.width}×${data.height} Pixel Art`"
+        title-tag="h1"
+    >
+      <template #head>
+        <SocialSharing :meta="shareBtnMeta" position="right" class="art-tb-share"/>
+</template>
 
-    <template v-else>
-
-      <div class="editor art-editor">
-        <div class="editor-toolbar">
-          <div class="toolbar-start">
-            <h1 class="art-tb-title" :title="data.name || `${data.width}×${data.height} Pixel Art`">
-              {{ data.name || `${data.width}×${data.height} Pixel Art` }}
-            </h1>
-          </div>
-          <div class="toolbar-end">
-            <SocialSharing :meta="shareBtnMeta" position="right" class="art-tb-share"/>
-          </div>
+    <div class="flat-editor art-editor">
+      <div class="tm-stage art-stage">
+        <ClientOnly v-if="isAnimatedArt">
+          <AnimatedArt
+              :frames="animation.frames"
+              :shared="animation.shared"
+              :width="data.width"
+              :height="data.height"
+              :colors="data.colors"
+              :fps="animation.fps"
+              :loop="animation.loop"
+              class="art-img"
+              :style="previewStyle"
+          />
+          <template #fallback>
+            <img :src="imgOriginal" :alt="data.name" class="art-img" :style="previewStyle" :width="data.width" :height="data.height">
+          </template>
+        </ClientOnly>
+        <img
+            v-else
+            id="mainImg"
+            :src="imgOriginal"
+            :alt="data.name || `${data.width}x${data.height} Pixel Art`"
+            class="art-img"
+            :style="previewStyle"
+            loading="eager"
+            fetchpriority="high"
+            :width="data.width"
+            :height="data.height"
+        >
+        <div v-if="isAnimatedArt" class="art-anim-badge" title="Animated artwork">
+          <span class="art-anim-dot" aria-hidden="true"/>
+          <span>Animated · {{ animation.frames.length }}f</span>
+        </div>
+        <div v-if="data.template" class="art-remix-badge" title="Remixed from another artwork">
+          <span class="icon icon-pen"/>
+          <span>Remix</span>
         </div>
 
-        <div class="editor-body">
-          <div class="canvas-col">
-            <div class="tm-stage art-stage">
-              <ClientOnly v-if="isAnimatedArt">
-                <AnimatedArt
-                    :frames="animation.frames"
-                    :shared="animation.shared"
-                    :width="data.width"
-                    :height="data.height"
-                    :colors="data.colors"
-                    :fps="animation.fps"
-                    :loop="animation.loop"
-                    class="art-img"
-                    :style="previewStyle"
-                />
-                <template #fallback>
-                  <img :src="imgOriginal" :alt="data.name" class="art-img" :style="previewStyle" :width="data.width" :height="data.height">
-                </template>
-              </ClientOnly>
-              <img
-                  v-else
-                  id="mainImg"
-                  :src="imgOriginal"
-                  :alt="data.name || `${data.width}x${data.height} Pixel Art`"
-                  class="art-img"
-                  :style="previewStyle"
-                  loading="eager"
-                  fetchpriority="high"
-                  :width="data.width"
-                  :height="data.height"
-              >
-              <div v-if="isAnimatedArt" class="art-anim-badge" title="Animated artwork">
-                <span class="art-anim-dot" aria-hidden="true"/>
-                <span>Animated · {{ animation.frames.length }}f</span>
-              </div>
-              <div v-if="data.template" class="art-remix-badge" title="Remixed from another artwork">
-                <span class="icon icon-pen"/>
-                <span>Remix</span>
-              </div>
-
-              <div class="art-preview-ctl">
-                <ui-dropdown-menu position="right">
-                  <button class="art-size-pill" title="Preview size">
-                    <span class="icon icon-search"/>
-                    <span>{{ previewSizeShort }}</span>
-                    <span class="icon icon-expand-down" aria-hidden="true"/>
-                  </button>
-                  <template #menu>
-                    <div class="file-menu">
-                      <button
-                          v-for="opt in PREVIEW_SIZES"
-                          :key="String(opt)"
-                          class="file-menu-item"
-                          @click="previewSize = opt"
-                      >
-                        <span class="file-menu-label">
-                          <span>{{ previewSizeLabel(opt) }}</span>
-                          <span v-if="previewSize === opt" class="icon icon-check"/>
-                        </span>
-                      </button>
-                    </div>
-                  </template>
-                </ui-dropdown-menu>
-              </div>
-            </div>
-          </div>
-
-          <aside class="editor-sidebar">
-            <div class="art-sidebar-inner">
-            <Widget title="Meta">
-              <dl class="art-meta-side">
-                <div v-if="data.user" class="art-meta-row">
-                  <dt>Creator</dt>
-                  <dd><nuxt-link :to="`/creator/${data.user.username}`" class="art-meta-link">@{{ data.user.username }}</nuxt-link></dd>
-                </div>
-                <div class="art-meta-row">
-                  <dt>Size</dt>
-                  <dd><nuxt-link :to="`/arts/size-${data.width}x${data.height}`" class="art-meta-link">{{ data.width }}×{{ data.height }}</nuxt-link></dd>
-                </div>
-                <div class="art-meta-row">
-                  <dt>Pixels</dt>
-                  <dd>{{ Object.keys(data.map_numbers).length }}</dd>
-                </div>
-                <div v-if="data.colors?.length" class="art-meta-row">
-                  <dt>Colors</dt>
-                  <dd>{{ data.colors.length }}</dd>
-                </div>
-                <div v-if="formattedDate" class="art-meta-row">
-                  <dt>Updated</dt>
-                  <dd>{{ formattedDate }}</dd>
-                </div>
-                <div v-if="data?.taxonomies && data.taxonomies.length" class="art-meta-row art-meta-row-tags">
-                  <dt>Tags</dt>
-                  <dd class="art-meta-tags">
-                    <nuxt-link
-                        v-for="t in data.taxonomies"
-                        :key="t.id_string"
-                        :to="`/arts/${t.id_string}`"
-                        class="art-meta-link"
-                    >{{ t.title }}</nuxt-link>
-                  </dd>
-                </div>
-              </dl>
-            </Widget>
-            <Widget>
-              <div class="art-actions">
-                <nuxt-link
-                    :to="`/editor?id=${route.params.id_string}`"
-                    class="btn"
-                    :title="isOwner ? 'Edit this pixel art' : 'Remix this pixel art'"
-                >
-                  <span class="icon icon-pen"/>
-                  <span>{{ isOwner ? 'Edit this' : 'Remix this' }}</span>
-                </nuxt-link>
-              </div>
-            </Widget>
-            <Widget title="Download" class="art-dl-widget">
-              <div class="download-menu art-dl-list">
+        <div class="art-preview-ctl">
+          <ui-dropdown-menu position="right">
+            <button class="art-size-pill" title="Preview size">
+              <span class="icon icon-search"/>
+              <span>{{ previewSizeShort }}</span>
+              <span class="icon icon-expand-down" aria-hidden="true"/>
+            </button>
+            <template #menu>
+              <div class="file-menu">
                 <button
-                    v-for="s in pngSizes"
-                    :key="s.scale"
-                    class="drop-item btn-split"
-                    :disabled="dlScale !== null"
-                    @click="downloadPngSize(s)"
+                    v-for="opt in PREVIEW_SIZES"
+                    :key="String(opt)"
+                    class="file-menu-item"
+                    @click="previewSize = opt"
                 >
-                  <span>PNG · {{ s.label }}</span>
-                  <span class="text-muted">{{ dlScale === s.scale ? '…' : `${s.w}×${s.h}` }}</span>
-                </button>
-                <div class="file-menu-sep"/>
-                <button class="drop-item btn-split" @click="download('square')">
-                  <span>PNG · square</span><span class="text-muted">1080×1080 · social</span>
-                </button>
-                <button v-if="isAnimatedArt" class="drop-item btn-split" @click="download('gif')">
-                  <span>Animated GIF</span><span class="text-muted">{{ animation.frames.length }} frames</span>
-                </button>
-                <button class="drop-item btn-split" @click="download('svg')">
-                  <span>SVG</span><span class="text-muted">vector</span>
-                </button>
-                <button class="drop-item btn-split" @click="download('pdf')">
-                  <span>PDF</span><span class="text-muted">print</span>
-                </button>
-                <button class="drop-item btn-split" @click="download('json')">
-                  <span>JSON</span><span class="text-muted">source</span>
+                  <span class="file-menu-label">
+                    <span>{{ previewSizeLabel(opt) }}</span>
+                    <span v-if="previewSize === opt" class="icon icon-check"/>
+                  </span>
                 </button>
               </div>
-            </Widget>
-            </div>
-          </aside>
-        </div>
-
-        <div v-if="data?.colors && data.colors.length" class="art-footer">
-          <Widget title="Palette">
-            <div class="art-palette">
-              <nuxt-link
-                  v-for="item in data.colors" :key="item"
-                  class="art-swatch"
-                  :to="`/arts/color-${item.toUpperCase().replace('#', '')}`"
-                  :style="{'--swatch': item}"
-                  :title="`Color ${item.toUpperCase()} — find similar artworks`"
-              >
-                <span class="art-swatch-color"/>
-                <span class="art-swatch-hex">{{ item.toUpperCase() }}</span>
-              </nuxt-link>
-            </div>
-            <p class="art-palette-links">
-              <nuxt-link v-if="data?.palette_slug" :to="`/palettes/${data.palette_slug}`">
-                View this palette
-              </nuxt-link>
-              <span v-if="data?.palette_slug" aria-hidden="true"> · </span>
-              <nuxt-link to="/palettes">Browse color palettes</nuxt-link>
-            </p>
-          </Widget>
+            </template>
+          </ui-dropdown-menu>
         </div>
       </div>
+    </div>
 
-      <p v-if="data.desc" class="art-desc">{{ data.desc }}</p>
+    <template #status>
+      <p class="editor-foot-hint text-xs text-muted">
+        {{ data.width }}×{{ data.height }}px · {{ Object.keys(data.map_numbers).length }} pixels
+        <template v-if="data.colors?.length"> · {{ data.colors.length }} colors</template>
+        <template v-if="isAnimatedArt"> · {{ animation.frames.length }} frames</template>
+      </p>
+      <p v-if="formattedDate" class="text-xs text-muted">{{ formattedDate }}</p>
+    </template>
+
+    <template #aside>
+    <Widget>
+      <div class="art-actions">
+        <nuxt-link
+            :to="`/editor?id=${route.params.id_string}`"
+            class="btn"
+            :title="isOwner ? 'Edit this pixel art' : 'Remix this pixel art'"
+        >
+          <span class="icon icon-pen"/>
+          <span>{{ isOwner ? 'Edit this' : 'Remix this' }}</span>
+        </nuxt-link>
+      </div>
+    </Widget>
+    <Widget title="Download">
+      <div class="download-menu art-dl-list">
+        <button
+            v-for="s in pngSizes"
+            :key="s.scale"
+            class="drop-item btn-split"
+            :disabled="dlScale !== null"
+            @click="downloadPngSize(s)"
+        >
+          <span>PNG · {{ s.label }}</span>
+          <span class="text-muted">{{ dlScale === s.scale ? '…' : `${s.w}×${s.h}` }}</span>
+        </button>
+        <div class="file-menu-sep"/>
+        <button class="drop-item btn-split" @click="download('square')">
+          <span>PNG · square</span><span class="text-muted">1080×1080 · social</span>
+        </button>
+        <button v-if="isAnimatedArt" class="drop-item btn-split" @click="download('gif')">
+          <span>Animated GIF</span><span class="text-muted">{{ animation.frames.length }} frames</span>
+        </button>
+        <button class="drop-item btn-split" @click="download('svg')">
+          <span>SVG</span><span class="text-muted">vector</span>
+        </button>
+        <button class="drop-item btn-split" @click="download('pdf')">
+          <span>PDF</span><span class="text-muted">print</span>
+        </button>
+        <button class="drop-item btn-split" @click="download('json')">
+          <span>JSON</span><span class="text-muted">source</span>
+        </button>
+      </div>
+    </Widget>
+    <Widget title="Meta">
+      <dl class="art-meta-side">
+        <div v-if="data.user" class="art-meta-row">
+          <dt>Creator</dt>
+          <dd><nuxt-link :to="`/creator/${data.user.username}`" class="art-meta-link">@{{ data.user.username }}</nuxt-link></dd>
+        </div>
+        <div class="art-meta-row">
+          <dt>Size</dt>
+          <dd><nuxt-link :to="`/arts/size-${data.width}x${data.height}`" class="art-meta-link">{{ data.width }}×{{ data.height }}</nuxt-link></dd>
+        </div>
+        <div class="art-meta-row">
+          <dt>Pixels</dt>
+          <dd>{{ Object.keys(data.map_numbers).length }}</dd>
+        </div>
+        <div v-if="data.colors?.length" class="art-meta-row">
+          <dt>Colors</dt>
+          <dd>{{ data.colors.length }}</dd>
+        </div>
+        <div v-if="formattedDate" class="art-meta-row">
+          <dt>Updated</dt>
+          <dd>{{ formattedDate }}</dd>
+        </div>
+        <div v-if="data?.taxonomies && data.taxonomies.length" class="art-meta-row art-meta-row-tags">
+          <dt>Tags</dt>
+          <dd class="art-meta-tags">
+            <nuxt-link
+                v-for="t in data.taxonomies"
+                :key="t.id_string"
+                :to="`/arts/${t.id_string}`"
+                class="art-meta-link"
+            >{{ t.title }}</nuxt-link>
+          </dd>
+        </div>
+      </dl>
+    </Widget>
+    <Widget title="Palette">
+      <div class="art-palette">
+        <nuxt-link
+            v-for="item in data.colors" :key="item"
+            class="art-swatch"
+            :to="`/arts/color-${item.toUpperCase().replace('#', '')}`"
+            :style="{'--swatch': item}"
+            :title="`Color ${item.toUpperCase()} — find similar artworks`"
+        >
+          <span class="art-swatch-color"/>
+          <span class="art-swatch-hex">{{ item.toUpperCase() }}</span>
+        </nuxt-link>
+      </div>
+      <p class="art-palette-links">
+        <nuxt-link v-if="data?.palette_slug" :to="`/palettes/${data.palette_slug}`">
+          View this palette
+        </nuxt-link>
+        <span v-if="data?.palette_slug" aria-hidden="true"> · </span>
+        <nuxt-link to="/palettes">Browse color palettes</nuxt-link>
+      </p>
+    </Widget>
+      <Widget v-if="data.desc" title="Description">
+        <p class="art-desc">{{ data.desc }}</p>
+      </Widget>
+
+      <Widget title="Related artworks">
+        <template #ctl>
+          <nuxt-link to="/arts" class="widget-ctl-btn">
+            <span class="widget-ctl-name">Browse all</span><span class="icon icon-angle-right"/>
+          </nuxt-link>
+        </template>
+        <item-list :limit="6"/>
+      </Widget>
+
+      <Widget>
+        <p class="art-report">
+          Something off about this artwork?
+          <a :href="reportMailto" class="art-report-link">Report</a> ·
+          <nuxt-link to="/dmca">DMCA</nuxt-link> ·
+          <nuxt-link to="/guidelines">Guidelines</nuxt-link>
+        </p>
+      </Widget>
 
       <ClientOnly v-if="hasOriginalContent">
         <div class="art-ad">
           <AdSlot slot="6499761093" size="medium"/>
         </div>
       </ClientOnly>
+    </template>
 
-      <section class="art-section">
-        <header class="section-head">
-          <h2 class="section-title">Related artworks</h2>
-          <nuxt-link to="/arts" class="section-link">Browse all →</nuxt-link>
-        </header>
-        <item-list :limit="6"/>
-      </section>
-
-      <section class="art-report">
-        <span class="art-report-icon icon icon-flag" aria-hidden="true"/>
-        <p>
-          Something off about this artwork?
-          <a :href="reportMailto" class="art-report-link">Report</a>
-          ·
-          <nuxt-link to="/dmca">DMCA</nuxt-link>
-          ·
-          <nuxt-link to="/guidelines">Guidelines</nuxt-link>
-        </p>
-      </section>
-
+    <template #extra>
       <ClientOnly>
         <AdminArtPanel v-if="isAdmin" :data="data" @updated="onAdminUpdate" @deleted="onAdminDelete"/>
       </ClientOnly>
     </template>
-  </div>
+  </ToolLayout>
 </template>
 
 <style scoped>
@@ -642,49 +625,6 @@ const previewStyle = computed(() => {
   max-width: 56ch;
 }
 
-.art-section {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  overflow: hidden;
-}
-
-.art-section .section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: 0 var(--space-4);
-  border-bottom: 1px solid var(--border);
-}
-
-.art-section .section-title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) 0;
-  margin-bottom: -1px;                 
-  border-bottom: 2px solid #fd8c73;
-  font-size: var(--text-xs);
-  font-weight: 800;
-  color: var(--foreground);
-}
-
-.art-section > :not(.section-head) {
-  margin: var(--space-4);
-}
-
-.art-section .section-link {
-  font-size: var(--text-xs);
-  color: var(--muted);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .art-section .section-link:hover {
-    color: var(--primary);
-  }
-}
-
 .download-menu {
   display: flex;
   flex-direction: column;
@@ -766,17 +706,9 @@ const previewStyle = computed(() => {
 }
 
 .art-report {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--muted);
   font-size: var(--text-xs);
-}
-
-.art-report-icon {
-  flex-shrink: 0;
+  line-height: var(--text-xs-lh);
   color: var(--muted);
-  font-size: 14px;
 }
 
 .art-report p {
@@ -800,71 +732,15 @@ const previewStyle = computed(() => {
   }
 }
 
-.art-editor { margin-bottom: var(--space-4); }
 
-.art-editor .toolbar-start { flex: 1; min-width: 0; }
-
-.art-tb-title {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  padding: 0 var(--space-2);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--foreground);
-}
-
-.art-editor .toolbar-end { border-left: 0; padding-left: 0; width: 100px; }
-
-@media (min-width: 768px) {
-  .art-editor .toolbar-end { width: calc(24% - 8px); max-width: 190px; }
-}
-
-.art-editor .toolbar-end :deep(.dropdown),
-.art-editor .toolbar-end :deep(.dropdown-trigger-wrap) { width: 100%; }
-
-.art-editor .toolbar-end :deep(.share-trigger) {
-  width: 100%;
-  height: 2.25rem;
-  min-height: 0;
-  padding: 0;
-  gap: var(--space-1);
-  justify-content: center;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.art-editor .toolbar-end :deep(.share-trigger .icon) { width: 14px; height: 14px; }
-
-@media (hover: hover) and (pointer: fine) {
-  .art-editor .toolbar-end :deep(.share-trigger:hover) {
-    background: color-mix(in oklab, var(--primary) 88%, #000);
-  }
-}
-
-.art-editor .editor-sidebar { min-height: 0; }
-.art-sidebar-inner { display: flex; flex-direction: column; min-height: 0; }
-.art-sidebar-inner > .widget + .widget { border-top: 1px solid var(--border); }
-
-@media (min-width: 768px) {
-  .art-editor .editor-sidebar { position: relative; }
-  .art-sidebar-inner { position: absolute; inset: 0; overflow: hidden; }
-}
-
-.art-dl-widget { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.art-dl-widget :deep(.widget-body) { flex: 1; min-height: 0; overflow-y: auto; }
-
-.art-actions { display: flex; flex-direction: column; gap: var(--space-2); padding-top: var(--space-2); }
+.art-actions { display: flex; flex-direction: column; gap: var(--space-2); }
 .art-actions .btn { width: 100%; justify-content: center; }
-.art-actions :deep(.dropdown),
-.art-actions :deep(.dropdown-trigger-wrap),
-.art-actions :deep(.share-trigger) { width: 100%; }
-.art-actions :deep(.share-trigger) { justify-content: center; }
 
-.art-stage { max-height: 72vh; }
+.art-stage { min-height: 0; }
+
+@media (max-width: 1279px) {
+  .art-stage { max-height: 60vh; }
+}
 
 .art-preview-ctl {
   position: absolute;
@@ -952,8 +828,6 @@ const previewStyle = computed(() => {
 @media (hover: hover) and (pointer: fine) {
   .art-meta-link:hover { color: var(--primary); }
 }
-
-.art-footer { border-top: 1px solid var(--border); }
 
 .art-desc { margin-top: var(--space-3); }
 </style>

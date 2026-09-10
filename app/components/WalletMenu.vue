@@ -29,7 +29,7 @@ async function load() {
   if (!auth.isLogged) return
   try {
     sum.value = await useNativeFetch<Summary>('/coloring/economy/')
-  } catch { /* header widget — fail quiet, chip just hides */ }
+  } catch {  }
 }
 
 async function claimDaily() {

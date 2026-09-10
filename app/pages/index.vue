@@ -15,14 +15,14 @@ const auth = useAuthStore()
 const config = useRuntimeConfig()
 
 const userWorks = ref<WorkItem[]>([])
-const loadingWorks = ref(true)
+const loadingWorks = ref(false)
+
+const {hasWork, workCount, setWorkCount} = useHasWork()
+
+const mounted = ref(false)
 
 const hasWorks = computed(() => userWorks.value.length > 0)
-
-const greetingName = computed(() => {
-  if (!auth.logged) return ''
-  return auth.logged.username || auth.logged.first_name || 'pixel artist'
-})
+const showStudio = computed(() => hasWork.value || hasWorks.value)
 
 function isCloudWork(item: WorkItem): boolean {
   return typeof item.id === 'number' && !!item.id_string
@@ -56,6 +56,9 @@ async function loadUserWorks() {
     }
   } finally {
     loadingWorks.value = false
+
+
+    setWorkCount(userWorks.value.length)
   }
 }
 
@@ -116,21 +119,12 @@ const faq = [
   },
 ]
 
-// AI prompt → /generate hand-off. The form only shows when the backend can
-// actually generate (billing-gated flag), so the homepage never advertises a
-// dead end. Resolved during SSR: as a client-only flag the hero grew a row
-// after hydration and the form was absent from the crawled HTML. `transform`
-// keeps the payload down to the one boolean, and the key must not look like a
-// route path — a payload key such as "/coloring/economy/" gets picked up as a
-// relative URL and crawled.
 const {data: aiEnabled} = await useAuthFetch<boolean>('/coloring/economy/', {
   key: 'home-ai-image-enabled',
   transform: (s: any) => !!s?.ai_image_enabled,
   default: () => false,
 })
 
-// This week's challenge banner. Transform keeps the SSR payload to the few
-// fields the banner shows; key must not look like a route path (crawl trap).
 const {data: homeChallenge} = await useAuthFetch<any>('/coloring/challenges/', {
   key: 'home-weekly-challenge',
   transform: (s: any) => s?.current
@@ -158,12 +152,14 @@ function goGenerate() {
 }
 
 onMounted(() => {
-  loadUserWorks()
+  mounted.value = true
+
+  if (hasWork.value) loadUserWorks()
 })
 
 useCustomSeoMeta({
-  title: "Simple Pixel Art — Easy Free Pixel Art Maker for Game Sprites & Tilesets",
-  description: "Free online pixel art maker built for game assets: draw sprites, build tilesets with autotiling, paint tilemaps, and export for Godot, Unity, or Phaser. Convert photos and remix templates too — no signup.",
+  title: "Free Pixel Art Maker for Game Art",
+  description: "Free online pixel art maker for game assets: draw sprites, build tilesets, paint tilemaps, and export for Godot, Unity or Phaser. No signup.",
   keywords: "simple pixel art, simplepixelart, pixel art, pixel art maker, pixel art editor, free pixel art, pixel art online, game sprites, tileset maker, tilemap editor, sprite editor, pixel art for games, 8-bit art, retro art, create pixel art",
   canonical: "https://simplepixelart.com",
   script: [
@@ -242,13 +238,16 @@ useCustomSeoMeta({
 </script>
 
 <template>
-  <div class="page home">
+  <ToolLayout title="Home">
+    <template #head>
+      <p class="home-facts text-xs text-muted">
+        Sprites → tiles → maps · Godot · Unity · Phaser export · photo → pixel art in one click
+      </p>
+    </template>
 
-    <section class="home-hero">
-      <div class="home-hero-inner">
-        <span class="home-hero-eyebrow">
-          Free · No signup · Runs in your browser
-        </span>
+    <div class="screen home-stack">
+      <section class="home-hero">
+        <span class="home-hero-eyebrow">Free · No signup · Runs in your browser</span>
         <h1 class="home-hero-title">
           <span class="home-hero-title-main">Make pixel art</span>
           <span class="home-hero-title-accent">in seconds.</span>
@@ -270,85 +269,62 @@ useCustomSeoMeta({
             <span class="icon icon-auto-fix"/><span>Generate</span>
           </button>
         </form>
-        <div class="studio-tools">
+        <div class="home-tools"><ToolPaths exclude="ai"/></div>
+      </section>
 
-          <ToolPaths exclude="ai"/>
-        </div>
-        <p v-if="auth.logged" class="home-hero-greeting">
-          Welcome back, <span class="home-hero-name">@{{ greetingName }}</span>
-        </p>
-        <ul class="home-hero-stats" aria-label="Highlights">
-          <li>
-            <strong>Sprites → tiles → maps</strong>
-            <span>one asset pipeline</span>
-          </li>
-          <li>
-            <strong>Godot · Unity · Phaser</strong>
-            <span>game-ready export</span>
-          </li>
-          <li>
-            <strong>One-click</strong>
-            <span>photo → pixel art</span>
-          </li>
-        </ul>
-      </div>
-    </section>
+      <Widget v-if="showStudio" :title="auth.logged ? 'Your studio' : 'Start a project'">
+        <template #ctl>
+          <nuxt-link to="/work" class="widget-ctl-btn">
+            <span class="widget-ctl-name">View all</span><span class="icon icon-angle-right"/>
+          </nuxt-link>
+        </template>
 
-    <section v-if="hasWorks || loadingWorks" class="studio readme">
-      <div class="readme-head">
-        <div class="readme-tabs">
-          <span class="readme-tab is-active"><span class="icon icon-file"/>{{ auth.logged ? 'Your studio' : 'Start a project' }}</span>
-        </div>
-        <div v-if="hasWorks" class="readme-actions">
-          <nuxt-link to="/work" class="section-link">View all →</nuxt-link>
-        </div>
-      </div>
-
-      <div class="studio-body">
-
-      <div v-if="hasWorks" class="studio-grid">
-        <nuxt-link to="/editor?new=true" class="studio-new" title="New blank canvas">
-          <span class="icon icon-plus studio-new-icon"/>
-          <span class="studio-new-label">New canvas</span>
-        </nuxt-link>
-        <nuxt-link
-            v-for="item in userWorks"
-            :key="item.id as any"
-            :to="`/editor?id=${item.id_string || item.id}`"
-            class="studio-card"
-            :title="item.name || 'Untitled'"
-        >
-          <div class="studio-canvas">
-            <div class="square">
-              <div class="inside">
-                <img
-                    v-if="isCloudWork(item) && item.has_image !== false && !failedThumb[item.id]"
-                    :src="workThumbUrl(item)"
-                    :alt="item.name || 'Pixel art'"
-                    class="size-full"
-                    loading="lazy"
-                    decoding="async"
-                    @error="failedThumb[item.id] = true"
-                />
-                <div v-else-if="isCloudWork(item)" class="studio-empty-thumb">
-                  <span class="icon icon-image"/>
+          <div v-if="hasWorks" class="studio-grid">
+            <nuxt-link to="/editor?new=true" class="studio-new" title="New blank canvas">
+              <span class="icon icon-plus studio-new-icon"/>
+              <span class="studio-new-label">New canvas</span>
+            </nuxt-link>
+            <nuxt-link
+                v-for="item in userWorks"
+                :key="item.id as any"
+                :to="`/editor?id=${item.id_string || item.id}`"
+                class="studio-card"
+                :title="item.name || 'Untitled'"
+            >
+              <div class="studio-canvas">
+                <div class="square">
+                  <div class="inside">
+                    <img
+                        v-if="isCloudWork(item) && item.has_image !== false && !failedThumb[item.id]"
+                        :src="workThumbUrl(item)"
+                        :alt="item.name || 'Pixel art'"
+                        class="size-full"
+                        loading="lazy"
+                        decoding="async"
+                        @error="failedThumb[item.id] = true"
+                    />
+                    <div v-else-if="isCloudWork(item)" class="studio-empty-thumb">
+                      <span class="icon icon-image"/>
+                    </div>
+                    <Thumb v-else :data="item as EditorData"/>
+                  </div>
                 </div>
-                <Thumb v-else :data="item as EditorData"/>
+              </div>
+            </nuxt-link>
+          </div>
+
+          <div v-else class="studio-grid" aria-busy="true">
+            <div v-for="i in workCount + 1" :key="i" class="studio-card">
+              <div class="studio-canvas">
+                <div class="square">
+                  <div class="inside"><span class="skeleton size-full"/></div>
+                </div>
               </div>
             </div>
           </div>
-        </nuxt-link>
-      </div>
+      </Widget>
 
-      <div v-else-if="loadingWorks" class="studio-loading">
-        <div v-for="i in 6" :key="i" class="skeleton skeleton-square"/>
-      </div>
-
-      </div>
-    </section>
-
-    <section v-if="homeChallenge" class="home-challenge">
-      <nuxt-link :to="`/challenges/${homeChallenge.id_string}`" class="home-challenge-link">
+      <nuxt-link v-if="homeChallenge" :to="`/challenges/${homeChallenge.id_string}`" class="home-challenge-link">
         <span class="home-challenge-tag"><span class="icon icon-flag"/>Weekly challenge</span>
         <span class="home-challenge-name">{{ homeChallenge.name }}</span>
         <span class="home-challenge-sub">
@@ -356,28 +332,23 @@ useCustomSeoMeta({
           {{ homeChallenge.entries }} {{ homeChallenge.entries === 1 ? 'entry' : 'entries' }} · Join →
         </span>
       </nuxt-link>
-    </section>
 
-    <section class="library readme">
-      <div class="readme-head">
-        <div class="readme-tabs">
-          <span class="readme-tab is-active"><span class="icon icon-hot"/>What's new</span>
-        </div>
-        <div class="readme-actions">
-          <nuxt-link to="/arts/new" class="section-link">View all →</nuxt-link>
-        </div>
-      </div>
-      <div class="library-body">
-        <item-list :limit="12" hide-ip hide-paginator ordering="-updated"/>
-      </div>
-    </section>
+      <Widget title="What's new" class="home-library">
+        <template #ctl>
+          <nuxt-link to="/arts/new" class="widget-ctl-btn">
+            <span class="widget-ctl-name">View all</span><span class="icon icon-angle-right"/>
+          </nuxt-link>
+        </template>
+        <item-list :limit="32" hide-ip hide-paginator ordering="-updated"/>
+      </Widget>
+    </div>
 
-    <ClientOnly>
-      <AdSlot slot="6499761093"/>
-    </ClientOnly>
+    <template #status>
+      <PartialFooterBar/>
+    </template>
 
-    <ToolReadme :toc="false" :guidelines="false">
-      <h1>Simple Pixel Art</h1>
+    <template #doc>
+      <h2>Simple Pixel Art</h2>
       <div class="readme-badges">
         <span class="badge"><span>price</span><span class="v ok">free</span></span>
         <span class="badge"><span>signup</span><span class="v">none</span></span>
@@ -443,31 +414,23 @@ useCustomSeoMeta({
       </p>
 
       <QnA title="Questions &amp; answers" :items="faq"/>
-    </ToolReadme>
-  </div>
+      <ClientOnly>
+        <AdSlot slot="6499761093"/>
+      </ClientOnly>
+    </template>
+  </ToolLayout>
 </template>
 
 <style scoped>
-.home > * + * {
-  margin-top: var(--space-2);
-}
-
 .home-hero {
-  padding: var(--space-4);
-  background:
-    radial-gradient(120% 120% at 100% 0%, color-mix(in oklab, var(--primary) 10%, transparent), transparent 60%),
-    var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-
-.home-hero-inner {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-4);
-  width: 100%;
-  min-width: 0;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background:
+    radial-gradient(120% 120% at 100% 0%, color-mix(in oklab, var(--surface-2) 85%, transparent), transparent 62%),
+    var(--surface);
 }
 
 .home-hero-eyebrow {
@@ -537,58 +500,6 @@ useCustomSeoMeta({
   flex-shrink: 0;
 }
 
-.home-hero-greeting {
-  font-size: var(--text-sm);
-  color: var(--muted);
-}
-
-.home-hero-name {
-  color: var(--foreground);
-  font-weight: 700;
-}
-
-.home-hero-stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-  width: 100%;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border);
-}
-
-.home-hero-stats li {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.home-hero-stats strong {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--foreground);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-}
-
-.home-hero-stats span {
-  font-size: 11.5px;
-  color: var(--muted);
-  letter-spacing: 0.01em;
-}
-
-@media (max-width: 520px) {
-  .home-hero-stats {
-    grid-template-columns: 1fr;
-    gap: var(--space-1);
-  }
-  .home-hero-stats li {
-    flex-direction: row;
-    gap: var(--space-2);
-    align-items: baseline;
-  }
-}
-
 .home-challenge-link {
   display: flex;
   align-items: center;
@@ -596,14 +507,12 @@ useCustomSeoMeta({
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  transition: border-color var(--transition);
+  transition: background var(--transition);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .home-challenge-link:hover {
-    border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+    background: var(--surface-2);
   }
 }
 
@@ -638,48 +547,15 @@ useCustomSeoMeta({
   white-space: nowrap;
 }
 
-.section-head {
+.home-library {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: 0.25rem;
+  flex-direction: column;
+  flex: 1 0 auto;
 }
 
-.section-title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: var(--text-xl);
-  line-height: 1.2;
-  font-weight: 800;
-  font-variation-settings: "wght" 800;
-  letter-spacing: -0.02em;
-  color: var(--foreground);
+.home-library :deep(.widget-body) {
+  flex: 1 0 auto;
 }
-
-.section-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: var(--text-sm);
-  line-height: 1;
-  font-weight: 600;
-  color: var(--muted);
-  padding: 6px 10px;
-  border-radius: var(--radius-pill);
-  transition: color 160ms ease, background 160ms ease, transform 160ms ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .section-link:hover {
-    color: var(--primary);
-    background: color-mix(in oklab, var(--primary) 10%, transparent);
-  }
-}
-
-.studio-body,
-.library-body { padding: var(--space-4); }
 
 .studio-grid {
   display: grid;
@@ -796,23 +672,6 @@ useCustomSeoMeta({
 .studio-empty-thumb .icon {
   width: 28px;
   height: 28px;
-}
-
-.studio-loading {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-@media (min-width: 768px) {
-  .studio-loading {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: var(--space-4);
-  }
-}
-
-.studio-tools {
-  width: 100%;
 }
 
 </style>

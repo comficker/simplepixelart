@@ -110,6 +110,7 @@ const insights = computed(() => {
 
 const creator = computed(() => palette.value?.user?.username || '')
 
+
 useCustomSeoMeta({
   title: computed(() => {
     const by = creator.value ? ` by ${creator.value}` : ''

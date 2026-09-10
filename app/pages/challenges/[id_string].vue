@@ -64,12 +64,13 @@ function thumb(e: Entry): string {
 
 const medals = ['🥇', '🥈', '🥉']
 
+
 useCustomSeoMeta({
   title: () => challenge.value
-      ? `${challenge.value.name} — Weekly Pixel Art Challenge`
+      ? `${challenge.value.name} — Pixel Art Challenge`
       : 'Pixel Art Challenge',
   description: () => challenge.value
-      ? `“${challenge.value.name}” pixel art challenge (${challenge.value.starts} to ${challenge.value.ends}). ${challenge.value.desc || ''} Draw your take and submit it for community votes.`
+      ? `“${challenge.value.name}” pixel art challenge, ${challenge.value.starts} to ${challenge.value.ends}. ${challenge.value.desc || 'Draw your take and submit it for community votes.'}`.slice(0, 158)
       : 'Weekly pixel art challenge on SimplePixelArt.',
   canonical: () => `https://simplepixelart.com/challenges/${slug.value}`,
   robots: () => (challenge.value ? 'index, follow' : 'noindex, follow'),
@@ -77,15 +78,16 @@ useCustomSeoMeta({
 </script>
 
 <template>
-  <div class="page">
+  <div class="page screen">
     <template v-if="challenge">
-      <section class="page-hero">
-        <p class="chal-bc">
-          <nuxt-link to="/challenges" class="section-link">← All challenges</nuxt-link>
-        </p>
-        <h1 class="page-title">{{ challenge.name }}</h1>
-        <p v-if="challenge.desc" class="text-muted">{{ challenge.desc }}</p>
-        <p class="chal-meta text-muted">
+      <div class="screen-head">
+        <div class="screen-head-text">
+          <p class="chal-bc">
+            <nuxt-link to="/challenges" class="section-link">← All challenges</nuxt-link>
+          </p>
+          <h1 class="screen-title">{{ challenge.name }}</h1>
+          <p v-if="challenge.desc" class="screen-desc">{{ challenge.desc }}</p>
+          <p class="chal-meta">
           <template v-if="challenge.state === 'active'">
             <strong>Live now</strong> · {{ fmtRange() }} · {{ daysLeft() }} {{ daysLeft() === 1 ? 'day' : 'days' }} left
             · {{ challenge.entries_count }} {{ challenge.entries_count === 1 ? 'entry' : 'entries' }}
@@ -93,9 +95,10 @@ useCustomSeoMeta({
           <template v-else-if="challenge.state === 'ended'">
             Ended · {{ fmtRange() }} · {{ challenge.entries_count }} {{ challenge.entries_count === 1 ? 'entry' : 'entries' }}
           </template>
-          <template v-else>Starts {{ fmtRange() }}</template>
-        </p>
-        <div v-if="challenge.state === 'active'" class="chal-actions">
+            <template v-else>Starts {{ fmtRange() }}</template>
+          </p>
+        </div>
+        <div v-if="challenge.state === 'active'" class="screen-actions">
           <nuxt-link to="/editor?new=true" class="btn primary">
             <span class="icon icon-pencil"/><span>Draw your entry</span>
           </nuxt-link>
@@ -106,10 +109,9 @@ useCustomSeoMeta({
             <span class="icon icon-flag"/><span>Log in to submit</span>
           </button>
         </div>
-      </section>
+      </div>
 
-      <section v-if="challenge.state === 'ended' && winners.length" class="chal-winners">
-        <h2 class="section-title">Winners</h2>
+      <Widget v-if="challenge.state === 'ended' && winners.length" title="Winners">
         <div class="chal-winner-row">
           <nuxt-link
               v-for="(e, i) in winners"
@@ -123,17 +125,16 @@ useCustomSeoMeta({
             <span class="chal-winner-sub">@{{ e.username }} · {{ e.votes }} {{ e.votes === 1 ? 'vote' : 'votes' }}</span>
           </nuxt-link>
         </div>
-      </section>
+      </Widget>
 
-      <section class="chal-entries">
-        <h2 class="section-title">Entries</h2>
-        <div v-if="entries.length" class="grid-arts">
+      <Widget title="Entries">
+        <div v-if="entries.length" class="results">
           <ItemCard v-for="p in entries" :key="p.id" :value="p"/>
         </div>
         <p v-else class="text-muted text-xs">
           No public entries yet{{ challenge.state === 'active' ? ' — be the first!' : '.' }}
         </p>
-      </section>
+      </Widget>
 
       <ChallengeSubmitModal
           v-if="showSubmit"
@@ -144,12 +145,14 @@ useCustomSeoMeta({
     </template>
 
     <template v-else>
-      <section class="page-hero">
-        <h1 class="page-title">Challenge not found</h1>
-        <p class="text-muted">
-          It may have been removed. <nuxt-link to="/challenges" class="section-link">See all challenges →</nuxt-link>
-        </p>
-      </section>
+      <div class="screen-head">
+        <div class="screen-head-text">
+          <h1 class="screen-title">Challenge not found</h1>
+          <p class="screen-desc">
+            It may have been removed. <nuxt-link to="/challenges" class="section-link">See all challenges →</nuxt-link>
+          </p>
+        </div>
+      </div>
     </template>
   </div>
 </template>
@@ -161,22 +164,7 @@ useCustomSeoMeta({
 
 .chal-meta {
   font-size: var(--text-xs);
-}
-
-.chal-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-}
-
-.chal-winners,
-.chal-entries {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
+  color: var(--muted);
 }
 
 .chal-winner-row {
@@ -222,23 +210,5 @@ useCustomSeoMeta({
 .chal-winner-sub {
   font-size: var(--text-2xs);
   color: var(--muted);
-}
-
-.grid-arts {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(2, 1fr);
-}
-
-@media (min-width: 640px) {
-  .grid-arts {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .grid-arts {
-    grid-template-columns: repeat(6, 1fr);
-  }
 }
 </style>

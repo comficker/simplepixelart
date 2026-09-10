@@ -145,7 +145,7 @@ async function bulkDelete() {
         const rows = worldsList.value.filter(w => ids.has(w.id))
         await Promise.all(rows.map(w => useNativeFetch(`/coloring/worlds/${w.id_string}/`, {method: 'DELETE'})))
       } else {
-        try { localStorage.removeItem(FREESTYLE_KEY) } catch { /* ignore */ }
+        try { localStorage.removeItem(FREESTYLE_KEY) } catch {  }
       }
       worldsList.value = worldsList.value.filter(w => !ids.has(w.id))
     } else {
@@ -313,7 +313,7 @@ async function purgeLocalArt(id: string | number) {
     if (localStorage.getItem('workspace_current') === key) {
       localStorage.setItem('workspace_current', '')
     }
-  } catch { /* storage unavailable / malformed — ignore */ }
+  } catch {  }
 }
 
 function purgeLocalTile(id: string | number) {
@@ -577,7 +577,7 @@ async function destroyWorld(w: any) {
   const idx = worldsList.value.findIndex(x => x.id === w.id)
   if (idx !== -1) worldsList.value.splice(idx, 1)
   if (w.local) {
-    try { localStorage.removeItem(FREESTYLE_KEY) } catch { /* ignore */ }
+    try { localStorage.removeItem(FREESTYLE_KEY) } catch {  }
     toast.success('Deleted')
     return
   }
@@ -665,134 +665,83 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="page work-page">
-
-    <section class="readme work-panel">
-      <div class="readme-head work-head">
-        <div class="work-controlbar">
-
-      <ui-dropdown-menu class="work-sel work-sel-tab">
-        <button class="btn work-sel-btn">
-          <span class="icon" :class="activeTabMeta.icon"/>
-          <span>{{ activeTabMeta.label }}</span>
-          <span class="icon icon-chevron-down work-sel-caret"/>
-        </button>
-        <template #menu>
-          <div class="file-menu">
-            <button
-                v-for="t in TABS"
-                :key="t"
-                class="file-menu-item"
-                :disabled="!!TAB_META[t].auth && !auth.isLogged"
-                :title="TAB_META[t].auth && !auth.isLogged ? 'Sign in to use this' : ''"
-                @click="setTab(t)"
-            >
-              <span class="icon" :class="TAB_META[t].icon"/>
-              <span class="file-menu-label">
-                <span>{{ TAB_META[t].label }}</span>
-                <span v-if="tab === t" class="icon icon-check"/>
-              </span>
-            </button>
-          </div>
-        </template>
-      </ui-dropdown-menu>
-
-      <ui-dropdown-menu class="work-sel">
-        <button class="btn work-sel-btn">
-          <span>{{ curFilter === 'all' ? 'All' : curFilter === 'public' ? 'Public' : privateChipLabel }}</span>
-          <span class="icon icon-chevron-down work-sel-caret"/>
-        </button>
-        <template #menu>
-          <div class="file-menu">
-            <button
-                v-for="f in (['all', 'public', 'private'] as const)"
-                :key="f"
-                class="file-menu-item"
-                @click="curFilter = f"
-            >
-              <span class="file-menu-label">
-                <span>{{ f === 'all' ? 'All' : f === 'public' ? 'Public' : privateChipLabel }}</span>
-                <span v-if="curFilter === f" class="icon icon-check"/>
-              </span>
-            </button>
-          </div>
-        </template>
-      </ui-dropdown-menu>
-
-      <ui-dropdown-menu v-if="tab === 'artworks'" class="work-sel">
-        <button class="btn work-sel-btn">
-          <span>{{ workTileFilter === 'all' ? 'All types' : workTileFilter === 'art' ? 'Art' : 'Tiles' }}</span>
-          <span class="icon icon-chevron-down work-sel-caret"/>
-        </button>
-        <template #menu>
-          <div class="file-menu">
-            <button
-                v-for="f in (['all', 'art', 'tiles'] as const)"
-                :key="f"
-                class="file-menu-item"
-                @click="workTileFilter = f"
-            >
-              <span class="file-menu-label">
-                <span>{{ f === 'all' ? 'All types' : f === 'art' ? 'Art' : 'Tiles' }}</span>
-                <span v-if="workTileFilter === f" class="icon icon-check"/>
-              </span>
-            </button>
-          </div>
-        </template>
-      </ui-dropdown-menu>
-
-      <ui-dropdown-menu class="work-sel work-sel-sort">
-        <button class="btn work-sel-btn" title="Sort by">
-          <span>{{ SORT_META[sortBy].label }}</span>
-          <span class="icon icon-chevron-down work-sel-caret"/>
-        </button>
-        <template #menu>
-          <div class="file-menu">
-            <button
-                v-for="(m, k) in SORT_META"
-                :key="k"
-                class="file-menu-item"
-                @click="sortBy = k"
-            >
-              <span class="file-menu-label">
-                <span>{{ m.label }}</span>
-                <span v-if="sortBy === k" class="icon icon-check"/>
-              </span>
-            </button>
-          </div>
-        </template>
-      </ui-dropdown-menu>
+  <BrowseLayout class="work-page" title="Your work" desc="Everything you have made — artworks, collections and tilesets.">
+    <template #actions>
       <nuxt-link v-if="tab === 'artworks'" to="/editor?new=true" class="btn primary">
-        <span class="icon icon-plus"/>
-        <span>New</span>
+        <span class="icon icon-plus"/><span>New artwork</span>
       </nuxt-link>
-      <nuxt-link
-          v-else-if="tab === 'worlds' || tab === 'tilesets'"
-          :to="tab === 'worlds' ? '/tilemaps/editor?new=true' : '/tilesets/editor?new=true'"
-          class="btn primary"
-      >
-        <span class="icon icon-plus"/>
-        <span>New</span>
+      <nuxt-link v-else-if="tab === 'tilesets'" to="/tilesets/editor" class="btn primary">
+        <span class="icon icon-plus"/><span>New tileset</span>
       </nuxt-link>
       <button v-else-if="auth.isLogged" class="btn primary" @click="showCreateColl = true">
-        <span class="icon icon-plus"/>
-        <span>New</span>
+        <span class="icon icon-plus"/><span>New collection</span>
       </button>
-        </div>
-      </div>
+    </template>
 
-      <div class="work-body">
+    <template #filters>
+      <BrowseFilter label="View" :icon="activeTabMeta.icon" :value="activeTabMeta.label">
+        <BrowseOpt
+            v-for="t in TABS"
+            :key="t"
+            :active="tab === t"
+            :disabled="!!TAB_META[t].auth && !auth.isLogged"
+            :title="TAB_META[t].auth && !auth.isLogged ? 'Sign in to use this' : ''"
+            @click="setTab(t)"
+        >
+          {{ TAB_META[t].label }}
+        </BrowseOpt>
+      </BrowseFilter>
+
+      <BrowseFilter
+          label="Status"
+          icon="icon-earth"
+          :value="curFilter === 'all' ? 'All' : curFilter === 'public' ? 'Public' : privateChipLabel"
+          :active="curFilter !== 'all'"
+      >
+        <BrowseOpt
+            v-for="f in (['all', 'public', 'private'] as const)"
+            :key="f"
+            :active="curFilter === f"
+            @click="curFilter = f"
+        >
+          {{ f === 'all' ? 'All' : f === 'public' ? 'Public' : privateChipLabel }}
+        </BrowseOpt>
+      </BrowseFilter>
+
+      <BrowseFilter
+          v-if="tab === 'artworks'"
+          label="Type"
+          icon="icon-grid"
+          :value="workTileFilter === 'all' ? 'All' : workTileFilter === 'art' ? 'Art' : 'Tiles'"
+          :active="workTileFilter !== 'all'"
+      >
+        <BrowseOpt
+            v-for="t in (['all', 'art', 'tiles'] as const)"
+            :key="t"
+            :active="workTileFilter === t"
+            @click="workTileFilter = t"
+        >
+          {{ t === 'all' ? 'All types' : t === 'art' ? 'Art' : 'Tiles' }}
+        </BrowseOpt>
+      </BrowseFilter>
+
+      <BrowseFilter label="Sort" icon="icon-rocket" :value="SORT_META[sortBy].label">
+        <BrowseOpt v-for="(meta, key) in SORT_META" :key="key" :active="sortBy === key" @click="sortBy = key">
+          {{ meta.label }}
+        </BrowseOpt>
+      </BrowseFilter>
+    </template>
 
     <template v-if="tab === 'artworks'">
-      <div v-if="loadingWorks" class="work-grid" aria-busy="true">
+      <div v-if="loadingWorks" class="results" aria-busy="true">
         <div v-for="i in 10" :key="i" class="skeleton skeleton-square"/>
       </div>
 
-      <div v-else-if="!workspaces.length && workFilter === 'all'" class="work-empty">
-        <span class="icon icon-pen empty-icon"/>
-        <h2 class="empty-title">No artworks yet</h2>
-        <p class="text-xs">Create something — it takes seconds.</p>
-        <div class="empty-actions">
+      <div v-else-if="!workspaces.length && workFilter === 'all'" class="empty-state">
+        <span class="empty-state-icon icon icon-pen" aria-hidden="true"/>
+        <h2 class="empty-state-title">No artworks yet</h2>
+        <p class="empty-state-body">Create something — it takes seconds.</p>
+        <div class="empty-state-actions">
           <nuxt-link to="/editor?new=true" class="btn primary">
             <span class="icon icon-pen"/>
             <span>Start drawing</span>
@@ -807,7 +756,7 @@ onMounted(() => {
       <TransitionGroup
           v-else-if="filteredWorks.length"
           tag="div"
-          class="work-grid"
+          class="results"
           :class="{selecting: selectMode}"
           name="work-item"
       >
@@ -870,21 +819,21 @@ onMounted(() => {
         </div>
       </TransitionGroup>
 
-      <div v-else class="work-empty">
-        <p class="text-xs">No {{ workFilter }} artworks.</p>
+      <div v-else class="empty-state">
+        <p class="empty-state-body">No {{ workFilter }} artworks.</p>
       </div>
     </template>
 
     <template v-else-if="tab === 'collections'">
-      <div v-if="loadingColls" class="work-grid" aria-busy="true">
+      <div v-if="loadingColls" class="results" aria-busy="true">
         <div v-for="i in 10" :key="i" class="skeleton skeleton-square"/>
       </div>
 
-      <div v-else-if="!collections.length" class="work-empty">
-        <span class="icon icon-rhombus empty-icon"/>
-        <h2 class="empty-title">No collections yet</h2>
-        <p class="text-xs">Create one to group artworks by theme or style.</p>
-        <div class="empty-actions">
+      <div v-else-if="!collections.length" class="empty-state">
+        <span class="empty-state-icon icon icon-rhombus" aria-hidden="true"/>
+        <h2 class="empty-state-title">No collections yet</h2>
+        <p class="empty-state-body">Create one to group artworks by theme or style.</p>
+        <div class="empty-state-actions">
           <button class="btn primary" @click="showCreateColl = true">
             <span class="icon icon-plus"/>
             <span>New collection</span>
@@ -895,7 +844,7 @@ onMounted(() => {
       <TransitionGroup
           v-else-if="filteredColls.length"
           tag="div"
-          class="work-grid"
+          class="results"
           :class="{selecting: selectMode}"
           name="work-item"
       >
@@ -956,21 +905,21 @@ onMounted(() => {
         </div>
       </TransitionGroup>
 
-      <div v-else class="work-empty">
-        <p class="text-xs">No {{ collFilter }} collections.</p>
+      <div v-else class="empty-state">
+        <p class="empty-state-body">No {{ collFilter }} collections.</p>
       </div>
     </template>
 
     <template v-else-if="tab === 'worlds'">
-      <div v-if="loadingWorlds" class="work-grid" aria-busy="true">
+      <div v-if="loadingWorlds" class="results" aria-busy="true">
         <div v-for="i in 8" :key="i" class="skeleton skeleton-square"/>
       </div>
 
-      <div v-else-if="!worldsList.length" class="work-empty">
-        <span class="icon icon-grid empty-icon"/>
-        <h2 class="empty-title">No worlds yet</h2>
-        <p class="text-xs">Arrange pixel art into grid or isometric scenes with the world editor.</p>
-        <div class="empty-actions">
+      <div v-else-if="!worldsList.length" class="empty-state">
+        <span class="empty-state-icon icon icon-grid" aria-hidden="true"/>
+        <h2 class="empty-state-title">No worlds yet</h2>
+        <p class="empty-state-body">Arrange pixel art into grid or isometric scenes with the world editor.</p>
+        <div class="empty-state-actions">
           <nuxt-link to="/tilemaps/editor?new=true" class="btn primary">
             <span class="icon icon-grid"/>
             <span>Open world editor</span>
@@ -978,7 +927,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <TransitionGroup v-else tag="div" class="work-grid" :class="{selecting: selectMode}" name="work-item">
+      <TransitionGroup v-else tag="div" class="results" :class="{selecting: selectMode}" name="work-item">
         <div v-for="w in pagedWorlds" :key="w.id" class="work-card work-card-folder">
           <button
               v-if="selectMode"
@@ -1033,15 +982,15 @@ onMounted(() => {
     </template>
 
     <template v-else>
-      <div v-if="loadingTilesets" class="work-grid" aria-busy="true">
+      <div v-if="loadingTilesets" class="results" aria-busy="true">
         <div v-for="i in 8" :key="i" class="skeleton skeleton-square"/>
       </div>
 
-      <div v-else-if="!tilesetsList.length" class="work-empty">
-        <span class="icon icon-select empty-icon"/>
-        <h2 class="empty-title">No tilesets yet</h2>
-        <p class="text-xs">A tileset is a curated set of tiles you can paint many worlds with.</p>
-        <div class="empty-actions">
+      <div v-else-if="!tilesetsList.length" class="empty-state">
+        <span class="empty-state-icon icon icon-select" aria-hidden="true"/>
+        <h2 class="empty-state-title">No tilesets yet</h2>
+        <p class="empty-state-body">A tileset is a curated set of tiles you can paint many worlds with.</p>
+        <div class="empty-state-actions">
           <nuxt-link to="/tilesets/editor?new=true" class="btn primary">
             <span class="icon icon-grid"/>
             <span>Open tileset editor</span>
@@ -1049,7 +998,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <TransitionGroup v-else tag="div" class="work-grid" :class="{selecting: selectMode}" name="work-item">
+      <TransitionGroup v-else tag="div" class="results" :class="{selecting: selectMode}" name="work-item">
         <div v-for="t in pagedTilesets" :key="t.id" class="work-card work-card-folder">
           <button
               v-if="selectMode"
@@ -1102,10 +1051,9 @@ onMounted(() => {
         </div>
       </TransitionGroup>
     </template>
-      </div>
 
-      <div class="readme-foot work-foot">
-        <div class="work-foot-sel">
+    <template #foot>
+      <span class="browse-foot-start">
           <button
               class="work-ic-btn"
               :class="{active: selectMode}"
@@ -1131,160 +1079,27 @@ onMounted(() => {
               <span class="work-bulk-n">{{ selectedCount }}</span>
             </button>
           </template>
-
-        </div>
-        <Paginator v-if="curNumPages > 1" v-model:page="curPage" :pages="curNumPages" class="work-paging"/>
-        <span v-else class="work-count">{{ curCount }} {{ curCount === 1 ? 'item' : 'items' }}</span>
-      </div>
-    </section>
+      </span>
+      <span class="browse-foot-end">
+        <span>{{ curCount }} {{ curCount === 1 ? 'item' : 'items' }}</span>
+        <Paginator v-if="curNumPages > 1" v-model:page="curPage" :pages="curNumPages"/>
+      </span>
+    </template>
 
     <CollectionEditModal v-if="showCreateColl" @close="showCreateColl = false" @created="onCollCreated"/>
-  </div>
+  </BrowseLayout>
 </template>
 
 <style scoped>
 
-.work-controlbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
 
-.work-sel-btn {
-  gap: var(--space-2);
-  justify-content: space-between;
-  min-width: 120px;
-  white-space: nowrap;   
-}
 
-.work-sel-tab .work-sel-btn {
-  width: 160px;
-}
 
-.work-sel-caret {
-  font-size: 13px;
-  color: var(--muted);
-}
 
-.work-sel-sort {
-  margin-left: auto;
-}
 
-.work-panel {
-  margin-top: 0;       
-  overflow: visible;   
-  flex: 1 1 auto;      
-  min-height: 480px;   
-  display: flex;
-  flex-direction: column;
-}
-
-.work-head {
-  display: block;
-  padding: var(--space-2) var(--space-4);
-  flex: 0 0 auto;      
-}
-
-.work-body {
-  padding: var(--space-4);
-  flex: 1 1 auto;      
-  min-height: 0;       
-  overflow-y: auto;
-}
-
-.work-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-4);
-  border-top: 1px solid var(--border);
-  flex: 0 0 auto;      
-}
-
-.work-foot-sel {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.work-foot .work-paging {
-  margin: 0;
-}
-
-.work-count {
-  font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
-  color: var(--muted);
-}
-
-.work-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: var(--space-3);
-  padding-top: 3rem;
-  padding-bottom: 3rem;
-  min-height: 100%;   
-}
-
-.empty-icon {
-  font-size: 48px;
-  color: var(--primary);
-}
-
-.empty-title {
-  font-size: var(--text-base);
-  line-height: var(--text-base-lh);
-  font-weight: 700;
-  color: var(--foreground);
-}
-
-.empty-actions {
-  display: flex;
-  gap: var(--space-3);
-  margin-top: 0.75rem;
-}
 
 .work-card:has(.dropdown.active) {
   z-index: 5;
-}
-
-.work-grid {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-@media (min-width: 768px) {
-  .work-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 767px) {
-
-  .work-controlbar {
-    flex-wrap: wrap;
-  }
-  .work-sel-btn {
-    min-width: 0;
-    gap: var(--space-1);
-    padding-left: var(--space-2);
-    padding-right: var(--space-2);
-  }
-  .work-sel-tab .work-sel-btn {
-    width: auto;   
-  }
-  .work-controlbar .btn.primary {
-    padding-left: var(--space-2);
-    padding-right: var(--space-2);
-  }
-  .work-controlbar .btn.primary span:not(.icon) {
-    display: none;
-  }
 }
 
 .work-card {
@@ -1297,7 +1112,7 @@ onMounted(() => {
   box-shadow: var(--shadow);
 }
 
-.work-grid.selecting .work-card :deep(.dropdown) {
+.results.selecting .work-card :deep(.dropdown) {
   visibility: hidden;
 }
 
@@ -1592,8 +1407,8 @@ onMounted(() => {
 }
 
 .badge-pending {
-  background: #f59e0b;
-  color: #1a1a1a;
+  background: var(--warning);
+  color: var(--warning-foreground);
 }
 
 .badge-draft {
@@ -1666,26 +1481,3 @@ onMounted(() => {
 }
 </style>
 
-<style>
-.main-wrapper:has(.work-page) {
-  height: 100dvh;   
-}
-.main-wrapper:has(.work-page) > .main {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-.main-wrapper:has(.work-page) > .main > .container {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-.page.work-page {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-</style>

@@ -48,7 +48,7 @@ function computeStorage() {
     const wl = JSON.parse(localStorage.getItem('workspace_layout') || 'null')
     boards = wf?.boards?.length || wl?.boards?.length || 0
     arts = Object.keys(JSON.parse(localStorage.getItem('workspaces') || '{}')).length
-  } catch { /* malformed — leave at 0 */ }
+  } catch {  }
   storage.value = {
     usedMB: (bytes / 1024 / 1024).toFixed(1),
     pct: Math.min(100, Math.round((bytes / STORAGE_LIMIT) * 100)),

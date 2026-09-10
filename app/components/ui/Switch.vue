@@ -72,6 +72,15 @@ function toggle() {
   box-shadow: 0 0 0 2px var(--primary);
 }
 
+@media (pointer: coarse) {
+  .ui-switch {
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+  }
+}
+
 .track {
   position: relative;
   display: block;

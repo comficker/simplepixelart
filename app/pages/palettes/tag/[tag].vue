@@ -21,16 +21,8 @@ const results = computed(() => data.value?.results || [])
 const isLoading = computed(() => pending.value && !results.value.length)
 const isEmpty = computed(() => !pending.value && data.value && results.value.length === 0)
 
-const pagination = computed(() => {
-  const page = route.query.page ? Number.parseInt(route.query.page.toString()) : 1
-  const base = (p: number) => p <= 1 ? route.path : `${route.path}?page=${p}`
-  return {
-    n: data.value?.links?.next ? base(page + 1) : null,
-    p: data.value?.links?.previous ? base(page - 1) : null,
-  }
-})
+const {page, prevTo, nextTo} = usePageLinks(data)
 
-const page = computed(() => route.query.page ? Number.parseInt(route.query.page.toString()) : 1)
 
 useCustomSeoMeta({
   title: computed(() => page.value > 1
@@ -73,10 +65,10 @@ useCustomSeoMeta({
 
     <Paginator
         v-if="results.length"
-        :page="Number(route.query.page) || 1"
+        :page="page"
         :pages="data?.num_pages || 1"
-        :prev-to="pagination.p"
-        :next-to="pagination.n"
+        :prev-to="prevTo"
+        :next-to="nextTo"
     />
   </div>
 </template>
@@ -91,7 +83,18 @@ useCustomSeoMeta({
   margin-bottom: 0.5rem;
 }
 
-.ptag-crumb a { color: var(--primary); font-weight: 600; }
+.ptag-crumb a {
+  display: inline-flex;
+  align-items: center;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+@media (pointer: coarse) {
+  .ptag-crumb a {
+    min-height: 32px;
+  }
+}
 .ptag-sep { opacity: 0.5; }
 
 .ptag-title {
@@ -105,15 +108,5 @@ useCustomSeoMeta({
   color: var(--muted);
   font-size: var(--text-sm);
   margin: 0.25rem 0 1rem;
-}
-
-.pal-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-4);
-}
-
-@media (max-width: 520px) {
-  .pal-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 }
 </style>

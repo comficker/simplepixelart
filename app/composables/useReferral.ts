@@ -11,7 +11,7 @@ export async function attachPendingReferral() {
   } catch (e: any) {
     const s = e?.status ?? e?.response?.status
     if (s === 400 || s === 409) {
-      try { localStorage.removeItem('spa_ref') } catch { /* ignore */ }
+      try { localStorage.removeItem('spa_ref') } catch {  }
     }
   }
 }

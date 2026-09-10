@@ -64,7 +64,7 @@ async function toggleFollow() {
         '/activity/follow/', {method: 'POST', body: {username: username.value}},
     )
     profile.value = {...profile.value, following: res.following, followers: res.followers}
-  } catch { /* keep prior state */ } finally {
+  } catch {  } finally {
     followBusy.value = false
   }
 }
@@ -120,6 +120,7 @@ if (isEmptyCreator.value && import.meta.server) {
   setResponseStatus(useRequestEvent()!, 404)
 }
 
+
 useCustomSeoMeta({
   title: seoTitle,
   description: () => `Browse pixel art by @${username.value} on SimplePixelArt.com. Discover their sprites, 8-bit characters, and pixel designs — remix or follow for new releases.`,
@@ -138,14 +139,6 @@ useCustomSeoMeta({
           '@type': 'Person',
           name: `@${username.value}`,
           url: `https://simplepixelart.com/creator/${username.value}`
-        },
-        breadcrumb: {
-          '@type': 'BreadcrumbList',
-          itemListElement: [
-            {'@type': 'ListItem', position: 1, name: 'Home', item: 'https://simplepixelart.com/'},
-            {'@type': 'ListItem', position: 2, name: 'Creators', item: 'https://simplepixelart.com/creator'},
-            {'@type': 'ListItem', position: 3, name: `@${username.value}`, item: canonicalUrl.value}
-          ]
         }
       })
     }

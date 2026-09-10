@@ -63,7 +63,7 @@ async function loadTilesets() {
     })
     tilesets.value = res.results.map(c => ({id: c.id, id_string: c.id_string, title: c.name || 'Untitled'}))
   } catch {
-    /* non-fatal */
+    
   }
   await bindToActive()
 }
@@ -84,7 +84,7 @@ async function bindToActive() {
       const t = await useNativeFetch<any>(`/coloring/tilesets/${want}/`)
       match = {id: t.id, id_string: t.id_string, title: t.name || 'Untitled'}
       tilesets.value = [match, ...tilesets.value]
-    } catch { /* not owned / gone — leave unbound */ }
+    } catch {  }
   }
   if (match) { boundId.value = match.id; selectedId.value = match.id }
   else { boundId.value = null; selectedId.value = null }
@@ -210,7 +210,7 @@ async function removeFromTileset(from: Ts): Promise<void> {
     await useNativeFetch(`/coloring/tilesets/${from.id_string}/remove-tile/`, {
       method: 'POST', body: {page_id_string: slug},
     })
-  } catch { /* not there — treat as removed */ }
+  } catch {  }
 }
 
 async function createTileset() {
@@ -233,7 +233,7 @@ async function createTileset() {
     newTitle.value = ''
     showNew.value = false
   } catch {
-    /* ignore */
+    
   } finally {
     creating.value = false
   }

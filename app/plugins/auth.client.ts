@@ -4,6 +4,6 @@ export default defineNuxtPlugin(() => {
 
   if (auth.isLogged && route.query.access_token) {
     const editor = useEditor()
-    editor.syncLocalToCloud().catch(() => { /* kept local */ })
+    editor.syncLocalToCloud().catch(() => {  })
   }
 })

@@ -62,7 +62,7 @@ async function loadSources() {
       for (const t of res.results) {
         list.push({kind: 'ts', title: t.name || 'Untitled', id: t.id_string})
       }
-    } catch { /* non-fatal — arts sources still work */ }
+    } catch {  }
   }
   for (const t of localTs.list.value) {
     list.push({kind: 'ts', title: t.name, id: t.id, local: true})
@@ -311,7 +311,6 @@ watch(() => auth.isLogged, () => loadSources())
   .stp-thumbs {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    /* exactly 3 rows of square thumbs visible, the rest scrolls */
     max-height: calc(3 * (100cqw - 3 * var(--space-2)) / 4 + 2 * var(--space-2));
     overflow-x: visible;
     overflow-y: auto;

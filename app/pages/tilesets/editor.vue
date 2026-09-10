@@ -16,8 +16,8 @@ const auth = useAuthStore()
 const apiBase = useRuntimeConfig().public.api as string
 
 useCustomSeoMeta({
-  title: 'Tileset Editor — Build Tilesets & Auto-Tile Terrains Online',
-  description: 'Free online tileset builder. Curate pixel-art tiles into groups, auto-generate Wang 16 and blob 47 terrain sets from one base tile, define terrain relations and weighted variants, then export a Godot 4 TileSet, a Tiled tileset or PNG + JSON.',
+  title: 'Tileset Editor — Auto-Tile Terrains',
+  description: 'Free online tileset builder: group tiles, auto-generate Wang 16 and blob 47 terrains from one base tile, then export Godot 4, Tiled or PNG + JSON.',
   keywords: 'tileset editor, tileset maker, autotile generator, wang tiles, blob tileset, terrain tileset, pixel art tileset builder, godot tileset export, tiled tsx export, tileset png export, 2d game tileset tool, auto tiling',
   canonical: 'https://simplepixelart.com/tilesets/editor',
   robots: () => route.query.id ? 'noindex, follow' : 'index, follow',
@@ -70,13 +70,6 @@ useCustomSeoMeta({
               {'@type': 'Question', name: 'How do terrains connect to each other?', acceptedAnswer: {'@type': 'Answer', text: 'Each terrain can declare which terrains it connects to and a priority. Connected terrains at equal priority merge seamlessly; a higher-priority terrain draws its transition edge over the lower one; unrelated terrains keep a hard boundary.'}},
               {'@type': 'Question', name: 'Can I export the tileset to my game engine?', acceptedAnswer: {'@type': 'Answer', text: 'Yes. Export a Godot 4 TileSet (.tres) with the atlas and terrain sets already filled in, or a Tiled tileset (.tsx) with each terrain as a Wang set — both ship with the packed PNG, ready to drop into your project. A plain PNG + JSON export covers Unity, Phaser and custom engines.'}},
               {'@type': 'Question', name: 'Where do the tiles come from?', acceptedAnswer: {'@type': 'Answer', text: 'From any public pixel art on SimplePixelArt or your own drawings made in the pixel art editor. Each tile stays a live link to its art — edit the art and the tileset updates.'}},
-            ],
-          },
-          {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              {'@type': 'ListItem', position: 1, name: 'Home', item: 'https://simplepixelart.com/'},
-              {'@type': 'ListItem', position: 2, name: 'Tileset Editor', item: 'https://simplepixelart.com/tilesets/editor'},
             ],
           },
         ],
@@ -221,7 +214,7 @@ const boardGridStyle = ref<'solid' | 'dashed' | 'dots'>('solid')
 const showBoardChrome = ref(true)
 function toggleBoardChrome() {
   showBoardChrome.value = !showBoardChrome.value
-  try { localStorage.setItem('tsx_board_chrome', showBoardChrome.value ? '1' : '0') } catch { /* quota */ }
+  try { localStorage.setItem('tsx_board_chrome', showBoardChrome.value ? '1' : '0') } catch {  }
   scheduleDraw()
 }
 const showCanvasModal = ref(false)
@@ -256,7 +249,7 @@ function saveViewState() {
       cam: {x: cam.value.x, y: cam.value.y},
       board: {bg: boardBg.value, grid: boardGrid.value, gridStep: boardGridStep.value, gridStyle: boardGridStyle.value},
     }))
-  } catch { /* storage unavailable / quota — ignore */ }
+  } catch {  }
 }
 const saveViewSoon = debounce(saveViewState, 400)
 
@@ -493,8 +486,8 @@ function autosaveLocal() { debouncedLibSave() }
 function migrateLegacyDraft(): string | null {
   if (typeof localStorage === 'undefined') return null
   let saved: any = null
-  try { saved = JSON.parse(localStorage.getItem('spa_tileset_draft_v1') || 'null') } catch { /* ignore */ }
-  try { localStorage.removeItem('spa_tileset_draft_v1') } catch { /* ignore */ }
+  try { saved = JSON.parse(localStorage.getItem('spa_tileset_draft_v1') || 'null') } catch {  }
+  try { localStorage.removeItem('spa_tileset_draft_v1') } catch {  }
   const reg = saved?.tileset?.registry
   if (!reg || !Object.keys(reg).length) return null
   const entry = localTs.create(saved.tileset.name || 'My tileset')
@@ -1048,18 +1041,13 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
-let resizeObs: ResizeObserver | null = null
+useSettledResize(stageEl, () => scheduleDraw())
+
 onMounted(() => {
   document.addEventListener('keydown', onKeydown)
-  resizeObs = new ResizeObserver(() => scheduleDraw())
-  watch(stageEl, (el, _old, onCleanup) => {
-    if (el) resizeObs?.observe(el)
-    onCleanup(() => { if (el) resizeObs?.unobserve(el) })
-  }, {immediate: true})
 })
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown)
-  resizeObs?.disconnect()
 })
 
 function removeTileById(id: number) {
@@ -2855,7 +2843,7 @@ async function onPngFiles(e: Event) {
 
 onMounted(async () => {
   pruneStorageKeys('tsx_view:')
-  try { showBoardChrome.value = localStorage.getItem('tsx_board_chrome') !== '0' } catch { /* ignore */ }
+  try { showBoardChrome.value = localStorage.getItem('tsx_board_chrome') !== '0' } catch {  }
   await fetchMyTilesets()
   fetchCollections()
   runSearch()
@@ -2886,7 +2874,7 @@ const faq = [
 </script>
 
 <template>
-  <div class="page tsx-page">
+  <ToolLayout title="Tileset" class="tsx-page">
     <div class="editor">
 
     <div v-if="tileset" class="editor-toolbar">
@@ -3153,11 +3141,19 @@ const faq = [
     </div>
     </div>
 
-    <Widget title="More tools" class="tool-more">
-      <ToolPaths exclude="tileset"/>
-    </Widget>
 
-    <ToolReadme>
+    <template #status>
+      <p class="editor-foot-hint text-xs text-muted">
+        <template v-if="tileset">
+          {{ tiles.length }} tile{{ tiles.length === 1 ? '' : 's' }} ·
+          cell {{ tileset.cell.w }}×{{ tileset.cell.h }}px<template v-if="activeGroup"> ·
+            {{ activeGroup.name }}</template>
+        </template>
+        <template v-else>No tileset open</template>
+      </p>
+    </template>
+
+    <template #doc>
       <h1>Tileset Editor</h1>
       <p>
         Turn pixel art into a game-ready tileset. Group tiles on an infinite board, auto-generate
@@ -3186,7 +3182,8 @@ const faq = [
       </p>
 
       <QnA :items="faq"/>
-    </ToolReadme>
+    </template>
+    <template #extra>
 
     <UiModal v-if="showCanvasModal" class="canvas-modal" @close="showCanvasModal = false">
       <h3 class="publish-heading">Canvas</h3>
@@ -3605,7 +3602,8 @@ const faq = [
         @create="pickLoad('__new__')"
         @close="showLoad = false"
     />
-  </div>
+    </template>
+  </ToolLayout>
 </template>
 
 <style scoped>

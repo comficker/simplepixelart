@@ -29,7 +29,7 @@ export const THEMES = [
   {
     id: 'light',
     name: 'Light',
-    colors: ['#ffffff', '#e5e7eb', '#111827', '#2563eb'],
+    colors: ['#fdfcfa', '#eae7e0', '#1c1a17', '#2550cf'],
   },
   {
     id: 'dark',

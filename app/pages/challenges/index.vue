@@ -45,31 +45,32 @@ function fmtRange(c: ChallengeItem): string {
 }
 
 useCustomSeoMeta({
-  title: 'Weekly Pixel Art Challenges — Draw, Submit, Get Voted',
+  title: 'Weekly Pixel Art Challenges',
   description: 'A new pixel art theme every week. Draw your take in the free editor, submit it, and the community votes the winners. Browse past challenges and winning sprites.',
   canonical: 'https://simplepixelart.com/challenges',
 })
 </script>
 
 <template>
-  <div class="page">
-    <section class="page-hero">
-      <h1 class="page-title">Weekly challenges</h1>
-      <p class="text-muted">One theme a week. Draw it your way, submit, and the community votes the winners.</p>
-    </section>
+  <div class="page screen">
+    <div class="screen-head">
+      <div class="screen-head-text">
+        <h1 class="screen-title">Weekly challenges</h1>
+        <p class="screen-desc">One theme a week. Draw it your way, submit, and the community votes the winners.</p>
+      </div>
+      <div class="screen-actions">
+        <nuxt-link to="/editor?new=true" class="btn primary">
+          <span class="icon icon-pencil"/><span>Draw your entry</span>
+        </nuxt-link>
+      </div>
+    </div>
 
-    <section v-if="current" class="chal-current">
+    <Widget v-if="current" title="This week">
       <div class="chal-card">
-        <div class="chal-head">
-          <span class="chal-live">This week</span>
-          <span class="chal-dates">{{ fmtRange(current) }} · {{ daysLeft(current) }} {{ daysLeft(current) === 1 ? 'day' : 'days' }} left</span>
-        </div>
+        <span class="chal-dates">{{ fmtRange(current) }} · {{ daysLeft(current) }} {{ daysLeft(current) === 1 ? 'day' : 'days' }} left</span>
         <h2 class="chal-name">{{ current.name }}</h2>
         <p v-if="current.desc" class="chal-desc">{{ current.desc }}</p>
         <div class="chal-actions">
-          <nuxt-link to="/editor?new=true" class="btn primary">
-            <span class="icon icon-pencil"/><span>Draw your entry</span>
-          </nuxt-link>
           <button v-if="auth.isLogged" class="btn" @click="showSubmit = true">
             <span class="icon icon-flag"/><span>Submit an art</span>
           </button>
@@ -86,10 +87,9 @@ useCustomSeoMeta({
           </nuxt-link>
         </div>
       </div>
-    </section>
+    </Widget>
 
-    <section v-if="past.length" class="chal-past">
-      <h2 class="section-title">Past challenges</h2>
+    <Widget v-if="past.length" title="Past challenges">
       <div class="chal-grid">
         <nuxt-link
             v-for="c in past"
@@ -116,7 +116,7 @@ useCustomSeoMeta({
           </div>
         </nuxt-link>
       </div>
-    </section>
+    </Widget>
 
     <ChallengeSubmitModal
         v-if="showSubmit && current"
@@ -131,29 +131,8 @@ useCustomSeoMeta({
 .chal-card {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--space-3);
-  padding: var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-
-.chal-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.chal-live {
-  display: inline-flex;
-  padding: 2px 8px;
-  font-size: var(--text-2xs);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--primary-foreground);
-  background: var(--primary);
-  border-radius: 999px;
 }
 
 .chal-dates {
@@ -179,8 +158,8 @@ useCustomSeoMeta({
   gap: var(--space-2);
 }
 
-.chal-view {
-  margin-left: auto;
+.chal-actions .chal-view {
+  margin-left: var(--space-2);
 }
 
 .chal-thumbs {
@@ -203,28 +182,15 @@ useCustomSeoMeta({
   object-fit: contain;
 }
 
-.chal-past {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-}
-
 .chal-grid {
   display: grid;
   gap: var(--space-3);
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 
-@media (min-width: 640px) {
+@media (max-width: 520px) {
   .chal-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
-  .chal-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

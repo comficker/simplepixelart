@@ -60,8 +60,8 @@ export async function loadWorkspaceFull(): Promise<any | null> {
     if (v == null) {
       const legacy = lsRead()
       if (legacy != null) {
-        try { await idbPut(legacy) } catch { /* ignore */ }
-        try { localStorage.removeItem(KEY) } catch { /* ignore */ }
+        try { await idbPut(legacy) } catch {  }
+        try { localStorage.removeItem(KEY) } catch {  }
         v = legacy
       }
     }
@@ -73,14 +73,14 @@ export async function loadWorkspaceFull(): Promise<any | null> {
 
 export async function saveWorkspaceFull(payload: any): Promise<void> {
   if (!hasIdb()) {
-    try { localStorage.setItem(KEY, JSON.stringify(payload)) } catch { /* quota */ }
+    try { localStorage.setItem(KEY, JSON.stringify(payload)) } catch {  }
     return
   }
-  try { await idbPut(payload) } catch { /* ignore */ }
-  try { localStorage.removeItem(KEY) } catch { /* ignore */ }
+  try { await idbPut(payload) } catch {  }
+  try { localStorage.removeItem(KEY) } catch {  }
 }
 
 export async function clearWorkspaceFull(): Promise<void> {
-  try { localStorage.removeItem(KEY) } catch { /* ignore */ }
-  if (hasIdb()) { try { await idbDelete() } catch { /* ignore */ } }
+  try { localStorage.removeItem(KEY) } catch {  }
+  if (hasIdb()) { try { await idbDelete() } catch {  } }
 }
