@@ -287,7 +287,7 @@ useCustomSeoMeta({
           <div v-if="hasWorks" class="studio-grid">
             <nuxt-link to="/editor?new=true" class="studio-new" title="New blank canvas">
               <span class="icon icon-plus studio-new-icon"/>
-              <span class="studio-new-label">New canvas</span>
+              <span class="studio-new-label">New</span>
             </nuxt-link>
             <nuxt-link
                 v-for="item in studioWorks"
