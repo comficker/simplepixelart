@@ -698,6 +698,12 @@ input[type=number] {
     }
 }
 
+@media (max-width: 899px) {
+    .home-hero .home-tools > .studio-paths {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
 @media (min-width: 1024px) {
     .footer-social {
         display: none;
