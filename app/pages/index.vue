@@ -125,6 +125,12 @@ const faq = [
   },
 ]
 
+// Start the artwork list now rather than after the lookups below resolve.
+// item-list further down calls useArtListFetch with the same key, so it joins
+// this in-flight request instead of opening a second round trip — on a
+// client-side navigation each round trip costs about a second of latency.
+useArtListFetch({limit: 32, ordering: '-updated', hideIp: true})
+
 // Awaited together: these two are independent, and awaiting them one after
 // the other made the server wait out both round trips before the artwork list
 // (fetched by item-list further down) could even start.
