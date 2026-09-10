@@ -2,8 +2,15 @@
 const route = useRoute()
 const routePaths = new Set(useRouter().getRoutes().map(r => r.path))
 
+// A segment whose own path is not a page, but which has an obvious home:
+// /art/<slug> lives under the gallery, so its crumb should lead there rather
+// than sit dead because /art itself does not exist.
+const CRUMB_TARGET: Record<string, string> = {
+  art: '/arts',
+}
+
 const LABELS: Record<string, string> = {
-  arts: 'Discovery', art: 'Art', work: 'Your work', editor: 'Editor', convert: 'Convert',
+  arts: 'Discovery', art: 'Discovery', work: 'Your work', editor: 'Editor', convert: 'Convert',
   generate: 'AI generator', tilesets: 'Tilesets', slicer: 'Slicer', tilemaps: 'Tilemaps',
   palettes: 'Palettes', challenges: 'Challenges', creator: 'Creators', settings: 'Settings',
   collections: 'Collections', missions: 'Missions', tag: 'Tags',
@@ -17,7 +24,8 @@ const siteUrl = (config.public.siteUrl as string) || 'https://simplepixelart.com
 const crumbs = computed(() => {
   const parts = route.path.split('/').filter(Boolean)
   return parts.map((seg, i) => {
-    const to = '/' + parts.slice(0, i + 1).join('/')
+    const own = '/' + parts.slice(0, i + 1).join('/')
+    const to = (i < parts.length - 1 && CRUMB_TARGET[seg]) || own
     return {
       to,
       linked: routePaths.has(to),
