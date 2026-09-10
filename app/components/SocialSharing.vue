@@ -50,7 +50,7 @@ async function shareInstagram() {
     const blob = await (await fetch(squareSrc.value)).blob()
     const file = new File([blob], 'pixel-art.png', {type: blob.type || 'image/png'})
     if (typeof navigator.canShare === 'function' && navigator.canShare({files: [file]})) {
-      await navigator.share({files: [file], text: props.meta?.title}).catch(() => { /* user closed the sheet */ })
+      await navigator.share({files: [file], text: props.meta?.title}).catch(() => {  })
       return
     }
     const a = document.createElement('a')

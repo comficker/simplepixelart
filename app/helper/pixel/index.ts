@@ -1,18 +1,3 @@
-// One library for every image → pixel-art path in the app. Each feature calls
-// a preset here instead of wiring stages itself:
-//
-//   editor "Import files"  → importFileGrid   (legacy sampled engine — the
-//   editor "Insert image"  → importFileGrid    quality benchmark, golden-locked
-//                                              by simplepixelart/pixel_bench)
-//   editor 1:1 import      → importOriginalGrid
-//   /convert               → convertImageToGrid (+ cleanOrphanCells)
-//   /generate (AI result)  → aiImageToGrid
-//   tileset slicer         → imageToCells + the detect primitives
-//
-// Engines live beside this façade: ./legacy.ts (gradient-streak sampler),
-// ./reconstruct.ts (scale detection, two-stage reconstruction, AI pipeline).
-// Baseline numbers and the harness: simplepixelart/pixel_bench/ — run it
-// before and after touching anything here.
 
 import {isSameColor, rgbToHex} from '~/helper/color'
 import {dataUrlToOriginalGrid, dataUrlToSamplesGrid} from './legacy'
@@ -111,9 +96,9 @@ function contentBox(img: HTMLImageElement): { x: number; y: number; w: number; h
     for (let x = 0; x < pw; x++) { tally(x, 0); tally(x, ph - 1) }
     for (let y = 1; y < ph - 1; y++) { tally(0, y); tally(pw - 1, y) }
     const top = [...hist.values()].sort((a, b) => b.n - a.n)[0]
-    if (!top || top.n / border < 0.85) return null       // no uniform ground
-    // Tight: cream-on-white sprites live a small distance from the ground —
-    // a generous tolerance here cropped the cat's paws off (pixel_bench).
+    if (!top || top.n / border < 0.85) return null
+
+
     const TOL = 3 * 12 * 12
     let x0 = pw, y0 = ph, x1 = -1, y1 = -1
     for (let y = 0; y < ph; y++) for (let x = 0; x < pw; x++) {
@@ -149,10 +134,10 @@ export async function convertImageToGrid(
         dither?: boolean
     },
 ): Promise<{ palette: RGBc[]; indexed: number[][]; width: number; height: number; native?: boolean } | null> {
-    // Pixel-art input? Read its OWN grid instead of resampling blind — an
-    // upscaled export loses nothing this way (pixel_bench: blind resample of a
-    // grid-lined or padded screenshot mis-phased every cell). Only untouched
-    // inputs qualify: any colour adjustment needs the photo path anyway.
+
+
+
+
     const untouched = !opts.brightness && !opts.contrast && !opts.saturation
     if (opts.dataUrl && untouched) {
         try {
@@ -169,7 +154,7 @@ export async function convertImageToGrid(
                 const q = quantizeGrid(opts.cutBackground ? cellFloodGround(cells) : cells, opts)
                 return {...q, width: w, height: h, native: true}
             }
-        } catch { /* fall through to the photo path */ }
+        } catch {  }
     }
     const box = contentBox(img)
     const sx = box?.x ?? 0
@@ -192,7 +177,7 @@ export async function convertImageToGrid(
             const pd = pctx.getImageData(0, 0, pcv.width, pcv.height)
             const p = estimateCellPx(pd.data, pcv.width, pcv.height, 0, 0, pcv.width - 1, pcv.height - 1)
             if (p) pitch = p / pf
-        } catch { /* fall back */ }
+        } catch {  }
         w = pitch ? Math.max(8, Math.min(128, Math.round(sw / pitch))) : 48
     } else {
         w = opts.size

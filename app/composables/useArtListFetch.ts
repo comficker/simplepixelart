@@ -51,17 +51,17 @@ export function useArtListFetch(opts: {
         is_iso: isoActive.value ? '1' : undefined,
     }))
 
-    // Key includes the props that change the query (ordering/limit) so two lists
-    // on the same route — e.g. homepage "What's new" vs another feed — never
-    // share a cache entry and render identical data.
-    //
-    // The path is URI-encoded on purpose. This key ships inside the SSR payload,
-    // and the previous form `/arts/steve|default|20` reads as a URL path —
-    // Googlebot extracted it and crawled it as a real page. That page then
-    // emitted its own key (`…|default|20|default|20`), which got crawled too: an
-    // unbounded, self-feeding crawl trap of near-duplicate listings. Encoding
-    // drops the slashes so nothing in the key can be mistaken for a path.
-    // Don't "tidy" this back into a raw path.
+
+
+
+
+
+
+
+
+
+
+
     const fetch = useAuthFetch<ResponseSharedPage>(`/coloring/shared-pages/`, {
         query: params,
         key: `item-list:${encodeURIComponent(route.fullPath)}:${ordering || 'default'}:${limit}`,

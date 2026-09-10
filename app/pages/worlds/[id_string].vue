@@ -7,7 +7,6 @@ const auth = useAuthStore()
 
 const {data, error} = await useAuthFetch<any>(`/coloring/worlds/${route.params.id_string}/`)
 
-// Private or missing worlds 404 for crawlers, not soft-200.
 if (error.value && import.meta.server) {
   setResponseStatus(useRequestEvent()!, 404)
 }

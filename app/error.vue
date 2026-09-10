@@ -21,8 +21,6 @@ useHead({
   ],
 })
 
-// Detected after mount only — SSR always renders "Ctrl", so evaluating
-// navigator in-template would hydration-mismatch on Mac (cf. Header.vue).
 const isMacUA = ref(false)
 onMounted(() => {
   isMacUA.value = /Mac|iPhone|iPad/.test(navigator.platform)
@@ -35,7 +33,6 @@ const handleError = () => clearError({ redirect: '/' })
   <div class="err-wrap">
     <section class="err-card">
       <div class="err-art" aria-hidden="true">
-        <!-- 6x6 pixel grid that spells the status code in dot-matrix style -->
         <div class="err-grid">
           <span v-for="n in 36" :key="n" class="err-pix" :style="{ animationDelay: `${(n % 7) * 60}ms` }"/>
         </div>

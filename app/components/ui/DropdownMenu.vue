@@ -79,8 +79,6 @@ const ghostStyle = computed(() => ({
   pointerEvents: 'none',
 }))
 
-// Adaptive placement: the `position` prop is a preference; when the menu
-// would clip the viewport it flips vertically and clamps horizontally.
 const autoDir = ref('')
 const menuStyle = ref({})
 

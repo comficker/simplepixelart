@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const store = useEditor()
 const route = useRoute()
 
 const editId = computed(() => route.query.id?.toString() || '')
@@ -10,7 +11,7 @@ const canonical = computed(() =>
 
 useCustomSeoMeta({
   title: "Pixel Art Maker — Free Online Editor",
-  description: "Make pixel art online free — draw on a pixel grid with brushes, fill, layers, mirror mode and custom palettes, then export a PNG. No download, no signup, runs in your browser.",
+  description: "Make pixel art online free — brushes, fill, layers, mirror mode and custom palettes, then export a PNG. No download, no signup, runs in your browser.",
   keywords: "pixel art maker, make pixel art, pixel art online, free pixel art, pixel art editor, online pixel editor, pixel art creator, pixel drawing tool, draw pixel art online, pixel art generator",
   canonical: canonical,
   robots: () => editId.value ? 'noindex, follow' : 'index, follow',
@@ -62,13 +63,6 @@ useCustomSeoMeta({
               {'@type': 'Question', name: 'How do I export my pixel art?', acceptedAnswer: {'@type': 'Answer', text: 'Export your artwork as a PNG for games, the web or print, and optionally share it to the SimplePixelArt gallery.'}},
             ],
           },
-          {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              {'@type': 'ListItem', position: 1, name: 'Home', item: 'https://simplepixelart.com/'},
-              {'@type': 'ListItem', position: 2, name: 'Pixel Art Editor', item: 'https://simplepixelart.com/editor'},
-            ],
-          },
         ],
       })
     }
@@ -85,12 +79,19 @@ const faq = [
 </script>
 
 <template>
-  <div class="page">
+  <ToolLayout title="Draw">
     <PXEditor/>
-    <Widget title="More tools" class="tool-more">
-      <ToolPaths exclude="draw"/>
-    </Widget>
-    <ToolReadme>
+    <template #status>
+      <p class="editor-foot-hint text-xs text-muted">
+        {{ store.editorData.width }}×{{ store.editorData.height }}px ·
+        {{ store.editorData.layers.length }} layer{{ store.editorData.layers.length === 1 ? '' : 's' }} ·
+        {{ store.editorData.colors.length }} colors<template v-if="store.isAnimated"> ·
+          {{ store.frameCount }} frames</template>
+      </p>
+      <span class="text-xs text-muted">{{ store.currentTool }}</span>
+    </template>
+
+    <template #doc>
       <h1>Pixel Art Maker</h1>
       <div class="readme-badges">
         <span class="badge"><span>price</span><span class="v ok">free</span></span>
@@ -131,6 +132,6 @@ const faq = [
       </ul>
 
       <QnA :items="faq"/>
-    </ToolReadme>
-  </div>
+    </template>
+  </ToolLayout>
 </template>

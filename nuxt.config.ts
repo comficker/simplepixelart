@@ -90,10 +90,10 @@ export default defineNuxtConfig({
                 // Load font CSS non-render-blocking: fetch as `print` (idle),
                 // then swap to `all` once loaded. Text paints immediately in the
                 // fallback face (display=swap) instead of waiting on Google Fonts.
-                {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:wght@400..800&display=swap', media: 'print', onload: "this.media='all'"},
+                {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap', media: 'print', onload: "this.media='all'"},
             ],
             noscript: [
-                {innerHTML: '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Plus+Jakarta+Sans:wght@400..800&display=swap">'},
+                {innerHTML: '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap">'},
             ],
             meta: [
                 {

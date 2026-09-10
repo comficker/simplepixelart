@@ -49,8 +49,8 @@ const FAQ = [
 ]
 
 useCustomSeoMeta({
-  title: "Color Palette by Color — Generate a Palette from One Color",
-  description: "Pick one color and instantly generate a matching color palette — complementary, analogous, triadic, square, monochrome and shades. Choose the number of colors and tonal spread, then copy the hex codes, open in the editor, or save to the library. Free, no signup.",
+  title: "Color Palette from One Color",
+  description: "Pick one color and generate a matching palette — complementary, analogous, triadic, square, monochrome or shades. Copy the hex codes or edit them.",
   keywords: "color palette by color, color palette from color, color palette generator, palette from one color, color harmony palette, complementary colors, analogous colors, triadic colors, color combinations",
   canonical: "https://simplepixelart.com/palettes/color-palette-from-color",
   robots: "index, follow",
@@ -98,14 +98,6 @@ useCustomSeoMeta({
               name: f.q,
               acceptedAnswer: {'@type': 'Answer', text: f.a},
             })),
-          },
-          {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              {'@type': 'ListItem', position: 1, name: 'Home', item: 'https://simplepixelart.com/'},
-              {'@type': 'ListItem', position: 2, name: 'Palettes', item: 'https://simplepixelart.com/palettes'},
-              {'@type': 'ListItem', position: 3, name: 'Color palette by color', item: 'https://simplepixelart.com/palettes/color-palette-from-color'},
-            ],
           },
         ],
       }),

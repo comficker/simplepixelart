@@ -21,7 +21,7 @@ async function fetchUnread() {
       params: {read: false, page_size: 1},
     })
     unread.value = res.count || 0
-  } catch { /* badge stays empty */ }
+  } catch {  }
 }
 
 async function onOpen() {
@@ -37,7 +37,7 @@ async function onOpen() {
       await useNativeFetch('/activity/notifications-read/', {method: 'POST', body: {}})
       unread.value = 0
     }
-  } catch { /* list stays empty */ } finally {
+  } catch {  } finally {
     loading.value = false
   }
 }

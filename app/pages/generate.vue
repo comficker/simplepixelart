@@ -12,8 +12,8 @@ const requestURL = useRequestURL()
 const route = useRoute()
 
 useCustomSeoMeta({
-  title: 'AI Pixel Art Generator — Text to Sprite, Free',
-  description: 'Describe a sprite — or attach a reference image — and get editable pixel art. Choose 16×16 to 128×128, cap the palette, cut the background, then open the result in a full pixel art editor.',
+  title: 'AI Pixel Art Generator',
+  description: 'Describe a sprite and get editable pixel art. Pick 16×16 to 128×128, cap the palette, cut the background, then open the result in the editor.',
   keywords: 'ai pixel art generator, text to pixel art, ai sprite generator, pixel art from text, image to pixel art ai, photo to sprite ai, ai game asset generator, free ai pixel art, prompt to sprite',
   canonical: 'https://simplepixelart.com/generate',
   script: [
@@ -284,7 +284,7 @@ async function loadHistory() {
     const res = await useNativeFetch<{ results: GenHistoryItem[] }>(
         '/coloring/economy/gen-image/history/')
     history.value = res.results || []
-  } catch { /* strip just stays as it is */ }
+  } catch {  }
 }
 
 async function restoreFromHistory(h: GenHistoryItem) {
@@ -320,7 +320,7 @@ function deleteFromHistory(id: number) {
   history.value = history.value.filter(e => e.id !== id)
   if (historyId.value === id) historyId.value = null
   useNativeFetch(`/coloring/economy/gen-image/history/${id}/`, {method: 'DELETE'})
-      .catch(() => { /* it comes back on the next load if the delete failed */ })
+      .catch(() => {  })
 }
 
 async function sendToEditor() {
@@ -401,10 +401,10 @@ const faq = [
 </script>
 
 <template>
-  <div class="page">
+  <ToolLayout title="AI generator">
     <div class="gen-grid flat-editor">
 
-      <div class="gen-main">
+      <div class="canvas-col">
         <Widget title="Preview">
           <div class="preview-wrapper">
 
@@ -422,8 +422,8 @@ const faq = [
               <img v-if="previewMode === 'original'" :src="resultUrl" alt="Generated picture" class="gen-original">
             </template>
 
-            <div v-else class="gen-empty">
-              <span class="icon icon-auto-fix gen-empty-icon"/>
+            <div v-else class="tool-empty">
+              <span class="icon icon-auto-fix"/>
               <p class="text-sm">Describe a sprite and generate it</p>
               <p class="text-xs text-muted">You get pixels on a canvas — editable, not a flat image.</p>
               <p v-if="summary && !summary.enabled" class="text-xs text-muted">
@@ -448,70 +448,71 @@ const faq = [
           </button>
         </div>
 
-        <div class="gen-composer" @drop="onRefDrop" @dragover.prevent>
+      </div>
 
-          <div v-if="reference" class="gen-ref">
-            <img :src="reference" alt="" class="gen-ref-thumb">
-            <span class="gen-ref-name">{{ referenceName || 'Reference image' }}</span>
-            <button class="gen-ref-x" aria-label="Remove reference" title="Remove reference" @click="clearReference">
-              <span class="icon icon-close"/>
-            </button>
-          </div>
-          <div class="gen-composer-box">
-            <button
-                class="gen-attach"
-                :disabled="busy || !auth.isLogged"
-                :aria-label="reference ? 'Replace reference image' : 'Attach a reference image'"
-                :title="reference ? 'Replace the reference image' : 'Attach a reference image — the sprite is redrawn from it'"
-                :class="{active: !!reference}"
-              @click="fileEl?.click()"
-            >
-              <span class="icon icon-paperclip"/>
-            </button>
-            <input ref="fileEl" type="file" accept="image/*" class="gen-file" @change="onRefPick">
-            <input
-                ref="promptEl"
-                v-model="prompt"
-                type="text"
-                class="gen-input"
-                maxlength="300"
-                :placeholder="reference ? 'What to change…' : hasResult ? 'Describe another sprite…' : 'A sleeping orange cat curled up…'"
-                :disabled="busy || !auth.isLogged"
-                @keydown.enter.prevent="generate"
-            >
-            <a v-if="!auth.isLogged" :href="googleAuthUrl" class="btn primary gen-send">
-              <span class="icon icon-user"/><span>Sign in</span>
-            </a>
-            <button
-                v-else
-                class="btn primary gen-send"
-                :disabled="busy || broke || prompt.trim().length < 3 || (summary ? !summary.enabled : false)"
-                :title="hasResult ? `Generate another — 🪙${summary?.cost ?? 60}` : `Generate — 🪙${summary?.cost ?? 60}`"
-                @click="generate"
-            >
-              <span class="icon" :class="busy ? 'icon-refresh' : 'icon-auto-fix'"/>
-              <span class="gen-send-label">{{ busy ? 'Generating…' : hasResult ? 'Again' : 'Generate' }}</span>
-              <span class="gen-cost"><span class="icon icon-coin"/>{{ summary?.cost ?? 60 }}</span>
-            </button>
-          </div>
+      <div class="gen-composer" @drop="onRefDrop" @dragover.prevent>
 
-          <div v-if="broke || (summary && !summary.enabled)" class="gen-composer-foot">
-            <template v-if="broke">
-              <span class="text-2xs text-muted">Need 🪙{{ summary!.cost }}</span>
-              <button
-                  v-if="!summary!.dailyClaimed && summary!.dailyGrant > 0"
-                  class="gen-link"
-                  :disabled="claiming"
-                  @click="claimDaily"
-              >{{ claiming ? 'Claiming…' : `Claim 🪙${summary!.dailyGrant}` }}</button>
-              <nuxt-link to="/missions" class="gen-link">Earn credits</nuxt-link>
-            </template>
-            <span v-else class="text-2xs text-muted">Generation is offline</span>
-          </div>
+        <div v-if="reference" class="gen-ref">
+          <img :src="reference" alt="" class="gen-ref-thumb">
+          <span class="gen-ref-name">{{ referenceName || 'Reference image' }}</span>
+          <button class="gen-ref-x" aria-label="Remove reference" title="Remove reference" @click="clearReference">
+            <span class="icon icon-close"/>
+          </button>
+        </div>
+        <div class="gen-composer-box">
+          <button
+              class="gen-attach"
+              :disabled="busy || !auth.isLogged"
+              :aria-label="reference ? 'Replace reference image' : 'Attach a reference image'"
+              :title="reference ? 'Replace the reference image' : 'Attach a reference image — the sprite is redrawn from it'"
+              :class="{active: !!reference}"
+            @click="fileEl?.click()"
+          >
+            <span class="icon icon-paperclip"/>
+          </button>
+          <input ref="fileEl" type="file" accept="image/*" class="gen-file" @change="onRefPick">
+          <input
+              ref="promptEl"
+              v-model="prompt"
+              type="text"
+              class="gen-input"
+              maxlength="300"
+              :placeholder="reference ? 'What to change…' : hasResult ? 'Describe another sprite…' : 'A sleeping orange cat curled up…'"
+              :disabled="busy || !auth.isLogged"
+              @keydown.enter.prevent="generate"
+          >
+          <a v-if="!auth.isLogged" :href="googleAuthUrl" class="btn primary gen-send">
+            <span class="icon icon-user"/><span>Sign in</span>
+          </a>
+          <button
+              v-else
+              class="btn primary gen-send"
+              :disabled="busy || broke || prompt.trim().length < 3 || (summary ? !summary.enabled : false)"
+              :title="hasResult ? `Generate another — 🪙${summary?.cost ?? 60}` : `Generate — 🪙${summary?.cost ?? 60}`"
+              @click="generate"
+          >
+            <span class="icon" :class="busy ? 'icon-refresh' : 'icon-auto-fix'"/>
+            <span class="gen-send-label">{{ busy ? 'Generating…' : hasResult ? 'Again' : 'Generate' }}</span>
+            <span class="gen-cost"><span class="icon icon-coin"/>{{ summary?.cost ?? 60 }}</span>
+          </button>
+        </div>
+
+        <div v-if="broke || (summary && !summary.enabled)" class="gen-composer-foot">
+          <template v-if="broke">
+            <span class="text-2xs text-muted">Need 🪙{{ summary!.cost }}</span>
+            <button
+                v-if="!summary!.dailyClaimed && summary!.dailyGrant > 0"
+                class="gen-link"
+                :disabled="claiming"
+                @click="claimDaily"
+            >{{ claiming ? 'Claiming…' : `Claim 🪙${summary!.dailyGrant}` }}</button>
+            <nuxt-link to="/missions" class="gen-link">Earn credits</nuxt-link>
+          </template>
+          <span v-else class="text-2xs text-muted">Generation is offline</span>
         </div>
       </div>
 
-      <div class="gen-settings">
+      <div class="editor-sidebar">
         <Widget title="Look">
           <div class="settings-row">
             <label v-for="s in STYLES" :key="s.v" class="pill" :class="{active: style === s.v}">
@@ -525,7 +526,7 @@ const faq = [
               <span>{{ v.l }}</span>
             </label>
           </div>
-          <label class="gen-check">
+          <label class="editor-check">
             <input v-model="outline" type="checkbox" :disabled="busy">
             <span class="text-xs">Dark outline</span>
           </label>
@@ -560,7 +561,7 @@ const faq = [
               <span>{{ m.l }}</span>
             </label>
           </div>
-          <label class="gen-check" title="Crop to the subject so it uses the whole canvas, instead of keeping the model's margins">
+          <label class="editor-check" title="Crop to the subject so it uses the whole canvas, instead of keeping the model's margins">
             <input v-model="fillGrid" type="checkbox">
             <span class="text-xs">Crop to subject</span>
           </label>
@@ -583,11 +584,16 @@ const faq = [
       </div>
     </div>
 
-    <Widget title="More tools" class="tool-more">
-      <ToolPaths exclude="ai"/>
-    </Widget>
 
-    <ToolReadme>
+    <template #status>
+      <p class="editor-foot-hint text-xs text-muted">
+        {{ style }} · {{ view }} view · {{ size === 'auto' ? 'auto size' : `${size}×${size}px` }} ·
+        {{ maxColors }} colors · backdrop {{ bgMode }}
+      </p>
+      <span class="text-xs text-muted">{{ busy ? 'Generating…' : hasResult ? 'Ready' : 'Idle' }}</span>
+    </template>
+
+    <template #doc>
       <h1>AI Pixel Art Generator</h1>
       <p>Describe a sprite, get pixel art you can actually edit — a canvas of pixels with a real palette, not a picture of pixel art.</p>
 
@@ -616,8 +622,8 @@ const faq = [
       </ul>
 
       <QnA :items="faq"/>
-    </ToolReadme>
-  </div>
+    </template>
+  </ToolLayout>
 </template>
 
 <style scoped>
@@ -631,31 +637,11 @@ const faq = [
 
 @media (min-width: 768px) {
   .gen-grid {
-    grid-template-columns: 1fr 232px;
+    grid-template-columns: 1fr var(--sidebar-w);
   }
 }
 
-.gen-main {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  border-bottom: 1px solid var(--border);
-}
 
-@media (min-width: 768px) {
-  .gen-main {
-    border-bottom: 0;
-    border-right: 1px solid var(--border);
-  }
-}
-
-.gen-settings :deep(.widget + .widget) {
-  border-top: 1px solid var(--border);
-}
-
-.gen-main :deep(.widget-body) {
-  padding: 0;
-}
 
 .preview-wrapper {
   position: relative;                
@@ -705,23 +691,6 @@ const faq = [
   padding: 0 0.5rem;
   font-size: var(--text-2xs);
   letter-spacing: 0.02em;
-}
-
-.gen-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  text-align: center;
-  color: var(--muted);
-}
-
-.gen-empty p { margin: 0; }
-
-.gen-empty-icon {
-  font-size: 40px;
-  color: var(--primary);
-  margin-bottom: var(--space-1);
 }
 
 .gen-ref {
@@ -819,6 +788,7 @@ const faq = [
 .gen-file { display: none; }
 
 .gen-composer {
+  grid-column: 1 / -1;
   border-top: 1px solid var(--border);
   padding: var(--space-3);
 }
@@ -878,10 +848,6 @@ const faq = [
   cursor: pointer;
 }
 
-@media (max-width: 479px) {
-  .gen-send-label { display: none; }   
-}
-
 .gen-hint {
   margin: 0;
   padding: 0 var(--space-4) var(--space-3);
@@ -904,14 +870,6 @@ const faq = [
 .gen-cost .icon { width: 12px; height: 12px; }
 
 .gen-row2 { margin-top: var(--space-2); }
-
-.gen-check {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-  cursor: pointer;
-}
 
 .gen-hist {
   display: grid;
@@ -982,27 +940,4 @@ const faq = [
   .gen-hist-x { opacity: 1; }
 }
 
-.pill {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
-  min-width: 36px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--foreground);
-  border-radius: var(--radius-sm);
-  transition: background var(--transition), color var(--transition), border-color var(--transition);
-}
-
-.pill input { display: none; }
-
-.pill.active {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-color: var(--primary);
-}
 </style>

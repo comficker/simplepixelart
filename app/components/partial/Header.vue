@@ -195,7 +195,6 @@ header .brand-name-main {
 }
 
 @media (max-width: 1023px) {
-  .hdr-link-label { display: none; }
   .hdr-link { padding: 7px 10px; }
 }
 
@@ -206,7 +205,6 @@ header .brand-name-main {
   header .brand-name { font-size: var(--text-lg); }
   .hdr-nav { gap: 0; }
   .hdr-link { padding: 7px 9px; }
-  .cmdk-hint { display: none; }
   .cmdk-trigger { padding: 7px; margin-right: -7px; border-radius: var(--radius-sm); }
 }
 

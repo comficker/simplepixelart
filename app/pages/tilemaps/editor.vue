@@ -19,8 +19,8 @@ const apiBase = useRuntimeConfig().public.api as string
 const localTs = useLocalTilesets()
 
 useCustomSeoMeta({
-  title: 'Tilemap Editor — Make Pixel Art Maps Online (Grid & Isometric)',
-  description: 'Free online tilemap maker. Paint pixel-art maps on a grid or isometric grid with stacked layers of ground tiles and sprites — using your own art or any piece from the gallery. No signup, runs in your browser.',
+  title: 'Tilemap Editor — Grid & Isometric',
+  description: 'Free online tilemap maker: paint pixel-art maps on a grid or isometric grid with stacked layers of tiles and sprites. Runs in your browser.',
   keywords: 'tilemap editor, tilemap maker, pixel art map maker, isometric tilemap creator, free online tilemap tool, grid map maker, 2d game map editor, tile map builder, sprite map maker, isometric pixel art',
   canonical: 'https://simplepixelart.com/tilemaps/editor',
   robots: () => route.query.world ? 'noindex, follow' : 'index, follow',
@@ -72,13 +72,6 @@ useCustomSeoMeta({
               {'@type': 'Question', name: 'Can I use my own pixel art as tiles?', acceptedAnswer: {'@type': 'Answer', text: 'Yes. Draw tiles in the pixel art editor, add them to a tileset in the Tileset Editor, then pick that tileset here to paint with them.'}},
             ],
           },
-          {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              {'@type': 'ListItem', position: 1, name: 'Home', item: 'https://simplepixelart.com/'},
-              {'@type': 'ListItem', position: 2, name: 'Tilemap Editor', item: 'https://simplepixelart.com/tilemaps/editor'},
-            ],
-          },
         ],
       }),
     },
@@ -123,7 +116,7 @@ const brushSize = ref(1)
 const dirty = ref(false)
 const saving = ref(false)
 
-const PALETTE_PER = 24
+const PALETTE_PER = 10
 const searchQuery = ref('')
 const searchResults = ref<SharedPage[]>([])
 const searchCount = ref(0)
@@ -207,13 +200,13 @@ function saveViewState() {
       sl: stageEl.value?.scrollLeft || 0,
       st: stageEl.value?.scrollTop || 0,
     }))
-  } catch { /* quota — ignore */ }
+  } catch {  }
 }
 const debouncedViewSave = debounce(saveViewState, 400)
 function restoreViewState(): boolean {
   if (typeof localStorage === 'undefined') return false
   let v: any = null
-  try { v = JSON.parse(localStorage.getItem(viewKey()) || 'null') } catch { /* corrupt — ignore */ }
+  try { v = JSON.parse(localStorage.getItem(viewKey()) || 'null') } catch {  }
   if (!v) return false
   if (typeof v.zoom === 'number') zoom.value = Math.max(ZMIN, Math.min(ZMAX, v.zoom))
   if (typeof v.layersOpen === 'boolean') layersOpen.value = v.layersOpen
@@ -253,8 +246,8 @@ function registerTiles(arts: { id: number; id_string: string }[]) {
 function ensureImage(id: number) {
   if (tileImages.has(id) || !knownTiles[id]) return
   const img = new Image()
-  // Without this the canvas taints on the cross-origin tile PNGs and every
-  // toBlob-based export (PNG, Tiled zip) dies with a SecurityError.
+
+
   img.crossOrigin = 'anonymous'
   pendingImages.value++
   const done = () => { pendingImages.value = Math.max(0, pendingImages.value - 1); scheduleDraw() }
@@ -273,7 +266,7 @@ const LS_KEY = 'spa_tilemap_freestyle_v1'
 
 function restoreFreeStyle(): string | null {
   let saved: any = null
-  try { saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null') } catch { /* ignore */ }
+  try { saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null') } catch {  }
   Object.assign(config, normalizeTilemap(saved?.config))
   activeLayerId.value = config.layers[config.layers.length - 1]?.id || ''
   if (saved?.registry && typeof saved.registry === 'object') {
@@ -299,7 +292,7 @@ function saveFreeStyle() {
   for (const id of placedIds(config)) if (knownTiles[id]) registry[id] = knownTiles[id]
   try {
     localStorage.setItem(LS_KEY, JSON.stringify({config: snapshot(), registry, tileset: guestTileset.value?.id || null}))
-  } catch { /* quota — ignore */ }
+  } catch {  }
   dirty.value = false
 }
 const debouncedFreeStyleSave = debounce(saveFreeStyle, 600)
@@ -1258,7 +1251,7 @@ function runGesture() {
   const m = gMid(), d = gDist()
   el.scrollLeft = gesture.sl - (m.x - gesture.midX)
   el.scrollTop = gesture.st - (m.y - gesture.midY)
-  if (gesture.dist > 0) {                              // pinch → stepped zoom
+  if (gesture.dist > 0) {
     const r = d / gesture.dist
     if (r > 1.35 || r < 0.74) zoomAround(m.x, m.y, r > 1 ? 1 : -1)
   }
@@ -1722,7 +1715,7 @@ const faq = [
 </script>
 
 <template>
-  <div class="page tm-page">
+  <ToolLayout title="Tilemap" class="tm-page">
 
     <div v-if="loadingList" class="tm-skeleton" aria-busy="true" aria-label="Loading">
       <div class="skel skel-controls"/>
@@ -2100,11 +2093,17 @@ const faq = [
         </div>
         </div>
     </template>
-    <Widget title="More tools" class="tool-more">
-      <ToolPaths exclude="tilemap"/>
-    </Widget>
 
-    <ToolReadme>
+    <template #status>
+      <p class="editor-foot-hint text-xs text-muted">
+        {{ config.mode === 'iso' ? 'Isometric' : 'Grid' }} {{ config.cols }}×{{ config.rows }} ·
+        cell {{ config.cellW }}×{{ config.cellH }}px ·
+        {{ config.layers.length }} layer{{ config.layers.length === 1 ? '' : 's' }} ·
+        {{ placedIds(config).length }} tiles placed
+      </p>
+    </template>
+
+    <template #doc>
       <h1>Tilemap Editor</h1>
       <p>
         Paint pixel-art maps on a grid or isometric grid. Stack layers of ground tiles and sprites
@@ -2130,7 +2129,8 @@ const faq = [
         <li><strong>Paint your layers</strong> — add ground and sprite layers, then click and drag to lay tiles. Reorder, hide or clear any layer anytime.</li>
       </ol>
       <QnA :items="faq"/>
-    </ToolReadme>
+    </template>
+    <template #extra>
 
     <UiModal v-if="sizeOpen" class="tm-settings-modal" @close="sizeOpen = false">
           <h3 class="publish-heading">Map settings</h3>
@@ -2262,17 +2262,15 @@ const faq = [
         @create="pickTilemap('__new__')"
         @close="showLoadTm = false"
     />
-  </div>
+    </template>
+  </ToolLayout>
 </template>
 
 <style scoped>
 .tm-page { display: flex; flex-direction: column; gap: var(--space-3); }
 
-.tm-page > .tool-more { margin-top: calc(var(--space-3) * -1 - 1px); }
 
 .tm-editor, .tm-skeleton { touch-action: pan-x pan-y; }
-
-.tm-editor { display: flex; flex-direction: column; gap: 0; }
 
 .tm-palette-seg button { flex: 1; }
 
@@ -2333,6 +2331,10 @@ const faq = [
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 .tm-island.open { width: 232px; }
+
+@media (pointer: coarse) and (max-width: 1023px) {
+  .tm-island.open { width: calc(100% - 1.5rem); }
+}
 .tm-island-head {
   display: flex; align-items: center; gap: var(--space-2);
   padding: 0.1rem 0.2rem; cursor: pointer; user-select: none;
@@ -2472,19 +2474,19 @@ const faq = [
 
 .tm-tilesbar {
   --tm-ctl: 34px;
-  display: flex; flex-direction: column; gap: 0.5rem;
-  padding: 0.625rem 0.875rem 0.875rem;
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-3);
   border-top: 1px solid var(--border);
 }
 .tm-tilesbar-ctl { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .tm-tilesbar-ctl .tm-search { flex: 1; min-width: 160px; margin-bottom: 0; }
 
-.tm-tiles { max-height: 138px; min-height: 0; overflow-y: auto; }
+.tm-tiles { min-height: 0; }
 .tm-tiles-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
-  gap: var(--space-2); align-content: start; padding: 2px;
+  display: flex; gap: var(--space-2); padding: 2px; overflow-x: auto;
 }
-.tm-tiles-empty { grid-column: 1 / -1; }
+.tm-tiles-grid > :is(.tm-tile, .tm-tile-skel) { flex: 1 1 0; min-width: 40px; max-width: 64px; }
+.tm-tiles-empty { flex: 1 1 auto; align-self: center; margin: 0; }
 
 .tm-pager { display: flex; align-items: center; gap: var(--space-1); flex: none; margin-left: auto; }
 .tm-pager-btn {

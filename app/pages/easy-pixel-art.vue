@@ -47,122 +47,105 @@ const faq = [
 ]
 
 useCustomSeoMeta({
-  title: 'Easy Pixel Art — Simple Grids, 3 Colors, Free Editor',
-  description: 'Easy pixel art for beginners — start on an 8×8 or 12×12 grid with three colors. Step-by-step method, the easiest canvas sizes, and a free online editor with mirror mode. No signup.',
+  title: 'Easy Pixel Art for Beginners',
+  description: 'Easy pixel art for beginners: start on an 8×8 grid with three colors. A step-by-step method, the easiest canvas sizes and a free online editor.',
   keywords: 'easy pixel art, pixel art easy, simple pixel art, pixel art for beginners, easy pixel art ideas, small pixel art, 8x8 pixel art, easy pixel art grid, beginner pixel art',
   canonical: 'https://simplepixelart.com/easy-pixel-art',
   ogType: 'article',
   script: [
     {
-      type: 'application/ld+json',
-      innerHTML: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@graph': [
-          {
-            '@type': 'HowTo',
-            name: 'How to make easy pixel art',
-            description: 'Draw readable pixel art on a small grid with a limited palette.',
-            totalTime: 'PT10M',
-            tool: [{'@type': 'HowToTool', name: 'SimplePixelArt editor (free, browser-based)'}],
-            step: steps.map((s, i) => ({
-              '@type': 'HowToStep',
-              position: i + 1,
-              name: s.h,
-              text: s.p,
-            })),
-          },
-          {
-            '@type': 'FAQPage',
-            mainEntity: faq.map(f => ({
-              '@type': 'Question',
-              name: f.q,
-              acceptedAnswer: {'@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '')},
-            })),
-          },
-          {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              {'@type': 'ListItem', position: 1, name: 'Home', item: 'https://simplepixelart.com/'},
-              {
-                '@type': 'ListItem',
-                position: 2,
-                name: 'Easy Pixel Art',
-                item: 'https://simplepixelart.com/easy-pixel-art',
-              },
-            ],
-          },
-        ],
-      }),
+    type: 'application/ld+json',
+    innerHTML: JSON.stringify({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'HowTo',
+          name: 'How to make easy pixel art',
+          description: 'Draw readable pixel art on a small grid with a limited palette.',
+          totalTime: 'PT10M',
+          tool: [{'@type': 'HowToTool', name: 'SimplePixelArt editor (free, browser-based)'}],
+          step: steps.map((s, i) => ({
+            '@type': 'HowToStep',
+            position: i + 1,
+            name: s.h,
+            text: s.p,
+          })),
+        },
+        {
+          '@type': 'FAQPage',
+          mainEntity: faq.map(f => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: {'@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '')},
+          })),
+        },
+      ],
+    }),
     },
   ],
 })
 </script>
 
 <template>
-  <div class="page">
-    <section class="page-hero">
-      <span class="page-hero-eyebrow">Beginner guide</span>
-      <h1>Easy Pixel Art</h1>
-      <p>
-        Pixel art gets easy the moment you shrink the canvas. On an 8×8 grid there are 64 squares and
-        no room to overthink — pick three colors, block the shape, done in minutes. Below: the grids
-        that work best when you are starting, the four steps that matter, and a free editor to do it in.
-      </p>
-      <p>
-        <nuxt-link to="/editor?new=true" class="btn">Open the editor</nuxt-link>
-      </p>
-    </section>
+  <div class="page prose">
+        <p class="page-meta">Beginner guide</p>
+    <h1>Easy Pixel Art</h1>
+    <p>
+      Pixel art gets easy the moment you shrink the canvas. On an 8×8 grid there are 64 squares and
+      no room to overthink — pick three colors, block the shape, done in minutes. Below: the grids
+      that work best when you are starting, the four steps that matter, and a free editor to do it in.
+    </p>
+    <p>
+      <nuxt-link to="/editor?new=true" class="btn">Open the editor</nuxt-link>
+    </p>
 
-    <section>
-      <h2>The easiest canvas sizes</h2>
-      <p>Each of these has real pieces you can open, remix, and recolor — the fastest way to learn the grid.</p>
-      <ul class="policy-list">
-        <li v-for="s in EASY_SIZES" :key="s.slug">
-          <nuxt-link :to="`/arts/size-${s.slug}`"><strong>{{ s.label }} pixel art</strong></nuxt-link>
-          — {{ s.note }}
-        </li>
-      </ul>
-      <p>
-        Bigger grids once these feel small:
-        <nuxt-link to="/arts/size-20x20">20×20</nuxt-link> ·
-        <nuxt-link to="/arts/size-24x24">24×24</nuxt-link> ·
-        <nuxt-link to="/arts/size-32x32">32×32</nuxt-link>.
-      </p>
-    </section>
+    <h2>The easiest canvas sizes</h2>
+    <p>Each of these has real pieces you can open, remix, and recolor — the fastest way to learn the grid.</p>
+    <ul>
+      <li v-for="s in EASY_SIZES" :key="s.slug">
+        <nuxt-link :to="`/arts/size-${s.slug}`"><strong>{{ s.label }} pixel art</strong></nuxt-link>
+        — {{ s.note }}
+      </li>
+    </ul>
+    <p>
+      Bigger grids once these feel small:
+      <nuxt-link to="/arts/size-20x20">20×20</nuxt-link> ·
+      <nuxt-link to="/arts/size-24x24">24×24</nuxt-link> ·
+      <nuxt-link to="/arts/size-32x32">32×32</nuxt-link>.
+    </p>
+    
 
-    <section>
-      <h2>Four steps that do most of the work</h2>
-      <ol class="policy-list">
-        <li v-for="s in steps" :key="s.h">
-          <strong>{{ s.h }}</strong> — {{ s.p }}
-        </li>
-      </ol>
-    </section>
+    <h2>Four steps that do most of the work</h2>
+    <ol>
+      <li v-for="s in steps" :key="s.h">
+        <strong>{{ s.h }}</strong> — {{ s.p }}
+      </li>
+    </ol>
+    
 
-    <section>
-      <h2>Where to go next</h2>
-      <ul class="policy-list">
-        <li>
-          <nuxt-link to="/editor"><strong>Pixel art editor</strong></nuxt-link>
-          — brushes, fill, layers, mirror mode and PNG export, all in the browser.
-        </li>
-        <li>
-          <nuxt-link to="/palettes"><strong>Color palettes</strong></nuxt-link>
-          — ready-made 3-8 color sets, so you skip the hardest beginner decision.
-        </li>
-        <li>
-          <nuxt-link to="/convert"><strong>Photo to pixel art</strong></nuxt-link>
-          — convert an image, then clean it up by hand to see how a piece is built.
-        </li>
-        <li>
-          <nuxt-link to="/arts"><strong>Browse the gallery</strong></nuxt-link>
-          — every piece opens in the editor as a starting point.
-        </li>
-      </ul>
-    </section>
+    <h2>Where to go next</h2>
+    <ul>
+      <li>
+        <nuxt-link to="/editor"><strong>Pixel art editor</strong></nuxt-link>
+        — brushes, fill, layers, mirror mode and PNG export, all in the browser.
+      </li>
+      <li>
+        <nuxt-link to="/palettes"><strong>Color palettes</strong></nuxt-link>
+        — ready-made 3-8 color sets, so you skip the hardest beginner decision.
+      </li>
+      <li>
+        <nuxt-link to="/convert"><strong>Photo to pixel art</strong></nuxt-link>
+        — convert an image, then clean it up by hand to see how a piece is built.
+      </li>
+      <li>
+        <nuxt-link to="/arts"><strong>Browse the gallery</strong></nuxt-link>
+        — every piece opens in the editor as a starting point.
+      </li>
+    </ul>
+    
 
     <ToolReadme :toc="false">
-      <QnA title="Questions &amp; answers" :items="faq"/>
+    <QnA title="Questions &amp; answers" :items="faq"/>
     </ToolReadme>
   </div>
 </template>

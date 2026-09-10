@@ -127,11 +127,11 @@ export function pruneStorageKeys(prefix: string, max = 30) {
             const k = localStorage.key(i)
             if (!k || !k.startsWith(prefix)) continue
             let t = 0
-            try { t = JSON.parse(localStorage.getItem(k) || 'null')?.t || 0 } catch { /* ignore */ }
+            try { t = JSON.parse(localStorage.getItem(k) || 'null')?.t || 0 } catch {  }
             entries.push({k, t})
         }
         if (entries.length <= max) return
         entries.sort((a, b) => a.t - b.t)
         for (const {k} of entries.slice(0, entries.length - max)) localStorage.removeItem(k)
-    } catch { /* ignore */ }
+    } catch {  }
 }

@@ -198,10 +198,6 @@ function ready(img?: HTMLImageElement): img is HTMLImageElement {
   return !!img && img.complete && img.naturalWidth > 0
 }
 
-// Tiles larger than one cell keep their size and span whole cells,
-// anchored bottom-left (bottom-center in iso) like Tiled, so tall props
-// rise above their anchor row and y-sorting stays correct. Tiles at or
-// below cell size keep stretching to fill exactly one cell.
 export function drawGround(ctx: CanvasRenderingContext2D, img: HTMLImageElement,
                            c: TilemapConfig, g: TileGeometry, col: number, row: number, s: number) {
   if (c.mode === 'iso') {

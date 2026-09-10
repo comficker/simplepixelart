@@ -18,7 +18,6 @@ const {data, error} = await useAuthFetch<CollectionDetail>(
     `/coloring/collections/${route.params.id_string}/`,
 )
 
-// A missing or private collection should 404 for crawlers, not soft-200.
 if (error.value && import.meta.server) {
   setResponseStatus(useRequestEvent()!, 404)
 }
@@ -56,6 +55,7 @@ const formattedDate = computed(() => {
   }
 })
 
+
 useCustomSeoMeta({
   title: `${title.value} — Pixel Art Collection`,
   description: desc.value
@@ -87,14 +87,6 @@ useCustomSeoMeta({
             url: `${config.public.siteUrl}/art/${it.id_string}`,
             name: it.name || title.value,
           })),
-        },
-        breadcrumb: {
-          '@type': 'BreadcrumbList',
-          itemListElement: [
-            {'@type': 'ListItem', position: 1, name: 'Home', item: `${config.public.siteUrl}/`},
-            {'@type': 'ListItem', position: 2, name: 'Gallery', item: `${config.public.siteUrl}/arts`},
-            {'@type': 'ListItem', position: 3, name: title.value, item: canonicalUrl.value},
-          ],
         },
       }) : '',
     },

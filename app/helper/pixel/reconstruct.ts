@@ -260,9 +260,9 @@ function knockoutUniformBg(img: ImageData) {
         const d = (p[0] - bg![0]) ** 2 + (p[1] - bg![1]) ** 2 + (p[2] - bg![2]) ** 2
         if (d <= EDGE_TOL) near++
     }
-    if (near < border.length * 0.85) return   // border isn't one solid color
-    // Tight knockout: EDGE_TOL here also killed cream-on-white sprite colours
-    // (pixel_bench: the cat lost its paws and every native read came up short).
+    if (near < border.length * 0.85) return
+
+
     const KNOCK_TOL = 12 * 12 * 3
     for (let i = 0; i < w * h; i++) {
         const o = i * 4
@@ -448,7 +448,7 @@ export function peelGround(img: ImageData): RGB | null {
             if (seen[i]) continue
             seen[i] = 1
             const o = i * 4
-            if (D[o + 3]! < ALPHA_ON) {           // already gone — keep spreading
+            if (D[o + 3]! < ALPHA_ON) {
                 stack.push(x + 1, y, x - 1, y, x, y + 1, x, y - 1)
                 continue
             }
@@ -499,15 +499,15 @@ export function peelGround(img: ImageData): RGB | null {
         const continues = peeled.some(pc => bgs.some(bg => Math.sqrt(
             (pc[0] - bg[0]) ** 2 + (pc[1] - bg[1]) ** 2 + (pc[2] - bg[2]) ** 2) <= TOL * 2.5))
         const pre = (round && !continues) ? bbox() : null
-        // Gated rounds may only peel an ENCLOSING band, judged AFTER the halo
-        // erosion (the blend ring a peel leaves hugs the old extremes and made
-        // an honest shrink look like none). Two tests from pixel_bench:
-        //  · a real band shrinks the content box on all four sides — a
-        //    mostly-one-colour sprite body doesn't (its outline stays at the
-        //    same extremes: chubby-orange-cat lost its whole body here), and
-        //  · a band's colour doesn't recur INSIDE what remains, sprite ink
-        //    does (the cat's outline colour is also its eyes and mouth).
-        // Failing either restores the round wholesale from the snapshot.
+
+
+
+
+
+
+
+
+
         let alphaSnap: Uint8Array | null = null
         if (pre) {
             alphaSnap = new Uint8Array(total)
@@ -554,30 +554,6 @@ export function peelGround(img: ImageData): RGB | null {
     return ground
 }
 
-/**
- * A text-to-image PNG → an indexed N×N grid ready for the editor.
- *
- * Index 0 is the background: transparent in the art, and `palette[0]` carries
- * the ground colour the model drew, so a caller can paint it back instead.
- * Returns null when the image can't be read.
- *
- * `removeGround: false` keeps the model's ground as art (the escape hatch when
- * the peel misjudges a subject), and `fillGrid: false` keeps the model's own
- * framing instead of cropping to the subject — both are re-runs of a picture
- * already paid for, so the caller can offer them as free adjustments.
- */
-// The art's cell period in source pixels, for Auto output — where the
-// round-trip detector is blind (AI output's wobbly 8–20px cells, upscales
-// past f=8, JPEG noise, grid-lined shots). Three ideas, each earned on
-// pixel_bench + the 21 test generations:
-//  · lattice sites are the STARTS of stable colour runs; the comb works on
-//    start-to-start gaps (run lengths hide a 1px grid line's share of the
-//    period),
-//  · comb election: a gap explains a candidate as any multiple (weight 1/m),
-//    largest candidate within 92% of the best score wins (anti sub-pitch),
-//  · the elected integer is refined by fitting gap ≈ a·m + b — the slope is
-//    the true period (a 5.5× upscale has no integer candidate; b absorbs a
-//    constant separator).
 export function estimateCellPx(
     D: Uint8ClampedArray, W: number, H: number,
     x0: number, y0: number, x1: number, y1: number,

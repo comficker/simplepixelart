@@ -12,8 +12,8 @@ import {createZip} from '~/helper/zip'
 const auth = useAuthStore()
 
 useCustomSeoMeta({
-  title: 'Tileset Slicer — Cut Sprites from a Spritesheet Online',
-  description: 'Free online tileset & spritesheet slicer. Cut sprites by a fixed grid, auto-detect packed sprites, or hand-select each sprite and export them all as PNGs in a ZIP. Open in the pixel editor too. No signup.',
+  title: 'Tileset & Spritesheet Slicer',
+  description: 'Free online tileset and spritesheet slicer: cut sprites by grid, auto-detect packed sprites, or select each one, then export them all as a ZIP.',
   keywords: 'tileset slicer, spritesheet cutter, sprite extractor, manual sprite select, export sprites zip, auto detect sprites, cut tiles from image, pixel art tileset editor',
   canonical: 'https://simplepixelart.com/tilesets/slicer',
   script: [
@@ -62,13 +62,6 @@ useCustomSeoMeta({
               {'@type': 'Question', name: 'Can I export all sprites at once?', acceptedAnswer: {'@type': 'Answer', text: 'Yes. Select or detect the sprites you want and Download all as a ZIP of individual PNG files.'}},
               {'@type': 'Question', name: 'Does it keep transparency?', acceptedAnswer: {'@type': 'Answer', text: 'Yes. Pixels are extracted exactly at 1:1, and the alpha channel is preserved. You can also knock out a background colour to make sprites transparent.'}},
               {'@type': 'Question', name: 'Can I edit a sprite after slicing it?', acceptedAnswer: {'@type': 'Answer', text: 'Yes. Open any sprite straight in the Simple Pixel Art editor to keep drawing with layers, palette and export tools.'}},
-            ],
-          },
-          {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              {'@type': 'ListItem', position: 1, name: 'Home', item: 'https://simplepixelart.com/'},
-              {'@type': 'ListItem', position: 2, name: 'Tileset Slicer', item: 'https://simplepixelart.com/tilesets/slicer'},
             ],
           },
         ],
@@ -171,7 +164,8 @@ const tilePreview = ref<HTMLCanvasElement | null>(null)
 const wrapEl = ref<HTMLElement | null>(null)
 const wrapSize = ref(0)
 const zoom = ref(1)
-let resizeObs: ResizeObserver | null = null
+
+useSettledResize(wrapEl, measureWrap)
 
 function measureWrap() {
   if (wrapEl.value) {
@@ -279,9 +273,6 @@ function endPan() {
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown)
   window.addEventListener('keyup', onKeyUp)
-  if (typeof ResizeObserver !== 'undefined') {
-    resizeObs = new ResizeObserver(measureWrap)
-  }
   restoreState()
   loadTilesets()
   if (auth.isLogged) localTs.syncToCloud().then(n => { if (n) loadTilesets() })
@@ -298,7 +289,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeyDown)
   window.removeEventListener('keyup', onKeyUp)
   window.removeEventListener('mousemove', doPan)
-  resizeObs?.disconnect()
 })
 const selectedCell = ref<{ c: number; r: number } | null>(null)
 const hoverCell = ref<{ c: number; r: number } | null>(null)
@@ -414,7 +404,6 @@ async function restoreState() {
     rawImageData.value = rawSrc || legacySrc
     nextTick(() => {
       measureWrap()
-      if (resizeObs && wrapEl.value) { resizeObs.disconnect(); resizeObs.observe(wrapEl.value) }
       if (s.zoom) setZoom(s.zoom); else zoomFit()
       drawSheet()
       if (mode.value === 'auto') detect()
@@ -545,7 +534,6 @@ function setSource(img: HTMLImageElement, dataUrl: string) {
   bg.value = pickCornerColor(img)
   nextTick(() => {
     measureWrap()
-    if (resizeObs && wrapEl.value) { resizeObs.disconnect(); resizeObs.observe(wrapEl.value) }
     zoomFit()
     drawSheet()
     if (mode.value === 'auto') detect()
@@ -1560,7 +1548,7 @@ async function loadTilesets() {
     })
     tilesets.value = res.results.map(c => ({id: c.id, id_string: c.id_string, title: c.name || 'Untitled'}))
   } catch {
-    /* non-fatal */
+    
   } finally {
     loadingTs.value = false
   }
@@ -1768,7 +1756,7 @@ const faq = [
 </script>
 
 <template>
-  <div class="page">
+  <ToolLayout title="Slicer">
     <div class="ts-slicer flat-editor">
 
       <div class="editor-toolbar">
@@ -1964,9 +1952,9 @@ const faq = [
       </div>
       </div>
 
-      <div class="ts-body">
+      <div class="editor-body">
 
-      <div class="ts-stage">
+      <div class="canvas-col ts-stage">
         <Widget>
           <div class="ts-stage-inner">
             <div v-if="hasImage" ref="wrapEl" class="ts-canvas-wrap no-scrollbar">
@@ -1983,25 +1971,17 @@ const faq = [
                   @dblclick="zoomFit"
               />
             </div>
-            <div v-else class="ts-dropzone" @click="openFileDialog" @drop="onDrop" @dragover.prevent>
-              <span class="icon icon-upload ts-dropzone-icon"/>
-              <p class="ts-dropzone-title">Drop a tileset or spritesheet here</p>
+            <div v-else class="dropzone" @click="openFileDialog" @drop="onDrop" @dragover.prevent>
+              <span class="icon icon-upload dropzone-icon"/>
+              <p class="dropzone-title">Drop a tileset or spritesheet here</p>
               <button class="btn primary" @click.stop="openFileDialog">Choose image</button>
-              <p class="text-xs text-muted">PNG, JPG, or WebP</p>
+              <p class="dropzone-hint">PNG, JPG, or WebP</p>
             </div>
           </div>
         </Widget>
-        <div class="ts-stage-foot">
-          <p class="ts-hint text-xs text-muted">
-            <template v-if="mode === 'grid'">{{ tileCount }} cells · {{ cols }}×{{ rows }} · {{ tileW }}×{{ tileH }}px</template>
-            <template v-else-if="mode === 'auto'">{{ detecting ? 'Detecting…' : `${boxes.length} sprites — click one` }}</template>
-            <template v-else>{{ regions.length }} region{{ regions.length === 1 ? '' : 's' }} — {{ selectShape === 'fixed' ? 'click to drop a box' : (selectShape === 'square' ? 'drag a square' : 'drag to add a box') }}</template>
-          </p>
-          <span v-if="processing" class="text-xs text-muted">Processing…</span>
-        </div>
       </div>
 
-      <div class="ts-side">
+      <div class="editor-sidebar">
 
         <Widget title="Selected">
           <ui-tooltip v-if="activeBox" :text="previewInfo" position="bottom" class="ts-preview-tip">
@@ -2121,10 +2101,15 @@ const faq = [
       </div>
       </div>
     </div>
-    <Widget title="More tools" class="tool-more">
-      <ToolPaths exclude="slicer"/>
-    </Widget>
-    <ToolReadme>
+      <template #status>
+        <p class="editor-foot-hint text-xs text-muted">
+          <template v-if="mode === 'grid'">{{ tileCount }} cells · {{ cols }}×{{ rows }} · {{ tileW }}×{{ tileH }}px</template>
+          <template v-else-if="mode === 'auto'">{{ detecting ? 'Detecting…' : `${boxes.length} sprites — click one` }}</template>
+          <template v-else>{{ regions.length }} region{{ regions.length === 1 ? '' : 's' }} — {{ selectShape === 'fixed' ? 'click to drop a box' : (selectShape === 'square' ? 'drag a square' : 'drag to add a box') }}</template>
+        </p>
+        <span v-if="processing" class="text-xs text-muted">Processing…</span>
+      </template>
+    <template #doc>
       <h1>Tileset Slicer</h1>
       <p>Cut sprites out of a tileset or spritesheet. Draw a box around each one, auto-detect them, or
         use a fixed grid — then open in the editor or export all as a ZIP. Free, runs in your browser.</p>
@@ -2155,73 +2140,15 @@ const faq = [
       </ul>
 
       <QnA :items="faq"/>
-    </ToolReadme>
+    </template>
+    <template #extra>
 
     <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileSelect">
-
-  </div>
+    </template>
+  </ToolLayout>
 </template>
 
 <style scoped>
-
-.ts-dropzone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  aspect-ratio: 1;
-  width: 100%;
-  padding: 2rem 1.5rem;
-  text-align: center;
-  color: var(--muted);
-  cursor: pointer;
-  transition: background var(--transition);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .ts-dropzone:hover {
-    background: color-mix(in oklab, var(--surface) 55%, transparent);
-  }
-}
-
-.ts-dropzone-icon {
-  font-size: 32px;
-  color: var(--primary);
-}
-
-.ts-dropzone-title {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.ts-slicer {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.ts-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-@media (min-width: 768px) {
-  .ts-body {
-    flex-direction: row;
-  }
-}
-
-.ts-stage :deep(.widget + .widget),
-.ts-side :deep(.widget + .widget) {
-  border-top: 1px solid var(--border);
-}
-
-.ts-stage :deep(.widget-body) {
-  padding: 0;
-}
 
 .ts-canvas-wrap {
   aspect-ratio: 1;
@@ -2259,21 +2186,7 @@ const faq = [
   cursor: grabbing;
 }
 
-.ts-stage-foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-3);
-  padding: var(--space-2);
-  border-top: 1px solid var(--border);
-}
 
-.ts-hint {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-variant-numeric: tabular-nums;
-}
 
 .ts-tiles-widget {
   flex: 1;
@@ -2475,35 +2388,9 @@ const faq = [
 }
 
 .ts-stage {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
   min-width: 0;
-  border-bottom: 1px solid var(--border);
 }
 
-@media (min-width: 768px) {
-  .ts-stage {
-    border-bottom: 0;
-    border-right: 1px solid var(--border);
-  }
-}
-
-.ts-side {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  width: 100%;
-  min-height: 0;
-}
-
-@media (min-width: 768px) {
-  .ts-side {
-    width: 24%;
-    max-width: 190px;
-  }
-}
 
 .ts-preview-empty {
   display: flex;
@@ -2750,8 +2637,8 @@ const faq = [
 
 @media (hover: hover) and (pointer: fine) {
   .ts-region-del:hover {
-    color: #fff;
-    background: #ef4444;
+    color: var(--danger-foreground);
+    background: var(--danger);
   }
 }
 

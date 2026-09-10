@@ -22,7 +22,7 @@ defineProps<{ title?: string }>()
   overflow: hidden;
 }
 
-.widget .widget-head {
+:is(.widget, .tool-main) > .widget-head {
   display: flex;
   gap: var(--space-2);
   justify-content: space-between;

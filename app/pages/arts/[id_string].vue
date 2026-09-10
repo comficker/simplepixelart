@@ -65,6 +65,10 @@ const filteredRelated = computed(() =>
         .slice(0, 20),
 )
 
+const fallbackDesc = computed(() =>
+    `Browse ${tagTitle.value.toLowerCase()} pixel art creations — sprites, characters and icons in 8-bit and 16-bit style. Remix any piece in the editor or download for your game, NFT, or project.`,
+)
+
 const canonicalUrl = computed(() => {
   if (isNewSlug.value) return 'https://simplepixelart.com/arts'
   const base = `https://simplepixelart.com/arts/${idString.value}`
@@ -174,20 +178,13 @@ const structuredData = computed(() => {
         })),
       },
     },
-    {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        {'@type': 'ListItem', position: 1, name: 'Home', item: 'https://simplepixelart.com/'},
-        {'@type': 'ListItem', position: 2, name: 'Gallery', item: 'https://simplepixelart.com/arts'},
-        {'@type': 'ListItem', position: 3, name: tagTitle.value, item: url},
-      ],
-    },
   ]
   return {
     '@context': 'https://schema.org',
     '@graph': graph,
   }
 })
+
 
 useCustomSeoMeta({
   title: seoTitle,
@@ -207,56 +204,14 @@ useCustomSeoMeta({
 
 <template>
   <div class="page">
-    <section class="page-hero">
-      <span class="page-hero-eyebrow">{{ isSizeSlug ? 'Canvas size' : 'Tag' }}</span>
-      <h1>{{ tagTitle }} Pixel Art</h1>
-      <p v-if="tagDesc">{{ tagDesc }}</p>
-      <p v-else>
-        Browse {{ tagTitle.toLowerCase() }} pixel art creations — sprites, characters and icons in 8-bit and 16-bit
-        style. Remix any piece in the editor or download for your game, NFT, or project.
-      </p>
-    </section>
-
-    <item-list :limit="24" show-filter/>
-
-    <section v-if="filteredRelated.length" class="tag-related" aria-label="Related tags">
-      <header class="tag-related-head">
-        <span class="tag-related-label">Browse by tag</span>
-        <span class="tag-related-count">{{ filteredRelated.length }}</span>
-      </header>
-      <TagList :items="filteredRelated.map(t => ({ label: t.title || t.name, to: `/arts/${t.id_string}` }))"/>
-    </section>
+    <item-list :limit="24" show-filter :title="`${tagTitle} Pixel Art`" :desc="tagDesc || fallbackDesc">
+      <template v-if="filteredRelated.length" #filters-extra>
+        <BrowseFilter label="Tags" icon="icon-flag" :value="String(filteredRelated.length)">
+          <BrowseOpt v-for="t in filteredRelated" :key="t.id_string" :to="`/arts/${t.id_string}`">
+            {{ t.title || t.name }}
+          </BrowseOpt>
+        </BrowseFilter>
+      </template>
+    </item-list>
   </div>
 </template>
-
-<style scoped>
-.tag-related {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.tag-related-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.tag-related-label {
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.tag-related-count {
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-2);
-  color: var(--muted);
-}
-
-</style>

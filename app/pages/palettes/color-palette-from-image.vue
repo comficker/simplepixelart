@@ -50,8 +50,8 @@ const FAQ = [
 ]
 
 useCustomSeoMeta({
-  title: "Color Palette from Image — Extract Colors Online (Free)",
-  description: "Generate a color palette for any image. Upload a photo and instantly extract its dominant colors — pick 2 to 32 colors, copy the hex codes, open them in the editor, or save to the palette library. Free, runs in your browser.",
+  title: "Color Palette from Image",
+  description: "Extract a color palette from any image. Upload a photo, pick 2 to 32 colors, then copy the hex codes or open them in the pixel art editor.",
   keywords: "color palette for image, color palette from image, extract colors from image, image color palette generator, get colors from photo, image to palette, dominant colors extractor, photo color palette",
   canonical: "https://simplepixelart.com/palettes/color-palette-from-image",
   robots: "index, follow",
@@ -100,14 +100,6 @@ useCustomSeoMeta({
               acceptedAnswer: {'@type': 'Answer', text: f.a},
             })),
           },
-          {
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              {'@type': 'ListItem', position: 1, name: 'Home', item: 'https://simplepixelart.com/'},
-              {'@type': 'ListItem', position: 2, name: 'Palettes', item: 'https://simplepixelart.com/palettes'},
-              {'@type': 'ListItem', position: 3, name: 'Color palette from image', item: 'https://simplepixelart.com/palettes/color-palette-from-image'},
-            ],
-          },
         ],
       }),
     },
@@ -116,17 +108,17 @@ useCustomSeoMeta({
 </script>
 
 <template>
-  <div class="page">
-    <div class="tool-card">
+  <ToolLayout title="Extract">
+    <div class="tool-card ext-stack">
       <div class="tool-pane">
         <span class="tool-pane-cap">Source image</span>
-        <label class="ext-drop" :class="{ filled: !!previewUrl }">
+        <label class="dropzone" :class="{ filled: !!previewUrl }">
           <input type="file" accept="image/*" class="ext-file" @change="onFile"/>
           <img v-if="previewUrl" :src="previewUrl" alt="Source preview" class="ext-preview"/>
           <template v-else>
-            <span class="icon icon-image ext-drop-icon"/>
-            <span>Choose an image</span>
-            <span class="ext-drop-hint">PNG, JPG, WebP or GIF</span>
+            <span class="icon icon-image dropzone-icon"/>
+            <span class="dropzone-title">Choose an image</span>
+            <span class="dropzone-hint">PNG, JPG, WebP or GIF</span>
           </template>
         </label>
         <div class="ext-count">
@@ -140,25 +132,37 @@ useCustomSeoMeta({
           <span class="icon icon-adjust"/>
           <span>Detecting colors…</span>
         </div>
-        <div v-else-if="!colors.length" class="tool-empty">
-          <span class="icon icon-image"/>
-          <span>Pick an image to extract its palette.</span>
-        </div>
         <PaletteComposer
-            v-else
+            v-else-if="colors.length"
             v-model:colors="colors"
             source="image"
             name-placeholder="Palette name"
             default-name="Extracted palette"
         />
+        <div v-else class="ext-ph">
+          <span class="tool-pane-cap">Palette</span>
+          <div class="ext-ph-swatches" aria-hidden="true">
+            <span
+                v-for="i in count"
+                :key="i"
+                class="ext-ph-sw"
+                :style="{'--ph': `${6 + (i / count) * 72}%`}"
+            />
+          </div>
+        </div>
       </div>
     </div>
 
-    <Widget title="More tools" class="tool-more">
-      <ToolPaths exclude="extract"/>
-    </Widget>
 
-    <ToolReadme>
+    <template #status>
+      <p class="editor-foot-hint text-xs text-muted">
+        <template v-if="colors.length">{{ colors.length }} colors extracted</template>
+        <template v-else-if="previewUrl">Reading colors…</template>
+        <template v-else>No image yet — drop one to extract its palette</template>
+      </p>
+    </template>
+
+    <template #doc>
       <h1>Color palette from image</h1>
       <p>
         Upload any image and instantly extract its color palette. Tweak the colors, copy the hex codes,
@@ -191,32 +195,34 @@ useCustomSeoMeta({
       </ul>
 
       <QnA :items="FAQ"/>
-    </ToolReadme>
-  </div>
+    </template>
+  </ToolLayout>
 </template>
 
 <style scoped>
-.ext-drop {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: 220px;
-  border: 1.5px dashed var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  color: var(--muted);
-  font-weight: 600;
-  overflow: hidden;
-  transition: border-color var(--transition), color var(--transition);
+.ext-stack {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.ext-drop:hover { color: var(--primary); }
-.ext-drop.filled { padding: 0; border-style: solid; }
+.ext-stack .tool-pane + .tool-pane {
+  border-left: 0;
+  border-top: 1px solid var(--border);
+}
+
+.ext-ph-swatches {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+}
+
+.ext-ph-sw {
+  flex: 0 0 58px;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--foreground) var(--ph, 20%), var(--surface));
+}
+
 .ext-file { display: none; }
-.ext-drop-icon { font-size: 32px; }
-.ext-drop-hint { font-size: var(--text-xs); font-weight: 500; color: var(--muted); }
 .ext-preview { width: 100%; height: 100%; max-height: 320px; object-fit: contain; image-rendering: pixelated; }
 
 .ext-count { display: flex; align-items: center; gap: 0.625rem; margin-top: 0.875rem; font-size: var(--text-sm); }

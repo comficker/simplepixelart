@@ -44,7 +44,7 @@ function read(): LocalTileset[] {
 
 function write() {
   if (typeof localStorage === 'undefined') return
-  try { localStorage.setItem(KEY, JSON.stringify(list.value)) } catch { /* quota — degrade */ }
+  try { localStorage.setItem(KEY, JSON.stringify(list.value)) } catch {  }
 }
 
 function ensureLoaded() {
@@ -195,7 +195,7 @@ export function useLocalTilesets() {
         const ws = JSON.parse(localStorage.getItem('workspaces') || '{}')
         ws[tile.ed.id] = tile.ed
         localStorage.setItem('workspaces', JSON.stringify(ws))
-      } catch { /* ignore */ }
+      } catch {  }
     }
     return tile.ed.id
   }
@@ -240,7 +240,7 @@ export function useLocalTilesets() {
               await useNativeFetch(`/coloring/tilesets/${cloud.id_string}/add-tile/`, {
                 method: 'POST', body: {page_id_string: slug},
               })
-            } catch { /* keep going — not a local loss */ }
+            } catch {  }
           }
           if (!localFailed) {
             const remapped: Record<string, string> = {}
@@ -266,11 +266,11 @@ export function useLocalTilesets() {
                   ...(ts.meta?.board !== undefined ? {board: ts.meta.board} : {}),
                 },
               },
-            }).catch(() => { /* meta is a nicety; the tiles themselves are safe */ })
+            }).catch(() => {  })
             remove(ts.id)
             done++
           }
-        } catch { /* tileset create failed → keep local for a later retry */ }
+        } catch {  }
       }
     } finally {
       syncing = false

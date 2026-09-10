@@ -1,6 +1,7 @@
 import {defineStore} from 'pinia'
 import type {AnimationTag, EditorData, Layer, SharedPage} from "~/types";
 import {useNativeFetch} from "~/composables/useCustomFetch";
+import {useHasWork} from "~/composables/useHasWork";
 import {cloneDeep, debounce, generateUUID, getStorageItem, key2Point, sharedPage2EditorData} from "~/helper/utils";
 import {DEFAULT_EDITOR_DATA} from "~/helper/constants";
 import {markRaw, ref, shallowRef, toRaw} from "vue";
@@ -12,6 +13,8 @@ import {toast} from "vue-sonner";
 
 export const useEditor = defineStore('editor', () => {
     const auth = useAuthStore()
+
+    const {markHasWork} = useHasWork()
     const localTs = useLocalTilesets()
 
     function markRawPixels(ed: EditorData): EditorData {
@@ -94,7 +97,7 @@ export const useEditor = defineStore('editor', () => {
     function initBoardsFromCurrent() {
         boards.value = [{
             id: editorData.value.id.toString(),
-            x: 0, y: 0,       // corrected by applyWorkspaceLayoutOverlay() after load
+            x: 0, y: 0,
             data: editorData.value,
             history: history.value,
             historyIndex: historyIndex.value,
@@ -185,7 +188,7 @@ export const useEditor = defineStore('editor', () => {
                 boards: boards.value.map(boardLayoutEntry),
                 activeIndex: Math.max(0, boards.value.findIndex(b => b.id === activeBoardId.value)),
             }))
-        } catch { /* ignore */ }
+        } catch {  }
 
         if (boards.value.length <= 1) {
             void clearWorkspaceFull()
@@ -1154,7 +1157,8 @@ export const useEditor = defineStore('editor', () => {
         } else {
             save2Local()
         }
-        try { localTs.syncEditedArt(toRaw(editorData.value)) } catch (e) { /* non-fatal */ }
+        markHasWork()
+        try { localTs.syncEditedArt(toRaw(editorData.value)) } catch (e) {  }
         const wsId = editorData.value.id.toString()
         localStorage.setItem('workspace_current', wsId)
         saveWorkspaceLayout()
@@ -1185,7 +1189,7 @@ export const useEditor = defineStore('editor', () => {
                 localStorage.setItem('histories', JSON.stringify(histories.value))
             } catch (e) {
                 console.warn('Failed to persist history, skipping:', e)
-                try { localStorage.removeItem('histories') } catch { /* ignore */ }
+                try { localStorage.removeItem('histories') } catch {  }
             }
         }
         if (typeof requestIdleCallback !== 'undefined') {
@@ -1689,7 +1693,7 @@ export const useEditor = defineStore('editor', () => {
             .sort((a, b) => a - b)
         if (list.length < 2) return false
         const merged: { [key: string]: number } = {}
-        for (const i of list) {   // ascending — the top layer overwrites
+        for (const i of list) {
             const layer = editorData.value.layers[i]!
             const lx = layer.x || 0, ly = layer.y || 0
             for (const key of Object.keys(layer.pixels)) {
@@ -1988,14 +1992,14 @@ export const useEditor = defineStore('editor', () => {
             localStorage.setItem('workspaces', '{}')
             localStorage.setItem('histories', '{}')
             localStorage.setItem('workspace_current', '')
-            try { localStorage.removeItem('workspace_layout') } catch { /* ignore */ }
+            try { localStorage.removeItem('workspace_layout') } catch {  }
             void clearWorkspaceFull()
             localWS.value = {}
             histories.value = {}
         } else {
             const keep: { [key: string]: EditorData } = {}
             for (const key of failed) keep[key] = workspaces[key]!
-            try { localStorage.setItem('workspaces', JSON.stringify(keep)) } catch { /* quota */ }
+            try { localStorage.setItem('workspaces', JSON.stringify(keep)) } catch {  }
             localWS.value = keep
             toast.error(`${failed.length} artwork${failed.length > 1 ? 's' : ''} failed to sync — kept locally`)
         }

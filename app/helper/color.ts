@@ -111,7 +111,7 @@ export function generatePalette(
     type: SchemeType,
     count = 6,
     spread = 0.34,
-    seed = 0, // 0 = canonical (deterministic); > 0 = a variation of the same base
+    seed = 0,
 ): string[] {
   const [r, g, b] = hexToRgb(baseHex)
   const {h, s, l} = rgbToHsl(r, g, b)

@@ -1,9 +1,4 @@
 // @ts-nocheck
-// The legacy sampled-import engine — the editor's file-import ('filter') and
-// Insert image quality benchmark. Gradient edge map -> erosion -> row/column
-// streak scores -> gap histogram -> grid sampling. Moved VERBATIM from
-// helper/canvas.ts (pixel_bench golden-locks its behaviour); change it only
-// with the benchmark green.
 
 type RGB = [number, number, number];
 
@@ -81,7 +76,7 @@ function findUnusedColor(imageData: ImageData): RGB | null {
     const {data} = imageData;
 
     for (let i = 0; i < data.length; i += 4) {
-        if (data[i + 3] > 0) { // Only non-transparent pixels
+        if (data[i + 3] > 0) {
             const key = `${data[i]},${data[i + 1]},${data[i + 2]}`;
             usedColors.add(key);
         }

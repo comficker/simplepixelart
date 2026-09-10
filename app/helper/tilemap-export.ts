@@ -14,11 +14,6 @@ interface SlotGroup {
   ids: number[]
 }
 
-// Builds a Tiled 1.10 JSON map (.tmj) plus one atlas PNG per tile size class.
-// Tile size classes follow the in-app renderer (drawGround): tiles at or below
-// one cell stretch to exactly one cell, larger tiles span whole cells at
-// native size — Tiled and Phaser both anchor oversized tiles bottom-left in
-// orthogonal maps, which matches how the editor draws them.
 export function buildTiledMap(
     c: TilemapConfig,
     images: Map<number, HTMLImageElement>,
