@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const artImage = useArtImage()
 import {onMounted, ref, toRaw} from "vue";
 import {buildIsoPath, compositeFrame, drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
 import {hexToRgb} from "~/helper/color";
@@ -507,7 +508,7 @@ async function loadMyArts() {
     myArts.value = res.results.map(r => ({
       id: r.id_string,
       name: r.name || r.id_string,
-      thumb: `${config.public.api}/coloring/files/art-original/${r.id_string}.png`,
+      thumb: artImage(r),
     }));
     myArtsLoaded.value = true;
   } catch {
@@ -536,7 +537,7 @@ async function fetchPickerArts() {
       name: r.name || r.id_string,
       status: r.status,
       updated: r.updated,
-      thumb: `${config.public.api}/coloring/files/art-original/${r.id_string}.png`,
+      thumb: artImage(r),
     }));
   } catch {
     pickerArts.value = [];

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const artImage = useArtImage()
 import {toast} from 'vue-sonner'
 import type {LoadItem} from '~/components/editor/LoadBrowser.vue'
 
@@ -6,7 +7,6 @@ const props = defineProps<{ challenge: string }>()
 const emit = defineEmits<{ close: []; submitted: [] }>()
 
 const auth = useAuthStore()
-const config = useRuntimeConfig()
 const items = ref<LoadItem[]>([])
 const loading = ref(false)
 const posting = ref(false)
@@ -21,7 +21,7 @@ async function load() {
     items.value = (res.results || []).filter(r => r?.id_string).map(r => ({
       id: r.id_string,
       name: r.name || r.id_string,
-      previewImgs: [`${config.public.api}/coloring/files/art-original/${r.id_string}.png`],
+      previewImgs: [artImage(r)],
       status: r.status,
       updated: r.updated,
     }))

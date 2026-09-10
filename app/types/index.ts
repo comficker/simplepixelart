@@ -57,6 +57,9 @@ export interface SharedPage {
     id_string: string
     desc: any
     meta: any
+    /** List rows only: annotated flags, so the grid can skip meta entirely. */
+    is_anim?: boolean
+    has_image?: boolean
     colors: any[]
     map_numbers: { [key: string]: number }
     layers: Layer[]

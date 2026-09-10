@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const artImage = useArtImage()
 interface Entry {
   id: number
   id_string: string
@@ -20,7 +21,6 @@ interface ChallengeItem {
 }
 
 const auth = useAuthStore()
-const config = useRuntimeConfig()
 
 const {data, refresh} = await useAuthFetch<{ current: ChallengeItem | null; past: ChallengeItem[] }>(
     '/coloring/challenges/', {key: 'challenges-list'},
@@ -36,7 +36,7 @@ function daysLeft(c: ChallengeItem): number {
 }
 
 function thumb(e: Entry): string {
-  return `${config.public.api}/coloring/files/art-original/${e.id_string}.png`
+  return artImage(e)
 }
 
 function fmtRange(c: ChallengeItem): string {

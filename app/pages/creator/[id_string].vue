@@ -1,8 +1,8 @@
 <script setup lang="ts">
+const artImage = useArtImage()
 import type {APIResponse, Collection, ResponseSharedPage, SharedPage} from "~/types";
 
 const route = useRoute()
-const config = useRuntimeConfig()
 const username = computed(() => route.params.id_string?.toString() || '')
 const page = computed(() => route.query.page ? Number.parseInt(route.query.page.toString()) : 1)
 
@@ -87,7 +87,7 @@ function coverUrl(c: CreatorCollection): string | null {
   if (Array.isArray(c.items) && c.items.length > 0) {
     const first = c.items[0]
     if (typeof first === 'object' && first?.id_string) {
-      return `${config.public.api}/coloring/files/art-original/${first.id_string}.png`
+      return artImage(first)
     }
   }
   return null

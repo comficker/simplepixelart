@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const artImage = useArtImage()
 import type {APIResponse, Collection, EditorData, SharedPage} from "~/types";
 import {getStorageItem} from "~/helper/utils";
 import {loadWorkspaceFull, saveWorkspaceFull, clearWorkspaceFull} from "~/helper/workspaceSnapshot";
@@ -272,7 +273,7 @@ const failedThumb = reactive<Record<string | number, boolean>>({})
 const failedCover = reactive<Record<string | number, boolean>>({})
 
 function artUrl(idString: string): string {
-  return `${config.public.api}/coloring/files/art-original/${idString}.png`
+  return artImage(idString)
 }
 
 function thumbUrl(item: WorkItem): string {
@@ -446,7 +447,7 @@ function coverUrl(c: CollectionItem): string | null {
   if (Array.isArray(c.items) && c.items.length > 0) {
     const first = c.items[0]
     if (typeof first === 'object' && first?.id_string) {
-      return `${config.public.api}/coloring/files/art-original/${first.id_string}.png`
+      return artImage(first)
     }
   }
   return null

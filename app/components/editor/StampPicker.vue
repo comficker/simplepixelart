@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const artImage = useArtImage()
 import {toast} from 'vue-sonner'
 import {debounce} from '~/helper/utils'
 import {layers2MapNumbers} from '~/helper/canvas'
@@ -21,7 +22,6 @@ interface Thumb {
 
 const store = useEditor()
 const auth = useAuthStore()
-const config = useRuntimeConfig()
 const localTs = useLocalTilesets()
 
 const sources = ref<Source[]>([])
@@ -47,7 +47,7 @@ const shown = computed(() => {
 })
 
 function artThumb(slug: string): string {
-  return `${config.public.api}/coloring/files/art-original/${slug}.png`
+  return artImage(slug)
 }
 
 async function loadSources() {
