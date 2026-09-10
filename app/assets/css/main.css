@@ -792,12 +792,16 @@ footer {
     display: inline-flex;
 }
 
+html,
+body,
 .no-scrollbar,
 .browse-filters {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
 
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar,
 .browse-filters::-webkit-scrollbar {
     display: none;
