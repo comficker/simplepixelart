@@ -1150,7 +1150,7 @@ body::-webkit-scrollbar,
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
-    padding: 6px 10px;
+    padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-pill);
     color: var(--muted);
     font-size: var(--text-sm);
@@ -3636,7 +3636,7 @@ html.editor-fullscreen .consent {
     font-size: var(--text-sm);
     line-height: 1.65;
     color: var(--muted);
-    padding-left: 18px;
+    padding-left: var(--space-4);
     position: relative;
 }
 
@@ -4042,11 +4042,6 @@ html.editor-fullscreen .consent {
   color: var(--foreground);
 }
 
-.prose > :is(h1, h2),
-.prose .section-head {
-  padding-bottom: 0.3em;
-  border-bottom: 1px solid var(--border);
-}
 
 .prose h1,
 .prose > :first-child:is(h1, h2) { font-size: 1.25rem; line-height: 1.35; }
@@ -4056,11 +4051,7 @@ html.editor-fullscreen .consent {
 
 .prose > :is(h1, h2) + .readme-badges { margin-top: var(--space-2); }
 
-.prose .section-head h2 {
-  margin-top: 0;
-  padding-bottom: 0;
-  border-bottom: 0;
-}
+.prose .section-head h2 { margin-top: 0; }
 
 .prose a { color: var(--primary); text-decoration: none; }
 .prose a:hover { text-decoration: underline; text-underline-offset: 2px; }
@@ -4070,16 +4061,16 @@ html.editor-fullscreen .consent {
 .prose code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.88em;
-  padding: 0.15em 0.4em;
+  padding: 0 var(--space-1);
   border-radius: var(--radius-sm);
   background: color-mix(in oklab, var(--surface-2) 55%, transparent);
 }
 
 .prose ol,
-.prose ul { padding-left: 1.5rem; }
+.prose ul { padding-left: var(--space-6); }
 .prose ol { list-style: decimal; }
 .prose ul { list-style: disc; }
-.prose li { line-height: 1.6; padding-left: 0.25rem; }
+.prose li { line-height: 1.6; padding-left: var(--space-1); }
 .prose li + li { margin-top: var(--space-1); }
 .prose li::marker { color: var(--muted); }
 
@@ -4107,13 +4098,13 @@ html.editor-fullscreen .consent {
   overflow: hidden;
 }
 
-.readme-badges .badge > span { padding: 0.4em 0.55em; }
+.readme-badges .badge > span { padding: var(--space-1) var(--space-2); }
 .readme-badges .badge > span:first-child { background: color-mix(in oklab, var(--foreground) 72%, var(--surface)); color: var(--surface); }
 .readme-badges .badge .v { background: var(--surface-2); color: var(--foreground); }
 .readme-badges .badge .v.ok { background: var(--success); color: #fff; }
 
 .prose .gh-alert { padding: var(--space-2) var(--space-4); border-left: 3px solid var(--border); }
-.prose .gh-alert > * + * { margin-top: 0.15rem; }
+.prose .gh-alert > * + * { margin-top: var(--space-1); }
 .gh-alert-title { display: flex; align-items: center; gap: var(--space-2); font-weight: 600; }
 .gh-alert-title .icon { font-size: 15px; }
 .prose .gh-tip { border-left-color: var(--success); }
