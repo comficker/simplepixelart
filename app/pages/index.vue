@@ -254,7 +254,7 @@ useCustomSeoMeta({
 </script>
 
 <template>
-  <ToolLayout title="Home">
+  <ToolLayout title="Get started">
     <template #head>
       <p class="home-facts text-xs text-muted">
         Sprites → tiles → maps · Godot · Unity · Phaser export · photo → pixel art in one click
