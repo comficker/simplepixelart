@@ -403,10 +403,6 @@ input[type=number] {
     .main-wrapper.dash .dash-main > footer .container {
         max-width: none;
     }
-
-    .main-wrapper.dash .dash-main > footer .footer-bar {
-        padding-top: 0;
-    }
 }
 
 @media (min-width: 1280px) {
