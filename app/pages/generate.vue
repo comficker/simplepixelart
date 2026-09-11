@@ -103,6 +103,28 @@ const REF_SIDE = 768
 const fileEl = ref<HTMLInputElement | null>(null)
 const reference = ref('')
 const referenceName = ref('')
+const refining = ref(false)
+
+// Shrink to the side the API accepts before sending. The server clamps too,
+// but a 1024px PNG is megabytes on the wire for nothing.
+async function toReference(url: string, smooth: boolean): Promise<string> {
+  const img = await new Promise<HTMLImageElement>((ok, err) => {
+    const i = new Image()
+    i.onload = () => ok(i)
+    i.onerror = err
+    i.src = url
+  })
+  const f = Math.min(1, REF_SIDE / Math.max(img.naturalWidth, img.naturalHeight))
+  if (f === 1 && url.startsWith('data:image/png')) return url
+  const cv = document.createElement('canvas')
+  cv.width = Math.max(1, Math.round(img.naturalWidth * f))
+  cv.height = Math.max(1, Math.round(img.naturalHeight * f))
+  const ctx = cv.getContext('2d')!
+  ctx.imageSmoothingEnabled = smooth
+  if (smooth) ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(img, 0, 0, cv.width, cv.height)
+  return cv.toDataURL('image/png')
+}
 
 async function pickReference(file: File | null | undefined) {
   if (!file) return
@@ -114,23 +136,28 @@ async function pickReference(file: File | null | undefined) {
       r.onerror = () => err(r.error)
       r.readAsDataURL(file)
     })
-    const img = await new Promise<HTMLImageElement>((ok, err) => {
-      const i = new Image()
-      i.onload = () => ok(i)
-      i.onerror = err
-      i.src = url
-    })
-    const f = Math.min(1, REF_SIDE / Math.max(img.naturalWidth, img.naturalHeight))
-    const cv = document.createElement('canvas')
-    cv.width = Math.max(1, Math.round(img.naturalWidth * f))
-    cv.height = Math.max(1, Math.round(img.naturalHeight * f))
-    const ctx = cv.getContext('2d')!
-    ctx.imageSmoothingQuality = 'high'
-    ctx.drawImage(img, 0, 0, cv.width, cv.height)
-    reference.value = cv.toDataURL('image/png')
+    reference.value = await toReference(url, true)
     referenceName.value = file.name
+    refining.value = false
   } catch {
     toast.error('Could not read that image')
+  }
+}
+
+// Refine: hand the sprite back to the model as the reference and let the next
+// prompt describe a change to it. Nearest-neighbour on the way down, so the
+// model is shown hard pixel edges rather than a blurred copy of them.
+async function refineResult() {
+  if (!resultUrl.value || busy.value) return
+  try {
+    reference.value = await toReference(resultUrl.value, false)
+    referenceName.value = 'This sprite'
+    refining.value = true
+    prompt.value = ''
+    await nextTick()
+    promptEl.value?.focus()
+  } catch {
+    toast.error('Could not reuse that result')
   }
 }
 
@@ -142,6 +169,7 @@ function onRefPick(e: Event) {
 function clearReference() {
   reference.value = ''
   referenceName.value = ''
+  refining.value = false
 }
 
 function onRefDrop(e: DragEvent) {
@@ -252,12 +280,17 @@ async function generate() {
             size: size.value === 'auto' ? 128 : size.value,
             style: style.value, view: view.value, outline: outline.value,
             colors: maxColors.value,
-            ...(reference.value ? {reference: reference.value} : {}),
+            ...(reference.value
+                ? {reference: reference.value, reference_kind: refining.value ? 'art' : 'photo'}
+                : {}),
           },
         },
     )
     resultUrl.value = res.image
     previewMode.value = 'pixel'
+    // Keep refining from what is on screen now, so a second change applies to
+    // the sprite the user just accepted rather than to an older one.
+    if (refining.value) reference.value = await toReference(res.image, false)
     if (summary.value) summary.value.balance = res.balance
     await convertResult()
     historyId.value = res.history_id ?? null
@@ -446,16 +479,30 @@ const faq = [
             <span class="icon icon-pen"/>
             <span>{{ previewMode === 'original' ? 'Open Original in Editor' : 'Open in Editor' }}</span>
           </button>
+          <button
+              class="btn block"
+              :disabled="busy || !auth.isLogged"
+              title="Describe a change and generate this sprite again — costs one generation"
+              @click="refineResult"
+          >
+            <span class="icon icon-auto-fix"/>
+            <span>Refine with a prompt</span>
+          </button>
         </div>
 
       </div>
 
       <div class="gen-composer" @drop="onRefDrop" @dragover.prevent>
 
-        <div v-if="reference" class="gen-ref">
+        <div v-if="reference" class="gen-ref" :class="{'is-refining': refining}">
           <img :src="reference" alt="" class="gen-ref-thumb">
-          <span class="gen-ref-name">{{ referenceName || 'Reference image' }}</span>
-          <button class="gen-ref-x" aria-label="Remove reference" title="Remove reference" @click="clearReference">
+          <span class="gen-ref-name">{{ refining ? 'Refining this sprite' : (referenceName || 'Reference image') }}</span>
+          <button
+              class="gen-ref-x"
+              :aria-label="refining ? 'Stop refining' : 'Remove reference'"
+              :title="refining ? 'Stop refining and describe a new sprite' : 'Remove reference'"
+              @click="clearReference"
+          >
             <span class="icon icon-close"/>
           </button>
         </div>
@@ -477,7 +524,7 @@ const faq = [
               type="text"
               class="gen-input"
               maxlength="300"
-              :placeholder="reference ? 'What to change…' : hasResult ? 'Describe another sprite…' : 'A sleeping orange cat curled up…'"
+              :placeholder="refining ? 'What to change — “make the hat red”…' : reference ? 'What to change…' : hasResult ? 'Describe another sprite…' : 'A sleeping orange cat curled up…'"
               :disabled="busy || !auth.isLogged"
               @keydown.enter.prevent="generate"
           >
