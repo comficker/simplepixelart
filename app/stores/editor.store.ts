@@ -32,11 +32,22 @@ export const useEditor = defineStore('editor', () => {
         updated: new Date().toISOString()
     }));
     const virtualLayer = ref<Layer>({
-        name: 'Virtual',
+        // Normally hidden from the layer list, but an auto-save that lands
+        // mid-drag persists it — the pixels live only here while a selection
+        // floats, so dropping it would lose them. Give it a name that reads
+        // sensibly if the user ever does meet it.
+        name: 'Moved selection',
+        _virtual: true,
         pixels: markRaw({}),
         x: 0,
         y: 0
     });
+
+    // What the user should be told they have: the floating-selection layer is
+    // spliced into editorData.layers while a selection is being moved, and
+    // counting it made the editor claim an extra layer.
+    const layerCount = computed(() =>
+        editorData.value.layers.filter(l => !l._virtual).length)
 
     const localWS = shallowRef<{ [key: string]: EditorData }>({})
 
@@ -1273,7 +1284,7 @@ export const useEditor = defineStore('editor', () => {
     const canRedo = computed(() => historyIndex.value < history.value.length - 1)
 
     function foldStrayVirtual() {
-        const vi = editorData.value.layers.findIndex(l => l.name === 'Virtual')
+        const vi = editorData.value.layers.findIndex(l => l._virtual)
         if (vi < 0) return
         currentLayerIndex.value = Math.max(0, vi - 1)
         virtualLayer.value = editorData.value.layers[vi]!
@@ -2054,6 +2065,7 @@ export const useEditor = defineStore('editor', () => {
         deleteLayer,
         immigrateVirtualLayer,
         beginVirtualOverlay,
+        layerCount,
         mergeVirtualLayer,
         move,
         resetEditorData,
