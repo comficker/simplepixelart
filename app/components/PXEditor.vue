@@ -2743,6 +2743,10 @@ function onMergeBlock() {
 }
 
 const multiSelectLayers = ref(false)
+// The agent takes over the right-hand rail; the button lives here, the panel
+// is rendered by the page, so the state is shared.
+const {open: agentOpen, toggle: toggleAgent} = useAgentPanel()
+
 const selectedLayers = ref<Set<number>>(new Set())
 
 // The floating-selection layer lives in editorData.layers while a selection is
@@ -3501,10 +3505,17 @@ watch(
         </ui-dropdown-menu>
 
         <div class="toolbar-sep"/>
-        <ui-tooltip text="Generate with AI">
-          <nuxt-link to="/generator" class="toolbar-btn" aria-label="Generate with AI">
+        <ui-tooltip text="Agent — ask for a change in words">
+          <button
+              type="button"
+              class="toolbar-btn"
+              :class="{active: agentOpen}"
+              :aria-pressed="agentOpen"
+              aria-label="Agent"
+              @click="toggleAgent"
+          >
             <span class="icon icon-auto-fix"/>
-          </nuxt-link>
+          </button>
         </ui-tooltip>
       </div>
       <div class="toolbar-main no-scrollbar">

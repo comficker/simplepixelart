@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-withDefaults(defineProps<{ guidelines?: boolean; toc?: boolean }>(), {
-  guidelines: true,
+const props = withDefaults(defineProps<{ toc?: boolean; agent?: boolean }>(), {
   toc: true,
+  // Only the editor has art for an agent to edit, so only it asks for the tab.
+  agent: false,
 })
+
+// Shared with the editor's toolbar button: either can open the tab. Asked for
+// only when the page wants the tab — the panel reaches into the editor store,
+// and every tool page renders a README, so reaching for it unconditionally
+// built that whole store on pages with no canvas, Home among them.
+const agentOpen = props.agent ? useAgentPanel().open : ref(false)
 
 const root = ref<HTMLElement | null>(null)
 const tocOpen = ref(false)
@@ -43,13 +50,24 @@ function goTo(id: string) {
 </script>
 
 <template>
-  <section ref="root" class="readme">
+  <section ref="root" class="readme" :class="{'is-agent': agent && agentOpen}">
     <div class="readme-head">
       <div class="readme-tabs">
-        <span class="readme-tab is-active"><span class="icon icon-file"/>README</span>
-        <NuxtLink v-if="guidelines" to="/guidelines" class="readme-tab">Guidelines</NuxtLink>
+        <button
+            type="button"
+            class="readme-tab"
+            :class="{'is-active': !agentOpen}"
+            @click="agentOpen = false"
+        ><span class="icon icon-file"/>README</button>
+        <button
+            v-if="agent"
+            type="button"
+            class="readme-tab"
+            :class="{'is-active': agentOpen}"
+            @click="agentOpen = true"
+        ><span class="icon icon-auto-fix"/>Agent</button>
       </div>
-      <div v-if="toc" class="readme-actions">
+      <div v-if="toc && !agentOpen" class="readme-actions">
         <button
             type="button"
             class="widget-ctl-btn"
@@ -61,7 +79,8 @@ function goTo(id: string) {
         </button>
       </div>
     </div>
-    <div class="readme-body prose">
+    <EditorAgentChat v-if="agent && agentOpen"/>
+    <div v-else class="readme-body prose">
       <slot/>
     </div>
 

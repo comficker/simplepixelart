@@ -4021,6 +4021,21 @@ html.editor-fullscreen .consent {
   padding: var(--space-4);
 }
 
+/* Holding the agent, the rail card becomes a column the height of the rail, so
+   the chat log scrolls inside it and the composer stays on the bottom edge
+   instead of drifting down as the conversation grows. */
+.readme.is-agent {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.readme.is-agent > .agent {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .prose {
   color: var(--foreground);
   font-size: 14px;
