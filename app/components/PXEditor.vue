@@ -2964,6 +2964,9 @@ useSettledResize(stageWrap, () => {
 });
 
 onMounted(async () => {
+  // Read it once: the flag is stripped from the URL below, and route.query is
+  // reactive, so later checks would see it gone.
+  const isNewCanvas = route.query.new === 'true';
   try { coarsePointer.value = window.matchMedia('(pointer: coarse)').matches; } catch {  }
   try { showBoardChrome.value = localStorage.getItem('editor_board_chrome') !== '0'; } catch {  }
   try {
@@ -2992,7 +2995,7 @@ onMounted(async () => {
   initCanvas()
   if (route.query.tileset) {
     await loadTilesetBoards(String(route.query.tileset))
-  } else if (route.query.new === 'true') {
+  } else if (isNewCanvas) {
     await store.load(undefined)
     const hasContent = editorData.value.layers?.some(l => Object.keys(l.pixels || {}).length > 0)
     if (hasContent) {
@@ -3004,6 +3007,12 @@ onMounted(async () => {
     }
     store.resetEditorData()
     localStorage.setItem('workspace_current', '')
+    // new=true is a one-shot command, like palette and colors below — drop it
+    // once acted on. Left in the URL a reload runs it again, opening a fresh
+    // canvas over whatever the session has built since: boards the agent
+    // opened, art pasted in, a board drawn on the canvas.
+    const q = {...route.query}; delete q.new
+    router.replace({query: q}).catch(() => {})
   } else {
     await store.load(route.query.id?.toString())
   }
@@ -3028,7 +3037,7 @@ onMounted(async () => {
     router.replace({query: q}).catch(() => {})
   }
   setupCanvas()
-  if (route.query.new !== 'true' && !route.query.id) {
+  if (!isNewCanvas && !route.query.id) {
     try {
       const sc = JSON.parse(localStorage.getItem('workspace_camera') || 'null');
       if (sc && isFinite(sc.z) && isFinite(sc.x) && isFinite(sc.y)) {
