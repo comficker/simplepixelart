@@ -10,7 +10,7 @@ useCustomSeoMeta({
   title: 'Image to Pixel Art Converter',
   description: 'Convert any photo into pixel art in seconds. Free online tool with palette control (4–64 colors), pixel cleaner, color swap and live preview.',
   keywords: 'image to pixel art, photo to pixel art converter, pixelate image online, pixel art generator, convert jpg to pixel art, png to pixel art, free pixel art maker, 8-bit converter, 16-bit art generator',
-  canonical: 'https://simplepixelart.com/convert',
+  canonical: 'https://simplepixelart.com/converter',
   script: [
     {
       type: 'application/ld+json',
@@ -21,7 +21,7 @@ useCustomSeoMeta({
             '@type': 'SoftwareApplication',
             name: 'Image to Pixel Art Converter',
             description: 'Free online tool that converts photos and images into pixel art with customizable palette, size, and cleanup options.',
-            url: 'https://simplepixelart.com/convert',
+            url: 'https://simplepixelart.com/converter',
             applicationCategory: 'GraphicsApplication',
             operatingSystem: 'Any (browser-based)',
             offers: {
@@ -297,7 +297,7 @@ const faq = [
 </script>
 
 <template>
-  <ToolLayout title="Convert">
+  <ToolLayout title="Converter">
 
     <div class="editor-body flat-editor">
 

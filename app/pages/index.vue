@@ -85,7 +85,7 @@ const faq = [
     a: `<p>Three paths to your first pixel art:</p>
         <ul>
           <li><strong>Remix a template.</strong> Browse the library on the home page and click any artwork to open it in the editor.</li>
-          <li><strong>Convert a photo.</strong> Use the <a href="/convert">image-to-pixel-art converter</a> to turn any photo into pixel art with adjustable size and palette.</li>
+          <li><strong>Convert a photo.</strong> Use the <a href="/converter">image-to-pixel-art converter</a> to turn any photo into pixel art with adjustable size and palette.</li>
           <li><strong>Draw from scratch.</strong> Open the <a href="/editor">editor</a>, pick a canvas size from 8×8 to 64×64, and start painting.</li>
         </ul>`,
   },
@@ -387,7 +387,7 @@ useCustomSeoMeta({
       <h2>Three ways to start</h2>
       <ol>
         <li><strong>Draw from scratch</strong> — open the <a href="/editor">editor</a>, pick a canvas from <code>8×8</code> to <code>64×64</code>, and paint pixel by pixel.</li>
-        <li><strong>Convert a photo</strong> — drop an image into the <a href="/convert">converter</a> and tune the resolution and palette until it looks right.</li>
+        <li><strong>Convert a photo</strong> — drop an image into the <a href="/converter">converter</a> and tune the resolution and palette until it looks right.</li>
         <li><strong>Remix a template</strong> — browse the <a href="/arts">gallery</a> and open any artwork straight into the editor.</li>
         <li><strong>Start from a palette</strong> — pick one of the <a href="/palettes">color palettes</a> and draw inside a fixed set of colors, the way most pixel art is made.</li>
       </ol>

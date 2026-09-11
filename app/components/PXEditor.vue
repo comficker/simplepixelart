@@ -3502,7 +3502,7 @@ watch(
 
         <div class="toolbar-sep"/>
         <ui-tooltip text="Generate with AI">
-          <nuxt-link to="/generate" class="toolbar-btn" aria-label="Generate with AI">
+          <nuxt-link to="/generator" class="toolbar-btn" aria-label="Generate with AI">
             <span class="icon icon-auto-fix"/>
           </nuxt-link>
         </ui-tooltip>

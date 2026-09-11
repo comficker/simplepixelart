@@ -134,7 +134,7 @@ useCustomSeoMeta({
         — ready-made 3-8 color sets, so you skip the hardest beginner decision.
       </li>
       <li>
-        <nuxt-link to="/convert"><strong>Photo to pixel art</strong></nuxt-link>
+        <nuxt-link to="/converter"><strong>Photo to pixel art</strong></nuxt-link>
         — convert an image, then clean it up by hand to see how a piece is built.
       </li>
       <li>

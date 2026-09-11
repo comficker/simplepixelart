@@ -13,6 +13,10 @@ export default defineNuxtConfig({
             // Old color-tool slugs → keyword-rich slugs (permanent 301).
             '/palettes/extract': {redirect: {to: '/palettes/color-palette-from-image', statusCode: 301}},
             '/palettes/scheme': {redirect: {to: '/palettes/color-palette-from-color', statusCode: 301}},
+            // Tools renamed after the thing they are, not the verb (301 so the
+            // old URLs keep whatever they have earned).
+            '/generate': {redirect: {to: '/generator', statusCode: 301}},
+            '/convert': {redirect: {to: '/converter', statusCode: 301}},
         },
     },
     css: [
