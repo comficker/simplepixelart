@@ -45,31 +45,41 @@ defineExpose({addColor, toggleModify, removeColor})
   <div class="palette">
     <div ref="wrapperRef" class="wrapper no-scrollbar">
       <div class="items">
-        <div
+        <button
             v-if="!isModify"
+            type="button"
             class="item"
-            @click="store.currentColorIndex = -1"
+            @click="store.useColor(-1)"
             :class="{ active: store.currentColorIndex === -1 }"
+            :aria-pressed="store.currentColorIndex === -1"
+            aria-label="Eraser"
             title="Eraser (E) — paint with transparency to remove pixels"
         >
           <span class="icon icon-eraser"/>
-        </div>
-        <div
+        </button>
+        <button
             v-if="!isModify"
+            type="button"
             class="item tool-item"
             :class="{ active: store.currentTool === 'picker' }"
+            :aria-pressed="store.currentTool === 'picker'"
+            aria-label="Eyedropper"
             @click="store.setTool(store.currentTool === 'picker' ? 'brush' : 'picker')"
-            title="Eyedropper — click/tap a pixel in the art to grab its color"
+            title="Eyedropper — click a pixel to grab its color, then keep drawing"
         >
           <span class="icon icon-eyedropper"/>
-        </div>
+        </button>
         <template v-if="!isModify">
-          <div
+          <button
               v-for="(color, index) in store.editorData.colors" :key="index"
+              type="button"
               :data-ci="index"
               :style="{ backgroundColor: color }"
               :class="['item', 'color-item', { active: index === store.currentColorIndex }]"
-              @click="store.currentColorIndex = index"
+              :aria-pressed="index === store.currentColorIndex"
+              :aria-label="`Color ${index + 1}: ${color}`"
+              :title="color"
+              @click="store.useColor(index)"
           />
         </template>
         <template v-else>
@@ -79,7 +89,7 @@ defineExpose({addColor, toggleModify, removeColor})
               :data-ci="index"
               :value="store.editorData.colors[index]"
               :class="['item', { active: index === store.currentColorIndex }]"
-              @click="store.currentColorIndex = index"
+              @click="store.useColor(index)"
               @input="handleChange(index, $event)"
           />
         </template>

@@ -751,7 +751,7 @@ onMounted(() => {
             <span class="icon icon-pen"/>
             <span>Start drawing</span>
           </nuxt-link>
-          <nuxt-link to="/convert" class="btn">
+          <nuxt-link to="/converter" class="btn">
             <span class="icon icon-adjust"/>
             <span>Convert image</span>
           </nuxt-link>

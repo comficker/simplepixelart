@@ -1411,10 +1411,7 @@ function startDraw(e: any) {
   const {x, y} = getPixelPos(e);
   if (store.currentTool === 'picker') {
     const ci = store.colorIndexAt(x, y);
-    if (ci >= 0) {
-      store.currentColorIndex = ci;
-      store.pickedColorIndex = ci;
-    }
+    if (ci >= 0) store.pickColorAt(ci);
     return;
   }
   let resetSelection = false
@@ -2748,6 +2745,13 @@ function onMergeBlock() {
 const multiSelectLayers = ref(false)
 const selectedLayers = ref<Set<number>>(new Set())
 
+// The floating-selection layer lives in editorData.layers while a selection is
+// being moved, but it is not the user's — keep it out of the list while
+// holding on to each row's real index, which every action here works from.
+const visibleLayers = computed(() => editorData.value.layers
+    .map((layer, index) => ({layer, index}))
+    .filter(row => !row.layer._virtual))
+
 function onLayerClick(index: number, e: MouseEvent) {
   if (multiSelectLayers.value || e.shiftKey) {
     const next = new Set(selectedLayers.value)
@@ -3498,7 +3502,7 @@ watch(
 
         <div class="toolbar-sep"/>
         <ui-tooltip text="Generate with AI">
-          <nuxt-link to="/generate" class="toolbar-btn" aria-label="Generate with AI">
+          <nuxt-link to="/generator" class="toolbar-btn" aria-label="Generate with AI">
             <span class="icon icon-auto-fix"/>
           </nuxt-link>
         </ui-tooltip>
@@ -3786,25 +3790,25 @@ watch(
               </template>
           <ul>
             <li
-                v-for="(_, index) in editorData.layers"
-                :key="index"
+                v-for="(row, i) in visibleLayers"
+                :key="row.index"
                 :class="{
-                  active: index === store.currentLayerIndex && store.activeScope !== 'board',
-                  selected: selectedLayers.has(index),
+                  active: row.index === store.currentLayerIndex && store.activeScope !== 'board',
+                  selected: selectedLayers.has(row.index),
                 }"
-                @click="onLayerClick(index, $event)"
+                @click="onLayerClick(row.index, $event)"
             >
-              <span v-if="selectedLayers.has(index)" class="layer-num layer-check" aria-hidden="true"><span class="icon icon-check"/></span>
-              <span v-else class="layer-num" aria-hidden="true">{{ editorData.layers.length - index }}</span>
+              <span v-if="selectedLayers.has(row.index)" class="layer-num layer-check" aria-hidden="true"><span class="icon icon-check"/></span>
+              <span v-else class="layer-num" aria-hidden="true">{{ visibleLayers.length - i }}</span>
               <EditableText
-                  v-model="editorData.layers[index]!.name"
+                  v-model="editorData.layers[row.index]!.name"
                   placeholder="Untitled layer"
                   class="layer-name"
                   @changed="store.saveState()"
               />
               <button
-                  v-if="editorData.layers.length > 1"
-                  @click.stop="store.deleteLayer(index)"
+                  v-if="visibleLayers.length > 1"
+                  @click.stop="store.deleteLayer(row.index)"
                   class="layer-del"
                   title="Delete layer"
                   aria-label="Delete layer"

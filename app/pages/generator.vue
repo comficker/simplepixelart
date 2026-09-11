@@ -15,7 +15,7 @@ useCustomSeoMeta({
   title: 'AI Pixel Art Generator',
   description: 'Describe a sprite and get editable pixel art. Pick 16×16 to 128×128, cap the palette, cut the background, then open the result in the editor.',
   keywords: 'ai pixel art generator, text to pixel art, ai sprite generator, pixel art from text, image to pixel art ai, photo to sprite ai, ai game asset generator, free ai pixel art, prompt to sprite',
-  canonical: 'https://simplepixelart.com/generate',
+  canonical: 'https://simplepixelart.com/generator',
   script: [
     {
       type: 'application/ld+json',
@@ -24,7 +24,7 @@ useCustomSeoMeta({
         '@type': 'SoftwareApplication',
         name: 'AI Pixel Art Generator',
         description: 'Generate pixel art sprites from a text prompt, then tune the size, palette and background before editing them.',
-        url: 'https://simplepixelart.com/generate',
+        url: 'https://simplepixelart.com/generator',
         applicationCategory: 'GraphicsApplication',
         operatingSystem: 'Any (browser-based)',
         offers: {'@type': 'Offer', price: '0', priceCurrency: 'USD'},
@@ -434,7 +434,7 @@ const faq = [
 </script>
 
 <template>
-  <ToolLayout title="AI generator">
+  <ToolLayout title="Generator">
     <div class="gen-grid flat-editor">
 
       <div class="canvas-col">

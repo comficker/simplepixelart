@@ -10,8 +10,9 @@ const CRUMB_TARGET: Record<string, string> = {
 }
 
 const LABELS: Record<string, string> = {
-  arts: 'Discovery', art: 'Discovery', work: 'Your work', editor: 'Editor', convert: 'Convert',
-  generate: 'AI generator', tilesets: 'Tilesets', slicer: 'Slicer', tilemaps: 'Tilemaps',
+  arts: 'Discovery', art: 'Discovery', work: 'Your work', editor: 'Editor',
+  converter: 'Converter', generator: 'Generator',
+  tilesets: 'Tilesets', slicer: 'Slicer', tilemaps: 'Tilemaps',
   palettes: 'Palettes', challenges: 'Challenges', creator: 'Creators', settings: 'Settings',
   collections: 'Collections', missions: 'Missions', tag: 'Tags',
   'easy-pixel-art': 'Easy pixel art',

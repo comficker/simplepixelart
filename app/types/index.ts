@@ -170,6 +170,11 @@ export interface Layer {
     };
     x: number;
     y: number
+    // Marks the editor's floating-selection layer. It is spliced into
+    // editorData.layers while a selection is moved, so the UI needs to tell it
+    // apart — by a flag that survives cloneDeep, not by its name, which a user
+    // can type themselves.
+    _virtual?: boolean
 }
 
 export interface EditorBg {

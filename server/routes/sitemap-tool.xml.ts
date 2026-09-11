@@ -2,8 +2,8 @@ const domain = "simplepixelart.com"
 
 const toolPages = [
     {loc: '/editor', changefreq: 'weekly', priority: '0.9'},
-    {loc: '/convert', changefreq: 'weekly', priority: '0.9'},
-    {loc: '/generate', changefreq: 'weekly', priority: '0.9'},
+    {loc: '/converter', changefreq: 'weekly', priority: '0.9'},
+    {loc: '/generator', changefreq: 'weekly', priority: '0.9'},
     {loc: '/tilesets/slicer', changefreq: 'weekly', priority: '0.8'},
     {loc: '/tilemaps/editor', changefreq: 'weekly', priority: '0.8'},
     {loc: '/palettes/color-palette-from-image', changefreq: 'weekly', priority: '0.8'},

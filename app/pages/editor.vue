@@ -73,7 +73,7 @@ const faq = [
   {q: 'Is the pixel art editor free?', a: `<p>Yes — completely free and running in your browser. No signup to start and no watermark.</p>`},
   {q: 'Do I need to install anything?', a: `<p>No. The editor runs in any modern web browser on desktop or mobile — nothing to download.</p>`},
   {q: 'What canvas sizes can I use?', a: `<p>Anywhere from 8×8 to 64×64 pixels. Smaller canvases suit icons and sprites; larger ones allow more detail.</p>`},
-  {q: 'Can I turn a photo or sprite sheet into pixel art?', a: `<p>Yes. Pixelate a photo with the <a href="/convert">image-to-pixel-art converter</a>, or cut sprites from a sheet with the <a href="/tilesets/slicer">tileset slicer</a>, then open the result here.</p>`},
+  {q: 'Can I turn a photo or sprite sheet into pixel art?', a: `<p>Yes. Pixelate a photo with the <a href="/converter">image-to-pixel-art converter</a>, or cut sprites from a sheet with the <a href="/tilesets/slicer">tileset slicer</a>, then open the result here.</p>`},
   {q: 'How do I export my pixel art?', a: `<p>Export your artwork as a PNG for games, the web or print — and optionally share it to the <a href="/arts">gallery</a>.</p>`},
 ]
 </script>
@@ -84,7 +84,7 @@ const faq = [
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">
         {{ store.editorData.width }}×{{ store.editorData.height }}px ·
-        {{ store.editorData.layers.length }} layer{{ store.editorData.layers.length === 1 ? '' : 's' }} ·
+        {{ store.layerCount }} layer{{ store.layerCount === 1 ? '' : 's' }} ·
         {{ store.editorData.colors.length }} colors<template v-if="store.isAnimated"> ·
           {{ store.frameCount }} frames</template>
       </p>

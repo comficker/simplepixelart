@@ -1892,7 +1892,7 @@ const faq = [
               v-model="editorProcess"
               :disabled="processing"
               size="sm"
-              title="Runs the shared import pipeline (the same engine the editor, /convert and /generate use: de-upscale to the native grid, background knockout, crop) on the whole sheet — the preview and every export slice from the result."
+              title="Runs the shared import pipeline (the same engine the editor, /converter and /generator use: de-upscale to the native grid, background knockout, crop) on the whole sheet — the preview and every export slice from the result."
           >
             <span class="text-xs">{{ processing ? 'Processing…' : 'Clean sheet on load' }}</span>
           </ui-switch>
@@ -2136,7 +2136,7 @@ const faq = [
         <li>Knock out a background colour to get fully transparent sprites.</li>
         <li>Export every sprite at once as a ZIP, or <nuxt-link to="/editor">open one in the editor</nuxt-link> to keep drawing.</li>
         <li>Drop the sprites you cut into the <nuxt-link to="/tilemaps/editor">tilemap editor</nuxt-link> to build a grid or isometric game map.</li>
-        <li>Turn a photo into pixels first with the <nuxt-link to="/convert">image-to-pixel-art converter</nuxt-link>, then slice it.</li>
+        <li>Turn a photo into pixels first with the <nuxt-link to="/converter">image-to-pixel-art converter</nuxt-link>, then slice it.</li>
       </ul>
 
       <QnA :items="faq"/>

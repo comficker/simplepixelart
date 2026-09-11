@@ -32,11 +32,22 @@ export const useEditor = defineStore('editor', () => {
         updated: new Date().toISOString()
     }));
     const virtualLayer = ref<Layer>({
-        name: 'Virtual',
+        // Normally hidden from the layer list, but an auto-save that lands
+        // mid-drag persists it — the pixels live only here while a selection
+        // floats, so dropping it would lose them. Give it a name that reads
+        // sensibly if the user ever does meet it.
+        name: 'Moved selection',
+        _virtual: true,
         pixels: markRaw({}),
         x: 0,
         y: 0
     });
+
+    // What the user should be told they have: the floating-selection layer is
+    // spliced into editorData.layers while a selection is being moved, and
+    // counting it made the editor claim an extra layer.
+    const layerCount = computed(() =>
+        editorData.value.layers.filter(l => !l._virtual).length)
 
     const localWS = shallowRef<{ [key: string]: EditorData }>({})
 
@@ -1273,7 +1284,7 @@ export const useEditor = defineStore('editor', () => {
     const canRedo = computed(() => historyIndex.value < history.value.length - 1)
 
     function foldStrayVirtual() {
-        const vi = editorData.value.layers.findIndex(l => l.name === 'Virtual')
+        const vi = editorData.value.layers.findIndex(l => l._virtual)
         if (vi < 0) return
         currentLayerIndex.value = Math.max(0, vi - 1)
         virtualLayer.value = editorData.value.layers[vi]!
@@ -1346,9 +1357,36 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
+    // Where to go back to once a colour has been picked, so the eyedropper
+    // behaves like a detour rather than a mode you have to leave by hand.
+    let toolBeforePicker = 'brush'
+
     function setTool(tool: string) {
+        if (tool === 'picker' && currentTool.value !== 'picker') {
+            toolBeforePicker = currentTool.value
+        }
         currentTool.value = tool
         if (tool !== 'picker') pickedColorIndex.value = null
+    }
+
+    function leavePicker() {
+        if (currentTool.value !== 'picker') return
+        setTool(toolBeforePicker === 'picker' ? 'brush' : toolBeforePicker)
+    }
+
+    // Picking a colour is the whole point of the eyedropper, so finishing the
+    // pick also finishes the detour: the next click paints.
+    function pickColorAt(index: number) {
+        currentColorIndex.value = index
+        pickedColorIndex.value = index
+        leavePicker()
+    }
+
+    // Choosing a swatch by hand says the same thing as picking one off the
+    // canvas — the user has their colour and wants to draw with it.
+    function useColor(index: number) {
+        currentColorIndex.value = index
+        leavePicker()
     }
 
     function colorIndexAt(x: number, y: number): number {
@@ -2054,6 +2092,9 @@ export const useEditor = defineStore('editor', () => {
         deleteLayer,
         immigrateVirtualLayer,
         beginVirtualOverlay,
+        layerCount,
+        pickColorAt,
+        useColor,
         mergeVirtualLayer,
         move,
         resetEditorData,
