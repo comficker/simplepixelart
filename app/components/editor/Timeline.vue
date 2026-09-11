@@ -5,17 +5,23 @@ import type {AnimationFrame, AnimationTag} from "~/types";
 
 const store = useEditor()
 
-const displayFrames = computed<AnimationFrame[]>(() =>
-    store.frames.length
+// Drop the floating-selection layer: it is spliced into the layer arrays while
+// a selection is being moved, and counting it here added a whole row to the
+// timeline mid-drag — the rows shifted under the cursor.
+const displayFrames = computed<AnimationFrame[]>(() => {
+    const frames = store.frames.length
         ? (store.frames as AnimationFrame[])
-        : [{id: '_static', layers: store.editorData.layers}]
-)
+        : [{id: '_static', layers: store.editorData.layers} as AnimationFrame]
+    return frames.map(f => f.layers.some(l => l._virtual)
+        ? {...f, layers: f.layers.filter(l => !l._virtual)}
+        : f)
+})
 
 const maxLayers = computed(() => displayFrames.value.reduce((m, f) => Math.max(m, f.layers.length), 0))
 const rowIndexes = computed(() => Array.from({length: maxLayers.value}, (_, i) => i))
 
 function rowName(li: number) {
-  const active = store.frames[store.currentFrameIndex]?.layers[li]
+  const active = displayFrames.value[store.currentFrameIndex]?.layers[li]
   if (active?.name) return active.name
   for (const f of displayFrames.value) {
     const n = f.layers[li]?.name
@@ -136,7 +142,7 @@ function selectFrame(j: number) {
 
 function selectCel(j: number, li: number) {
   selectFrame(j)
-  if (store.frames[j]?.layers[li] || (!store.isAnimated && store.editorData.layers[li])) {
+  if (displayFrames.value[j]?.layers[li]) {
     store.activateLayer(li)
   }
 }
