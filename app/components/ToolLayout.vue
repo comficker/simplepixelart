@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import useStatefulCookie from '~/composables/useStatefulCookie'
 
-withDefaults(defineProps<{ title: string; titleTag?: 'h1' | 'h2' }>(), {titleTag: 'h2'})
+withDefaults(defineProps<{ title: string; titleTag?: 'h1' | 'h2'; agent?: boolean }>(),
+    {titleTag: 'h2', agent: false})
 
 const DOC_MIN = 300
 
@@ -76,7 +77,7 @@ function nudge(step: number) {
     />
     <div class="tool-doc">
       <slot name="aside"/>
-      <ToolReadme v-if="$slots.doc">
+      <ToolReadme v-if="$slots.doc" :agent="agent">
         <slot name="doc"/>
       </ToolReadme>
     </div>

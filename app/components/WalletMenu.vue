@@ -22,6 +22,9 @@ interface Summary {
 }
 
 const sum = ref<Summary | null>(null)
+// The chip reads shared state so a spend elsewhere (the editor's agent) shows
+// up here straight away.
+const {balance: sharedBalance, setBalance} = useCredits()
 const claiming = ref('')
 const dd = ref<{ close: (o?: { restoreFocus?: boolean }) => void } | null>(null)
 
@@ -29,6 +32,7 @@ async function load() {
   if (!auth.isLogged) return
   try {
     sum.value = await useNativeFetch<Summary>('/coloring/economy/')
+    setBalance(sum.value?.balance)
   } catch {  }
 }
 
@@ -40,6 +44,7 @@ async function claimDaily() {
         '/coloring/economy/daily/', {method: 'POST'})
     if (sum.value) {
       sum.value.balance = res.balance
+      setBalance(res.balance)
       sum.value.daily_claimed = true
     }
     toast.success(`+${res.granted} credits`)
@@ -66,13 +71,13 @@ watch(() => auth.isLogged, (v) => {
   <ui-dropdown-menu v-if="auth.isLogged && sum" ref="dd" class="wallet" label="Credits wallet" @click="load">
     <button type="button" class="wallet-chip" title="Credits — daily bonus & missions">
       <span class="icon icon-coin"/>
-      <span class="wallet-n">{{ sum.balance ?? 0 }}</span>
+      <span class="wallet-n">{{ sharedBalance ?? sum.balance ?? 0 }}</span>
     </button>
     <template #menu>
       <div class="file-menu wallet-panel">
         <div class="wallet-balance">
           <span class="icon icon-coin"/>
-          <span class="wallet-balance-n">{{ sum.balance ?? 0 }}</span>
+          <span class="wallet-balance-n">{{ sharedBalance ?? sum.balance ?? 0 }}</span>
           <span class="wallet-balance-label">credits</span>
         </div>
         <div class="file-menu-sep"/>

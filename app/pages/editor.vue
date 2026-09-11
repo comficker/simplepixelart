@@ -79,7 +79,7 @@ const faq = [
 </script>
 
 <template>
-  <ToolLayout title="Draw">
+  <ToolLayout title="Draw" agent>
     <PXEditor/>
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">

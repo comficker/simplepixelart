@@ -486,7 +486,7 @@ const faq = [
               @click="refineResult"
           >
             <span class="icon icon-auto-fix"/>
-            <span>Refine with a prompt</span>
+            <span>Refine</span>
           </button>
         </div>
 
@@ -907,6 +907,8 @@ const faq = [
 }
 
 .gen-actions {
+  display: flex;
+  gap: var(--space-2);
   padding: var(--space-3);
   border-top: 1px solid var(--border);
 }

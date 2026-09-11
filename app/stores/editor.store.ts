@@ -149,6 +149,7 @@ export const useEditor = defineStore('editor', () => {
         board.history = history.value
         board.historyIndex = historyIndex.value
         saveWorkspaceLayout()
+        boardAddedRev.value++
         return board.id
     }
 
@@ -357,6 +358,12 @@ export const useEditor = defineStore('editor', () => {
     const pickedColorIndex = ref<number | null>(null);
     const currentLayerIndex = ref(0);
     const drawTurn = ref(0)
+    // Bumped when a board is added and made active. The camera lives in the
+    // editor component, so every in-component add pairs itself with a fit;
+    // boards added from inside the store (the agent, paste, file import) had
+    // no such pairing and went active off-screen — the rail showed the new
+    // art while the canvas still showed the board we came from.
+    const boardAddedRev = ref(0)
 
     const MAX_FRAMES = 64
     const currentFrameIndex = ref(0)
@@ -1061,6 +1068,15 @@ export const useEditor = defineStore('editor', () => {
             initBoardsFromCurrent()
             await restoreWorkspaceLayout(explicitId ? editorData.value.id.toString() : undefined)
             applyWorkspaceLayoutOverlay()
+            // The canvas caches its pixel buffer against drawTurn, and the
+            // component can mount and paint its first frame before this async
+            // load finishes. Without a bump that empty first buffer is kept
+            // for good: after a reload the art showed in the rail, the preview
+            // and the layer thumbnails while the canvas stayed blank. The
+            // multi-board path was safe only because restoreWorkspaceLayout
+            // goes through loadBoardLive, which bumps it.
+            markFullRedraw()
+            drawTurn.value++
         } catch (error) {
             resetEditorData()
         }
@@ -1852,6 +1868,147 @@ export const useEditor = defineStore('editor', () => {
         saveState()
     }
 
+    // ── Agent ops ────────────────────────────────────────────────────────
+    // The editing agent answers with a short list of mechanical edits. They
+    // are carried out here so nothing is redrawn and one history entry covers
+    // the whole answer.
+    type AgentOp =
+        | { op: 'replace_color'; index: number; to: string }
+        | { op: 'remove_color'; index: number }
+        | { op: 'add_outline'; color: string }
+        | { op: 'flip'; axis: 'h' | 'v' }
+
+    function outlineSilhouette(color: string): number {
+        const colors = editorData.value.colors
+        let ci = colors.indexOf(color)
+        if (ci < 0) {
+            colors.push(color)
+            ci = colors.length - 1
+        }
+        // Walk the drawn pixels once and collect the empty neighbours; writing
+        // while walking would outline the outline.
+        const layer = editorData.value.layers[currentLayerIndex.value]!
+        const filled = layer.pixels
+        const {width, height} = editorData.value
+        const edge = new Set<string>()
+        for (const key of Object.keys(filled)) {
+            const {x, y} = key2Point(key)
+            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+                const nx = x + dx, ny = y + dy
+                if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue
+                const k = `${nx}_${ny}`
+                if (filled[k] === undefined) edge.add(k)
+            }
+        }
+        edge.forEach(k => {
+            const {x, y} = key2Point(k)
+            setPixelByIndex(x, y, ci)
+        })
+        return edge.size
+    }
+
+    function flipCanvas(axis: 'h' | 'v'): number {
+        const {width, height} = editorData.value
+        let touched = 0
+        forEachLayer(layer => {
+            const next: { [key: string]: number } = {}
+            Object.keys(layer.pixels).forEach(key => {
+                const {x, y} = key2Point(key)
+                const nx = axis === 'h' ? width - 1 - x : x
+                const ny = axis === 'v' ? height - 1 - y : y
+                next[`${nx}_${ny}`] = layer.pixels[key]!
+                touched++
+            })
+            layer.pixels = markRaw(next)
+        })
+        markFullRedraw()
+        return touched
+    }
+
+    /** Put art the agent redrew either onto this board or onto a new one.
+     *
+     * On this board it replaces the active layer's pixels and the palette and
+     * takes one history entry, so Ctrl+Z puts the old sprite back. As a new
+     * board the old one stays untouched next to it. */
+    function applyAgentArt(
+        colors: string[],
+        pixels: { [key: string]: number },
+        width: number,
+        height: number,
+        asNewBoard = false,
+    ): string | null {
+        if (asNewBoard) {
+            const data = markRawPixels({
+                ...cloneDeep(DEFAULT_EDITOR_DATA),
+                id: generateUUID(),
+                name: 'Agent edit',
+                width, height,
+                colors: [...colors],
+                layers: [{name: 'Layer 1', pixels, x: 0, y: 0}],
+                updated: new Date().toISOString(),
+            } as EditorData)
+            const id = addBoardWithData(data)
+            setActiveBoard(id)
+            return id
+        }
+        const anim = editorData.value.meta?.animation
+        const onlyLayer = editorData.value.layers.length === 1 && !anim?.frames?.length
+        let mapped = pixels
+        if (onlyLayer) {
+            // Nothing else references the palette, so take the agent's as-is
+            // and leave no unused entries behind.
+            editorData.value.colors = [...colors]
+        } else {
+            // Other layers and frames store colour INDICES, so replacing the
+            // palette outright silently repainted them — a red layer came back
+            // green. Merge into the existing palette and remap the art onto it.
+            const palette = editorData.value.colors
+            const remap = colors.map(hex => findOrCreateColor(hex, palette))
+            mapped = {}
+            for (const key of Object.keys(pixels)) mapped[key] = remap[pixels[key]!] ?? 0
+        }
+        const layer = editorData.value.layers[currentLayerIndex.value]!
+        layer.pixels = markRaw(mapped)
+        layer.x = 0
+        layer.y = 0
+        markFullRedraw()
+        drawTurn.value++
+        saveState()
+        return null
+    }
+
+    function applyAgentOps(ops: AgentOp[]): { applied: number; pixels: number } {
+        let applied = 0
+        let pixels = 0
+        for (const op of ops) {
+            if (op.op === 'replace_color') {
+                const colors = editorData.value.colors
+                if (op.index < 0 || op.index >= colors.length) continue
+                // Repainting is a palette edit: every pixel of that colour
+                // follows for free, so there is nothing to walk.
+                colors[op.index] = op.to
+                markFullRedraw()
+                applied++
+            } else if (op.op === 'remove_color') {
+                if (op.index < 0 || op.index >= editorData.value.colors.length) continue
+                removeColor(op.index)
+                markFullRedraw()
+                applied++
+            } else if (op.op === 'add_outline') {
+                pixels += outlineSilhouette(op.color)
+                applied++
+            } else if (op.op === 'flip') {
+                pixels += flipCanvas(op.axis)
+                applied++
+            }
+        }
+        if (applied) {
+            drawTurn.value++
+            saveState()
+        }
+        return {applied, pixels}
+    }
+
     function clearCurrentLayer() {
         getContentInBound(true)
         saveState();
@@ -2079,6 +2236,7 @@ export const useEditor = defineStore('editor', () => {
         selectionState,
         validBounds,
         drawTurn,
+        boardAddedRev,
         consumeRenderDirty,
         history,
         load,
@@ -2093,6 +2251,8 @@ export const useEditor = defineStore('editor', () => {
         immigrateVirtualLayer,
         beginVirtualOverlay,
         layerCount,
+        applyAgentOps,
+        applyAgentArt,
         pickColorAt,
         useColor,
         mergeVirtualLayer,

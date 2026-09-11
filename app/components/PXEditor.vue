@@ -1181,6 +1181,16 @@ function focusActiveBoard() {
   scheduleMiniMap();
 }
 
+/** Is the active board wholly inside the viewport right now? */
+function activeBoardInView(): boolean {
+  const b = activeBoard.value;
+  if (!b) return true;
+  const z = zoom.value;
+  const {x: sx, y: sy} = boardScreen(b.x, b.y);
+  const bw = b.data.width * z, bh = b.data.height * z;
+  return sx >= 0 && sy >= 0 && sx + bw <= stageW.value && sy + bh <= stageH.value;
+}
+
 function fitAllBoards() {
   const bs = store.boards;
   if (bs.length <= 1) { centerView(); scheduleDraw(); scheduleMiniMap(); return; }
@@ -2743,6 +2753,10 @@ function onMergeBlock() {
 }
 
 const multiSelectLayers = ref(false)
+// The agent takes over the right-hand rail; the button lives here, the panel
+// is rendered by the page, so the state is shared.
+const {open: agentOpen, toggle: toggleAgent} = useAgentPanel()
+
 const selectedLayers = ref<Set<number>>(new Set())
 
 // The floating-selection layer lives in editorData.layers while a selection is
@@ -2950,6 +2964,9 @@ useSettledResize(stageWrap, () => {
 });
 
 onMounted(async () => {
+  // Read it once: the flag is stripped from the URL below, and route.query is
+  // reactive, so later checks would see it gone.
+  const isNewCanvas = route.query.new === 'true';
   try { coarsePointer.value = window.matchMedia('(pointer: coarse)').matches; } catch {  }
   try { showBoardChrome.value = localStorage.getItem('editor_board_chrome') !== '0'; } catch {  }
   try {
@@ -2978,7 +2995,7 @@ onMounted(async () => {
   initCanvas()
   if (route.query.tileset) {
     await loadTilesetBoards(String(route.query.tileset))
-  } else if (route.query.new === 'true') {
+  } else if (isNewCanvas) {
     await store.load(undefined)
     const hasContent = editorData.value.layers?.some(l => Object.keys(l.pixels || {}).length > 0)
     if (hasContent) {
@@ -2990,6 +3007,12 @@ onMounted(async () => {
     }
     store.resetEditorData()
     localStorage.setItem('workspace_current', '')
+    // new=true is a one-shot command, like palette and colors below — drop it
+    // once acted on. Left in the URL a reload runs it again, opening a fresh
+    // canvas over whatever the session has built since: boards the agent
+    // opened, art pasted in, a board drawn on the canvas.
+    const q = {...route.query}; delete q.new
+    router.replace({query: q}).catch(() => {})
   } else {
     await store.load(route.query.id?.toString())
   }
@@ -3014,7 +3037,7 @@ onMounted(async () => {
     router.replace({query: q}).catch(() => {})
   }
   setupCanvas()
-  if (route.query.new !== 'true' && !route.query.id) {
+  if (!isNewCanvas && !route.query.id) {
     try {
       const sc = JSON.parse(localStorage.getItem('workspace_camera') || 'null');
       if (sc && isFinite(sc.z) && isFinite(sc.x) && isFinite(sc.y)) {
@@ -3126,6 +3149,16 @@ function doRedo() {
   store.redo();
   nextTick(() => { restoringHistory = false; });
 }
+
+// Boards added from inside the store — the agent's "new board", paste as a
+// board, a file import — make the new board active without touching the
+// camera, which the store cannot reach. Without this the board went active
+// off-screen: the rail, preview and layer thumbnails showed its art while the
+// canvas still showed the board we came from. Only move when it is actually
+// out of view, so a board drawn on the canvas stays exactly where it was put.
+watch(() => store.boardAddedRev, () => {
+  nextTick(() => { if (!activeBoardInView()) fitAllBoards(); });
+});
 
 let lastActiveBoardId = '';
 watch(
@@ -3501,10 +3534,17 @@ watch(
         </ui-dropdown-menu>
 
         <div class="toolbar-sep"/>
-        <ui-tooltip text="Generate with AI">
-          <nuxt-link to="/generator" class="toolbar-btn" aria-label="Generate with AI">
+        <ui-tooltip text="Agent — ask for a change in words">
+          <button
+              type="button"
+              class="toolbar-btn"
+              :class="{active: agentOpen}"
+              :aria-pressed="agentOpen"
+              aria-label="Agent"
+              @click="toggleAgent"
+          >
             <span class="icon icon-auto-fix"/>
-          </nuxt-link>
+          </button>
         </ui-tooltip>
       </div>
       <div class="toolbar-main no-scrollbar">
