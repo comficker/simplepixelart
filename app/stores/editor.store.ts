@@ -1068,6 +1068,15 @@ export const useEditor = defineStore('editor', () => {
             initBoardsFromCurrent()
             await restoreWorkspaceLayout(explicitId ? editorData.value.id.toString() : undefined)
             applyWorkspaceLayoutOverlay()
+            // The canvas caches its pixel buffer against drawTurn, and the
+            // component can mount and paint its first frame before this async
+            // load finishes. Without a bump that empty first buffer is kept
+            // for good: after a reload the art showed in the rail, the preview
+            // and the layer thumbnails while the canvas stayed blank. The
+            // multi-board path was safe only because restoreWorkspaceLayout
+            // goes through loadBoardLive, which bumps it.
+            markFullRedraw()
+            drawTurn.value++
         } catch (error) {
             resetEditorData()
         }
