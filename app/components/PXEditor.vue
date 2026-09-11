@@ -1411,10 +1411,7 @@ function startDraw(e: any) {
   const {x, y} = getPixelPos(e);
   if (store.currentTool === 'picker') {
     const ci = store.colorIndexAt(x, y);
-    if (ci >= 0) {
-      store.currentColorIndex = ci;
-      store.pickedColorIndex = ci;
-    }
+    if (ci >= 0) store.pickColorAt(ci);
     return;
   }
   let resetSelection = false

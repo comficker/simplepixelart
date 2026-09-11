@@ -1357,9 +1357,36 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
+    // Where to go back to once a colour has been picked, so the eyedropper
+    // behaves like a detour rather than a mode you have to leave by hand.
+    let toolBeforePicker = 'brush'
+
     function setTool(tool: string) {
+        if (tool === 'picker' && currentTool.value !== 'picker') {
+            toolBeforePicker = currentTool.value
+        }
         currentTool.value = tool
         if (tool !== 'picker') pickedColorIndex.value = null
+    }
+
+    function leavePicker() {
+        if (currentTool.value !== 'picker') return
+        setTool(toolBeforePicker === 'picker' ? 'brush' : toolBeforePicker)
+    }
+
+    // Picking a colour is the whole point of the eyedropper, so finishing the
+    // pick also finishes the detour: the next click paints.
+    function pickColorAt(index: number) {
+        currentColorIndex.value = index
+        pickedColorIndex.value = index
+        leavePicker()
+    }
+
+    // Choosing a swatch by hand says the same thing as picking one off the
+    // canvas — the user has their colour and wants to draw with it.
+    function useColor(index: number) {
+        currentColorIndex.value = index
+        leavePicker()
     }
 
     function colorIndexAt(x: number, y: number): number {
@@ -2066,6 +2093,8 @@ export const useEditor = defineStore('editor', () => {
         immigrateVirtualLayer,
         beginVirtualOverlay,
         layerCount,
+        pickColorAt,
+        useColor,
         mergeVirtualLayer,
         move,
         resetEditorData,
