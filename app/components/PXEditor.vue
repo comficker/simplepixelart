@@ -1181,6 +1181,16 @@ function focusActiveBoard() {
   scheduleMiniMap();
 }
 
+/** Is the active board wholly inside the viewport right now? */
+function activeBoardInView(): boolean {
+  const b = activeBoard.value;
+  if (!b) return true;
+  const z = zoom.value;
+  const {x: sx, y: sy} = boardScreen(b.x, b.y);
+  const bw = b.data.width * z, bh = b.data.height * z;
+  return sx >= 0 && sy >= 0 && sx + bw <= stageW.value && sy + bh <= stageH.value;
+}
+
 function fitAllBoards() {
   const bs = store.boards;
   if (bs.length <= 1) { centerView(); scheduleDraw(); scheduleMiniMap(); return; }
@@ -3130,6 +3140,16 @@ function doRedo() {
   store.redo();
   nextTick(() => { restoringHistory = false; });
 }
+
+// Boards added from inside the store — the agent's "new board", paste as a
+// board, a file import — make the new board active without touching the
+// camera, which the store cannot reach. Without this the board went active
+// off-screen: the rail, preview and layer thumbnails showed its art while the
+// canvas still showed the board we came from. Only move when it is actually
+// out of view, so a board drawn on the canvas stays exactly where it was put.
+watch(() => store.boardAddedRev, () => {
+  nextTick(() => { if (!activeBoardInView()) fitAllBoards(); });
+});
 
 let lastActiveBoardId = '';
 watch(

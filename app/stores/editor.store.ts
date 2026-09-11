@@ -149,6 +149,7 @@ export const useEditor = defineStore('editor', () => {
         board.history = history.value
         board.historyIndex = historyIndex.value
         saveWorkspaceLayout()
+        boardAddedRev.value++
         return board.id
     }
 
@@ -357,6 +358,12 @@ export const useEditor = defineStore('editor', () => {
     const pickedColorIndex = ref<number | null>(null);
     const currentLayerIndex = ref(0);
     const drawTurn = ref(0)
+    // Bumped when a board is added and made active. The camera lives in the
+    // editor component, so every in-component add pairs itself with a fit;
+    // boards added from inside the store (the agent, paste, file import) had
+    // no such pairing and went active off-screen — the rail showed the new
+    // art while the canvas still showed the board we came from.
+    const boardAddedRev = ref(0)
 
     const MAX_FRAMES = 64
     const currentFrameIndex = ref(0)
@@ -2220,6 +2227,7 @@ export const useEditor = defineStore('editor', () => {
         selectionState,
         validBounds,
         drawTurn,
+        boardAddedRev,
         consumeRenderDirty,
         history,
         load,
