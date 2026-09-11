@@ -644,25 +644,30 @@ const faq = [
 
 
 .preview-wrapper {
-  position: relative;                
+  position: relative;
+  container-type: size;
   display: flex;
   align-items: center;
   justify-content: center;
   aspect-ratio: 1;
 }
 
-.gen-preview,
-.gen-original {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
+/* The preview grows to fill the panel but must keep its shape. width:100%
+   with only a max-height let the box take the panel's proportions instead,
+   which stretched the sprite whenever the panel was not square — and the dash
+   layout drops the wrapper's aspect-ratio, so it rarely is. */
+.gen-preview {
+  aspect-ratio: 1;
+  width: min(100cqw, 100cqh);
   height: auto;
 }
 
-.gen-preview { width: 100%; }
-
+/* The model's own picture is not necessarily square, so letterbox it. */
 .gen-original {
   width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
 }
 
