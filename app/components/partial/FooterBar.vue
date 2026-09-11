@@ -7,6 +7,7 @@ const year = new Date().getFullYear()
     <span class="footer-copy">© {{ year }} SimplePixelArt.com</span>
     <nav class="footer-links" aria-label="Footer">
       <nuxt-link to="/contact">Contact</nuxt-link>
+      <nuxt-link to="/guidelines">Guidelines</nuxt-link>
       <nuxt-link to="/privacy">Privacy</nuxt-link>
       <nuxt-link to="/terms">Terms</nuxt-link>
     </nav>
