@@ -1,5 +1,3 @@
-import useStatefulCookie from '~/composables/useStatefulCookie'
-
 export interface AgentGrid {
     colors: string[]
     pixels: Record<string, number>
@@ -26,6 +24,7 @@ export interface AgentTurn {
 }
 
 const STORE_KEY = 'agent_sessions'
+const OPEN_KEY = 'agent_open'
 const MAX_TURNS = 40
 const MAX_BOARDS = 12
 
@@ -67,16 +66,28 @@ function write(sessions: Sessions) {
 export const useAgentPanel = () => {
     const store = useEditor()
     // Whether the tab is open is worth keeping: someone mid-conversation who
-    // reloads expects to still be in it. A cookie rather than localStorage so
-    // the server renders the same thing the client does — read from storage
-    // after hydration and the panel would pop in, or mismatch.
-    const openCookie = useStatefulCookie('agent_open')
-    const open = computed<boolean>({
-        // Nuxt parses cookie values, so '1' comes back as the number 1 —
-        // compare on the string form or the read never matches the write.
-        get: () => String(openCookie.value ?? '') === '1',
-        set: (value) => { openCookie.value = value ? '1' : '0' },
-    })
+    // reloads expects to still be in it.
+    //
+    // Client-side only, and read after mount. A cookie would let the server
+    // render it, but putting it in SSR state made the server answer every
+    // request with whatever the last one had set — one visitor's open panel
+    // became everyone's. The cost is that the panel appears a beat after
+    // hydration instead of in the first paint, which on an editor that boots
+    // for seconds is not a cost at all.
+    const open = useState('agent-open', () => false)
+    const openLoaded = useState('agent-open-loaded', () => false)
+
+    if (import.meta.client) {
+        onMounted(() => {
+            if (openLoaded.value) return
+            openLoaded.value = true
+            try { open.value = localStorage.getItem(OPEN_KEY) === '1' } catch { /* private mode */ }
+        })
+        watch(open, (value) => {
+            try { localStorage.setItem(OPEN_KEY, value ? '1' : '0') } catch { /* quota */ }
+        })
+    }
+
     const busy = useState('agent-busy', () => false)
     const sessions = useState<Sessions>('agent-sessions', () => ({}))
     const loaded = useState('agent-sessions-loaded', () => false)
