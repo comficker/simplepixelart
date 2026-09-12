@@ -4023,17 +4023,50 @@ html.editor-fullscreen .consent {
 
 /* Holding the agent, the rail card becomes a column the height of the rail, so
    the chat log scrolls inside it and the composer stays on the bottom edge
-   instead of drifting down as the conversation grows. */
+   instead of drifting down as the conversation grows.
+
+   Below 1280px the tool page stacks and the rail sits under the canvas — the
+   panel opened a screen and a half below the fold, so tapping the button
+   looked like it did nothing. There the agent is a sheet over the art
+   instead, in the same chrome as the browse filters sheet — but with no scrim
+   and no dimming, unlike the filters. The user is editing the thing behind it:
+   the art has to stay visible, and drawable, while the conversation is open.
+   It closes from the header, or from the toolbar button that opened it. */
 .readme.is-agent {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  height: 100%;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  /* --agent-kb is how much the on-screen keyboard covers; see AgentChat. */
+  bottom: var(--agent-kb, 0px);
+  height: min(60dvh, 520px);
+  max-height: calc(100dvh - var(--agent-kb, 0px) - 64px);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: var(--shadow-modal);
 }
 
 .readme.is-agent > .agent {
   flex: 1 1 auto;
   min-height: 0;
+}
+
+@media (min-width: 1280px) {
+  .readme.is-agent {
+    position: static;
+    z-index: auto;
+    bottom: auto;
+    height: 100%;
+    max-height: none;
+    border-top: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
 }
 
 .prose {

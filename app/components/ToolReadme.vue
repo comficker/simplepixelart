@@ -67,6 +67,17 @@ function goTo(id: string) {
             @click="agentOpen = true"
         ><span class="icon icon-auto-fix"/>Agent</button>
       </div>
+      <div v-if="agent && agentOpen" class="readme-actions">
+        <button
+            type="button"
+            class="widget-ctl-btn"
+            aria-label="Close agent"
+            title="Close agent"
+            @click="agentOpen = false"
+        >
+          <span class="icon icon-close"/>
+        </button>
+      </div>
       <div v-if="toc && !agentOpen" class="readme-actions">
         <button
             type="button"

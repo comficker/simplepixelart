@@ -18,6 +18,9 @@ export interface AgentTurn {
     grid?: AgentGrid
     origGrid?: AgentGrid
     done?: string
+    // An ops turn that changed something: on touch it offers an Undo button,
+    // since a keyboard shortcut is no use there.
+    undoable?: boolean
 }
 
 const STORE_KEY = 'agent_sessions'
