@@ -11,7 +11,9 @@ const {turns, busy, close} = useAgentPanel()
 const draft = ref('')
 const inputEl = ref<HTMLTextAreaElement | null>(null)
 const listEl = ref<HTMLElement | null>(null)
-const cost = ref<{ chat: number; redraw: number } | null>(null)
+// Prices come from the server's config and are tuned there without a deploy;
+// null until it has said, rather than a number baked in here that goes stale.
+const cost = ref<{ chat: number | null; redraw: number | null } | null>(null)
 const {setBalance} = useCredits()
 
 const editorData = computed(() => store.editorData)
@@ -19,10 +21,9 @@ const editorData = computed(() => store.editorData)
 async function loadCost() {
   try {
     const sum = await useNativeFetch<any>('/coloring/economy/')
-    cost.value = {
-      chat: sum.actions?.gen_meta ?? 1,
-      redraw: sum.actions?.gen_image ?? 60,
-    }
+    const price = (code: string) =>
+        typeof sum.actions?.[code] === 'number' ? sum.actions[code] : null
+    cost.value = {chat: price('gen_meta'), redraw: price('gen_image')}
     setBalance(sum.balance)
   } catch { cost.value = null }
 }
@@ -421,7 +422,7 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
           <div v-if="t.redrawPrompt" class="settings-row">
             <button class="btn primary" :disabled="busy" @click="redraw(t)">
               <span class="icon icon-auto-fix"/>
-              <span>Redraw{{ cost ? ` — ${cost.redraw}` : '' }}</span>
+              <span>Redraw{{ cost?.redraw == null ? '' : ` — ${cost.redraw}` }}</span>
             </button>
             <button class="btn" :disabled="busy" @click="t.redrawPrompt = undefined">No thanks</button>
           </div>
@@ -489,7 +490,7 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
           class="btn primary tm-iconbtn"
           type="submit"
           :disabled="busy || !auth.isLogged || draft.trim().length < 2"
-          :title="cost ? `Costs ${cost.chat} credit` : 'Send'"
+          :title="cost?.chat == null ? 'Send' : `Costs ${cost.chat} credit`"
           aria-label="Send"
       >
         <span class="icon icon-angle-right"/>

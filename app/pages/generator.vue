@@ -94,7 +94,10 @@ watch(style, (v) => { if (!restoring) bgMode.value = v === 'scene' ? 'keep' : 'c
 const busy = ref(false)
 const converting = ref(false)
 const claiming = ref(false)
-const summary = ref<{ enabled: boolean; cost: number; balance: number; dailyClaimed: boolean; dailyGrant: number } | null>(null)
+// cost is null until the server has told us — prices live in one config
+// there and are tuned without a deploy, so a number baked in here goes
+// stale silently. The fallback used to be 60, which is now double.
+const summary = ref<{ enabled: boolean; cost: number | null; balance: number; dailyClaimed: boolean; dailyGrant: number } | null>(null)
 const resultUrl = ref('')
 const previewCanvas = ref<HTMLCanvasElement | null>(null)
 const promptEl = ref<HTMLInputElement | null>(null)
@@ -182,14 +185,15 @@ const palette = ref<string[]>([])
 const BG = 0
 const hasResult = computed(() => !!resultUrl.value && grid.value.length > 0)
 const broke = computed(() =>
-    auth.isLogged && !!summary.value?.enabled && summary.value.balance < summary.value.cost)
+    auth.isLogged && !!summary.value?.enabled && summary.value.cost !== null
+    && summary.value.balance < summary.value.cost)
 
 async function loadSummary() {
   try {
     const sum = await useNativeFetch<any>('/coloring/economy/')
     summary.value = {
       enabled: !!sum.ai_image_enabled,
-      cost: sum.actions?.gen_image ?? 60,
+      cost: typeof sum.actions?.gen_image === 'number' ? sum.actions.gen_image : null,
       balance: sum.balance ?? 0,
       dailyClaimed: !!sum.daily_claimed,
       dailyGrant: sum.daily_grant ?? 0,
@@ -535,12 +539,14 @@ const faq = [
               v-else
               class="btn primary gen-send"
               :disabled="busy || broke || prompt.trim().length < 3 || (summary ? !summary.enabled : false)"
-              :title="hasResult ? `Generate another — 🪙${summary?.cost ?? 60}` : `Generate — 🪙${summary?.cost ?? 60}`"
+              :title="`${hasResult ? 'Generate another' : 'Generate'}${summary?.cost == null ? '' : ` — 🪙${summary.cost}`}`"
               @click="generate"
           >
             <span class="icon" :class="busy ? 'icon-refresh' : 'icon-auto-fix'"/>
             <span class="gen-send-label">{{ busy ? 'Generating…' : hasResult ? 'Again' : 'Generate' }}</span>
-            <span class="gen-cost"><span class="icon icon-coin"/>{{ summary?.cost ?? 60 }}</span>
+            <span v-if="summary?.cost != null" class="gen-cost">
+              <span class="icon icon-coin"/>{{ summary.cost }}
+            </span>
           </button>
         </div>
 
