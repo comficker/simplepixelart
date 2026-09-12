@@ -6,7 +6,7 @@ import {rgbToHex} from '~/helper/color'
 
 const store = useEditor()
 const auth = useAuthStore()
-const {turns, busy} = useAgentPanel()
+const {turns, busy, close} = useAgentPanel()
 
 const draft = ref('')
 const inputEl = ref<HTMLTextAreaElement | null>(null)
@@ -88,11 +88,19 @@ async function send() {
         role: 'agent',
         text: res.reply,
         done: applied
-            ? `${describe(res.ops)}${pixels ? ` (${pixels} pixels)` : ''} — undo with ${modKey()}Z`
+            ? `${describe(res.ops)}${pixels ? ` (${pixels} pixels)` : ''}`
+              + (touch.value ? '' : ` — undo with ${modKey()}Z`)
             : 'Nothing changed.',
+        undoable: applied > 0,
       }]
-      // No success toast: the turn itself says what happened, and the toast
-      // stack sits bottom-right, right on top of this panel's composer.
+      // On a phone the sheet covers the art it just changed, so step aside and
+      // put the undo where the user is looking instead.
+      if (applied && touch.value) {
+        close()
+        toast.success(describe(res.ops), {action: {label: 'Undo', onClick: undoLast}})
+      }
+      // No success toast on desktop: the turn itself says what happened, and
+      // the toast stack sits bottom-right, on top of this panel's composer.
       if (!applied) toast.error('That change did not apply')
     } else if (res.action === 'redraw') {
       turns.value = [...turns.value, {
@@ -131,6 +139,40 @@ function describe(ops: any[]): string {
 
 function modKey(): string {
   return import.meta.client && /Mac/i.test(navigator.platform) ? '⌘' : 'Ctrl+'
+}
+
+// A keyboard shortcut is not an affordance on a touch device, so the hint
+// becomes a button there — and the sheet gets out of the way so the change it
+// is talking about is visible.
+const touch = ref(false)
+
+// The on-screen keyboard is drawn over fixed elements, so the composer — which
+// is pinned to the bottom of the sheet — would end up under it. visualViewport
+// is the only thing that reports how much is covered; lift the sheet by that
+// much and let it shrink to fit what is left. A no-op on desktop, where the
+// two viewports agree and the inset stays 0.
+function syncKeyboardInset() {
+  const vv = window.visualViewport
+  if (!vv) return
+  const covered = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+  document.documentElement.style.setProperty('--agent-kb', `${Math.round(covered)}px`)
+}
+
+onMounted(() => {
+  try { touch.value = window.matchMedia('(pointer: coarse)').matches } catch { /* older browsers */ }
+  window.visualViewport?.addEventListener('resize', syncKeyboardInset)
+  window.visualViewport?.addEventListener('scroll', syncKeyboardInset)
+  syncKeyboardInset()
+})
+
+onBeforeUnmount(() => {
+  window.visualViewport?.removeEventListener('resize', syncKeyboardInset)
+  window.visualViewport?.removeEventListener('scroll', syncKeyboardInset)
+  document.documentElement.style.removeProperty('--agent-kb')
+})
+
+function undoLast() {
+  store.undo()
 }
 
 /** Turn the model's picture into the grid the board will receive.
@@ -420,7 +462,12 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
             </div>
           </template>
 
-          <p v-if="t.done" class="agent-done text-2xs">{{ t.done }}</p>
+          <p v-if="t.done" class="agent-done text-2xs">
+            {{ t.done }}
+            <button v-if="touch && t.undoable" type="button" class="btn agent-undo" @click="undoLast">
+              Undo
+            </button>
+          </p>
         </div>
 
         <p v-if="busy" class="agent-text text-sm text-muted">Thinking…</p>
@@ -541,6 +588,29 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
 
 .agent-preview {
   image-rendering: pixelated;
+}
+
+/* Touch targets: the desktop sizes here are 34 and 36, both under the 44px
+   minimum a finger needs. */
+@media (pointer: coarse) {
+  .agent-composer .tm-iconbtn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .agent-proposal ~ .settings-row .btn {
+    min-height: 44px;
+    width: 100%;
+  }
+
+  .agent-composer textarea {
+    font-size: 16px; /* anything smaller and iOS zooms the page on focus */
+  }
+}
+
+.agent-undo {
+  margin-left: var(--space-2);
+  min-height: 32px;
 }
 
 .agent-done {
