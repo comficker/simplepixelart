@@ -4021,6 +4021,13 @@ html.editor-fullscreen .consent {
   padding: var(--space-4);
 }
 
+/* The head row is space-between: a title on the left, actions on the right.
+   A second action would otherwise be spread into the middle of the row, so
+   push it over and let the row's own gap seat it beside the first. */
+.widget-head > .admin-trigger {
+  margin-left: auto;
+}
+
 /* Holding the agent, the rail card becomes a column the height of the rail, so
    the chat log scrolls inside it and the composer stays on the bottom edge
    instead of drifting down as the conversation grows.

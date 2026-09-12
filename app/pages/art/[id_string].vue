@@ -324,8 +324,20 @@ const previewStyle = computed(() => {
         title-tag="h1"
     >
       <template #head>
+        <!-- Moderation sits with Share because it is the same kind of thing: an
+             action on this artwork. In the #extra slot it became a direct child
+             of the page grid and stretched into a full-width bar under the
+             footer, which read as a piece of broken layout. -->
+        <ClientOnly>
+          <AdminArtPanel
+              v-if="isAdmin"
+              :data="data"
+              @updated="onAdminUpdate"
+              @deleted="onAdminDelete"
+          />
+        </ClientOnly>
         <SocialSharing :meta="shareBtnMeta" position="right" class="art-tb-share"/>
-</template>
+      </template>
 
     <div class="flat-editor art-editor">
       <div class="tm-stage art-stage">
@@ -530,11 +542,6 @@ const previewStyle = computed(() => {
       </ClientOnly>
     </template>
 
-    <template #extra>
-      <ClientOnly>
-        <AdminArtPanel v-if="isAdmin" :data="data" @updated="onAdminUpdate" @deleted="onAdminDelete"/>
-      </ClientOnly>
-    </template>
   </ToolLayout>
 </template>
 
