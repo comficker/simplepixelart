@@ -1,3 +1,5 @@
+import useStatefulCookie from '~/composables/useStatefulCookie'
+
 export interface AgentGrid {
     colors: string[]
     pixels: Record<string, number>
@@ -64,7 +66,17 @@ function write(sessions: Sessions) {
  */
 export const useAgentPanel = () => {
     const store = useEditor()
-    const open = useState('agent-open', () => false)
+    // Whether the tab is open is worth keeping: someone mid-conversation who
+    // reloads expects to still be in it. A cookie rather than localStorage so
+    // the server renders the same thing the client does — read from storage
+    // after hydration and the panel would pop in, or mismatch.
+    const openCookie = useStatefulCookie('agent_open')
+    const open = computed<boolean>({
+        // Nuxt parses cookie values, so '1' comes back as the number 1 —
+        // compare on the string form or the read never matches the write.
+        get: () => String(openCookie.value ?? '') === '1',
+        set: (value) => { openCookie.value = value ? '1' : '0' },
+    })
     const busy = useState('agent-busy', () => false)
     const sessions = useState<Sessions>('agent-sessions', () => ({}))
     const loaded = useState('agent-sessions-loaded', () => false)
