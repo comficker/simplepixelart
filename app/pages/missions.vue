@@ -264,7 +264,6 @@ watch(() => auth.isLogged, (v) => {
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-base);
-  line-height: var(--text-base-lh);
   font-weight: 700;
 }
 
@@ -287,7 +286,6 @@ watch(() => auth.isLogged, (v) => {
 
 .msn-lead {
   font-size: var(--text-sm);
-  line-height: 1.6;
   color: var(--muted);
   margin-bottom: var(--space-4);
 }
@@ -474,7 +472,6 @@ watch(() => auth.isLogged, (v) => {
 
 .msn-invite-title {
   font-size: var(--text-base);
-  line-height: var(--text-base-lh);
   font-weight: 800;
 }
 

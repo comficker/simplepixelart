@@ -547,7 +547,6 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
   flex-direction: column;
   gap: var(--space-2);
   font-size: var(--text-sm);
-  line-height: 1.5;
 }
 
 .agent-turn.user .agent-text {
@@ -648,7 +647,6 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
   max-height: 120px;
   font-family: inherit;
   font-size: var(--text-sm);
-  line-height: 1.5;
   color: var(--foreground);
 }
 

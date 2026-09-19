@@ -461,7 +461,6 @@ useCustomSeoMeta({
   flex-wrap: wrap;
   gap: 0 0.5rem;
   font-size: clamp(1.75rem, 5vw, 2.75rem);
-  line-height: 1.05;
   font-weight: 800;
   font-variation-settings: "wght" 800;
   letter-spacing: -0.035em;
@@ -478,14 +477,7 @@ useCustomSeoMeta({
 .home-hero-tagline {
   color: var(--muted);
   font-size: var(--text-sm);
-  line-height: 1.55;
   max-width: 56ch;
-}
-
-@media (min-width: 768px) {
-  .home-hero-tagline {
-    font-size: var(--text-base);
-  }
 }
 
 .home-ai {

@@ -128,7 +128,6 @@ function onEnter() {
     0 6px 16px -4px rgba(0, 0, 0, 0.18);
   padding: 6px 10px;
   font-size: 12px;
-  line-height: 1.3;
   font-weight: 600;
   letter-spacing: 0.01em;
 

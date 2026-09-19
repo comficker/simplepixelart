@@ -105,7 +105,6 @@ onMounted(() => {
   flex: 1 1 240px;
   min-width: 0;
   font-size: var(--text-xs);
-  line-height: 1.55;
   color: var(--muted);
   display: flex;
   flex-direction: column;

@@ -2287,7 +2287,6 @@ const faq = [
   box-sizing: border-box;
   padding: 0.5rem 0.75rem;
   font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
   color: var(--foreground);
   background: var(--surface-2);
   border: 1px solid var(--border);

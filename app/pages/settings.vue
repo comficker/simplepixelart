@@ -235,7 +235,6 @@ watch(() => auth.logged, fillForm)
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-base);
-  line-height: var(--text-base-lh);
   font-weight: 700;
 }
 

@@ -81,7 +81,6 @@ const shown = computed(() => {
   font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--foreground);
-  line-height: 1.2;
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;

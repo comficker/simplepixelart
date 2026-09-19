@@ -4198,7 +4198,6 @@ canvas.select.sel-drag:not(.panning) {
 .cv-hint {
   margin: 6px 2px 0;
   font-size: var(--text-2xs);
-  line-height: var(--text-2xs-lh);
   color: var(--muted);
 }
 
@@ -4212,7 +4211,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   margin-right: auto; 
   padding: 0 0.25rem;
   font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
   color: var(--foreground);
   font-variant-numeric: tabular-nums;
 }
@@ -4285,7 +4283,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 
 .login-heading {
   font-size: var(--text-sm);
-  line-height: var(--text-sm-lh);
   font-weight: 700;
   margin-bottom: 0.5rem;
 }
@@ -4412,7 +4409,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   display: flex;
   gap: var(--space-3);
   font-size: 12px;
-  line-height: 1.5;
   color: var(--muted);
   padding: 0.5rem 0.625rem;
   background: var(--surface-2);
@@ -4532,7 +4528,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 .bg-empty p {
   font-size: 13px;
   color: var(--muted);
-  line-height: 1.55;
   margin: 0;
 }
 
@@ -4640,7 +4635,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 
 .login-msg {
   font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
   margin-bottom: 1rem;
 }
 </style>

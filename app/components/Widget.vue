@@ -29,7 +29,6 @@ defineProps<{ title?: string }>()
   align-items: center;
   padding: var(--space-1) var(--space-2);
   font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
   border-bottom: 1px solid var(--border);
 }
 
@@ -47,7 +46,6 @@ defineProps<{ title?: string }>()
   padding: 0;
   color: var(--muted);
   font-size: 10px;
-  line-height: var(--text-xs-lh);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;

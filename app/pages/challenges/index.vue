@@ -143,7 +143,6 @@ useCustomSeoMeta({
 .chal-name {
   font-family: var(--font-display);
   font-size: var(--text-2xl);
-  line-height: 1.1;
 }
 
 .chal-desc {

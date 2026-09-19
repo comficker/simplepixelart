@@ -368,7 +368,6 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
 
 .cl-detail-desc {
   font-size: var(--text-sm);
-  line-height: var(--text-sm-lh);
   color: var(--muted);
   max-width: 60ch;
 }

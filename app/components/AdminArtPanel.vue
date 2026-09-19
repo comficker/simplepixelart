@@ -273,7 +273,6 @@ async function destroy() {
   font-size: var(--text-sm);
   font-weight: 700;
   color: var(--foreground);
-  line-height: 1.1;
 }
 
 .admin-modal-id {
@@ -437,7 +436,6 @@ async function destroy() {
 .admin-textarea {
   resize: vertical;
   min-height: 84px;
-  line-height: 1.5;
 }
 
 .admin-modal-foot {

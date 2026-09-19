@@ -138,7 +138,6 @@ const handleError = () => clearError({ redirect: '/' })
 
 .err-title {
   font-size: var(--text-2xl);
-  line-height: var(--text-2xl-lh);
   font-weight: 800;
   letter-spacing: -0.025em;
   color: var(--foreground);
@@ -148,7 +147,6 @@ const handleError = () => clearError({ redirect: '/' })
   color: var(--muted);
   max-width: 38ch;
   font-size: var(--text-sm);
-  line-height: var(--text-sm-lh);
 }
 
 .err-actions {

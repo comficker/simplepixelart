@@ -61,7 +61,6 @@ const overflow = computed(() => Math.max(0, value.colors.length - MAX_SWATCHES))
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: var(--text-sm);
-  line-height: var(--text-sm-lh);
   font-weight: 600;
   letter-spacing: -0.005em;
 }

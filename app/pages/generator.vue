@@ -872,7 +872,6 @@ const faq = [
   background: transparent;
   color: var(--foreground);
   font-size: var(--text-sm);
-  line-height: var(--text-sm-lh);
   padding: 0 var(--space-1);
 }
 

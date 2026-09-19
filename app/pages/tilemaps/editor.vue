@@ -2411,7 +2411,7 @@ const faq = [
 }
 .tm-bg-preset.active { outline: 2px solid var(--primary); outline-offset: 1px; }
 
-.tm-hint { font-size: var(--text-xs); line-height: 1.5; color: var(--muted); margin: 0; }
+.tm-hint { font-size: var(--text-xs); color: var(--muted); margin: 0; }
 
 .tm-layers {
   display: flex; flex-direction: column; gap: 2px;

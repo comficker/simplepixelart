@@ -48,7 +48,6 @@ withDefaults(defineProps<{
   align-items: center;
   gap: var(--space-3);
   font-size: var(--text-xl);
-  line-height: 1.2;
   font-weight: 800;
   font-variation-settings: "wght" 800;
   letter-spacing: -0.02em;

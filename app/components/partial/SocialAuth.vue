@@ -37,7 +37,6 @@ const googleAuthUrl = useGoogleAuthUrl()
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
 }
 
 .social-ic {

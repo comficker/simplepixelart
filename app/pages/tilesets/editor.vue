@@ -4158,7 +4158,6 @@ const faq = [
 
 .tsx-rel-help {
   margin-top: var(--space-2, 8px);
-  line-height: 1.5;
 }
 
 .tsx-tb-type {

@@ -112,7 +112,6 @@ defineExpose({addColor, toggleModify, removeColor})
   height: calc(2.5rem + 2 * var(--space-2));
   position: relative;
   font-size: var(--text-2xl);
-  line-height: var(--text-2xl-lh);
 }
 
 .wrapper {

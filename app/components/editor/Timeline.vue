@@ -788,7 +788,6 @@ onUnmounted(() => { store.isPlaying = false })
   background: var(--surface);
   color: var(--muted);
   cursor: pointer;
-  line-height: 1.1;
 }
 
 .tl-colhead b {

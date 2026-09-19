@@ -1393,7 +1393,6 @@ onMounted(() => {
   padding: var(--space-3);
   border-top: 1px solid var(--border);
   font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
 }
 
 .work-name {

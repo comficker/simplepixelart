@@ -265,7 +265,6 @@ useCustomSeoMeta({
 
 .pd-title {
   font-size: var(--text-2xl);
-  line-height: var(--text-2xl-lh);
   font-weight: 800;
   letter-spacing: -0.02em;
 }
@@ -382,7 +381,6 @@ useCustomSeoMeta({
 
 .pd-insights-title {
   font-size: var(--text-lg);
-  line-height: var(--text-lg-lh);
   font-weight: 700;
   margin-bottom: 0.75rem;
 }
@@ -482,7 +480,6 @@ useCustomSeoMeta({
 
 .pd-used-title {
   font-size: var(--text-lg);
-  line-height: var(--text-lg-lh);
   font-weight: 700;
   margin-bottom: 0.75rem;
 }
@@ -499,7 +496,6 @@ useCustomSeoMeta({
 
 .pd-related-title {
   font-size: var(--text-lg);
-  line-height: var(--text-lg-lh);
   font-weight: 700;
   margin-bottom: 0.75rem;
 }

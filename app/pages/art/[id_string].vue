@@ -628,7 +628,6 @@ const previewStyle = computed(() => {
 .art-desc {
   color: var(--muted);
   font-size: var(--text-base);
-  line-height: 1.6;
   max-width: 56ch;
 }
 
@@ -714,14 +713,12 @@ const previewStyle = computed(() => {
 
 .art-report {
   font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
   color: var(--muted);
 }
 
 .art-report p {
   margin: 0;
   flex: 1;
-  line-height: 1.5;
 }
 
 .art-report a {

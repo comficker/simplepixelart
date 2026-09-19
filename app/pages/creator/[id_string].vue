@@ -335,7 +335,6 @@ useCustomSeoMeta({
   padding: 0.375rem 0.5rem;
   border-top: 1px solid var(--border);
   font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
 }
 
 .creator-coll-title {

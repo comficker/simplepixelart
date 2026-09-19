@@ -22,7 +22,6 @@ const year = new Date().getFullYear()
   gap: var(--space-2) var(--space-3);
   min-width: 0;
   font-size: var(--text-xs);
-  line-height: var(--text-xs-lh);
 }
 
 .footer-copy {

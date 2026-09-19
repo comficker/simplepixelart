@@ -89,15 +89,10 @@ export default defineNuxtConfig({
                 {rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png'},
                 {rel: 'manifest', href: '/site.webmanifest'},
                 {rel: 'preconnect', href: 'https://touch.ninosaur.com'},
-                {rel: 'preconnect', href: 'https://fonts.googleapis.com'},
-                {rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: ''},
-                // Load font CSS non-render-blocking: fetch as `print` (idle),
-                // then swap to `all` once loaded. Text paints immediately in the
-                // fallback face (display=swap) instead of waiting on Google Fonts.
-                {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap', media: 'print', onload: "this.media='all'"},
-            ],
-            noscript: [
-                {innerHTML: '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap">'},
+                // The UI font is self-hosted from public/fonts, so there is no
+                // third-party stylesheet to fetch and no swap trick to play.
+                {rel: 'preload', href: '/fonts/iAWriterQuattroS-Regular.woff2', as: 'font', type: 'font/woff2', crossorigin: ''},
+                {rel: 'preload', href: '/fonts/iAWriterQuattroS-Bold.woff2', as: 'font', type: 'font/woff2', crossorigin: ''},
             ],
             meta: [
                 {

@@ -387,7 +387,6 @@ useCustomSeoMeta({
 
 .scheme-hint {
   font-size: var(--text-xs);
-  line-height: 1.5;
   color: var(--muted);
   margin-bottom: 0.875rem;
   min-height: 1.5em;
