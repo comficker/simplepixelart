@@ -30,18 +30,6 @@ defineProps<{ title?: string }>()
   padding: var(--space-1) var(--space-2);
   font-size: var(--text-xs);
   border-bottom: 1px solid var(--border);
-  /* Widget heads stack down a column, so one carrying a control has to line up
-     with one that only carries a title. Left to content they came out 23px
-     bare, 27px with a button group and 28.7px with a dropdown. Pinning the
-     floor to the tallest of those makes every head identical. */
-  min-height: 29px;
-}
-
-@media (pointer: coarse) and (max-width: 1023px) {
-  /* controls grow to a 32px touch target there, so the floor grows with them */
-  :is(.widget, .tool-main) > .widget-head {
-    min-height: 41px;
-  }
 }
 
 .widget-head:empty {

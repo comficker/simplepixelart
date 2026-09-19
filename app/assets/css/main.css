@@ -3957,6 +3957,22 @@ html.editor-fullscreen .consent {
   border-bottom: 1px solid var(--border);
 }
 
+/* .widget-head and .readme-head are the same bar -- same padding, font size and
+   border -- and they sit next to each other along the top of the editor. Left
+   to content each one is as tall as its tallest child, so a head carrying a
+   button (27px) or a dropdown (28.7px) stepped away from one carrying only a
+   title (23px). One floor, set for both, keeps them level. */
+:is(.widget-head, .readme-head) {
+    min-height: 29px;
+}
+
+@media (pointer: coarse) and (max-width: 1023px) {
+    /* controls grow to a 32px touch target there, so the floor grows with them */
+    :is(.widget-head, .readme-head) {
+        min-height: 41px;
+    }
+}
+
 .readme-tabs { display: flex; align-items: center; gap: var(--space-3); }
 
 .readme-tab {
