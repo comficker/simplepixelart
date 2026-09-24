@@ -295,6 +295,29 @@ const previewSizeShort = computed(() =>
         : previewSize.value === 'original' ? '1:1'
             : `${previewSize.value}px`)
 
+/** Bead and coordinate views both need real pixels rather than the server PNG,
+ *  and both are sized by how big one cell is rather than by the whole image. */
+const beadView = ref(false)
+const coordView = ref(false)
+const pixelView = computed(() => beadView.value || coordView.value)
+
+const CELL_SIZES = [8, 12, 16, 24, 32, 48] as const
+/** Below this "63,63" stops being readable at any font size that fits. */
+const COORD_MIN_CELL = 24
+const cellSize = ref(16)
+
+const viewLabel = computed(() =>
+    beadView.value && coordView.value ? 'Beads + xy'
+        : beadView.value ? 'Beads'
+            : coordView.value ? 'Coords'
+                : 'Pixels')
+
+watch(coordView, (on) => {
+  // Turning labels on at 8px a cell would draw nothing legible, which reads as
+  // a broken toggle. Zoom to where they can be read instead.
+  if (on && cellSize.value < COORD_MIN_CELL) cellSize.value = COORD_MIN_CELL
+})
+
 const previewStyle = computed(() => {
   const w = data.value?.width || 1, h = data.value?.height || 1
   const s = previewSize.value
@@ -341,7 +364,18 @@ const previewStyle = computed(() => {
 
     <div class="flat-editor art-editor">
       <div class="tm-stage art-stage">
-        <ClientOnly v-if="isAnimatedArt">
+        <ClientOnly v-if="pixelView">
+          <ArtPixelCanvas
+              :width="data.width"
+              :height="data.height"
+              :map-numbers="data.map_numbers"
+              :colors="data.colors"
+              :cell="cellSize"
+              :bead="beadView"
+              :coords="coordView"
+          />
+        </ClientOnly>
+        <ClientOnly v-else-if="isAnimatedArt">
           <AnimatedArt
               :frames="animation.frames"
               :shared="animation.shared"
@@ -380,6 +414,55 @@ const previewStyle = computed(() => {
 
         <div class="art-preview-ctl">
           <ui-dropdown-menu position="right">
+            <button class="art-size-pill" title="View">
+              <span class="icon icon-grid"/>
+              <span>{{ viewLabel }}</span>
+              <span class="icon icon-expand-down" aria-hidden="true"/>
+            </button>
+            <template #menu>
+              <div class="file-menu">
+                <button class="file-menu-item" @click="beadView = !beadView">
+                  <span class="file-menu-label">
+                    <span>Beads</span>
+                    <span v-if="beadView" class="icon icon-check"/>
+                  </span>
+                </button>
+                <button class="file-menu-item" @click="coordView = !coordView">
+                  <span class="file-menu-label">
+                    <span>Coordinates</span>
+                    <span v-if="coordView" class="icon icon-check"/>
+                  </span>
+                </button>
+              </div>
+            </template>
+          </ui-dropdown-menu>
+
+          <!-- In the bead and coordinate views the useful number is how big one
+               cell is, not how wide the whole picture ends up. -->
+          <ui-dropdown-menu v-if="pixelView" position="right">
+            <button class="art-size-pill" title="Cell size">
+              <span class="icon icon-search"/>
+              <span>{{ cellSize }}px</span>
+              <span class="icon icon-expand-down" aria-hidden="true"/>
+            </button>
+            <template #menu>
+              <div class="file-menu">
+                <button
+                    v-for="opt in CELL_SIZES"
+                    :key="opt"
+                    class="file-menu-item"
+                    @click="cellSize = opt"
+                >
+                  <span class="file-menu-label">
+                    <span>{{ opt }}px a cell</span>
+                    <span v-if="cellSize === opt" class="icon icon-check"/>
+                  </span>
+                </button>
+              </div>
+            </template>
+          </ui-dropdown-menu>
+
+          <ui-dropdown-menu v-else position="right">
             <button class="art-size-pill" title="Preview size">
               <span class="icon icon-search"/>
               <span>{{ previewSizeShort }}</span>
@@ -752,6 +835,19 @@ const previewStyle = computed(() => {
   bottom: 12px;
   transform: translateX(-50%);
   z-index: 3;
+  /* Two pills. They were block children, so they stacked with no gap at all;
+     side by side once the stage is wide enough, stacked on a phone where a row
+     of two would crowd the artwork. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+@media (min-width: 768px) {
+  .art-preview-ctl {
+    flex-direction: row;
+  }
 }
 
 .art-preview-ctl :deep(.dropdown-menu) {
