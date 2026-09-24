@@ -3973,6 +3973,13 @@ html.editor-fullscreen .consent {
     }
 }
 
+/* vue-sonner widens the stack to the viewport on small screens but keeps its
+   16px offset, so the toasts hung off the right edge everywhere. The attribute
+   is there to outrank the library's own stylesheet, which loads after this. */
+.toaster[data-sonner-toaster] {
+    max-width: calc(100vw - 2 * var(--space-4));
+}
+
 .readme-tabs { display: flex; align-items: center; gap: var(--space-3); }
 
 .readme-tab {
@@ -4186,7 +4193,11 @@ html.editor-fullscreen .consent {
     .tm-layer-add,
     .tm-layer-eye,
     .tm-layer-kind,
-    .tm-la-btn {
+    .tm-la-btn,
+    .hdr-link,
+    .ui-modal-x,
+    .work-ic-btn,
+    .tsx-mini-btn {
         min-height: 32px;
         min-width: 32px;
     }

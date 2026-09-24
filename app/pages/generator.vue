@@ -684,13 +684,15 @@ const faq = [
 .gen-grid {
   display: grid;
   gap: 0;
-  grid-template-columns: 1fr;
+  /* minmax(0, 1fr), not 1fr: a `1fr` track floors at min-content, which kept the
+     canvas column at 369px and pushed the page 49px sideways at 320. */
+  grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
 }
 
 @media (min-width: 768px) {
   .gen-grid {
-    grid-template-columns: 1fr var(--sidebar-w);
+    grid-template-columns: minmax(0, 1fr) var(--sidebar-w);
   }
 }
 
