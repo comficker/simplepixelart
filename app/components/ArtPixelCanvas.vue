@@ -52,15 +52,6 @@ function draw() {
   )
   const labels = !!props.coords && font >= 6
 
-  if (props.coords) {
-    ctx.strokeStyle = 'rgba(128,128,128,0.35)'
-    ctx.lineWidth = 1
-    ctx.beginPath()
-    for (let x = 0; x <= width; x++) { ctx.moveTo(x * cell + 0.5, 0); ctx.lineTo(x * cell + 0.5, h) }
-    for (let y = 0; y <= height; y++) { ctx.moveTo(0, y * cell + 0.5); ctx.lineTo(w, y * cell + 0.5) }
-    ctx.stroke()
-  }
-
   const r = cell / 2 * 0.94
   const hole = r * 0.32
 
@@ -84,19 +75,38 @@ function draw() {
     }
   }
 
+  // The grid goes on top of the cells, not under them. Drawn first it was
+  // painted over by every filled cell, so the lines survived only across the
+  // empty parts of the board and the whole thing looked torn.
+  if (props.coords) {
+    // A hairline is one device pixel wide and has to be centred on one, or the
+    // browser spreads it over two and the lines come out at uneven darkness.
+    // The old +0.5 did that for a 1x screen and broke it on a 2x one.
+    const edge = (v: number, max: number) =>
+        (Math.min(Math.round(v * dpr), max * dpr - 1) + 0.5) / dpr
+    ctx.strokeStyle = 'rgba(128,128,128,0.35)'
+    ctx.lineWidth = 1 / dpr
+    ctx.beginPath()
+    for (let x = 0; x <= width; x++) { const gx = edge(x * cell, w); ctx.moveTo(gx, 0); ctx.lineTo(gx, h) }
+    for (let y = 0; y <= height; y++) { const gy = edge(y * cell, h); ctx.moveTo(0, gy); ctx.lineTo(w, gy) }
+    ctx.stroke()
+  }
+
   if (!labels) return
   ctx.font = `${font}px ui-monospace, monospace`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  for (let y = 0; y < props.height; y++) {
-    for (let x = 0; x < props.width; x++) {
-      const index = mapNumbers[`${x}_${y}`]
-      const filled = index !== undefined && index !== -1
-      ctx.fillStyle = filled && isDark(colors[index!] ?? '#000000')
-          ? 'rgba(255,255,255,0.92)'
-          : filled ? 'rgba(0,0,0,0.75)' : 'rgba(128,128,128,0.8)'
-      ctx.fillText(`${x},${y}`, x * cell + cell / 2, y * cell + cell / 2)
-    }
+  // Only cells that carry a colour get a label: on a sparse board the empty
+  // ones were most of the grid and the numbers that mattered were lost in them.
+  for (const [key, index] of Object.entries(mapNumbers)) {
+    if (index === undefined || index === -1) continue
+    const sep = key.indexOf('_')
+    const x = +key.slice(0, sep)
+    const y = +key.slice(sep + 1)
+    ctx.fillStyle = isDark(colors[index] ?? '#000000')
+        ? 'rgba(255,255,255,0.92)'
+        : 'rgba(0,0,0,0.75)'
+    ctx.fillText(`${x},${y}`, x * cell + cell / 2, y * cell + cell / 2)
   }
 }
 
