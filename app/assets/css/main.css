@@ -2637,6 +2637,9 @@ canvas.iso-line { cursor: crosshair; }
     color: var(--primary-foreground);
     border-color: var(--primary);
 }
+/* The options sit in equal 1fr columns and may shrink, which squeezed an icon
+   to zero width and left the label standing alone. */
+.cv-opt .icon { flex: none; }
 .cv-opt .desk-sw { width: 12px; height: 12px; }
 .cv-cap { text-transform: capitalize; }
 
