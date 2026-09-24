@@ -174,9 +174,12 @@ onMounted(() => {
 })
 
 useCustomSeoMeta({
-  title: "Free Pixel Art Maker for Game Art",
-  description: "Free online pixel art maker for game assets: draw sprites, build tilesets, paint tilemaps, and export for Godot, Unity or Phaser. No signup.",
-  keywords: "simple pixel art, simplepixelart, pixel art, pixel art maker, pixel art editor, free pixel art, pixel art online, game sprites, tileset maker, tilemap editor, sprite editor, pixel art for games, 8-bit art, retro art, create pixel art",
+  // The maker wording belongs to /editor, which already carries it. Leaving it
+  // here too had the two pages competing for the same query while the terms the
+  // home page should own -- simple pixel art, easy pixel art -- went unclaimed.
+  title: "Simple Pixel Art — Easy Pixel Art Online",
+  description: "Simple pixel art for everyone. Draw easy pixel art online in your browser, turn photos into pixel art, and browse thousands of free creations. No signup.",
+  keywords: "pixel art, simple pixel art, easy pixel art, simplepixelart, pixel art online, free pixel art, easy pixel art online, pixel art for beginners, make pixel art, pixel art gallery, 8-bit art, retro art",
   canonical: "https://simplepixelart.com",
   script: [
     {
