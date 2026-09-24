@@ -270,9 +270,23 @@ const DESK_BG = { dark: '#1b1b1f', light: '#eceef1' };
 const deskBg = ref(DESK_BG.dark);
 const deskGrid = ref(true);
 const deskGridStyle = ref<'solid' | 'dashed' | 'dots'>('solid');
+/** How a painted pixel is drawn on the board. 'square' keeps the fast path --
+ *  one scaled drawImage of the whole 1:1 buffer -- and the other two cost a
+ *  per-cell loop, so they stay opt-in. */
+const cellStyle = ref<'square' | 'x' | 'bead'>('square');
+const CELL_STYLES = [
+  {id: 'square', label: 'Square', icon: 'icon-square'},
+  {id: 'x', label: 'Cross', icon: 'icon-close'},
+  {id: 'bead', label: 'Bead', icon: 'icon-circle-outline'},
+] as const;
 const deskGridShape = ref<'square' | 'iso'>('square');
 const deskGridColor = ref('');
 const deskGridCell = ref({ width: 1, height: 1 });
+watch(cellStyle, (v) => {
+  try { localStorage.setItem('editor_cell_style', v); } catch {  }
+  scheduleDraw();
+});
+
 const isCustomDeskBg = computed(() => {
   const c = deskBg.value.toLowerCase();
   return c !== DESK_BG.dark && c !== DESK_BG.light;
@@ -430,7 +444,7 @@ const hoverInSelection = computed(() =>
 const bgImage = ref<HTMLImageElement | null>(null);
 let bgImageUrlCache = '';
 
-const settingsView = ref<'main' | 'resize' | 'bg' | 'canvas' | 'board'>('main');
+const settingsView = ref<'main' | 'resize' | 'bg' | 'canvas' | 'board' | 'cell'>('main');
 const bgTab = ref<'none' | 'transparent' | 'solid' | 'art'>('none');
 const bgSolidColor = ref('#FFFFFF');
 const myArts = ref<Array<{id: string; name: string; thumb: string}>>([]);
@@ -2211,6 +2225,56 @@ function drawMarquee(): void {
   ctx.restore();
 }
 
+function drawPixelsShaped(ox: number, oy: number, z: number): void {
+  if (!ctx || !artImg) return;
+  const data = artImg.data;
+  const sw = stageW.value, sh = stageH.value;
+  // Only the cells that land on screen. Without this the loop would run over
+  // the whole board however little of it is in view.
+  const x0 = Math.max(0, Math.floor((0 - ox) / z));
+  const x1 = Math.min(artW, Math.ceil((sw - ox) / z));
+  const y0 = Math.max(0, Math.floor((0 - oy) / z));
+  const y1 = Math.min(artH, Math.ceil((sh - oy) / z));
+  if (x1 <= x0 || y1 <= y0) return;
+
+  const bead = cellStyle.value === 'bead';
+  // One path per colour. Setting fillStyle per cell is what makes a per-cell
+  // loop expensive, and a board holds a few dozen colours at most.
+  const paths = new Map<string, Path2D>();
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const off = (y * artW + x) * 4;
+      if (data[off + 3] === 0) continue;
+      const key = `${data[off]},${data[off + 1]},${data[off + 2]}`;
+      let path = paths.get(key);
+      if (!path) { path = new Path2D(); paths.set(key, path); }
+      const px = ox + x * z, py = oy + y * z;
+      if (bead) {
+        const cx = px + z / 2, cy = py + z / 2, r = z / 2 * 0.94, hole = r * 0.32;
+        // moveTo before each arc, or the sub-paths join up with a straight
+        // line. Outer clockwise and inner counter-clockwise punch the hole.
+        path.moveTo(cx + r, cy);
+        path.arc(cx, cy, r, 0, Math.PI * 2);
+        path.moveTo(cx + hole, cy);
+        path.arc(cx, cy, hole, 0, Math.PI * 2, true);
+      } else {
+        const m = z * 0.2;
+        path.moveTo(px + m, py + m);
+        path.lineTo(px + z - m, py + z - m);
+        path.moveTo(px + z - m, py + m);
+        path.lineTo(px + m, py + z - m);
+      }
+    }
+  }
+  if (bead) {
+    for (const [c, path] of paths) { ctx.fillStyle = `rgb(${c})`; ctx.fill(path); }
+  } else {
+    ctx.lineWidth = Math.max(1, z * 0.17);
+    ctx.lineCap = 'round';
+    for (const [c, path] of paths) { ctx.strokeStyle = `rgb(${c})`; ctx.stroke(path); }
+  }
+}
+
 function drawPixels(): void {
   if (!ctx) return;
   const art = getArtCanvas();
@@ -2219,7 +2283,11 @@ function drawPixels(): void {
   const oy = Math.round(artOffset.value.y);
   const z = zoom.value;
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(art, 0, 0, artW, artH, ox, oy, artW * z, artH * z);
+  if (cellStyle.value === 'square') {
+    ctx.drawImage(art, 0, 0, artW, artH, ox, oy, artW * z, artH * z);
+    return;
+  }
+  drawPixelsShaped(ox, oy, z);
 }
 
 function drawSelection(): void {
@@ -2970,6 +3038,10 @@ onMounted(async () => {
   try { coarsePointer.value = window.matchMedia('(pointer: coarse)').matches; } catch {  }
   try { showBoardChrome.value = localStorage.getItem('editor_board_chrome') !== '0'; } catch {  }
   try {
+    const cs = localStorage.getItem('editor_cell_style');
+    if (cs === 'square' || cs === 'x' || cs === 'bead') cellStyle.value = cs;
+  } catch {  }
+  try {
     const d = JSON.parse(localStorage.getItem('workspace_desk') || 'null');
     if (d) {
       if (typeof d.bg === 'string' && /^#[0-9a-fA-F]{6}$/.test(d.bg)) deskBg.value = d.bg;
@@ -3262,6 +3334,9 @@ watch(
                 <span class="icon" :class="showBoardChrome ? 'icon-eye-cross' : 'icon-eye'"/>
                 <span>{{ showBoardChrome ? 'Hide board labels' : 'Show board labels' }}</span>
               </button>
+              <button class="file-menu-item" @click="settingsView = 'cell'">
+                <span class="icon icon-circle-outline"/><span>Cell style</span><span class="icon icon-angle-right settings-chev"/>
+              </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" @click="importReferenceImage">
                 <span class="icon icon-upload"/>
@@ -3302,6 +3377,27 @@ watch(
                 <span class="icon icon-trash"/>
                 <span>Delete this art</span>
               </button>
+            </div>
+
+            <div v-else-if="settingsView === 'cell'" class="file-menu settings-sub" @click.stop>
+              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>Cell style</span></button>
+              <div class="settings-body">
+                <div class="cv-field">
+                  <label class="cv-label">How a pixel is drawn</label>
+                  <div class="cv-opts cols-3">
+                    <button
+                        v-for="st in CELL_STYLES"
+                        :key="st.id"
+                        class="cv-opt"
+                        :class="{ active: cellStyle === st.id }"
+                        @click="cellStyle = st.id"
+                    >
+                      <span class="icon" :class="st.icon"/>
+                      <span>{{ st.label }}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div v-else-if="settingsView === 'resize'" class="file-menu settings-sub" @click.stop>
