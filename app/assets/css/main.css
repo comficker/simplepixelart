@@ -369,8 +369,6 @@ input[type=number] {
 }
 
 .container {
-    max-width: 800px;
-    margin: 0 auto;
     width: 100%;
 }
 
@@ -421,10 +419,6 @@ input[type=number] {
         padding: 0 var(--space-4);
         border-top: 1px solid var(--border);
     }
-
-    .main-wrapper.dash .dash-main > footer .container {
-        max-width: none;
-    }
 }
 
 @media (min-width: 1280px) {
@@ -442,11 +436,6 @@ input[type=number] {
         flex-direction: column;
         flex: 1 1 auto;
         min-height: 0;
-        max-width: none;
-    }
-
-    .main-wrapper.dash .container:has(:is(.browse, .screen)) {
-        max-width: none;
     }
 
 
