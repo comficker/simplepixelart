@@ -76,6 +76,22 @@ const shown = computed(() => {
     0 2px 6px -2px var(--ic-2);
 }
 
+/* The tool grid is secondary navigation; below 900px it was eating 227px of the
+   first viewport and pushing the gallery out of sight. */
+@media (max-width: 899px) {
+  .studio-path {
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .studio-path-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 19px;
+    border-radius: 10px;
+  }
+}
+
 .studio-path-title {
   font-family: var(--font-display);
   font-size: var(--text-2xs);

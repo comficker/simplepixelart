@@ -385,16 +385,22 @@ useCustomSeoMeta({
 </template>
 
 <style scoped>
-
+/* No flat gap: each element sets its own top margin, so the eyebrow reads as a
+   label on the title and the AI form gets real separation from the copy. */
 .home-hero {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-4);
+  padding: var(--space-5) var(--space-4);
   background:
     radial-gradient(120% 120% at 100% 0%, color-mix(in oklab, var(--surface-2) 85%, transparent), transparent 62%),
     var(--surface);
+}
+
+@media (min-width: 1024px) {
+  .home-hero {
+    padding: var(--space-6) var(--space-5);
+  }
 }
 
 .home-hero-eyebrow {
@@ -405,9 +411,11 @@ useCustomSeoMeta({
 }
 
 .home-hero-title {
+  margin-top: var(--space-2);
   display: flex;
   flex-wrap: wrap;
-  gap: 0 0.5rem;
+  /* em, not rem: the word gap has to scale with the clamped title size */
+  gap: 0 0.25em;
   font-size: clamp(1.75rem, 5vw, 2.75rem);
   font-weight: 800;
   font-variation-settings: "wght" 800;
@@ -423,16 +431,25 @@ useCustomSeoMeta({
 }
 
 .home-hero-tagline {
+  margin-top: var(--space-3);
   color: var(--muted);
   font-size: var(--text-sm);
-  max-width: 56ch;
+  /* 64ch keeps the copy to three lines on desktop and sits closer to the
+     title's width, so the block does not read as a narrow column. */
+  max-width: 64ch;
 }
 
 .home-ai {
+  margin-top: var(--space-5);
   display: flex;
   gap: var(--space-2);
   width: 100%;
-  max-width: 480px;
+  /* Matches the tagline measure so the hero keeps one right-hand edge. */
+  max-width: 560px;
+}
+
+.home-hero .home-tools {
+  margin-top: var(--space-4);
 }
 
 .home-ai-input {
