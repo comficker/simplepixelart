@@ -4,37 +4,69 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+# One deploy at a time; a newer push waits instead of racing the swap.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  HOST: 45.76.181.237
+  DIR: /home/frontend/simplepixelart
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup SSH
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install
+        run: bun install --frozen-lockfile
+
+      # Built here, not on the VPS. The box has 2 GB and the Nuxt build now
+      # needs more than that: on 2026-09-25 it died with a V8
+      # FatalProcessOutOfMemory, and because the old step removed .output
+      # before building, the site was left with nothing to serve.
+      - name: Build
+        run: bun run build
+
+      - name: SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
 
-      - name: Deploy via SSH
+      - name: Upload
+        run: rsync -az --no-owner --no-group --delete -e "ssh -i ~/.ssh/id_ed25519" .output/ "root@$HOST:$DIR/.output.new/"
+
+      # Swap the new build in, then restart; the running one stays untouched
+      # until a complete upload is sitting next to it.
+      - name: Release
         run: |
-          ssh -i ~/.ssh/id_ed25519 ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-            cd /home/frontend/simplepixelart
-            git stash
-            git pull origin main
-            rm -rf .output
-            rm -rf .nuxt
-            pm2 stop simplepixelart
-            # Install bun if missing (idempotent — official installer is safe to re-run)
-            if ! command -v bun >/dev/null 2>&1; then
-              curl -fsSL https://bun.sh/install | bash
-            fi
-            export PATH="$HOME/.bun/bin:$PATH"
-            bun install
-            bun run build
-            pm2 restart simplepixelart
-          EOF
+          ssh -i ~/.ssh/id_ed25519 "root@$HOST" "DIR=$DIR bash -s" <<'REMOTE'
+          set -e
+          cd "$DIR"
+          git fetch --quiet origin main && git reset --quiet --hard origin/main
+          rm -rf .output.old
+          [ -d .output ] && mv .output .output.old
+          mv .output.new .output
+          pm2 restart simplepixelart --update-env
+          rm -rf .output.old
+          REMOTE
+
+      # The old step ran the build inside an `ssh <<EOF` heredoc, so the exit
+      # code came from the last line (pm2 restart) and a failed build still
+      # reported a green deploy.
+      - name: Smoke test
+        run: |
+          sleep 5
+          for p in / /ja/ /editor /arts /sitemap-index.xml; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://simplepixelart.com$p")
+            echo "$p $code"
+            [ "$code" = 200 ] || exit 1
+          done
