@@ -74,29 +74,29 @@ async function shareInstagram() {
         :class="{'is-icon-only': iconOnly}"
         :disabled="!meta?.url"
         :title="iconOnly ? 'Share' : undefined"
-        aria-label="Share"
+        :aria-label="$t('c_SocialSharing.share')"
     >
       <span class="icon icon-share"/>
-      <span v-if="!iconOnly">Share</span>
+      <span v-if="!iconOnly">{{ $t('c_SocialSharing.share') }}</span>
     </button>
     <template #menu>
-      <a class="drop-item" :href="twitterUrl" target="_blank" rel="noopener noreferrer" title="Share on X (Twitter)">
-        <span class="icon icon-x"/> Twitter
+      <a class="drop-item" :href="twitterUrl" target="_blank" rel="noopener noreferrer" :title="$t('c_SocialSharing.shareOnXTwitter')">
+        <span class="icon icon-x"/> {{ $t('common.twitter') }}
       </a>
-      <a class="drop-item" :href="telegramUrl" target="_blank" rel="noopener noreferrer" title="Share on Telegram">
-        <span class="icon icon-telegram"/> Telegram
+      <a class="drop-item" :href="telegramUrl" target="_blank" rel="noopener noreferrer" :title="$t('c_SocialSharing.shareOnTelegram')">
+        <span class="icon icon-telegram"/> {{ $t('c_SocialSharing.telegram') }}
       </a>
-      <a class="drop-item" :href="redditUrl" target="_blank" rel="noopener noreferrer" title="Share on Reddit">
-        <span class="icon icon-reddit"/> Reddit
+      <a class="drop-item" :href="redditUrl" target="_blank" rel="noopener noreferrer" :title="$t('c_SocialSharing.shareOnReddit')">
+        <span class="icon icon-reddit"/> {{ $t('common.reddit') }}
       </a>
-      <a class="drop-item" :href="pinterestUrl" target="_blank" rel="noopener noreferrer" title="Share on Pinterest">
-        <span class="icon icon-pinterest"/> Pinterest
+      <a class="drop-item" :href="pinterestUrl" target="_blank" rel="noopener noreferrer" :title="$t('c_SocialSharing.shareOnPinterest')">
+        <span class="icon icon-pinterest"/> {{ $t('common.pinterest') }}
       </a>
       <button
           v-if="squareSrc"
           class="drop-item"
           :disabled="igBusy"
-          title="Share the square image to Instagram"
+          :title="$t('c_SocialSharing.shareTheSquareImageToInstagram')"
           @click="shareInstagram"
       >
         <span class="icon icon-instagram"/> {{ igBusy ? 'Preparing…' : 'Instagram' }}

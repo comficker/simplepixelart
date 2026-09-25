@@ -58,21 +58,21 @@ function goTo(id: string) {
             class="readme-tab"
             :class="{'is-active': !agentOpen}"
             @click="agentOpen = false"
-        ><span class="icon icon-file"/>README</button>
+        ><span class="icon icon-file"/>{{ $t('c_ToolReadme.readme') }}</button>
         <button
             v-if="agent"
             type="button"
             class="readme-tab"
             :class="{'is-active': agentOpen}"
             @click="agentOpen = true"
-        ><span class="icon icon-auto-fix"/>Agent</button>
+        ><span class="icon icon-auto-fix"/>{{ $t('common.agent') }}</button>
       </div>
       <div v-if="agent && agentOpen" class="readme-actions">
         <button
             type="button"
             class="widget-ctl-btn"
-            aria-label="Close agent"
-            title="Close agent"
+            :aria-label="$t('c_ToolReadme.closeAgent')"
+            :title="$t('c_ToolReadme.closeAgent')"
             @click="agentOpen = false"
         >
           <span class="icon icon-close"/>
@@ -82,8 +82,8 @@ function goTo(id: string) {
         <button
             type="button"
             class="widget-ctl-btn"
-            title="Table of contents"
-            aria-label="Table of contents"
+            :title="$t('c_ToolReadme.tableOfContents')"
+            :aria-label="$t('c_ToolReadme.tableOfContents')"
             @click="openToc"
         >
           <span class="icon icon-list"/>
@@ -95,7 +95,7 @@ function goTo(id: string) {
       <slot/>
     </div>
 
-    <UiModal v-if="tocOpen" title="Table of contents" width="26rem" @close="tocOpen = false">
+    <UiModal v-if="tocOpen" :title="$t('c_ToolReadme.tableOfContents')" width="26rem" @close="tocOpen = false">
       <nav class="readme-toc">
         <button
             v-for="item in tocItems"
@@ -105,7 +105,7 @@ function goTo(id: string) {
             :class="`lvl-${item.level}`"
             @click="goTo(item.id)"
         >{{ item.text }}</button>
-        <p v-if="!tocItems.length" class="readme-toc-empty">No sections.</p>
+        <p v-if="!tocItems.length" class="readme-toc-empty">{{ $t('c_ToolReadme.noSections') }}</p>
       </nav>
     </UiModal>
   </section>

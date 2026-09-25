@@ -11,35 +11,35 @@ function openCommandPalette() {
 <template>
   <header>
     <div class="container hdr">
-      <nuxt-link to="/" class="brand" title="Home">
-        <img :src="`/logo.svg`" alt="Simple Pixel Art" width="42" height="42" class="brand-logo">
+      <NuxtLinkLocale to="/" class="brand" :title="$t('common.home')">
+        <img :src="`/logo.svg`" :alt="$t('common.simplePixelArt')" width="42" height="42" class="brand-logo">
         <span class="brand-name">
-          <span class="brand-name-stamp">Simple</span>
-          <span class="brand-name-main">PixelArt</span>
+          <span class="brand-name-stamp">{{ $t('common.simple') }}</span>
+          <span class="brand-name-main">{{ $t('common.pixelart') }}</span>
         </span>
-      </nuxt-link>
+      </NuxtLinkLocale>
 
-      <nav class="hdr-nav" aria-label="Primary">
-        <nuxt-link to="/arts" class="hdr-link" title="Discovery">
+      <nav class="hdr-nav" :aria-label="$t('common.primary')">
+        <NuxtLinkLocale to="/arts" class="hdr-link" :title="$t('nav.discovery')">
           <span class="icon icon-explore"/>
-          <span class="hdr-link-label">Discovery</span>
-        </nuxt-link>
-        <nuxt-link to="/challenges" class="hdr-link" title="Weekly challenges">
+          <span class="hdr-link-label">{{ $t('nav.discovery') }}</span>
+        </NuxtLinkLocale>
+        <NuxtLinkLocale to="/challenges" class="hdr-link" :title="$t('common.weeklyChallenges')">
           <span class="icon icon-flag"/>
-          <span class="hdr-link-label">Challenges</span>
-        </nuxt-link>
-        <nuxt-link to="/work" class="hdr-link" title="Your work">
+          <span class="hdr-link-label">{{ $t('nav.challenges') }}</span>
+        </NuxtLinkLocale>
+        <NuxtLinkLocale to="/work" class="hdr-link" :title="$t('nav.yourWork')">
           <span class="icon icon-workspace"/>
-          <span class="hdr-link-label">Your work</span>
-        </nuxt-link>
+          <span class="hdr-link-label">{{ $t('nav.yourWork') }}</span>
+        </NuxtLinkLocale>
         <span class="hdr-divider" aria-hidden="true"/>
         <PartialNotifyBell/>
         <WalletMenu/>
         <button
             type="button"
             class="cmdk-trigger"
-            title="Open command palette (themes, navigation, more)"
-            aria-label="Open command palette"
+            :title="$t('c_Header.openCommandPaletteThemesNavigation')"
+            :aria-label="$t('common.openCommandPalette')"
             @click="openCommandPalette"
         >
           <span class="icon icon-search"/>

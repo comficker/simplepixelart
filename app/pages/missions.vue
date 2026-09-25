@@ -116,7 +116,7 @@ watch(() => auth.isLogged, (v) => {
       <div class="readme-head msn-head">
         <h1 class="msn-title">
           <span class="icon icon-flag"/>
-          <span>Missions</span>
+          <span>{{ $t('common.missions') }}</span>
         </h1>
         <div v-if="sum" class="msn-balance">
           <span class="icon icon-coin"/>
@@ -125,47 +125,41 @@ watch(() => auth.isLogged, (v) => {
       </div>
 
       <div class="msn-body">
-        <p class="msn-lead">
-          Credits are SimplePixelArt's token — earn them free every day,
-          spend them on AI tools that help you make art and content,
-          or gift them to artists you love.
-        </p>
+        <p class="msn-lead" v-html="$t('p_missions.creditsAreSimplepixelartSTokenEarn')"/>
 
         <div class="msn-uses">
           <div class="msn-use">
-            <span v-if="!sum?.ai_image_enabled" class="msn-soon">Soon</span>
+            <span v-if="!sum?.ai_image_enabled" class="msn-soon">{{ $t('p_missions.soon') }}</span>
             <span class="icon icon-auto-fix"/>
             <div class="msn-use-main">
-              <div class="msn-use-title">Generate art with AI</div>
-              <p class="msn-use-desc text-xs">
-                Turn a prompt into pixel art, straight onto your canvas.
-                <nuxt-link v-if="sum?.ai_image_enabled" to="/editor" class="msn-use-link">Try it in the editor →</nuxt-link>
+              <div class="msn-use-title">{{ $t('p_missions.generateArtWithAi') }}</div>
+              <p class="msn-use-desc text-xs"> {{ $t('p_missions.turnAPromptIntoPixelArt') }} <NuxtLinkLocale v-if="sum?.ai_image_enabled" to="/editor" class="msn-use-link">{{ $t('p_missions.tryItInTheEditor') }}</NuxtLinkLocale>
               </p>
             </div>
           </div>
           <div class="msn-use">
-            <span v-if="!sum?.ai_enabled" class="msn-soon">Soon</span>
+            <span v-if="!sum?.ai_enabled" class="msn-soon">{{ $t('p_missions.soon') }}</span>
             <span class="icon icon-pencil"/>
             <div class="msn-use-main">
-              <div class="msn-use-title">AI content assistant</div>
-              <p class="msn-use-desc text-xs">Writes titles, descriptions and tags for your art when you publish.</p>
+              <div class="msn-use-title">{{ $t('p_missions.aiContentAssistant') }}</div>
+              <p class="msn-use-desc text-xs" v-html="$t('p_missions.writesTitlesDescriptionsAndTagsFor')"/>
             </div>
           </div>
           <div class="msn-use">
-            <span class="msn-soon">Soon</span>
+            <span class="msn-soon">{{ $t('p_missions.soon') }}</span>
             <span class="icon icon-gift"/>
             <div class="msn-use-main">
-              <div class="msn-use-title">Tip artists</div>
-              <p class="msn-use-desc text-xs">Gift credits to creators to show love for their art.</p>
+              <div class="msn-use-title">{{ $t('p_missions.tipArtists') }}</div>
+              <p class="msn-use-desc text-xs" v-html="$t('p_missions.giftCreditsToCreatorsToShow')"/>
             </div>
           </div>
         </div>
 
         <div v-if="!auth.isLogged" class="msn-empty">
           <span class="icon icon-coin empty-icon"/>
-          <h2 class="msn-empty-title">Sign in to earn credits</h2>
-          <p class="text-xs">Daily bonus, missions and invites reward you for creating and sharing pixel art.</p>
-          <a :href="googleAuthUrl" class="btn primary">Sign in</a>
+          <h2 class="msn-empty-title">{{ $t('p_missions.signInToEarnCredits') }}</h2>
+          <p class="text-xs" v-html="$t('p_missions.dailyBonusMissionsAndInvitesReward')"/>
+          <a :href="googleAuthUrl" class="btn primary">{{ $t('common.signIn') }}</a>
         </div>
 
         <div v-else-if="loading && !sum" class="msn-list" aria-busy="true">
@@ -173,15 +167,15 @@ watch(() => auth.isLogged, (v) => {
         </div>
 
         <template v-else-if="sum">
-          <h2 class="msn-section-title">Earn credits</h2>
+          <h2 class="msn-section-title">{{ $t('common.earnCredits') }}</h2>
           <div class="msn-list">
 
             <div class="msn-row">
               <div class="msn-row-main">
-                <div class="msn-row-title">Daily bonus</div>
-                <div class="msn-row-sub text-xs">Come back every day for free credits</div>
+                <div class="msn-row-title">{{ $t('common.dailyBonus') }}</div>
+                <div class="msn-row-sub text-xs">{{ $t('p_missions.comeBackEveryDayForFree') }}</div>
               </div>
-              <span class="msn-chip">Daily</span>
+              <span class="msn-chip">{{ $t('p_missions.daily') }}</span>
               <span class="msn-reward"><span class="icon icon-coin"/>{{ sum.daily_grant }}</span>
               <button
                   class="btn msn-claim"
@@ -189,8 +183,8 @@ watch(() => auth.isLogged, (v) => {
                   :disabled="sum.daily_claimed || claiming === 'daily'"
                   @click="claimDaily"
               >
-                <template v-if="sum.daily_claimed"><span class="icon icon-check"/><span>Claimed</span></template>
-                <template v-else>Claim</template>
+                <template v-if="sum.daily_claimed"><span class="icon icon-check"/><span>{{ $t('p_missions.claimed') }}</span></template>
+                <template v-else>{{ $t('p_missions.claim') }}</template>
               </button>
             </div>
 
@@ -207,8 +201,8 @@ watch(() => auth.isLogged, (v) => {
                   :title="m.claimed ? 'Claimed' : m.done ? 'Claim reward' : 'Not completed yet'"
                   @click="claimMission(m)"
               >
-                <template v-if="m.claimed"><span class="icon icon-check"/><span>Claimed</span></template>
-                <template v-else>Claim</template>
+                <template v-if="m.claimed"><span class="icon icon-check"/><span>{{ $t('p_missions.claimed') }}</span></template>
+                <template v-else>{{ $t('p_missions.claim') }}</template>
               </button>
             </div>
           </div>
@@ -217,17 +211,17 @@ watch(() => auth.isLogged, (v) => {
             <div class="msn-invite-head">
               <span class="icon icon-gift msn-invite-ic"/>
               <div class="msn-row-main">
-                <div class="msn-invite-title">Invite friends, earn forever</div>
+                <div class="msn-invite-title">{{ $t('p_missions.inviteFriendsEarnForever') }}</div>
                 <div class="msn-invite-sub">
-                  <strong>+{{ sum.referral.signup_reward }}</strong> per friend who joins<template v-if="sum.referral.purchase_rate">
-                  · <strong>{{ Math.round(sum.referral.purchase_rate * 100) }}%</strong> of every credit pack they buy</template>
+                  <strong>+{{ sum.referral.signup_reward }}</strong> {{ $t('p_missions.perFriendWhoJoins') }}<template v-if="sum.referral.purchase_rate">
+                  · <strong>{{ Math.round(sum.referral.purchase_rate * 100) }}%</strong> {{ $t('p_missions.ofEveryCreditPackTheyBuy') }}</template>
                 </div>
               </div>
             </div>
             <div class="msn-invite-bar">
               <input class="msn-invite-link" :value="inviteLink" readonly @focus="($event.target as HTMLInputElement).select()">
               <button class="btn primary" @click="copyInvite">
-                <span class="icon icon-link"/><span>Copy link</span>
+                <span class="icon icon-link"/><span>{{ $t('p_missions.copyLink') }}</span>
               </button>
             </div>
             <p v-if="sum.referral.invited" class="msn-invite-stats text-xs">
@@ -238,7 +232,7 @@ watch(() => auth.isLogged, (v) => {
           </div>
 
           <p class="msn-hint text-xs text-muted">
-            Daily missions reset at midnight UTC.
+            {{ $t('p_missions.dailyMissionsResetAtMidnightUtc') }}
           </p>
         </template>
       </div>

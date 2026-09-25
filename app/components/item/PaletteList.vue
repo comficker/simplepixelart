@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const {t} = useI18n()
+
 import type {ResponsePalette} from "~/types";
 
 const {title, desc} = defineProps({
@@ -28,13 +30,13 @@ const tagLabel = computed(() => tag.value
 const search = ref((route.query.q as string) || '')
 
 const SORTS = [
-  {key: '-score', label: 'Popular'},
-  {key: '-usage_count', label: 'Most used'},
-  {key: '-created', label: 'Newest'},
+  {key: '-score', label: t('c_PaletteList.popular')},
+  {key: '-usage_count', label: t('c_PaletteList.mostUsed')},
+  {key: '-created', label: t('c_PaletteList.newest')},
 ] as const
 
 const COUNTS = [
-  {key: '', label: 'Any size', gte: undefined, lte: undefined},
+  {key: '', label: t('c_PaletteList.anySize'), gte: undefined, lte: undefined},
   {key: '1-8', label: '≤ 8', gte: 1, lte: 8},
   {key: '9-16', label: '9–16', gte: 9, lte: 16},
   {key: '17-32', label: '17–32', gte: 17, lte: 32},
@@ -88,31 +90,31 @@ const {page: currentPage, prevTo, nextTo} = usePageLinks(data)
 <template>
   <BrowseLayout :title="title" :desc="desc">
     <template #actions>
-      <nuxt-link to="/palettes/color-palette-from-image" class="btn">
-        <span class="icon icon-image"/><span>From image</span>
-      </nuxt-link>
-      <nuxt-link to="/palettes/color-palette-from-color" class="btn">
-        <span class="icon icon-swap"/><span>From a color</span>
-      </nuxt-link>
+      <NuxtLinkLocale to="/palettes/color-palette-from-image" class="btn">
+        <span class="icon icon-image"/><span>{{ $t('common.fromImage') }}</span>
+      </NuxtLinkLocale>
+      <NuxtLinkLocale to="/palettes/color-palette-from-color" class="btn">
+        <span class="icon icon-swap"/><span>{{ $t('c_PaletteList.fromAColor') }}</span>
+      </NuxtLinkLocale>
     </template>
 
     <template #filters>
-      <BrowseSearch :model-value="search" placeholder="Search palettes..." @update:model-value="setSearch"/>
+      <BrowseSearch :model-value="search" :placeholder="$t('common.searchPalettes')" @update:model-value="setSearch"/>
 
-      <BrowseFilter label="Sort" icon="icon-rocket" :value="activeSort.label">
+      <BrowseFilter :label="$t('common.sort')" icon="icon-rocket" :value="activeSort.label">
         <BrowseOpt v-for="s in SORTS" :key="s.key" :active="sort === s.key" @click="setSort(s.key)">
           {{ s.label }}
         </BrowseOpt>
       </BrowseFilter>
 
-      <BrowseFilter label="Colors" icon="icon-palette" :value="activeCount.label" :active="!!countKey">
+      <BrowseFilter :label="$t('common.colors')" icon="icon-palette" :value="activeCount.label" :active="!!countKey">
         <BrowseOpt v-for="c in COUNTS" :key="c.key" :active="countKey === c.key" @click="setCount(c.key)">
           {{ c.label }}
         </BrowseOpt>
       </BrowseFilter>
 
-      <BrowseFilter v-if="browseTags.length" label="Tags" icon="icon-flag" :value="tagLabel" :active="!!tag">
-        <BrowseOpt to="/palettes" :active="!tag">All palettes</BrowseOpt>
+      <BrowseFilter v-if="browseTags.length" :label="$t('common.tags')" icon="icon-flag" :value="tagLabel" :active="!!tag">
+        <BrowseOpt to="/palettes" :active="!tag">{{ $t('c_PaletteList.allPalettes') }}</BrowseOpt>
         <BrowseOpt
             v-for="t in browseTags"
             :key="t.id_string"
@@ -130,16 +132,16 @@ const {page: currentPage, prevTo, nextTo} = usePageLinks(data)
     </div>
     <div v-else-if="isEmpty" class="empty-state">
       <span class="empty-state-icon icon icon-search" aria-hidden="true"/>
-      <div class="empty-state-title">No palettes found</div>
+      <div class="empty-state-title">{{ $t('c_PaletteList.noPalettesFound') }}</div>
       <p class="empty-state-body">
-        <template v-if="hasFilters">Nothing matches the current filters.</template>
+        <template v-if="hasFilters">{{ $t('c_PaletteList.nothingMatchesTheCurrentFilters') }}</template>
         <template v-else-if="tag">Nothing is tagged “{{ tagLabel }}” yet.</template>
-        <template v-else>The library is empty here for now.</template>
+        <template v-else>{{ $t('c_PaletteList.theLibraryIsEmptyHereFor') }}</template>
       </p>
       <div class="empty-state-actions">
-        <button v-if="hasFilters" class="btn" @click="clearFilters">Clear filters</button>
-        <nuxt-link v-else-if="tag" to="/palettes" class="btn">All palettes</nuxt-link>
-        <nuxt-link to="/palettes/color-palette-from-image" class="btn primary">Create from image</nuxt-link>
+        <button v-if="hasFilters" class="btn" @click="clearFilters">{{ $t('common.clearFilters') }}</button>
+        <NuxtLinkLocale v-else-if="tag" to="/palettes" class="btn">{{ $t('c_PaletteList.allPalettes') }}</NuxtLinkLocale>
+        <NuxtLinkLocale to="/palettes/color-palette-from-image" class="btn primary">{{ $t('c_PaletteList.createFromImage') }}</NuxtLinkLocale>
       </div>
     </div>
     <div v-else class="pal-grid">
@@ -148,7 +150,7 @@ const {page: currentPage, prevTo, nextTo} = usePageLinks(data)
 
     <template v-if="results.length" #foot>
       <span class="browse-foot-start">
-        {{ data?.count || results.length }} {{ (data?.count || results.length) === 1 ? 'palette' : 'palettes' }}
+        {{ $t('c_PaletteList.paletteCount', data?.count || results.length, {count: data?.count || results.length}) }}
       </span>
       <span class="browse-foot-end">
         <Paginator

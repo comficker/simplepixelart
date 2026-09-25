@@ -67,3 +67,17 @@ for (const dst of targets) {
   copyDir(src, dst)
   console.log(`[fix-unhead-bundle] synced ${src} → ${dst}`)
 }
+
+// unhead 2.x imports `HookableCore` from hookable 6, but the root install may
+// resolve to hookable 5 (nothing else has moved yet). Node then resolves the
+// copied unhead against the wrong version and the server 500s on every request
+// with "does not provide an export named 'HookableCore'". Carry unhead's own
+// nested copy across too, so resolution stops before it reaches the root one.
+const nestedHookable = 'node_modules/unhead/node_modules/hookable'
+if (existsSync(nestedHookable)) {
+  const dst = '.output/server/node_modules/hookable'
+  copyDir(nestedHookable, dst)
+  console.log(`[fix-unhead-bundle] synced ${nestedHookable} → ${dst}`)
+} else {
+  console.log('[fix-unhead-bundle] no nested hookable to sync (root version is presumably fine)')
+}

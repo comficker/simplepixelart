@@ -2,28 +2,28 @@
   <ui-modal :title="isEdit ? 'Edit collection' : 'New collection'" @close="$emit('close')">
     <div class="publish-form">
         <div>
-          <label class="publish-label">Title</label>
+          <label class="publish-label">{{ $t('common.title') }}</label>
           <input
               type="text"
               v-model="form.title"
-              placeholder="e.g. Retro RPG sprites"
+              :placeholder="$t('c_CollectionEditModal.eGRetroRpgSprites')"
               maxlength="120"
               class="publish-input"
               @keydown.enter="save"
           />
         </div>
         <div>
-          <label class="publish-label">Description</label>
+          <label class="publish-label">{{ $t('common.description') }}</label>
           <input
               type="text"
               v-model="form.desc"
-              placeholder="Describe your collection..."
+              :placeholder="$t('c_CollectionEditModal.describeYourCollection')"
               maxlength="200"
               class="publish-input"
           />
         </div>
         <div v-if="isEdit">
-          <label class="publish-label">Slug</label>
+          <label class="publish-label">{{ $t('common.slug') }}</label>
           <input
               type="text"
               v-model="form.id_string"
@@ -35,16 +35,16 @@
         </div>
         <div class="h-center gap-2">
           <ui-switch :model-value="form.status === 'public'" @update:model-value="form.status = $event ? 'public' : 'private'"/>
-          <span class="text-xs">Public</span>
+          <span class="text-xs">{{ $t('common.public') }}</span>
           <span class="text-xs text-muted">{{ form.status === 'public' ? '— anyone with the link' : '— only you' }}</span>
         </div>
       </div>
     <div class="publish-actions">
       <button class="btn primary block" @click="save" :disabled="saving || !form.title.trim()">
-        {{ saving ? 'Saving…' : (isEdit ? 'Save' : 'Create') }}
+        {{ saving ? $t('c_CollectionEditModal.saving') : (isEdit ? $t('common.save') : $t('common.create')) }}
       </button>
       <button class="btn block" @click="$emit('close')" :disabled="saving">
-        Cancel
+        {{ $t('common.cancel') }}
       </button>
     </div>
   </ui-modal>

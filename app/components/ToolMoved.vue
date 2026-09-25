@@ -21,11 +21,10 @@ onMounted(() => {
       <span class="icon icon-move empty-state-icon"/>
       <h1 class="empty-state-title">{{ name }} has moved</h1>
       <p class="empty-state-body">
-        This tool now lives at <code>{{ to }}</code>. Taking you there now…
-      </p>
-      <nuxt-link :to="{ path: to, query: route.query }" class="btn primary empty-state-action">
+        {{ $t('c_ToolMoved.thisToolNowLivesAt') }} <code>{{ to }}</code>{{ $t('c_ToolMoved.takingYouThereNow') }} </p>
+      <NuxtLinkLocale :to="{ path: to, query: route.query }" class="btn primary empty-state-action">
         Go to {{ name }}
-      </nuxt-link>
+      </NuxtLinkLocale>
     </div>
   </div>
 </template>

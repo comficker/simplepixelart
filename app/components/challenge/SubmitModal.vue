@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const localePath = useLocalePath()
 const artImage = useArtImage()
 import {toast} from 'vue-sonner'
 import type {LoadItem} from '~/components/editor/LoadBrowser.vue'
@@ -59,14 +60,14 @@ onMounted(load)
 
 <template>
   <EditorLoadBrowser
-      title="Submit an art to this challenge"
+      :title="$t('c_SubmitModal.submitAnArtToThisChallenge')"
       :items="items"
       :loading="loading"
       empty-text="You have no saved arts yet — draw one first."
       filterable
       new-label="New canvas"
       @select="pick"
-      @create="navigateTo('/editor?new=true')"
+      @create="navigateTo(localePath('/editor?new=true'))"
       @close="emit('close')"
   />
 </template>

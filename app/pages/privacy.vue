@@ -1,5 +1,6 @@
 <script setup lang="ts">
 useCustomSeoMeta({
+  untranslated: true,
   title: "Privacy Policy",
   description: "Privacy Policy for SimplePixelArt.com. Learn how we collect, use, and protect your data.",
   keywords: "privacy policy, simplepixelart privacy, data protection",
@@ -70,12 +71,12 @@ useCustomSeoMeta({
     <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:comficker@gmail.com">comficker@gmail.com</a>.</p>
 
     <div class="tags">
-      <div class="item"><nuxt-link to="/">Home</nuxt-link></div>
-      <div class="item"><nuxt-link to="/about">About</nuxt-link></div>
-      <div class="item"><nuxt-link to="/terms">Terms of Service</nuxt-link></div>
-      <div class="item"><nuxt-link to="/contact">Contact</nuxt-link></div>
-      <div class="item"><nuxt-link to="/dmca">DMCA</nuxt-link></div>
-      <div class="item"><nuxt-link to="/guidelines">Community Guidelines</nuxt-link></div>
+      <div class="item"><NuxtLinkLocale to="/">Home</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/about">About</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/terms">Terms of Service</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/contact">Contact</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/dmca">DMCA</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/guidelines">Community Guidelines</NuxtLinkLocale></div>
     </div>
   </div>
 </template>

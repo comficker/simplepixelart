@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const localePath = useLocalePath()
+const {t} = useI18n()
 import {ref, computed, watch, nextTick} from 'vue'
 import {toast} from 'vue-sonner'
 import type {EditorData} from '~/types'
@@ -7,9 +9,9 @@ import {cloneDeep, debounce, generateUUID, getStorageItem} from '~/helper/utils'
 import {cleanOrphanCells, convertImageToGrid} from '~/helper/pixel'
 
 useCustomSeoMeta({
-  title: 'Image to Pixel Art Converter',
-  description: 'Convert any photo into pixel art in seconds. Free online tool with palette control (4–64 colors), pixel cleaner, color swap and live preview.',
-  keywords: 'image to pixel art, photo to pixel art converter, pixelate image online, pixel art generator, convert jpg to pixel art, png to pixel art, free pixel art maker, 8-bit converter, 16-bit art generator',
+  title: () => t('seo.converter.title'),
+  description: () => t('seo.converter.description'),
+  keywords: () => t('seo.converter.keywords'),
   canonical: 'https://simplepixelart.com/converter',
   script: [
     {
@@ -280,33 +282,32 @@ function sendToEditor() {
   ws[id] = data
   localStorage.setItem('workspaces', JSON.stringify(ws))
   localStorage.setItem('workspace_current', id)
-  navigateTo(`/editor?id=${id}`)
+  navigateTo(localePath(`/editor?id=${id}`))
 }
 
 const debouncedConvert = debounce(() => { if (sourceImage.value) convert() }, 150)
 watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], () => debouncedConvert())
 
-const faq = [
-  {q: 'Is this tool really free?', a: `<p>Yes. The entire converter runs in your browser. No account, no watermark, no upload to any server.</p>`},
-  {q: 'What image formats are supported?', a: `<p>PNG, JPG, and WebP. Drag and drop a file onto the upload area or click to browse.</p>`},
-  {q: 'How does the Pixel Cleaner work?', a: `<p>It scans the output for pixels that have no same-colored neighbors (orphans) and replaces each one with the majority color of its four-direction neighbors. This smooths out speckle that quantization often produces from photos.</p>`},
-  {q: 'Can I edit the result after conversion?', a: `<p>Yes. Click <strong>Open in Editor</strong> to load the converted pixel art into our full online editor with brush, fill, layers, undo/redo, and export options.</p>`},
-  {q: "What's the difference between this and other pixel art converters?", a: `<p>Auto size that reads real pixel art back at its native resolution (most converters blindly resample it), transparent background removal, Bayer dithering, live preview on every setting change, color merge, an orphan-pixel cleaner, and a direct handoff to a full editor. No downloads, no signup.</p>`},
-  {q: 'What does the Auto size do?', a: `<p>If your image is pixel art that was upscaled, screenshotted, JPEG-compressed, or captured with grid lines, Auto detects the original cell size and reads the art back cell for cell — no detail lost, no blur. For photos it estimates a sensible output size instead.</p>`},
-]
+const faq = computed(() => [
+  {q: t('p_converter.faq0q'), a: t('p_converter.faq0a')},
+  {q: t('p_converter.faq1q'), a: t('p_converter.faq1a')},
+  {q: t('p_converter.faq2q'), a: t('p_converter.faq2a')},
+  {q: t('p_converter.faq3q'), a: t('p_converter.faq3a')},
+  {q: t('p_converter.faq4q'), a: t('p_converter.faq4a')},
+])
 </script>
 
 <template>
-  <ToolLayout title="Converter">
+  <ToolLayout :title="$t('p_converter.converter')">
 
     <div class="editor-body flat-editor">
 
       <div class="canvas-col">
-        <Widget title="Pixel Preview">
+        <Widget :title="$t('p_converter.pixelPreview')">
           <template #ctl>
             <button v-if="hasImage" class="widget-ctl-btn" @click="openFileDialog">
               <span class="icon icon-image"/>
-              <span>Change image</span>
+              <span>{{ $t('p_converter.changeImage') }}</span>
             </button>
           </template>
           <div class="preview-wrapper">
@@ -319,9 +320,9 @@ const faq = [
                 @dragover.prevent
             >
               <span class="icon icon-upload dropzone-icon"/>
-              <p class="dropzone-title">Click or drop an image here</p>
-              <p class="dropzone-hint">PNG, JPG, or WebP</p>
-              <button class="btn primary" @click.stop="openFileDialog">Choose file</button>
+              <p class="dropzone-title">{{ $t('p_converter.clickOrDropAnImageHere') }}</p>
+              <p class="dropzone-hint">{{ $t('common.pngJpgOrWebp') }}</p>
+              <button class="btn primary" @click.stop="openFileDialog">{{ $t('p_converter.chooseFile') }}</button>
             </div>
           </div>
         </Widget>
@@ -329,18 +330,18 @@ const faq = [
         <div v-if="hasImage" class="convert-actions">
           <button class="btn primary block" @click="sendToEditor">
             <span class="icon icon-pen"/>
-            <span>Open in Editor</span>
+            <span>{{ $t('common.openInEditor2') }}</span>
           </button>
           <button class="btn block" @click="cleanOrphans">
             <span class="icon icon-broom"/>
-            <span>Clean Orphans</span>
+            <span>{{ $t('p_converter.cleanOrphans') }}</span>
           </button>
         </div>
       </div>
 
       <div class="editor-sidebar">
-        <Widget title="Size">
-          <div class="settings-row" title="Auto reads the image's own pixel grid when it has one">
+        <Widget :title="$t('common.size')">
+          <div class="settings-row" :title="$t('p_converter.autoReadsTheImageSOwn')">
             <label v-for="s in sizeOptions" :key="s" class="pill" :class="{active: outputSize === s}">
               <input type="radio" :value="s" v-model="outputSize">
               <span>{{ s === 'auto' ? 'Auto' : s }}</span>
@@ -351,41 +352,41 @@ const faq = [
           </p>
         </Widget>
 
-        <Widget title="Colors">
+        <Widget :title="$t('common.colors')">
           <div class="settings-row">
             <label v-for="c in colorOptions" :key="c" class="pill" :class="{active: maxColors === c}">
               <input type="radio" :value="c" v-model="maxColors">
               <span>{{ c }}</span>
             </label>
           </div>
-          <label class="editor-check" title="Cut a uniform backdrop to transparency — the sprite lands in the editor with nothing behind it">
+          <label class="editor-check" :title="$t('p_converter.cutAUniformBackdropToTransparency')">
             <input v-model="bgCut" type="checkbox">
-            <span class="text-xs">Transparent background</span>
+            <span class="text-xs">{{ $t('p_converter.transparentBackground') }}</span>
           </label>
-          <label class="editor-check" title="Ordered (Bayer) dithering — fakes gradients a small palette can't hold; best on photos">
+          <label class="editor-check" :title="$t('p_converter.orderedBayerDitheringFakesGradient')">
             <input v-model="dither" type="checkbox">
-            <span class="text-xs">Dithering</span>
+            <span class="text-xs">{{ $t('p_converter.dithering') }}</span>
           </label>
         </Widget>
 
-        <Widget title="Adjust">
+        <Widget :title="$t('p_converter.adjust')">
           <div class="slider-row">
-            <label>Brightness <span>{{ brightness }}</span></label>
+            <label>{{ $t('p_converter.brightness') }} <span>{{ brightness }}</span></label>
             <input type="range" v-model.number="brightness" min="-100" max="100" step="5">
           </div>
           <div class="slider-row">
-            <label>Contrast <span>{{ contrast }}</span></label>
+            <label>{{ $t('p_converter.contrast') }} <span>{{ contrast }}</span></label>
             <input type="range" v-model.number="contrast" min="-100" max="100" step="5">
           </div>
           <div class="slider-row">
-            <label>Saturation <span>{{ saturation }}</span></label>
+            <label>{{ $t('p_converter.saturation') }} <span>{{ saturation }}</span></label>
             <input type="range" v-model.number="saturation" min="-100" max="100" step="5">
           </div>
         </Widget>
 
-        <Widget title="Palette">
+        <Widget :title="$t('common.palette')">
           <template #ctl>
-            <span class="text-xs">{{ palette.length }} colors</span>
+            <span class="text-xs">{{ $t('common.nColors', {count: palette.length}) }}</span>
           </template>
           <div class="palette-grid">
             <div
@@ -404,14 +405,14 @@ const faq = [
             </div>
           </div>
           <div v-if="selectedColorIndex >= 0" class="merge-hint">
-            <p class="text-xs">Merge with another color:</p>
+            <p class="text-xs">{{ $t('p_converter.mergeWithAnotherColor') }}</p>
             <div class="palette-grid mt-2">
               <div
                   v-for="(rgb, i) in palette" :key="i"
                   v-show="i !== selectedColorIndex"
                   class="palette-swatch mergeable"
                   :style="{background: `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`}"
-                  :title="`Merge into color #${i + 1}`"
+                  :title="$t('p_converter.mergeIntoColorN', {n: i + 1})"
                   @click="mergeColor(selectedColorIndex, i)"
               />
             </div>
@@ -434,49 +435,49 @@ const faq = [
         <template v-if="hasImage">
           {{ sourceImage?.naturalWidth }}×{{ sourceImage?.naturalHeight }}px →
           {{ pixels[0]?.length || 0 }}×{{ pixels.length }}px ·
-          {{ palette.length }} colors<template v-if="isNative"> · native grid</template>
+          {{ palette.length }} colors<template v-if="isNative"> {{ $t('p_converter.nativeGrid') }}</template>
         </template>
-        <template v-else>No image yet — drop one to convert</template>
+        <template v-else>{{ $t('p_converter.noImageYetDropOneTo') }}</template>
       </p>
     </template>
 
     <template #doc>
-      <h1>Image to Pixel Art Converter</h1>
-      <p>Turn any photo into pixel art in seconds — free, no signup, and everything runs in your browser.</p>
+      <h1>{{ $t('p_converter.imageToPixelArtConverter') }}</h1>
+      <p v-html="$t('p_converter.turnAnyPhotoIntoPixelArt')"/>
 
-      <h2>How to use it</h2>
+      <h2>{{ $t('common.howToUseIt') }}</h2>
       <ol>
-        <li><strong>Upload an image</strong> — drag and drop a PNG, JPG or WebP, or click to browse. Nothing is uploaded — it all runs in your browser.</li>
-        <li><strong>Pick size &amp; palette</strong> — keep <strong>Auto</strong> (it reads the image's own pixel grid when there is one — even from an upscaled, JPEG-compressed or grid-lined screenshot) or choose a size from <code>8×8</code> to <code>64×64</code>; pick a color count (4–64) or lock the output to a community palette, then tune brightness, contrast and saturation live.</li>
-        <li><strong>Clean up &amp; export</strong> — run the Pixel Cleaner, merge colors, then open the result in the editor or save your pixel art.</li>
+        <li v-html="$t('p_converter.strongUploadAnImageStrongDrag')"/>
+        <li v-html="$t('p_converter.strongPickSizePaletteStrongKeep')"/>
+        <li v-html="$t('p_converter.strongCleanUpExportStrongRun')"/>
       </ol>
 
-      <h2>How this converter works</h2>
-      <p>Our free image to pixel art converter runs entirely in your browser. Upload any PNG, JPG, or WebP, pick an output size, and the tool resamples your image and reduces its palette using a <strong>median-cut quantization algorithm</strong> — the same technique used in retro game tools to pick the most representative colors. Every change updates the preview live.</p>
+      <h2>{{ $t('p_converter.howThisConverterWorks') }}</h2>
+      <p v-html="$t('p_converter.ourFreeImageToPixelArt')"/>
 
-      <h2>Features</h2>
+      <h2>{{ $t('common.features') }}</h2>
       <ul>
-        <li><strong>Flexible output size</strong> — convert to 8×8, 16×16, 32×32, 48×48, or up to 64×64 pixels. Aspect ratio preserved automatically.</li>
-        <li><strong>Palette control</strong> — limit to 4, 8, 16, 32, or 64 colors. Smaller palettes produce that crisp retro look; larger palettes keep more detail.</li>
-        <li><strong>Live image adjustments</strong> — brightness, contrast, and saturation sliders re-run the conversion on every change.</li>
-        <li><strong>Pixel Cleaner</strong> — removes orphan pixels (isolated single dots with no matching neighbor), replacing them with the majority color around them.</li>
-        <li><strong>Auto size</strong> — pixel art that was exported at 8× or screenshotted with grid lines is read back at its true resolution, cell for cell, instead of being blindly resampled.</li>
-        <li><strong>Transparent background</strong> — cut a uniform backdrop to real transparency; the sprite lands in the editor with nothing behind it.</li>
-        <li><strong>Dithering</strong> — ordered (Bayer) dithering fakes the gradients a small palette can't hold; best on photos.</li>
-        <li><strong>Color Swap &amp; Merge</strong> — click any palette swatch to pick a replacement color, or merge two palette colors into one to simplify your output.</li>
-        <li><strong>One-click editor handoff</strong> — open the result in the full pixel art editor for touch-ups, layers, export to PNG/SVG/JSON, and sharing.</li>
+        <li v-html="$t('p_converter.strongFlexibleOutputSizeStrongConv')"/>
+        <li v-html="$t('p_converter.strongPaletteControlStrongLimitTo')"/>
+        <li v-html="$t('p_converter.strongLiveImageAdjustmentsStrongBr')"/>
+        <li v-html="$t('p_converter.strongPixelCleanerStrongRemovesOrp')"/>
+        <li v-html="$t('p_converter.strongAutoSizeStrongPixelArt')"/>
+        <li v-html="$t('p_converter.strongTransparentBackgroundStrongC')"/>
+        <li v-html="$t('p_converter.strongDitheringStrongOrderedBayerD')"/>
+        <li v-html="$t('p_converter.strongColorSwapMergeStrongClick')"/>
+        <li v-html="$t('p_converter.strongOneClickEditorHandoffStrong')"/>
       </ul>
 
-      <h2>Screenshot</h2>
+      <h2>{{ $t('p_converter.screenshot') }}</h2>
       <figure>
         <img
             src="/screenshot/Image-to-Pixel-Art-Converter.png"
-            alt="Image to Pixel Art Converter interface showing live preview, size and color palette controls, brightness contrast saturation sliders, and generated pixel art output"
-            title="Image to Pixel Art Converter — live preview with palette and adjustment controls"
+            :alt="$t('p_converter.imageToPixelArtConverterInterface')"
+            :title="$t('p_converter.imageToPixelArtConverterLive')"
             loading="lazy"
             decoding="async"
         />
-        <figcaption>Live preview, palette control, and image adjustments in one view.</figcaption>
+        <figcaption>{{ $t('p_converter.livePreviewPaletteControlAnd') }}</figcaption>
       </figure>
 
       <QnA :items="faq"/>

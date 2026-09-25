@@ -88,7 +88,7 @@ watch(isStaff, (v) => { if (v) load() })
       <div class="adm-head">
         <h1 class="adm-title"><span class="icon icon-user"/><span>Users</span></h1>
         <div class="adm-head-actions">
-          <NuxtLink to="/admin" class="btn"><span class="icon icon-adjust"/><span>Overview</span></NuxtLink>
+          <NuxtLinkLocale to="/admin" class="btn"><span class="icon icon-adjust"/><span>Overview</span></NuxtLinkLocale>
           <button v-if="isStaff" class="btn" :disabled="loading" @click="load">
             <span class="icon icon-refresh"/><span>Refresh</span>
           </button>
@@ -115,7 +115,7 @@ watch(isStaff, (v) => { if (v) load() })
               <tr v-for="u in data.results" :key="u.id">
                 <td>
                   <div class="usr-name">
-                    <NuxtLink :to="`/creator/${u.username}`" class="usr-link">@{{ u.username }}</NuxtLink>
+                    <NuxtLinkLocale :to="`/creator/${u.username}`" class="usr-link">@{{ u.username }}</NuxtLinkLocale>
                     <span v-if="u.is_staff" class="usr-badge">staff</span>
                   </div>
                   <div class="usr-mail">{{ u.email || '—' }}</div>

@@ -63,7 +63,7 @@ function nudge(step: number) {
         :class="{dragging}"
         role="separator"
         aria-orientation="vertical"
-        aria-label="Resize the documentation column"
+        :aria-label="$t('c_ToolLayout.resizeTheDocumentationColumn')"
         :aria-valuenow="docPx"
         :aria-valuemin="DOC_MIN"
         tabindex="0"

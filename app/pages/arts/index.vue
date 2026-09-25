@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const {t} = useI18n()
 import type {APIResponse, TagSchema} from "~/types";
 
 const route = useRoute()
@@ -27,14 +28,14 @@ const canonicalUrl = computed(() => {
 
 const seoTitle = computed(() =>
     page.value > 1
-        ? `Pixel Art Gallery — Page ${page.value}`
-        : 'Pixel Art Gallery — Browse & Remix'
+        ? `${t('seo.arts.title')} — ${page.value}`
+        : t('seo.arts.title'),
 )
 
 useCustomSeoMeta({
   title: seoTitle,
-  description: 'Browse thousands of free pixel art creations — sprites, 8-bit and 16-bit designs, characters and icons. Remix or download any piece for your project.',
-  keywords: 'pixel art gallery, pixel art collection, browse pixel art, free pixel art, pixel art download, 8-bit art, 16-bit art, pixel sprites, retro art, pixel art community',
+  description: () => t('seo.arts.description'),
+  keywords: () => t('seo.arts.keywords'),
   canonical: canonicalUrl,
   robots: () => (page.value > 1 || hasFilterQuery.value) ? 'noindex, follow' : 'index, follow',
   ogImage: 'https://simplepixelart.com/og-image.png',
@@ -63,11 +64,11 @@ useCustomSeoMeta({
     <item-list
         :limit="24"
         show-filter
-        title="Pixel Art Gallery"
+        :title="$t('p_arts.pixelArtGallery')"
         desc="Browse thousands of free pixel art creations — sprites, 8-bit and 16-bit designs, characters and icons. Remix any piece in the editor or download for your game, NFT, or project."
     >
       <template v-if="tags.length" #filters-extra>
-        <BrowseFilter label="Tags" icon="icon-flag" :value="String(tagsRes?.count || tags.length)">
+        <BrowseFilter :label="$t('common.tags')" icon="icon-flag" :value="String(tagsRes?.count || tags.length)">
           <BrowseOpt v-for="t in tags" :key="t.id_string" :to="`/arts/${t.id_string}`">
             {{ t.title || t.name }}
           </BrowseOpt>

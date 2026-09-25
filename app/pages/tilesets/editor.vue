@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const {t} = useI18n()
 import {toast} from 'vue-sonner'
 import type {EditorData, SharedPage} from '~/types'
 import {tileImageUrl} from '~/helper/tilemap'
@@ -2864,17 +2865,17 @@ watch(() => auth.isLogged, async (v) => {
   }
 })
 
-const faq = [
-  {q: 'Do I have to draw all the border tiles myself?', a: `<p>No. <strong>Build Borders</strong> generates all 16 (or 47) variants from one base tile — auto-shaded, or composed from your own edge and corner art with per-side overrides and variations. Edit the base art later and the whole set regenerates.</p>`},
-  {q: 'Wang 16 or blob 47 — which should I pick?', a: `<p><strong>Wang 16</strong> tracks the four edges and puts borders mid-tile — great for top-down maps. <strong>Blob 47</strong> also tracks corners for the 47 canonical shapes, so concave joins look right — the usual choice for platformers. You can switch a terrain between the two at any time.</p>`},
-  {q: 'How do two terrains blend into each other?', a: `<p>Give a terrain an <strong>Under</strong> art in Build Borders to bake the transition, then set <strong>relations</strong>: connected terrains at equal priority merge seamlessly, a higher-priority terrain draws its transition edge over the lower one, and unrelated terrains keep a hard boundary.</p>`},
-  {q: 'Can I use the tileset in my game engine?', a: `<p>Yes. Download a packed <strong>PNG sheet</strong> plus a <strong>JSON</strong> file with tiles, groups and terrain masks — per group or for the whole set — and import it into Godot, Unity, Phaser or your own engine.</p>`},
-  {q: 'Do I need an account?', a: `<p>You can open the editor and build right away. Sign in when you want to save the tileset to your account, sync generated tiles, or paint worlds with it in the <a href="/tilemaps/editor">tilemap editor</a>.</p>`},
-]
+const faq = computed(() => [
+  {q: t('p_tilesets_editor.faq0q'), a: t('p_tilesets_editor.faq0a')},
+  {q: t('p_tilesets_editor.faq1q'), a: t('p_tilesets_editor.faq1a')},
+  {q: t('p_tilesets_editor.faq2q'), a: t('p_tilesets_editor.faq2a')},
+  {q: t('p_tilesets_editor.faq3q'), a: t('p_tilesets_editor.faq3a')},
+  {q: t('p_tilesets_editor.faq4q'), a: t('p_tilesets_editor.faq4a')},
+])
 </script>
 
 <template>
-  <ToolLayout title="Tileset" class="tsx-page">
+  <ToolLayout :title="$t('common.tileset')" class="tsx-page">
     <div class="editor">
 
     <div v-if="tileset" class="editor-toolbar">
@@ -2882,52 +2883,52 @@ const faq = [
       <input ref="pngInput" type="file" accept="image/png,image/*" multiple hidden @change="onPngFiles">
       <div class="toolbar-start">
         <ui-dropdown-menu>
-          <ui-tooltip text="Tilesets">
+          <ui-tooltip :text="$t('p_tilesets_editor.tilesets')">
             <button class="toolbar-btn"><span class="icon icon-file"/></button>
           </ui-tooltip>
           <template #menu>
             <div class="file-menu">
               <button class="file-menu-item" @click="openLoad">
-                <span class="icon icon-grid"/><span>Load tileset…</span>
+                <span class="icon icon-grid"/><span>{{ $t('p_tilesets_editor.loadTileset') }}</span>
               </button>
               <button class="file-menu-item" @click="onTilesetSelect('__new__')">
-                <span class="icon icon-plus"/><span>New tileset</span>
+                <span class="icon icon-plus"/><span>{{ $t('common.newTileset') }}</span>
               </button>
               <button class="file-menu-item" :disabled="importingPng" @click="openPngImport">
                 <span class="icon icon-image"/><span>{{ importingPng ? 'Importing…' : 'Load PNG files…' }}</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" :disabled="!tiles.length || exporting" @click="exportPNG">
-                <span class="icon icon-image"/><span>Download PNG</span>
+                <span class="icon icon-image"/><span>{{ $t('common.downloadPng') }}</span>
               </button>
               <button class="file-menu-item" :disabled="!tiles.length || exporting" @click="exportJSON">
-                <span class="icon icon-download"/><span>Export JSON</span>
+                <span class="icon icon-download"/><span>{{ $t('common.exportJson') }}</span>
               </button>
               <button class="file-menu-item" :disabled="!tiles.length || exporting" @click="exportEngine('godot')">
-                <span class="icon icon-download"/><span>Export for Godot 4</span>
+                <span class="icon icon-download"/><span>{{ $t('p_tilesets_editor.exportForGodot4') }}</span>
               </button>
               <button class="file-menu-item" :disabled="!tiles.length || exporting" @click="exportEngine('tiled')">
-                <span class="icon icon-download"/><span>Export for Tiled</span>
+                <span class="icon icon-download"/><span>{{ $t('p_tilesets_editor.exportForTiled') }}</span>
               </button>
             </div>
           </template>
         </ui-dropdown-menu>
         <ui-dropdown-menu>
-          <button class="toolbar-btn" title="Settings"><span class="icon icon-cog"/></button>
+          <button class="toolbar-btn" :title="$t('common.settings')"><span class="icon icon-cog"/></button>
           <template #menu>
             <div class="file-menu">
               <button class="file-menu-item" @click="showSettings = true">
-                <span class="icon icon-cog"/><span>Tileset settings</span>
+                <span class="icon icon-cog"/><span>{{ $t('p_tilesets_editor.tilesetSettings') }}</span>
               </button>
               <button class="file-menu-item" @click="openAdd">
-                <span class="icon icon-plus"/><span>Manage tiles</span>
+                <span class="icon icon-plus"/><span>{{ $t('p_tilesets_editor.manageTiles') }}</span>
               </button>
               <button class="file-menu-item" @click="showCanvasModal = true">
-                <span class="icon icon-grid"/><span>Grid settings</span>
+                <span class="icon icon-grid"/><span>{{ $t('p_tilesets_editor.gridSettings') }}</span>
               </button>
               <button class="file-menu-item" @click="toggleBoardChrome">
                 <span class="icon" :class="showBoardChrome ? 'icon-eye-cross' : 'icon-eye'"/>
-                <span>{{ showBoardChrome ? 'Hide group labels' : 'Show group labels' }}</span>
+                <span>{{ showBoardChrome ? $t('p_tilesets_editor.hideGroupLabels') : $t('p_tilesets_editor.showGroupLabels') }}</span>
               </button>
             </div>
           </template>
@@ -2935,28 +2936,28 @@ const faq = [
       </div>
       <div class="toolbar-main no-scrollbar">
         <div class="toolbar-group">
-          <ui-tooltip text="Undo (⌘Z)">
+          <ui-tooltip :text="$t('p_tilesets_editor.undoZ')">
             <button class="toolbar-btn" :disabled="!canUndo" @click="undoTs"><span class="icon icon-undo"/></button>
           </ui-tooltip>
-          <ui-tooltip text="Redo (⇧⌘Z)">
+          <ui-tooltip :text="$t('p_tilesets_editor.redoZ')">
             <button class="toolbar-btn" :disabled="!canRedo" @click="redoTs"><span class="icon icon-redo"/></button>
           </ui-tooltip>
         </div>
         <div class="toolbar-sep"/>
         <div class="toolbar-group">
-          <ui-tooltip text="Zoom out">
+          <ui-tooltip :text="$t('p_tilesets_editor.zoomOut')">
             <button class="toolbar-btn" :disabled="zoom <= ZMIN" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
           </ui-tooltip>
-          <ui-tooltip text="Zoom in">
+          <ui-tooltip :text="$t('p_tilesets_editor.zoomIn')">
             <button class="toolbar-btn" :disabled="zoom >= ZMAX" @click="zoomIn"><span class="icon icon-zoom-in"/></button>
           </ui-tooltip>
-          <ui-tooltip text="Fit all in view">
-            <button class="toolbar-btn" @click="fitAll"><span class="fit-label">FIT</span></button>
+          <ui-tooltip :text="$t('p_tilesets_editor.fitAllInView')">
+            <button class="toolbar-btn" @click="fitAll"><span class="fit-label">{{ $t('common.fit') }}</span></button>
           </ui-tooltip>
         </div>
         <div class="toolbar-sep"/>
         <div class="toolbar-group">
-          <ui-tooltip text="Auto arrange — pack groups tightly">
+          <ui-tooltip :text="$t('p_tilesets_editor.autoArrangePackGroupsTightly')">
             <button class="toolbar-btn" :disabled="!tileset.groups.length" @click="autoArrange()">
               <span class="icon icon-arrange"/>
             </button>
@@ -2976,32 +2977,32 @@ const faq = [
                 {{ activeGroup.type === 'blob47' ? '47' : '16' }}
               </button>
             </ui-tooltip>
-            <ui-tooltip v-if="activeGroup.kind === 'terrain'" text="Build borders — generate every variant from a base tile">
+            <ui-tooltip v-if="activeGroup.kind === 'terrain'" :text="$t('p_tilesets_editor.buildBordersGenerateEveryVariantFr')">
               <button class="toolbar-btn" @click="openBuild">
                 <span class="icon icon-auto-fix"/>
               </button>
             </ui-tooltip>
-            <ui-tooltip v-if="activeGroup.kind === 'terrain'" text="Fill empty slots with the selected tile">
+            <ui-tooltip v-if="activeGroup.kind === 'terrain'" :text="$t('p_tilesets_editor.fillEmptySlotsWithTheSelected')">
               <button class="toolbar-btn" :disabled="selectedTileId == null" @click="fillTerrainFromSelected(activeGroup)">
                 <span class="icon icon-bucket"/>
               </button>
             </ui-tooltip>
-            <ui-tooltip v-if="activeGroup.kind === 'terrain'" text="Relations — which terrains this one connects to, and its boundary priority">
+            <ui-tooltip v-if="activeGroup.kind === 'terrain'" :text="$t('p_tilesets_editor.relationsWhichTerrainsThisOneConne')">
               <button class="toolbar-btn" :class="{active: !!activeGroup.relations}" @click="showRelations = true">
                 <span class="icon icon-relation"/>
               </button>
             </ui-tooltip>
-            <ui-tooltip v-if="activeGroup.kind === 'group'" text="Random variants — painting with this group in the tilemap picks a random tile">
+            <ui-tooltip v-if="activeGroup.kind === 'group'" :text="$t('p_tilesets_editor.randomVariantsPaintingWithThisGrou')">
               <button class="toolbar-btn" :class="{active: activeGroup.random}" @click="toggleRandom(activeGroup)">
                 <span class="icon icon-swap"/>
               </button>
             </ui-tooltip>
             <template v-if="activeGroup.kind === 'group' && activeGroup.random && selectedTileId != null && activeGroup.tiles.includes(selectedTileId)">
-              <ui-tooltip text="Less likely">
+              <ui-tooltip :text="$t('p_tilesets_editor.lessLikely')">
                 <button class="toolbar-btn" :disabled="selectedWeight <= 1" @click="bumpWeight(-1)"><span class="icon icon-minus"/></button>
               </ui-tooltip>
-              <span class="tsx-weight-val" title="Weight of the selected tile in the random pick">×{{ selectedWeight }}</span>
-              <ui-tooltip text="More likely">
+              <span class="tsx-weight-val" :title="$t('p_tilesets_editor.weightOfTheSelectedTileIn')">×{{ selectedWeight }}</span>
+              <ui-tooltip :text="$t('p_tilesets_editor.moreLikely')">
                 <button class="toolbar-btn" :disabled="selectedWeight >= 9" @click="bumpWeight(1)"><span class="icon icon-plus"/></button>
               </ui-tooltip>
             </template>
@@ -3018,22 +3019,22 @@ const faq = [
         </template>
       </div>
       <div class="toolbar-end">
-        <ui-tooltip text="Edit tiles in the pixel editor (new tab)">
+        <ui-tooltip :text="$t('p_tilesets_editor.editTilesInThePixelEditor2')">
           <a
               v-if="tileset.id_string"
               :href="`/editor?tileset=${tileset.id_string}`"
               target="_blank"
               rel="noopener"
               class="toolbar-btn"
-              aria-label="Edit tiles in the pixel editor"
+              :aria-label="$t('p_tilesets_editor.editTilesInThePixelEditor')"
           ><span class="icon icon-pen"/></a>
-          <button v-else class="toolbar-btn" disabled aria-label="Edit tiles in the pixel editor"><span class="icon icon-pen"/></button>
+          <button v-else class="toolbar-btn" disabled :aria-label="$t('p_tilesets_editor.editTilesInThePixelEditor')"><span class="icon icon-pen"/></button>
         </ui-tooltip>
-        <ui-tooltip text="Refresh tiles — reload art after editing it">
+        <ui-tooltip :text="$t('p_tilesets_editor.refreshTilesReloadArtAfterEditing')">
           <button class="toolbar-btn" :disabled="!tiles.length" @click="refreshArt"><span class="icon icon-sync"/></button>
         </ui-tooltip>
-        <ui-tooltip :text="saving ? 'Saving…' : 'Save'">
-          <button class="publish-toolbar-btn tm-save" :class="{dirty}" :disabled="saving || !dirty" :aria-label="saving ? 'Saving…' : 'Save'" @click="save">
+        <ui-tooltip :text="saving ? $t('common.saving') : $t('common.save')">
+          <button class="publish-toolbar-btn tm-save" :class="{dirty}" :disabled="saving || !dirty" :aria-label="saving ? $t('common.saving') : $t('common.save')" @click="save">
             <span class="icon icon-save"/>
           </button>
         </ui-tooltip>
@@ -3057,10 +3058,10 @@ const faq = [
             @wheel="onStageWheel"
         >
           <div v-if="!tiles.length" class="tsx-desk-empty">
-            <p>No tiles yet.</p>
+            <p>{{ $t('p_tilesets_editor.noTilesYet') }}</p>
             <button class="btn" @click="openAdd">
               <span class="icon icon-plus"/>
-              <span>Add tiles</span>
+              <span>{{ $t('p_tilesets_editor.addTiles') }}</span>
             </button>
           </div>
           <div v-else class="tsx-boardwrap">
@@ -3080,14 +3081,14 @@ const faq = [
           <Transition name="tsx-pop">
             <div v-if="selectedTile" class="tsx-selbar">
               <img :src="tileSrc(selectedTile.id_string)" alt="" class="tsx-selbar-thumb">
-              <span class="tsx-selbar-name">{{ selectedTileIds.length > 1 ? `${selectedTileIds.length} tiles` : selectedTile.id_string }}</span>
+              <span class="tsx-selbar-name">{{ selectedTileIds.length > 1 ? $t('p_tilesets_editor.nTiles', {count: selectedTileIds.length}) : selectedTile.id_string }}</span>
               <span class="tsx-selbar-hint">{{ selectedTileIds.length > 1 ? 'drag moves them together' : 'click a terrain slot to place' }}</span>
-              <ui-tooltip text="Remove selected (Del)">
+              <ui-tooltip :text="$t('p_tilesets_editor.removeSelectedDel')">
                 <button class="tsx-selbar-btn danger" @click="deleteSelectedTiles">
                   <span class="icon icon-trash"/>
                 </button>
               </ui-tooltip>
-              <ui-tooltip text="Deselect (Esc)">
+              <ui-tooltip :text="$t('p_tilesets_editor.deselectEsc')">
                 <button class="tsx-selbar-btn" @click="selectedTileIds = []">
                   <span class="icon icon-x"/>
                 </button>
@@ -3097,10 +3098,10 @@ const faq = [
         </div>
 
         <div v-if="tileset.id_string" class="tm-stage-fab">
-          <ui-tooltip text="Open public page" position="left">
-            <nuxt-link :to="`/tilesets/${tileset.id_string}`" class="tm-stage-fab-btn" aria-label="Open public page">
+          <ui-tooltip :text="$t('p_tilesets_editor.openPublicPage')" position="left">
+            <NuxtLinkLocale :to="`/tilesets/${tileset.id_string}`" class="tm-stage-fab-btn" :aria-label="$t('common.openPublicPage')">
               <span class="icon icon-link"/>
-            </nuxt-link>
+            </NuxtLinkLocale>
           </ui-tooltip>
         </div>
         </div>
@@ -3110,14 +3111,14 @@ const faq = [
       <aside class="tm-panel tsx-dock editor-sidebar">
         <section class="tm-group">
           <span class="tm-label">
-            <span>Groups <em>{{ tileset.groups.length }}</em></span>
+            <span>{{ $t('p_tilesets_editor.groups') }} <em>{{ tileset.groups.length }}</em></span>
             <span class="tsx-label-actions">
-              <ui-tooltip text="Add group">
+              <ui-tooltip :text="$t('p_tilesets_editor.addGroup')">
                 <button class="tsx-mini-btn" @click="addGroup('group')">
                   <span class="icon icon-plus"/>
                 </button>
               </ui-tooltip>
-              <ui-tooltip text="Add terrain — auto-tile group with connection slots">
+              <ui-tooltip :text="$t('p_tilesets_editor.addTerrainAutoTileGroupWith')">
                 <button class="tsx-mini-btn" @click="addGroup('terrain')">
                   <span class="icon icon-rhombus"/>
                 </button>
@@ -3131,8 +3132,8 @@ const faq = [
               :class="{active: selectedGroupId === g.id}"
               @click="selectedGroupId === g.id || selectGroup(g.id)"
           >
-            <span v-if="g.kind === 'terrain'" class="icon icon-rhombus tsx-kind-ic" title="Terrain (auto-tile)"/>
-            <span v-else class="icon icon-grid tsx-kind-ic" title="Group"/>
+            <span v-if="g.kind === 'terrain'" class="icon icon-rhombus tsx-kind-ic" :title="$t('p_tilesets_editor.terrainAutoTile')"/>
+            <span v-else class="icon icon-grid tsx-kind-ic" :title="$t('p_tilesets_editor.group')"/>
             <input v-model="g.name" type="text" class="tsx-terrain-name" @input="dirty = true">
             <em class="tsx-group-count">{{ g.kind === 'terrain' ? Object.keys(g.map || {}).length : g.tiles.length }}</em>
           </div>
@@ -3149,49 +3150,30 @@ const faq = [
           cell {{ tileset.cell.w }}×{{ tileset.cell.h }}px<template v-if="activeGroup"> ·
             {{ activeGroup.name }}</template>
         </template>
-        <template v-else>No tileset open</template>
+        <template v-else>{{ $t('p_tilesets_editor.noTilesetOpen') }}</template>
       </p>
     </template>
 
     <template #doc>
-      <h1>Tileset Editor</h1>
-      <p>
-        Turn pixel art into a game-ready tileset. Group tiles on an infinite board, auto-generate
-        Wang 16 / blob 47 terrain borders from a single base tile, then export straight to
-        Godot 4 or Tiled — or paint worlds here. Free, runs in your browser.
-      </p>
+      <h1>{{ $t('p_tilesets_editor.tilesetEditor') }}</h1>
+      <p v-html="$t('p_tilesets_editor.turnPixelArtIntoAGame')"/>
 
-      <h2>Build auto-tile terrains without drawing 47 tiles</h2>
+      <h2>{{ $t('p_tilesets_editor.buildAutoTileTerrainsWithout') }}</h2>
       <p>
-        The <strong>Tileset Editor</strong> curates pixel art into tilesets. Add tiles from your own
-        drawings or any public art in the <nuxt-link to="/arts">gallery</nuxt-link>, set a base cell
-        size, and arrange groups for terrain, props and characters. Add a <strong>terrain</strong> and
-        drop one base tile on it — <strong>Build Borders</strong> composes every edge, corner and
-        inner-corner variant for you, as a <strong>Wang 16</strong> set for top-down maps or a
-        <strong>blob 47</strong> set for platformers.
-      </p>
-      <p>
-        Terrains are data-driven: declare which terrains <strong>connect</strong>, give them a
-        <strong>priority</strong>, and boundaries resolve themselves — seamless merges, layered
-        transitions, or hard edges. Random groups pick <strong>weighted variants</strong> while you
-        paint, so large areas never look repetitive. When it's ready, export a
-        <strong>Godot 4 TileSet (.tres)</strong> with the terrain sets already wired up, a
-        <strong>Tiled tileset (.tsx)</strong> whose terrains land as Wang sets, or the packed
-        <strong>PNG + JSON</strong> for Unity, Phaser and custom engines — or open the
-        <nuxt-link to="/tilemaps/editor">tilemap editor</nuxt-link> and paint worlds with terrain-aware brushes.
-      </p>
+        {{ $t('common.the') }} <strong>{{ $t('p_tilesets_editor.tilesetEditor') }}</strong> {{ $t('p_tilesets_editor.curatesPixelArtIntoTilesetsAdd') }} <NuxtLinkLocale to="/arts">{{ $t('p_tilesets_editor.gallery') }}</NuxtLinkLocale>{{ $t('p_tilesets_editor.setABaseCellSizeAnd') }} <strong>{{ $t('p_tilesets_editor.terrain') }}</strong> {{ $t('p_tilesets_editor.andDropOneBaseTileOn') }} <strong>{{ $t('p_tilesets_editor.buildBorders') }}</strong> {{ $t('p_tilesets_editor.composesEveryEdgeCornerAndInner') }} <strong>{{ $t('p_tilesets_editor.wang16') }}</strong> {{ $t('p_tilesets_editor.setForTopDownMapsOr') }} <strong>{{ $t('p_tilesets_editor.blob47') }}</strong> {{ $t('p_tilesets_editor.setForPlatformers') }} </p>
+      <p> {{ $t('p_tilesets_editor.terrainsAreDataDrivenDeclareWhich') }} <strong>{{ $t('p_tilesets_editor.connect') }}</strong>{{ $t('p_tilesets_editor.giveThemA') }} <strong>{{ $t('p_tilesets_editor.priority2') }}</strong>{{ $t('p_tilesets_editor.andBoundariesResolveThemselvesSeam') }} <strong>{{ $t('p_tilesets_editor.weightedVariants') }}</strong> {{ $t('p_tilesets_editor.whileYouPaintSoLargeAreas') }} <strong>{{ $t('p_tilesets_editor.godot4TilesetTres') }}</strong> {{ $t('p_tilesets_editor.withTheTerrainSetsAlreadyWired') }} <strong>{{ $t('p_tilesets_editor.tiledTilesetTsx') }}</strong> {{ $t('p_tilesets_editor.whoseTerrainsLandAsWangSets') }} <strong>{{ $t('p_tilesets_editor.pngJson') }}</strong> {{ $t('p_tilesets_editor.forUnityPhaserAndCustomEngines') }} <NuxtLinkLocale to="/tilemaps/editor">{{ $t('p_tilesets_editor.tilemapEditor') }}</NuxtLinkLocale> {{ $t('p_tilesets_editor.andPaintWorldsWithTerrainAware') }} </p>
 
       <QnA :items="faq"/>
     </template>
     <template #extra>
 
     <UiModal v-if="showCanvasModal" class="canvas-modal" @close="showCanvasModal = false">
-      <h3 class="publish-heading">Canvas</h3>
-      <p class="publish-sub">Background &amp; grid of the board your tiles sit on.</p>
+      <h3 class="publish-heading">{{ $t('common.canvas') }}</h3>
+      <p class="publish-sub" v-html="$t('p_tilesets_editor.backgroundAmpGridOfTheBoard')"/>
 
       <div class="cv-fields">
         <div class="cv-field">
-          <label class="cv-label">Background</label>
+          <label class="cv-label">{{ $t('common.background') }}</label>
           <div class="cv-color-row">
             <input
                 type="color"
@@ -3216,16 +3198,16 @@ const faq = [
         </div>
 
         <div class="cv-field">
-          <label class="cv-label">Grid</label>
+          <label class="cv-label">{{ $t('common.grid') }}</label>
           <div class="cv-opts cols-2">
-            <button class="cv-opt" :class="{ active: !boardGrid }" @click="boardGrid = false; onBoardChange()">Off</button>
-            <button class="cv-opt" :class="{ active: boardGrid }" @click="boardGrid = true; onBoardChange()">On</button>
+            <button class="cv-opt" :class="{ active: !boardGrid }" @click="boardGrid = false; onBoardChange()">{{ $t('common.off') }}</button>
+            <button class="cv-opt" :class="{ active: boardGrid }" @click="boardGrid = true; onBoardChange()">{{ $t('common.on') }}</button>
           </div>
         </div>
 
         <template v-if="boardGrid">
           <div class="cv-field">
-            <label class="cv-label">Grid size</label>
+            <label class="cv-label">{{ $t('p_tilesets_editor.gridSize') }}</label>
             <div class="cv-opts cols-3">
               <button
                   v-for="s in BOARD_GRID_STEPS"
@@ -3233,11 +3215,11 @@ const faq = [
                   class="cv-opt"
                   :class="{ active: boardGridStep === s }"
                   @click="boardGridStep = s; onBoardChange()"
-              >{{ s === 1 ? '1 cell' : `${s} cells` }}</button>
+              >{{ s === 1 ? '1 cell' : $t('p_tilesets_editor.nCells', {count: s}) }}</button>
             </div>
           </div>
           <div class="cv-field">
-            <label class="cv-label">Line style</label>
+            <label class="cv-label">{{ $t('common.lineStyle') }}</label>
             <div class="cv-opts cols-3">
               <button
                   v-for="st in (['solid','dashed','dots'] as const)"
@@ -3251,18 +3233,18 @@ const faq = [
         </template>
       </div>
 
-      <button class="btn primary wide" @click="showCanvasModal = false">Done</button>
+      <button class="btn primary wide" @click="showCanvasModal = false">{{ $t('common.done') }}</button>
     </UiModal>
 
     <UiModal v-if="showSettings && tileset" @close="showSettings = false">
-          <h3 class="publish-heading">Tileset settings</h3>
+          <h3 class="publish-heading">{{ $t('p_tilesets_editor.tilesetSettings') }}</h3>
           <div class="publish-form">
             <div>
-              <label class="publish-label">Name</label>
+              <label class="publish-label">{{ $t('common.name') }}</label>
               <input v-model="tileset.name" type="text" class="publish-input" @input="dirty = true">
             </div>
             <div>
-              <label class="publish-label">Base tile size</label>
+              <label class="publish-label">{{ $t('p_tilesets_editor.baseTileSize') }}</label>
               <div class="tsx-chips">
                 <button
                     v-for="pz in CELL_CHOICES"
@@ -3272,38 +3254,38 @@ const faq = [
                 >{{ pz }}</button>
               </div>
               <div class="tsx-cell-dims tsx-modal-dims">
-                <label>W <input type="number" min="4" max="256" :value="tileset.cell.w"
+                <label>{{ $t('p_tilesets_editor.w') }}<input type="number" min="4" max="256" :value="tileset.cell.w"
                                 @change="setCellDim('w', Number(($event.target as HTMLInputElement).value))"></label>
-                <label>H <input type="number" min="4" max="256" :value="tileset.cell.h"
+                <label>{{ $t('p_tilesets_editor.h') }}<input type="number" min="4" max="256" :value="tileset.cell.h"
                                 @change="setCellDim('h', Number(($event.target as HTMLInputElement).value))"></label>
-                <span class="text-xs text-muted">px — base cell for the tilemap grid; larger art simply spans several cells</span>
+                <span class="text-xs text-muted">{{ $t('p_tilesets_editor.pxBaseCellForTheTilemap') }}</span>
               </div>
             </div>
             <div>
-              <label class="publish-label">Tile shape</label>
+              <label class="publish-label">{{ $t('p_tilesets_editor.tileShape') }}</label>
               <div class="h-center gap-2">
                 <ui-switch
                     :model-value="tileset.iso"
                     @update:model-value="tileset.iso = $event; dirty = true"
                 />
-                <span class="text-xs">Isometric</span>
+                <span class="text-xs">{{ $t('common.isometric') }}</span>
                 <span class="text-xs text-muted">{{ tileset.iso ? '— diamond tiles; the tilemap opens in isometric mode' : '— top-down square tiles (grid)' }}</span>
               </div>
             </div>
             <div>
-              <label class="publish-label">Visibility</label>
+              <label class="publish-label">{{ $t('p_tilesets_editor.visibility') }}</label>
               <div class="h-center gap-2">
                 <ui-switch
                     :model-value="tileset.status === 'public'"
                     @update:model-value="tileset.status = $event ? 'public' : 'private'; dirty = true"
                 />
-                <span class="text-xs">Public</span>
+                <span class="text-xs">{{ $t('common.public') }}</span>
                 <span class="text-xs text-muted">{{ tileset.status === 'public' ? '— anyone can view and clone it' : '— only you can see it' }}</span>
               </div>
             </div>
           </div>
           <div class="publish-actions">
-            <button class="btn block" @click="showSettings = false">Close</button>
+            <button class="btn block" @click="showSettings = false">{{ $t('common.close') }}</button>
             <button class="btn primary block" :disabled="saving || !dirty" @click="save(); showSettings = false">
               {{ saving ? 'Saving…' : 'Save' }}
             </button>
@@ -3314,27 +3296,25 @@ const faq = [
           <h3 class="publish-heading">{{ activeGroup.name }} — relations</h3>
           <div class="publish-form">
             <div>
-              <label class="publish-label">Priority</label>
+              <label class="publish-label">{{ $t('p_tilesets_editor.priority') }}</label>
               <div class="h-center gap-2">
-                <ui-tooltip text="Lower priority">
+                <ui-tooltip :text="$t('p_tilesets_editor.lowerPriority')">
                   <button class="btn tm-iconbtn" :disabled="groupPriority(activeGroup) <= 0" @click="bumpPriority(activeGroup, -1)">
                     <span class="icon icon-minus"/>
                   </button>
                 </ui-tooltip>
                 <span class="tsx-weight-val">{{ groupPriority(activeGroup) }}</span>
-                <ui-tooltip text="Higher priority">
+                <ui-tooltip :text="$t('p_tilesets_editor.higherPriority')">
                   <button class="btn tm-iconbtn" :disabled="groupPriority(activeGroup) >= 9" @click="bumpPriority(activeGroup, 1)">
                     <span class="icon icon-plus"/>
                   </button>
                 </ui-tooltip>
-                <span class="text-xs text-muted">higher paints its transition edge over lower terrains</span>
+                <span class="text-xs text-muted">{{ $t('p_tilesets_editor.higherPaintsItsTransitionEdgeOver') }}</span>
               </div>
             </div>
             <div>
-              <label class="publish-label">Connects to</label>
-              <p v-if="!otherTerrains.length" class="text-xs text-muted">
-                Add another terrain to this tileset to define relations.
-              </p>
+              <label class="publish-label">{{ $t('p_tilesets_editor.connectsTo') }}</label>
+              <p v-if="!otherTerrains.length" class="text-xs text-muted" v-html="$t('p_tilesets_editor.addAnotherTerrainToThisTileset')"/>
               <div v-for="t in otherTerrains" :key="t.id" class="tsx-rel-row">
                 <ui-switch
                     :model-value="isConnected(activeGroup, t.id)"
@@ -3343,15 +3323,11 @@ const faq = [
                 <span class="tsx-rel-name">{{ t.name }}</span>
                 <span class="text-xs text-muted">priority {{ groupPriority(t) }}</span>
               </div>
-              <p class="text-xs text-muted tsx-rel-help">
-                Connected terrains merge seamlessly at equal priority. Against a higher-priority
-                connected terrain this one runs underneath its transition edge. Terrains not
-                listed keep a hard boundary (each draws its own border).
-              </p>
+              <p class="text-xs text-muted tsx-rel-help" v-html="$t('p_tilesets_editor.connectedTerrainsMergeSeamlesslyAt')"/>
             </div>
           </div>
           <div class="publish-actions">
-            <button class="btn primary block" @click="showRelations = false">Done</button>
+            <button class="btn primary block" @click="showRelations = false">{{ $t('common.done') }}</button>
           </div>
       </UiModal>
 
@@ -3361,34 +3337,34 @@ const faq = [
             <div class="tsx-build-left">
 
               <div class="tsx-build-sec">
-                <span>Style</span>
+                <span>{{ $t('p_tilesets_editor.style') }}</span>
                 <button type="button" class="tsx-build-morelink" @click="toggleBuildAdvanced">{{ buildAdvanced ? 'Less' : 'More' }}</button>
               </div>
               <div class="tsx-chips tsx-build-style">
                 <template v-if="tileset.iso">
-                  <ui-tooltip text="Reuse the base tile for every slot — best for 3D blocks (the tile's own walls read as the border)" position="bottom">
-                    <button :class="{active: buildStyle === 'fill'}" @click="buildStyle = 'fill'">Fill</button>
+                  <ui-tooltip :text="$t('p_tilesets_editor.reuseTheBaseTileForEvery')" position="bottom">
+                    <button :class="{active: buildStyle === 'fill'}" @click="buildStyle = 'fill'">{{ $t('common.fill') }}</button>
                   </ui-tooltip>
                   <template v-if="buildAdvanced">
-                    <ui-tooltip text="Shade the diamond edges — only for flat floor tiles, not 3D blocks" position="bottom">
-                      <button :class="{active: buildStyle === 'auto'}" @click="buildStyle = 'auto'">Auto shade</button>
+                    <ui-tooltip :text="$t('p_tilesets_editor.shadeTheDiamondEdgesOnlyFor')" position="bottom">
+                      <button :class="{active: buildStyle === 'auto'}" @click="buildStyle = 'auto'">{{ $t('p_tilesets_editor.autoShade') }}</button>
                     </ui-tooltip>
-                    <ui-tooltip text="Composite a hand-drawn edge piece onto each open diamond edge (mirrored to all 4)" position="bottom">
-                      <button :class="{active: buildStyle === 'edge'}" @click="buildStyle = 'edge'">Edge art</button>
+                    <ui-tooltip :text="$t('p_tilesets_editor.compositeAHandDrawnEdgePiece')" position="bottom">
+                      <button :class="{active: buildStyle === 'edge'}" @click="buildStyle = 'edge'">{{ $t('p_tilesets_editor.edgeArt') }}</button>
                     </ui-tooltip>
                   </template>
                 </template>
                 <template v-else>
-                  <ui-tooltip text="Shade the base tile automatically — no extra art needed" position="bottom">
-                    <button :class="{active: buildStyle === 'auto'}" @click="buildStyle = 'auto'">Auto shade</button>
+                  <ui-tooltip :text="$t('p_tilesets_editor.shadeTheBaseTileAutomaticallyNo')" position="bottom">
+                    <button :class="{active: buildStyle === 'auto'}" @click="buildStyle = 'auto'">{{ $t('p_tilesets_editor.autoShade') }}</button>
                   </ui-tooltip>
-                  <ui-tooltip v-if="buildAdvanced" text="Overlay hand-drawn edge and corner art" position="bottom">
-                    <button :class="{active: buildStyle === 'edge'}" @click="buildStyle = 'edge'">Edge art</button>
+                  <ui-tooltip v-if="buildAdvanced" :text="$t('p_tilesets_editor.overlayHandDrawnEdgeAndCorner')" position="bottom">
+                    <button :class="{active: buildStyle === 'edge'}" @click="buildStyle = 'edge'">{{ $t('p_tilesets_editor.edgeArt') }}</button>
                   </ui-tooltip>
                 </template>
               </div>
 
-              <div class="tsx-build-sec">Sources</div>
+              <div class="tsx-build-sec">{{ $t('p_tilesets_editor.sources') }}</div>
               <div class="tsx-build-slotgrid">
                 <ui-tooltip v-for="s in buildSlotDefs" :key="s.key" :text="s.title" position="bottom">
                   <button
@@ -3416,7 +3392,7 @@ const faq = [
                     <span>{{ s.label }}</span>
                   </button>
                 </ui-tooltip>
-                <ui-tooltip text="Edge variations — pick several extra edge arts; they mix in deterministically to break repetition (optional)" position="bottom">
+                <ui-tooltip :text="$t('p_tilesets_editor.edgeVariationsPickSeveralExtraEdge')" position="bottom">
                   <button
                       class="tsx-build-slot"
                       :class="{active: buildTarget === 'vars'}"
@@ -3425,55 +3401,55 @@ const faq = [
                     <span class="tsx-build-slot-thumb" :class="{empty: !buildVarIds.length}">
                       <span v-if="buildVarIds.length" class="tsx-build-varcount">+{{ buildVarIds.length }}</span>
                     </span>
-                    <span>Vars</span>
+                    <span>{{ $t('p_tilesets_editor.vars') }}</span>
                   </button>
                 </ui-tooltip>
               </div>
 
-              <div v-if="buildStyle === 'auto' || (buildStyle === 'edge' && !tileset.iso)" class="tsx-build-sec">Options</div>
+              <div v-if="buildStyle === 'auto' || (buildStyle === 'edge' && !tileset.iso)" class="tsx-build-sec">{{ $t('p_tilesets_editor.options') }}</div>
               <div v-if="buildStyle === 'auto' || (buildStyle === 'edge' && !tileset.iso)" class="tsx-build-controls">
                 <template v-if="buildStyle === 'auto'">
-                  <ui-tooltip text="Border band thickness in pixels" position="bottom">
+                  <ui-tooltip :text="$t('p_tilesets_editor.borderBandThicknessInPixels')" position="bottom">
                     <label class="tsx-build-field">
-                      <span>Depth</span>
+                      <span>{{ $t('p_tilesets_editor.depth') }}</span>
                       <input type="number" min="1" max="8" :value="buildDepth"
                              @change="buildDepth = Math.max(1, Math.min(8, Number(($event.target as HTMLInputElement).value) || 2))">
                     </label>
                   </ui-tooltip>
                   <div class="tsx-chips">
-                    <ui-tooltip text="Border band darker than the base" position="bottom">
-                      <button :class="{active: buildMode === 'darken'}" @click="buildMode = 'darken'">Darken</button>
+                    <ui-tooltip :text="$t('p_tilesets_editor.borderBandDarkerThanTheBase')" position="bottom">
+                      <button :class="{active: buildMode === 'darken'}" @click="buildMode = 'darken'">{{ $t('p_tilesets_editor.darken') }}</button>
                     </ui-tooltip>
-                    <ui-tooltip text="Border band lighter than the base" position="bottom">
-                      <button :class="{active: buildMode === 'lighten'}" @click="buildMode = 'lighten'">Lighten</button>
+                    <ui-tooltip :text="$t('p_tilesets_editor.borderBandLighterThanTheBase')" position="bottom">
+                      <button :class="{active: buildMode === 'lighten'}" @click="buildMode = 'lighten'">{{ $t('p_tilesets_editor.lighten') }}</button>
                     </ui-tooltip>
                   </div>
-                  <ui-tooltip text="Cut outer corners at 45° for a rounded look" position="bottom">
+                  <ui-tooltip :text="$t('p_tilesets_editor.cutOuterCornersAt45For')" position="bottom">
                     <label class="tsx-build-switch">
                       <ui-switch :model-value="buildRounded" @update:model-value="buildRounded = $event"/>
-                      <span>Rounded</span>
+                      <span>{{ $t('p_tilesets_editor.rounded') }}</span>
                     </label>
                   </ui-tooltip>
-                  <ui-tooltip text="Checker-dither the seam between band and base" position="bottom">
+                  <ui-tooltip :text="$t('p_tilesets_editor.checkerDitherTheSeamBetweenBand')" position="bottom">
                     <label class="tsx-build-switch">
                       <ui-switch :model-value="buildDither" @update:model-value="buildDither = $event"/>
-                      <span>Dither</span>
+                      <span>{{ $t('p_tilesets_editor.dither') }}</span>
                     </label>
                   </ui-tooltip>
                 </template>
-                <ui-tooltip v-else-if="buildStyle === 'edge'" text="Only the top N rows of the edge art apply (0 = whole art)" position="bottom">
+                <ui-tooltip v-else-if="buildStyle === 'edge'" :text="$t('p_tilesets_editor.onlyTheTopNRowsOf')" position="bottom">
                   <label class="tsx-build-field">
-                    <span>Cutoff</span>
+                    <span>{{ $t('p_tilesets_editor.cutoff') }}</span>
                     <input type="number" min="0" max="64" :value="buildCut"
                            @change="buildCut = Math.max(0, Math.min(64, Number(($event.target as HTMLInputElement).value) || 0))">
                   </label>
                 </ui-tooltip>
               </div>
 
-              <div class="tsx-build-sec">Art library <em>→ {{ buildTargetLabel }}</em></div>
+              <div class="tsx-build-sec">{{ $t('p_tilesets_editor.artLibrary') }} <em>→ {{ buildTargetLabel }}</em></div>
               <div class="tm-search">
                 <span class="icon icon-search"/>
-                <input v-model="buildQuery" type="search" placeholder="Search public art…" @input="debouncedBuildSearch()">
+                <input v-model="buildQuery" type="search" :placeholder="$t('p_tilesets_editor.searchPublicArt')" @input="debouncedBuildSearch()">
               </div>
               <div class="tsx-add-grid tsx-build-grid no-scrollbar">
                 <button
@@ -3489,18 +3465,18 @@ const faq = [
                 </button>
               </div>
               <div v-if="buildPages > 1" class="tsx-build-pager">
-                <ui-tooltip text="Previous page">
-                  <button class="btn tm-iconbtn" :disabled="buildPage <= 1 || buildSearching" aria-label="Previous page" @click="buildSearch(buildPage - 1)">‹</button>
+                <ui-tooltip :text="$t('common.previousPage')">
+                  <button class="btn tm-iconbtn" :disabled="buildPage <= 1 || buildSearching" :aria-label="$t('common.previousPage')" @click="buildSearch(buildPage - 1)">‹</button>
                 </ui-tooltip>
                 <span>{{ buildPage }} / {{ buildPages }}</span>
-                <ui-tooltip text="Next page">
-                  <button class="btn tm-iconbtn" :disabled="buildPage >= buildPages || buildSearching" aria-label="Next page" @click="buildSearch(buildPage + 1)">›</button>
+                <ui-tooltip :text="$t('common.nextPage')">
+                  <button class="btn tm-iconbtn" :disabled="buildPage >= buildPages || buildSearching" :aria-label="$t('common.nextPage')" @click="buildSearch(buildPage + 1)">›</button>
                 </ui-tooltip>
               </div>
             </div>
 
             <div class="tsx-build-right">
-              <div class="tsx-build-sec">Preview</div>
+              <div class="tsx-build-sec">{{ $t('common.preview') }}</div>
               <div class="tsx-build-body">
                 <canvas ref="buildDemoEl" class="tsx-build-preview"/>
               </div>
@@ -3510,42 +3486,42 @@ const faq = [
               </div>
             </div>
           </div>
-          <p v-if="!buildBase" class="tsx-build-hint">Pick a tile for the Base slot to generate.</p>
-          <p v-else-if="buildStyle === 'edge' && !buildEdge" class="tsx-build-hint">Edge art needs a tile in the Edge slot — pick one from the grid.</p>
+          <p v-if="!buildBase" class="tsx-build-hint" v-html="$t('p_tilesets_editor.pickATileForTheBase')"/>
+          <p v-else-if="buildStyle === 'edge' && !buildEdge" class="tsx-build-hint" v-html="$t('p_tilesets_editor.edgeArtNeedsATileIn')"/>
           <div class="publish-actions">
-            <button class="btn block" @click="showBuild = false">Cancel</button>
+            <button class="btn block" @click="showBuild = false">{{ $t('common.cancel') }}</button>
             <button
                 class="btn primary block"
                 :disabled="building || !buildBase || (buildStyle === 'edge' && !buildEdge)"
                 @click="generateBorders()"
             >
-              {{ building ? `Generating ${buildProgress}…` : `${buildStyle === 'fill' ? 'Fill' : 'Generate'} ${activeGroup.type === 'blob47' ? 47 : 16} tiles` }}
+              {{ building ? $t('p_tilesets_editor.generatingX', {x: buildProgress}) : $t(buildStyle === 'fill' ? 'p_tilesets_editor.fillNTiles' : 'p_tilesets_editor.generateNTiles', {count: activeGroup.type === 'blob47' ? 47 : 16}) }}
             </button>
           </div>
       </UiModal>
 
     <UiModal v-if="showAdd && tileset" class="tsx-add-modal" @close="showAdd = false">
-          <h3 class="publish-heading">Manage tiles</h3>
+          <h3 class="publish-heading">{{ $t('p_tilesets_editor.manageTiles') }}</h3>
           <div class="tsx-add-src">
             <div class="tm-search tm-grow">
               <span class="icon icon-search"/>
               <input
                   v-model="searchQuery"
                   type="search"
-                  placeholder="Search public pixel art…"
+                  :placeholder="$t('p_tilesets_editor.searchPublicPixelArt')"
                   @input="debouncedSearch()"
               >
             </div>
             <select v-model="collectionSel" class="tsx-import tsx-add-coll" @change="loadCollection(collectionSel)">
-              <option value="">From collection…</option>
+              <option value="">{{ $t('p_tilesets_editor.fromCollection') }}</option>
               <option v-for="c in collections" :key="c.id" :value="c.id">{{ c.title || c.name || 'Untitled' }}</option>
             </select>
           </div>
           <div class="tsx-add-body no-scrollbar">
             <template v-if="tiles.length">
               <span class="tm-label">
-                <span>In tileset <em>{{ tiles.length }}</em></span>
-                <span class="text-xs text-muted">click to remove</span>
+                <span>{{ $t('p_tilesets_editor.inTileset') }} <em>{{ tiles.length }}</em></span>
+                <span class="text-xs text-muted">{{ $t('p_tilesets_editor.clickToRemove') }}</span>
               </span>
               <div class="tsx-add-grid">
                 <button
@@ -3562,11 +3538,11 @@ const faq = [
               </div>
             </template>
             <span class="tm-label">
-              <span>Public art</span>
-              <button class="tsx-add-all" @click="pickAll">Select all</button>
+              <span>{{ $t('p_tilesets_editor.publicArt') }}</span>
+              <button class="tsx-add-all" @click="pickAll">{{ $t('p_tilesets_editor.selectAll') }}</button>
             </span>
-            <div v-if="searching" class="text-xs text-muted tsx-add-status">Searching…</div>
-            <p v-else-if="!freshResults.length" class="text-xs text-muted tsx-add-status">Nothing found.</p>
+            <div v-if="searching" class="text-xs text-muted tsx-add-status">{{ $t('p_tilesets_editor.searching') }}</div>
+            <p v-else-if="!freshResults.length" class="text-xs text-muted tsx-add-status">{{ $t('p_tilesets_editor.nothingFound') }}</p>
             <div v-else class="tsx-add-grid">
               <button
                   v-for="a in freshResults"
@@ -3582,7 +3558,7 @@ const faq = [
             </div>
           </div>
           <div class="publish-actions">
-            <button class="btn block" @click="showAdd = false">Cancel</button>
+            <button class="btn block" @click="showAdd = false">{{ $t('common.cancel') }}</button>
             <button class="btn primary block" :disabled="!pickedCount && !removeCount" @click="applyChanges">
               {{ applyLabel }}
             </button>
@@ -3591,7 +3567,7 @@ const faq = [
 
     <EditorLoadBrowser
         v-if="showLoad"
-        title="Load tileset"
+        :title="$t('p_tilesets_editor.loadTileset2')"
         :items="browseTilesets"
         filterable
         folder

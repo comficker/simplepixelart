@@ -10,8 +10,8 @@ const googleAuthUrl = useGoogleAuthUrl()
         target="_blank"
         rel="noopener"
         class="social-ic"
-        title="Open source on GitHub"
-        aria-label="GitHub repository"
+        :title="$t('c_SocialAuth.openSourceOnGithub')"
+        :aria-label="$t('c_SocialAuth.githubRepository')"
     >
       <span class="icon icon-github"/>
     </a>
@@ -20,14 +20,14 @@ const googleAuthUrl = useGoogleAuthUrl()
         target="_blank"
         rel="noopener"
         class="social-ic"
-        title="Follow on X"
-        aria-label="X (Twitter)"
+        :title="$t('c_SocialAuth.followOnX')"
+        :aria-label="$t('c_SocialAuth.xTwitter')"
     >
       <span class="icon icon-brand-x"/>
     </a>
     <span class="social-sep" aria-hidden="true"/>
-    <span v-if="auth.isLogged" class="social-auth-link" @click="auth.logout()">Logout</span>
-    <a v-else :href="googleAuthUrl" class="social-auth-link">Login</a>
+    <span v-if="auth.isLogged" class="social-auth-link" @click="auth.logout()">{{ $t('c_SocialAuth.logout') }}</span>
+    <a v-else :href="googleAuthUrl" class="social-auth-link">{{ $t('c_SocialAuth.login') }}</a>
   </div>
 </template>
 

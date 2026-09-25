@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const {t} = useI18n()
+
 export interface QnAItem {
   q: string
   a: string
@@ -9,16 +11,16 @@ withDefaults(defineProps<{
   title?: string
   hint?: string
 }>(), {
-  title: 'Frequently asked questions',
-  hint: 'Tap a question to expand',
+  title: '',
+  hint: '',
 })
 </script>
 
 <template>
   <section class="learn-more">
     <header class="section-head">
-      <h2 class="section-title">{{ title }}</h2>
-      <span v-if="hint" class="section-link section-hint">{{ hint }}</span>
+      <h2 class="section-title">{{ title || t('c_QnA.frequentlyAskedQuestions') }}</h2>
+      <span v-if="hint" class="section-link section-hint">{{ hint || t('c_QnA.tapAQuestionToExpand') }}</span>
     </header>
 
     <div class="qa-list">

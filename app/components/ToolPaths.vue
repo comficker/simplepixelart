@@ -1,6 +1,6 @@
 <template>
-  <nav class="studio-paths" :style="{'--tp-cols': shown.length}" aria-label="Pixel art tools">
-    <nuxt-link
+  <nav class="studio-paths" :style="{'--tp-cols': shown.length}" :aria-label="$t('c_ToolPaths.pixelArtTools')">
+    <NuxtLinkLocale
         v-for="t in shown"
         :key="t.key"
         :to="t.to"
@@ -8,8 +8,8 @@
         :style="{'--ic-1': t.c1, '--ic-2': t.c2}"
     >
       <span class="studio-path-icon icon" :class="t.icon"/>
-      <span class="studio-path-title">{{ t.title }}</span>
-    </nuxt-link>
+      <span class="studio-path-title">{{ $t(t.i18n) }}</span>
+    </NuxtLinkLocale>
   </nav>
 </template>
 
@@ -74,6 +74,22 @@ const shown = computed(() => {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     0 2px 6px -2px var(--ic-2);
+}
+
+/* The tool grid is secondary navigation; below 900px it was eating 227px of the
+   first viewport and pushing the gallery out of sight. */
+@media (max-width: 899px) {
+  .studio-path {
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .studio-path-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 19px;
+    border-radius: 10px;
+  }
 }
 
 .studio-path-title {

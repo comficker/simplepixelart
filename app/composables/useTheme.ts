@@ -3,37 +3,37 @@ import useStatefulCookie from '~/composables/useStatefulCookie'
 export const THEMES = [
   {
     id: 'cozy',
-    name: 'Cozy',
+    i18n: 'theme.cozy', name: 'Cozy',
     colors: ['#f5e6d3', '#d4c4a8', '#d4854a', '#a8b89a'],
   },
   {
     id: 'gameboy',
-    name: 'Game Boy',
+    i18n: 'theme.gameBoy', name: 'Game Boy',
     colors: ['#0f380f', '#306230', '#8bac0f', '#9bbc0f'],
   },
   {
     id: 'arcade',
-    name: 'Arcade',
+    i18n: 'theme.arcade', name: 'Arcade',
     colors: ['#1a1033', '#4a2a7a', '#ffb800', '#ff3d7f'],
   },
   {
     id: 'nes',
-    name: 'NES',
+    i18n: 'theme.nes', name: 'NES',
     colors: ['#000000', '#383838', '#e40058', '#0078f8'],
   },
   {
     id: 'synthwave',
-    name: 'Synthwave',
+    i18n: 'theme.synthwave', name: 'Synthwave',
     colors: ['#1a0033', '#8833ff', '#00f5ff', '#ff006e'],
   },
   {
     id: 'light',
-    name: 'Light',
+    i18n: 'theme.light', name: 'Light',
     colors: ['#fdfcfa', '#eae7e0', '#1c1a17', '#2550cf'],
   },
   {
     id: 'dark',
-    name: 'Dark',
+    i18n: 'theme.dark', name: 'Dark',
     colors: ['#111111', '#1f1f1f', '#e5e5e5', '#3b82f6'],
   },
 ] as const

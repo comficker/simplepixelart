@@ -43,16 +43,15 @@ const handleError = () => clearError({ redirect: '/' })
       <div class="err-actions">
         <button class="btn primary" @click="handleError">
           <span class="icon icon-square"/>
-          <span>Back to home</span>
+          <span>{{ $t('c_error.backToHome') }}</span>
         </button>
-        <nuxt-link to="/arts" class="btn">
+        <NuxtLinkLocale to="/arts" class="btn">
           <span class="icon icon-search"/>
-          <span>Browse gallery</span>
-        </nuxt-link>
+          <span>{{ $t('common.browseGallery') }}</span>
+        </NuxtLinkLocale>
       </div>
       <p class="err-hint">
-        Or press <kbd class="kbd">{{ isMacUA ? '⌘' : 'Ctrl' }}</kbd><kbd class="kbd">K</kbd> to search.
-      </p>
+        {{ $t('c_error.orPress') }} <kbd class="kbd">{{ isMacUA ? '⌘' : 'Ctrl' }}</kbd><kbd class="kbd">K</kbd> {{ $t('c_error.toSearch') }} </p>
     </section>
   </div>
 </template>

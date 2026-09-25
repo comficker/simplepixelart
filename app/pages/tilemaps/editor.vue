@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const {t} = useI18n()
 import {ref, computed, reactive, watch, onMounted, onBeforeUnmount, nextTick} from 'vue'
 import {toast} from 'vue-sonner'
 import type {SharedPage} from '~/types'
@@ -1705,19 +1706,18 @@ async function save() {
   toast.success('Saved in this browser')
 }
 
-const faq = [
-  {q: 'Is the Tilemap Editor free?', a: `<p>Yes — completely free and running in your browser. No signup to start and no watermark.</p>`},
-  {q: 'Do I need an account?', a: `<p><strong>Free style</strong> works with no login and saves your map in this browser. Sign in only to paint from your own collections and save maps to them.</p>`},
-  {q: "What's the difference between grid and isometric?", a: `<p>Grid mode lays tiles in a flat square grid for top-down maps. Isometric mode uses 2:1 diamond cells for a 3/4 view, where taller sprites rise above and overlap the cells behind them.</p>`},
-  {q: 'What are ground and sprite layers?', a: `<p>A <strong>ground</strong> layer fills each cell so floor tiles tessellate. A <strong>sprite</strong> layer draws art at its real size, anchored to the cell's base so objects stand on the floor. Layers can be reordered, hidden or deleted.</p>`},
-  {q: 'Can I use my own pixel art as tiles?', a: `<p>Yes. Draw tiles in the <a href="/editor">pixel art editor</a>, add them to a collection, then pick that collection here to paint with them.</p>`},
-]
+const faq = computed(() => [
+  {q: t('p_tilemaps_editor.faq0q'), a: t('p_tilemaps_editor.faq0a')},
+  {q: t('p_tilemaps_editor.faq1q'), a: t('p_tilemaps_editor.faq1a')},
+  {q: t('p_tilemaps_editor.faq2q'), a: t('p_tilemaps_editor.faq2a')},
+  {q: t('p_tilemaps_editor.faq3q'), a: t('p_tilemaps_editor.faq3a')},
+])
 </script>
 
 <template>
-  <ToolLayout title="Tilemap" class="tm-page">
+  <ToolLayout :title="$t('p_tilemaps_editor.tilemap')" class="tm-page">
 
-    <div v-if="loadingList" class="tm-skeleton" aria-busy="true" aria-label="Loading">
+    <div v-if="loadingList" class="tm-skeleton" aria-busy="true" :aria-label="$t('p_tilemaps_editor.loading')">
       <div class="skel skel-controls"/>
       <div class="tm-layout">
         <div class="tm-stage"><div class="skel skel-board"/></div>
@@ -1730,26 +1730,26 @@ const faq = [
         <div class="editor-toolbar">
           <div class="toolbar-start">
             <ui-dropdown-menu>
-              <ui-tooltip text="File — worlds & export">
+              <ui-tooltip :text="$t('p_tilemaps_editor.fileWorldsExport')">
                 <button class="toolbar-btn"><span class="icon icon-file"/></button>
               </ui-tooltip>
               <template #menu>
                 <div class="file-menu">
                   <button class="file-menu-item" @click="openLoadTilemap">
-                    <span class="icon icon-grid"/><span>Load tilemap…</span>
+                    <span class="icon icon-grid"/><span>{{ $t('p_tilemaps_editor.loadTilemap') }}</span>
                   </button>
                   <button class="file-menu-item" @click="newMap()">
-                    <span class="icon icon-plus"/><span>{{ world ? 'New world' : 'New map' }}</span>
+                    <span class="icon icon-plus"/><span>{{ world ? $t('p_tilemaps_editor.newWorld') : $t('p_tilemaps_editor.newMap') }}</span>
                   </button>
                   <div class="file-menu-sep"/>
                   <button class="file-menu-item" @click="exportPNG">
-                    <span class="icon icon-image"/><span>Download PNG</span>
+                    <span class="icon icon-image"/><span>{{ $t('common.downloadPng') }}</span>
                   </button>
-                  <button class="file-menu-item" @click="exportTiled" title="Tiled .tmj + tileset PNGs — loads in Phaser, Tiled, Godot (via importer), Unity">
-                    <span class="icon icon-rocket"/><span>Export for game engines</span>
+                  <button class="file-menu-item" @click="exportTiled" :title="$t('p_tilemaps_editor.tiledTmjTilesetPngsLoadsIn')">
+                    <span class="icon icon-rocket"/><span>{{ $t('p_tilemaps_editor.exportForGameEngines') }}</span>
                   </button>
                   <button class="file-menu-item" @click="exportJSON">
-                    <span class="icon icon-download"/><span>Export JSON</span>
+                    <span class="icon icon-download"/><span>{{ $t('common.exportJson') }}</span>
                   </button>
                 </div>
               </template>
@@ -1758,7 +1758,7 @@ const faq = [
 
           <div class="toolbar-main no-scrollbar">
             <div class="toolbar-group">
-              <ui-tooltip text="Map settings — grid type, cell & map size, seed, background">
+              <ui-tooltip :text="$t('p_tilemaps_editor.mapSettingsGridTypeCellMap')">
                 <button class="toolbar-btn" @click="sizeOpen = true">
                   <span class="icon icon-cog"/>
                 </button>
@@ -1766,12 +1766,12 @@ const faq = [
             </div>
             <div class="toolbar-sep"/>
             <div class="toolbar-group">
-              <ui-tooltip text="Undo (⌘Z)">
+              <ui-tooltip :text="$t('p_tilemaps_editor.undoZ')">
                 <button class="toolbar-btn" :disabled="!canUndo" @click="undo(); draw()">
                   <span class="icon icon-undo"/>
                 </button>
               </ui-tooltip>
-              <ui-tooltip text="Redo (⇧⌘Z)">
+              <ui-tooltip :text="$t('p_tilemaps_editor.redoZ')">
                 <button class="toolbar-btn" :disabled="!canRedo" @click="redo(); draw()">
                   <span class="icon icon-redo"/>
                 </button>
@@ -1779,13 +1779,13 @@ const faq = [
             </div>
             <div class="toolbar-sep"/>
             <div class="toolbar-group">
-              <ui-tooltip text="Zoom out">
-                <button class="toolbar-btn" :disabled="zoom <= ZMIN" aria-label="Zoom out" @click="zoomOut">
+              <ui-tooltip :text="$t('p_tilemaps_editor.zoomOut')">
+                <button class="toolbar-btn" :disabled="zoom <= ZMIN" :aria-label="$t('common.zoomOut')" @click="zoomOut">
                   <span class="icon icon-zoom-out"/>
                 </button>
               </ui-tooltip>
-              <ui-tooltip text="Zoom in">
-                <button class="toolbar-btn" :disabled="zoom >= ZMAX" aria-label="Zoom in" @click="zoomIn">
+              <ui-tooltip :text="$t('p_tilemaps_editor.zoomIn')">
+                <button class="toolbar-btn" :disabled="zoom >= ZMAX" :aria-label="$t('common.zoomIn')" @click="zoomIn">
                   <span class="icon icon-zoom-in"/>
                 </button>
               </ui-tooltip>
@@ -1793,7 +1793,7 @@ const faq = [
           </div>
 
           <div class="toolbar-end">
-            <ui-tooltip :text="`Clear ${activeLayer?.name || 'layer'} — remove every tile on this layer`">
+            <ui-tooltip :text="$t('p_tilemaps_editor.clearXRemoveEveryTile', {x: activeLayer?.name || $t('common.scope_layer')})">
               <button
                   class="toolbar-btn"
                   :disabled="!ready || !activeLayer || !Object.keys(activeLayer.cells).length"
@@ -1802,12 +1802,12 @@ const faq = [
                 <span class="icon icon-broom"/>
               </button>
             </ui-tooltip>
-            <ui-tooltip :text="saving ? 'Saving…' : 'Save'">
+            <ui-tooltip :text="saving ? $t('common.saving') : $t('common.save')">
               <button
                   class="publish-toolbar-btn tm-save"
                   :class="{dirty}"
                   :disabled="saving || (!dirty && world !== null)"
-                  :aria-label="saving ? 'Saving…' : 'Save'"
+                  :aria-label="saving ? $t('common.saving') : $t('common.save')"
                   @click="save"
               >
                 <span class="icon icon-save"/>
@@ -1820,27 +1820,27 @@ const faq = [
 
           <Widget class="tool-rail">
             <div class="tools tools-rail no-scrollbar">
-              <ui-tooltip text="Paint (P) — Alt-click picks a tile" position="right">
+              <ui-tooltip :text="$t('p_tilemaps_editor.paintPAltClickPicksA')" position="right">
                 <Square :class="{active: tool === 'paint'}" @click="tool = 'paint'">
                   <span class="icon icon-pen"/>
                 </Square>
               </ui-tooltip>
-              <ui-tooltip text="Fill (G) — repaint the touching region" position="right">
+              <ui-tooltip :text="$t('p_tilemaps_editor.fillGRepaintTheTouchingRegion')" position="right">
                 <Square :class="{active: tool === 'fill'}" @click="tool = 'fill'">
                   <span class="icon icon-bucket"/>
                 </Square>
               </ui-tooltip>
-              <ui-tooltip text="Line (L)" position="right">
+              <ui-tooltip :text="$t('p_tilemaps_editor.lineL')" position="right">
                 <Square :class="{active: tool === 'line'}" @click="tool = 'line'">
                   <span class="icon icon-line"/>
                 </Square>
               </ui-tooltip>
-              <ui-tooltip text="Rectangle (R)" position="right">
+              <ui-tooltip :text="$t('p_tilemaps_editor.rectangleR')" position="right">
                 <Square :class="{active: tool === 'rect'}" @click="tool = 'rect'">
                   <span class="icon icon-square"/>
                 </Square>
               </ui-tooltip>
-              <ui-tooltip text="Eraser (E) — or right-click / ⌘-drag" position="right">
+              <ui-tooltip :text="$t('p_tilemaps_editor.eraserEOrRightClickDrag')" position="right">
                 <Square :class="{active: brush === 'erase'}" @click="toggleEraser">
                   <span class="icon icon-eraser"/>
                 </Square>
@@ -1850,14 +1850,14 @@ const faq = [
                   v-if="tool === 'paint' || tool === 'line'"
                   class="brush-sizes"
                   role="group"
-                  aria-label="Brush size"
+                  :aria-label="$t('common.brushSize')"
               >
-                <ui-tooltip v-for="n in [1, 2, 3, 4]" :key="n" :text="`Brush size ${n}×${n} cells`" position="right">
+                <ui-tooltip v-for="n in [1, 2, 3, 4]" :key="n" :text="$t('p_tilemaps_editor.brushSizeNCells', {n})" position="right">
                   <button
                       type="button"
                       class="brush-size"
                       :class="{active: brushSize === n}"
-                      :aria-label="`Brush size ${n}`"
+                      :aria-label="$t('common.brushSizeN', {n})"
                       :aria-pressed="brushSize === n"
                       @click="brushSize = n"
                   >
@@ -1871,12 +1871,12 @@ const faq = [
 
               <div class="tools-sep"/>
 
-              <ui-tooltip text="Eyedropper (I) — pick a placed tile or terrain" position="right">
+              <ui-tooltip :text="$t('p_tilemaps_editor.eyedropperIPickAPlacedTile')" position="right">
                 <Square :class="{active: tool === 'pick'}" @click="tool = 'pick'">
                   <span class="icon icon-eyedropper"/>
                 </Square>
               </ui-tooltip>
-              <ui-tooltip v-if="config.mode === 'grid'" text="Select (M) — move, copy or delete a region" position="right">
+              <ui-tooltip v-if="config.mode === 'grid'" :text="$t('p_tilemaps_editor.selectMMoveCopyOrDelete')" position="right">
                 <Square :class="{active: tool === 'select'}" @click="tool = 'select'">
                   <span class="icon icon-select"/>
                 </Square>
@@ -1890,13 +1890,13 @@ const faq = [
                 class="tm-island-head"
                 role="button"
                 tabindex="0"
-                :title="layersOpen ? 'Collapse layers' : 'Expand layers'"
+                :title="layersOpen ? $t('p_tilemaps_editor.collapseLayers') : $t('p_tilemaps_editor.expandLayers')"
                 @click="layersOpen = !layersOpen"
                 @keydown.enter.prevent="layersOpen = !layersOpen"
             >
-              <span class="tm-island-title">Layers <em>{{ config.layers.length }}</em></span>
-              <button v-if="layersOpen" class="tm-layer-add" :disabled="config.layers.length >= 12" title="Add layer" @click.stop="addLayer">
-                <span class="icon icon-plus"/> Layer
+              <span class="tm-island-title">{{ $t('common.layers') }} <em>{{ config.layers.length }}</em></span>
+              <button v-if="layersOpen" class="tm-layer-add" :disabled="config.layers.length >= 12" :title="$t('p_tilemaps_editor.addLayer')" @click.stop="addLayer">
+                <span class="icon icon-plus"/> {{ $t('p_tilemaps_editor.layer') }}
               </button>
               <span class="icon tm-island-caret" :class="layersOpen ? 'icon-expand-up' : 'icon-expand-down'" aria-hidden="true"/>
             </div>
@@ -1910,7 +1910,7 @@ const faq = [
               >
                 <button
                     class="tm-layer-eye"
-                    :title="l.visible ? 'Hide layer' : 'Show layer'"
+                    :title="l.visible ? $t('p_tilemaps_editor.hideLayer') : $t('p_tilemaps_editor.showLayer')"
                     @click.stop="toggleLayer(l.id)"
                 >
                   <span class="icon" :class="l.visible ? 'icon-eye' : 'icon-eye-cross'"/>
@@ -1941,12 +1941,12 @@ const faq = [
                     @keydown.esc="finishRename"
                     @blur="finishRename"
                 />
-                <span v-else class="tm-layer-name" :title="`${l.name} — double-click to rename`" @dblclick.stop="startRename(l.id)">{{ l.name }}</span>
+                <span v-else class="tm-layer-name" :title="$t('p_tilemaps_editor.xDoubleClickToRename', {x: l.name})" @dblclick.stop="startRename(l.id)">{{ l.name }}</span>
                 <span class="tm-layer-count">{{ Object.keys(l.cells).length }}</span>
                 <div class="tm-layer-actions">
-                  <button class="tm-la-btn" :disabled="l.id === topLayerId" title="Move up" @click.stop="moveLayer(l.id, 1)"><span class="icon icon-expand-up"/></button>
-                  <button class="tm-la-btn" :disabled="l.id === bottomLayerId" title="Move down" @click.stop="moveLayer(l.id, -1)"><span class="icon icon-expand-down"/></button>
-                  <button class="tm-la-btn danger" :disabled="config.layers.length < 2" title="Delete layer" @click.stop="removeLayer(l.id)"><span class="icon icon-trash"/></button>
+                  <button class="tm-la-btn" :disabled="l.id === topLayerId" :title="$t('p_tilemaps_editor.moveUp')" @click.stop="moveLayer(l.id, 1)"><span class="icon icon-expand-up"/></button>
+                  <button class="tm-la-btn" :disabled="l.id === bottomLayerId" :title="$t('p_tilemaps_editor.moveDown')" @click.stop="moveLayer(l.id, -1)"><span class="icon icon-expand-down"/></button>
+                  <button class="tm-la-btn danger" :disabled="config.layers.length < 2" :title="$t('common.deleteLayer')" @click.stop="removeLayer(l.id)"><span class="icon icon-trash"/></button>
                 </div>
               </div>
             </div>
@@ -1972,14 +1972,14 @@ const faq = [
             <transition name="tm-fade">
               <div v-if="tilesLoading" class="tm-rendering">
                 <span class="tm-spinner" aria-hidden="true"/>
-                <span>Loading tiles…</span>
+                <span>{{ $t('p_tilemaps_editor.loadingTiles') }}</span>
               </div>
             </transition>
             <div v-if="world" class="tm-stage-fab">
-              <ui-tooltip text="Open this world's public page" position="left">
-                <nuxt-link :to="`/worlds/${world.id_string}`" class="tm-stage-fab-btn" aria-label="Open public page">
+              <ui-tooltip :text="$t('p_tilemaps_editor.openThisWorldSPublicPage')" position="left">
+                <NuxtLinkLocale :to="`/worlds/${world.id_string}`" class="tm-stage-fab-btn" :aria-label="$t('common.openPublicPage')">
                   <span class="icon icon-link"/>
-                </nuxt-link>
+                </NuxtLinkLocale>
               </ui-tooltip>
             </div>
           </template>
@@ -1991,24 +1991,24 @@ const faq = [
           <div class="tm-tilesbar-ctl">
             <div v-if="hasSeg" class="tm-seg tm-palette-seg">
               <button :class="{active: paletteTab === 'tiles'}" @click="paletteTab = 'tiles'">
-                <span class="icon icon-grid"/> Tiles
+                <span class="icon icon-grid"/> {{ $t('common.tiles') }}
               </button>
-              <button :class="{active: paletteTab === 'search'}" title="Paint with any public pixel art" @click="paletteTab = 'search'">
-                <span class="icon icon-search"/> Search
+              <button :class="{active: paletteTab === 'search'}" :title="$t('p_tilemaps_editor.paintWithAnyPublicPixelArt')" @click="paletteTab = 'search'">
+                <span class="icon icon-search"/> {{ $t('p_tilemaps_editor.search') }}
               </button>
             </div>
             <select
                 v-if="hasSeg && paletteTab === 'tiles'"
                 class="tm-world-select tm-src-select"
                 :value="world?.tileset_id_string || guestTileset?.id || ''"
-                title="Tile source — pick a tileset"
+                :title="$t('p_tilemaps_editor.tileSourcePickATileset')"
                 @change="onSourceSelect(($event.target as HTMLSelectElement).value, $event.target as HTMLSelectElement)"
             >
-              <option value="">Free style — search any art</option>
+              <option value="">{{ $t('p_tilemaps_editor.freeStyleSearchAnyArt') }}</option>
               <option v-for="t in myTilesets" :key="t.id_string" :value="t.id_string">
                 {{ t.name }} ({{ t.count }} tiles)
               </option>
-              <option value="__manage__">✎ Manage tilesets…</option>
+              <option value="__manage__">{{ $t('p_tilemaps_editor.manageTilesets') }}</option>
             </select>
             <template v-if="hasTilesSource && paletteTab === 'tiles'">
               <a
@@ -2017,13 +2017,13 @@ const faq = [
                   target="_blank"
                   rel="noopener"
                   class="tm-pager-btn"
-                  title="Edit this tileset (opens in a new tab)"
-                  aria-label="Edit tileset"
+                  :title="$t('p_tilemaps_editor.editThisTilesetOpensInA')"
+                  :aria-label="$t('common.editTileset')"
               ><span class="icon icon-pen"/></a>
               <button
                   class="tm-pager-btn"
-                  title="Refresh tiles — reload the art after editing it"
-                  aria-label="Refresh tiles"
+                  :title="$t('p_tilemaps_editor.refreshTilesReloadTheArtAfter')"
+                  :aria-label="$t('p_tilemaps_editor.refreshTiles')"
                   @click="refreshTiles"
               ><span class="icon icon-sync"/></button>
             </template>
@@ -2032,14 +2032,14 @@ const faq = [
               <input
                   v-model="searchQuery"
                   type="search"
-                  placeholder="Search pixel art…"
+                  :placeholder="$t('p_tilemaps_editor.searchPixelArt')"
                   @input="onSearchInput"
                   @keydown.enter.prevent="runSearch(1)"
               />
             </div>
             <div v-if="!paletteLoading && totalPages > 1" class="tm-pager">
-              <button class="tm-pager-btn" :disabled="palettePage <= 1" :title="`Previous page (${palettePage} / ${totalPages})`" aria-label="Previous page" @click="goPage(palettePage - 1)"><span class="icon icon-angle-left"/></button>
-              <button class="tm-pager-btn" :disabled="palettePage >= totalPages" :title="`Next page (${palettePage} / ${totalPages})`" aria-label="Next page" @click="goPage(palettePage + 1)"><span class="icon icon-angle-right"/></button>
+              <button class="tm-pager-btn" :disabled="palettePage <= 1" :title="$t('common.previousPageOf', {page: palettePage, pages: totalPages})" :aria-label="$t('common.previousPage')" @click="goPage(palettePage - 1)"><span class="icon icon-angle-left"/></button>
+              <button class="tm-pager-btn" :disabled="palettePage >= totalPages" :title="$t('common.nextPageOf', {page: palettePage, pages: totalPages})" :aria-label="$t('common.nextPage')" @click="goPage(palettePage + 1)"><span class="icon icon-angle-right"/></button>
             </div>
           </div>
           <div class="tm-tiles no-scrollbar">
@@ -2048,11 +2048,9 @@ const faq = [
                 <div v-for="n in 12" :key="n" class="skel tm-tile-skel"/>
               </template>
               <p v-else-if="!paletteItems.length" class="tm-hint tm-tiles-empty">
-                <template v-if="paletteMode === 'search'">No art found — try another search.</template>
-                <template v-else-if="!hasTilesSource">Pick a tileset from the menu, or switch to Search.</template>
-                <template v-else>This tileset has no tiles yet — add some in the
-                  <nuxt-link v-if="world || guestTileset" :to="`/tilesets/editor?id=${world?.tileset_id_string || guestTileset?.id}`" class="underline">tileset editor</nuxt-link>,
-                  or use Search above.</template>
+                <template v-if="paletteMode === 'search'">{{ $t('p_tilemaps_editor.noArtFoundTryAnotherSearch') }}</template>
+                <template v-else-if="!hasTilesSource">{{ $t('p_tilemaps_editor.pickATilesetFromTheMenu') }}</template>
+                <template v-else>{{ $t('p_tilemaps_editor.thisTilesetHasNoTilesYet') }} <NuxtLinkLocale v-if="world || guestTileset" :to="`/tilesets/editor?id=${world?.tileset_id_string || guestTileset?.id}`" class="underline">{{ $t('p_tilemaps_editor.tilesetEditor') }}</NuxtLinkLocale>{{ $t('p_tilemaps_editor.orUseSearchAbove') }}</template>
               </p>
               <template v-else>
                 <button
@@ -2060,7 +2058,7 @@ const faq = [
                     :key="t.id"
                     class="tm-tile tm-terrain"
                     :class="{active: brush === `terrain:${t.id}`}"
-                    :title="`Terrain brush: ${t.name} — auto-picks edge and corner tiles as you paint`"
+                    :title="$t('p_tilemaps_editor.terrainBrushX', {x: t.name})"
                     @click="brush = `terrain:${t.id}`"
                 >
                   <span class="icon icon-auto-fix"/>
@@ -2071,7 +2069,7 @@ const faq = [
                     :key="vg.id"
                     class="tm-tile tm-terrain"
                     :class="{active: brush === `random:${vg.id}`}"
-                    :title="`Random brush: ${vg.name} — each stroke places a random tile from this group`"
+                    :title="$t('p_tilemaps_editor.randomBrushX', {x: vg.name})"
                     @click="brush = `random:${vg.id}`"
                 >
                   <span class="icon icon-swap"/>
@@ -2104,45 +2102,34 @@ const faq = [
     </template>
 
     <template #doc>
-      <h1>Tilemap Editor</h1>
-      <p>
-        Paint pixel-art maps on a grid or isometric grid. Stack layers of ground tiles and sprites
-        from your own collection — or any artwork in the gallery — then save your map or
-        export it as a Tiled <code>.tmj</code> that Phaser and Tiled load directly (Godot and
-        Unity via their Tiled importers). Free, runs in your browser.
-      </p>
+      <h1>{{ $t('p_tilemaps_editor.tilemapEditor') }}</h1>
+      <p v-html="$t('p_tilemaps_editor.paintPixelArtMapsOnA')"/>
 
-      <h2>Build pixel-art tilemaps, free in your browser</h2>
+      <h2>{{ $t('p_tilemaps_editor.buildPixelArtTilemapsFree') }}</h2>
       <p>
-        The <strong>Tilemap Editor</strong> turns pixel art into maps. Lay tiles on a flat
-        <strong>grid</strong> for top-down scenes or an <strong>isometric</strong> grid for a 3/4 view,
-        stack as many <strong>layers</strong> as you need, and paint with your own
-        <nuxt-link to="/work?tab=collections">collection</nuxt-link> or any piece from the
-        <nuxt-link to="/arts">gallery</nuxt-link>. No install and no signup to start — your map saves to a
-        collection or right in your browser.
-      </p>
+        {{ $t('common.the') }} <strong>{{ $t('p_tilemaps_editor.tilemapEditor') }}</strong> {{ $t('p_tilemaps_editor.turnsPixelArtIntoMapsLay') }} <strong>{{ $t('p_tilemaps_editor.grid') }}</strong> {{ $t('p_tilemaps_editor.forTopDownScenesOrAn') }} <strong>{{ $t('p_tilemaps_editor.isometric') }}</strong> {{ $t('p_tilemaps_editor.gridForA34View') }} <strong>{{ $t('p_tilemaps_editor.layers') }}</strong> {{ $t('p_tilemaps_editor.asYouNeedAndPaintWith') }} <NuxtLinkLocale to="/work?tab=collections">{{ $t('p_tilemaps_editor.collection') }}</NuxtLinkLocale> {{ $t('p_tilemaps_editor.orAnyPieceFromThe') }} <NuxtLinkLocale to="/arts">{{ $t('p_tilemaps_editor.gallery') }}</NuxtLinkLocale>{{ $t('p_tilemaps_editor.noInstallAndNoSignupTo') }} </p>
 
-      <h2>How it works</h2>
+      <h2>{{ $t('common.howItWorks') }}</h2>
       <ol>
-        <li><strong>Pick your tiles</strong> — choose a collection as your palette, or stay in Free style and search any public pixel art to paint with.</li>
-        <li><strong>Set up the map</strong> — switch between grid and isometric, set the cell size and the number of columns and rows, and pick a background.</li>
-        <li><strong>Paint your layers</strong> — add ground and sprite layers, then click and drag to lay tiles. Reorder, hide or clear any layer anytime.</li>
+        <li v-html="$t('p_tilemaps_editor.strongPickYourTilesStrongChoose')"/>
+        <li v-html="$t('p_tilemaps_editor.strongSetUpTheMapStrong')"/>
+        <li v-html="$t('p_tilemaps_editor.strongPaintYourLayersStrongAdd')"/>
       </ol>
       <QnA :items="faq"/>
     </template>
     <template #extra>
 
     <UiModal v-if="sizeOpen" class="tm-settings-modal" @close="sizeOpen = false">
-          <h3 class="publish-heading">Map settings</h3>
+          <h3 class="publish-heading">{{ $t('p_tilemaps_editor.mapSettings') }}</h3>
           <div class="tm-settings-body">
             <div class="tm-group">
-              <span class="tm-label">Grid type</span>
+              <span class="tm-label">{{ $t('common.gridType') }}</span>
               <div class="tm-seg">
-                <button :class="{active: config.mode === 'grid'}" @click="setMode('grid')"><span class="icon icon-grid"/> Grid</button>
-                <button :class="{active: config.mode === 'iso'}" @click="setMode('iso')"><span class="icon icon-rhombus"/> Iso</button>
+                <button :class="{active: config.mode === 'grid'}" @click="setMode('grid')"><span class="icon icon-grid"/> {{ $t('common.grid') }}</button>
+                <button :class="{active: config.mode === 'iso'}" @click="setMode('iso')"><span class="icon icon-rhombus"/> {{ $t('p_tilemaps_editor.iso') }}</button>
               </div>
               <div v-if="config.mode === 'iso'" class="tm-num tm-iso-ratio">
-                <span class="tm-num-cap">View ratio <em>(W:H)</em></span>
+                <span class="tm-num-cap">{{ $t('p_tilemaps_editor.viewRatio') }} <em>(W:H)</em></span>
                 <div class="tm-chips tm-chips-ratio">
                   <button
                       v-for="r in ISO_RATIOS"
@@ -2154,7 +2141,7 @@ const faq = [
               </div>
             </div>
             <div class="tm-group">
-              <span class="tm-label">Cell size <em>{{ cellLabel }}px</em></span>
+              <span class="tm-label">{{ $t('common.cellSize') }} <em>{{ cellLabel }}px</em></span>
               <div class="tm-chips">
                 <button v-for="p in CELL_PRESETS" :key="p" :class="{active: config.cellW === p && (config.mode === 'iso' || config.cellH === p)}" @click="setCell(p)">{{ p }}</button>
               </div>
@@ -2164,62 +2151,62 @@ const faq = [
                   <input
                       type="number" class="tm-cell-input" inputmode="numeric"
                       :min="MIN_CELL" :max="MAX_CELL" :value="config.cellW"
-                      aria-label="Cell width (px)"
+                      :aria-label="$t('p_tilemaps_editor.cellWidthPx')"
                       @change="setCellDim('cellW', ($event.target as HTMLInputElement).valueAsNumber)"
                   >
                 </div>
                 <div v-if="config.mode === 'grid'" class="tm-num">
-                  <span class="tm-num-cap">Height</span>
+                  <span class="tm-num-cap">{{ $t('common.height') }}</span>
                   <input
                       type="number" class="tm-cell-input" inputmode="numeric"
                       :min="MIN_CELL" :max="MAX_CELL" :value="config.cellH"
-                      aria-label="Cell height (px)"
+                      :aria-label="$t('p_tilemaps_editor.cellHeightPx')"
                       @change="setCellDim('cellH', ($event.target as HTMLInputElement).valueAsNumber)"
                   >
                 </div>
               </div>
             </div>
             <div class="tm-group">
-              <span class="tm-label">Map size</span>
+              <span class="tm-label">{{ $t('p_tilemaps_editor.mapSize') }}</span>
               <div class="tm-dims">
                 <div class="tm-num">
-                  <span class="tm-num-cap">Cols</span>
+                  <span class="tm-num-cap">{{ $t('common.cols') }}</span>
                   <div class="tm-num-ctl">
-                    <button aria-label="Fewer columns" @click="changeDim('cols', -1)">−</button>
+                    <button :aria-label="$t('p_tilemaps_editor.fewerColumns')" @click="changeDim('cols', -1)">−</button>
                     <span>{{ config.cols }}</span>
-                    <button aria-label="More columns" @click="changeDim('cols', 1)">+</button>
+                    <button :aria-label="$t('p_tilemaps_editor.moreColumns')" @click="changeDim('cols', 1)">+</button>
                   </div>
                 </div>
                 <div class="tm-num">
-                  <span class="tm-num-cap">Rows</span>
+                  <span class="tm-num-cap">{{ $t('common.rows') }}</span>
                   <div class="tm-num-ctl">
-                    <button aria-label="Fewer rows" @click="changeDim('rows', -1)">−</button>
+                    <button :aria-label="$t('p_tilemaps_editor.fewerRows')" @click="changeDim('rows', -1)">−</button>
                     <span>{{ config.rows }}</span>
-                    <button aria-label="More rows" @click="changeDim('rows', 1)">+</button>
+                    <button :aria-label="$t('p_tilemaps_editor.moreRows')" @click="changeDim('rows', 1)">+</button>
                   </div>
                 </div>
               </div>
             </div>
             <div class="tm-group">
-              <span class="tm-label">Variant seed <em>{{ config.seed ? config.seed : 'random' }}</em></span>
+              <span class="tm-label">{{ $t('p_tilemaps_editor.variantSeed') }} <em>{{ config.seed ? config.seed : 'random' }}</em></span>
               <div class="tm-dims tm-dims-one">
                 <div class="tm-num">
-                  <span class="tm-num-cap">0 = true random; a seed makes variant picks repeatable per cell</span>
+                  <span class="tm-num-cap">{{ $t('p_tilemaps_editor.0TrueRandomASeedMakes') }}</span>
                   <input
                       type="number" class="tm-cell-input" inputmode="numeric"
                       min="0" max="999999" :value="config.seed"
-                      aria-label="Variant seed (0 = random)"
+                      :aria-label="$t('p_tilemaps_editor.variantSeed0Random')"
                       @change="setSeed(($event.target as HTMLInputElement).valueAsNumber)"
                   >
                 </div>
               </div>
             </div>
             <div class="tm-group">
-              <span class="tm-label">Background</span>
+              <span class="tm-label">{{ $t('common.background') }}</span>
               <div class="tm-bg-opts">
                 <button class="tm-bg-opt" :class="{active: !config.bg}" @click="setBg('')">
                   <span class="tm-bg-sw checker"/>
-                  <span>Transparent</span>
+                  <span>{{ $t('common.transparent') }}</span>
                 </button>
                 <label class="tm-bg-row2">
                   <input
@@ -2245,18 +2232,18 @@ const faq = [
             </div>
           </div>
           <div class="publish-actions">
-            <button class="btn primary block" @click="sizeOpen = false">Done</button>
+            <button class="btn primary block" @click="sizeOpen = false">{{ $t('common.done') }}</button>
           </div>
       </UiModal>
 
     <EditorLoadBrowser
         v-if="showLoadTm"
-        title="Load tilemap"
+        :title="$t('p_tilemaps_editor.loadTilemap2')"
         :items="browseTilemaps"
         filterable
         folder
         empty-icon="icon-grid"
-        :new-label="world ? 'New world' : 'New map'"
+        :new-label="world ? t('p_tilemaps_editor.newWorld') : t('p_tilemaps_editor.newMap')"
         empty-text="No tilemaps yet — paint one to get started."
         @select="pickTilemap"
         @create="pickTilemap('__new__')"

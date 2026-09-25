@@ -66,6 +66,7 @@ const medals = ['🥇', '🥈', '🥉']
 
 
 useCustomSeoMeta({
+  untranslated: true,
   title: () => challenge.value
       ? `${challenge.value.name} — Pixel Art Challenge`
       : 'Pixel Art Challenge',
@@ -83,13 +84,13 @@ useCustomSeoMeta({
       <div class="screen-head">
         <div class="screen-head-text">
           <p class="chal-bc">
-            <nuxt-link to="/challenges" class="section-link">← All challenges</nuxt-link>
+            <NuxtLinkLocale to="/challenges" class="section-link">{{ $t('p_challenges_id_string.allChallenges') }}</NuxtLinkLocale>
           </p>
           <h1 class="screen-title">{{ challenge.name }}</h1>
           <p v-if="challenge.desc" class="screen-desc">{{ challenge.desc }}</p>
           <p class="chal-meta">
           <template v-if="challenge.state === 'active'">
-            <strong>Live now</strong> · {{ fmtRange() }} · {{ daysLeft() }} {{ daysLeft() === 1 ? 'day' : 'days' }} left
+            <strong>{{ $t('p_challenges_id_string.liveNow') }}</strong> · {{ fmtRange() }} · {{ daysLeft() }} {{ daysLeft() === 1 ? 'day' : 'days' }} left
             · {{ challenge.entries_count }} {{ challenge.entries_count === 1 ? 'entry' : 'entries' }}
           </template>
           <template v-else-if="challenge.state === 'ended'">
@@ -99,21 +100,21 @@ useCustomSeoMeta({
           </p>
         </div>
         <div v-if="challenge.state === 'active'" class="screen-actions">
-          <nuxt-link to="/editor?new=true" class="btn primary">
-            <span class="icon icon-pencil"/><span>Draw your entry</span>
-          </nuxt-link>
+          <NuxtLinkLocale to="/editor?new=true" class="btn primary">
+            <span class="icon icon-pencil"/><span>{{ $t('common.drawYourEntry') }}</span>
+          </NuxtLinkLocale>
           <button v-if="auth.isLogged" class="btn" @click="showSubmit = true">
-            <span class="icon icon-flag"/><span>Submit an art</span>
+            <span class="icon icon-flag"/><span>{{ $t('common.submitAnArt') }}</span>
           </button>
           <button v-else class="btn" @click="auth.authOAUTH()">
-            <span class="icon icon-flag"/><span>Log in to submit</span>
+            <span class="icon icon-flag"/><span>{{ $t('common.logInToSubmit') }}</span>
           </button>
         </div>
       </div>
 
-      <Widget v-if="challenge.state === 'ended' && winners.length" title="Winners">
+      <Widget v-if="challenge.state === 'ended' && winners.length" :title="$t('p_challenges_id_string.winners')">
         <div class="chal-winner-row">
-          <nuxt-link
+          <NuxtLinkLocale
               v-for="(e, i) in winners"
               :key="e.id"
               :to="`/art/${e.id_string}`"
@@ -123,11 +124,11 @@ useCustomSeoMeta({
             <img :src="thumb(e)" :alt="e.name" loading="lazy" decoding="async">
             <span class="chal-winner-name">{{ e.name }}</span>
             <span class="chal-winner-sub">@{{ e.username }} · {{ e.votes }} {{ e.votes === 1 ? 'vote' : 'votes' }}</span>
-          </nuxt-link>
+          </NuxtLinkLocale>
         </div>
       </Widget>
 
-      <Widget title="Entries">
+      <Widget :title="$t('p_challenges_id_string.entries')">
         <div v-if="entries.length" class="results">
           <ItemCard v-for="p in entries" :key="p.id" :value="p"/>
         </div>
@@ -147,9 +148,9 @@ useCustomSeoMeta({
     <template v-else>
       <div class="screen-head">
         <div class="screen-head-text">
-          <h1 class="screen-title">Challenge not found</h1>
+          <h1 class="screen-title">{{ $t('p_challenges_id_string.challengeNotFound') }}</h1>
           <p class="screen-desc">
-            It may have been removed. <nuxt-link to="/challenges" class="section-link">See all challenges →</nuxt-link>
+            {{ $t('p_challenges_id_string.itMayHaveBeenRemoved') }} <NuxtLinkLocale to="/challenges" class="section-link">{{ $t('p_challenges_id_string.seeAllChallenges') }}</NuxtLinkLocale>
           </p>
         </div>
       </div>

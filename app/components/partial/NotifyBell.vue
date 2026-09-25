@@ -68,17 +68,17 @@ watch(() => auth.isLogged, (v) => { if (v) fetchUnread() })
 </script>
 
 <template>
-  <ui-dropdown-menu v-if="auth.isLogged" position="right" label="Notifications">
-    <button type="button" class="hdr-link notify-btn" title="Notifications" @click="onOpen">
+  <ui-dropdown-menu v-if="auth.isLogged" position="right" :label="$t('common.notifications')">
+    <button type="button" class="hdr-link notify-btn" :title="$t('c_NotifyBell.notifications')" @click="onOpen">
       <span class="icon icon-bell"/>
       <span v-if="unread > 0" class="notify-badge">{{ unread > 9 ? '9+' : unread }}</span>
     </button>
     <template #menu>
       <div class="file-menu notify-menu">
-        <div class="file-menu-item file-menu-heading">Notifications</div>
-        <div v-if="loading && !items.length" class="notify-empty">Loading…</div>
+        <div class="file-menu-item file-menu-heading">{{ $t('c_NotifyBell.notifications') }}</div>
+        <div v-if="loading && !items.length" class="notify-empty">{{ $t('common.loading') }}</div>
         <template v-else-if="items.length">
-          <nuxt-link
+          <NuxtLinkLocale
               v-for="n in items"
               :key="n.id"
               :to="linkOf(n)"
@@ -92,9 +92,9 @@ watch(() => auth.isLogged, (v) => { if (v) fetchUnread() })
                 <template v-if="n.meta?.excerpt">“{{ n.meta.excerpt }}” · </template>{{ ago(n.created) }} ago
               </span>
             </span>
-          </nuxt-link>
+          </NuxtLinkLocale>
         </template>
-        <div v-else-if="loaded" class="notify-empty">Nothing yet — publish art and follow creators.</div>
+        <div v-else-if="loaded" class="notify-empty">{{ $t('c_NotifyBell.nothingYetPublishArtAnd') }}</div>
       </div>
     </template>
   </ui-dropdown-menu>

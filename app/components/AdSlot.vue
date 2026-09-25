@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const {t} = useI18n()
+
 interface Props {
   slot: string
   client?: string
@@ -12,7 +14,7 @@ const props = withDefaults(defineProps<Props>(), {
   client: 'ca-pub-7842478840527195',
   format: 'auto',
   responsive: 'true',
-  label: 'Advertisement',
+  label: '',
   size: 'medium',
 })
 
@@ -63,7 +65,7 @@ onMounted(() => {
 
 <template>
   <div v-if="adsEnabled && hasValidSlot" class="ad-slot" :class="`ad-slot-${size}`">
-    <div class="ad-label">{{ label }}</div>
+    <div class="ad-label">{{ label || t('c_AdSlot.advertisement') }}</div>
     <ins
         ref="insRef"
         class="adsbygoogle"

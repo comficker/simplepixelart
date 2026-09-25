@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const {t} = useI18n()
+const localePath = useLocalePath()
 import {toast} from "vue-sonner";
 import {PALETTE_THEMES} from "~/helper/constants";
 import type {Palette} from "~/types";
@@ -47,7 +49,7 @@ const editorHref = computed(() =>
 async function copyAll() {
   try {
     await navigator.clipboard.writeText(colors.value.join('\n'))
-    toast.success(`Copied ${colors.value.length} colors`)
+    toast.success(t('c_Composer.copiedNColors', {count: colors.value.length}))
   } catch {
     toast.error('Copy failed')
   }
@@ -68,7 +70,7 @@ async function publish() {
       },
     })
     toast.success(`Published "${res.name}"`)
-    await navigateTo(`/palettes/${res.id_string}`)
+    await navigateTo(localePath(`/palettes/${res.id_string}`))
   } catch {
     toast.error('Publish failed')
   } finally {
@@ -83,9 +85,9 @@ async function publish() {
       <span class="tool-pane-cap" style="margin: 0;">{{ colors.length }} color{{ colors.length === 1 ? '' : 's' }}</span>
       <div class="composer-head-actions">
         <button class="composer-link" type="button" @click="addColor">
-          <span class="icon icon-plus"/><span>Add</span>
+          <span class="icon icon-plus"/><span>{{ $t('common.add') }}</span>
         </button>
-        <button class="composer-link" type="button" @click="copyAll">Copy hex</button>
+        <button class="composer-link" type="button" @click="copyAll">{{ $t('common.copyHex') }}</button>
       </div>
     </div>
 
@@ -93,7 +95,7 @@ async function publish() {
       <div v-for="(c, i) in colors" :key="i" class="composer-sw-wrap">
         <input type="color" class="composer-sw" :value="c" :title="c" @input="updateColor(i, $event)"/>
         <span class="composer-sw-hex">{{ c }}</span>
-        <button class="composer-sw-x" type="button" :aria-label="`Remove ${c}`" @click="removeColor(i)">
+        <button class="composer-sw-x" type="button" :aria-label="t('common.removeX', {x: c})" @click="removeColor(i)">
           <span class="icon icon-x"/>
         </button>
       </div>
@@ -107,7 +109,7 @@ async function publish() {
         @keydown.enter="publish"
     />
 
-    <p class="composer-themes-label">Themes <span>(optional)</span></p>
+    <p class="composer-themes-label">{{ $t('common.themes') }} <span>{{ $t('c_Composer.optional') }}</span></p>
     <div class="composer-themes">
       <button
           v-for="t in PALETTE_THEMES" :key="t"
@@ -124,10 +126,10 @@ async function publish() {
       </button>
       <a class="btn" :href="editorHref">
         <span class="icon icon-pen"/>
-        <span>Open in editor</span>
+        <span>{{ $t('common.openInEditor') }}</span>
       </a>
     </div>
-    <p v-if="!auth.isLogged" class="composer-note">Sign in to publish to the public library.</p>
+    <p v-if="!auth.isLogged" class="composer-note" v-html="$t('c_Composer.signInToPublishToThe')"/>
   </div>
 </template>
 

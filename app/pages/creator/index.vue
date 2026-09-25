@@ -30,8 +30,8 @@ useCustomSeoMeta({
 <template>
   <div class="page">
     <section>
-      <h1 class="page-title">Pixel Art Creators</h1>
-      <p class="text-muted">Discover artists from the SimplePixelArt.com community. Browse their portfolios and explore their pixel art creations.</p>
+      <h1 class="page-title">{{ $t('p_creator.pixelArtCreators') }}</h1>
+      <p class="text-muted" v-html="$t('p_creator.discoverArtistsFromTheSimplepixela')"/>
     </section>
     <item-list show-filter/>
   </div>

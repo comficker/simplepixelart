@@ -62,7 +62,7 @@ function handleBlur() {
   <div :class="['tag-box', props.className]" @click="focusInput">
     <span v-for="(tag, index) in props.modelValue" :key="index" class="tag-chip">
       <span class="tag-chip-text">{{ tag }}</span>
-      <button class="tag-chip-x" type="button" aria-label="Remove tag" @click.stop="removeTag(index)">×</button>
+      <button class="tag-chip-x" type="button" :aria-label="$t('c_TagInput.removeTag')" @click.stop="removeTag(index)">×</button>
     </span>
     <input
         v-if="props.modelValue.length < props.maxTags"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const localePath = useLocalePath()
 import {toast} from 'vue-sonner'
 import {tileImageUrl} from '~/helper/tilemap'
 
@@ -34,6 +35,7 @@ function tileSrc(idString: string) {
 
 const tilesetUrl = `${config.public.siteUrl}/tilesets/${route.params.id_string}`
 useCustomSeoMeta({
+  untranslated: true,
   title: `${title.value} — Pixel Art Tileset`,
   description: `A pixel art tileset with ${tiles.value.length} tiles on SimplePixelArt${data.value?.username ? ` by @${data.value.username}` : ''}. Clone it and paint your own worlds in the free tilemap editor.`,
   canonical: tilesetUrl,
@@ -74,7 +76,7 @@ async function cloneTileset() {
         meta: {registry: data.value?.meta?.registry || {}},
       },
     })
-    navigateTo(`/tilesets/editor?id=${t.id_string}`)
+    navigateTo(localePath(`/tilesets/editor?id=${t.id_string}`))
   } catch {
     toast.error('Could not clone tileset')
   } finally {
@@ -87,27 +89,27 @@ async function cloneTileset() {
   <div class="page">
     <div v-if="error || !data" class="empty-state">
       <span class="empty-state-icon icon icon-grid" aria-hidden="true"/>
-      <div class="empty-state-title">Tileset not found</div>
-      <p class="empty-state-body">This tileset may be private or no longer exists.</p>
-      <nuxt-link to="/tilesets/editor" class="btn primary empty-state-action">Build your own</nuxt-link>
+      <div class="empty-state-title">{{ $t('p_tilesets_id_string.tilesetNotFound') }}</div>
+      <p class="empty-state-body" v-html="$t('p_tilesets_id_string.thisTilesetMayBePrivateOr')"/>
+      <NuxtLinkLocale to="/tilesets/editor" class="btn primary empty-state-action">{{ $t('p_tilesets_id_string.buildYourOwn') }}</NuxtLinkLocale>
     </div>
 
     <template v-else>
       <section class="tsd-hero">
         <div class="tsd-head">
-          <span class="tsd-eyebrow">Tileset</span>
+          <span class="tsd-eyebrow">{{ $t('common.tileset') }}</span>
           <h1 class="page-title">{{ title }}</h1>
           <div class="tsd-meta">
             <span class="tsd-pill">{{ tiles.length }} {{ tiles.length === 1 ? 'tile' : 'tiles' }}</span>
             <span v-if="data.username" class="tsd-pill">by @{{ data.username }}</span>
-            <span v-if="!isPublic" class="tsd-pill tsd-pill-private">Private</span>
+            <span v-if="!isPublic" class="tsd-pill tsd-pill-private">{{ $t('common.private') }}</span>
           </div>
         </div>
         <div class="tsd-actions">
-          <nuxt-link v-if="isOwner" :to="`/tilesets/editor?id=${data.id_string}`" class="btn primary">
+          <NuxtLinkLocale v-if="isOwner" :to="`/tilesets/editor?id=${data.id_string}`" class="btn primary">
             <span class="icon icon-pen"/>
-            <span>Edit tileset</span>
-          </nuxt-link>
+            <span>{{ $t('common.editTileset') }}</span>
+          </NuxtLinkLocale>
           <button v-else class="btn primary" :disabled="cloning" @click="cloneTileset">
             <span class="icon icon-plus"/>
             <span>{{ cloning ? 'Cloning…' : 'Use this tileset' }}</span>
@@ -115,8 +117,8 @@ async function cloneTileset() {
         </div>
       </section>
 
-      <section v-if="tiles.length" class="tsd-tiles" aria-label="Tiles">
-        <nuxt-link
+      <section v-if="tiles.length" class="tsd-tiles" :aria-label="$t('common.tiles')">
+        <NuxtLinkLocale
             v-for="t in tiles"
             :key="t.id"
             :to="`/art/${t.id_string}`"
@@ -124,18 +126,18 @@ async function cloneTileset() {
             :title="t.id_string"
         >
           <img :src="tileSrc(t.id_string)" :alt="t.id_string" loading="lazy">
-        </nuxt-link>
+        </NuxtLinkLocale>
       </section>
 
-      <section v-if="publicWorlds.length" class="tsd-worlds" aria-label="Worlds using this tileset">
-        <span class="tsd-label">Worlds built with this tileset</span>
+      <section v-if="publicWorlds.length" class="tsd-worlds" :aria-label="$t('p_tilesets_id_string.worldsUsingThisTileset')">
+        <span class="tsd-label">{{ $t('p_tilesets_id_string.worldsBuiltWithThisTileset') }}</span>
         <div class="tsd-world-chips">
-          <nuxt-link
+          <NuxtLinkLocale
               v-for="w in publicWorlds"
               :key="w.id_string"
               :to="`/worlds/${w.id_string}`"
               class="tsd-world-chip"
-          >{{ w.name || 'Untitled' }}</nuxt-link>
+          >{{ w.name || 'Untitled' }}</NuxtLinkLocale>
         </div>
       </section>
     </template>

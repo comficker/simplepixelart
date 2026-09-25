@@ -95,17 +95,17 @@ watch(open, (v) => { if (v) reset() })
 
 <template>
   <UiModal v-if="open" class="si-modal" @close="close">
-        <h3 class="publish-heading">Import sprite strip</h3>
-        <p class="si-sub">Slice a spritesheet PNG into animation frames.</p>
+        <h3 class="publish-heading">{{ $t('common.importSpriteStrip') }}</h3>
+        <p class="si-sub" v-html="$t('c_StripImport.sliceASpritesheetPngIntoAnimation')"/>
 
         <button v-if="!dataUrl" type="button" class="si-drop" @click="pickFile">
           <span class="icon icon-upload"/>
-          <span>Choose an image…</span>
-          <span class="si-drop-hint">e.g. duck_strip4.png — frames laid out on a grid</span>
+          <span>{{ $t('c_StripImport.chooseAnImage') }}</span>
+          <span class="si-drop-hint">{{ $t('c_StripImport.egDuckStripPng') }}</span>
         </button>
 
         <template v-else>
-          <div class="si-preview" title="Click to choose another image" @click="pickFile">
+          <div class="si-preview" :title="$t('c_StripImport.clickToChooseAnotherImage')" @click="pickFile">
             <div class="si-frame">
               <img :src="dataUrl" :alt="fileName" class="si-img" draggable="false">
               <div
@@ -117,11 +117,11 @@ watch(open, (v) => { if (v) reset() })
 
           <div class="si-controls">
             <label class="si-field">
-              <span class="si-label">Cols</span>
+              <span class="si-label">{{ $t('common.cols') }}</span>
               <input v-model.number="cols" type="number" min="1" :max="MAX_FRAMES">
             </label>
             <label class="si-field">
-              <span class="si-label">Rows</span>
+              <span class="si-label">{{ $t('common.rows') }}</span>
               <input v-model.number="rows" type="number" min="1" :max="MAX_FRAMES">
             </label>
             <div class="si-info">
@@ -133,11 +133,11 @@ watch(open, (v) => { if (v) reset() })
             </div>
           </div>
 
-          <p class="si-hint">Importing replaces the current artwork. Empty trailing cells are skipped.</p>
+          <p class="si-hint" v-html="$t('c_StripImport.importingReplacesTheCurrentArtwork')"/>
         </template>
 
         <div class="publish-actions">
-          <button class="btn block" @click="close">Cancel</button>
+          <button class="btn block" @click="close">{{ $t('common.cancel') }}</button>
           <button
               v-if="dataUrl"
               class="btn primary block"

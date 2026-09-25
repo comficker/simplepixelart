@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const {t} = useI18n()
 const artImage = useArtImage()
 import {toast} from 'vue-sonner'
 import type {EditorData} from '~/types'
@@ -45,7 +46,7 @@ const newTitle = ref('')
 const creating = ref(false)
 
 const selectedTs = computed(() => tilesets.value.find(c => c.id === selectedId.value) || null)
-const selectedTitle = computed(() => selectedTs.value?.title || 'Choose tileset')
+const selectedTitle = computed(() => selectedTs.value?.title || t('c_TilesetStrip.chooseTileset'))
 
 function cloudThumb(slug: string): string {
   return artImage(slug)
@@ -273,10 +274,10 @@ defineExpose({removeItem, refresh, siblingId})
 </script>
 
 <template>
-  <Widget class="cstrip" title="Tileset">
+  <Widget class="cstrip" :title="$t('common.tileset')">
     <template #ctl>
       <ui-dropdown-menu>
-        <button type="button" class="widget-ctl-btn" :class="{active: boundId != null}" :title="`Choose tileset (${selectedTitle})`">
+        <button type="button" class="widget-ctl-btn" :class="{active: boundId != null}" :title="`${$t('c_TilesetStrip.chooseTileset')} (${selectedTitle})`">
           <span class="icon icon-grid"/>
           <span class="widget-ctl-name">{{ selectedTitle }}</span>
           <span class="icon icon-chevron-down"/>
@@ -286,7 +287,7 @@ defineExpose({removeItem, refresh, siblingId})
             <button class="file-menu-item" @click="pick(null)">
               <span class="icon icon-close"/>
               <span class="file-menu-label">
-                <span>None</span>
+                <span>{{ $t('c_TilesetStrip.none') }}</span>
                 <span v-if="selectedId == null" class="icon icon-check"/>
               </span>
             </button>
@@ -300,7 +301,7 @@ defineExpose({removeItem, refresh, siblingId})
             <div class="file-menu-sep"/>
             <button class="file-menu-item" @click="showNew = true">
               <span class="icon icon-plus"/>
-              <span>Create tileset…</span>
+              <span>{{ $t('c_TilesetStrip.createTileset') }}</span>
             </button>
           </div>
         </template>
@@ -312,13 +313,13 @@ defineExpose({removeItem, refresh, siblingId})
         <input
             v-model="newTitle"
             class="cstrip-new-input"
-            placeholder="Tileset name"
+            :placeholder="$t('common.tilesetName')"
             maxlength="120"
             @keydown.enter="createTileset"
             @keydown.esc="showNew = false"
         >
         <div class="cstrip-new-actions">
-          <button class="btn" @click="showNew = false">Cancel</button>
+          <button class="btn" @click="showNew = false">{{ $t('common.cancel') }}</button>
           <button class="btn primary" :disabled="!newTitle.trim() || creating" @click="createTileset">
             {{ creating ? '…' : 'Create' }}
           </button>

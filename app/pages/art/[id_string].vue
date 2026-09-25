@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const localePath = useLocalePath()
 import type {SharedPage} from "~/types";
 import {editorDataToJSON, editorDataToSVG} from "~/helper/canvas";
 import {sharedPage2EditorData} from "~/helper/utils";
@@ -25,7 +26,7 @@ function onAdminUpdate(updated: SharedPage) {
 }
 
 async function onAdminDelete() {
-  await router.push('/arts')
+  await router.push(localePath('/arts'))
 }
 
 const reportMailto = computed(() => {
@@ -116,6 +117,7 @@ const hasOriginalContent = computed(() =>
 )
 
 useCustomSeoMeta({
+  untranslated: true,
   title: meta.value.title,
   description: meta.value.desc || meta.value.descFallback,
   canonical: meta.value.url,
@@ -331,19 +333,19 @@ const previewStyle = computed(() => {
 <template>
   <div v-if="pending" class="page art-state">
     <div class="skeleton skeleton-square art-state-skeleton"/>
-    <p class="art-state-caption">Loading pixel art…</p>
+    <p class="art-state-caption">{{ $t('p_art_id_string.loadingPixelArt') }}</p>
   </div>
 
   <div v-else-if="error || !data" class="page empty-state">
     <span class="empty-state-icon icon icon-search" aria-hidden="true"/>
-    <div class="empty-state-title">Artwork not found</div>
-    <p class="empty-state-body">This pixel art couldn’t be found or may have been removed.</p>
-    <nuxt-link to="/arts" class="btn primary empty-state-action">Browse gallery</nuxt-link>
+    <div class="empty-state-title">{{ $t('p_art_id_string.artworkNotFound') }}</div>
+    <p class="empty-state-body" v-html="$t('p_art_id_string.thisPixelArtCouldnTBe')"/>
+    <NuxtLinkLocale to="/arts" class="btn primary empty-state-action">{{ $t('common.browseGallery') }}</NuxtLinkLocale>
   </div>
 
   <ToolLayout
       v-else
-        :title="data.name || `${data.width}×${data.height} Pixel Art`"
+        :title="data.name || $t('p_art_id_string.whPixelArt', {w: data.width, h: data.height})"
         title-tag="h1"
     >
       <template #head>
@@ -395,7 +397,7 @@ const previewStyle = computed(() => {
             v-else
             id="mainImg"
             :src="imgOriginal"
-            :alt="data.name || `${data.width}x${data.height} Pixel Art`"
+            :alt="data.name || $t('p_art_id_string.whPixelArt', {w: data.width, h: data.height})"
             class="art-img"
             :style="previewStyle"
             loading="eager"
@@ -403,18 +405,18 @@ const previewStyle = computed(() => {
             :width="data.width"
             :height="data.height"
         >
-        <div v-if="isAnimatedArt" class="art-anim-badge" title="Animated artwork">
+        <div v-if="isAnimatedArt" class="art-anim-badge" :title="$t('common.animatedArtwork')">
           <span class="art-anim-dot" aria-hidden="true"/>
           <span>Animated · {{ animation.frames.length }}f</span>
         </div>
-        <div v-if="data.template" class="art-remix-badge" title="Remixed from another artwork">
+        <div v-if="data.template" class="art-remix-badge" :title="$t('p_art_id_string.remixedFromAnotherArtwork')">
           <span class="icon icon-pen"/>
-          <span>Remix</span>
+          <span>{{ $t('p_art_id_string.remix') }}</span>
         </div>
 
         <div class="art-preview-ctl">
           <ui-dropdown-menu position="right">
-            <button class="art-size-pill" title="View">
+            <button class="art-size-pill" :title="$t('p_art_id_string.view')">
               <span class="icon icon-grid"/>
               <span>{{ viewLabel }}</span>
               <span class="icon icon-expand-down" aria-hidden="true"/>
@@ -423,13 +425,13 @@ const previewStyle = computed(() => {
               <div class="file-menu">
                 <button class="file-menu-item" @click="beadView = !beadView">
                   <span class="file-menu-label">
-                    <span>Beads</span>
+                    <span>{{ $t('p_art_id_string.beads') }}</span>
                     <span v-if="beadView" class="icon icon-check"/>
                   </span>
                 </button>
                 <button class="file-menu-item" @click="coordView = !coordView">
                   <span class="file-menu-label">
-                    <span>Coordinates</span>
+                    <span>{{ $t('p_art_id_string.coordinates') }}</span>
                     <span v-if="coordView" class="icon icon-check"/>
                   </span>
                 </button>
@@ -440,7 +442,7 @@ const previewStyle = computed(() => {
           <!-- In the bead and coordinate views the useful number is how big one
                cell is, not how wide the whole picture ends up. -->
           <ui-dropdown-menu v-if="pixelView" position="right">
-            <button class="art-size-pill" title="Cell size">
+            <button class="art-size-pill" :title="$t('common.cellSize')">
               <span class="icon icon-search"/>
               <span>{{ cellSize }}px</span>
               <span class="icon icon-expand-down" aria-hidden="true"/>
@@ -463,7 +465,7 @@ const previewStyle = computed(() => {
           </ui-dropdown-menu>
 
           <ui-dropdown-menu v-else position="right">
-            <button class="art-size-pill" title="Preview size">
+            <button class="art-size-pill" :title="$t('p_art_id_string.previewSize')">
               <span class="icon icon-search"/>
               <span>{{ previewSizeShort }}</span>
               <span class="icon icon-expand-down" aria-hidden="true"/>
@@ -500,17 +502,17 @@ const previewStyle = computed(() => {
     <template #aside>
     <Widget>
       <div class="art-actions">
-        <nuxt-link
+        <NuxtLinkLocale
             :to="`/editor?id=${route.params.id_string}`"
             class="btn"
             :title="isOwner ? 'Edit this pixel art' : 'Remix this pixel art'"
         >
           <span class="icon icon-pen"/>
           <span>{{ isOwner ? 'Edit this' : 'Remix this' }}</span>
-        </nuxt-link>
+        </NuxtLinkLocale>
       </div>
     </Widget>
-    <Widget title="Download">
+    <Widget :title="$t('common.download')">
       <div class="download-menu art-dl-list">
         <button
             v-for="s in pngSizes"
@@ -524,97 +526,97 @@ const previewStyle = computed(() => {
         </button>
         <div class="file-menu-sep"/>
         <button class="drop-item btn-split" @click="download('square')">
-          <span>PNG · square</span><span class="text-muted">1080×1080 · social</span>
+          <span>{{ $t('p_art_id_string.pngSquare') }}</span><span class="text-muted">1080×1080 · social</span>
         </button>
         <button v-if="isAnimatedArt" class="drop-item btn-split" @click="download('gif')">
-          <span>Animated GIF</span><span class="text-muted">{{ animation.frames.length }} frames</span>
+          <span>{{ $t('p_art_id_string.animatedGif') }}</span><span class="text-muted">{{ animation.frames.length }} frames</span>
         </button>
         <button class="drop-item btn-split" @click="download('svg')">
-          <span>SVG</span><span class="text-muted">vector</span>
+          <span>{{ $t('p_art_id_string.svg') }}</span><span class="text-muted">vector</span>
         </button>
         <button class="drop-item btn-split" @click="download('pdf')">
-          <span>PDF</span><span class="text-muted">print</span>
+          <span>{{ $t('p_art_id_string.pdf') }}</span><span class="text-muted">print</span>
         </button>
         <button class="drop-item btn-split" @click="download('json')">
-          <span>JSON</span><span class="text-muted">source</span>
+          <span>{{ $t('p_art_id_string.json') }}</span><span class="text-muted">source</span>
         </button>
       </div>
     </Widget>
-    <Widget title="Meta">
+    <Widget :title="$t('p_art_id_string.meta')">
       <dl class="art-meta-side">
         <div v-if="data.user" class="art-meta-row">
-          <dt>Creator</dt>
-          <dd><nuxt-link :to="`/creator/${data.user.username}`" class="art-meta-link">@{{ data.user.username }}</nuxt-link></dd>
+          <dt>{{ $t('p_art_id_string.creator') }}</dt>
+          <dd><NuxtLinkLocale :to="`/creator/${data.user.username}`" class="art-meta-link">@{{ data.user.username }}</NuxtLinkLocale></dd>
         </div>
         <div class="art-meta-row">
-          <dt>Size</dt>
-          <dd><nuxt-link :to="`/arts/size-${data.width}x${data.height}`" class="art-meta-link">{{ data.width }}×{{ data.height }}</nuxt-link></dd>
+          <dt>{{ $t('common.size') }}</dt>
+          <dd><NuxtLinkLocale :to="`/arts/size-${data.width}x${data.height}`" class="art-meta-link">{{ data.width }}×{{ data.height }}</NuxtLinkLocale></dd>
         </div>
         <div class="art-meta-row">
-          <dt>Pixels</dt>
+          <dt>{{ $t('common.pixels') }}</dt>
           <dd>{{ Object.keys(data.map_numbers).length }}</dd>
         </div>
         <div v-if="data.colors?.length" class="art-meta-row">
-          <dt>Colors</dt>
+          <dt>{{ $t('common.colors') }}</dt>
           <dd>{{ data.colors.length }}</dd>
         </div>
         <div v-if="formattedDate" class="art-meta-row">
-          <dt>Updated</dt>
+          <dt>{{ $t('p_art_id_string.updated') }}</dt>
           <dd>{{ formattedDate }}</dd>
         </div>
         <div v-if="data?.taxonomies && data.taxonomies.length" class="art-meta-row art-meta-row-tags">
-          <dt>Tags</dt>
+          <dt>{{ $t('common.tags') }}</dt>
           <dd class="art-meta-tags">
-            <nuxt-link
+            <NuxtLinkLocale
                 v-for="t in data.taxonomies"
                 :key="t.id_string"
                 :to="`/arts/${t.id_string}`"
                 class="art-meta-link"
-            >{{ t.title }}</nuxt-link>
+            >{{ t.title }}</NuxtLinkLocale>
           </dd>
         </div>
       </dl>
     </Widget>
-    <Widget title="Palette">
+    <Widget :title="$t('common.palette')">
       <div class="art-palette">
-        <nuxt-link
+        <NuxtLinkLocale
             v-for="item in data.colors" :key="item"
             class="art-swatch"
             :to="`/arts/color-${item.toUpperCase().replace('#', '')}`"
             :style="{'--swatch': item}"
-            :title="`Color ${item.toUpperCase()} — find similar artworks`"
+            :title="$t('p_art_id_string.colorXFindSimilar', {x: item.toUpperCase()})"
         >
           <span class="art-swatch-color"/>
           <span class="art-swatch-hex">{{ item.toUpperCase() }}</span>
-        </nuxt-link>
+        </NuxtLinkLocale>
       </div>
       <p class="art-palette-links">
-        <nuxt-link v-if="data?.palette_slug" :to="`/palettes/${data.palette_slug}`">
-          View this palette
-        </nuxt-link>
+        <NuxtLinkLocale v-if="data?.palette_slug" :to="`/palettes/${data.palette_slug}`">
+          {{ $t('p_art_id_string.viewThisPalette') }}
+        </NuxtLinkLocale>
         <span v-if="data?.palette_slug" aria-hidden="true"> · </span>
-        <nuxt-link to="/palettes">Browse color palettes</nuxt-link>
+        <NuxtLinkLocale to="/palettes">{{ $t('p_art_id_string.browseColorPalettes') }}</NuxtLinkLocale>
       </p>
     </Widget>
-      <Widget v-if="data.desc" title="Description">
+      <Widget v-if="data.desc" :title="$t('common.description')">
         <p class="art-desc">{{ data.desc }}</p>
       </Widget>
 
-      <Widget title="Related artworks">
+      <Widget :title="$t('p_art_id_string.relatedArtworks')">
         <template #ctl>
-          <nuxt-link to="/arts" class="widget-ctl-btn">
-            <span class="widget-ctl-name">Browse all</span><span class="icon icon-angle-right"/>
-          </nuxt-link>
+          <NuxtLinkLocale to="/arts" class="widget-ctl-btn">
+            <span class="widget-ctl-name">{{ $t('p_art_id_string.browseAll') }}</span><span class="icon icon-angle-right"/>
+          </NuxtLinkLocale>
         </template>
         <item-list :limit="6" exact-limit/>
       </Widget>
 
       <Widget>
         <p class="art-report">
-          Something off about this artwork?
-          <a :href="reportMailto" class="art-report-link">Report</a> ·
-          <nuxt-link to="/dmca">DMCA</nuxt-link> ·
-          <nuxt-link to="/guidelines">Guidelines</nuxt-link>
+          {{ $t('p_art_id_string.somethingOffAboutThisArtwork') }}
+          <a :href="reportMailto" class="art-report-link">{{ $t('p_art_id_string.report') }}</a> ·
+          <NuxtLinkLocale to="/dmca">{{ $t('common.dmca') }}</NuxtLinkLocale> ·
+          <NuxtLinkLocale to="/guidelines">{{ $t('common.guidelines') }}</NuxtLinkLocale>
         </p>
       </Widget>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 useCustomSeoMeta({
+  untranslated: true,
   title: "Terms of Service",
   description: "Terms of Service for SimplePixelArt.com. Read our terms before using the pixel art editor and gallery.",
   keywords: "terms of service, simplepixelart terms, user agreement",
@@ -31,17 +32,17 @@ useCustomSeoMeta({
     <h2>User-Generated Content</h2>
     <ul>
       <li>You retain ownership of pixel art you create. By publishing artwork on the site, you grant SimplePixelArt.com a non-exclusive license to display and distribute that content on the platform.</li>
-      <li>You must not publish content that is illegal, harmful, defamatory, or infringes on the intellectual property rights of others. See our <nuxt-link to="/guidelines">Community Guidelines</nuxt-link>.</li>
+      <li>You must not publish content that is illegal, harmful, defamatory, or infringes on the intellectual property rights of others. See our <NuxtLinkLocale to="/guidelines">Community Guidelines</NuxtLinkLocale>.</li>
       <li>We reserve the right to remove any content that violates these terms without notice.</li>
       <li>Published artwork is visible to the public. Do not publish artwork containing personal information.</li>
-      <li>Copyright owners can submit takedown requests via our <nuxt-link to="/dmca">DMCA Policy</nuxt-link>.</li>
+      <li>Copyright owners can submit takedown requests via our <NuxtLinkLocale to="/dmca">DMCA Policy</NuxtLinkLocale>.</li>
     </ul>
 
     <h2>Intellectual Property</h2>
     <p>The SimplePixelArt.com name, logo, and software are the property of SimplePixelArt.com. You may not reproduce, distribute, or create derivative works from our software or branding without permission.</p>
 
     <h2>Advertising</h2>
-    <p>The site displays advertisements provided by Google AdSense. By using the site, you acknowledge that advertisements may be shown based on your browsing activity, as described in our <nuxt-link to="/privacy">Privacy Policy</nuxt-link>.</p>
+    <p>The site displays advertisements provided by Google AdSense. By using the site, you acknowledge that advertisements may be shown based on your browsing activity, as described in our <NuxtLinkLocale to="/privacy">Privacy Policy</NuxtLinkLocale>.</p>
 
     <h2>Disclaimer of Warranties</h2>
     <p>SimplePixelArt.com is provided "as is" without warranties of any kind. We do not guarantee that the service will be uninterrupted, error-free, or that your saved work will never be lost. We recommend keeping local backups of important artwork.</p>
@@ -56,12 +57,12 @@ useCustomSeoMeta({
     <p>If you have questions about these terms, contact us at <a href="mailto:comficker@gmail.com">comficker@gmail.com</a>.</p>
 
     <div class="tags">
-      <div class="item"><nuxt-link to="/">Home</nuxt-link></div>
-      <div class="item"><nuxt-link to="/about">About</nuxt-link></div>
-      <div class="item"><nuxt-link to="/privacy">Privacy Policy</nuxt-link></div>
-      <div class="item"><nuxt-link to="/contact">Contact</nuxt-link></div>
-      <div class="item"><nuxt-link to="/dmca">DMCA</nuxt-link></div>
-      <div class="item"><nuxt-link to="/guidelines">Community Guidelines</nuxt-link></div>
+      <div class="item"><NuxtLinkLocale to="/">Home</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/about">About</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/privacy">Privacy Policy</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/contact">Contact</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/dmca">DMCA</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/guidelines">Community Guidelines</NuxtLinkLocale></div>
     </div>
   </div>
 </template>

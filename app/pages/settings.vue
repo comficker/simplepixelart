@@ -88,66 +88,64 @@ watch(() => auth.logged, fillForm)
       <div class="readme-head set-head">
         <h1 class="set-title">
           <span class="icon icon-cog"/>
-          <span>Settings</span>
+          <span>{{ $t('common.settings') }}</span>
         </h1>
       </div>
 
       <div class="set-body">
 
         <section class="set-section">
-          <h2 class="set-section-title">Account</h2>
+          <h2 class="set-section-title">{{ $t('p_settings.account') }}</h2>
           <div v-if="!auth.isLogged" class="set-signin">
-            <p class="text-xs text-muted">Sign in to manage your username, profile and password.</p>
-            <a :href="googleAuthUrl" class="btn primary">Sign in</a>
+            <p class="text-xs text-muted" v-html="$t('p_settings.signInToManageYourUsername')"/>
+            <a :href="googleAuthUrl" class="btn primary">{{ $t('common.signIn') }}</a>
           </div>
           <form v-else class="set-form" @submit.prevent="saveProfile">
             <label class="set-field">
-              <span class="set-label">Username</span>
+              <span class="set-label">{{ $t('p_settings.username') }}</span>
               <input v-model="form.username" class="set-input" maxlength="30" autocomplete="username">
-              <span class="set-help text-xs">Your public handle — changing it changes your profile URL.</span>
+              <span class="set-help text-xs">{{ $t('p_settings.yourPublicHandleChangingIt') }}</span>
             </label>
             <div class="set-row">
               <label class="set-field">
-                <span class="set-label">First name</span>
+                <span class="set-label">{{ $t('p_settings.firstName') }}</span>
                 <input v-model="form.first_name" class="set-input" maxlength="150" autocomplete="given-name">
               </label>
               <label class="set-field">
-                <span class="set-label">Last name</span>
+                <span class="set-label">{{ $t('p_settings.lastName') }}</span>
                 <input v-model="form.last_name" class="set-input" maxlength="150" autocomplete="family-name">
               </label>
             </div>
             <label class="set-field">
-              <span class="set-label">Bio</span>
-              <textarea v-model="form.bio" class="set-input set-textarea" maxlength="280" rows="3" placeholder="A line about you and your art"/>
+              <span class="set-label">{{ $t('p_settings.bio') }}</span>
+              <textarea v-model="form.bio" class="set-input set-textarea" maxlength="280" rows="3" :placeholder="$t('p_settings.aLineAboutYouAndYour')"/>
             </label>
             <div class="set-actions">
               <button type="submit" class="btn primary" :disabled="savingProfile">
                 {{ savingProfile ? 'Saving…' : 'Save profile' }}
               </button>
-              <nuxt-link v-if="auth.logged?.username" :to="`/creator/${auth.logged.username}`" class="btn">
-                <span class="icon icon-user"/><span>View public profile</span>
-              </nuxt-link>
+              <NuxtLinkLocale v-if="auth.logged?.username" :to="`/creator/${auth.logged.username}`" class="btn">
+                <span class="icon icon-user"/><span>{{ $t('p_settings.viewPublicProfile') }}</span>
+              </NuxtLinkLocale>
             </div>
           </form>
         </section>
 
         <section v-if="auth.isLogged" class="set-section">
-          <h2 class="set-section-title">Password</h2>
-          <p v-if="!hasPassword" class="text-xs text-muted">
-            You signed in with Google — set a password to also log in directly.
-          </p>
+          <h2 class="set-section-title">{{ $t('p_settings.password') }}</h2>
+          <p v-if="!hasPassword" class="text-xs text-muted" v-html="$t('p_settings.youSignedInWithGoogleSet')"/>
           <form class="set-form" @submit.prevent="savePassword">
             <label v-if="hasPassword" class="set-field">
-              <span class="set-label">Current password</span>
+              <span class="set-label">{{ $t('p_settings.currentPassword') }}</span>
               <input v-model="pw.current" type="password" class="set-input" autocomplete="current-password">
             </label>
             <div class="set-row">
               <label class="set-field">
-                <span class="set-label">New password</span>
+                <span class="set-label">{{ $t('p_settings.newPassword') }}</span>
                 <input v-model="pw.next" type="password" class="set-input" minlength="6" autocomplete="new-password">
               </label>
               <label class="set-field">
-                <span class="set-label">Confirm</span>
+                <span class="set-label">{{ $t('p_settings.confirm') }}</span>
                 <input v-model="pw.confirm" type="password" class="set-input" autocomplete="new-password">
               </label>
             </div>
@@ -160,7 +158,7 @@ watch(() => auth.logged, fillForm)
         </section>
 
         <section class="set-section">
-          <h2 class="set-section-title">Appearance</h2>
+          <h2 class="set-section-title">{{ $t('p_settings.appearance') }}</h2>
           <div class="set-themes">
             <button
                 v-for="t in themes"
@@ -173,17 +171,17 @@ watch(() => auth.logged, fillForm)
               <span class="set-theme-dot" :style="{background: t.colors[0], color: t.colors[2]}">
                 <span class="set-theme-ink"/>
               </span>
-              <span>{{ t.name }}</span>
+              <span>{{ $t(t.i18n) }}</span>
               <span v-if="current === t.id" class="icon icon-check"/>
             </button>
           </div>
 
           <div class="set-field">
-            <span class="set-label">Items per row</span>
+            <span class="set-label">{{ $t('p_settings.itemsPerRow') }}</span>
             <div class="settings-row">
               <label class="pill" :class="{active: resultsCols === 'auto'}">
                 <input type="radio" value="auto" :checked="resultsCols === 'auto'" @change="setResultsCols('auto')">
-                <span>Auto</span>
+                <span>{{ $t('common.auto') }}</span>
               </label>
               <label
                   v-for="n in resultsColOptions"
@@ -195,23 +193,16 @@ watch(() => auth.logged, fillForm)
                 <span>{{ n }}</span>
               </label>
             </div>
-            <p class="text-xs text-muted">
-              How many artworks each gallery row fits on tablet and desktop, four rows
-              per page. Phones always show 3.
-            </p>
+            <p class="text-xs text-muted" v-html="$t('p_settings.howManyArtworksEachGalleryRow')"/>
           </div>
         </section>
 
         <section class="set-section">
-          <h2 class="set-section-title">App data</h2>
-          <p class="text-xs text-muted">
-            Local storage holds your guest artwork, undo history and preferences.
-            Reset if the app gets stuck — unsynced guest work is lost, your
-            signed-in account is not affected.
-          </p>
+          <h2 class="set-section-title">{{ $t('p_settings.appData') }}</h2>
+          <p class="text-xs text-muted" v-html="$t('p_settings.localStorageHoldsYourGuestArtwork')"/>
           <div class="set-actions">
             <button class="btn set-danger" @click="resetAppData">
-              <span class="icon icon-broom"/><span>Reset app data</span>
+              <span class="icon icon-broom"/><span>{{ $t('p_settings.resetAppData') }}</span>
             </button>
           </div>
         </section>

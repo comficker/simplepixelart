@@ -9,46 +9,41 @@ useCustomSeoMeta({
 
 <template>
   <div class="page prose">
-    <h1>Contact Us</h1>
-    <p>We read every message. Pick the channel that matches your request.</p>
+    <h1>{{ $t('p_contact.contactUs') }}</h1>
+    <p v-html="$t('p_contact.weReadEveryMessagePickThe')"/>
 
-    <h2>Bugs &amp; Feature Requests</h2>
-    <p>
-      SimplePixelArt is <a href="https://github.com/comficker/simplepixelart" target="_blank" rel="noopener">open source</a> —
-      the fastest way to report a bug or request a feature is to
-      <a href="https://github.com/comficker/simplepixelart/issues" target="_blank" rel="noopener">open an issue on GitHub</a>.
-      Pull requests are welcome too.
-    </p>
+    <h2>{{ $t('p_contact.bugsAmpFeatureRequests') }}</h2>
+    <p v-html="$t('p_contact.simplepixelartIsAHrefHttpsGithub')"/>
 
-    <h2>General Support</h2>
-    <p>Questions about the editor, account issues, or feedback:</p>
+    <h2>{{ $t('p_contact.generalSupport') }}</h2>
+    <p v-html="$t('p_contact.questionsAboutTheEditorAccountIssu')"/>
     <p><a href="mailto:comficker@gmail.com?subject=SimplePixelArt%20Support">comficker@gmail.com</a></p>
-    <p class="page-meta">Typical response: within 3 business days.</p>
+    <p class="page-meta" v-html="$t('p_contact.typicalResponseWithin3BusinessDays')"/>
 
-    <h2>Copyright / DMCA</h2>
-    <p>If your copyrighted work was published without permission, submit a takedown notice following our <nuxt-link to="/dmca">DMCA Policy</nuxt-link>.</p>
+    <h2>{{ $t('p_contact.copyrightDmca') }}</h2>
+    <p>{{ $t('p_contact.ifYourCopyrightedWorkWasPublished') }} <NuxtLinkLocale to="/dmca">{{ $t('p_contact.dmcaPolicy') }}</NuxtLinkLocale>.</p>
     <p><a href="mailto:comficker@gmail.com?subject=DMCA%20Takedown%20Request">comficker@gmail.com</a></p>
 
-    <h2>Report Abuse</h2>
-    <p>Content that violates our <nuxt-link to="/guidelines">Community Guidelines</nuxt-link> (illegal, hateful, harassing, or sexually explicit material):</p>
+    <h2>{{ $t('p_contact.reportAbuse') }}</h2>
+    <p>{{ $t('p_contact.contentThatViolatesOur') }} <NuxtLinkLocale to="/guidelines">{{ $t('p_contact.communityGuidelines') }}</NuxtLinkLocale> {{ $t('p_contact.illegalHatefulHarassingOrSexuallyE') }}</p>
     <p><a href="mailto:comficker@gmail.com?subject=Abuse%20Report">comficker@gmail.com</a></p>
-    <p class="page-meta">Include the artwork URL and a brief description of the issue.</p>
+    <p class="page-meta" v-html="$t('p_contact.includeTheArtworkUrlAndA')"/>
 
-    <h2>Privacy Requests</h2>
-    <p>Account deletion, data export (GDPR/CCPA), or privacy-related inquiries:</p>
+    <h2>{{ $t('p_contact.privacyRequests') }}</h2>
+    <p v-html="$t('p_contact.accountDeletionDataExportGdprCcpa')"/>
     <p><a href="mailto:comficker@gmail.com?subject=Privacy%20Request">comficker@gmail.com</a></p>
 
-    <h2>Business / Press</h2>
-    <p>Partnerships, advertising questions, press inquiries:</p>
+    <h2>{{ $t('p_contact.businessPress') }}</h2>
+    <p v-html="$t('p_contact.partnershipsAdvertisingQuestionsPr')"/>
     <p><a href="mailto:comficker@gmail.com?subject=Business%20Inquiry">comficker@gmail.com</a></p>
 
     <div class="tags">
-      <div class="item"><nuxt-link to="/">Home</nuxt-link></div>
-      <div class="item"><nuxt-link to="/about">About</nuxt-link></div>
-      <div class="item"><nuxt-link to="/privacy">Privacy Policy</nuxt-link></div>
-      <div class="item"><nuxt-link to="/terms">Terms of Service</nuxt-link></div>
-      <div class="item"><nuxt-link to="/dmca">DMCA</nuxt-link></div>
-      <div class="item"><nuxt-link to="/guidelines">Community Guidelines</nuxt-link></div>
+      <div class="item"><NuxtLinkLocale to="/">{{ $t('common.home') }}</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/about">{{ $t('p_contact.about') }}</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/privacy">{{ $t('common.privacyPolicy') }}</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/terms">{{ $t('p_contact.termsOfService') }}</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/dmca">{{ $t('common.dmca') }}</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/guidelines">{{ $t('p_contact.communityGuidelines') }}</NuxtLinkLocale></div>
     </div>
   </div>
 </template>

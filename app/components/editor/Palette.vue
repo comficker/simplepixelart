@@ -52,8 +52,8 @@ defineExpose({addColor, toggleModify, removeColor})
             @click="store.useColor(-1)"
             :class="{ active: store.currentColorIndex === -1 }"
             :aria-pressed="store.currentColorIndex === -1"
-            aria-label="Eraser"
-            title="Eraser (E) — paint with transparency to remove pixels"
+            :aria-label="$t('c_Palette.eraser')"
+            :title="$t('c_Palette.eraserEPaintWithTransparencyTo')"
         >
           <span class="icon icon-eraser"/>
         </button>
@@ -63,9 +63,9 @@ defineExpose({addColor, toggleModify, removeColor})
             class="item tool-item"
             :class="{ active: store.currentTool === 'picker' }"
             :aria-pressed="store.currentTool === 'picker'"
-            aria-label="Eyedropper"
+            :aria-label="$t('c_Palette.eyedropper')"
             @click="store.setTool(store.currentTool === 'picker' ? 'brush' : 'picker')"
-            title="Eyedropper — click a pixel to grab its color, then keep drawing"
+            :title="$t('c_Palette.eyedropperClickAPixelToGrab')"
         >
           <span class="icon icon-eyedropper"/>
         </button>
@@ -77,7 +77,7 @@ defineExpose({addColor, toggleModify, removeColor})
               :style="{ backgroundColor: color }"
               :class="['item', 'color-item', { active: index === store.currentColorIndex }]"
               :aria-pressed="index === store.currentColorIndex"
-              :aria-label="`Color ${index + 1}: ${color}`"
+              :aria-label="$t('c_Palette.colorNHex', {n: index + 1, hex: color})"
               :title="color"
               @click="store.useColor(index)"
           />
@@ -97,7 +97,7 @@ defineExpose({addColor, toggleModify, removeColor})
             v-if="isModify && store.editorData.colors.length > 1"
             class="palette-remove"
             @click="removeColor"
-            title="Remove current color"
+            :title="$t('c_Palette.removeCurrentColor')"
         >
           <span class="icon icon-trash"/>
         </div>

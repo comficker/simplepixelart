@@ -4,7 +4,37 @@ const adsEnabled = process.env.NUXT_PUBLIC_ADS_ENABLED !== 'false';
 export default defineNuxtConfig({
     compatibilityDate: '2025-07-15',
     devtools: {enabled: true},
-    modules: ['@pinia/nuxt'],
+    modules: ['@pinia/nuxt', '@nuxtjs/i18n'],
+    i18n: {
+        // Subdirectories, not a cookie: a language only earns traffic if Google
+        // has a URL of its own to index for it. English keeps the bare paths so
+        // nothing it already ranks for moves.
+        strategy: 'prefix_except_default',
+        defaultLocale: 'en',
+        // Message fallback is a vue-i18n option, not a module one -- the
+        // module's own fallbackLocale belongs to browser detection.
+        vueI18n: './i18n.config.ts',
+        // The six markets where pixel art, retro games and indie dev are
+        // strongest. `language` is what goes in hreflang.
+        locales: [
+            {code: 'en', language: 'en', name: 'English', file: 'en.json'},
+            {code: 'ja', language: 'ja', name: '日本語', file: 'ja.json'},
+            {code: 'zh', language: 'zh-Hans', name: '简体中文', file: 'zh.json'},
+            {code: 'ko', language: 'ko', name: '한국어', file: 'ko.json'},
+            {code: 'es', language: 'es', name: 'Español', file: 'es.json'},
+            {code: 'pt', language: 'pt-BR', name: 'Português', file: 'pt.json'},
+            {code: 'ru', language: 'ru', name: 'Русский', file: 'ru.json'},
+        ],
+        lazy: true,
+        bundle: {optimizeTranslationDirective: false},
+        // README/FAQ copy is prose with inline markup, rendered through v-html.
+        // The compiler rejects HTML in messages by default, which 404s the locale chunk.
+        compilation: {strictMessage: false, escapeHtml: false},
+        // No automatic redirect: a visitor who lands on an English URL from
+        // search should stay on it, or the ranking page bounces them away.
+        detectBrowserLanguage: false,
+        baseUrl: 'https://simplepixelart.com',
+    },
     nitro: {
         // Pre-compress hashed assets at build; the node server (and gzip_static/
         // brotli_static in nginx) can serve .br/.gz without on-the-fly work.
@@ -76,9 +106,6 @@ export default defineNuxtConfig({
         head: {
             titleTemplate: '%s - SimplePixelArt.com',
             title: "Simple Pixel Art - Create & Discover Pixel Art Online",
-            htmlAttrs: {
-                lang: 'en',
-            },
             link: [
                 {rel: 'icon', type: 'image/x-icon', href: '/favicon.ico'},
                 {rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png'},

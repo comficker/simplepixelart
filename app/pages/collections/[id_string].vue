@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const localePath = useLocalePath()
 const artImage = useArtImage()
 import {toast} from 'vue-sonner'
 import type {APIResponse, Collection, SharedPage} from "~/types";
@@ -58,6 +59,7 @@ const formattedDate = computed(() => {
 
 
 useCustomSeoMeta({
+  untranslated: true,
   title: `${title.value} — Pixel Art Collection`,
   description: desc.value
       ? `${desc.value} Browse ${itemCount.value} pixel art ${itemCount.value === 1 ? 'piece' : 'pieces'} curated on SimplePixelArt.`
@@ -190,7 +192,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
   if (!data.value) return
   data.value = {...data.value, ...updated, items: items.value}
   if (updated.id_string && updated.id_string !== route.params.id_string) {
-    navigateTo(`/collections/${updated.id_string}`, {replace: true})
+    navigateTo(localePath(`/collections/${updated.id_string}`), {replace: true})
   }
 }
 </script>
@@ -198,15 +200,15 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
 <template>
   <div class="page">
     <div v-if="error" class="cl-detail-error">
-      <h1 class="page-title">Collection not found</h1>
-      <p class="text-xs text-muted">This collection may be private or no longer exists.</p>
-      <nuxt-link to="/arts" class="btn primary">Browse public pixel art</nuxt-link>
+      <h1 class="page-title">{{ $t('p_collections_id_string.collectionNotFound') }}</h1>
+      <p class="text-xs text-muted" v-html="$t('p_collections_id_string.thisCollectionMayBePrivateOr')"/>
+      <NuxtLinkLocale to="/arts" class="btn primary">{{ $t('p_collections_id_string.browsePublicPixelArt') }}</NuxtLinkLocale>
     </div>
 
     <template v-else-if="data">
       <section class="cl-detail-hero">
         <div class="cl-detail-head">
-          <span class="cl-detail-eyebrow">Collection</span>
+          <span class="cl-detail-eyebrow">{{ $t('p_collections_id_string.collection') }}</span>
           <h1 class="page-title">{{ title }}</h1>
           <p v-if="desc" class="cl-detail-desc">{{ desc }}</p>
           <div class="cl-detail-meta">
@@ -215,7 +217,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
               <span class="icon icon-calender"/> Updated {{ formattedDate }}
             </span>
             <span v-if="!isPublic" class="cl-detail-pill cl-detail-pill-private">
-              <span class="icon icon-earth-off"/> Private
+              <span class="icon icon-earth-off"/> {{ $t('common.private') }}
             </span>
           </div>
         </div>
@@ -225,8 +227,8 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
             <button
                 v-if="isOwner"
                 class="btn cl-icon-btn"
-                title="Manage collection"
-                aria-label="Manage collection"
+                :title="$t('p_collections_id_string.manageCollection')"
+                :aria-label="$t('p_collections_id_string.manageCollection')"
                 @click="startManage"
             >
               <span class="icon icon-pencil"/>
@@ -235,16 +237,16 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
           <template v-else>
             <button
                 class="btn cl-icon-btn"
-                title="Collection settings"
-                aria-label="Collection settings"
+                :title="$t('p_collections_id_string.collectionSettings')"
+                :aria-label="$t('p_collections_id_string.collectionSettings')"
                 @click="showEditModal = true"
             >
               <span class="icon icon-cog"/>
             </button>
             <button
                 class="btn cl-icon-btn"
-                title="Cancel — discard changes"
-                aria-label="Cancel and discard changes"
+                :title="$t('p_collections_id_string.cancelDiscardChanges')"
+                :aria-label="$t('p_collections_id_string.cancelAndDiscardChanges')"
                 :disabled="savingManage"
                 @click="cancelManage"
             >
@@ -253,7 +255,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
             <button
                 class="btn primary cl-icon-btn"
                 :title="savingManage ? 'Saving…' : 'Save changes'"
-                aria-label="Save changes"
+                :aria-label="$t('p_collections_id_string.saveChanges')"
                 :disabled="savingManage"
                 @click="saveManage"
             >
@@ -270,7 +272,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
             <button
                 v-if="managing"
                 class="cl-manage-trash"
-                :aria-label="`Remove ${item.name || 'artwork'} from collection`"
+                :aria-label="$t('p_collections_id_string.removeXFromCollection', {x: item.name || $t('common.artwork')})"
                 @click.prevent.stop="removeItem(item)"
             >
               <span class="icon icon-trash"/>
@@ -281,20 +283,20 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
 
       <section v-else-if="!managing" class="empty-state">
         <span class="empty-state-icon icon icon-rhombus" aria-hidden="true"/>
-        <div class="empty-state-title">Empty collection</div>
-        <p class="empty-state-body">No pixel art has been added to this collection yet.</p>
+        <div class="empty-state-title">{{ $t('p_collections_id_string.emptyCollection') }}</div>
+        <p class="empty-state-body" v-html="$t('p_collections_id_string.noPixelArtHasBeenAdded')"/>
         <div class="empty-state-actions">
-          <button v-if="isOwner" class="btn primary" @click="startManage">Add pixel art</button>
-          <nuxt-link to="/arts" class="btn">Browse gallery</nuxt-link>
+          <button v-if="isOwner" class="btn primary" @click="startManage">{{ $t('p_collections_id_string.addPixelArt') }}</button>
+          <NuxtLinkLocale to="/arts" class="btn">{{ $t('common.browseGallery') }}</NuxtLinkLocale>
         </div>
       </section>
 
       <section v-if="managing && isOwner" class="cl-manage-add">
         <header class="section-head">
-          <h2 class="section-title">Add your artworks</h2>
-          <span class="section-link">tap to add</span>
+          <h2 class="section-title">{{ $t('p_collections_id_string.addYourArtworks') }}</h2>
+          <span class="section-link">{{ $t('p_collections_id_string.tapToAdd') }}</span>
         </header>
-        <p v-if="loadingMyArts" class="text-xs text-muted">Loading your artworks…</p>
+        <p v-if="loadingMyArts" class="text-xs text-muted">{{ $t('p_collections_id_string.loadingYourArtworks') }}</p>
         <p v-else-if="!addableArts.length" class="text-xs text-muted">
           {{ myArts.length ? 'All your artworks are already in this collection.' : 'You have no cloud artworks yet.' }}
         </p>
@@ -303,7 +305,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
               v-for="a in addableArts"
               :key="a.id"
               class="cl-manage-add-item"
-              :title="`Add ${a.name || 'artwork'}`"
+              :title="$t('common.addX', {x: a.name || $t('common.artwork')})"
               @click="addItem(a)"
           >
             <img
@@ -321,14 +323,14 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
       </section>
 
       <div class="cl-detail-actions">
-        <nuxt-link to="/arts" class="btn">
+        <NuxtLinkLocale to="/arts" class="btn">
           <span class="icon icon-grid"/>
-          <span>Browse all pixel art</span>
-        </nuxt-link>
-        <nuxt-link to="/editor?new=true" class="btn">
+          <span>{{ $t('p_collections_id_string.browseAllPixelArt') }}</span>
+        </NuxtLinkLocale>
+        <NuxtLinkLocale to="/editor?new=true" class="btn">
           <span class="icon icon-pen"/>
-          <span>Create your own</span>
-        </nuxt-link>
+          <span>{{ $t('p_collections_id_string.createYourOwn') }}</span>
+        </NuxtLinkLocale>
       </div>
 
       <CollectionEditModal

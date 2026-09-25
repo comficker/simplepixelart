@@ -55,43 +55,43 @@ useCustomSeoMeta({
   <div class="page screen">
     <div class="screen-head">
       <div class="screen-head-text">
-        <h1 class="screen-title">Weekly challenges</h1>
-        <p class="screen-desc">One theme a week. Draw it your way, submit, and the community votes the winners.</p>
+        <h1 class="screen-title">{{ $t('common.weeklyChallenges') }}</h1>
+        <p class="screen-desc" v-html="$t('p_challenges.oneThemeAWeekDrawIt')"/>
       </div>
       <div class="screen-actions">
-        <nuxt-link to="/editor?new=true" class="btn primary">
-          <span class="icon icon-pencil"/><span>Draw your entry</span>
-        </nuxt-link>
+        <NuxtLinkLocale to="/editor?new=true" class="btn primary">
+          <span class="icon icon-pencil"/><span>{{ $t('common.drawYourEntry') }}</span>
+        </NuxtLinkLocale>
       </div>
     </div>
 
-    <Widget v-if="current" title="This week">
+    <Widget v-if="current" :title="$t('p_challenges.thisWeek')">
       <div class="chal-card">
         <span class="chal-dates">{{ fmtRange(current) }} · {{ daysLeft(current) }} {{ daysLeft(current) === 1 ? 'day' : 'days' }} left</span>
         <h2 class="chal-name">{{ current.name }}</h2>
         <p v-if="current.desc" class="chal-desc">{{ current.desc }}</p>
         <div class="chal-actions">
           <button v-if="auth.isLogged" class="btn" @click="showSubmit = true">
-            <span class="icon icon-flag"/><span>Submit an art</span>
+            <span class="icon icon-flag"/><span>{{ $t('common.submitAnArt') }}</span>
           </button>
           <button v-else class="btn" @click="auth.authOAUTH()">
-            <span class="icon icon-flag"/><span>Log in to submit</span>
+            <span class="icon icon-flag"/><span>{{ $t('common.logInToSubmit') }}</span>
           </button>
-          <nuxt-link :to="`/challenges/${current.id_string}`" class="section-link chal-view">
+          <NuxtLinkLocale :to="`/challenges/${current.id_string}`" class="section-link chal-view">
             {{ current.entries_count }} {{ current.entries_count === 1 ? 'entry' : 'entries' }} →
-          </nuxt-link>
+          </NuxtLinkLocale>
         </div>
         <div v-if="current.top?.length" class="chal-thumbs">
-          <nuxt-link v-for="e in current.top" :key="e.id" :to="`/art/${e.id_string}`" class="chal-thumb" :title="e.name">
+          <NuxtLinkLocale v-for="e in current.top" :key="e.id" :to="`/art/${e.id_string}`" class="chal-thumb" :title="e.name">
             <img :src="thumb(e)" :alt="e.name" loading="lazy" decoding="async">
-          </nuxt-link>
+          </NuxtLinkLocale>
         </div>
       </div>
     </Widget>
 
-    <Widget v-if="past.length" title="Past challenges">
+    <Widget v-if="past.length" :title="$t('p_challenges.pastChallenges')">
       <div class="chal-grid">
-        <nuxt-link
+        <NuxtLinkLocale
             v-for="c in past"
             :key="c.id_string"
             :to="`/challenges/${c.id_string}`"
@@ -114,7 +114,7 @@ useCustomSeoMeta({
             <div class="chal-past-name">{{ c.name }}</div>
             <div class="chal-past-sub">{{ fmtRange(c) }} · {{ c.entries_count }} {{ c.entries_count === 1 ? 'entry' : 'entries' }}</div>
           </div>
-        </nuxt-link>
+        </NuxtLinkLocale>
       </div>
     </Widget>
 

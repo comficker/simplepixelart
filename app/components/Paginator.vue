@@ -19,20 +19,20 @@ function step(delta: number) {
 <template>
   <div v-if="pages > 1" class="paginator">
     <template v-if="linkMode">
-      <CustomLink :to="prevTo" aria-label="Previous page">
+      <CustomLink :to="prevTo" :aria-label="$t('common.previousPage')">
         <span class="icon icon-angle-left"/>
       </CustomLink>
       <div>{{ page }}/{{ pages }}</div>
-      <CustomLink :to="nextTo" aria-label="Next page">
+      <CustomLink :to="nextTo" :aria-label="$t('common.nextPage')">
         <span class="icon icon-angle-right"/>
       </CustomLink>
     </template>
     <template v-else>
-      <a :href="page > 1 ? '#' : undefined" aria-label="Previous page" @click.prevent="step(-1)">
+      <a :href="page > 1 ? '#' : undefined" :aria-label="$t('common.previousPage')" @click.prevent="step(-1)">
         <span class="icon icon-angle-left"/>
       </a>
       <div>{{ page }}/{{ pages }}</div>
-      <a :href="page < pages ? '#' : undefined" aria-label="Next page" @click.prevent="step(1)">
+      <a :href="page < pages ? '#' : undefined" :aria-label="$t('common.nextPage')" @click.prevent="step(1)">
         <span class="icon icon-angle-right"/>
       </a>
     </template>

@@ -27,6 +27,7 @@ const tileItems = computed(() =>
 const canonicalUrl = computed(() => `${config.public.siteUrl}/worlds/${route.params.id_string}`)
 
 useCustomSeoMeta({
+  untranslated: true,
   title: `${title.value} — Pixel Art World`,
   description: `A pixel art world built tile by tile on SimplePixelArt${data.value?.username ? ` by @${data.value.username}` : ''}. Explore the map or build your own in the free world editor.`,
   canonical: canonicalUrl.value,
@@ -48,50 +49,50 @@ const formattedDate = computed(() => {
   <div class="page">
     <div v-if="error || !data" class="empty-state">
       <span class="empty-state-icon icon icon-grid" aria-hidden="true"/>
-      <div class="empty-state-title">World not found</div>
-      <p class="empty-state-body">This world may be private or no longer exists.</p>
-      <nuxt-link to="/tilemaps/editor" class="btn primary empty-state-action">Open the world editor</nuxt-link>
+      <div class="empty-state-title">{{ $t('p_worlds_id_string.worldNotFound') }}</div>
+      <p class="empty-state-body" v-html="$t('p_worlds_id_string.thisWorldMayBePrivateOr')"/>
+      <NuxtLinkLocale to="/tilemaps/editor" class="btn primary empty-state-action">{{ $t('p_worlds_id_string.openTheWorldEditor') }}</NuxtLinkLocale>
     </div>
 
     <template v-else>
       <section class="wd-hero">
         <div class="wd-head">
-          <span class="wd-eyebrow">World</span>
+          <span class="wd-eyebrow">{{ $t('p_worlds_id_string.world') }}</span>
           <h1 class="page-title">{{ title }}</h1>
           <div class="wd-meta">
             <span v-if="data.username" class="wd-pill">by @{{ data.username }}</span>
             <span v-if="formattedDate" class="wd-pill">Updated {{ formattedDate }}</span>
-            <span v-if="!isPublic" class="wd-pill wd-pill-private">Private</span>
+            <span v-if="!isPublic" class="wd-pill wd-pill-private">{{ $t('common.private') }}</span>
           </div>
         </div>
         <div class="wd-actions">
-          <nuxt-link v-if="isOwner" :to="`/tilemaps/editor?world=${data.id_string}`" class="btn primary">
+          <NuxtLinkLocale v-if="isOwner" :to="`/tilemaps/editor?world=${data.id_string}`" class="btn primary">
             <span class="icon icon-pen"/>
-            <span>Edit world</span>
-          </nuxt-link>
-          <nuxt-link v-if="data.tileset_id_string" :to="`/tilesets/${data.tileset_id_string}`" class="btn">
+            <span>{{ $t('p_worlds_id_string.editWorld') }}</span>
+          </NuxtLinkLocale>
+          <NuxtLinkLocale v-if="data.tileset_id_string" :to="`/tilesets/${data.tileset_id_string}`" class="btn">
             <span class="icon icon-grid"/>
-            <span>Tileset</span>
-          </nuxt-link>
+            <span>{{ $t('common.tileset') }}</span>
+          </NuxtLinkLocale>
         </div>
       </section>
 
       <ClientOnly>
         <TilemapShowcase v-if="sceneConfig" :config="sceneConfig" :items="tileItems as any"/>
         <template #fallback>
-          <div class="wd-ph">Rendering world…</div>
+          <div class="wd-ph">{{ $t('p_worlds_id_string.renderingWorld') }}</div>
         </template>
       </ClientOnly>
 
-      <nav class="wd-more" aria-label="Explore more">
-        <nuxt-link to="/tilemaps/editor" class="btn">
+      <nav class="wd-more" :aria-label="$t('p_worlds_id_string.exploreMore')">
+        <NuxtLinkLocale to="/tilemaps/editor" class="btn">
           <span class="icon icon-grid"/>
-          <span>Build your own world</span>
-        </nuxt-link>
-        <nuxt-link to="/arts" class="btn">
+          <span>{{ $t('p_worlds_id_string.buildYourOwnWorld') }}</span>
+        </NuxtLinkLocale>
+        <NuxtLinkLocale to="/arts" class="btn">
           <span class="icon icon-search"/>
-          <span>Browse pixel art</span>
-        </nuxt-link>
+          <span>{{ $t('p_worlds_id_string.browsePixelArt') }}</span>
+        </NuxtLinkLocale>
       </nav>
     </template>
   </div>

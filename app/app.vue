@@ -2,7 +2,19 @@
 import useStatefulCookie from '~/composables/useStatefulCookie'
 const editorBoot = useEditorBoot()
 const {style: resultsColsStyle} = useResultsCols()
-useHead({htmlAttrs: {style: resultsColsStyle}})
+// html lang plus the hreflang set. Without it /ja served lang="en" and no
+// alternate links at all, so the localised URLs had nothing telling Google
+// what they were or who they were for.
+const localeHead = useLocaleHead({dir: true, lang: true, seo: true})
+useHead({
+  htmlAttrs: {
+    style: resultsColsStyle,
+    lang: computed(() => localeHead.value?.htmlAttrs?.lang),
+    dir: computed(() => localeHead.value?.htmlAttrs?.dir),
+  },
+  link: computed(() => localeHead.value?.link || []),
+  meta: computed(() => localeHead.value?.meta || []),
+})
 const sideState = useStatefulCookie('dash_side')
 const sideCollapsed = computed(() => sideState.value === 'collapsed')
 const editorBootBg = ref('#1b1b1f')

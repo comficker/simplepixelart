@@ -1,4 +1,7 @@
 <script setup lang="ts">
+const {t} = useI18n()
+
+const localePath = useLocalePath()
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 
 type Cmd = {
@@ -6,14 +9,22 @@ type Cmd = {
   label: string
   hint?: string
   icon?: string
-  group: 'Navigate' | 'Create' | 'Account' | 'Theme' | 'Help' | 'System'
+  group: 'Create' | 'Go to' | 'Preferences' | 'Account' | 'Help' | 'System' | 'Theme' | 'Language'
+  /** Opens a view inside the palette instead of running and closing. */
+  opens?: View
   keywords?: string
   swatch?: { ring: string; ink: string }
   active?: boolean
   run: () => void | Promise<void>
 }
 
-const GROUP_ORDER = ['Theme', 'Navigate', 'Create', 'Account', 'Help', 'System']
+// Doing comes before going, preferences after both, and the legal pages last.
+// Theme used to sit at the top and pushed every real action below the fold.
+const GROUP_ORDER = ['Create', 'Go to', 'Preferences', 'Account', 'Help', 'System']
+
+type View = 'root' | 'theme' | 'language'
+const view = ref<View>('root')
+const VIEW_TITLE: Record<Exclude<View, 'root'>, string> = {theme: 'Theme', language: 'Language'}
 
 const router = useRouter()
 const { current, setTheme, themes } = useTheme() as any
@@ -57,71 +68,72 @@ function computeStorage() {
 }
 
 const baseCommands = computed<Cmd[]>(() => [
-  { id: 'nav:home', label: 'Home', icon: 'icon-square', group: 'Navigate', keywords: 'index start', run: () => router.push('/') },
-  { id: 'nav:editor', label: 'PX Editor', icon: 'icon-pen', hint: 'New canvas', group: 'Navigate', keywords: 'draw paint create canvas', run: () => router.push('/editor') },
-  { id: 'nav:convert', label: 'Image to Pixel Art', icon: 'icon-swap', group: 'Navigate', keywords: 'convert photo pixelate', run: () => router.push('/converter') },
-  { id: 'nav:generate', label: 'AI Generator', icon: 'icon-auto-fix', hint: 'Text to sprite', group: 'Navigate', keywords: 'ai generate prompt text to sprite reference image gemini', run: () => router.push('/generator') },
-  { id: 'nav:tileset', label: 'Tileset Slicer', icon: 'icon-select', hint: 'Slice a sheet', group: 'Navigate', keywords: 'spritesheet slice cut sprites tiles', run: () => router.push('/tilesets/slicer') },
-  { id: 'nav:tilesets', label: 'Tileset Editor', icon: 'icon-grid', hint: 'Curate tiles', group: 'Navigate', keywords: 'tileset tiles curate registry set', run: () => router.push('/tilesets/editor') },
-  { id: 'nav:tilemap', label: 'Tilemap Editor', icon: 'icon-rhombus', hint: 'Grid / iso map', group: 'Navigate', keywords: 'tilemap map grid isometric tiles level scene world', run: () => router.push('/tilemaps/editor') },
-  { id: 'nav:palettes', label: 'Palettes', icon: 'icon-bucket', group: 'Navigate', keywords: 'color palette swatches library', run: () => router.push('/palettes') },
-  { id: 'nav:arts', label: 'Discovery', icon: 'icon-search', group: 'Navigate', keywords: 'gallery browse art', run: () => router.push('/arts') },
-  { id: 'nav:challenges', label: 'Weekly Challenges', icon: 'icon-flag', hint: 'Draw the theme', group: 'Navigate', keywords: 'challenge weekly theme contest vote', run: () => router.push('/challenges') },
-  { id: 'nav:collections', label: 'Your collections', icon: 'icon-rhombus', group: 'Navigate', keywords: 'collection group theme album', run: () => router.push('/work?tab=collections') },
-  { id: 'create:new', label: 'New pixel art', icon: 'icon-square', hint: 'Open editor', group: 'Create', keywords: 'start blank draw', run: () => router.push('/editor') },
-  { id: 'create:convert', label: 'Convert an image', icon: 'icon-swap', group: 'Create', keywords: 'photo upload pixelate', run: () => router.push('/converter') },
-  { id: 'create:generate', label: 'Generate with AI', icon: 'icon-auto-fix', hint: 'Prompt or photo', group: 'Create', keywords: 'ai generate prompt text to pixel art sprite', run: () => router.push('/generator') },
-  { id: 'create:tileset', label: 'New tileset', icon: 'icon-grid', group: 'Create', keywords: 'tiles curate set registry', run: () => router.push('/tilesets/editor') },
-  { id: 'create:tilemap', label: 'New tilemap', icon: 'icon-rhombus', hint: 'Grid / iso', group: 'Create', keywords: 'map grid isometric build level scene world', run: () => router.push('/tilemaps/editor') },
-  { id: 'create:slice', label: 'Slice a tileset', icon: 'icon-select', group: 'Create', keywords: 'spritesheet cut sprites tiles', run: () => router.push('/tilesets/slicer') },
-  { id: 'create:palette', label: 'Extract a palette', icon: 'icon-image', hint: 'From image', group: 'Create', keywords: 'color palette from image extract', run: () => router.push('/palettes/color-palette-from-image') },
-  { id: 'help:guide', label: 'Guidelines', icon: 'icon-flag', group: 'Help', keywords: 'community rules', run: () => router.push('/guidelines') },
-  { id: 'help:about', label: 'About SimplePixelArt', icon: 'icon-explore', group: 'Help', keywords: 'info mission', run: () => router.push('/about') },
-  { id: 'help:contact', label: 'Contact', icon: 'icon-at', group: 'Help', keywords: 'email support help', run: () => router.push('/contact') },
-  { id: 'help:privacy', label: 'Privacy Policy', icon: 'icon-eye-cross', group: 'Help', keywords: 'privacy data gdpr cookies', run: () => router.push('/privacy') },
-  { id: 'help:terms', label: 'Terms of Service', icon: 'icon-file', group: 'Help', keywords: 'terms tos legal', run: () => router.push('/terms') },
-  { id: 'help:dmca', label: 'DMCA', icon: 'icon-flag', group: 'Help', keywords: 'copyright takedown report', run: () => router.push('/dmca') },
-  { id: 'help:github', label: 'GitHub repository', icon: 'icon-link', hint: 'Open source', group: 'Help', keywords: 'github source code open source star contribute repo', run: () => window.open('https://github.com/comficker/simplepixelart', '_blank', 'noopener') },
-  { id: 'help:issues', label: 'Report an issue', icon: 'icon-flag', hint: 'GitHub Issues', group: 'Help', keywords: 'bug report feature request issue github feedback', run: () => window.open('https://github.com/comficker/simplepixelart/issues', '_blank', 'noopener') },
-  { id: 'system:reset', label: 'Reset app data', hint: 'Clear cache & storage', icon: 'icon-broom', group: 'System', keywords: 'reset clear cache storage wipe localstorage indexeddb hard refresh fix stuck broken', run: resetAppData },
+  // Six of these used to exist twice -- "PX Editor" and "New pixel art" both
+  // went to /editor, and so on for the converter, generator, slicer, tileset
+  // and tilemap. Twelve rows for six places. The action wording stays, since a
+  // palette is for doing; the navigation keywords were folded into it so a
+  // search for "tileset editor" still lands.
+  { id: 'nav:home', label: t('c_CommandPalette.home'), icon: 'icon-square', group: 'Go to', keywords: 'index start', run: () => router.push(localePath('/')) },
+  { id: 'nav:arts', label: t('c_CommandPalette.discovery'), icon: 'icon-search', group: 'Go to', keywords: 'gallery browse art', run: () => router.push(localePath('/arts')) },
+  { id: 'nav:palettes', label: t('c_CommandPalette.palettes'), icon: 'icon-bucket', group: 'Go to', keywords: 'color palette swatches library', run: () => router.push(localePath('/palettes')) },
+  { id: 'nav:challenges', label: t('c_CommandPalette.weeklyChallenges'), icon: 'icon-flag', hint: t('c_CommandPalette.drawTheTheme'), group: 'Go to', keywords: 'challenge weekly theme contest vote', run: () => router.push(localePath('/challenges')) },
+  { id: 'nav:collections', label: t('c_CommandPalette.yourCollections'), icon: 'icon-rhombus', group: 'Go to', keywords: 'collection group album', run: () => router.push(localePath('/work?tab=collections')) },
+  { id: 'pref:theme', label: t('c_CommandPalette.theme'), icon: 'icon-adjust', hint: t('c_CommandPalette.changeTheLook'), group: 'Preferences', keywords: 'theme colour color dark light appearance skin', opens: 'theme', run: () => {} },
+  { id: 'pref:lang', label: t('c_CommandPalette.language'), icon: 'icon-earth', hint: t('c_CommandPalette.changeTheLanguage'), group: 'Preferences', keywords: 'language locale translate japanese chinese korean spanish portuguese russian 言語 语言 언어 idioma', opens: 'language', run: () => {} },
+  { id: 'create:new', label: t('c_CommandPalette.newPixelArt'), icon: 'icon-square', hint: t('c_CommandPalette.openEditor'), group: 'Create', keywords: 'px editor draw paint canvas start blank draw', run: () => router.push(localePath('/editor')) },
+  { id: 'create:convert', label: t('c_CommandPalette.convertAnImage'), icon: 'icon-swap', group: 'Create', keywords: 'image to pixel art converter pixelate photo upload pixelate', run: () => router.push(localePath('/converter')) },
+  { id: 'create:generate', label: t('c_CommandPalette.generateWithAi'), icon: 'icon-auto-fix', hint: t('c_CommandPalette.promptOrPhoto'), group: 'Create', keywords: 'ai generator text to sprite gemini ai generate prompt text to pixel art sprite', run: () => router.push(localePath('/generator')) },
+  { id: 'create:tileset', label: t('c_CommandPalette.newTileset'), icon: 'icon-grid', group: 'Create', keywords: 'tileset editor curate registry tiles curate set registry', run: () => router.push(localePath('/tilesets/editor')) },
+  { id: 'create:tilemap', label: t('c_CommandPalette.newTilemap'), icon: 'icon-rhombus', hint: t('c_CommandPalette.gridIso'), group: 'Create', keywords: 'tilemap editor map isometric level scene world map grid isometric build level scene world', run: () => router.push(localePath('/tilemaps/editor')) },
+  { id: 'create:slice', label: t('c_CommandPalette.sliceATileset'), icon: 'icon-select', group: 'Create', keywords: 'tileset slicer spritesheet sheet spritesheet cut sprites tiles', run: () => router.push(localePath('/tilesets/slicer')) },
+  { id: 'create:palette', label: t('c_CommandPalette.extractAPalette'), icon: 'icon-image', hint: t('c_CommandPalette.fromImage'), group: 'Create', keywords: 'color palette from image extract', run: () => router.push(localePath('/palettes/color-palette-from-image')) },
+  { id: 'help:guide', label: t('c_CommandPalette.guidelines'), icon: 'icon-flag', group: 'Help', keywords: 'community rules', run: () => router.push(localePath('/guidelines')) },
+  { id: 'help:about', label: t('c_CommandPalette.aboutSimplepixelart'), icon: 'icon-explore', group: 'Help', keywords: 'info mission', run: () => router.push(localePath('/about')) },
+  { id: 'help:contact', label: t('c_CommandPalette.contact'), icon: 'icon-at', group: 'Help', keywords: 'email support help', run: () => router.push(localePath('/contact')) },
+  { id: 'help:privacy', label: t('c_CommandPalette.privacyPolicy'), icon: 'icon-eye-cross', group: 'Help', keywords: 'privacy data gdpr cookies', run: () => router.push(localePath('/privacy')) },
+  { id: 'help:terms', label: t('c_CommandPalette.termsOfService'), icon: 'icon-file', group: 'Help', keywords: 'terms tos legal', run: () => router.push(localePath('/terms')) },
+  { id: 'help:dmca', label: t('c_CommandPalette.dmca'), icon: 'icon-flag', group: 'Help', keywords: 'copyright takedown report', run: () => router.push(localePath('/dmca')) },
+  { id: 'help:github', label: t('c_CommandPalette.githubRepository'), icon: 'icon-link', hint: t('c_CommandPalette.openSource'), group: 'Help', keywords: 'github source code open source star contribute repo', run: () => window.open('https://github.com/comficker/simplepixelart', '_blank', 'noopener') },
+  { id: 'help:issues', label: t('c_CommandPalette.reportAnIssue'), icon: 'icon-flag', hint: t('c_CommandPalette.githubIssues'), group: 'Help', keywords: 'bug report feature request issue github feedback', run: () => window.open('https://github.com/comficker/simplepixelart/issues', '_blank', 'noopener') },
+  { id: 'system:reset', label: t('c_CommandPalette.resetAppData'), hint: t('c_CommandPalette.clearCacheStorage'), icon: 'icon-broom', group: 'System', keywords: 'reset clear cache storage wipe localstorage indexeddb hard refresh fix stuck broken', run: resetAppData },
 ])
 
 const accountCommands = computed<Cmd[]>(() => {
   const cmds: Cmd[] = []
   if (!auth.isLogged) {
     cmds.push({
-      id: 'account:login', label: 'Sign in', icon: 'icon-user', hint: 'Google',
+      id: 'account:login', label: t('c_CommandPalette.signIn'), icon: 'icon-user', hint: t('c_CommandPalette.google'),
       group: 'Account', keywords: 'login signin account google',
       run: () => { window.location.href = googleAuthUrl.value },
     })
   }
   cmds.push({
-    id: 'account:settings', label: 'Settings', icon: 'icon-cog',
+    id: 'account:settings', label: t('c_CommandPalette.settings'), icon: 'icon-cog',
     group: 'Account', keywords: 'account profile username password theme preferences reset',
-    run: () => router.push('/settings'),
+    run: () => router.push(localePath('/settings')),
   })
   if (auth.isLogged) {
     cmds.push({
-      id: 'account:profile', label: 'Public profile', icon: 'icon-user',
+      id: 'account:profile', label: t('c_CommandPalette.publicProfile'), icon: 'icon-user',
       hint: `@${auth.logged?.username}`, group: 'Account',
       keywords: 'creator page my profile',
-      run: () => router.push(`/creator/${auth.logged?.username}`),
+      run: () => router.push(localePath(`/creator/${auth.logged?.username}`)),
     })
   }
   cmds.push({
-    id: 'account:work', label: 'Your work', icon: 'icon-workspace',
+    id: 'account:work', label: t('c_CommandPalette.yourWork'), icon: 'icon-workspace',
     group: 'Account', keywords: 'mine artworks drafts',
-    run: () => router.push('/work'),
+    run: () => router.push(localePath('/work')),
   })
   if (auth.isLogged) {
     cmds.push(
         {
-          id: 'account:missions', label: 'Missions & credits', icon: 'icon-coin',
+          id: 'account:missions', label: t('c_CommandPalette.missionsCredits'), icon: 'icon-coin',
           group: 'Account', keywords: 'credits tokens rewards earn daily invite referral',
-          run: () => router.push('/missions'),
+          run: () => router.push(localePath('/missions')),
         },
         {
-          id: 'account:logout', label: 'Log out', icon: 'icon-x',
+          id: 'account:logout', label: t('c_CommandPalette.logOut'), icon: 'icon-x',
           group: 'Account', keywords: 'sign out logout leave',
           run: () => auth.logout(),
         },
@@ -131,19 +143,38 @@ const accountCommands = computed<Cmd[]>(() => {
 })
 
 const themeCommands = computed<Cmd[]>(() =>
-    (themes || []).map((t: any) => ({
-      id: `theme:${t.id}`,
-      label: t.name,
+    (themes || []).map((tt: any) => ({
+      id: `theme:${tt.id}`,
+      label: t(tt.i18n),
       icon: 'icon-adjust',
       group: 'Theme' as const,
-      keywords: `theme color ${t.id} ${t.name}`,
-      swatch: { ring: t.colors[0], ink: t.colors[2] },
-      active: current.value === t.id,
-      run: () => setTheme(t.id),
+      keywords: `theme color ${tt.id} ${tt.name}`,
+      swatch: { ring: tt.colors[0], ink: tt.colors[2] },
+      active: current.value === tt.id,
+      run: () => setTheme(tt.id),
     }))
 )
 
-const allCommands = computed(() => [...baseCommands.value, ...accountCommands.value, ...themeCommands.value])
+const {locale, locales} = useI18n()
+const switchLocalePath = useSwitchLocalePath()
+
+const languageCommands = computed<Cmd[]>(() =>
+    (locales.value as {code: string, name: string}[]).map(l => ({
+      id: `lang:${l.code}`,
+      label: l.name,
+      icon: 'icon-earth',
+      group: 'Language' as const,
+      keywords: `language locale ${l.code} ${l.name}`,
+      active: l.code === locale.value,
+      // switchLocalePath keeps the visitor on the page they are reading.
+      run: () => router.push(switchLocalePath(l.code)),
+    }))
+)
+
+const allCommands = computed(() => [
+  ...baseCommands.value, ...accountCommands.value,
+  ...themeCommands.value, ...languageCommands.value,
+])
 
 function score(cmd: Cmd, q: string): number {
   if (!q) return 1
@@ -158,9 +189,19 @@ function score(cmd: Cmd, q: string): number {
   return 0
 }
 
+/** Theme and Language live behind their own view, so the root list is not
+ *  buried under a dozen swatches. A search still reaches into them: typing
+ *  "dark" or "日本語" from the root should find them. */
+const inView = computed(() => {
+  if (query.value) return allCommands.value
+  if (view.value === 'theme') return themeCommands.value
+  if (view.value === 'language') return languageCommands.value
+  return allCommands.value.filter(c => c.group !== 'Theme' && c.group !== 'Language')
+})
+
 const filtered = computed(() => {
   const q = query.value
-  return allCommands.value
+  return inView.value
       .map(cmd => ({ cmd, s: score(cmd, q) }))
       .filter(x => x.s > 0)
       .sort((a, b) => b.s - a.s)
@@ -198,6 +239,7 @@ watch(query, () => { selected.value = 0 })
 
 function openPalette() {
   open.value = true
+  view.value = 'root'
   query.value = ''
   selected.value = 0
   computeStorage()
@@ -225,13 +267,29 @@ function scrollActiveIntoView() {
 async function activate(cmd?: Cmd) {
   const target = cmd ?? flatItems.value[selected.value]
   if (!target) return
+  if (target.opens) {
+    view.value = target.opens
+    query.value = ''
+    selected.value = 0
+    return
+  }
   closePalette()
   await target.run()
 }
 
+function back() {
+  view.value = 'root'
+  query.value = ''
+  selected.value = 0
+}
+
 function onKey(e: KeyboardEvent) {
   if (!open.value) return
-  if (e.key === 'Escape') { e.preventDefault(); closePalette() }
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    view.value === 'root' ? closePalette() : back()
+  }
+  else if (e.key === 'Backspace' && !query.value && view.value !== 'root') { e.preventDefault(); back() }
   else if (e.key === 'ArrowDown') { e.preventDefault(); move(1) }
   else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1) }
   else if (e.key === 'Enter') { e.preventDefault(); activate() }
@@ -259,26 +317,30 @@ onBeforeUnmount(() => {
   <Teleport to="body">
     <Transition name="cmdk">
       <div v-if="open" class="cmdk-overlay" @click.self="closePalette" @keydown="onKey">
-        <div class="cmdk" role="dialog" aria-label="Command palette">
+        <div class="cmdk" role="dialog" :aria-label="$t('c_CommandPalette.commandPalette')">
           <div class="cmdk-input-wrap">
             <span class="icon icon-search cmdk-search-icon" aria-hidden="true"/>
             <input
                 ref="inputEl"
                 v-model="query"
                 class="cmdk-input"
-                placeholder="Type a command or search…"
+                :placeholder="view === 'root' ? 'Type a command or search…' : t('c_CommandPalette.searchX', {x: (VIEW_TITLE[view] || '').toLowerCase()})"
                 spellcheck="false"
                 autocomplete="off"
-                @keydown="onKey"
+                @keydown.stop="onKey"
             >
             <kbd class="kbd">esc</kbd>
           </div>
+          <button v-if="view !== 'root'" type="button" class="cmdk-back" @click="back">
+            <span class="icon icon-angle-left"/>
+            <span>{{ VIEW_TITLE[view] }}</span>
+          </button>
           <div ref="listEl" class="cmdk-list" role="listbox">
             <template v-if="flatItems.length">
               <div v-for="block in groupedBlocks" :key="block.group" class="cmdk-block">
-                <div class="cmdk-group">{{ block.group }}</div>
+                <div v-if="view === 'root' || query" class="cmdk-group">{{ block.group }}</div>
 
-                <div v-if="block.group === 'Theme'" class="cmdk-theme-row">
+                <div v-if="block.group === 'Theme' && view === 'theme'" class="cmdk-theme-row">
                   <button
                       v-for="it in block.items"
                       :key="it.cmd.id"
@@ -311,6 +373,8 @@ onBeforeUnmount(() => {
                   <span class="cmdk-item-icon icon" :class="it.cmd.icon" aria-hidden="true"/>
                   <span class="cmdk-item-label">{{ it.cmd.label }}</span>
                   <span v-if="it.cmd.hint" class="cmdk-item-hint">{{ it.cmd.hint }}</span>
+                  <span v-if="it.cmd.active" class="icon icon-check cmdk-item-tick" aria-hidden="true"/>
+                  <span v-else-if="it.cmd.opens" class="icon icon-angle-right cmdk-item-chev" aria-hidden="true"/>
                 </button>
               </div>
             </template>
@@ -326,23 +390,23 @@ onBeforeUnmount(() => {
               :title="`Local storage: ${storage.usedMB} MB of ~5 MB used (${storage.pct}%)${storage.boards ? ` · ${storage.boards} board${storage.boards === 1 ? '' : 's'}` : ''}${storage.arts ? ` · ${storage.arts} saved` : ''}`"
           >
             <span class="cmdk-stat-icon icon icon-save" aria-hidden="true"/>
-            <span class="cmdk-stat-label">Storage</span>
+            <span class="cmdk-stat-label">{{ $t('c_CommandPalette.storage') }}</span>
             <span class="cmdk-stat-bar"><span class="cmdk-stat-fill" :style="{ width: storage.pct + '%' }"/></span>
             <span class="cmdk-stat-val">{{ storage.usedMB }} MB · {{ storage.pct }}%</span>
             <a
                 v-if="!auth.isLogged && storage.pct >= 70"
                 :href="googleAuthUrl"
                 class="cmdk-stat-cta"
-                title="Sign in to back your local work up to the cloud — and free up local space"
-            >Sign in to back up →</a>
+                :title="$t('c_CommandPalette.signInToBackYourLocal')"
+            >{{ $t('c_CommandPalette.signInToBackUp') }}</a>
             <span v-else-if="storage.boards" class="cmdk-stat-meta">{{ storage.boards }} board{{ storage.boards === 1 ? '' : 's' }}</span>
           </div>
           <div class="cmdk-foot">
-            <span class="cmdk-foot-grp"><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> navigate</span>
-            <span class="cmdk-foot-grp"><kbd class="kbd">↵</kbd> select</span>
-            <span class="cmdk-foot-grp"><kbd class="kbd">esc</kbd> close</span>
+            <span class="cmdk-foot-grp"><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> {{ $t('c_CommandPalette.navigate') }}</span>
+            <span class="cmdk-foot-grp"><kbd class="kbd">↵</kbd> {{ $t('c_CommandPalette.select') }}</span>
+            <span class="cmdk-foot-grp"><kbd class="kbd">esc</kbd> {{ view === 'root' ? 'close' : 'back' }}</span>
             <span class="cmdk-foot-spacer"/>
-            <span class="cmdk-foot-brand">SimplePixel<span class="cmdk-foot-brand-accent">Art</span></span>
+            <span class="cmdk-foot-brand">{{ $t('c_CommandPalette.simplepixel') }}<span class="cmdk-foot-brand-accent">{{ $t('c_CommandPalette.art') }}</span></span>
           </div>
         </div>
       </div>
@@ -371,7 +435,10 @@ onBeforeUnmount(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  max-height: 70vh;
+  /* A fixed height, not a cap: with max-height the box was as tall as whatever
+     it held, so stepping into Theme or Language shrank it from 630px to 209px
+     and everything under the cursor jumped. The list scrolls inside instead. */
+  height: min(70dvh, 560px);
 }
 
 .cmdk-input-wrap {
@@ -402,6 +469,31 @@ onBeforeUnmount(() => {
 .cmdk-input::placeholder {
   color: var(--muted);
 }
+
+/* Reads like the settings sub-views: a header you can click to step back out,
+   so the palette never traps you in Theme or Language. */
+.cmdk-back {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+.cmdk-back .icon { flex: none; }
+@media (hover: hover) and (pointer: fine) {
+  .cmdk-back:hover { color: var(--foreground); }
+}
+
+.cmdk-item-tick { margin-left: auto; flex: none; color: var(--primary); }
+.cmdk-item-chev { margin-left: auto; flex: none; opacity: 0.45; }
 
 .cmdk-list {
   flex: 1;
@@ -636,7 +728,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 600px) {
   .cmdk-overlay { padding-top: 6vh; }
-  .cmdk { max-height: 80vh; border-radius: var(--radius-sm); }
+  .cmdk { height: min(80dvh, 560px); border-radius: var(--radius-sm); }
   .cmdk-foot { display: none; }
 }
 

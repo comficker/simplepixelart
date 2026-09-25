@@ -3,9 +3,9 @@ const {to} = defineProps<{to?: string | null}>()
 </script>
 
 <template>
-  <nuxt-link v-if="to" class="h-center underline" :to="to">
+  <NuxtLinkLocale v-if="to" class="h-center underline" :to="to">
     <slot/>
-  </nuxt-link>
+  </NuxtLinkLocale>
   <a v-else class="h-center text-muted">
     <slot/>
   </a>

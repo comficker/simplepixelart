@@ -51,7 +51,7 @@ const shown = computed(() => {
     <div class="lb-bar">
       <label class="lb-search">
         <span class="icon icon-search"/>
-        <input v-model="q" type="search" placeholder="Search…">
+        <input v-model="q" type="search" :placeholder="$t('common.search')">
       </label>
 
       <ui-dropdown-menu v-if="filterable" class="lb-sel">
@@ -62,7 +62,7 @@ const shown = computed(() => {
           <div class="file-menu">
             <button v-for="f in (['all','public','private'] as const)" :key="f" class="file-menu-item" @click="filter = f">
               <span class="file-menu-label">
-                <span>{{ f === 'all' ? 'All' : f === 'public' ? 'Public' : 'Private' }}</span>
+                <span>{{ f === 'all' ? $t('common.all') : f === 'public' ? $t('common.public') : $t('common.private') }}</span>
                 <span v-if="filter === f" class="icon icon-check"/>
               </span>
             </button>
@@ -77,10 +77,10 @@ const shown = computed(() => {
         <template #menu>
           <div class="file-menu">
             <button class="file-menu-item" @click="order = 'recent'">
-              <span class="file-menu-label"><span>Recent</span><span v-if="order === 'recent'" class="icon icon-check"/></span>
+              <span class="file-menu-label"><span>{{ $t('c_LoadBrowser.recent') }}</span><span v-if="order === 'recent'" class="icon icon-check"/></span>
             </button>
             <button class="file-menu-item" @click="order = 'name'">
-              <span class="file-menu-label"><span>Name</span><span v-if="order === 'name'" class="icon icon-check"/></span>
+              <span class="file-menu-label"><span>{{ $t('common.name') }}</span><span v-if="order === 'name'" class="icon icon-check"/></span>
             </button>
           </div>
         </template>
@@ -96,7 +96,7 @@ const shown = computed(() => {
         <div v-for="i in 8" :key="i" class="skeleton skeleton-square"/>
       </div>
       <p v-else-if="!shown.length" class="lb-empty text-xs text-muted">
-        {{ q ? `Nothing matches “${q}”.` : (emptyText || 'Nothing here yet.') }}
+        {{ q ? $t('common.nothingMatchesQ', {q}) : (emptyText || $t('common.nothingHereYet')) }}
       </p>
       <div v-else class="lb-grid">
         <ItemWorkTile

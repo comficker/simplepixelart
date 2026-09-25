@@ -7,6 +7,7 @@ const currentPage = computed(() => route.query.page ? Number.parseInt(route.quer
 const hasFilterQuery = computed(() => !!(route.query.q || route.query.size || route.query.sort))
 
 useCustomSeoMeta({
+  untranslated: true,
   title: computed(() => currentPage.value > 1
       ? `${label.value} Color Palettes — Page ${currentPage.value} | Pixel Art`
       : `${label.value} Color Palettes — Pixel Art`),
@@ -23,7 +24,7 @@ useCustomSeoMeta({
 
 <template>
   <ItemPaletteList
-      :title="`${label} palettes`"
-      :desc="`Pixel art palettes tagged “${label.toLowerCase()}” — copy the hex codes or open any palette in the editor.`"
+      :title="$t('p_palettes_tag_tag.labelPalettes', {label})"
+      :desc="$t('p_palettes_tag_tag.taggedDesc', {label: label.toLowerCase()})"
   />
 </template>
