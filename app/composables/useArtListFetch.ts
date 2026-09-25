@@ -9,6 +9,10 @@ export function useArtListFetch(opts: {
     search?: Ref<string>
 } = {}) {
     const route = useRoute()
+    // Route identity, not URL building: on /ja/arts/size-16x16 the raw
+    // route.path matches none of the patterns below and the gallery falls back
+    // to listing everything.
+    const path = useRoutePathNoLocale()
     const limit = opts.limit ?? 20
     const status = opts.status ?? 'public'
     const ordering = opts.ordering ?? ''
@@ -20,11 +24,11 @@ export function useArtListFetch(opts: {
 
     const effectiveLimit = computed(() => (exact ? limit : pageSize(limit)))
 
-    const isNewView = computed(() => route.path === '/arts/new')
-    const isDetailView = computed(() => route.path.startsWith('/art/'))
+    const isNewView = computed(() => path.value === '/arts/new')
+    const isDetailView = computed(() => path.value.startsWith('/art/'))
     const relatedId = computed(() => isDetailView.value ? route.params.id_string?.toString() : undefined)
 
-    const sizeSlugMatch = computed(() => route.path.match(/^\/arts\/size-(\d+)x(\d+)$/i))
+    const sizeSlugMatch = computed(() => path.value.match(/^\/arts\/size-(\d+)x(\d+)$/i))
 
     const currentSize = computed(() => {
         if (sizeSlugMatch.value) {
@@ -46,7 +50,7 @@ export function useArtListFetch(opts: {
 
     const params = computed(() => ({
         status: isNewView.value ? 'public,pending' : status,
-        slug: isNewView.value ? '/arts' : route.path,
+        slug: isNewView.value ? '/arts' : path.value,
         page: route.query.page ? Number.parseInt(route.query.page.toString()) : 1,
         page_size: hideIp ? effectiveLimit.value + 6 : effectiveLimit.value,
         search: search.value,

@@ -15,9 +15,29 @@ function getParams<T>(url: string, options: any = {}) {
   if (authToken.value) {
     headers['Authorization'] = `Bearer ${authToken.value}`
   }
+  // Tag titles come back localised when the backend has a translation for the
+  // locale (apps/coloring TaxonomySerializer). Without this header every
+  // language reads the English tag.
+  // useNativeFetch is also called from store actions that have resumed after
+  // an await, where there is no Nuxt instance to read -- fall back to no
+  // header there rather than throwing on every imperative request.
+  let locale = ''
+  try {
+    locale = unref(useNuxtApp().$i18n?.locale) || ''
+  } catch {
+    locale = ''
+  }
+  if (locale) {
+    headers['Accept-Language'] = locale
+  }
+
   const q = options?.query ?? options?.params
   const qVal = q ? unref(q) : undefined
-  const defaultKey = qVal ? `${url}?${JSON.stringify(qVal)}` : url
+  // The locale belongs in the key: the same URL now returns different tag
+  // titles per language, and without it a switch would replay the cached
+  // payload of the language before it.
+  const base = locale ? `${locale}:${url}` : url
+  const defaultKey = qVal ? `${base}?${JSON.stringify(qVal)}` : base
   const defaults: UseFetchOptions<T> = {
     baseURL: <string>config.public.api,
     key: defaultKey,
