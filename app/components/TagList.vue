@@ -10,7 +10,7 @@ defineProps<{ items: TagItem[] }>()
 
 <template>
   <div class="tag-list">
-    <nuxt-link
+    <NuxtLinkLocale
         v-for="(t, i) in items"
         :key="i"
         :to="t.to"
@@ -18,7 +18,7 @@ defineProps<{ items: TagItem[] }>()
     >
       <span>{{ t.label }}</span>
       <span v-if="t.count != null" class="tag-list-count">{{ t.count }}</span>
-    </nuxt-link>
+    </NuxtLinkLocale>
   </div>
 </template>
 

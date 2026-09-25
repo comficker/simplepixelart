@@ -1,5 +1,5 @@
 <template>
-  <nuxt-link class="card" :to="to" :title="value.name">
+  <NuxtLinkLocale class="card" :to="to" :title="value.name">
     <div class="square">
       <div class="inside card-pad">
         <img
@@ -14,7 +14,7 @@
             decoding="async"
             @error="imgError = true"
         />
-        <div v-else-if="!isDraw && imgError" class="card-empty" aria-label="No preview yet">
+        <div v-else-if="!isDraw && imgError" class="card-empty" :aria-label="$t('c_Card.noPreviewYet')">
           <span class="icon icon-image"/>
         </div>
         <canvas
@@ -25,13 +25,13 @@
             height="200"
             :aria-label="value.name || 'Pixel art preview'"
         />
-        <span v-if="isAnim" class="card-anim-badge" title="Animated artwork">
+        <span v-if="isAnim" class="card-anim-badge" :title="$t('common.animatedArtwork')">
           <svg viewBox="0 0 24 24" width="10" height="10"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
-          <span>GIF</span>
+          <span>{{ $t('c_Card.gif') }}</span>
         </span>
       </div>
     </div>
-  </nuxt-link>
+  </NuxtLinkLocale>
 </template>
 
 <script setup lang="ts">

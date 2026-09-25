@@ -1,5 +1,6 @@
 <script setup lang="ts">
 useCustomSeoMeta({
+  untranslated: true,
   title: "Community Guidelines",
   description: "Community guidelines for SimplePixelArt.com. Rules on user-generated pixel art, copyright, harassment, and what gets removed.",
   keywords: "community guidelines, simplepixelart rules, content policy, moderation",
@@ -20,7 +21,7 @@ useCustomSeoMeta({
       <li><strong>Hate speech</strong> — Content that attacks, threatens, or dehumanizes people based on race, ethnicity, national origin, religion, disability, gender, sexual orientation, or other protected characteristics.</li>
       <li><strong>Harassment & bullying</strong> — Targeted abuse, doxxing, or sustained insults toward other users.</li>
       <li><strong>Violence & gore</strong> — Graphic depictions of real-world violence, self-harm, or animal cruelty.</li>
-      <li><strong>Copyright infringement</strong> — Uploading artwork that copies or closely traces protected characters, logos, or images without permission. See our <nuxt-link to="/dmca">DMCA Policy</nuxt-link>.</li>
+      <li><strong>Copyright infringement</strong> — Uploading artwork that copies or closely traces protected characters, logos, or images without permission. See our <NuxtLinkLocale to="/dmca">DMCA Policy</NuxtLinkLocale>.</li>
       <li><strong>Impersonation</strong> — Pretending to be another person, brand, or organization.</li>
       <li><strong>Spam & scams</strong> — Bulk low-effort uploads, phishing links, misleading promotions, or referral abuse.</li>
       <li><strong>Personal information</strong> — Publishing addresses, phone numbers, government IDs, or private data of yourself or others.</li>
@@ -37,7 +38,7 @@ useCustomSeoMeta({
       <li>The rule you believe was broken.</li>
       <li>Any supporting context (screenshots, links).</li>
     </ul>
-    <p>For copyright-specific issues, use our <nuxt-link to="/dmca">DMCA process</nuxt-link> instead.</p>
+    <p>For copyright-specific issues, use our <NuxtLinkLocale to="/dmca">DMCA process</NuxtLinkLocale> instead.</p>
 
     <h2>Enforcement</h2>
     <ul>
@@ -45,18 +46,18 @@ useCustomSeoMeta({
       <li><strong>Repeated or severe violations:</strong> Account suspension or permanent ban.</li>
       <li><strong>Illegal content:</strong> Immediate removal and, where required, report to law enforcement (e.g., NCMEC for CSAM).</li>
     </ul>
-    <p>We review reports manually and may remove content proactively when we detect violations. Decisions are final but can be appealed via <nuxt-link to="/contact">Contact</nuxt-link>.</p>
+    <p>We review reports manually and may remove content proactively when we detect violations. Decisions are final but can be appealed via <NuxtLinkLocale to="/contact">Contact</NuxtLinkLocale>.</p>
 
     <h2>Age Requirements</h2>
     <p>You must be at least 13 years old to use SimplePixelArt.com. Users under 18 should have a parent or guardian review these guidelines.</p>
 
     <div class="tags">
-      <div class="item"><nuxt-link to="/">Home</nuxt-link></div>
-      <div class="item"><nuxt-link to="/about">About</nuxt-link></div>
-      <div class="item"><nuxt-link to="/terms">Terms of Service</nuxt-link></div>
-      <div class="item"><nuxt-link to="/privacy">Privacy Policy</nuxt-link></div>
-      <div class="item"><nuxt-link to="/dmca">DMCA</nuxt-link></div>
-      <div class="item"><nuxt-link to="/contact">Contact</nuxt-link></div>
+      <div class="item"><NuxtLinkLocale to="/">Home</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/about">About</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/terms">Terms of Service</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/privacy">Privacy Policy</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/dmca">DMCA</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/contact">Contact</NuxtLinkLocale></div>
     </div>
   </div>
 </template>

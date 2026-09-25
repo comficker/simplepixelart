@@ -242,13 +242,13 @@ onUnmounted(() => { store.isPlaying = false })
 </script>
 
 <template>
-  <Widget title="Animation frames" class="timeline">
+  <Widget :title="$t('common.animationFrames')" class="timeline">
     <div class="tl-bar">
 
       <div class="tl-controls" v-if="store.isAnimated">
 
         <div class="tl-group">
-          <button class="tl-op" title="Previous frame (,)" :disabled="store.currentFrameIndex <= 0" @click="step(-1)">
+          <button class="tl-op" :title="$t('c_Timeline.previousFrame')" :disabled="store.currentFrameIndex <= 0" @click="step(-1)">
             <span class="icon icon-angle-left"/>
           </button>
           <button class="tl-play" :title="playing ? 'Pause' : 'Play'" @click="togglePlay">
@@ -259,10 +259,10 @@ onUnmounted(() => { store.isPlaying = false })
               <path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/>
             </svg>
           </button>
-          <button class="tl-op" title="Next frame (.)" :disabled="store.currentFrameIndex >= store.frameCount - 1" @click="step(1)">
+          <button class="tl-op" :title="$t('c_Timeline.nextFrame')" :disabled="store.currentFrameIndex >= store.frameCount - 1" @click="step(1)">
             <span class="icon icon-angle-right"/>
           </button>
-          <span class="tl-counter" title="Current frame / total">
+          <span class="tl-counter" :title="$t('c_Timeline.currentFrameTotal')">
             {{ store.currentFrameIndex + 1 }}<i>/</i>{{ store.frameCount }}
           </span>
         </div>
@@ -270,13 +270,13 @@ onUnmounted(() => { store.isPlaying = false })
         <span class="tl-divider"/>
 
         <div class="tl-group">
-          <label class="tl-field" title="Playback speed — frames without their own duration use this">
-            <span>Speed</span>
+          <label class="tl-field" :title="$t('c_Timeline.playbackSpeedFramesWithoutTheirOwn')">
+            <span>{{ $t('c_Timeline.speed') }}</span>
             <input type="number" min="1" max="60" v-model.number="fpsDraft" @change="commitFps">
             <em>fps</em>
           </label>
-          <label class="tl-field" title="How long the selected frame stays on screen">
-            <span>Frame</span>
+          <label class="tl-field" :title="$t('c_Timeline.howLongTheSelectedFrameStays')">
+            <span>{{ $t('c_Timeline.frame') }}</span>
             <input type="number" min="10" max="10000" step="10" v-model.number="durationDraft" @change="commitDuration">
             <em>ms</em>
           </label>
@@ -288,58 +288,58 @@ onUnmounted(() => { store.isPlaying = false })
           <button
               class="tl-toggle"
               :class="{active: store.loopAnimation}"
-              title="Repeat the animation"
+              :title="$t('c_Timeline.repeatTheAnimation')"
               @click="store.toggleLoop()"
           >
             <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
               <path d="M7 7h8v3l4-4-4-4v3H5v6h2zM17 17H9v-3l-4 4 4 4v-3h10v-6h-2z" fill="currentColor"/>
             </svg>
-            <span>Loop</span>
+            <span>{{ $t('c_Timeline.loop') }}</span>
           </button>
           <button
               class="tl-toggle"
               :class="{active: store.onionSkin}"
-              title="Show faded previous/next frames while drawing"
+              :title="$t('c_Timeline.showFadedPreviousNextFramesWhile')"
               @click="store.onionSkin = !store.onionSkin"
           >
             <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
               <circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
               <circle cx="9" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
             </svg>
-            <span>Onion</span>
+            <span>{{ $t('c_Timeline.onion') }}</span>
           </button>
           <button
               class="tl-toggle"
-              title="Tag a frame range (idle, walk, …) — exported for game engines"
+              :title="$t('c_Timeline.tagAFrameRangeIdleWalk')"
               @click="onAddTag"
           >
             <span class="icon icon-plus"/>
-            <span>Tag</span>
+            <span>{{ $t('c_Timeline.tag') }}</span>
           </button>
         </div>
 
-        <ui-dropdown-menu class="tl-more" position="bottom" label="Frame actions">
-          <button class="tl-op" title="Frame actions" aria-label="Frame actions">
+        <ui-dropdown-menu class="tl-more" position="bottom" :label="$t('c_Timeline.frameActions')">
+          <button class="tl-op" :title="$t('c_Timeline.frameActions')" :aria-label="$t('c_Timeline.frameActions')">
             <span class="icon icon-dots"/>
           </button>
           <template #menu>
             <div class="file-menu">
               <button class="file-menu-item" @click="onDuplicate">
-                <span class="icon icon-content-copy"/><span>Duplicate frame</span>
+                <span class="icon icon-content-copy"/><span>{{ $t('c_Timeline.duplicateFrame') }}</span>
               </button>
               <button class="file-menu-item" :disabled="store.currentFrameIndex <= 0" @click="moveCur(-1)">
-                <span class="icon icon-angle-left"/><span>Move frame left</span>
+                <span class="icon icon-angle-left"/><span>{{ $t('c_Timeline.moveFrameLeft') }}</span>
               </button>
               <button
                   class="file-menu-item"
                   :disabled="store.currentFrameIndex >= store.frameCount - 1"
                   @click="moveCur(1)"
               >
-                <span class="icon icon-angle-right"/><span>Move frame right</span>
+                <span class="icon icon-angle-right"/><span>{{ $t('c_Timeline.moveFrameRight') }}</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item tl-del" :disabled="store.frameCount <= 1" @click="onDelete">
-                <span class="icon icon-trash"/><span>Delete frame</span>
+                <span class="icon icon-trash"/><span>{{ $t('c_Timeline.deleteFrame') }}</span>
               </button>
             </div>
           </template>
@@ -352,20 +352,20 @@ onUnmounted(() => { store.isPlaying = false })
             class="tl-tagname"
             :value="store.activeTag.name"
             maxlength="24"
-            title="Tag name — becomes the animation name in game engines"
+            :title="$t('c_Timeline.tagNameBecomesTheAnimationName')"
             @change="patchTag({name: ($event.target as HTMLInputElement).value})"
         >
         <label class="tl-tagrange">
-          <span>From</span>
+          <span>{{ $t('c_Timeline.from') }}</span>
           <input type="number" min="1" :max="store.frameCount" :value="store.activeTag.from + 1"
                  @change="patchTag({from: Number(($event.target as HTMLInputElement).value) - 1})">
         </label>
         <label class="tl-tagrange">
-          <span>To</span>
+          <span>{{ $t('c_Timeline.to') }}</span>
           <input type="number" min="1" :max="store.frameCount" :value="store.activeTag.to + 1"
                  @change="patchTag({to: Number(($event.target as HTMLInputElement).value) - 1})">
         </label>
-        <div class="tl-dirs" title="Playback direction">
+        <div class="tl-dirs" :title="$t('c_Timeline.playbackDirection')">
           <button
               v-for="d in (['forward', 'reverse', 'pingpong'] as const)"
               :key="d"
@@ -375,7 +375,7 @@ onUnmounted(() => { store.isPlaying = false })
               @click="patchTag({direction: d})"
           >{{ DIR_GLYPHS[d] }}</button>
         </div>
-        <button class="tl-tagdel" title="Delete tag" @click="onDeleteTag">
+        <button class="tl-tagdel" :title="$t('c_Timeline.deleteTag')" @click="onDeleteTag">
           <span class="icon icon-trash"/>
         </button>
       </div>
@@ -395,20 +395,20 @@ onUnmounted(() => { store.isPlaying = false })
         </div>
 
         <div class="tl-hrow">
-          <div class="tl-corner">Layers</div>
+          <div class="tl-corner">{{ $t('common.layers') }}</div>
           <button
               v-for="(f, j) in displayFrames"
               :key="`h${f.id}`"
               class="tl-colhead"
               :class="{active: j === store.currentFrameIndex}"
               :style="colheadStyle(j)"
-              :title="store.isAnimated ? `Frame ${j + 1} — ${frameMs(f)}ms` : 'Frame 1'"
+              :title="store.isAnimated ? $t('c_Timeline.frameNMs', {n: j + 1, ms: frameMs(f)}) : 'Frame 1'"
               @click="selectFrame(j)"
           >
             <b>{{ j + 1 }}</b>
             <i v-if="store.isAnimated">{{ frameMs(f) }}</i>
           </button>
-          <button class="tl-addcol" title="Add frame (duplicate current)" @click="addFrame">
+          <button class="tl-addcol" :title="$t('c_Timeline.addFrameDuplicateCurrent')" @click="addFrame">
             <span class="icon icon-plus"/>
           </button>
         </div>
@@ -439,19 +439,19 @@ onUnmounted(() => { store.isPlaying = false })
         </div>
 
         <div v-if="store.isAnimated" class="tl-lrow tl-bgrow" :class="{'row-active': store.editingShared}">
-          <button class="tl-rowname" title="Static background — drawn behind every frame" @click="editShared">
-            <b>BG</b>
-            <span>Background</span>
+          <button class="tl-rowname" :title="$t('c_Timeline.staticBackgroundDrawnBehindEveryFr')" @click="editShared">
+            <b>{{ $t('c_Timeline.bg') }}</b>
+            <span>{{ $t('common.background') }}</span>
           </button>
           <button
               class="tl-cel tl-bgcel"
               :class="{active: store.editingShared}"
               :style="{width: `${store.frameCount * CEL + (store.frameCount - 1) * GAP}px`}"
-              title="Shared across all frames — click to edit"
+              :title="$t('c_Timeline.sharedAcrossAllFramesClickTo')"
               @click="editShared"
           >
             <canvas ref="bgThumbEl"/>
-            <em>shared across all frames</em>
+            <em>{{ $t('c_Timeline.sharedAcrossAllFrames') }}</em>
           </button>
         </div>
       </div>

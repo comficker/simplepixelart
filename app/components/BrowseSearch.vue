@@ -1,11 +1,13 @@
 <script setup lang="ts">
+const {t} = useI18n()
+
 import {debounce} from "~/helper/utils";
 
 const props = withDefaults(defineProps<{
   modelValue?: string
   placeholder?: string
   delay?: number
-}>(), {modelValue: '', placeholder: 'Search…', delay: 600})
+}>(), {modelValue: '', placeholder: '', delay: 600})
 
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 
@@ -18,7 +20,7 @@ const onInput = debounce((e: Event) => emit('update:modelValue', (e.target as HT
     <input
         type="text"
         :value="modelValue"
-        :placeholder="placeholder"
+        :placeholder="placeholder || t('c_BrowseSearch.search')"
         :aria-label="placeholder"
         @input="onInput"
     />

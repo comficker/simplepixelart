@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const {t} = useI18n()
 const store = useEditor()
 const route = useRoute()
 
@@ -10,9 +11,9 @@ const canonical = computed(() =>
 )
 
 useCustomSeoMeta({
-  title: "Pixel Art Maker — Free Online Editor",
-  description: "Make pixel art online free — brushes, fill, layers, mirror mode and custom palettes, then export a PNG. No download, no signup, runs in your browser.",
-  keywords: "pixel art maker, make pixel art, pixel art online, free pixel art, pixel art editor, online pixel editor, pixel art creator, pixel drawing tool, draw pixel art online, pixel art generator",
+  title: () => t('seo.editor.title'),
+  description: () => t('seo.editor.description'),
+  keywords: () => t('seo.editor.keywords'),
   canonical: canonical,
   robots: () => editId.value ? 'noindex, follow' : 'index, follow',
   script: [
@@ -69,66 +70,62 @@ useCustomSeoMeta({
   ]
 });
 
-const faq = [
-  {q: 'Is the pixel art editor free?', a: `<p>Yes — completely free and running in your browser. No signup to start and no watermark.</p>`},
-  {q: 'Do I need to install anything?', a: `<p>No. The editor runs in any modern web browser on desktop or mobile — nothing to download.</p>`},
-  {q: 'What canvas sizes can I use?', a: `<p>Anywhere from 8×8 to 64×64 pixels. Smaller canvases suit icons and sprites; larger ones allow more detail.</p>`},
-  {q: 'Can I turn a photo or sprite sheet into pixel art?', a: `<p>Yes. Pixelate a photo with the <a href="/converter">image-to-pixel-art converter</a>, or cut sprites from a sheet with the <a href="/tilesets/slicer">tileset slicer</a>, then open the result here.</p>`},
-  {q: 'How do I export my pixel art?', a: `<p>Export your artwork as a PNG for games, the web or print — and optionally share it to the <a href="/arts">gallery</a>.</p>`},
-]
+const faq = computed(() => [
+  {q: t('p_editor.faq0q'), a: t('p_editor.faq0a')},
+  {q: t('p_editor.faq1q'), a: t('p_editor.faq1a')},
+  {q: t('p_editor.faq2q'), a: t('p_editor.faq2a')},
+  {q: t('p_editor.faq3q'), a: t('p_editor.faq3a')},
+  {q: t('p_editor.faq4q'), a: t('p_editor.faq4a')},
+])
 </script>
 
 <template>
-  <ToolLayout title="Draw" agent>
+  <ToolLayout :title="$t('p_editor.draw')" agent>
     <PXEditor/>
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">
         {{ store.editorData.width }}×{{ store.editorData.height }}px ·
-        {{ store.layerCount }} layer{{ store.layerCount === 1 ? '' : 's' }} ·
-        {{ store.editorData.colors.length }} colors<template v-if="store.isAnimated"> ·
-          {{ store.frameCount }} frames</template>
+        {{ $t('p_editor.nLayers', store.layerCount, {count: store.layerCount}) }} ·
+        {{ $t('common.nColors', {count: store.editorData.colors.length}) }}<template v-if="store.isAnimated"> ·
+          {{ $t('p_editor.nFrames', {count: store.frameCount}) }}</template>
       </p>
-      <span class="text-xs text-muted">{{ store.currentTool }}</span>
+      <span class="text-xs text-muted">{{ $t('common.tool_' + store.currentTool) }}</span>
     </template>
 
     <template #doc>
-      <h1>Pixel Art Maker</h1>
+      <h1>{{ $t('p_editor.pixelArtMaker') }}</h1>
       <div class="readme-badges">
-        <span class="badge"><span>price</span><span class="v ok">free</span></span>
-        <span class="badge"><span>signup</span><span class="v">none</span></span>
-        <span class="badge"><span>runs in</span><span class="v">browser</span></span>
-        <span class="badge"><span>export</span><span class="v">PNG</span></span>
-        <span class="badge"><span>canvas</span><span class="v">8×8–64×64</span></span>
+        <span class="badge"><span>{{ $t('p_editor.price') }}</span><span class="v ok">{{ $t('p_editor.free') }}</span></span>
+        <span class="badge"><span>{{ $t('p_editor.signup') }}</span><span class="v">{{ $t('p_editor.none') }}</span></span>
+        <span class="badge"><span>{{ $t('p_editor.runsIn') }}</span><span class="v">{{ $t('p_editor.browser') }}</span></span>
+        <span class="badge"><span>{{ $t('p_editor.export') }}</span><span class="v">{{ $t('common.png') }}</span></span>
+        <span class="badge"><span>{{ $t('p_editor.canvas') }}</span><span class="v">8×8–64×64</span></span>
       </div>
       <p>
-        SimplePixelArt is a free, browser-based <strong>pixel art maker</strong> — no installation and no
-        account required. Make pixel art online by drawing directly on a pixel grid with a full set of
-        editor tools, then export a clean PNG. New to it? Start with
-        <nuxt-link to="/easy-pixel-art">easy pixel art</nuxt-link> on a small grid.
-      </p>
+        {{ $t('p_editor.simplepixelartIsAFreeBrowserBased') }} <strong>{{ $t('p_editor.pixelArtMaker2') }}</strong> {{ $t('p_editor.noInstallationAndNoAccountRequired') }} <NuxtLinkLocale to="/easy-pixel-art">{{ $t('p_editor.easyPixelArt') }}</NuxtLinkLocale> {{ $t('p_editor.onASmallGrid') }} </p>
 
       <blockquote class="gh-alert gh-tip">
-        <p class="gh-alert-title"><span class="icon icon-rocket"/>Tip</p>
-        <p>Draw on an empty part of the canvas to spawn a new board, then drag its label to arrange your workspace.</p>
+        <p class="gh-alert-title"><span class="icon icon-rocket"/>{{ $t('common.tip') }}</p>
+        <p v-html="$t('p_editor.drawOnAnEmptyPartOf')"/>
       </blockquote>
 
-      <h2>How to use it</h2>
+      <h2>{{ $t('common.howToUseIt') }}</h2>
       <ol>
-        <li><strong>Pick a canvas size</strong> — open the editor and choose a canvas from <code>8×8</code> up to <code>64×64</code> pixels.</li>
-        <li><strong>Draw with the tools</strong> — paint with the brush, flood-fill regions, work across layers, and turn on mirror mode for symmetric sprites.</li>
-        <li><strong>Export &amp; share</strong> — export your art as a PNG, or publish it straight to the gallery.</li>
+        <li v-html="$t('p_editor.strongPickACanvasSizeStrong')"/>
+        <li v-html="$t('p_editor.strongDrawWithTheToolsStrong')"/>
+        <li v-html="$t('p_editor.strongExportShareStrongExportYour')"/>
       </ol>
 
-      <h2>Features</h2>
+      <h2>{{ $t('common.features') }}</h2>
       <ul>
-        <li><strong>Brush &amp; eraser</strong> — paint or erase individual pixels with precision; adjustable size for fine detail or broad strokes.</li>
-        <li><strong>Fill tool</strong> — flood-fill a region with a single click, ideal for coloring large areas fast.</li>
-        <li><strong>Mirror drawing</strong> — horizontal or vertical mirroring to draw symmetric sprites twice as fast.</li>
-        <li><strong>Multiple layers</strong> — sketch on one, color on another, stack details on top.</li>
-        <li><strong>Undo / redo</strong> — full history; experiment freely and step back through any change.</li>
-        <li><strong>Custom canvas sizes</strong> — from <code>8×8</code> up to <code>64×64</code> pixels, whatever fits your project.</li>
-        <li><strong>Color palette</strong> — build and save a palette, then swap colors across the whole canvas instantly.</li>
-        <li><strong>Export &amp; share</strong> — publish to the community, or export a PNG for games, web or print.</li>
+        <li v-html="$t('p_editor.strongBrushEraserStrongPaintOr')"/>
+        <li v-html="$t('p_editor.strongFillToolStrongFloodFill')"/>
+        <li v-html="$t('p_editor.strongMirrorDrawingStrongHorizonta')"/>
+        <li v-html="$t('p_editor.strongMultipleLayersStrongSketchOn')"/>
+        <li v-html="$t('p_editor.strongUndoRedoStrongFullHistory')"/>
+        <li v-html="$t('p_editor.strongCustomCanvasSizesStrongFrom')"/>
+        <li v-html="$t('p_editor.strongColorPaletteStrongBuildAnd')"/>
+        <li v-html="$t('p_editor.strongExportShareStrongPublishTo')"/>
       </ul>
 
       <QnA :items="faq"/>

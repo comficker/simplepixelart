@@ -9,7 +9,7 @@ const overflow = computed(() => Math.max(0, value.colors.length - MAX_SWATCHES))
 </script>
 
 <template>
-  <nuxt-link class="pcard" :to="`/palettes/${value.id_string}`" :title="value.name">
+  <NuxtLinkLocale class="pcard" :to="`/palettes/${value.id_string}`" :title="value.name">
     <div class="pcard-strip">
       <span
           v-for="(c, i) in shown"
@@ -21,12 +21,12 @@ const overflow = computed(() => Math.max(0, value.colors.length - MAX_SWATCHES))
     <div class="pcard-head">
       <p class="pcard-name">{{ value.name || value.id_string || 'Untitled' }}</p>
       <div class="pcard-meta">
-        <span>{{ value.color_count }} colors</span>
+        <span>{{ $t('common.nColors', {count: value.color_count}) }}</span>
         <template v-if="overflow"><span class="pcard-dot">·</span><span>+{{ overflow }}</span></template>
         <template v-if="value.usage_count"><span class="pcard-dot">·</span><span>{{ value.usage_count }} uses</span></template>
       </div>
     </div>
-  </nuxt-link>
+  </NuxtLinkLocale>
 </template>
 
 <style scoped>

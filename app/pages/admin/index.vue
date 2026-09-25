@@ -117,9 +117,9 @@ watch(isStaff, (v) => { if (v) load() })
       <div class="readme-head adm-head">
         <h1 class="adm-title"><span class="icon icon-adjust"/><span>Admin</span></h1>
         <div class="adm-head-actions">
-          <NuxtLink v-if="isStaff" to="/admin/users" class="btn">
+          <NuxtLinkLocale v-if="isStaff" to="/admin/users" class="btn">
             <span class="icon icon-user"/><span>Users</span>
-          </NuxtLink>
+          </NuxtLinkLocale>
           <button v-if="isStaff" class="btn" :disabled="loading" @click="load">
             <span class="icon icon-refresh"/><span>Refresh</span>
           </button>

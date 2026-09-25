@@ -90,10 +90,10 @@ watch([cfg, () => props.items], loadImages, {deep: true})
     <div ref="viewport" class="tm-viewport">
       <canvas ref="canvas" class="tm-showcase-canvas" :style="canvasStyle"/>
     </div>
-    <div class="tm-zoom" role="group" aria-label="Zoom world map">
-      <button type="button" class="tm-zoom-btn" :disabled="zoom <= ZOOM_MIN" aria-label="Zoom out" @click="zoomOut">−</button>
-      <button type="button" class="tm-zoom-pct" title="Reset zoom" @click="zoomReset">{{ Math.round(zoom * 100) }}%</button>
-      <button type="button" class="tm-zoom-btn" :disabled="zoom >= ZOOM_MAX" aria-label="Zoom in" @click="zoomIn">+</button>
+    <div class="tm-zoom" role="group" :aria-label="$t('c_TilemapShowcase.zoomWorldMap')">
+      <button type="button" class="tm-zoom-btn" :disabled="zoom <= ZOOM_MIN" :aria-label="$t('common.zoomOut')" @click="zoomOut">−</button>
+      <button type="button" class="tm-zoom-pct" :title="$t('c_TilemapShowcase.resetZoom')" @click="zoomReset">{{ Math.round(zoom * 100) }}%</button>
+      <button type="button" class="tm-zoom-btn" :disabled="zoom >= ZOOM_MAX" :aria-label="$t('common.zoomIn')" @click="zoomIn">+</button>
     </div>
   </div>
 </template>

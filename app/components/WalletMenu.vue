@@ -68,8 +68,8 @@ watch(() => auth.isLogged, (v) => {
 </script>
 
 <template>
-  <ui-dropdown-menu v-if="auth.isLogged && sum" ref="dd" class="wallet" label="Credits wallet" @click="load">
-    <button type="button" class="wallet-chip" title="Credits — daily bonus & missions">
+  <ui-dropdown-menu v-if="auth.isLogged && sum" ref="dd" class="wallet" :label="$t('c_WalletMenu.creditsWallet')" @click="load">
+    <button type="button" class="wallet-chip" :title="$t('c_WalletMenu.creditsDailyBonusMissions')">
       <span class="icon icon-coin"/>
       <span class="wallet-n">{{ sharedBalance ?? sum.balance ?? 0 }}</span>
     </button>
@@ -78,7 +78,7 @@ watch(() => auth.isLogged, (v) => {
         <div class="wallet-balance">
           <span class="icon icon-coin"/>
           <span class="wallet-balance-n">{{ sharedBalance ?? sum.balance ?? 0 }}</span>
-          <span class="wallet-balance-label">credits</span>
+          <span class="wallet-balance-label">{{ $t('c_WalletMenu.credits') }}</span>
         </div>
         <div class="file-menu-sep"/>
         <button
@@ -86,20 +86,20 @@ watch(() => auth.isLogged, (v) => {
             :disabled="sum.daily_claimed || claiming === 'daily'"
             @click="claimDaily"
         >
-          <span class="wallet-row-title">Daily bonus</span>
+          <span class="wallet-row-title">{{ $t('common.dailyBonus') }}</span>
           <span class="wallet-row-side" :class="{claimed: sum.daily_claimed}">
             <template v-if="sum.daily_claimed"><span class="icon icon-check"/></template>
             <template v-else>+{{ sum.daily_grant }}</template>
           </span>
         </button>
         <div class="file-menu-sep"/>
-        <nuxt-link class="file-menu-item wallet-row" to="/missions" @click="dd?.close({restoreFocus: false})">
+        <NuxtLinkLocale class="file-menu-item wallet-row" to="/missions" @click="dd?.close({restoreFocus: false})">
           <span class="wallet-row-title">
             <span class="icon icon-flag"/>
-            <span>Missions</span>
+            <span>{{ $t('common.missions') }}</span>
           </span>
           <span v-if="claimableCount" class="wallet-badge">{{ claimableCount }}</span>
-        </nuxt-link>
+        </NuxtLinkLocale>
       </div>
     </template>
   </ui-dropdown-menu>

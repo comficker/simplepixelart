@@ -54,7 +54,7 @@ onMounted(async () => {
       <div v-if="!error" class="callback__spinner" aria-hidden="true" />
       <h1 class="callback__title">{{ error ? 'Sign in failed' : 'Signing you in…' }}</h1>
       <p class="callback__msg">{{ error || 'Just a moment.' }}</p>
-      <NuxtLink v-if="error" to="/" class="btn primary">Back home</NuxtLink>
+      <NuxtLinkLocale v-if="error" to="/" class="btn primary">{{ $t('p_auth_callback.backHome') }}</NuxtLinkLocale>
     </div>
   </div>
 </template>

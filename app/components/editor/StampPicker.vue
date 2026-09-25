@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const {t} = useI18n()
+
 const artImage = useArtImage()
 import {toast} from 'vue-sonner'
 import {debounce} from '~/helper/utils'
@@ -52,8 +54,8 @@ function artThumb(slug: string): string {
 
 async function loadSources() {
   const list: Source[] = []
-  if (auth.isLogged) list.push({kind: 'mine', title: 'My arts'})
-  list.push({kind: 'explore', title: 'Explore'})
+  if (auth.isLogged) list.push({kind: 'mine', title: t('c_StampPicker.myArts')})
+  list.push({kind: 'explore', title: t('c_StampPicker.explore')})
   if (auth.isLogged) {
     try {
       const res = await useNativeFetch<{ results: any[] }>('/coloring/tilesets/', {
@@ -179,10 +181,10 @@ watch(() => auth.isLogged, () => loadSources())
 </script>
 
 <template>
-  <Widget class="stp" title="Brush art">
+  <Widget class="stp" :title="$t('c_StampPicker.brushArt')">
     <template #ctl>
       <ui-dropdown-menu>
-        <button type="button" class="widget-ctl-btn" :title="`Source: ${source?.title || ''}`">
+        <button type="button" class="widget-ctl-btn" :title="$t('c_StampPicker.sourceX', {name: source?.title || ''})">
           <span class="icon" :class="srcIcon(source)"/>
           <span class="widget-ctl-name">{{ source?.title || 'Source' }}</span>
           <span class="icon icon-chevron-down"/>
@@ -209,7 +211,7 @@ watch(() => auth.isLogged, () => loadSources())
     <div class="stp-body">
       <label class="stp-search">
         <span class="icon icon-search"/>
-        <input v-model="query" type="search" placeholder="Search…">
+        <input v-model="query" type="search" :placeholder="$t('common.search')">
       </label>
 
       <div v-if="loading && !shown.length" class="stp-thumbs">
@@ -237,7 +239,7 @@ watch(() => auth.isLogged, () => loadSources())
         </button>
       </div>
       <p v-else class="stp-empty">
-        {{ query ? `Nothing matches “${query}”.` : 'Nothing here yet.' }}
+        {{ query ? $t('common.nothingMatchesQ', {q: query}) : 'Nothing here yet.' }}
       </p>
     </div>
   </Widget>

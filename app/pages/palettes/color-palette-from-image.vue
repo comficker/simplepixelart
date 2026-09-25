@@ -108,21 +108,21 @@ useCustomSeoMeta({
 </script>
 
 <template>
-  <ToolLayout title="Extract">
+  <ToolLayout :title="$t('p_palettes_color-palette-from-image.extract')">
     <div class="tool-card ext-stack">
       <div class="tool-pane">
-        <span class="tool-pane-cap">Source image</span>
+        <span class="tool-pane-cap">{{ $t('p_palettes_color-palette-from-image.sourceImage') }}</span>
         <label class="dropzone" :class="{ filled: !!previewUrl }">
           <input type="file" accept="image/*" class="ext-file" @change="onFile"/>
-          <img v-if="previewUrl" :src="previewUrl" alt="Source preview" class="ext-preview"/>
+          <img v-if="previewUrl" :src="previewUrl" :alt="$t('p_palettes_color-palette-from-image.sourcePreview')" class="ext-preview"/>
           <template v-else>
             <span class="icon icon-image dropzone-icon"/>
-            <span class="dropzone-title">Choose an image</span>
-            <span class="dropzone-hint">PNG, JPG, WebP or GIF</span>
+            <span class="dropzone-title">{{ $t('p_palettes_color-palette-from-image.chooseAnImage') }}</span>
+            <span class="dropzone-hint">{{ $t('p_palettes_color-palette-from-image.pngJpgWebpOrGif') }}</span>
           </template>
         </label>
         <div class="ext-count">
-          <label>Colors <strong>{{ count }}</strong></label>
+          <label>{{ $t('common.colors') }} <strong>{{ count }}</strong></label>
           <input type="range" min="2" max="32" v-model.number="count"/>
         </div>
       </div>
@@ -130,17 +130,17 @@ useCustomSeoMeta({
       <div class="tool-pane">
         <div v-if="detecting" class="tool-empty">
           <span class="icon icon-adjust"/>
-          <span>Detecting colors…</span>
+          <span>{{ $t('p_palettes_color-palette-from-image.detectingColors') }}</span>
         </div>
         <PaletteComposer
             v-else-if="colors.length"
             v-model:colors="colors"
             source="image"
-            name-placeholder="Palette name"
+            name-:placeholder="$t('common.paletteName')"
             default-name="Extracted palette"
         />
         <div v-else class="ext-ph">
-          <span class="tool-pane-cap">Palette</span>
+          <span class="tool-pane-cap">{{ $t('common.palette') }}</span>
           <div class="ext-ph-swatches" aria-hidden="true">
             <span
                 v-for="i in count"
@@ -157,41 +157,34 @@ useCustomSeoMeta({
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">
         <template v-if="colors.length">{{ colors.length }} colors extracted</template>
-        <template v-else-if="previewUrl">Reading colors…</template>
-        <template v-else>No image yet — drop one to extract its palette</template>
+        <template v-else-if="previewUrl">{{ $t('p_palettes_color-palette-from-image.readingColors') }}</template>
+        <template v-else>{{ $t('p_palettes_color-palette-from-image.noImageYetDropOneTo') }}</template>
       </p>
     </template>
 
     <template #doc>
-      <h1>Color palette from image</h1>
+      <h1>{{ $t('p_palettes_color-palette-from-image.colorPaletteFromImage') }}</h1>
+      <p v-html="$t('p_palettes_color-palette-from-image.uploadAnyImageAndInstantlyExtract')"/>
+
+      <h2>{{ $t('p_palettes_color-palette-from-image.makeAColorPaletteForAny') }}</h2>
       <p>
-        Upload any image and instantly extract its color palette. Tweak the colors, copy the hex codes,
-        open them in the editor, or publish to the library.
+        {{ $t('p_palettes_color-palette-from-image.thisToolBuildsA') }} <strong>{{ $t('p_palettes_color-palette-from-image.colorPaletteFromAnImage') }}</strong> {{ $t('p_palettes_color-palette-from-image.inSecondsUploadAPhotoA') }} <NuxtLinkLocale to="/editor">{{ $t('p_palettes_color-palette-from-image.pixelArtEditor') }}</NuxtLinkLocale>.
       </p>
 
-      <h2>Make a color palette for any image</h2>
-      <p>
-        This tool builds a <strong>color palette from an image</strong> in seconds. Upload a photo, a screenshot,
-        game art or an illustration and it samples the picture to find its most representative colors. Everything
-        runs in your browser — the image is never uploaded — so it's fast and private. Use it to grab a brand's
-        colors, match a reference photo, or pull a starting palette before you draw in the
-        <nuxt-link to="/editor">pixel art editor</nuxt-link>.
-      </p>
-
-      <h2>How it works</h2>
+      <h2>{{ $t('common.howItWorks') }}</h2>
       <ol>
-        <li><strong>Upload</strong> — choose any image. It loads locally and is scaled down just for fast, accurate color sampling.</li>
-        <li><strong>Choose colors</strong> — pick 2–32 colors with the slider. A median-cut algorithm finds the dominant tones, not just the average.</li>
-        <li><strong>Use it</strong> — edit any swatch, copy the hex codes, open it in the editor, or publish it to the palette library.</li>
+        <li><strong>{{ $t('p_palettes_color-palette-from-image.upload') }}</strong> {{ $t('p_palettes_color-palette-from-image.uploadDesc') }}</li>
+        <li><strong>{{ $t('p_palettes_color-palette-from-image.chooseColors') }}</strong> {{ $t('p_palettes_color-palette-from-image.chooseColorsDesc') }}</li>
+        <li><strong>{{ $t('p_palettes_color-palette-from-image.useIt') }}</strong> {{ $t('p_palettes_color-palette-from-image.useItDesc') }}</li>
       </ol>
 
-      <h2>What you can do with it</h2>
+      <h2>{{ $t('common.whatYouCanDoWithIt') }}</h2>
       <ul>
-        <li>Extract a brand or logo's exact colors from a screenshot.</li>
-        <li>Pull a palette from a reference photo before drawing pixel art.</li>
-        <li>Reduce a busy image to a clean set of 8 or 16 colors.</li>
-        <li>Generate a <nuxt-link to="/palettes/color-palette-from-color">harmonious palette</nuxt-link> from the dominant color you found.</li>
-        <li>Save and share palettes with the <nuxt-link to="/palettes">community library</nuxt-link>.</li>
+        <li v-html="$t('p_palettes_color-palette-from-image.extractABrandOrLogoS')"/>
+        <li v-html="$t('p_palettes_color-palette-from-image.pullAPaletteFromAReference')"/>
+        <li v-html="$t('p_palettes_color-palette-from-image.reduceABusyImageToA')"/>
+        <li>{{ $t('p_palettes_color-palette-from-image.generateA') }} <NuxtLinkLocale to="/palettes/color-palette-from-color">{{ $t('p_palettes_color-palette-from-image.harmoniousPalette') }}</NuxtLinkLocale> {{ $t('p_palettes_color-palette-from-image.fromTheDominantColorYouFound') }}</li>
+        <li>{{ $t('p_palettes_color-palette-from-image.saveAndSharePalettesWithThe') }} <NuxtLinkLocale to="/palettes">{{ $t('p_palettes_color-palette-from-image.communityLibrary') }}</NuxtLinkLocale>.</li>
       </ul>
 
       <QnA :items="FAQ"/>

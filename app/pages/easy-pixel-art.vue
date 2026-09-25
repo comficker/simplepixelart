@@ -1,50 +1,39 @@
 <script setup lang="ts">
-const EASY_SIZES = [
-  {slug: '8x8', label: '8×8', note: 'icons, hearts, tiny sprites'},
-  {slug: '10x10', label: '10×10', note: 'simple faces and fruit'},
-  {slug: '12x12', label: '12×12', note: 'the most popular easy grid'},
-  {slug: '13x13', label: '13×13', note: 'odd grid — perfect symmetry'},
-  {slug: '15x15', label: '15×15', note: 'room for small characters'},
-  {slug: '16x16', label: '16×16', note: 'the classic sprite size'},
-]
+const {t} = useI18n()
+const EASY_SIZES = computed(() => [
+  {slug: '8x8', label: '8×8', note: t('p_easy-pixel-art.sizeNote0')},
+  {slug: '10x10', label: '10×10', note: t('p_easy-pixel-art.sizeNote1')},
+  {slug: '12x12', label: '12×12', note: t('p_easy-pixel-art.sizeNote2')},
+  {slug: '13x13', label: '13×13', note: t('p_easy-pixel-art.sizeNote3')},
+  {slug: '15x15', label: '15×15', note: t('p_easy-pixel-art.sizeNote4')},
+  {slug: '16x16', label: '16×16', note: t('p_easy-pixel-art.sizeNote5')},
+])
 
-const steps = [
+const steps = computed(() => [
   {
-    h: 'Pick a small canvas',
-    p: 'Fewer pixels means fewer decisions. An 8×8 grid holds 64 squares — you can fill it in a couple of minutes, and the shape reads clearly because there is no room for detail to get muddy.',
+    h: t('p_easy-pixel-art.step0h'),
+    p: t('p_easy-pixel-art.step0p'),
   },
   {
-    h: 'Limit yourself to 3-5 colors',
-    p: 'Beginner pixel art goes wrong from too many colors, not too few. Pick one base tone, one shadow, one highlight, and one outline. The palette manager can lock those in so you cannot drift.',
+    h: t('p_easy-pixel-art.step1h'),
+    p: t('p_easy-pixel-art.step1p'),
   },
   {
-    h: 'Draw the silhouette first',
-    p: 'Block the outline in a single flat color before touching anything else. If the silhouette is unreadable at actual size, no amount of shading will save it — and fixing it now costs a few clicks.',
+    h: t('p_easy-pixel-art.step2h'),
+    p: t('p_easy-pixel-art.step2p'),
   },
   {
-    h: 'Add shadow last, sparingly',
-    p: 'One darker tone on the side away from your light source is enough. Mirror mode helps for faces and symmetric objects: draw half, get the other half free.',
+    h: t('p_easy-pixel-art.step3h'),
+    p: t('p_easy-pixel-art.step3p'),
   },
-]
+])
 
-const faq = [
-  {
-    q: 'What is the easiest pixel art to start with?',
-    a: `<p>An 8×8 or 12×12 grid with three colors. Hearts, mushrooms, swords, apples and simple faces all read well at that size, which is why they are the classic first subjects. Start from an existing piece in the <a href="/arts/size-8x8">8×8 gallery</a> and change the colors — remixing teaches the grid faster than an empty canvas.</p>`,
-  },
-  {
-    q: 'Do I need to be good at drawing?',
-    a: `<p>No. Pixel art is placement, not brush control. You are choosing which squares to fill, and you can undo any square. That is closer to solving a puzzle than to sketching, which is exactly why it suits people who say they cannot draw.</p>`,
-  },
-  {
-    q: 'What canvas size should I avoid as a beginner?',
-    a: `<p>Anything above 32×32. A 64×64 canvas is over 4,000 squares — enough that mistakes compound before the shape is readable. Work up to it once small pieces feel comfortable.</p>`,
-  },
-  {
-    q: 'Is it free, and do I need an account?',
-    a: `<p>Free, and no account. The <a href="/editor">editor</a> runs in your browser and saves your work locally. Signing in with Google only matters if you want your pieces on a public profile or synced across devices.</p>`,
-  },
-]
+const faq = computed(() => [
+  {q: t('p_easy-pixel-art.faq0q'), a: t('p_easy-pixel-art.faq0a')},
+  {q: t('p_easy-pixel-art.faq1q'), a: t('p_easy-pixel-art.faq1a')},
+  {q: t('p_easy-pixel-art.faq2q'), a: t('p_easy-pixel-art.faq2a')},
+  {q: t('p_easy-pixel-art.faq3q'), a: t('p_easy-pixel-art.faq3a')},
+])
 
 useCustomSeoMeta({
   title: 'Easy Pixel Art for Beginners',
@@ -64,7 +53,7 @@ useCustomSeoMeta({
           description: 'Draw readable pixel art on a small grid with a limited palette.',
           totalTime: 'PT10M',
           tool: [{'@type': 'HowToTool', name: 'SimplePixelArt editor (free, browser-based)'}],
-          step: steps.map((s, i) => ({
+          step: steps.value.map((s, i) => ({
             '@type': 'HowToStep',
             position: i + 1,
             name: s.h,
@@ -73,7 +62,7 @@ useCustomSeoMeta({
         },
         {
           '@type': 'FAQPage',
-          mainEntity: faq.map(f => ({
+          mainEntity: faq.value.map(f => ({
             '@type': 'Question',
             name: f.q,
             acceptedAnswer: {'@type': 'Answer', text: f.a.replace(/<[^>]+>/g, '')},
@@ -88,34 +77,30 @@ useCustomSeoMeta({
 
 <template>
   <div class="page prose">
-        <p class="page-meta">Beginner guide</p>
-    <h1>Easy Pixel Art</h1>
+        <p class="page-meta">{{ $t('p_easy-pixel-art.beginnerGuide') }}</p>
+    <h1>{{ $t('p_easy-pixel-art.easyPixelArt') }}</h1>
+    <p v-html="$t('p_easy-pixel-art.pixelArtGetsEasyTheMoment')"/>
     <p>
-      Pixel art gets easy the moment you shrink the canvas. On an 8×8 grid there are 64 squares and
-      no room to overthink — pick three colors, block the shape, done in minutes. Below: the grids
-      that work best when you are starting, the four steps that matter, and a free editor to do it in.
-    </p>
-    <p>
-      <nuxt-link to="/editor?new=true" class="btn">Open the editor</nuxt-link>
+      <NuxtLinkLocale to="/editor?new=true" class="btn">{{ $t('p_easy-pixel-art.openTheEditor') }}</NuxtLinkLocale>
     </p>
 
-    <h2>The easiest canvas sizes</h2>
-    <p>Each of these has real pieces you can open, remix, and recolor — the fastest way to learn the grid.</p>
+    <h2>{{ $t('p_easy-pixel-art.theEasiestCanvasSizes') }}</h2>
+    <p v-html="$t('p_easy-pixel-art.eachOfTheseHasRealPieces')"/>
     <ul>
       <li v-for="s in EASY_SIZES" :key="s.slug">
-        <nuxt-link :to="`/arts/size-${s.slug}`"><strong>{{ s.label }} pixel art</strong></nuxt-link>
+        <NuxtLinkLocale :to="`/arts/size-${s.slug}`"><strong>{{ $t('p_easy-pixel-art.labelPixelArt', {label: s.label}) }}</strong></NuxtLinkLocale>
         — {{ s.note }}
       </li>
     </ul>
     <p>
-      Bigger grids once these feel small:
-      <nuxt-link to="/arts/size-20x20">20×20</nuxt-link> ·
-      <nuxt-link to="/arts/size-24x24">24×24</nuxt-link> ·
-      <nuxt-link to="/arts/size-32x32">32×32</nuxt-link>.
+      {{ $t('p_easy-pixel-art.biggerGridsOnceTheseFeelSmall') }}
+      <NuxtLinkLocale to="/arts/size-20x20">20×20</NuxtLinkLocale> ·
+      <NuxtLinkLocale to="/arts/size-24x24">24×24</NuxtLinkLocale> ·
+      <NuxtLinkLocale to="/arts/size-32x32">32×32</NuxtLinkLocale>.
     </p>
     
 
-    <h2>Four steps that do most of the work</h2>
+    <h2>{{ $t('p_easy-pixel-art.fourStepsThatDoMostOf') }}</h2>
     <ol>
       <li v-for="s in steps" :key="s.h">
         <strong>{{ s.h }}</strong> — {{ s.p }}
@@ -123,29 +108,21 @@ useCustomSeoMeta({
     </ol>
     
 
-    <h2>Where to go next</h2>
+    <h2>{{ $t('p_easy-pixel-art.whereToGoNext') }}</h2>
     <ul>
       <li>
-        <nuxt-link to="/editor"><strong>Pixel art editor</strong></nuxt-link>
-        — brushes, fill, layers, mirror mode and PNG export, all in the browser.
-      </li>
+        <NuxtLinkLocale to="/editor"><strong>{{ $t('p_easy-pixel-art.pixelArtEditor') }}</strong></NuxtLinkLocale> {{ $t('p_easy-pixel-art.brushesFillLayersMirrorModeAnd') }} </li>
       <li>
-        <nuxt-link to="/palettes"><strong>Color palettes</strong></nuxt-link>
-        — ready-made 3-8 color sets, so you skip the hardest beginner decision.
-      </li>
+        <NuxtLinkLocale to="/palettes"><strong>{{ $t('p_easy-pixel-art.colorPalettes') }}</strong></NuxtLinkLocale> {{ $t('p_easy-pixel-art.readyMade38ColorSets') }} </li>
       <li>
-        <nuxt-link to="/converter"><strong>Photo to pixel art</strong></nuxt-link>
-        — convert an image, then clean it up by hand to see how a piece is built.
-      </li>
+        <NuxtLinkLocale to="/converter"><strong>{{ $t('common.photoToPixelArt') }}</strong></NuxtLinkLocale> {{ $t('p_easy-pixel-art.convertAnImageThenCleanIt') }} </li>
       <li>
-        <nuxt-link to="/arts"><strong>Browse the gallery</strong></nuxt-link>
-        — every piece opens in the editor as a starting point.
-      </li>
+        <NuxtLinkLocale to="/arts"><strong>{{ $t('p_easy-pixel-art.browseTheGallery') }}</strong></NuxtLinkLocale> {{ $t('p_easy-pixel-art.everyPieceOpensInTheEditor') }} </li>
     </ul>
     
 
     <ToolReadme :toc="false">
-    <QnA title="Questions &amp; answers" :items="faq"/>
+    <QnA :title="$t('common.questionsAmpAnswers')" :items="faq"/>
     </ToolReadme>
   </div>
 </template>

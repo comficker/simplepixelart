@@ -187,6 +187,7 @@ const structuredData = computed(() => {
 
 
 useCustomSeoMeta({
+  untranslated: true,
   title: seoTitle,
   description: seoDesc,
   keywords: seoKeywords,
@@ -204,9 +205,9 @@ useCustomSeoMeta({
 
 <template>
   <div class="page">
-    <item-list :limit="24" show-filter :title="`${tagTitle} Pixel Art`" :desc="tagDesc || fallbackDesc">
+    <item-list :limit="24" show-filter :title="$t('p_arts_id_string.xPixelArt', {x: tagTitle})" :desc="tagDesc || fallbackDesc">
       <template v-if="filteredRelated.length" #filters-extra>
-        <BrowseFilter label="Tags" icon="icon-flag" :value="String(filteredRelated.length)">
+        <BrowseFilter :label="$t('common.tags')" icon="icon-flag" :value="String(filteredRelated.length)">
           <BrowseOpt v-for="t in filteredRelated" :key="t.id_string" :to="`/arts/${t.id_string}`">
             {{ t.title || t.name }}
           </BrowseOpt>

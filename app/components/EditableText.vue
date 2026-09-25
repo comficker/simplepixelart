@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const {t} = useI18n()
+
 import { nextTick, ref } from 'vue'
 
 interface Props {
@@ -8,7 +10,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  placeholder: 'Click to edit',
+  placeholder: '',
   className: ''
 })
 

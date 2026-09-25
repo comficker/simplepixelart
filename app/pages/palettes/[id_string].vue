@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const {t} = useI18n()
 import {toast} from "vue-sonner";
 import {hexToRgb, rgbToHsl} from "~/helper/color";
 import type {Palette, ResponseSharedPage} from "~/types";
@@ -69,7 +70,7 @@ async function copy(text: string, label: string) {
   }
 }
 
-const copyAll = () => copy(colors.value.join('\n'), `${colors.value.length} colors`)
+const copyAll = () => copy(colors.value.join('\n'), t('common.nColors', {count: colors.value.length}))
 
 const insights = computed(() => {
   const cs = colors.value
@@ -112,6 +113,7 @@ const creator = computed(() => palette.value?.user?.username || '')
 
 
 useCustomSeoMeta({
+  untranslated: true,
   title: computed(() => {
     const by = creator.value ? ` by ${creator.value}` : ''
     return `${palette.value?.name || 'Pixel Art'} Color Palette${by} — ${palette.value?.color_count} Colors & Hex Codes`
@@ -158,15 +160,15 @@ useCustomSeoMeta({
           <span v-if="usedCount">{{ usedCount }} {{ usedCount === 1 ? 'artwork' : 'artworks' }}</span>
           <template v-if="palette.user">
             <span class="pd-dot">·</span>
-            <span>by <nuxt-link class="pd-creator" :to="`/creator/${palette.user.username}`">{{ palette.user.username }}</nuxt-link></span>
+            <span>by <NuxtLinkLocale class="pd-creator" :to="`/creator/${palette.user.username}`">{{ palette.user.username }}</NuxtLinkLocale></span>
           </template>
         </div>
       </div>
       <div class="pd-actions">
-        <nuxt-link :to="`/editor?palette=${palette.id_string}`" class="btn primary">
+        <NuxtLinkLocale :to="`/editor?palette=${palette.id_string}`" class="btn primary">
           <span class="icon icon-pen"/>
-          <span>Open in editor</span>
-        </nuxt-link>
+          <span>{{ $t('common.openInEditor') }}</span>
+        </NuxtLinkLocale>
         <button class="btn pd-like" :class="{ liked }" :disabled="liking || liked" @click="toggleLike" :title="liked ? 'You hearted this today' : 'Heart this palette'">
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
             <path d="M12 21s-7.5-4.9-10-9.3C.5 8.6 2 5 5.5 5c2 0 3.4 1.1 4.5 2.6C11.1 6.1 12.5 5 14.5 5 18 5 19.5 8.6 22 11.7 19.5 16.1 12 21 12 21z"
@@ -177,7 +179,7 @@ useCustomSeoMeta({
         <ui-dropdown-menu>
           <button class="btn">
             <span class="icon icon-download"/>
-            <span>Download</span>
+            <span>{{ $t('common.download') }}</span>
           </button>
           <template #menu>
             <div class="pd-dl-menu">
@@ -185,7 +187,7 @@ useCustomSeoMeta({
                 <span>{{ f.label }}</span>
               </a>
               <button class="drop-item" @click="copyAll">
-                <span>Copy hex</span>
+                <span>{{ $t('common.copyHex') }}</span>
               </button>
             </div>
           </template>
@@ -198,7 +200,7 @@ useCustomSeoMeta({
           v-for="(c, i) in colors"
           :key="i"
           class="pd-sw"
-          :title="`Copy ${c}`"
+          :title="t('common.copyX', {x: c})"
           @click="copy(c, c)"
       >
         <span class="pd-sw-color" :style="{ backgroundColor: c }"/>
@@ -207,12 +209,12 @@ useCustomSeoMeta({
     </div>
 
     <section v-if="insights" class="pd-insights">
-      <h2 class="pd-insights-title">Insights</h2>
+      <h2 class="pd-insights-title">{{ $t('p_palettes_id_string.insights') }}</h2>
       <div class="pd-insights-panel">
         <div class="pd-dom">
           <span class="pd-dom-sw" :style="{ backgroundColor: insights.dominant }"/>
           <div class="pd-dom-meta">
-            <span class="pd-dom-cap">Dominant</span>
+            <span class="pd-dom-cap">{{ $t('p_palettes_id_string.dominant') }}</span>
             <span class="pd-dom-hex">{{ insights.dominant }}</span>
           </div>
         </div>
@@ -223,9 +225,9 @@ useCustomSeoMeta({
             <span class="pd-pill">{{ insights.saturation }}</span>
           </div>
           <div class="pd-range">
-            <span class="pd-range-cap">Dark</span>
+            <span class="pd-range-cap">{{ $t('common.dark') }}</span>
             <span class="pd-range-bar" :style="{ background: `linear-gradient(90deg, ${insights.darkest}, ${insights.lightest})` }"/>
-            <span class="pd-range-cap">Light</span>
+            <span class="pd-range-cap">{{ $t('common.light') }}</span>
           </div>
         </div>
       </div>
@@ -238,14 +240,14 @@ useCustomSeoMeta({
     />
 
     <section v-if="usedResults.length" class="pd-used">
-      <h2 class="pd-used-title">Artworks using this palette</h2>
+      <h2 class="pd-used-title">{{ $t('p_palettes_id_string.artworksUsingThisPalette') }}</h2>
       <div class="pd-used-grid">
         <ItemCard v-for="(item, i) in usedResults" :key="item.id" :value="item" :priority="i < 3"/>
       </div>
     </section>
 
     <section v-if="relatedList.length" class="pd-related">
-      <h2 class="pd-related-title">Related palettes</h2>
+      <h2 class="pd-related-title">{{ $t('p_palettes_id_string.relatedPalettes') }}</h2>
       <div class="pd-related-grid">
         <ItemPaletteCard v-for="p in relatedList" :key="p.id" :value="p"/>
       </div>

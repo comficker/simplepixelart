@@ -13,5 +13,6 @@ const props = defineProps<{
     :position="props.position || 'bottom-right'"
     :expand="true"
     :rich-colors="false"
+    :container-aria-label="$t('common.notifications')"
   />
 </template>

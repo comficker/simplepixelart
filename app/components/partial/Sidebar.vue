@@ -19,26 +19,26 @@ function openCommandPalette() {
 }
 
 const PRIMARY = [
-  {to: '/', icon: 'icon-home', title: 'Home'},
-  {to: '/arts', icon: 'icon-explore', title: 'Discovery'},
-  {to: '/palettes', icon: 'icon-bucket', title: 'Palettes'},
-  {to: '/challenges', icon: 'icon-flag', title: 'Challenges'},
-  {to: '/work', icon: 'icon-workspace', title: 'Your work'},
+  {to: '/', icon: 'icon-home', key: 'nav.home'},
+  {to: '/arts', icon: 'icon-explore', key: 'nav.discovery'},
+  {to: '/palettes', icon: 'icon-bucket', key: 'nav.palettes'},
+  {to: '/challenges', icon: 'icon-flag', key: 'nav.challenges'},
+  {to: '/work', icon: 'icon-workspace', key: 'nav.yourWork'},
 ]
 </script>
 
 <template>
-  <aside class="dash-side" :class="{'is-collapsed': collapsed}" aria-label="Sidebar">
+  <aside class="dash-side" :class="{'is-collapsed': collapsed}" :aria-label="$t('c_Sidebar.sidebar')">
     <div class="dash-brand-row">
-      <nuxt-link v-if="!collapsed" to="/" class="dash-brand" title="Home">
-        <img src="/logo.svg" alt="Simple Pixel Art" width="32" height="32" class="dash-brand-logo">
-        <span class="dash-brand-name"><span>Simple</span>PixelArt</span>
-      </nuxt-link>
+      <NuxtLinkLocale v-if="!collapsed" to="/" class="dash-brand" :title="$t('common.home')">
+        <img src="/logo.svg" :alt="$t('common.simplePixelArt')" width="32" height="32" class="dash-brand-logo">
+        <span class="dash-brand-name"><span>{{ $t('common.simple') }}</span>{{ $t('common.pixelart') }}</span>
+      </NuxtLinkLocale>
       <button
           type="button"
           class="widget-ctl-btn dash-collapse"
-          :title="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-          :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+          :title="collapsed ? $t('c_Sidebar.expandSidebar') : $t('c_Sidebar.collapseSidebar')"
+          :aria-label="collapsed ? $t('c_Sidebar.expandSidebar') : $t('c_Sidebar.collapseSidebar')"
           :aria-expanded="!collapsed"
           @click="toggleCollapsed"
       >
@@ -46,34 +46,34 @@ const PRIMARY = [
       </button>
     </div>
 
-    <nav class="dash-nav" aria-label="Primary">
-      <nuxt-link v-for="l in PRIMARY" :key="l.to" :to="l.to" class="hdr-link dash-link" :title="l.title">
+    <nav class="dash-nav" :aria-label="$t('common.primary')">
+      <NuxtLinkLocale v-for="l in PRIMARY" :key="l.to" :to="l.to" class="hdr-link dash-link" :title="$t(l.key)">
         <span class="icon" :class="l.icon"/>
-        <span class="dash-label">{{ l.title }}</span>
-      </nuxt-link>
+        <span class="dash-label">{{ $t(l.key) }}</span>
+      </NuxtLinkLocale>
     </nav>
 
-    <div class="dash-sec"><span class="dash-label">Tools</span></div>
-    <nav class="dash-nav" aria-label="Tools">
-      <nuxt-link
+    <div class="dash-sec"><span class="dash-label">{{ $t('c_Sidebar.tools') }}</span></div>
+    <nav class="dash-nav" :aria-label="$t('c_Sidebar.tools')">
+      <NuxtLinkLocale
           v-for="t in TOOLS"
           :key="t.key"
           :to="t.to"
           class="hdr-link dash-link"
           :style="{'--ic-1': t.c1, '--ic-2': t.c2}"
-          :title="t.title"
+          :title="$t(t.i18n)"
       >
         <span class="dash-tool-ic"><span class="icon" :class="t.icon"/></span>
-        <span class="dash-label">{{ t.title }}</span>
-      </nuxt-link>
+        <span class="dash-label">{{ $t(t.i18n) }}</span>
+      </NuxtLinkLocale>
     </nav>
 
     <div class="dash-foot">
       <button
           type="button"
           class="cmdk-trigger"
-          title="Open command palette"
-          aria-label="Open command palette"
+          :title="$t('common.openCommandPalette')"
+          :aria-label="$t('common.openCommandPalette')"
           @click="openCommandPalette"
       >
         <span class="icon icon-search"/>

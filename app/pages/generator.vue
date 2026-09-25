@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const localePath = useLocalePath()
+const {t} = useI18n()
 import {toast} from 'vue-sonner'
 import {cloneDeep, generateUUID, getStorageItem} from '~/helper/utils'
 import {rgbToHex} from '~/helper/color'
@@ -12,9 +14,9 @@ const requestURL = useRequestURL()
 const route = useRoute()
 
 useCustomSeoMeta({
-  title: 'AI Pixel Art Generator',
-  description: 'Describe a sprite and get editable pixel art. Pick 16×16 to 128×128, cap the palette, cut the background, then open the result in the editor.',
-  keywords: 'ai pixel art generator, text to pixel art, ai sprite generator, pixel art from text, image to pixel art ai, photo to sprite ai, ai game asset generator, free ai pixel art, prompt to sprite',
+  title: () => t('seo.generator.title'),
+  description: () => t('seo.generator.description'),
+  keywords: () => t('seo.generator.keywords'),
   canonical: 'https://simplepixelart.com/generator',
   script: [
     {
@@ -51,23 +53,23 @@ const googleAuthUrl = computed(() => {
 const SIZES: (number | 'auto')[] = ['auto', 16, 32, 64, 128]
 const COLOR_COUNTS = [8, 16, 32]
 const STYLES = [
-  {v: 'sprite', l: 'Sprite'},
-  {v: 'icon', l: 'Icon'},
-  {v: 'character', l: 'Character'},
-  {v: 'scene', l: 'Scene'},
+  {v: 'sprite', l: t('p_generator.sprite')},
+  {v: 'icon', l: t('p_generator.icon')},
+  {v: 'character', l: t('p_generator.character')},
+  {v: 'scene', l: t('p_generator.scene')},
 ]
 const VIEWS = [
-  {v: 'auto', l: 'Auto'},
-  {v: 'front', l: 'Front'},
-  {v: 'side', l: 'Side'},
-  {v: 'isometric', l: 'Iso'},
+  {v: 'auto', l: t('common.auto')},
+  {v: 'front', l: t('p_generator.front')},
+  {v: 'side', l: t('p_generator.side')},
+  {v: 'isometric', l: t('p_generator.iso')},
 ]
-const BG_MODES = [
-  {v: 'cut', l: 'Cut', t: 'Remove the background — the sprite lands with transparency around it'},
-  {v: 'keep', l: 'Keep', t: 'Remove it, then paint the colour the model used back in'},
-  {v: 'off', l: 'Off', t: "Don't touch the background — use the picture exactly as generated"},
-] as const
-type BgMode = typeof BG_MODES[number]['v']
+const BG_MODES = computed(() => [
+  {v: 'cut', l: t('p_generator.bgCut'), t: t('p_generator.bgCutHint')},
+  {v: 'keep', l: t('p_generator.bgKeep'), t: t('p_generator.bgKeepHint')},
+  {v: 'off', l: t('p_generator.bgOff'), t: t('p_generator.bgOffHint')},
+] as const)
+type BgMode = 'cut' | 'keep' | 'off'
 
 const prompt = ref('')
 const size = ref<number | 'auto'>(32)
@@ -406,48 +408,30 @@ async function sendToEditor() {
   ws[id] = data
   localStorage.setItem('workspaces', JSON.stringify(ws))
   localStorage.setItem('workspace_current', id)
-  navigateTo(`/editor?id=${id}`)
+  navigateTo(localePath(`/editor?id=${id}`))
 }
 
-const faq = [
-  {
-    q: 'What do I get out of it?',
-    a: `<p>An editable pixel art board — not a flat picture. The sprite arrives in the editor as pixels on a canvas of the size you chose, with a real palette you can recolor, so you can fix a face, redraw a hand, or animate it.</p>`,
-  },
-  {
-    q: 'Why does generating cost credits?',
-    a: `<p>Each generation calls an image model, which costs real money per picture. Credits keep that sustainable. You earn them free in <a href="/missions">Missions</a> — daily bonus, publishing art, inviting friends — and adjusting a result you already generated is always free.</p>`,
-  },
-  {
-    q: 'Does changing the size or palette cost another credit?',
-    a: `<p>No. Size, colors, backdrop and cropping all re-run on the picture you already paid for, in your browser. Only <strong>Try again</strong> asks the model for a new picture.</p>`,
-  },
-  {
-    q: 'How is the background removed?',
-    a: `<p>The model is asked for a flat background that contrasts with the subject, and the tool then flood-fills that ground away from the border inwards — so a color the subject also uses can never be punched out from inside it. If the removal misjudges your sprite, set <strong>Backdrop</strong> to Off and clean it up in the editor.</p>`,
-  },
-  {
-    q: 'Can I generate from my own image?',
-    a: `<p>Yes. Attach a reference with the 🖼 button in the prompt bar (or drop a file onto it), then describe what should change — “as a side-view sprite”, “only the head”, “make it night”. The model redraws your picture as pixel art instead of inventing a new subject. The reference is resized to 768px in your browser before it is sent, and it is not stored.</p>`,
-  },
-  {
-    q: 'Can I use the results commercially?',
-    a: `<p>Yes, the art is yours to use. Bear in mind AI output is not always unique, and check the terms of any store you publish to.</p>`,
-  },
-]
+const faq = computed(() => [
+  {q: t('p_generator.faq0q'), a: t('p_generator.faq0a')},
+  {q: t('p_generator.faq1q'), a: t('p_generator.faq1a')},
+  {q: t('p_generator.faq2q'), a: t('p_generator.faq2a')},
+  {q: t('p_generator.faq3q'), a: t('p_generator.faq3a')},
+  {q: t('p_generator.faq4q'), a: t('p_generator.faq4a')},
+  {q: t('p_generator.faq5q'), a: t('p_generator.faq5a')},
+])
 </script>
 
 <template>
-  <ToolLayout title="Generator">
+  <ToolLayout :title="$t('p_generator.generator')">
     <div class="gen-grid flat-editor">
 
       <div class="canvas-col">
-        <Widget title="Preview">
+        <Widget :title="$t('common.preview')">
           <div class="preview-wrapper">
 
             <div v-if="hasResult" class="tm-seg gen-viewseg">
-              <button :class="{active: previewMode === 'pixel'}" @click="previewMode = 'pixel'">Pixel art</button>
-              <button :class="{active: previewMode === 'original'}" @click="previewMode = 'original'">Original</button>
+              <button :class="{active: previewMode === 'pixel'}" @click="previewMode = 'pixel'">{{ $t('p_generator.pixelArt') }}</button>
+              <button :class="{active: previewMode === 'original'}" @click="previewMode = 'original'">{{ $t('p_generator.original') }}</button>
             </div>
             <template v-if="hasResult">
               <canvas
@@ -456,23 +440,19 @@ const faq = [
                   class="gen-preview pixelated"
                   :class="{busy: converting}"
               />
-              <img v-if="previewMode === 'original'" :src="resultUrl" alt="Generated picture" class="gen-original">
+              <img v-if="previewMode === 'original'" :src="resultUrl" :alt="$t('p_generator.generatedPicture')" class="gen-original">
             </template>
 
             <div v-else class="tool-empty">
               <span class="icon icon-auto-fix"/>
-              <p class="text-sm">Describe a sprite and generate it</p>
-              <p class="text-xs text-muted">You get pixels on a canvas — editable, not a flat image.</p>
-              <p v-if="summary && !summary.enabled" class="text-xs text-muted">
-                Generation is offline right now — check back soon.
-              </p>
+              <p class="text-sm">{{ $t('p_generator.describeASpriteAndGenerateIt') }}</p>
+              <p class="text-xs text-muted" v-html="$t('p_generator.youGetPixelsOnACanvas')"/>
+              <p v-if="summary && !summary.enabled" class="text-xs text-muted" v-html="$t('p_generator.generationIsOfflineRightNowCheck')"/>
             </div>
           </div>
         </Widget>
 
-        <p v-if="hasResult && previewMode === 'original'" class="gen-hint text-xs text-muted">
-          The model's own picture — the pixel art tab is built from it.
-        </p>
+        <p v-if="hasResult && previewMode === 'original'" class="gen-hint text-xs text-muted" v-html="$t('p_generator.theModelSOwnPictureThe')"/>
 
         <div v-if="hasResult" class="gen-actions">
           <button
@@ -486,11 +466,11 @@ const faq = [
           <button
               class="btn block"
               :disabled="busy || !auth.isLogged"
-              title="Describe a change and generate this sprite again — costs one generation"
+              :title="$t('p_generator.describeAChangeAndGenerateThis')"
               @click="refineResult"
           >
             <span class="icon icon-auto-fix"/>
-            <span>Refine</span>
+            <span>{{ $t('p_generator.refine') }}</span>
           </button>
         </div>
 
@@ -514,7 +494,7 @@ const faq = [
           <button
               class="gen-attach"
               :disabled="busy || !auth.isLogged"
-              :aria-label="reference ? 'Replace reference image' : 'Attach a reference image'"
+              :aria-label="reference ? $t('p_generator.replaceReferenceImage') : $t('p_generator.attachAReferenceImage')"
               :title="reference ? 'Replace the reference image' : 'Attach a reference image — the sprite is redrawn from it'"
               :class="{active: !!reference}"
             @click="fileEl?.click()"
@@ -533,13 +513,13 @@ const faq = [
               @keydown.enter.prevent="generate"
           >
           <a v-if="!auth.isLogged" :href="googleAuthUrl" class="btn primary gen-send">
-            <span class="icon icon-user"/><span>Sign in</span>
+            <span class="icon icon-user"/><span>{{ $t('common.signIn') }}</span>
           </a>
           <button
               v-else
               class="btn primary gen-send"
               :disabled="busy || broke || prompt.trim().length < 3 || (summary ? !summary.enabled : false)"
-              :title="`${hasResult ? 'Generate another' : 'Generate'}${summary?.cost == null ? '' : ` — 🪙${summary.cost}`}`"
+              :title="`${hasResult ? $t('p_generator.generateAnother') : $t('p_generator.generate2')}${summary?.cost == null ? '' : ` — 🪙${summary.cost}`}`"
               @click="generate"
           >
             <span class="icon" :class="busy ? 'icon-refresh' : 'icon-auto-fix'"/>
@@ -558,15 +538,15 @@ const faq = [
                 class="gen-link"
                 :disabled="claiming"
                 @click="claimDaily"
-            >{{ claiming ? 'Claiming…' : `Claim 🪙${summary!.dailyGrant}` }}</button>
-            <nuxt-link to="/missions" class="gen-link">Earn credits</nuxt-link>
+            >{{ claiming ? 'Claiming…' : `${$t('p_generator.claim')} 🪙${summary!.dailyGrant}` }}</button>
+            <NuxtLinkLocale to="/missions" class="gen-link">{{ $t('common.earnCredits') }}</NuxtLinkLocale>
           </template>
-          <span v-else class="text-2xs text-muted">Generation is offline</span>
+          <span v-else class="text-2xs text-muted">{{ $t('p_generator.generationIsOffline') }}</span>
         </div>
       </div>
 
       <div class="editor-sidebar">
-        <Widget title="Look">
+        <Widget :title="$t('p_generator.look')">
           <div class="settings-row">
             <label v-for="s in STYLES" :key="s.v" class="pill" :class="{active: style === s.v}">
               <input type="radio" :value="s.v" v-model="style" :disabled="busy">
@@ -581,12 +561,12 @@ const faq = [
           </div>
           <label class="editor-check">
             <input v-model="outline" type="checkbox" :disabled="busy">
-            <span class="text-xs">Dark outline</span>
+            <span class="text-xs">{{ $t('p_generator.darkOutline') }}</span>
           </label>
         </Widget>
 
-        <Widget title="Output">
-          <div class="settings-row" title="Canvas size — Auto keeps the model's native detail; re-converts for free">
+        <Widget :title="$t('p_generator.output')">
+          <div class="settings-row" :title="$t('p_generator.canvasSizeAutoKeepsTheModel')">
             <label v-for="s in SIZES" :key="s" class="pill" :class="{active: size === s}">
               <input type="radio" :value="s" v-model="size">
               <span>{{ s === 'auto' ? 'Auto' : s }}</span>
@@ -595,7 +575,7 @@ const faq = [
           <p v-if="size === 'auto' && hasResult" class="tool-note">
             Auto → {{ grid.length }}×{{ grid.length }}
           </p>
-          <div class="settings-row gen-row2" title="Palette size — re-converts for free">
+          <div class="settings-row gen-row2" :title="$t('p_generator.paletteSizeReConvertsForFree')">
             <label v-for="c in COLOR_COUNTS" :key="c" class="pill" :class="{active: maxColors === c}">
               <input type="radio" :value="c" v-model="maxColors">
               <span>{{ c }}c</span>
@@ -603,36 +583,36 @@ const faq = [
           </div>
 
           <p v-if="reference && size !== 'auto' && size < 64" class="tool-note">
-            A photo holds up better at 64+
+            {{ $t('p_generator.aPhotoHoldsUpBetterAt') }}
           </p>
         </Widget>
 
-        <Widget title="Backdrop">
+        <Widget :title="$t('p_generator.backdrop')">
           <div class="settings-row">
             <label v-for="m in BG_MODES" :key="m.v" class="pill" :class="{active: bgMode === m.v}" :title="m.t">
               <input type="radio" :value="m.v" v-model="bgMode">
               <span>{{ m.l }}</span>
             </label>
           </div>
-          <label class="editor-check" title="Crop to the subject so it uses the whole canvas, instead of keeping the model's margins">
+          <label class="editor-check" :title="$t('p_generator.cropToTheSubjectSoIt')">
             <input v-model="fillGrid" type="checkbox">
-            <span class="text-xs">Crop to subject</span>
+            <span class="text-xs">{{ $t('p_generator.cropToSubject') }}</span>
           </label>
         </Widget>
 
-        <Widget v-if="history.length" title="History">
+        <Widget v-if="history.length" :title="$t('p_generator.history')">
           <div class="gen-hist">
             <div v-for="h in history" :key="h.id" class="gen-hist-item" :class="{active: h.id === historyId}">
               <button class="gen-hist-thumb" :title="h.prompt" :disabled="busy" @click="restoreFromHistory(h)">
                 <img v-if="h.thumb" :src="h.thumb" :alt="h.prompt">
                 <span v-else class="icon icon-auto-fix"/>
               </button>
-              <button class="gen-hist-x" aria-label="Remove from history" title="Remove" @click="deleteFromHistory(h.id)">
+              <button class="gen-hist-x" :aria-label="$t('p_generator.removeFromHistory')" :title="$t('common.remove')" @click="deleteFromHistory(h.id)">
                 <span class="icon icon-close"/>
               </button>
             </div>
           </div>
-          <p class="tool-note">Reopening is free</p>
+          <p class="tool-note">{{ $t('p_generator.reopeningIsFree') }}</p>
         </Widget>
       </div>
     </div>
@@ -643,35 +623,35 @@ const faq = [
         {{ style }} · {{ view }} view · {{ size === 'auto' ? 'auto size' : `${size}×${size}px` }} ·
         {{ maxColors }} colors · backdrop {{ bgMode }}
       </p>
-      <span class="text-xs text-muted">{{ busy ? 'Generating…' : hasResult ? 'Ready' : 'Idle' }}</span>
+      <span class="text-xs text-muted">{{ busy ? $t('p_generator.generating') : hasResult ? $t('p_generator.ready') : $t('p_generator.idle') }}</span>
     </template>
 
     <template #doc>
-      <h1>AI Pixel Art Generator</h1>
-      <p>Describe a sprite, get pixel art you can actually edit — a canvas of pixels with a real palette, not a picture of pixel art.</p>
+      <h1>{{ $t('p_generator.aiPixelArtGenerator') }}</h1>
+      <p v-html="$t('p_generator.describeASpriteGetPixelArt')"/>
 
-      <h2>How to use it</h2>
+      <h2>{{ $t('common.howToUseIt') }}</h2>
       <ol>
-        <li><strong>Describe the sprite</strong> — “a sleeping orange cat”, “a red health potion”, “a knight with a shield”. Pick a look: sprite, icon, character or scene, and a view.</li>
-        <li><strong>Or start from a picture</strong> — attach a reference image (the 🖼 button in the prompt bar, or drop a file on it) and say what to change: “as a side-view walking sprite”. The subject, pose and colors carry over.</li>
-        <li><strong>Generate</strong> — one credit-costing call to the image model, which draws a large, flat-colored picture of your subject.</li>
-        <li><strong>Tune it, free</strong> — change the size (16–128), cap the palette (8/16/32), cut or keep the background, crop to the subject. Every change re-converts the same picture in your browser.</li>
-        <li><strong>Open in Editor</strong> — the sprite lands on a canvas with layers, mirror drawing, animation frames and export.</li>
+        <li v-html="$t('p_generator.strongDescribeTheSpriteStrongA')"/>
+        <li v-html="$t('p_generator.strongOrStartFromAPicture')"/>
+        <li v-html="$t('p_generator.strongGenerateStrongOneCreditCosti')"/>
+        <li v-html="$t('p_generator.strongTuneItFreeStrongChange')"/>
+        <li v-html="$t('p_generator.strongOpenInEditorStrongThe')"/>
       </ol>
 
-      <h2>Why the result is editable, not a screenshot</h2>
-      <p>Image models can't draw a true 32×32 bitmap — they draw a big picture that <em>looks</em> like pixel art, with blended edges, hundreds of near-identical colors and a background baked in. This tool undoes that: it removes the background by flood-filling it away from the border inwards, crops to your subject, then resamples the picture one grid cell at a time, keeping the model's own flat colors. What you get is a real pixel grid with a small palette.</p>
+      <h2>{{ $t('p_generator.whyTheResultIsEditableNot') }}</h2>
+      <p v-html="$t('p_generator.imageModelsCanTDrawA')"/>
 
-      <h2>Features</h2>
+      <h2>{{ $t('common.features') }}</h2>
       <ul>
-        <li><strong>Text to sprite</strong> — prompt modifiers for style and view, plus an optional dark outline, so you don't have to write prompt incantations.</li>
-        <li><strong>Reference image</strong> — attach a photo, drawing or existing sprite and have it redrawn as pixel art; it is downscaled in your browser before being sent.</li>
-        <li><strong>Sizes 16×16 to 128×128, or Auto</strong> — Auto reads the cell size the model actually drew at and keeps every pixel of that detail; switching size re-converts the same picture instead of charging again.</li>
-        <li><strong>Palette cap</strong> — 8, 16 or 32 colors, chosen by how much area each color covers, so flat regions stay flat.</li>
-        <li><strong>Background control</strong> — cut it to transparency, keep it as a color, or leave it untouched when the removal misjudges a subject.</li>
-        <li><strong>See the original</strong> — compare the model's own picture with the pixel art built from it.</li>
-        <li><strong>History</strong> — your recent generations are saved to your account; reopen any of them from any device and re-tune size, palette or backdrop without spending credits again.</li>
-        <li><strong>Editor hand-off</strong> — draw, animate, export to PNG/SVG/JSON or a game spritesheet.</li>
+        <li v-html="$t('p_generator.strongTextToSpriteStrongPrompt')"/>
+        <li v-html="$t('p_generator.strongReferenceImageStrongAttachA')"/>
+        <li v-html="$t('p_generator.strongSizes1616To128')"/>
+        <li v-html="$t('p_generator.strongPaletteCapStrong816')"/>
+        <li v-html="$t('p_generator.strongBackgroundControlStrongCutIt')"/>
+        <li v-html="$t('p_generator.strongSeeTheOriginalStrongCompare')"/>
+        <li v-html="$t('p_generator.strongHistoryStrongYourRecentGener')"/>
+        <li v-html="$t('p_generator.strongEditorHandOffStrongDraw')"/>
       </ul>
 
       <QnA :items="faq"/>

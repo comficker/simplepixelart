@@ -54,18 +54,16 @@ onMounted(() => {
 
 <template>
   <Transition name="consent">
-    <div v-if="visible" class="consent" role="dialog" aria-live="polite" aria-label="Cookie consent">
+    <div v-if="visible" class="consent" role="dialog" aria-live="polite" :aria-label="$t('c_ConsentBanner.cookieConsent')">
       <div class="consent-inner">
         <div class="consent-text">
-          <strong>We use cookies</strong>
-          <span>
-            SimplePixelArt uses cookies for analytics and personalized ads. You can accept all or reject non-essential cookies.
-            See our <nuxt-link to="/privacy">Privacy Policy</nuxt-link>.
+          <strong>{{ $t('c_ConsentBanner.weUseCookies') }}</strong>
+          <span> {{ $t('c_ConsentBanner.simplepixelartUsesCookiesForAnalyt') }} <NuxtLinkLocale to="/privacy">{{ $t('common.privacyPolicy') }}</NuxtLinkLocale>.
           </span>
         </div>
         <div class="consent-actions">
-          <button type="button" class="btn" @click="reject">Reject</button>
-          <button type="button" class="btn primary" @click="accept">Accept all</button>
+          <button type="button" class="btn" @click="reject">{{ $t('c_ConsentBanner.reject') }}</button>
+          <button type="button" class="btn primary" @click="accept">{{ $t('c_ConsentBanner.acceptAll') }}</button>
         </div>
       </div>
     </div>

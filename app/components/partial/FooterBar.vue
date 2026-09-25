@@ -5,11 +5,11 @@ const year = new Date().getFullYear()
 <template>
   <div class="footer-left">
     <span class="footer-copy">© {{ year }} SimplePixelArt.com</span>
-    <nav class="footer-links" aria-label="Footer">
-      <nuxt-link to="/contact">Contact</nuxt-link>
-      <nuxt-link to="/guidelines">Guidelines</nuxt-link>
-      <nuxt-link to="/privacy">Privacy</nuxt-link>
-      <nuxt-link to="/terms">Terms</nuxt-link>
+    <nav class="footer-links" :aria-label="$t('c_FooterBar.footer')">
+      <NuxtLinkLocale to="/contact">{{ $t('c_FooterBar.contact') }}</NuxtLinkLocale>
+      <NuxtLinkLocale to="/guidelines">{{ $t('common.guidelines') }}</NuxtLinkLocale>
+      <NuxtLinkLocale to="/privacy">{{ $t('c_FooterBar.privacy') }}</NuxtLinkLocale>
+      <NuxtLinkLocale to="/terms">{{ $t('c_FooterBar.terms') }}</NuxtLinkLocale>
     </nav>
   </div>
 </template>

@@ -1,10 +1,12 @@
 <script setup lang="ts">
+const {t} = useI18n()
+
 import {generatePalette, SCHEME_TYPES, type SchemeType} from "~/helper/color";
 
 const TONE_OPTIONS = [
-  {key: 'subtle', label: 'Subtle', spread: 0.16},
-  {key: 'medium', label: 'Medium', spread: 0.34},
-  {key: 'strong', label: 'Strong', spread: 0.52},
+  {key: 'subtle', label: t('p_palettes_color-palette-from-color.subtle'), spread: 0.16},
+  {key: 'medium', label: t('p_palettes_color-palette-from-color.medium'), spread: 0.34},
+  {key: 'strong', label: t('p_palettes_color-palette-from-color.strong'), spread: 0.52},
 ] as const
 
 const base = ref('#4F7CFF')
@@ -109,20 +111,17 @@ useCustomSeoMeta({
 <template>
   <div class="page">
     <header class="tool-hero">
-      <span class="tool-eyebrow">Color tool</span>
-      <h1 class="tool-title">Color palette by color</h1>
-      <p class="tool-sub">
-        Pick one color and get a matching color palette — choose a harmony, the number of colors and the
-        tonal spread. Copy the hex codes, open them in the editor, or publish to the library.
-      </p>
+      <span class="tool-eyebrow">{{ $t('p_palettes_color-palette-from-color.colorTool') }}</span>
+      <h1 class="tool-title">{{ $t('p_palettes_color-palette-from-color.colorPaletteByColor') }}</h1>
+      <p class="tool-sub" v-html="$t('p_palettes_color-palette-from-color.pickOneColorAndGetA')"/>
     </header>
 
     <div class="tool-card">
       <div class="tool-pane">
-        <span class="tool-pane-cap">Base color</span>
+        <span class="tool-pane-cap">{{ $t('p_palettes_color-palette-from-color.baseColor') }}</span>
         <div class="scheme-base">
-          <label class="scheme-swatch" :style="{ background: base }" title="Pick a color">
-            <input type="color" v-model="base" class="scheme-color-input" aria-label="Base color"/>
+          <label class="scheme-swatch" :style="{ background: base }" :title="$t('p_palettes_color-palette-from-color.pickAColor')">
+            <input type="color" v-model="base" class="scheme-color-input" :aria-label="$t('p_palettes_color-palette-from-color.baseColor')"/>
           </label>
           <div class="scheme-base-fields">
             <input
@@ -130,7 +129,7 @@ useCustomSeoMeta({
                 class="scheme-hex"
                 :value="base"
                 spellcheck="false"
-                aria-label="Base hex color"
+                :aria-label="$t('p_palettes_color-palette-from-color.baseHexColor')"
                 @change="onHex"
                 @keydown.enter="onHex"
             />
@@ -142,14 +141,14 @@ useCustomSeoMeta({
                   :class="{ active: p === base }"
                   :style="{ background: p }"
                   :title="p"
-                  :aria-label="`Use ${p}`"
+                  :aria-label="$t('common.useX', {x: p})"
                   @click="base = p"
               />
             </div>
           </div>
         </div>
 
-        <span class="tool-pane-cap scheme-harm-cap">Harmony</span>
+        <span class="tool-pane-cap scheme-harm-cap">{{ $t('p_palettes_color-palette-from-color.harmony') }}</span>
         <div class="scheme-harm-grid">
           <button
               v-for="h in SCHEME_TYPES" :key="h.key"
@@ -160,11 +159,11 @@ useCustomSeoMeta({
         </div>
 
         <div class="scheme-count-row">
-          <span class="tool-pane-cap scheme-count-cap">Colors <strong>{{ count }}</strong></span>
-          <input type="range" min="2" max="16" v-model.number="count" class="scheme-range" aria-label="Number of colors"/>
+          <span class="tool-pane-cap scheme-count-cap">{{ $t('common.colors') }} <strong>{{ count }}</strong></span>
+          <input type="range" min="2" max="16" v-model.number="count" class="scheme-range" :aria-label="$t('p_palettes_color-palette-from-color.numberOfColors')"/>
         </div>
 
-        <span class="tool-pane-cap scheme-harm-cap">Tones</span>
+        <span class="tool-pane-cap scheme-harm-cap">{{ $t('p_palettes_color-palette-from-color.tones') }}</span>
         <div class="scheme-tones">
           <button
               v-for="o in TONE_OPTIONS" :key="o.key"
@@ -177,12 +176,12 @@ useCustomSeoMeta({
         <button
             type="button"
             class="scheme-refresh"
-            title="Generate another palette for this color"
-            aria-label="Refresh palette"
+            :title="$t('p_palettes_color-palette-from-color.generateAnotherPaletteForThisColor')"
+            :aria-label="$t('p_palettes_color-palette-from-color.refreshPalette')"
             @click="shuffle"
         >
           <span class="icon icon-rotate-right"/>
-          <span>Refresh</span>
+          <span>{{ $t('p_palettes_color-palette-from-color.refresh') }}</span>
         </button>
       </div>
 
@@ -191,45 +190,38 @@ useCustomSeoMeta({
         <PaletteComposer
             v-model:colors="colors"
             source="scheme"
-            name-placeholder="Palette name"
+            name-:placeholder="$t('common.paletteName')"
             default-name="Color palette"
         />
       </div>
     </div>
 
-    <Widget title="More tools" class="tool-more">
+    <Widget :title="$t('p_palettes_color-palette-from-color.moreTools')" class="tool-more">
       <ToolPaths/>
     </Widget>
 
     <ToolReadme>
-      <h2>Build a color palette from one color</h2>
-      <p>
-        Start with a single color and this tool generates a <strong>color palette from that color</strong> using the
-        rules of color theory. Choose a harmony, set how many colors you want and how far the tones spread — the
-        matching colors are calculated from the color wheel, so they actually go together instead of being guessed.
-        It's perfect for picking a palette for pixel art, a game UI, a website, a logo or any design where one brand
-        color needs a supporting cast. Found your color in a photo? Pull it with the
-        <nuxt-link to="/palettes/color-palette-from-image">image color palette tool</nuxt-link> first, then build a palette around it.
-      </p>
+      <h2>{{ $t('p_palettes_color-palette-from-color.buildAColorPaletteFromOne') }}</h2>
+      <p> {{ $t('p_palettes_color-palette-from-color.startWithASingleColorAnd') }} <strong>{{ $t('p_palettes_color-palette-from-color.colorPaletteFromThatColor') }}</strong> {{ $t('p_palettes_color-palette-from-color.usingTheRulesOfColorTheory') }} <NuxtLinkLocale to="/palettes/color-palette-from-image">{{ $t('p_palettes_color-palette-from-color.imageColorPaletteTool') }}</NuxtLinkLocale> {{ $t('p_palettes_color-palette-from-color.firstThenBuildAPaletteAround') }} </p>
 
-      <h2>The harmony types</h2>
+      <h2>{{ $t('p_palettes_color-palette-from-color.theHarmonyTypes') }}</h2>
       <ul>
-        <li><strong>Complementary</strong> — your color and its opposite on the wheel. Bold, high-contrast pairings.</li>
-        <li><strong>Analogous</strong> — colors sitting next to each other. Calm, natural, easy on the eye.</li>
-        <li><strong>Triadic &amp; Square</strong> — three or four colors spaced evenly around the wheel — vivid but balanced.</li>
-        <li><strong>Split</strong> — the base plus the two colors either side of its complement — softer contrast.</li>
-        <li><strong>Monochrome</strong> — one hue at different saturation and lightness — clean and tonal.</li>
-        <li><strong>Shades &amp; tints</strong> — your color stepped from a dark shade up to a light tint.</li>
+        <li><strong>{{ $t('p_palettes_color-palette-from-color.complementary') }}</strong> {{ $t('p_palettes_color-palette-from-color.complementaryDesc') }}</li>
+        <li><strong>{{ $t('p_palettes_color-palette-from-color.analogous') }}</strong> {{ $t('p_palettes_color-palette-from-color.analogousDesc') }}</li>
+        <li><strong>{{ $t('p_palettes_color-palette-from-color.triadicAmpSquare') }}</strong> {{ $t('p_palettes_color-palette-from-color.triadicDesc') }}</li>
+        <li><strong>{{ $t('p_palettes_color-palette-from-color.split') }}</strong> {{ $t('p_palettes_color-palette-from-color.splitDesc') }}</li>
+        <li><strong>{{ $t('p_palettes_color-palette-from-color.monochrome') }}</strong> {{ $t('p_palettes_color-palette-from-color.monochromeDesc') }}</li>
+        <li><strong>{{ $t('p_palettes_color-palette-from-color.shadesAmpTints') }}</strong> {{ $t('p_palettes_color-palette-from-color.shadesDesc') }}</li>
       </ul>
 
-      <h2>How to use it</h2>
+      <h2>{{ $t('common.howToUseIt') }}</h2>
       <ul>
-        <li>Pick a base color with the picker or paste a hex code.</li>
-        <li>Switch harmony types to compare palettes side by side.</li>
-        <li>Set the number of colors and the tonal spread to taste.</li>
-        <li>Edit any swatch, then copy the hex codes for your project.</li>
-        <li><nuxt-link to="/editor?new=true">Open the palette in the editor</nuxt-link> to start drawing right away.</li>
-        <li>Publish it to the <nuxt-link to="/palettes">palette library</nuxt-link> to reuse and share.</li>
+        <li v-html="$t('p_palettes_color-palette-from-color.pickABaseColorWithThe')"/>
+        <li v-html="$t('p_palettes_color-palette-from-color.switchHarmonyTypesToComparePalette')"/>
+        <li v-html="$t('p_palettes_color-palette-from-color.setTheNumberOfColorsAnd')"/>
+        <li v-html="$t('p_palettes_color-palette-from-color.editAnySwatchThenCopyThe')"/>
+        <li><NuxtLinkLocale to="/editor?new=true">{{ $t('p_palettes_color-palette-from-color.openThePaletteInTheEditor') }}</NuxtLinkLocale> {{ $t('p_palettes_color-palette-from-color.toStartDrawingRightAway') }}</li>
+        <li>{{ $t('p_palettes_color-palette-from-color.publishItToThe') }} <NuxtLinkLocale to="/palettes">{{ $t('p_palettes_color-palette-from-color.paletteLibrary') }}</NuxtLinkLocale> {{ $t('p_palettes_color-palette-from-color.toReuseAndShare') }}</li>
       </ul>
 
       <QnA :items="FAQ"/>

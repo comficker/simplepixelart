@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const {t} = useI18n()
+const localePath = useLocalePath()
 import {ref, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
 import {toast} from 'vue-sonner'
 import type {EditorData} from '~/types'
@@ -155,7 +157,7 @@ const newTsName = ref('')
 const creatingTs = ref(false)
 const pickerRef = ref<{ close: () => void } | null>(null)
 const selectedTs = computed(() => tilesets.value.find(c => c.id === selectedTilesetId.value) || null)
-const currentTsName = computed(() => selectedTilesetId.value == null ? 'No tileset' : (selectedTs.value?.title || 'Tileset'))
+const currentTsName = computed(() => selectedTilesetId.value == null ? t('p_tilesets_slicer.noTileset') : (selectedTs.value?.title || t('common.tileset')))
 const syncedTiles = ref<Record<string, { id: number; id_string: string }>>({})
 const syncingKey = ref<string | null>(null)
 
@@ -1400,7 +1402,7 @@ function drawTilePreview() {
   const cv = tilePreview.value
   const proc = processActive()
   if (!cv || !proc) { cleanInfo.value = ''; return }
-  cleanInfo.value = `${proc.width}×${proc.height} · ${countColors(proc)} colors`
+  cleanInfo.value = `${proc.width}×${proc.height} · ${t('common.nColors', {count: countColors(proc)})}`
   const scale = Math.max(1, Math.floor(Math.min(256 / proc.width, 256 / proc.height)))
   cv.width = proc.width * scale; cv.height = proc.height * scale
   const ctx = cv.getContext('2d')!
@@ -1448,7 +1450,7 @@ async function openInEditor() {
   localStorage.setItem('workspaces', JSON.stringify(ws))
   localStorage.setItem('workspace_current', editorData.id)
   await clearWorkspaceFull()
-  navigateTo(`/editor?id=${editorData.id}`)
+  navigateTo(localePath(`/editor?id=${editorData.id}`))
 }
 
 async function openAllInEditor() {
@@ -1469,7 +1471,7 @@ async function openAllInEditor() {
   if (eds.length === 1) {
     localStorage.setItem('workspaces', JSON.stringify(ws))
     await clearWorkspaceFull()
-    navigateTo(`/editor?id=${eds[0]!.id}`)
+    navigateTo(localePath(`/editor?id=${eds[0]!.id}`))
     return
   }
   const cols = Math.ceil(Math.sqrt(eds.length))
@@ -1484,7 +1486,7 @@ async function openAllInEditor() {
   }))
   localStorage.setItem('workspaces', JSON.stringify(ws))
   await saveWorkspaceFull({boards, activeIndex: 0})
-  navigateTo('/editor')
+  navigateTo(localePath('/editor'))
 }
 
 const MAX_ANIM_FRAMES = 64
@@ -1533,7 +1535,7 @@ async function openAsAnimation() {
   localStorage.setItem('workspaces', JSON.stringify(ws))
   localStorage.setItem('workspace_current', ed.id)
   await clearWorkspaceFull()
-  navigateTo(`/editor?id=${ed.id}`)
+  navigateTo(localePath(`/editor?id=${ed.id}`))
 }
 
 async function loadTilesets() {
@@ -1745,66 +1747,65 @@ watch(zoom, () => { if (sourceImage.value) drawSheet() })
 
 watch([editorProcess, sheetKeepBg], () => { if (!restoring && rawImageData.value) applySource() })
 
-const faq = [
-  {q: 'Is the Tileset Slicer free?', a: `<p>Yes — completely free and running entirely in your browser. No signup, no watermark, and your image is never uploaded to a server.</p>`},
-  {q: 'What image formats can I slice?', a: `<p>PNG, JPG and WebP tile sheets and spritesheets. PNG transparency is preserved in the exported sprites.</p>`},
-  {q: "How do I cut sprites that aren't evenly spaced?", a: `<p>Use <strong>Select</strong> mode and draw a box around each sprite — free-form, square (1:1) or a fixed size. Move boxes to fine-tune, then export them all.</p>`},
-  {q: 'Can I export all sprites at once?', a: `<p>Yes. Select or auto-detect the sprites you want and <strong>Download all</strong> as a ZIP of individual PNG files.</p>`},
-  {q: 'Does it keep transparency?', a: `<p>Yes. Pixels are extracted exactly at 1:1 with the alpha channel intact. You can also remove a background colour to make sprites transparent.</p>`},
-  {q: 'Can I edit a sprite after slicing it?', a: `<p>Yes. Open any sprite straight in the <a href="/editor">pixel art editor</a> to keep drawing with layers, palette and export tools.</p>`},
-]
+const faq = computed(() => [
+  {q: t('p_tilesets_slicer.faq0q'), a: t('p_tilesets_slicer.faq0a')},
+  {q: t('p_tilesets_slicer.faq1q'), a: t('p_tilesets_slicer.faq1a')},
+  {q: t('p_tilesets_slicer.faq2q'), a: t('p_tilesets_slicer.faq2a')},
+  {q: t('p_tilesets_slicer.faq3q'), a: t('p_tilesets_slicer.faq3a')},
+  {q: t('p_tilesets_slicer.faq4q'), a: t('p_tilesets_slicer.faq4a')},
+])
 </script>
 
 <template>
-  <ToolLayout title="Slicer">
+  <ToolLayout :title="$t('p_tilesets_slicer.slicer')">
     <div class="ts-slicer flat-editor">
 
       <div class="editor-toolbar">
         <div class="toolbar-start">
           <ui-dropdown-menu>
-            <ui-tooltip text="File">
+            <ui-tooltip :text="$t('p_tilesets_slicer.file')">
               <button class="toolbar-btn"><span class="icon icon-file"/></button>
             </ui-tooltip>
             <template #menu>
               <div class="file-menu">
                 <button class="file-menu-item" @click="openFileDialog">
-                  <span class="icon icon-upload"/><span>Open image…</span>
+                  <span class="icon icon-upload"/><span>{{ $t('p_tilesets_slicer.openImage') }}</span>
                 </button>
                 <button class="file-menu-item" @click="openFileDialog">
-                  <span class="icon icon-swap"/><span>Change sheet</span>
+                  <span class="icon icon-swap"/><span>{{ $t('p_tilesets_slicer.changeSheet') }}</span>
                 </button>
                 <div class="file-menu-sep"/>
                 <button class="file-menu-item" @click="clearImage">
-                  <span class="icon icon-broom"/><span>Clear current image</span>
+                  <span class="icon icon-broom"/><span>{{ $t('p_tilesets_slicer.clearCurrentImage') }}</span>
                 </button>
               </div>
             </template>
           </ui-dropdown-menu>
-          <ui-tooltip text="Slice settings">
-            <button class="toolbar-btn" :class="{ active: showSettings }" title="Slice settings" @click="showSettings = !showSettings"><span class="icon icon-cog"/></button>
+          <ui-tooltip :text="$t('p_tilesets_slicer.sliceSettings')">
+            <button class="toolbar-btn" :class="{ active: showSettings }" :title="$t('p_tilesets_slicer.sliceSettings')" @click="showSettings = !showSettings"><span class="icon icon-cog"/></button>
           </ui-tooltip>
         </div>
         <div class="toolbar-main no-scrollbar">
           <div class="toolbar-group">
-            <ui-tooltip text="Zoom out">
+            <ui-tooltip :text="$t('p_tilesets_slicer.zoomOut')">
               <button class="toolbar-btn" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
             </ui-tooltip>
-            <ui-tooltip text="Reset to fit">
-              <button class="toolbar-btn zoom-pct" title="Zoom level — click for 100%" @click="zoomTo100">{{ Math.round(zoom * 100) }}%</button>
+            <ui-tooltip :text="$t('p_tilesets_slicer.resetToFit')">
+              <button class="toolbar-btn zoom-pct" :title="$t('p_tilesets_slicer.zoomLevelClickFor100')" @click="zoomTo100">{{ Math.round(zoom * 100) }}%</button>
             </ui-tooltip>
-            <ui-tooltip text="Zoom in">
+            <ui-tooltip :text="$t('p_tilesets_slicer.zoomIn')">
               <button class="toolbar-btn" @click="zoomIn"><span class="icon icon-zoom-in"/></button>
             </ui-tooltip>
-            <ui-tooltip text="Fit to view">
-              <button class="toolbar-btn" @click="zoomFit"><span class="fit-label">FIT</span></button>
+            <ui-tooltip :text="$t('p_tilesets_slicer.fitToView')">
+              <button class="toolbar-btn" @click="zoomFit"><span class="fit-label">{{ $t('common.fit') }}</span></button>
             </ui-tooltip>
           </div>
           <div class="toolbar-sep"/>
           <div class="toolbar-group">
-            <ui-tooltip text="Open selected tile in editor">
+            <ui-tooltip :text="$t('p_tilesets_slicer.openSelectedTileInEditor')">
               <button class="toolbar-btn" :disabled="!activeBox" @click="openInEditor"><span class="icon icon-pen"/></button>
             </ui-tooltip>
-            <ui-tooltip text="Download selected tile as PNG">
+            <ui-tooltip :text="$t('p_tilesets_slicer.downloadSelectedTileAsPng')">
               <button class="toolbar-btn" :disabled="!activeBox" @click="downloadTile"><span class="icon icon-download"/></button>
             </ui-tooltip>
           </div>
@@ -1812,22 +1813,22 @@ const faq = [
       </div>
 
       <div v-if="showSettings" class="ts-settings-bar">
-        <button class="ts-settings-x" aria-label="Close settings" @click="showSettings = false">
+        <button class="ts-settings-x" :aria-label="$t('p_tilesets_slicer.closeSettings')" @click="showSettings = false">
           <span class="icon icon-close"/>
         </button>
 <div class="ts-set">
         <div class="ts-set-col">
-          <label class="ts-set-label">Cut method</label>
+          <label class="ts-set-label">{{ $t('p_tilesets_slicer.cutMethod') }}</label>
           <div class="tm-seg">
-            <button :class="{active: mode === 'select'}" @click="mode = 'select'">Select</button>
-            <button :class="{active: mode === 'auto'}" @click="mode = 'auto'">Auto</button>
-            <button :class="{active: mode === 'grid'}" @click="mode = 'grid'">Grid</button>
+            <button :class="{active: mode === 'select'}" @click="mode = 'select'">{{ $t('common.select') }}</button>
+            <button :class="{active: mode === 'auto'}" @click="mode = 'auto'">{{ $t('common.auto') }}</button>
+            <button :class="{active: mode === 'grid'}" @click="mode = 'grid'">{{ $t('common.grid') }}</button>
           </div>
 
           <div class="ts-params">
 
             <template v-if="mode === 'grid'">
-              <label class="ts-sub">Tile size</label>
+              <label class="ts-sub">{{ $t('p_tilesets_slicer.tileSize') }}</label>
               <div class="settings-row">
                 <label v-for="s in sizePresets" :key="s" class="ts-pill" :class="{active: tileW === s && tileH === s}">
                   <input type="radio" :value="s" :checked="tileW === s && tileH === s" @change="() => { tileW = s; tileH = s }">
@@ -1836,12 +1837,12 @@ const faq = [
               </div>
               <div class="ts-dims">
                 <label class="ts-field"><span>W</span><input type="number" min="1" v-model.number="tileW"></label>
-                <button class="ts-link" :class="{active: linkSize}" @click="linkSize = !linkSize" title="Link width & height"><span class="icon icon-link"/></button>
+                <button class="ts-link" :class="{active: linkSize}" @click="linkSize = !linkSize" :title="$t('p_tilesets_slicer.linkWidthHeight')"><span class="icon icon-link"/></button>
                 <label class="ts-field"><span>H</span><input type="number" min="1" v-model.number="tileH" :disabled="linkSize"></label>
               </div>
-              <label class="ts-sub">Spacing &amp; offset</label>
+              <label class="ts-sub">{{ $t('p_tilesets_slicer.spacingAmpOffset') }}</label>
               <div class="slider-row">
-                <label>Spacing <span>{{ spacing }}px</span></label>
+                <label>{{ $t('p_tilesets_slicer.spacing') }} <span>{{ spacing }}px</span></label>
                 <input type="range" v-model.number="spacing" min="0" max="16" step="1">
               </div>
               <div class="ts-dims">
@@ -1853,33 +1854,33 @@ const faq = [
             <template v-else-if="mode === 'auto'">
               <div class="ts-bg-row">
                 <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
-                <span class="text-xs text-muted">Background</span>
+                <span class="text-xs text-muted">{{ $t('common.background') }}</span>
                 <button class="ts-inline-btn" @click="detect" :disabled="detecting">{{ detecting ? '…' : 'Re-detect' }}</button>
               </div>
               <div class="slider-row">
-                <label>Tolerance <span>{{ tolerance }}</span></label>
+                <label>{{ $t('p_tilesets_slicer.tolerance') }} <span>{{ tolerance }}</span></label>
                 <input type="range" v-model.number="tolerance" min="0" max="100" step="2">
               </div>
               <div class="slider-row">
-                <label>Min sprite size <span>{{ minSize }}px</span></label>
+                <label>{{ $t('p_tilesets_slicer.minSpriteSize') }} <span>{{ minSize }}px</span></label>
                 <input type="range" v-model.number="minSize" min="4" max="64" step="1">
               </div>
               <div class="slider-row">
-                <label>Merge gap <span>{{ mergeGap }}px</span></label>
+                <label>{{ $t('p_tilesets_slicer.mergeGap') }} <span>{{ mergeGap }}px</span></label>
                 <input type="range" v-model.number="mergeGap" min="0" max="6" step="1">
               </div>
             </template>
 
             <template v-else>
-              <label class="ts-sub">Selection shape</label>
+              <label class="ts-sub">{{ $t('p_tilesets_slicer.selectionShape') }}</label>
               <div class="tm-seg">
-                <button :class="{active: selectShape === 'free'}" @click="selectShape = 'free'">Rectangle</button>
-                <button :class="{active: selectShape === 'square'}" @click="selectShape = 'square'">Square</button>
-                <button :class="{active: selectShape === 'fixed'}" @click="selectShape = 'fixed'">Fixed</button>
+                <button :class="{active: selectShape === 'free'}" @click="selectShape = 'free'">{{ $t('p_tilesets_slicer.rectangle') }}</button>
+                <button :class="{active: selectShape === 'square'}" @click="selectShape = 'square'">{{ $t('common.square') }}</button>
+                <button :class="{active: selectShape === 'fixed'}" @click="selectShape = 'fixed'">{{ $t('p_tilesets_slicer.fixed') }}</button>
               </div>
               <div v-if="selectShape === 'fixed'" class="ts-dims">
                 <label class="ts-field"><span>W</span><input type="number" min="1" v-model.number="fixedW"></label>
-                <button class="ts-link" :class="{active: fixedLink}" @click="fixedLink = !fixedLink" title="Link width & height"><span class="icon icon-link"/></button>
+                <button class="ts-link" :class="{active: fixedLink}" @click="fixedLink = !fixedLink" :title="$t('p_tilesets_slicer.linkWidthHeight')"><span class="icon icon-link"/></button>
                 <label class="ts-field"><span>H</span><input type="number" min="1" v-model.number="fixedH" :disabled="fixedLink"></label>
               </div>
             </template>
@@ -1887,12 +1888,12 @@ const faq = [
         </div>
 
         <div class="ts-set-col">
-          <label class="ts-set-label">Cleanup</label>
+          <label class="ts-set-label">{{ $t('p_tilesets_slicer.cleanup') }}</label>
           <ui-switch
               v-model="editorProcess"
               :disabled="processing"
               size="sm"
-              title="Runs the shared import pipeline (the same engine the editor, /converter and /generator use: de-upscale to the native grid, background knockout, crop) on the whole sheet — the preview and every export slice from the result."
+              :title="$t('p_tilesets_slicer.runsTheSharedImportPipelineThe')"
           >
             <span class="text-xs">{{ processing ? 'Processing…' : 'Clean sheet on load' }}</span>
           </ui-switch>
@@ -1902,13 +1903,13 @@ const faq = [
                 :disabled="processing"
                 size="sm"
                 class="ts-set-toggle"
-                title="Keep the sheet's backdrop instead of knocking it out to transparency"
+                :title="$t('p_tilesets_slicer.keepTheSheetSBackdropInstead')"
             >
-              <span class="text-xs">Keep background</span>
+              <span class="text-xs">{{ $t('p_tilesets_slicer.keepBackground') }}</span>
             </ui-switch>
             <p v-if="sheetInfo" class="text-2xs text-muted ts-sheetinfo">Detected {{ sheetInfo }}</p>
           </template>
-          <ui-switch v-model="removeBg" size="sm" class="ts-set-toggle"><span class="text-xs">Remove background</span></ui-switch>
+          <ui-switch v-model="removeBg" size="sm" class="ts-set-toggle"><span class="text-xs">{{ $t('p_tilesets_slicer.removeBackground') }}</span></ui-switch>
           <div v-if="removeBg" class="ts-bg-block">
             <div class="ts-bg-row">
               <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
@@ -1917,12 +1918,12 @@ const faq = [
               </button>
             </div>
             <div class="slider-row" style="margin-top: 0.5rem">
-              <label>Bg tolerance <span>{{ removeBgTol }}</span></label>
+              <label>{{ $t('p_tilesets_slicer.bgTolerance') }} <span>{{ removeBgTol }}</span></label>
               <input type="range" v-model.number="removeBgTol" min="0" max="100" step="2">
             </div>
           </div>
 
-          <label class="ts-sub">Round pixels</label>
+          <label class="ts-sub">{{ $t('p_tilesets_slicer.roundPixels') }}</label>
           <div class="settings-row">
             <button
                 v-for="opt in crispOptions"
@@ -1932,12 +1933,12 @@ const faq = [
                 @click="crispFactor = opt.v"
             >{{ opt.l }}</button>
           </div>
-          <ui-switch v-model="median" size="sm" class="ts-set-toggle"><span class="text-xs">Smooth</span></ui-switch>
+          <ui-switch v-model="median" size="sm" class="ts-set-toggle"><span class="text-xs">{{ $t('p_tilesets_slicer.smooth') }}</span></ui-switch>
           <div class="slider-row" style="margin-top: 0.75rem">
-            <label>Merge similar colors <span>{{ mergeTol }}</span></label>
+            <label>{{ $t('p_tilesets_slicer.mergeSimilarColors') }} <span>{{ mergeTol }}</span></label>
             <input type="range" v-model.number="mergeTol" min="0" max="60" step="2">
           </div>
-          <label class="ts-sub">Reduce to colors</label>
+          <label class="ts-sub">{{ $t('p_tilesets_slicer.reduceToColors') }}</label>
           <div class="settings-row">
             <button
                 v-for="opt in quantOptions"
@@ -1947,7 +1948,7 @@ const faq = [
                 @click="quantize = opt.v"
             >{{ opt.l }}</button>
           </div>
-          <ui-switch v-model="despeckle" size="sm" class="ts-set-toggle"><span class="text-xs">Despeckle</span></ui-switch>
+          <ui-switch v-model="despeckle" size="sm" class="ts-set-toggle"><span class="text-xs">{{ $t('p_tilesets_slicer.despeckle') }}</span></ui-switch>
         </div>
       </div>
       </div>
@@ -1973,9 +1974,9 @@ const faq = [
             </div>
             <div v-else class="dropzone" @click="openFileDialog" @drop="onDrop" @dragover.prevent>
               <span class="icon icon-upload dropzone-icon"/>
-              <p class="dropzone-title">Drop a tileset or spritesheet here</p>
-              <button class="btn primary" @click.stop="openFileDialog">Choose image</button>
-              <p class="dropzone-hint">PNG, JPG, or WebP</p>
+              <p class="dropzone-title">{{ $t('p_tilesets_slicer.dropATilesetOrSpritesheetHere') }}</p>
+              <button class="btn primary" @click.stop="openFileDialog">{{ $t('p_tilesets_slicer.chooseImage') }}</button>
+              <p class="dropzone-hint">{{ $t('common.pngJpgOrWebp') }}</p>
             </div>
           </div>
         </Widget>
@@ -1983,7 +1984,7 @@ const faq = [
 
       <div class="editor-sidebar">
 
-        <Widget title="Selected">
+        <Widget :title="$t('p_tilesets_slicer.selected')">
           <ui-tooltip v-if="activeBox" :text="previewInfo" position="bottom" class="ts-preview-tip">
             <div class="ts-preview-box">
               <canvas ref="tilePreview" class="pixelated"/>
@@ -1992,16 +1993,16 @@ const faq = [
           <div v-else class="ts-preview-box">
             <div class="ts-preview-empty">
               <span class="icon icon-image"/>
-              <span>{{ mode === 'select' ? 'Draw a box' : 'Click a tile' }}</span>
+              <span>{{ mode === 'select' ? $t('p_tilesets_slicer.drawABox') : $t('p_tilesets_slicer.otherMode') }}</span>
             </div>
           </div>
         </Widget>
 
-        <Widget title="Tiles" class="ts-tiles-widget">
+        <Widget :title="$t('common.tiles')" class="ts-tiles-widget">
           <template #ctl>
             <button v-if="mode === 'select' && regions.length" class="widget-ctl-btn" @click="clearRegions">
               <span class="icon icon-broom"/>
-              <span>Clear all</span>
+              <span>{{ $t('p_tilesets_slicer.clearAll') }}</span>
             </button>
           </template>
           <div v-if="tiles.length" class="ts-region-list">
@@ -2025,14 +2026,14 @@ const faq = [
               >
                 <span class="icon" :class="syncedTiles[tileKey(t)] ? 'icon-check' : (syncingKey === tileKey(t) ? 'icon-undo spin' : 'icon-upload')"/>
               </button>
-              <button v-if="mode === 'select'" class="ts-region-del" title="Remove" @click.stop="deleteRegion(i)"><span class="icon icon-x"/></button>
+              <button v-if="mode === 'select'" class="ts-region-del" :title="$t('common.remove')" @click.stop="deleteRegion(i)"><span class="icon icon-x"/></button>
             </li>
             </ul>
           </div>
           <p v-else class="ts-empty text-xs text-muted">
-            <template v-if="mode === 'select'">Box a sprite to add it here.</template>
-            <template v-else-if="mode === 'auto'">Adjust detection to find sprites.</template>
-            <template v-else>Set a tile size to slice the grid.</template>
+            <template v-if="mode === 'select'">{{ $t('p_tilesets_slicer.boxASpriteToAddIt') }}</template>
+            <template v-else-if="mode === 'auto'">{{ $t('p_tilesets_slicer.adjustDetectionToFindSprites') }}</template>
+            <template v-else>{{ $t('p_tilesets_slicer.setATileSizeToSlice') }}</template>
           </p>
 
           <div class="ts-tiles-foot">
@@ -2041,20 +2042,20 @@ const faq = [
                 v-model="openAsAnim"
                 size="sm"
                 class="ts-anim-toggle"
-                title="Group all cut tiles into one animated art — each tile becomes a frame"
+                :title="$t('p_tilesets_slicer.groupAllCutTilesIntoOne')"
             >
-              <span class="text-xs">As animation</span>
+              <span class="text-xs">{{ $t('p_tilesets_slicer.asAnimation') }}</span>
             </ui-switch>
-            <ui-dropdown-menu v-if="!openAsAnim" ref="pickerRef" position="bottom" class="ts-pick" label="Choose tileset to sync to">
+            <ui-dropdown-menu v-if="!openAsAnim" ref="pickerRef" position="bottom" class="ts-pick" :label="$t('p_tilesets_slicer.chooseTilesetToSyncTo')">
               <button type="button" class="btn ts-pick-trigger">
                 <span class="ts-pick-name" :class="{placeholder: selectedTilesetId == null}">{{ currentTsName }}</span>
                 <span class="icon icon-chevron-down"/>
               </button>
               <template #menu>
                 <div class="file-menu">
-                  <div class="file-menu-item file-menu-heading">Sync tiles to</div>
+                  <div class="file-menu-item file-menu-heading">{{ $t('p_tilesets_slicer.syncTilesTo') }}</div>
                   <button class="file-menu-item" @click="chooseTs(null)">
-                    <span class="file-menu-label"><span>No tileset</span></span>
+                    <span class="file-menu-label"><span>{{ $t('p_tilesets_slicer.noTileset') }}</span></span>
                     <span v-if="selectedTilesetId == null" class="icon icon-check"/>
                   </button>
                   <button v-for="c in tilesets" :key="c.id" class="file-menu-item" @click="chooseTs(c.id)">
@@ -2066,7 +2067,7 @@ const faq = [
                     <input
                         v-model="newTsName"
                         class="ts-pick-input"
-                        placeholder="Tileset name"
+                        :placeholder="$t('common.tilesetName')"
                         maxlength="120"
                         @keydown.enter="createTileset"
                         @keydown.esc="showNewTs = false"
@@ -2076,7 +2077,7 @@ const faq = [
                     </button>
                   </div>
                   <button v-else class="file-menu-item" @click.stop="showNewTs = true">
-                    <span class="icon icon-plus"/><span>Create tileset</span>
+                    <span class="icon icon-plus"/><span>{{ $t('p_tilesets_slicer.createTileset') }}</span>
                   </button>
                 </div>
               </template>
@@ -2087,7 +2088,7 @@ const faq = [
                 :disabled="openAsAnim ? tiles.length < 2 : !tiles.length"
                 @click="openAsAnim ? openAsAnimation() : openAllInEditor()"
             >
-              <span class="icon icon-pen"/><span>Open editor</span>
+              <span class="icon icon-pen"/><span>{{ $t('p_tilesets_slicer.openEditor') }}</span>
             </button>
           </div>
         </Widget>
@@ -2095,7 +2096,7 @@ const faq = [
         <div class="ts-zip-bar">
           <button class="btn primary wide ts-zip-btn" :disabled="!tiles.length || exporting" @click="downloadAllZip">
             <span class="icon icon-download"/>
-            <span>{{ exporting ? 'Exporting…' : `ZIP (${tiles.length})` }}</span>
+            <span>{{ exporting ? $t('common.exporting') : $t('p_tilesets_slicer.zipN', {count: tiles.length}) }}</span>
           </button>
         </div>
       </div>
@@ -2104,39 +2105,33 @@ const faq = [
       <template #status>
         <p class="editor-foot-hint text-xs text-muted">
           <template v-if="mode === 'grid'">{{ tileCount }} cells · {{ cols }}×{{ rows }} · {{ tileW }}×{{ tileH }}px</template>
-          <template v-else-if="mode === 'auto'">{{ detecting ? 'Detecting…' : `${boxes.length} sprites — click one` }}</template>
+          <template v-else-if="mode === 'auto'">{{ detecting ? 'Detecting…' : $t('p_tilesets_slicer.nSpritesClickOne', {count: boxes.length}) }}</template>
           <template v-else>{{ regions.length }} region{{ regions.length === 1 ? '' : 's' }} — {{ selectShape === 'fixed' ? 'click to drop a box' : (selectShape === 'square' ? 'drag a square' : 'drag to add a box') }}</template>
         </p>
-        <span v-if="processing" class="text-xs text-muted">Processing…</span>
+        <span v-if="processing" class="text-xs text-muted">{{ $t('p_tilesets_slicer.processing') }}</span>
       </template>
     <template #doc>
-      <h1>Tileset Slicer</h1>
-      <p>Cut sprites out of a tileset or spritesheet. Draw a box around each one, auto-detect them, or
-        use a fixed grid — then open in the editor or export all as a ZIP. Free, runs in your browser.</p>
-      <h2>Slice any tileset or spritesheet, free in your browser</h2>
+      <h1>{{ $t('p_tilesets_slicer.tilesetSlicer') }}</h1>
+      <p v-html="$t('p_tilesets_slicer.cutSpritesOutOfATileset')"/>
+      <h2>{{ $t('p_tilesets_slicer.sliceAnyTilesetOrSpritesheetFree') }}</h2>
       <p>
-        The <strong>Tileset Slicer</strong> cuts a tile sheet or sprite sheet into individual sprites — with no install,
-        no signup, and nothing uploaded to a server. Load a PNG, JPG or WebP, choose how to split it, then download every
-        sprite as a ZIP of PNGs or send one straight to the
-        <nuxt-link to="/editor">pixel art editor</nuxt-link>. Pixels are extracted exactly at 1:1 and transparency is kept,
-        so your sprites come out clean and game-ready.
-      </p>
+        {{ $t('common.the') }} <strong>{{ $t('p_tilesets_slicer.tilesetSlicer') }}</strong> {{ $t('p_tilesets_slicer.cutsATileSheetOrSprite') }} <NuxtLinkLocale to="/editor">{{ $t('p_tilesets_slicer.pixelArtEditor') }}</NuxtLinkLocale>{{ $t('p_tilesets_slicer.pixelsAreExtractedExactlyAt1') }} </p>
 
-      <h2>Three ways to cut sprites</h2>
+      <h2>{{ $t('p_tilesets_slicer.threeWaysToCutSprites') }}</h2>
       <ol>
-        <li><strong>Grid</strong> — for evenly spaced tiles. Set tile size, spacing and offset — or just drag the grid to line it up — and every cell becomes a sprite.</li>
-        <li><strong>Auto-detect</strong> — for packed sheets. Pick the background colour and the slicer finds each sprite's bounding box automatically, merging small gaps.</li>
-        <li><strong>Select</strong> — for uneven sheets. Draw a box around each sprite by hand — free-form, square (1:1) or a fixed size — and drag boxes to fine-tune.</li>
+        <li v-html="$t('p_tilesets_slicer.strongGridStrongForEvenlySpaced')"/>
+        <li v-html="$t('p_tilesets_slicer.strongAutoDetectStrongForPacked')"/>
+        <li v-html="$t('p_tilesets_slicer.strongSelectStrongForUnevenSheets')"/>
       </ol>
 
-      <h2>What you can do with it</h2>
+      <h2>{{ $t('common.whatYouCanDoWithIt') }}</h2>
       <ul>
-        <li>Extract game sprites, tiles, icons and UI elements from a single sheet.</li>
-        <li>Clean up photo-converted pixel art with round-pixel, colour-merge and despeckle.</li>
-        <li>Knock out a background colour to get fully transparent sprites.</li>
-        <li>Export every sprite at once as a ZIP, or <nuxt-link to="/editor">open one in the editor</nuxt-link> to keep drawing.</li>
-        <li>Drop the sprites you cut into the <nuxt-link to="/tilemaps/editor">tilemap editor</nuxt-link> to build a grid or isometric game map.</li>
-        <li>Turn a photo into pixels first with the <nuxt-link to="/converter">image-to-pixel-art converter</nuxt-link>, then slice it.</li>
+        <li v-html="$t('p_tilesets_slicer.extractGameSpritesTilesIconsAnd')"/>
+        <li v-html="$t('p_tilesets_slicer.cleanUpPhotoConvertedPixelArt')"/>
+        <li v-html="$t('p_tilesets_slicer.knockOutABackgroundColourTo')"/>
+        <li>{{ $t('p_tilesets_slicer.exportEverySpriteAtOnceAs') }} <NuxtLinkLocale to="/editor">{{ $t('p_tilesets_slicer.openOneInTheEditor') }}</NuxtLinkLocale> {{ $t('p_tilesets_slicer.toKeepDrawing') }}</li>
+        <li>{{ $t('p_tilesets_slicer.dropTheSpritesYouCutInto') }} <NuxtLinkLocale to="/tilemaps/editor">{{ $t('p_tilesets_slicer.tilemapEditor') }}</NuxtLinkLocale> {{ $t('p_tilesets_slicer.toBuildAGridOrIsometric') }}</li>
+        <li>{{ $t('p_tilesets_slicer.turnAPhotoIntoPixelsFirst') }} <NuxtLinkLocale to="/converter">{{ $t('p_tilesets_slicer.imageToPixelArtConverter') }}</NuxtLinkLocale>{{ $t('p_tilesets_slicer.thenSliceIt') }}</li>
       </ul>
 
       <QnA :items="faq"/>

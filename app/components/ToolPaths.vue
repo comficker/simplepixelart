@@ -1,6 +1,6 @@
 <template>
-  <nav class="studio-paths" :style="{'--tp-cols': shown.length}" aria-label="Pixel art tools">
-    <nuxt-link
+  <nav class="studio-paths" :style="{'--tp-cols': shown.length}" :aria-label="$t('c_ToolPaths.pixelArtTools')">
+    <NuxtLinkLocale
         v-for="t in shown"
         :key="t.key"
         :to="t.to"
@@ -8,8 +8,8 @@
         :style="{'--ic-1': t.c1, '--ic-2': t.c2}"
     >
       <span class="studio-path-icon icon" :class="t.icon"/>
-      <span class="studio-path-title">{{ t.title }}</span>
-    </nuxt-link>
+      <span class="studio-path-title">{{ $t(t.i18n) }}</span>
+    </NuxtLinkLocale>
   </nav>
 </template>
 

@@ -403,17 +403,14 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
     <div ref="listEl" class="agent-log no-scrollbar">
       <div class="agent-stack">
         <div v-if="!turns.length" class="agent-intro">
-          <p class="text-sm">Tell the agent what to change</p>
+          <p class="text-sm">{{ $t('c_AgentChat.tellTheAgentWhatToChange') }}</p>
           <ul class="agent-hints text-xs text-muted">
-            <li>“knock out the background”</li>
-            <li>“make the helmet red”</li>
-            <li>“outline it in black”</li>
-            <li>“give him a wizard hat”</li>
+            <li>{{ $t('c_AgentChat.example0') }}</li>
+            <li>{{ $t('c_AgentChat.example1') }}</li>
+            <li>{{ $t('c_AgentChat.example2') }}</li>
+            <li>{{ $t('c_AgentChat.example3') }}</li>
           </ul>
-          <p class="text-2xs text-muted">
-            Exact changes apply straight away and undo in one step. Anything
-            needing new art asks first — that one costs a generation.
-          </p>
+          <p class="text-2xs text-muted" v-html="$t('c_AgentChat.exactChangesApplyStraightAwayAnd')"/>
         </div>
 
         <div v-for="(t, i) in turns" :key="i" class="agent-turn" :class="t.role">
@@ -424,14 +421,14 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
               <span class="icon icon-auto-fix"/>
               <span>Redraw{{ cost?.redraw == null ? '' : ` — ${cost.redraw}` }}</span>
             </button>
-            <button class="btn" :disabled="busy" @click="t.redrawPrompt = undefined">No thanks</button>
+            <button class="btn" :disabled="busy" @click="t.redrawPrompt = undefined">{{ $t('c_AgentChat.noThanks') }}</button>
           </div>
 
           <template v-if="t.grid">
             <div class="agent-proposal">
               <figure v-if="t.image">
                 <img :src="t.image" alt="" class="agent-render"/>
-                <figcaption class="text-2xs text-muted">What the model drew</figcaption>
+                <figcaption class="text-2xs text-muted">{{ $t('c_AgentChat.whatTheModelDrew') }}</figcaption>
               </figure>
               <figure>
                 <canvas
@@ -445,7 +442,7 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
             </div>
             <div class="settings-row">
               <button class="btn primary" :disabled="busy" @click="apply(t, t.grid, false)">
-                Apply to this board
+                {{ $t('c_AgentChat.applyToThisBoard') }}
               </button>
               <button class="btn" :disabled="busy" @click="apply(t, t.grid, true)">
                 New board · {{ t.grid.w }}×{{ t.grid.h }}
@@ -466,12 +463,12 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
           <p v-if="t.done" class="agent-done text-2xs">
             {{ t.done }}
             <button v-if="touch && t.undoable" type="button" class="btn agent-undo" @click="undoLast">
-              Undo
+              {{ $t('common.undo') }}
             </button>
           </p>
         </div>
 
-        <p v-if="busy" class="agent-text text-sm text-muted">Thinking…</p>
+        <p v-if="busy" class="agent-text text-sm text-muted">{{ $t('c_AgentChat.thinking') }}</p>
       </div>
     </div>
 
@@ -481,7 +478,7 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
           v-model="draft"
           rows="1"
           maxlength="300"
-          :placeholder="auth.isLogged ? 'What should change?' : 'Sign in to use the agent'"
+          :placeholder="auth.isLogged ? $t('c_AgentChat.whatShouldChange') : $t('c_AgentChat.signInToUseTheAgent')"
           :disabled="busy || !auth.isLogged"
           @input="grow"
           @keydown.enter.exact.prevent="send"
@@ -490,8 +487,8 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
           class="btn primary tm-iconbtn"
           type="submit"
           :disabled="busy || !auth.isLogged || draft.trim().length < 2"
-          :title="cost?.chat == null ? 'Send' : `Costs ${cost.chat} credit`"
-          aria-label="Send"
+          :title="cost?.chat == null ? 'Send' : $t('c_AgentChat.costsNCredit', {count: cost.chat})"
+          :aria-label="$t('c_AgentChat.send')"
       >
         <span class="icon icon-angle-right"/>
       </button>

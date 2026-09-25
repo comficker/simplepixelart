@@ -29,21 +29,21 @@ onBeforeUnmount(() => {
         <slot name="actions"/>
         <button type="button" class="btn browse-filters-open" @click="sheetOpen = true">
           <span class="icon icon-adjust"/>
-          <span>Filters</span>
+          <span>{{ $t('c_BrowseLayout.filters') }}</span>
         </button>
       </div>
     </div>
 
     <div class="browse-scrim" aria-hidden="true" @click="sheetOpen = false"/>
 
-    <aside class="browse-filters" aria-label="Filters">
+    <aside class="browse-filters" :aria-label="$t('c_BrowseLayout.filters')">
       <div class="browse-filters-head">
-        <span class="browse-filter-cap">Filters</span>
+        <span class="browse-filter-cap">{{ $t('c_BrowseLayout.filters') }}</span>
         <button
             type="button"
             class="widget-ctl-btn"
-            aria-label="Close filters"
-            title="Close filters"
+            :aria-label="$t('c_BrowseLayout.closeFilters')"
+            :title="$t('c_BrowseLayout.closeFilters')"
             @click="sheetOpen = false"
         >
           <span class="icon icon-close"/>

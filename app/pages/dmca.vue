@@ -1,5 +1,6 @@
 <script setup lang="ts">
 useCustomSeoMeta({
+  untranslated: true,
   title: "DMCA Policy",
   description: "DMCA takedown policy for SimplePixelArt.com. How to submit a copyright infringement notice and counter-notice.",
   keywords: "dmca, copyright takedown, simplepixelart dmca",
@@ -49,12 +50,12 @@ useCustomSeoMeta({
     <p>Knowingly submitting a false DMCA notice may result in legal liability under 17 U.S.C. § 512(f). Only submit a notice if you are the rights holder or authorized to act on their behalf.</p>
 
     <div class="tags">
-      <div class="item"><nuxt-link to="/">Home</nuxt-link></div>
-      <div class="item"><nuxt-link to="/about">About</nuxt-link></div>
-      <div class="item"><nuxt-link to="/terms">Terms of Service</nuxt-link></div>
-      <div class="item"><nuxt-link to="/privacy">Privacy Policy</nuxt-link></div>
-      <div class="item"><nuxt-link to="/guidelines">Community Guidelines</nuxt-link></div>
-      <div class="item"><nuxt-link to="/contact">Contact</nuxt-link></div>
+      <div class="item"><NuxtLinkLocale to="/">Home</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/about">About</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/terms">Terms of Service</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/privacy">Privacy Policy</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/guidelines">Community Guidelines</NuxtLinkLocale></div>
+      <div class="item"><NuxtLinkLocale to="/contact">Contact</NuxtLinkLocale></div>
     </div>
   </div>
 </template>

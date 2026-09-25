@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const {t} = useI18n()
+
 const artImage = useArtImage()
 import type {APIResponse, Collection, EditorData, SharedPage} from "~/types";
 import {getStorageItem} from "~/helper/utils";
@@ -35,10 +37,10 @@ const TABS: Tab[] = ['artworks', 'tilesets', 'worlds', 'collections']
 const tab = ref<Tab>(TABS.includes(route.query.tab as Tab) ? route.query.tab as Tab : 'artworks')
 
 const TAB_META: Record<Tab, { label: string; icon: string; auth?: boolean }> = {
-  artworks: {label: 'Artworks', icon: 'icon-grid'},
-  tilesets: {label: 'Tilesets', icon: 'icon-select'},
-  worlds: {label: 'Worlds', icon: 'icon-grid'},
-  collections: {label: 'Collections', icon: 'icon-rhombus', auth: true},
+  artworks: {label: t('p_work.artworks'), icon: 'icon-grid'},
+  tilesets: {label: t('p_work.tilesets'), icon: 'icon-select'},
+  worlds: {label: t('p_work.worlds'), icon: 'icon-grid'},
+  collections: {label: t('p_work.collections'), icon: 'icon-rhombus', auth: true},
 }
 const activeTabMeta = computed(() => TAB_META[tab.value])
 
@@ -184,10 +186,10 @@ useCustomSeoMeta({
 type SortKey = 'newest' | 'oldest' | 'name-az' | 'name-za'
 const sortBy = ref<SortKey>('newest')
 const SORT_META: Record<SortKey, { label: string; ordering: string }> = {
-  'newest': {label: 'Newest', ordering: '-updated'},
-  'oldest': {label: 'Oldest', ordering: 'updated'},
-  'name-az': {label: 'Name A–Z', ordering: 'name'},
-  'name-za': {label: 'Name Z–A', ordering: '-name'},
+  'newest': {label: t('p_work.newest'), ordering: '-updated'},
+  'oldest': {label: t('p_work.oldest'), ordering: 'updated'},
+  'name-az': {label: t('p_work.nameAZ'), ordering: 'name'},
+  'name-za': {label: t('p_work.nameZA'), ordering: '-name'},
 }
 
 function sortItems<T extends { name?: string; title?: string; updated?: string }>(list: T[]): T[] {
@@ -644,7 +646,7 @@ const curCount = computed(() => tab.value === 'artworks' ? filteredWorks.value.l
     : tab.value === 'collections' ? filteredColls.value.length
         : tab.value === 'worlds' ? filteredWorlds.value.length : filteredTilesets.value.length)
 
-const privateChipLabel = computed(() => tab.value === 'artworks' ? 'Draft' : 'Private')
+const privateChipLabel = computed(() => tab.value === 'artworks' ? t('p_work.draft') : t('common.private'))
 
 function statusIcon(status?: string): string {
   if (status === 'public') return 'icon-earth'
@@ -653,7 +655,7 @@ function statusIcon(status?: string): string {
 }
 
 function statusTitle(status?: string): string {
-  if (status === 'public') return 'Public'
+  if (status === 'public') return t('common.public')
   if (status === 'pending') return 'Pending review'
   return 'Private draft'
 }
@@ -667,30 +669,30 @@ onMounted(() => {
 </script>
 
 <template>
-  <BrowseLayout class="work-page" title="Your work" desc="Everything you have made — artworks, collections and tilesets.">
+  <BrowseLayout class="work-page" :title="$t('p_work.yourWork')" desc="Everything you have made — artworks, collections and tilesets.">
     <template #actions>
-      <nuxt-link v-if="tab === 'artworks'" to="/editor?new=true" class="btn primary">
-        <span class="icon icon-plus"/><span>New artwork</span>
-      </nuxt-link>
-      <nuxt-link v-else-if="tab === 'tilesets'" to="/tilesets/editor" class="btn primary">
-        <span class="icon icon-plus"/><span>New tileset</span>
-      </nuxt-link>
-      <nuxt-link v-else-if="tab === 'worlds'" to="/tilemaps/editor?new=true" class="btn primary">
-        <span class="icon icon-plus"/><span>New world</span>
-      </nuxt-link>
+      <NuxtLinkLocale v-if="tab === 'artworks'" to="/editor?new=true" class="btn primary">
+        <span class="icon icon-plus"/><span>{{ $t('p_work.newArtwork') }}</span>
+      </NuxtLinkLocale>
+      <NuxtLinkLocale v-else-if="tab === 'tilesets'" to="/tilesets/editor" class="btn primary">
+        <span class="icon icon-plus"/><span>{{ $t('common.newTileset') }}</span>
+      </NuxtLinkLocale>
+      <NuxtLinkLocale v-else-if="tab === 'worlds'" to="/tilemaps/editor?new=true" class="btn primary">
+        <span class="icon icon-plus"/><span>{{ $t('p_work.newWorld') }}</span>
+      </NuxtLinkLocale>
       <button v-else-if="auth.isLogged" class="btn primary" @click="showCreateColl = true">
-        <span class="icon icon-plus"/><span>New collection</span>
+        <span class="icon icon-plus"/><span>{{ $t('p_work.newCollection') }}</span>
       </button>
     </template>
 
     <template #filters>
-      <BrowseFilter label="View" :icon="activeTabMeta.icon" :value="activeTabMeta.label">
+      <BrowseFilter :label="$t('common.view')" :icon="activeTabMeta.icon" :value="activeTabMeta.label">
         <BrowseOpt
             v-for="t in TABS"
             :key="t"
             :active="tab === t"
             :disabled="!!TAB_META[t].auth && !auth.isLogged"
-            :title="TAB_META[t].auth && !auth.isLogged ? 'Sign in to use this' : ''"
+            :title="TAB_META[t].auth && !auth.isLogged ? $t('p_work.signInToUseThis') : ''"
             @click="setTab(t)"
         >
           {{ TAB_META[t].label }}
@@ -698,9 +700,9 @@ onMounted(() => {
       </BrowseFilter>
 
       <BrowseFilter
-          label="Status"
+          :label="$t('common.status')"
           icon="icon-earth"
-          :value="curFilter === 'all' ? 'All' : curFilter === 'public' ? 'Public' : privateChipLabel"
+          :value="curFilter === 'all' ? $t('common.all') : curFilter === 'public' ? $t('common.public') : privateChipLabel"
           :active="curFilter !== 'all'"
       >
         <BrowseOpt
@@ -709,15 +711,15 @@ onMounted(() => {
             :active="curFilter === f"
             @click="curFilter = f"
         >
-          {{ f === 'all' ? 'All' : f === 'public' ? 'Public' : privateChipLabel }}
+          {{ f === 'all' ? $t('common.all') : f === 'public' ? $t('common.public') : privateChipLabel }}
         </BrowseOpt>
       </BrowseFilter>
 
       <BrowseFilter
           v-if="tab === 'artworks'"
-          label="Type"
+          :label="$t('common.type')"
           icon="icon-grid"
-          :value="workTileFilter === 'all' ? 'All' : workTileFilter === 'art' ? 'Art' : 'Tiles'"
+          :value="workTileFilter === 'all' ? $t('common.all') : workTileFilter === 'art' ? $t('common.art') : $t('common.tiles')"
           :active="workTileFilter !== 'all'"
       >
         <BrowseOpt
@@ -726,11 +728,11 @@ onMounted(() => {
             :active="workTileFilter === t"
             @click="workTileFilter = t"
         >
-          {{ t === 'all' ? 'All types' : t === 'art' ? 'Art' : 'Tiles' }}
+          {{ t === 'all' ? $t('p_work.allTypes') : t === 'art' ? $t('p_work.art') : $t('common.tiles') }}
         </BrowseOpt>
       </BrowseFilter>
 
-      <BrowseFilter label="Sort" icon="icon-rocket" :value="SORT_META[sortBy].label">
+      <BrowseFilter :label="$t('common.sort')" icon="icon-rocket" :value="SORT_META[sortBy].label">
         <BrowseOpt v-for="(meta, key) in SORT_META" :key="key" :active="sortBy === key" @click="sortBy = key">
           {{ meta.label }}
         </BrowseOpt>
@@ -744,17 +746,17 @@ onMounted(() => {
 
       <div v-else-if="!workspaces.length && workFilter === 'all'" class="empty-state">
         <span class="empty-state-icon icon icon-pen" aria-hidden="true"/>
-        <h2 class="empty-state-title">No artworks yet</h2>
-        <p class="empty-state-body">Create something — it takes seconds.</p>
+        <h2 class="empty-state-title">{{ $t('p_work.noArtworksYet') }}</h2>
+        <p class="empty-state-body">{{ $t('p_work.createSomethingItTakesSeconds') }}</p>
         <div class="empty-state-actions">
-          <nuxt-link to="/editor?new=true" class="btn primary">
+          <NuxtLinkLocale to="/editor?new=true" class="btn primary">
             <span class="icon icon-pen"/>
-            <span>Start drawing</span>
-          </nuxt-link>
-          <nuxt-link to="/converter" class="btn">
+            <span>{{ $t('common.startDrawing') }}</span>
+          </NuxtLinkLocale>
+          <NuxtLinkLocale to="/converter" class="btn">
             <span class="icon icon-adjust"/>
-            <span>Convert image</span>
-          </nuxt-link>
+            <span>{{ $t('p_work.convertImage') }}</span>
+          </NuxtLinkLocale>
         </div>
       </div>
 
@@ -775,7 +777,7 @@ onMounted(() => {
           >
             <span class="work-select-dot"><span class="icon icon-check"/></span>
           </button>
-          <nuxt-link class="work-canvas" :to="`/editor?id=${item.id_string || item.id}`">
+          <NuxtLinkLocale class="work-canvas" :to="`/editor?id=${item.id_string || item.id}`">
             <div class="square">
               <div class="inside work-art-pad">
                 <img
@@ -793,12 +795,12 @@ onMounted(() => {
                 <Thumb v-else :data="item as EditorData"/>
               </div>
             </div>
-          </nuxt-link>
+          </NuxtLinkLocale>
           <span class="work-status badge-ic" :class="statusClass(item)" :title="statusTitle(item.status)">
             <span class="icon" :class="statusIcon(item.status)"/>
           </span>
           <ui-dropdown-menu class="work-more-tl">
-            <button class="work-more-btn" title="More" aria-label="Artwork actions">
+            <button class="work-more-btn" :title="$t('p_work.more')" :aria-label="$t('p_work.artworkActions')">
               <span class="icon icon-dots"/>
             </button>
             <template #menu>
@@ -807,12 +809,12 @@ onMounted(() => {
                     <span>{{ item.name || 'Untitled' }}</span>
                   </button>
                   <div class="file-menu-sep"/>
-                  <nuxt-link class="file-menu-item" :to="`/editor?id=${item.id_string || item.id}`">
-                    <span class="icon icon-pen"/><span>Edit</span>
-                  </nuxt-link>
-                  <nuxt-link v-if="item.id_string" class="file-menu-item" :to="`/art/${item.id_string}`">
-                    <span class="icon icon-link"/><span>Open page</span>
-                  </nuxt-link>
+                  <NuxtLinkLocale class="file-menu-item" :to="`/editor?id=${item.id_string || item.id}`">
+                    <span class="icon icon-pen"/><span>{{ $t('common.edit') }}</span>
+                  </NuxtLinkLocale>
+                  <NuxtLinkLocale v-if="item.id_string" class="file-menu-item" :to="`/art/${item.id_string}`">
+                    <span class="icon icon-link"/><span>{{ $t('p_work.openPage') }}</span>
+                  </NuxtLinkLocale>
 
                   <button class="file-menu-item" data-keep-open @click="destroyWork(item)">
                     <span class="icon" :class="confirmingWorkId === item.id ? 'icon-check' : 'icon-trash'"/>
@@ -836,12 +838,12 @@ onMounted(() => {
 
       <div v-else-if="!collections.length" class="empty-state">
         <span class="empty-state-icon icon icon-rhombus" aria-hidden="true"/>
-        <h2 class="empty-state-title">No collections yet</h2>
-        <p class="empty-state-body">Create one to group artworks by theme or style.</p>
+        <h2 class="empty-state-title">{{ $t('p_work.noCollectionsYet') }}</h2>
+        <p class="empty-state-body" v-html="$t('p_work.createOneToGroupArtworksBy')"/>
         <div class="empty-state-actions">
           <button class="btn primary" @click="showCreateColl = true">
             <span class="icon icon-plus"/>
-            <span>New collection</span>
+            <span>{{ $t('p_work.newCollection') }}</span>
           </button>
         </div>
       </div>
@@ -863,7 +865,7 @@ onMounted(() => {
           >
             <span class="work-select-dot"><span class="icon icon-check"/></span>
           </button>
-          <nuxt-link class="work-canvas" :to="`/collections/${c.id_string}`">
+          <NuxtLinkLocale class="work-canvas" :to="`/collections/${c.id_string}`">
             <div class="square">
               <div class="inside">
                 <img
@@ -880,14 +882,14 @@ onMounted(() => {
                 </div>
               </div>
             </div>
-          </nuxt-link>
+          </NuxtLinkLocale>
           <span class="work-status badge-ic" :class="statusClass(c)" :title="statusTitle(c.status)">
             <span class="icon" :class="statusIcon(c.status)"/>
           </span>
           <div class="work-meta">
             <div class="work-name" :title="c.title">{{ c.title || 'Untitled' }}</div>
             <ui-dropdown-menu position="right">
-              <button class="work-more-btn" title="More" aria-label="Collection actions">
+              <button class="work-more-btn" :title="$t('p_work.more')" :aria-label="$t('p_work.collectionActions')">
                 <span class="icon icon-dots"/>
               </button>
               <template #menu>
@@ -896,9 +898,9 @@ onMounted(() => {
                     <span>{{ c.title || 'Untitled' }}</span>
                   </button>
                   <div class="file-menu-sep"/>
-                  <nuxt-link class="file-menu-item" :to="`/collections/${c.id_string}`">
-                    <span class="icon icon-pencil"/><span>Edit</span>
-                  </nuxt-link>
+                  <NuxtLinkLocale class="file-menu-item" :to="`/collections/${c.id_string}`">
+                    <span class="icon icon-pencil"/><span>{{ $t('common.edit') }}</span>
+                  </NuxtLinkLocale>
                   <button class="file-menu-item" data-keep-open @click="destroyColl(c)">
                     <span class="icon" :class="confirmingCollId === c.id ? 'icon-check' : 'icon-trash'"/>
                     <span>{{ confirmingCollId === c.id ? 'Confirm delete' : 'Delete' }}</span>
@@ -922,13 +924,13 @@ onMounted(() => {
 
       <div v-else-if="!worldsList.length" class="empty-state">
         <span class="empty-state-icon icon icon-grid" aria-hidden="true"/>
-        <h2 class="empty-state-title">No worlds yet</h2>
-        <p class="empty-state-body">Arrange pixel art into grid or isometric scenes with the world editor.</p>
+        <h2 class="empty-state-title">{{ $t('p_work.noWorldsYet') }}</h2>
+        <p class="empty-state-body" v-html="$t('p_work.arrangePixelArtIntoGridOr')"/>
         <div class="empty-state-actions">
-          <nuxt-link to="/tilemaps/editor?new=true" class="btn primary">
+          <NuxtLinkLocale to="/tilemaps/editor?new=true" class="btn primary">
             <span class="icon icon-grid"/>
-            <span>Open world editor</span>
-          </nuxt-link>
+            <span>{{ $t('p_work.openWorldEditor') }}</span>
+          </NuxtLinkLocale>
         </div>
       </div>
 
@@ -943,7 +945,7 @@ onMounted(() => {
           >
             <span class="work-select-dot"><span class="icon icon-check"/></span>
           </button>
-          <nuxt-link class="work-canvas" :to="w.editUrl" :title="`Edit ${w.name || 'world'}`">
+          <NuxtLinkLocale class="work-canvas" :to="w.editUrl" :title="$t('common.editX', {x: w.name || $t('common.world')})">
             <div class="square">
               <div class="inside">
                 <div v-if="w.previewImgs?.length" class="tile-collage" :class="`n${w.previewImgs.length}`">
@@ -952,14 +954,14 @@ onMounted(() => {
                 <div v-else class="coll-cover-empty"><span class="icon icon-grid"/></div>
               </div>
             </div>
-          </nuxt-link>
+          </NuxtLinkLocale>
           <span class="work-status badge-ic" :class="statusClass(w)" :title="statusTitle(w.status)">
             <span class="icon" :class="statusIcon(w.status)"/>
           </span>
           <div class="work-meta">
             <div class="work-name" :title="w.name || 'Untitled'">{{ w.name || 'Untitled' }}</div>
             <ui-dropdown-menu position="right">
-              <button class="work-more-btn" title="More" aria-label="World actions">
+              <button class="work-more-btn" :title="$t('p_work.more')" :aria-label="$t('p_work.worldActions')">
                 <span class="icon icon-dots"/>
               </button>
               <template #menu>
@@ -968,12 +970,12 @@ onMounted(() => {
                     <span>{{ w.name || 'Untitled' }}</span>
                   </button>
                   <div class="file-menu-sep"/>
-                  <nuxt-link class="file-menu-item" :to="w.editUrl">
-                    <span class="icon icon-pen"/><span>Edit</span>
-                  </nuxt-link>
-                  <nuxt-link v-if="!w.local" class="file-menu-item" :to="`/worlds/${w.id_string}`">
-                    <span class="icon icon-link"/><span>Open page</span>
-                  </nuxt-link>
+                  <NuxtLinkLocale class="file-menu-item" :to="w.editUrl">
+                    <span class="icon icon-pen"/><span>{{ $t('common.edit') }}</span>
+                  </NuxtLinkLocale>
+                  <NuxtLinkLocale v-if="!w.local" class="file-menu-item" :to="`/worlds/${w.id_string}`">
+                    <span class="icon icon-link"/><span>{{ $t('p_work.openPage') }}</span>
+                  </NuxtLinkLocale>
                   <button class="file-menu-item" data-keep-open @click="destroyWorld(w)">
                     <span class="icon" :class="confirmingWorldId === w.id ? 'icon-check' : 'icon-trash'"/>
                     <span>{{ confirmingWorldId === w.id ? 'Confirm delete' : 'Delete' }}</span>
@@ -993,13 +995,13 @@ onMounted(() => {
 
       <div v-else-if="!tilesetsList.length" class="empty-state">
         <span class="empty-state-icon icon icon-select" aria-hidden="true"/>
-        <h2 class="empty-state-title">No tilesets yet</h2>
-        <p class="empty-state-body">A tileset is a curated set of tiles you can paint many worlds with.</p>
+        <h2 class="empty-state-title">{{ $t('p_work.noTilesetsYet') }}</h2>
+        <p class="empty-state-body" v-html="$t('p_work.aTilesetIsACuratedSet')"/>
         <div class="empty-state-actions">
-          <nuxt-link to="/tilesets/editor?new=true" class="btn primary">
+          <NuxtLinkLocale to="/tilesets/editor?new=true" class="btn primary">
             <span class="icon icon-grid"/>
-            <span>Open tileset editor</span>
-          </nuxt-link>
+            <span>{{ $t('p_work.openTilesetEditor') }}</span>
+          </NuxtLinkLocale>
         </div>
       </div>
 
@@ -1014,7 +1016,7 @@ onMounted(() => {
           >
             <span class="work-select-dot"><span class="icon icon-check"/></span>
           </button>
-          <nuxt-link class="work-canvas" :to="t.editUrl" :title="`Edit ${t.name || 'tileset'}`">
+          <NuxtLinkLocale class="work-canvas" :to="t.editUrl" :title="$t('common.editX', {x: t.name || $t('common.tileset').toLowerCase()})">
             <div class="square">
               <div class="inside">
                 <div v-if="t.previewImgs?.length" class="tile-collage" :class="`n${t.previewImgs.length}`">
@@ -1023,14 +1025,14 @@ onMounted(() => {
                 <div v-else class="coll-cover-empty"><span class="icon icon-select"/></div>
               </div>
             </div>
-          </nuxt-link>
+          </NuxtLinkLocale>
           <span class="work-status badge-ic" :class="statusClass(t)" :title="statusTitle(t.status)">
             <span class="icon" :class="statusIcon(t.status)"/>
           </span>
           <div class="work-meta">
             <div class="work-name" :title="t.name || 'Untitled'">{{ t.name || 'Untitled' }}</div>
             <ui-dropdown-menu position="right">
-              <button class="work-more-btn" title="More" aria-label="Tileset actions">
+              <button class="work-more-btn" :title="$t('p_work.more')" :aria-label="$t('p_work.tilesetActions')">
                 <span class="icon icon-dots"/>
               </button>
               <template #menu>
@@ -1039,12 +1041,12 @@ onMounted(() => {
                     <span>{{ t.name || 'Untitled' }}</span>
                   </button>
                   <div class="file-menu-sep"/>
-                  <nuxt-link v-if="t.editUrl" class="file-menu-item" :to="t.editUrl">
-                    <span class="icon icon-pen"/><span>Edit</span>
-                  </nuxt-link>
-                  <nuxt-link v-if="!t.local" class="file-menu-item" :to="`/tilesets/${t.id_string}`">
-                    <span class="icon icon-link"/><span>Open page</span>
-                  </nuxt-link>
+                  <NuxtLinkLocale v-if="t.editUrl" class="file-menu-item" :to="t.editUrl">
+                    <span class="icon icon-pen"/><span>{{ $t('common.edit') }}</span>
+                  </NuxtLinkLocale>
+                  <NuxtLinkLocale v-if="!t.local" class="file-menu-item" :to="`/tilesets/${t.id_string}`">
+                    <span class="icon icon-link"/><span>{{ $t('p_work.openPage') }}</span>
+                  </NuxtLinkLocale>
                   <button class="file-menu-item" data-keep-open @click="destroyTileset(t)">
                     <span class="icon" :class="confirmingTilesetId === t.id ? 'icon-check' : 'icon-trash'"/>
                     <span>{{ confirmingTilesetId === t.id ? 'Deletes its worlds too — confirm' : 'Delete' }}</span>
@@ -1062,22 +1064,22 @@ onMounted(() => {
           <button
               class="work-ic-btn"
               :class="{active: selectMode}"
-              :title="selectMode ? 'Exit select mode' : 'Select multiple items'"
-              :aria-label="selectMode ? 'Exit select mode' : 'Select multiple items'"
+              :title="selectMode ? $t('p_work.exitSelectMode') : $t('p_work.selectMultipleItems')"
+              :aria-label="selectMode ? $t('p_work.exitSelectMode') : $t('p_work.selectMultipleItems')"
               @click="toggleSelectMode"
           >
             <span class="icon" :class="selectMode ? 'icon-selected' : 'icon-select'"/>
           </button>
           <template v-if="selectedCount">
-            <button class="work-ic-btn" title="Deselect all" aria-label="Deselect all" @click="deselectAll">
+            <button class="work-ic-btn" :title="$t('p_work.deselectAll')" :aria-label="$t('p_work.deselectAll')" @click="deselectAll">
               <span class="icon icon-x"/>
             </button>
             <button
                 class="work-ic-btn work-bulk-del"
                 :class="{confirm: confirmingBulk}"
                 :disabled="bulkDeleting"
-                :title="bulkDeleting ? 'Deleting…' : confirmingBulk ? 'Click again to confirm' : `Delete ${selectedCount} selected`"
-                :aria-label="`Delete ${selectedCount} selected items`"
+                :title="bulkDeleting ? 'Deleting…' : confirmingBulk ? 'Click again to confirm' : $t('p_work.deleteNSelected', {count: selectedCount})"
+                :aria-label="$t('p_work.deleteNSelectedItems', {count: selectedCount})"
                 @click="bulkDelete"
             >
               <span class="icon" :class="confirmingBulk ? 'icon-check' : 'icon-trash'"/>
@@ -1086,7 +1088,7 @@ onMounted(() => {
           </template>
       </span>
       <span class="browse-foot-end">
-        <span>{{ curCount }} {{ curCount === 1 ? 'item' : 'items' }}</span>
+        <span>{{ $t('c_List.itemCount', curCount, {count: curCount}) }}</span>
         <Paginator v-if="curNumPages > 1" v-model:page="curPage" :pages="curNumPages"/>
       </span>
     </template>

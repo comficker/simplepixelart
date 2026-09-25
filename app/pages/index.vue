@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const localePath = useLocalePath()
+const {t} = useI18n()
 import type {APIResponse, EditorData, SharedPage} from "~/types";
 import {getStorageItem} from "~/helper/utils";
 
@@ -70,60 +72,16 @@ async function loadUserWorks() {
 
 const sizes = ["8x8", "10x10", "12x12", "13x13", "15x15", "16x16", "18x18", "20x20", "24x24", "32x32"];
 
-const faq = [
-  {
-    q: 'Why use Simple Pixel Art?',
-    a: `<p>Anyone should be able to make pixel art in seconds — no installation, no account, no learning curve. Pick a template, remix it, or convert any photo into pixel art with one click. For deeper work, the editor has layers, mirror drawing, selections, and a full palette manager.</p>
-        <p>The entire platform runs in your browser. Your work saves automatically to local storage when signed out, and syncs to the cloud when you log in with Google.</p>`,
-  },
-  {
-    q: 'What is pixel art?',
-    a: `<p>Pixel art is a form of digital art where images are created and edited at the pixel level — the smallest unit of a digital image. Originating from early video games of the 1970s–80s, pixel art has grown into a beloved medium celebrated for its clarity, charm, and nostalgic aesthetic. Every pixel is placed intentionally, giving artists full control with minimal tools.</p>`,
-  },
-  {
-    q: 'How do I get started?',
-    a: `<p>Three paths to your first pixel art:</p>
-        <ul>
-          <li><strong>Remix a template.</strong> Browse the library on the home page and click any artwork to open it in the editor.</li>
-          <li><strong>Convert a photo.</strong> Use the <a href="/converter">image-to-pixel-art converter</a> to turn any photo into pixel art with adjustable size and palette.</li>
-          <li><strong>Draw from scratch.</strong> Open the <a href="/editor">editor</a>, pick a canvas size from 8×8 to 64×64, and start painting.</li>
-        </ul>`,
-  },
-  {
-    q: 'Is Simple Pixel Art free?',
-    a: `<p>Yes. Simple Pixel Art is 100% free — no watermark, no signup, no downloads required.</p>`,
-  },
-  {
-    q: 'Do I need an account?',
-    a: `<p>No. You can draw, convert, and download without an account. Log in with Google to share publicly and sync your work across devices.</p>`,
-  },
-  {
-    q: 'Can I sell or use what I create?',
-    a: `<p>Yes. You own the pixel art you create here. Use it in your game, NFT collection, profile avatar, merchandise, or anywhere else.</p>`,
-  },
-  {
-    q: 'How do I draw good pixel art?',
-    a: `<ul>
-          <li><strong>Start small.</strong> 16×16 or 32×32 is ideal for learning. Larger canvases like 64×64 allow more detail.</li>
-          <li><strong>Pick a limited palette.</strong> Great pixel art often uses fewer than 16 colors. Constraints force creative decisions and keep work cohesive.</li>
-          <li><strong>Sketch the silhouette first.</strong> A strong silhouette makes pixel art readable at any size.</li>
-          <li><strong>Add shading with dithering.</strong> Alternate two colors in a checkerboard pattern to fake gradients without extra colors.</li>
-          <li><strong>Use the mirror tool.</strong> For symmetric subjects like characters or icons, enable horizontal mirroring to draw both sides at once.</li>
-          <li><strong>Iterate and zoom out.</strong> Check actual size often — details that pop up close usually disappear.</li>
-        </ul>`,
-  },
-  {
-    q: 'What is pixel art used for?',
-    a: `<ul>
-          <li><strong>Game development</strong> — sprites, tilesets, UI, and backgrounds for indie games.</li>
-          <li><strong>NFTs and collectibles</strong> — pixel art has become a signature format for digital ownership.</li>
-          <li><strong>Avatars and profile pictures</strong> — popular on Discord, social media, and online communities.</li>
-          <li><strong>Animation</strong> — frame-by-frame motion for games, web graphics, and short clips.</li>
-          <li><strong>Merchandise and print</strong> — clean geometry scales perfectly onto clothing, stickers, posters, and pins.</li>
-          <li><strong>Education</strong> — taught in schools and bootcamps for design fundamentals, color theory, and creative thinking.</li>
-        </ul>`,
-  },
-]
+const faq = computed(() => [
+  {q: t('p_index.faq0q'), a: t('p_index.faq0a')},
+  {q: t('p_index.faq1q'), a: t('p_index.faq1a')},
+  {q: t('p_index.faq2q'), a: t('p_index.faq2a')},
+  {q: t('p_index.faq3q'), a: t('p_index.faq3a')},
+  {q: t('p_index.faq4q'), a: t('p_index.faq4a')},
+  {q: t('p_index.faq5q'), a: t('p_index.faq5a')},
+  {q: t('p_index.faq6q'), a: t('p_index.faq6a')},
+  {q: t('p_index.faq7q'), a: t('p_index.faq7a')},
+])
 
 // Start the artwork list now rather than after the lookups below resolve.
 // item-list further down calls useArtListFetch with the same key, so it joins
@@ -164,7 +122,7 @@ const aiPrompt = ref('')
 function goGenerate() {
   const p = aiPrompt.value.trim()
   if (p.length < 3) return
-  navigateTo(`/generate?prompt=${encodeURIComponent(p.slice(0, 300))}`)
+  navigateTo(localePath(`/generate?prompt=${encodeURIComponent(p.slice(0, 300))}`))
 }
 
 onMounted(() => {
@@ -177,9 +135,9 @@ useCustomSeoMeta({
   // The maker wording belongs to /editor, which already carries it. Leaving it
   // here too had the two pages competing for the same query while the terms the
   // home page should own -- simple pixel art, easy pixel art -- went unclaimed.
-  title: "Simple Pixel Art — Easy Pixel Art Online",
-  description: "Simple pixel art for everyone. Draw easy pixel art online in your browser, turn photos into pixel art, and browse thousands of free creations. No signup.",
-  keywords: "pixel art, simple pixel art, easy pixel art, simplepixelart, pixel art online, free pixel art, easy pixel art online, pixel art for beginners, make pixel art, pixel art gallery, 8-bit art, retro art",
+  title: () => t('seo.home.title'),
+  description: () => t('seo.home.description'),
+  keywords: () => t('seo.home.keywords'),
   canonical: "https://simplepixelart.com",
   script: [
     {
@@ -257,53 +215,50 @@ useCustomSeoMeta({
 </script>
 
 <template>
-  <ToolLayout title="Get started">
+  <ToolLayout :title="$t('common.getStarted')">
     <template #head>
       <p class="home-facts text-xs text-muted">
-        Sprites → tiles → maps · Godot · Unity · Phaser export · photo → pixel art in one click
+        {{ $t('p_index.spritesTilesMapsGodotUnityPhaser') }}
       </p>
     </template>
 
     <div class="screen home-stack">
       <section class="home-hero">
-        <span class="home-hero-eyebrow">Free · No signup · Runs in your browser</span>
+        <span class="home-hero-eyebrow">{{ $t('p_index.freeNoSignupRunsInYour') }}</span>
         <h1 class="home-hero-title">
-          <span class="home-hero-title-main">Make pixel art</span>
-          <span class="home-hero-title-accent">in seconds.</span>
+          <span class="home-hero-title-main">{{ $t('p_index.makePixelArt') }}</span>
+          <span class="home-hero-title-accent">{{ $t('p_index.inSeconds') }}</span>
         </h1>
-        <p class="home-hero-tagline">
-          Draw sprites, build tilesets, paint tilemaps, and export game-ready assets for Godot, Unity, or Phaser —
-          or just convert a photo and remix community templates. All free, in your browser.
-        </p>
+        <p class="home-hero-tagline">{{ $t('p_index.heroTagline') }}</p>
         <form v-if="aiEnabled" class="home-ai" @submit.prevent="goGenerate">
           <input
               v-model="aiPrompt"
               class="home-ai-input"
               type="text"
               maxlength="300"
-              placeholder="Describe a sprite — “a sleeping orange cat”…"
-              aria-label="Describe the pixel art to generate"
+              :placeholder="$t('p_index.describeASpriteASleepingOrange')"
+              :aria-label="$t('p_index.describeThePixelArtToGenerate')"
           >
           <button type="submit" class="btn primary home-ai-btn" :disabled="aiPrompt.trim().length < 3">
-            <span class="icon icon-auto-fix"/><span>Generate</span>
+            <span class="icon icon-auto-fix"/><span>{{ $t('common.generate') }}</span>
           </button>
         </form>
         <div class="home-tools"><ToolPaths exclude="ai"/></div>
       </section>
 
-      <Widget v-if="showStudio" :title="auth.logged ? 'Your studio' : 'Start a project'">
+      <Widget v-if="showStudio" :title="auth.logged ? $t('p_index.yourStudio') : $t('p_index.startAProject')">
         <template #ctl>
-          <nuxt-link to="/work" class="widget-ctl-btn">
-            <span class="widget-ctl-name">View all</span><span class="icon icon-angle-right"/>
-          </nuxt-link>
+          <NuxtLinkLocale to="/work" class="widget-ctl-btn">
+            <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
+          </NuxtLinkLocale>
         </template>
 
           <div v-if="hasWorks" class="studio-grid">
-            <nuxt-link to="/editor?new=true" class="studio-new" title="New blank canvas">
+            <NuxtLinkLocale to="/editor?new=true" class="studio-new" :title="$t('p_index.newBlankCanvas')">
               <span class="icon icon-plus studio-new-icon"/>
-              <span class="studio-new-label">New</span>
-            </nuxt-link>
-            <nuxt-link
+              <span class="studio-new-label">{{ $t('common.new') }}</span>
+            </NuxtLinkLocale>
+            <NuxtLinkLocale
                 v-for="item in studioWorks"
                 :key="item.id as any"
                 :to="`/editor?id=${item.id_string || item.id}`"
@@ -329,7 +284,7 @@ useCustomSeoMeta({
                   </div>
                 </div>
               </div>
-            </nuxt-link>
+            </NuxtLinkLocale>
           </div>
 
           <div v-else class="studio-grid" aria-busy="true">
@@ -343,20 +298,20 @@ useCustomSeoMeta({
           </div>
       </Widget>
 
-      <nuxt-link v-if="homeChallenge" :to="`/challenges/${homeChallenge.id_string}`" class="home-challenge-link">
-        <span class="home-challenge-tag"><span class="icon icon-flag"/>Weekly challenge</span>
+      <NuxtLinkLocale v-if="homeChallenge" :to="`/challenges/${homeChallenge.id_string}`" class="home-challenge-link">
+        <span class="home-challenge-tag"><span class="icon icon-flag"/>{{ $t('p_index.weeklyChallenge') }}</span>
         <span class="home-challenge-name">{{ homeChallenge.name }}</span>
         <span class="home-challenge-sub">
           {{ challengeDaysLeft }} {{ challengeDaysLeft === 1 ? 'day' : 'days' }} left ·
           {{ homeChallenge.entries }} {{ homeChallenge.entries === 1 ? 'entry' : 'entries' }} · Join →
         </span>
-      </nuxt-link>
+      </NuxtLinkLocale>
 
-      <Widget title="What's new" class="home-library">
+      <Widget :title="$t('p_index.whatSNew')" class="home-library">
         <template #ctl>
-          <nuxt-link to="/arts/new" class="widget-ctl-btn">
-            <span class="widget-ctl-name">View all</span><span class="icon icon-angle-right"/>
-          </nuxt-link>
+          <NuxtLinkLocale to="/arts/new" class="widget-ctl-btn">
+            <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
+          </NuxtLinkLocale>
         </template>
         <item-list :limit="32" hide-ip hide-paginator ordering="-updated"/>
       </Widget>
@@ -367,72 +322,61 @@ useCustomSeoMeta({
     </template>
 
     <template #doc>
-      <h2>Simple Pixel Art</h2>
+      <h2>{{ $t('common.simplePixelArt') }}</h2>
       <div class="readme-badges">
-        <span class="badge"><span>price</span><span class="v ok">free</span></span>
-        <span class="badge"><span>signup</span><span class="v">none</span></span>
-        <span class="badge"><span>runs in</span><span class="v">browser</span></span>
-        <span class="badge"><span>export</span><span class="v">PNG</span></span>
+        <span class="badge"><span>{{ $t('p_index.price') }}</span><span class="v ok">{{ $t('p_index.free') }}</span></span>
+        <span class="badge"><span>{{ $t('p_index.signup') }}</span><span class="v">{{ $t('p_index.none') }}</span></span>
+        <span class="badge"><span>{{ $t('p_index.runsIn') }}</span><span class="v">{{ $t('p_index.browser') }}</span></span>
+        <span class="badge"><span>{{ $t('p_index.export') }}</span><span class="v">{{ $t('common.png') }}</span></span>
       </div>
 
-      <p>
-        <strong>Simple Pixel Art</strong> is a free online pixel art maker for everyone — hobbyists, game
-        developers, and complete beginners alike. Draw sprites from scratch, turn any photo into pixel art,
-        or remix templates from the community library, then share or download your work. No installation,
-        no account, no learning curve.
-      </p>
+      <p v-html="$t('p_index.strongSimplePixelArtStrongIs')"/>
 
       <blockquote class="gh-alert gh-tip">
-        <p class="gh-alert-title"><span class="icon icon-rocket"/>Tip</p>
-        <p>New here? Open any artwork from the gallery above and start editing — you can publish your first piece in under a minute.</p>
+        <p class="gh-alert-title"><span class="icon icon-rocket"/>{{ $t('common.tip') }}</p>
+        <p v-html="$t('p_index.newHereOpenAnyArtworkFrom')"/>
       </blockquote>
 
-      <h2>Three ways to start</h2>
+      <h2>{{ $t('p_index.threeWaysToStart') }}</h2>
       <ol>
-        <li><strong>Draw from scratch</strong> — open the <a href="/editor">editor</a>, pick a canvas from <code>8×8</code> to <code>64×64</code>, and paint pixel by pixel.</li>
-        <li><strong>Convert a photo</strong> — drop an image into the <a href="/converter">converter</a> and tune the resolution and palette until it looks right.</li>
-        <li><strong>Remix a template</strong> — browse the <a href="/arts">gallery</a> and open any artwork straight into the editor.</li>
-        <li><strong>Start from a palette</strong> — pick one of the <a href="/palettes">color palettes</a> and draw inside a fixed set of colors, the way most pixel art is made.</li>
+        <li v-html="$t('p_index.strongDrawFromScratchStrongOpen')"/>
+        <li v-html="$t('p_index.strongConvertAPhotoStrongDrop')"/>
+        <li v-html="$t('p_index.strongRemixATemplateStrongBrowse')"/>
+        <li v-html="$t('p_index.strongStartFromAPaletteStrong')"/>
       </ol>
 
-      <h2>Built for game developers</h2>
-      <p>
-        The whole game-asset pipeline lives here, end to end:
-      </p>
+      <h2>{{ $t('p_index.builtForGameDevelopers') }}</h2>
+      <p v-html="$t('p_index.theWholeGameAssetPipelineLives')"/>
       <ol>
-        <li><strong>Draw sprites</strong> in the <a href="/editor">editor</a> — layers, animation frames with tags, mirror and iso modes.</li>
-        <li><strong>Build tilesets</strong> — <a href="/tilesets/slicer">slice a sheet</a> or draw tiles, then generate terrain variants with autotiling in the <a href="/tilesets/editor">tileset editor</a>.</li>
-        <li><strong>Paint tilemaps</strong> — grid or isometric maps with layers and terrain brushes in the <a href="/tilemaps/editor">tilemap editor</a>.</li>
-        <li><strong>Export game-ready</strong> — sprite sheets with Aseprite-format JSON for Phaser, Unity and Godot; Godot <code>.tres</code> and Tiled <code>.tsx</code> tilesets; and full maps as Tiled <code>.tmj</code> that Phaser and Tiled load directly.</li>
+        <li v-html="$t('p_index.strongDrawSpritesStrongInThe')"/>
+        <li v-html="$t('p_index.strongBuildTilesetsStrongAHref')"/>
+        <li v-html="$t('p_index.strongPaintTilemapsStrongGridOr')"/>
+        <li v-html="$t('p_index.strongExportGameReadyStrongSprite')"/>
       </ol>
 
-      <h2>What's inside</h2>
+      <h2>{{ $t('p_index.whatSInside') }}</h2>
       <ul>
-        <li><strong>Full editor</strong> — brush, eraser, fill, selections, layers, and unlimited undo/redo.</li>
-        <li><strong>Animation</strong> — frame-by-frame with tags, onion skin, GIF and sprite-sheet export.</li>
-        <li><strong>Mirror drawing</strong> — draw symmetric characters and icons in half the time.</li>
-        <li><strong>Palette manager</strong> — build, save, and swap <a href="/palettes">color palettes</a> across the whole canvas.</li>
-        <li><strong>Photo to pixel art</strong> — one-click conversion with adjustable resolution and colors.</li>
-        <li><strong>Tilesets &amp; tilemaps</strong> — autotile terrain and assemble grid or isometric scenes.</li>
-        <li><strong>Weekly challenges</strong> — a fresh <a href="/challenges">theme every week</a>, community-voted winners.</li>
-        <li><strong>Export anywhere</strong> — clean PNGs for games, NFTs, avatars, print, and more.</li>
+        <li v-html="$t('p_index.strongFullEditorStrongBrushEraser')"/>
+        <li v-html="$t('p_index.strongAnimationStrongFrameByFrame')"/>
+        <li v-html="$t('p_index.strongMirrorDrawingStrongDrawSymme')"/>
+        <li v-html="$t('p_index.strongPaletteManagerStrongBuildSav')"/>
+        <li v-html="$t('p_index.strongPhotoToPixelArtStrong')"/>
+        <li v-html="$t('p_index.strongTilesetsTilemapsStrongAutoti')"/>
+        <li><strong>{{ $t('common.weeklyChallenges') }}</strong> {{ $t('p_index.aFresh') }} <a href="/challenges">{{ $t('p_index.themeEveryWeek') }}</a>{{ $t('p_index.communityVotedWinners') }}</li>
+        <li v-html="$t('p_index.strongExportAnywhereStrongCleanPng')"/>
       </ul>
 
-      <h2>Popular canvas sizes</h2>
+      <h2>{{ $t('p_index.popularCanvasSizes') }}</h2>
       <p>
-        Start from a preset —
+        {{ $t('p_index.startFromAPreset') }}
         <template v-for="(s, i) in sizes" :key="s"><a :href="`/arts/size-${s}`">{{ s }}</a><span v-if="i < sizes.length - 1" aria-hidden="true"> · </span></template>.
       </p>
 
-      <h2>New to pixel art?</h2>
+      <h2>{{ $t('p_index.newToPixelArt') }}</h2>
       <p>
-        Start with <nuxt-link to="/easy-pixel-art">easy pixel art</nuxt-link> — small grids, three
-        colors, and a four-step method that gets a readable sprite out of you in about ten minutes.
-        Or jump straight into the <nuxt-link to="/editor">pixel art editor</nuxt-link> to make pixel
-        art online for free.
-      </p>
+        {{ $t('p_index.startWith') }} <NuxtLinkLocale to="/easy-pixel-art">{{ $t('p_index.easyPixelArt') }}</NuxtLinkLocale> {{ $t('p_index.smallGridsThreeColorsAndA') }} <NuxtLinkLocale to="/editor">{{ $t('p_index.pixelArtEditor') }}</NuxtLinkLocale> {{ $t('p_index.toMakePixelArtOnlineFor') }} </p>
 
-      <QnA title="Questions &amp; answers" :items="faq"/>
+      <QnA :title="$t('common.questionsAmpAnswers')" :items="faq"/>
       <ClientOnly>
         <AdSlot slot="6499761093"/>
       </ClientOnly>
@@ -441,6 +385,7 @@ useCustomSeoMeta({
 </template>
 
 <style scoped>
+
 .home-hero {
   display: flex;
   flex-direction: column;

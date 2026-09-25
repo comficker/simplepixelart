@@ -123,36 +123,36 @@ watch(open, (v) => {
       <div class="share-modal pp-modal" role="dialog" aria-modal="true" @keydown.escape="open = false">
         <header class="pp-head">
           <div class="pp-tabs">
-            <button class="pp-tab" :class="{active: tab === 'browse'}" @click="tab = 'browse'">Browse</button>
-            <button class="pp-tab" :class="{active: tab === 'save'}" @click="tab = 'save'">Save current</button>
-            <button class="pp-tab" :class="{active: tab === 'image'}" @click="tab = 'image'">From image</button>
+            <button class="pp-tab" :class="{active: tab === 'browse'}" @click="tab = 'browse'">{{ $t('c_PalettePicker.browse') }}</button>
+            <button class="pp-tab" :class="{active: tab === 'save'}" @click="tab = 'save'">{{ $t('c_PalettePicker.saveCurrent') }}</button>
+            <button class="pp-tab" :class="{active: tab === 'image'}" @click="tab = 'image'">{{ $t('common.fromImage') }}</button>
           </div>
-          <button class="pp-close" aria-label="Close" @click="open = false">
+          <button class="pp-close" :aria-label="$t('common.close')" @click="open = false">
             <span class="icon icon-x"/>
           </button>
         </header>
 
         <div v-if="tab !== 'save'" class="pp-mode">
-          <span class="pp-mode-label">Apply as</span>
+          <span class="pp-mode-label">{{ $t('c_PalettePicker.applyAs') }}</span>
           <div class="pp-seg">
-            <button class="pp-seg-btn" :class="{active: mode === 'replace'}" @click="mode = 'replace'" title="Recolor by index">Replace</button>
-            <button class="pp-seg-btn" :class="{active: mode === 'append'}" @click="mode = 'append'" title="Add to current palette">Add</button>
+            <button class="pp-seg-btn" :class="{active: mode === 'replace'}" @click="mode = 'replace'" :title="$t('c_PalettePicker.recolorByIndex')">{{ $t('c_PalettePicker.replace') }}</button>
+            <button class="pp-seg-btn" :class="{active: mode === 'append'}" @click="mode = 'append'" :title="$t('c_PalettePicker.addToCurrentPalette')">{{ $t('common.add') }}</button>
           </div>
         </div>
 
         <div v-if="tab === 'browse'" class="pp-body">
           <div class="pp-toolbar">
-            <input type="text" class="pp-search" placeholder="Search palettes..." @input="onSearch"/>
+            <input type="text" class="pp-search" :placeholder="$t('common.searchPalettes')" @input="onSearch"/>
             <div class="pp-sorts">
-              <button class="pp-chip" :class="{active: sort === '-score'}" @click="setSort('-score')">Popular</button>
-              <button class="pp-chip" :class="{active: sort === '-usage_count'}" @click="setSort('-usage_count')">Used</button>
-              <button class="pp-chip" :class="{active: sort === '-created'}" @click="setSort('-created')">New</button>
+              <button class="pp-chip" :class="{active: sort === '-score'}" @click="setSort('-score')">{{ $t('common.popular') }}</button>
+              <button class="pp-chip" :class="{active: sort === '-usage_count'}" @click="setSort('-usage_count')">{{ $t('c_PalettePicker.used') }}</button>
+              <button class="pp-chip" :class="{active: sort === '-created'}" @click="setSort('-created')">{{ $t('common.new') }}</button>
             </div>
           </div>
-          <div v-if="loadingList" class="pp-list-state">Loading…</div>
-          <div v-else-if="!palettes.length" class="pp-list-state">No palettes found.</div>
+          <div v-if="loadingList" class="pp-list-state">{{ $t('common.loading') }}</div>
+          <div v-else-if="!palettes.length" class="pp-list-state">{{ $t('c_PalettePicker.noPalettesFound') }}</div>
           <div v-else class="pp-list">
-            <button v-for="p in palettes" :key="p.id" class="pp-item" @click="applyLibrary(p)" :title="`${p.name} — ${p.color_count} colors`">
+            <button v-for="p in palettes" :key="p.id" class="pp-item" @click="applyLibrary(p)" :title="`${p.name} — ${$t('common.nColors', {count: p.color_count})}`">
               <span class="pp-item-strip">
                 <span v-for="(c, i) in p.colors.slice(0, 16)" :key="i" class="pp-item-sw" :style="{ backgroundColor: c }"/>
               </span>
@@ -167,8 +167,8 @@ watch(open, (v) => {
           <div class="pp-cur-strip">
             <span v-for="(c, i) in store.editorData.colors" :key="i" class="pp-cur-sw" :style="{ backgroundColor: c }"/>
           </div>
-          <input v-model="saveName" type="text" class="pp-search" placeholder="Palette name" @keydown.enter="saveCurrent"/>
-          <p class="pp-themes-label">Themes <span>(optional)</span></p>
+          <input v-model="saveName" type="text" class="pp-search" :placeholder="$t('common.paletteName')" @keydown.enter="saveCurrent"/>
+          <p class="pp-themes-label">{{ $t('common.themes') }} <span>{{ $t('c_PalettePicker.optional') }}</span></p>
           <div class="pp-themes">
             <button
                 v-for="t in PALETTE_THEMES" :key="t"
@@ -189,16 +189,16 @@ watch(open, (v) => {
             <span>{{ lastFile ? lastFile.name : 'Choose an image' }}</span>
           </label>
           <div class="pp-count">
-            <label>Colors: <strong>{{ count }}</strong></label>
+            <label>{{ $t('c_PalettePicker.colors') }} <strong>{{ count }}</strong></label>
             <input type="range" min="2" max="32" v-model.number="count"/>
           </div>
-          <div v-if="detecting" class="pp-list-state">Detecting…</div>
+          <div v-if="detecting" class="pp-list-state">{{ $t('c_PalettePicker.detecting') }}</div>
           <div v-else-if="detected.length" class="pp-cur-strip">
             <span v-for="(c, i) in detected" :key="i" class="pp-cur-sw" :style="{ backgroundColor: c }"/>
           </div>
           <div class="pp-image-actions">
-            <button class="btn primary pp-action" :disabled="!detected.length" @click="applyImage">Apply to canvas</button>
-            <nuxt-link to="/palettes/color-palette-from-image" class="pp-publish-link">Publish as palette →</nuxt-link>
+            <button class="btn primary pp-action" :disabled="!detected.length" @click="applyImage">{{ $t('c_PalettePicker.applyToCanvas') }}</button>
+            <NuxtLinkLocale to="/palettes/color-palette-from-image" class="pp-publish-link">{{ $t('c_PalettePicker.publishAsPalette') }}</NuxtLinkLocale>
           </div>
         </div>
       </div>

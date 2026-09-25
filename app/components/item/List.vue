@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const {t} = useI18n()
+const localePath = useLocalePath()
 import BrowseLayout from "~/components/BrowseLayout.vue";
 import {looksLikeProtectedIP} from "~/helper/ip-denylist";
 
@@ -104,12 +106,12 @@ function setIso(on: boolean) {
   router.push({query: q})
 }
 
-const sortLabel = computed(() => isNewView.value ? 'Newest' : 'Popular')
+const sortLabel = computed(() => isNewView.value ? t('c_List.newest') : t('c_List.popular'))
 
 function clearFilters() {
   search.value = ''
   if (sizeSlugMatch.value) {
-    router.push('/arts')
+    router.push(localePath('/arts'))
     return
   }
   const q: Record<string, any> = {...route.query}
@@ -135,10 +137,10 @@ function isCurrentPreset(p: {width: number, height: number}): boolean {
 <template>
   <component :is="showFilter ? BrowseLayout : 'div'" v-bind="showFilter ? {title, desc} : {}" :class="showFilter ? undefined : 'page'">
     <template v-if="showFilter" #filters>
-      <BrowseSearch v-model="search" placeholder="Search pixel art..." :delay="800"/>
+      <BrowseSearch v-model="search" :placeholder="$t('c_List.searchPixelArt')" :delay="800"/>
 
-      <BrowseFilter label="Size" icon="icon-square" :value="sizeLabel || 'Any'" :active="!!sizeLabel">
-        <BrowseOpt :active="!currentSize" @click="setSize(null)">Any size</BrowseOpt>
+      <BrowseFilter :label="$t('common.size')" icon="icon-square" :value="sizeLabel || $t('c_List.any')" :active="!!sizeLabel">
+        <BrowseOpt :active="!currentSize" @click="setSize(null)">{{ $t('c_List.anySize') }}</BrowseOpt>
         <BrowseOpt
             v-for="p in SIZE_PRESETS"
             :key="`${p.width}x${p.height}`"
@@ -149,14 +151,14 @@ function isCurrentPreset(p: {width: number, height: number}): boolean {
         </BrowseOpt>
       </BrowseFilter>
 
-      <BrowseFilter label="View" icon="icon-rhombus" :value="isoActive ? 'Isometric' : 'All'" :active="isoActive">
-        <BrowseOpt :active="!isoActive" @click="setIso(false)">All views</BrowseOpt>
-        <BrowseOpt :active="isoActive" @click="setIso(true)">Isometric</BrowseOpt>
+      <BrowseFilter :label="$t('common.view')" icon="icon-rhombus" :value="isoActive ? $t('common.isometric') : $t('common.all')" :active="isoActive">
+        <BrowseOpt :active="!isoActive" @click="setIso(false)">{{ $t('c_List.allViews') }}</BrowseOpt>
+        <BrowseOpt :active="isoActive" @click="setIso(true)">{{ $t('common.isometric') }}</BrowseOpt>
       </BrowseFilter>
 
-      <BrowseFilter label="Sort" icon="icon-rocket" :value="sortLabel">
-        <BrowseOpt to="/arts" :active="!isNewView">Popular</BrowseOpt>
-        <BrowseOpt to="/arts/new" :active="isNewView">Newest</BrowseOpt>
+      <BrowseFilter :label="$t('common.sort')" icon="icon-rocket" :value="sortLabel">
+        <BrowseOpt to="/arts" :active="!isNewView">{{ $t('common.popular') }}</BrowseOpt>
+        <BrowseOpt to="/arts/new" :active="isNewView">{{ $t('c_List.newest') }}</BrowseOpt>
       </BrowseFilter>
 
       <slot name="filters-extra"/>
@@ -167,21 +169,17 @@ function isCurrentPreset(p: {width: number, height: number}): boolean {
     </div>
     <div v-else-if="isEmpty" class="empty-state">
       <span class="empty-state-icon icon icon-search" aria-hidden="true"/>
-      <div class="empty-state-title">No pixel art found</div>
+      <div class="empty-state-title">{{ $t('c_List.noPixelArtFound') }}</div>
       <p class="empty-state-body">
         <template v-if="search">
           Nothing matches "{{ search }}". Try a different keyword.
         </template>
-        <template v-else-if="hasActiveFilters">
-          No pixel art matches the current filters.
-        </template>
-        <template v-else>
-          The gallery is empty here for now. Be the first to publish something.
-        </template>
+        <template v-else-if="hasActiveFilters"> {{ $t('c_List.noPixelArtMatchesTheCurrent') }} </template>
+        <template v-else> {{ $t('c_List.theGalleryIsEmptyHereFor') }} </template>
       </p>
       <div class="empty-state-actions">
-        <button v-if="hasActiveFilters" class="btn" @click="clearFilters">Clear filters</button>
-        <nuxt-link to="/editor" class="btn primary">Start creating</nuxt-link>
+        <button v-if="hasActiveFilters" class="btn" @click="clearFilters">{{ $t('common.clearFilters') }}</button>
+        <NuxtLinkLocale to="/editor" class="btn primary">{{ $t('c_List.startCreating') }}</NuxtLinkLocale>
       </div>
     </div>
     <div v-else-if="data" class="results">
@@ -195,7 +193,7 @@ function isCurrentPreset(p: {width: number, height: number}): boolean {
         :next-to="nextTo"
     />
     <template v-if="showFilter && !hidePaginator && data?.results.length" #foot>
-      <span class="browse-foot-start">{{ data.count }} {{ data.count === 1 ? 'item' : 'items' }}</span>
+      <span class="browse-foot-start">{{ $t('c_List.itemCount', data.count, {count: data.count}) }}</span>
       <span class="browse-foot-end">
         <Paginator
             :page="page"

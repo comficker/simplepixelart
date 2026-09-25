@@ -10,7 +10,7 @@
           :style="width ? {maxWidth: width} : undefined"
           v-bind="$attrs"
       >
-        <button class="ui-modal-x" aria-label="Close" title="Close" @click="$emit('close')">
+        <button class="ui-modal-x" :aria-label="$t('common.close')" :title="$t('common.close')" @click="$emit('close')">
           <span class="icon icon-x"/>
         </button>
         <h3 v-if="title" :id="headingId" class="publish-heading">{{ title }}</h3>

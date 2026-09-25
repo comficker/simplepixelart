@@ -122,6 +122,7 @@ if (isEmptyCreator.value && import.meta.server) {
 
 
 useCustomSeoMeta({
+  untranslated: true,
   title: seoTitle,
   description: () => `Browse pixel art by @${username.value} on SimplePixelArt.com. Discover their sprites, 8-bit characters, and pixel designs — remix or follow for new releases.`,
   keywords: () => `${username.value} pixel art, @${username.value}, ${username.value} sprites, pixel art creator, ${username.value} 8-bit art, ${username.value} pixel designs`,
@@ -155,11 +156,11 @@ useCustomSeoMeta({
       </div>
       <div class="creator-id">
         <h1 class="page-title">@{{ username }}</h1>
-        <ul v-if="profile" class="creator-stats" aria-label="Creator stats">
+        <ul v-if="profile" class="creator-stats" :aria-label="$t('p_creator_id_string.creatorStats')">
           <li><strong>{{ profile.arts }}</strong><span>{{ profile.arts === 1 ? 'art' : 'arts' }}</span></li>
           <li><strong>{{ profile.likes }}</strong><span>{{ profile.likes === 1 ? 'like' : 'likes' }}</span></li>
           <li><strong>{{ profile.followers }}</strong><span>{{ profile.followers === 1 ? 'follower' : 'followers' }}</span></li>
-          <li v-if="joinedText"><strong>{{ joinedText }}</strong><span>joined</span></li>
+          <li v-if="joinedText"><strong>{{ joinedText }}</strong><span>{{ $t('p_creator_id_string.joined') }}</span></li>
         </ul>
       </div>
       <button
@@ -179,9 +180,9 @@ useCustomSeoMeta({
     </section>
 
     <section v-if="collections.length" class="creator-collections">
-      <h2 class="section-title">Collections</h2>
+      <h2 class="section-title">{{ $t('p_creator_id_string.collections') }}</h2>
       <div class="creator-coll-grid">
-        <nuxt-link
+        <NuxtLinkLocale
             v-for="c in collections"
             :key="c.id"
             :to="`/collections/${c.id_string}`"
@@ -207,7 +208,7 @@ useCustomSeoMeta({
             <div class="creator-coll-title">{{ c.title }}</div>
             <div class="creator-coll-count">{{ itemCount(c) }} {{ itemCount(c) === 1 ? 'piece' : 'pieces' }}</div>
           </div>
-        </nuxt-link>
+        </NuxtLinkLocale>
       </div>
     </section>
 

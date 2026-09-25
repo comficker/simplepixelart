@@ -97,9 +97,9 @@ async function destroy() {
 <template>
 
   <button type="button" class="admin-trigger" @click="openPanel">
-    <span class="admin-trigger-tag">ADMIN</span>
+    <span class="admin-trigger-tag">{{ $t('c_AdminArtPanel.admin') }}</span>
     <span class="icon icon-adjust"/>
-    <span>Moderate</span>
+    <span>{{ $t('c_AdminArtPanel.moderate') }}</span>
   </button>
 
   <Teleport to="body">
@@ -107,10 +107,10 @@ async function destroy() {
       <div class="admin-modal" role="dialog" aria-modal="true" @keydown.escape="open = false">
         <header class="admin-modal-head">
           <div class="admin-modal-titles">
-            <h3 class="admin-modal-title">Moderation</h3>
+            <h3 class="admin-modal-title">{{ $t('c_AdminArtPanel.moderation') }}</h3>
             <span class="admin-modal-id">id {{ data.id }} · {{ data.id_string }}</span>
           </div>
-          <button type="button" class="admin-modal-close" aria-label="Close" @click="open = false">
+          <button type="button" class="admin-modal-close" :aria-label="$t('common.close')" @click="open = false">
             <span class="icon icon-x"/>
           </button>
         </header>
@@ -118,8 +118,8 @@ async function destroy() {
         <div class="admin-modal-body">
 
           <div class="admin-group">
-            <span class="admin-group-label">Status</span>
-            <div class="admin-seg" role="group" aria-label="Status">
+            <span class="admin-group-label">{{ $t('common.status') }}</span>
+            <div class="admin-seg" role="group" :aria-label="$t('common.status')">
               <button
                   v-for="s in (['public','pending','draft'] as const)"
                   :key="s"
@@ -133,7 +133,7 @@ async function destroy() {
           </div>
 
           <div class="admin-group">
-            <span class="admin-group-label">IP flag</span>
+            <span class="admin-group-label">{{ $t('c_AdminArtPanel.ipFlag') }}</span>
             <div class="admin-flag">
               <button
                   type="button"
@@ -154,24 +154,24 @@ async function destroy() {
           </div>
 
           <label class="admin-group">
-            <span class="admin-group-label">Name</span>
+            <span class="admin-group-label">{{ $t('common.name') }}</span>
             <input
                 v-model="form.name"
                 type="text"
                 class="admin-input"
-                placeholder="Artwork name"
+                :placeholder="$t('c_AdminArtPanel.artworkName')"
                 :disabled="busy"
                 @keydown.enter="save"
             />
           </label>
 
           <label class="admin-group">
-            <span class="admin-group-label">Description</span>
+            <span class="admin-group-label">{{ $t('common.description') }}</span>
             <textarea
                 v-model="form.desc"
                 rows="4"
                 class="admin-input admin-textarea"
-                placeholder="Describe this artwork…"
+                :placeholder="$t('c_AdminArtPanel.describeThisArtwork')"
                 :disabled="busy"
             />
           </label>
@@ -180,10 +180,10 @@ async function destroy() {
         <footer class="admin-modal-foot">
           <button type="button" class="admin-delete" :disabled="busy" @click="destroy">
             <span class="icon icon-trash"/>
-            <span>Delete</span>
+            <span>{{ $t('c_AdminArtPanel.delete') }}</span>
           </button>
           <div class="admin-foot-right">
-            <button type="button" class="btn" :disabled="busy" @click="open = false">Cancel</button>
+            <button type="button" class="btn" :disabled="busy" @click="open = false">{{ $t('common.cancel') }}</button>
             <button type="button" class="btn primary" :disabled="busy || !dirty" @click="save">
               <span class="icon icon-check"/>
               <span>{{ busy ? 'Saving…' : 'Save changes' }}</span>

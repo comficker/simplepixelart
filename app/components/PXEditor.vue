@@ -1,4 +1,7 @@
 <script setup lang="ts">
+const {t} = useI18n()
+
+const localePath = useLocalePath()
 const artImage = useArtImage()
 import {onMounted, ref, toRaw} from "vue";
 import {buildIsoPath, compositeFrame, drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
@@ -164,12 +167,12 @@ async function destroyCurrent() {
 }
 
 const PUBLISH_STATUSES = [
-  {value: 'public', label: 'Public — listed in the gallery', action: 'Publish'},
-  {value: 'draft', label: 'Private draft — only you can see it', action: 'Save draft'},
+  {value: 'public', label: t('c_PXEditor.publicListedInTheGallery'), action: 'publish'},
+  {value: 'draft', label: t('c_PXEditor.privateDraftOnlyYouCanSee'), action: 'saveDraft'},
 ] as const
 const publishStatus = ref<'public' | 'draft'>('draft')
 const publishAction = computed(() =>
-    PUBLISH_STATUSES.find(s => s.value === publishStatus.value)?.action || 'Save')
+    t('common.' + (PUBLISH_STATUSES.find(s => s.value === publishStatus.value)?.action || 'save')))
 
 function openPublish() {
   if (!auth.isLogged) {
@@ -275,9 +278,9 @@ const deskGridStyle = ref<'solid' | 'dashed' | 'dots'>('solid');
  *  per-cell loop, so they stay opt-in. */
 const cellStyle = ref<'square' | 'x' | 'bead'>('square');
 const CELL_STYLES = [
-  {id: 'square', label: 'Square', icon: 'icon-square'},
-  {id: 'x', label: 'Cross', icon: 'icon-close'},
-  {id: 'bead', label: 'Bead', icon: 'icon-circle-outline'},
+  {id: 'square', label: t('c_PXEditor.square'), icon: 'icon-square'},
+  {id: 'x', label: t('c_PXEditor.cross'), icon: 'icon-close'},
+  {id: 'bead', label: t('c_PXEditor.bead'), icon: 'icon-circle-outline'},
 ] as const;
 const deskGridShape = ref<'square' | 'iso'>('square');
 const deskGridColor = ref('');
@@ -1366,7 +1369,7 @@ function onFsChange() {
 const hasPreviousScreen = ref(false);
 function goBack() {
   if (hasPreviousScreen.value) router.back();
-  else router.push('/');
+  else router.push(localePath('/'));
 }
 
 watch(fsMode, (m) => {
@@ -3089,7 +3092,7 @@ onMounted(async () => {
     await store.load(route.query.id?.toString())
   }
   if (route.query.ai) {
-    navigateTo(`/generate?prompt=${encodeURIComponent(String(route.query.ai).slice(0, 300))}`)
+    navigateTo(localePath(`/generate?prompt=${encodeURIComponent(String(route.query.ai).slice(0, 300))}`))
     return
   }
   if (route.query.palette) {
@@ -3252,138 +3255,138 @@ watch(
     <div class="editor-toolbar">
       <div class="toolbar-start">
         <ui-tooltip class="fs-only" :text="hasPreviousScreen ? 'Back' : 'Home'">
-          <button class="toolbar-btn" :aria-label="hasPreviousScreen ? 'Back' : 'Home'" @click="goBack">
+          <button class="toolbar-btn" :aria-label="hasPreviousScreen ? $t('common.back') : $t('common.home')" @click="goBack">
             <span class="icon" :class="hasPreviousScreen ? 'icon-angle-left' : 'icon-home'"/>
           </button>
         </ui-tooltip>
-        <ui-dropdown-menu label="File">
-          <ui-tooltip text="File">
-            <button class="toolbar-btn" aria-label="File"><span class="icon icon-file"/></button>
+        <ui-dropdown-menu :label="$t('common.file')">
+          <ui-tooltip :text="$t('c_PXEditor.file')">
+            <button class="toolbar-btn" :aria-label="$t('c_PXEditor.file')"><span class="icon icon-file"/></button>
           </ui-tooltip>
           <template #menu>
             <div class="file-menu">
               <button class="file-menu-item" @click="openOnboarding">
-                <span class="icon icon-rocket"/><span>Get started</span>
+                <span class="icon icon-rocket"/><span>{{ $t('common.getStarted') }}</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" @click="store.resetEditorData">
-                <span class="icon icon-plus"/><span>New canvas</span>
+                <span class="icon icon-plus"/><span>{{ $t('c_PXEditor.newCanvas') }}</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" @click="onAddBoard(16)">
-                <span class="icon icon-square"/><span>New board</span>
+                <span class="icon icon-square"/><span>{{ $t('c_PXEditor.newBoard') }}</span>
               </button>
               <button class="file-menu-item" @click="openArtPicker">
-                <span class="icon icon-workspace"/><span>Load board…</span>
+                <span class="icon icon-workspace"/><span>{{ $t('c_PXEditor.loadBoard') }}</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" @click="onImportFiles">
-                <span class="icon icon-upload"/><span>Import files…</span>
+                <span class="icon icon-upload"/><span>{{ $t('c_PXEditor.importFiles') }}</span>
               </button>
               <button class="file-menu-item" @click="store.insertImage()">
-                <span class="icon icon-image"/><span>Insert image</span>
+                <span class="icon icon-image"/><span>{{ $t('c_PXEditor.insertImage') }}</span>
               </button>
               <button class="file-menu-item" @click="showStripImport = true">
-                <span class="icon icon-filmstrip"/><span>Import sprite strip</span>
+                <span class="icon icon-filmstrip"/><span>{{ $t('common.importSpriteStrip') }}</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" @click="exportFile('png')">
-                <span class="icon icon-download"/><span>Download PNG</span>
+                <span class="icon icon-download"/><span>{{ $t('common.downloadPng') }}</span>
               </button>
               <button class="file-menu-item" @click="exportFile('svg')">
-                <span class="icon icon-download"/><span>Download SVG</span>
+                <span class="icon icon-download"/><span>{{ $t('c_PXEditor.downloadSvg') }}</span>
               </button>
               <button class="file-menu-item" @click="exportFile('json')">
-                <span class="icon icon-download"/><span>Download JSON</span>
+                <span class="icon icon-download"/><span>{{ $t('c_PXEditor.downloadJson') }}</span>
               </button>
               <template v-if="store.isAnimated">
                 <div class="file-menu-sep"/>
                 <button class="file-menu-item" @click="exportGif">
-                  <span class="icon icon-download"/><span>Download GIF (animated)</span>
+                  <span class="icon icon-download"/><span>{{ $t('c_PXEditor.downloadGifAnimated') }}</span>
                 </button>
                 <button class="file-menu-item" @click="exportSpritesheet">
-                  <span class="icon icon-download"/><span>Download spritesheet</span>
+                  <span class="icon icon-download"/><span>{{ $t('c_PXEditor.downloadSpritesheet') }}</span>
                 </button>
-                <button class="file-menu-item" @click="exportGame" title="1× spritesheet + Aseprite-format JSON (durations, tags) for Phaser / Unity / Godot">
-                  <span class="icon icon-download"/><span>Export for game (sheet + JSON)</span>
+                <button class="file-menu-item" @click="exportGame" :title="$t('c_PXEditor.1SpritesheetAsepriteFormatJsonDura')">
+                  <span class="icon icon-download"/><span>{{ $t('c_PXEditor.exportForGameSheetJson') }}</span>
                 </button>
               </template>
             </div>
           </template>
         </ui-dropdown-menu>
-        <ui-dropdown-menu label="Settings" class="settings-dd">
-          <ui-tooltip text="Settings">
-            <button class="toolbar-btn" aria-label="Settings" @click="settingsView = 'main'"><span class="icon icon-cog"/></button>
+        <ui-dropdown-menu :label="$t('common.settings')" class="settings-dd">
+          <ui-tooltip :text="$t('c_PXEditor.settings')">
+            <button class="toolbar-btn" :aria-label="$t('common.settings')" @click="settingsView = 'main'"><span class="icon icon-cog"/></button>
           </ui-tooltip>
           <template #menu>
 
             <div v-if="settingsView === 'main'" class="file-menu" @click.stop>
               <button class="file-menu-item" @click="openResize">
-                <span class="icon icon-ruler"/><span>Resize canvas</span><span class="icon icon-angle-right settings-chev"/>
+                <span class="icon icon-ruler"/><span>{{ $t('c_PXEditor.resizeCanvas') }}</span><span class="icon icon-angle-right settings-chev"/>
               </button>
               <button class="file-menu-item" @click="openBgPicker">
-                <span class="icon icon-image"/><span>Background</span><span class="icon icon-angle-right settings-chev"/>
+                <span class="icon icon-image"/><span>{{ $t('common.background') }}</span><span class="icon icon-angle-right settings-chev"/>
               </button>
               <button class="file-menu-item" @click="settingsView = 'canvas'">
-                <span class="icon icon-grid"/><span>Canvas</span><span class="icon icon-angle-right settings-chev"/>
+                <span class="icon icon-grid"/><span>{{ $t('common.canvas') }}</span><span class="icon icon-angle-right settings-chev"/>
               </button>
               <button class="file-menu-item" @click="settingsView = 'board'">
-                <span class="icon icon-square"/><span>Board</span><span class="icon icon-angle-right settings-chev"/>
+                <span class="icon icon-square"/><span>{{ $t('c_PXEditor.board') }}</span><span class="icon icon-angle-right settings-chev"/>
               </button>
               <button class="file-menu-item" @click="toggleBoardChrome">
                 <span class="icon" :class="showBoardChrome ? 'icon-eye-cross' : 'icon-eye'"/>
-                <span>{{ showBoardChrome ? 'Hide board labels' : 'Show board labels' }}</span>
+                <span>{{ showBoardChrome ? $t('c_PXEditor.hideBoardLabels') : $t('c_PXEditor.showBoardLabels') }}</span>
               </button>
               <button class="file-menu-item" @click="settingsView = 'cell'">
-                <span class="icon icon-circle-outline"/><span>Cell style</span><span class="icon icon-angle-right settings-chev"/>
+                <span class="icon icon-circle-outline"/><span>{{ $t('c_PXEditor.cellStyle') }}</span><span class="icon icon-angle-right settings-chev"/>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" @click="importReferenceImage">
                 <span class="icon icon-upload"/>
-                <span>{{ referenceImage ? 'Replace reference image' : 'Add reference image' }}</span>
+                <span>{{ referenceImage ? $t('c_PXEditor.replaceReferenceImage') : $t('c_PXEditor.addReferenceImage') }}</span>
               </button>
               <button v-if="referenceImage" class="file-menu-item" @click="toggleReference">
                 <span class="icon" :class="referenceVisible ? 'icon-eye-cross' : 'icon-eye'"/>
-                <span>{{ referenceVisible ? 'Hide reference' : 'Show reference' }}</span>
+                <span>{{ referenceVisible ? $t('c_PXEditor.hideReference') : $t('c_PXEditor.showReference') }}</span>
               </button>
               <button v-if="referenceImage" class="file-menu-item" @click="clearReference">
                 <span class="icon icon-trash"/>
-                <span>Remove reference</span>
+                <span>{{ $t('c_PXEditor.removeReference') }}</span>
               </button>
               <div class="file-menu-sep"/>
-              <button class="file-menu-item" :title="`Copies the ${store.activeScope} (${modK}C)`" @click="onCopy">
+              <button class="file-menu-item" :title="`${$t('c_PXEditor.copiesTheScope', {scope: $t('common.scope_' + store.activeScope)})} (${modK}C)`" @click="onCopy">
                 <span class="icon icon-content-copy"/>
-                <span>Copy {{ store.activeScope }}</span>
+                <span>{{ $t('c_PXEditor.copyScope', {scope: $t('common.scope_' + store.activeScope)}) }}</span>
               </button>
-              <button v-if="store.clipboard" class="file-menu-item" :title="`Paste (${modK}V)`" @click="onPaste">
+              <button v-if="store.clipboard" class="file-menu-item" :title="`${$t('c_PXEditor.paste')} (${modK}V)`" @click="onPaste">
                 <span class="icon icon-content-paste"/>
-                <span>Paste {{ store.clipboard.kind === 'board' ? 'as new board' : 'as new layer' }}</span>
+                <span>{{ store.clipboard.kind === 'board' ? $t('c_PXEditor.pasteAsNewBoard') : $t('c_PXEditor.pasteAsNewLayer') }}</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" @click="store.clearCurrentLayer">
                 <span class="icon icon-broom"/>
-                <span>Clear current layer</span>
+                <span>{{ $t('c_PXEditor.clearCurrentLayer') }}</span>
               </button>
               <button class="file-menu-item" @click="store.cleanupUnusedColors()">
                 <span class="icon icon-palette-swatch-outline"/>
-                <span>Cleanup unused colors</span>
+                <span>{{ $t('c_PXEditor.cleanupUnusedColors') }}</span>
               </button>
-              <button class="file-menu-item" title="Remove pixels stranded outside the canvas by a resize or move — they never render but still slow drawing and bloat saves" @click="onTrimHidden">
+              <button class="file-menu-item" :title="$t('c_PXEditor.removePixelsStrandedOutsideTheCanv')" @click="onTrimHidden">
                 <span class="icon icon-crop"/>
-                <span>Trim hidden pixels</span>
+                <span>{{ $t('c_PXEditor.trimHiddenPixels') }}</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item file-menu-danger" @click="showDeleteConfirm = true">
                 <span class="icon icon-trash"/>
-                <span>Delete this art</span>
+                <span>{{ $t('c_PXEditor.deleteThisArt') }}</span>
               </button>
             </div>
 
             <div v-else-if="settingsView === 'cell'" class="file-menu settings-sub" @click.stop>
-              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>Cell style</span></button>
+              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>{{ $t('c_PXEditor.cellStyle') }}</span></button>
               <div class="settings-body">
                 <div class="cv-field">
-                  <label class="cv-label">How a pixel is drawn</label>
+                  <label class="cv-label">{{ $t('c_PXEditor.howAPixelIsDrawn') }}</label>
                   <div class="cv-opts cols-3">
                     <button
                         v-for="st in CELL_STYLES"
@@ -3401,24 +3404,24 @@ watch(
             </div>
 
             <div v-else-if="settingsView === 'resize'" class="file-menu settings-sub" @click.stop>
-              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>Resize canvas</span></button>
+              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>{{ $t('c_PXEditor.resizeCanvas') }}</span></button>
               <div class="settings-body">
                 <div class="onb-field">
-                  <label class="onb-label">Presets</label>
+                  <label class="onb-label">{{ $t('c_PXEditor.presets') }}</label>
                   <div class="onb-chips">
                     <button v-for="s in SIZE_PRESETS" :key="s" class="onb-chip" :class="{ active: newSize.width === s && newSize.height === s }" @click="setResizePreset(s)">{{ s }}×{{ s }}</button>
                   </div>
                 </div>
                 <div class="onb-field">
-                  <label class="onb-label">Custom size</label>
+                  <label class="onb-label">{{ $t('c_PXEditor.customSize') }}</label>
                   <div class="resize-fields">
                     <label class="resize-field">
-                      <span class="resize-field-label">Width</span>
+                      <span class="resize-field-label">{{ $t('c_PXEditor.width') }}</span>
                       <input class="resize-input wide" type="number" min="1" max="128" :value="newSize.width" @input="onResizeWidth(($event.target as HTMLInputElement).value)" @keydown.enter="applyResize">
                     </label>
                     <button type="button" class="resize-link" :class="{ active: linkResize }" :aria-pressed="linkResize" :title="linkResize ? 'Aspect ratio locked' : 'Lock aspect ratio'" @click="linkResize = !linkResize"><span class="icon icon-link"/></button>
                     <label class="resize-field">
-                      <span class="resize-field-label">Height</span>
+                      <span class="resize-field-label">{{ $t('common.height') }}</span>
                       <input class="resize-input wide" type="number" min="1" max="128" :value="newSize.height" @input="onResizeHeight(($event.target as HTMLInputElement).value)" @keydown.enter="applyResize">
                     </label>
                   </div>
@@ -3429,20 +3432,20 @@ watch(
             </div>
 
             <div v-else-if="settingsView === 'bg'" class="file-menu settings-sub" @click.stop>
-              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>Background</span></button>
+              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>{{ $t('common.background') }}</span></button>
               <div class="settings-body">
                 <div class="bg-tabs">
                   <button class="bg-tab" :class="{active: store.bgConfig.type === 'none'}" @click="applyBgNone(); settingsView = 'main'">
-                    <span class="bg-tab-preview bg-tab-preview-checker" aria-hidden="true"/><span>Default</span>
+                    <span class="bg-tab-preview bg-tab-preview-checker" aria-hidden="true"/><span>{{ $t('c_PXEditor.default') }}</span>
                   </button>
                   <button class="bg-tab" :class="{active: store.bgConfig.type === 'transparent'}" @click="applyBgTransparent(); settingsView = 'main'">
-                    <span class="bg-tab-preview bg-tab-preview-none" aria-hidden="true"/><span>Transparent</span>
+                    <span class="bg-tab-preview bg-tab-preview-none" aria-hidden="true"/><span>{{ $t('common.transparent') }}</span>
                   </button>
                   <button class="bg-tab" :class="{active: bgTab === 'solid'}" @click="bgTab = 'solid'; applyBgSolid()">
-                    <span class="bg-tab-preview" :style="{background: bgSolidColor}" aria-hidden="true"/><span>Solid</span>
+                    <span class="bg-tab-preview" :style="{background: bgSolidColor}" aria-hidden="true"/><span>{{ $t('c_PXEditor.solid') }}</span>
                   </button>
                   <button class="bg-tab" :class="{active: bgTab === 'art'}" :disabled="!auth.isLogged" :title="auth.isLogged ? 'Use one of your arts' : 'Login required'" @click="bgTab = 'art'; auth.isLogged && !myArtsLoaded && loadMyArts()">
-                    <span class="bg-tab-preview bg-tab-preview-art" aria-hidden="true"/><span>My art</span>
+                    <span class="bg-tab-preview bg-tab-preview-art" aria-hidden="true"/><span>{{ $t('c_PXEditor.myArt') }}</span>
                   </button>
                 </div>
                 <div v-if="bgTab === 'solid'" class="bg-tab-body">
@@ -3458,7 +3461,7 @@ watch(
                   <div v-if="loadingMyArts" class="bg-art-grid no-scrollbar">
                     <div v-for="i in 6" :key="i" class="skeleton skeleton-square bg-art-thumb"/>
                   </div>
-                  <div v-else-if="!myArts.length" class="bg-empty"><p>You haven't published any art yet.</p></div>
+                  <div v-else-if="!myArts.length" class="bg-empty"><p>{{ $t('c_PXEditor.youHavenTPublishedAnyArt') }}</p></div>
                   <div v-else class="bg-art-grid no-scrollbar">
                     <button v-for="art in myArts" :key="art.id" class="bg-art-thumb" :class="{active: store.bgConfig.artId === art.id}" :title="art.name" @click="applyBgArt(art); settingsView = 'main'">
                       <img v-if="!failedBgThumb[art.id]" :src="art.thumb" :alt="art.name" loading="lazy" @error="failedBgThumb[art.id] = true">
@@ -3470,63 +3473,63 @@ watch(
             </div>
 
             <div v-else-if="settingsView === 'canvas'" class="file-menu settings-sub" @click.stop>
-              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>Canvas</span></button>
+              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>{{ $t('common.canvas') }}</span></button>
               <div class="settings-body">
                 <div class="cv-field">
-                  <label class="cv-label">Background</label>
+                  <label class="cv-label">{{ $t('common.background') }}</label>
                   <div class="cv-opts cols-3">
                     <button class="cv-opt" :class="{ active: deskBg.toLowerCase() === DESK_BG.dark }" @click="deskBg = DESK_BG.dark">
-                      <span class="desk-sw" :style="{ background: DESK_BG.dark }"/><span>Dark</span>
+                      <span class="desk-sw" :style="{ background: DESK_BG.dark }"/><span>{{ $t('common.dark') }}</span>
                     </button>
                     <button class="cv-opt" :class="{ active: deskBg.toLowerCase() === DESK_BG.light }" @click="deskBg = DESK_BG.light">
-                      <span class="desk-sw" :style="{ background: DESK_BG.light }"/><span>Light</span>
+                      <span class="desk-sw" :style="{ background: DESK_BG.light }"/><span>{{ $t('common.light') }}</span>
                     </button>
                     <label class="cv-opt cv-swatch" :class="{ active: isCustomDeskBg }">
-                      <span class="desk-sw" :style="{ background: deskBg }"/><span>Custom</span>
+                      <span class="desk-sw" :style="{ background: deskBg }"/><span>{{ $t('c_PXEditor.custom') }}</span>
                       <input type="color" class="cv-swatch-input" :value="deskBg" @input="deskBg = ($event.target as HTMLInputElement).value">
                     </label>
                   </div>
                 </div>
                 <div class="cv-field">
-                  <label class="cv-label">Desk grid</label>
+                  <label class="cv-label">{{ $t('c_PXEditor.deskGrid') }}</label>
                   <div class="cv-opts cols-2">
-                    <button class="cv-opt" :class="{ active: !deskGrid }" @click="deskGrid = false">Off</button>
-                    <button class="cv-opt" :class="{ active: deskGrid }" @click="deskGrid = true">On</button>
+                    <button class="cv-opt" :class="{ active: !deskGrid }" @click="deskGrid = false">{{ $t('common.off') }}</button>
+                    <button class="cv-opt" :class="{ active: deskGrid }" @click="deskGrid = true">{{ $t('common.on') }}</button>
                   </div>
                 </div>
                 <template v-if="deskGrid">
                   <div class="cv-field">
-                    <label class="cv-label">Grid type</label>
+                    <label class="cv-label">{{ $t('common.gridType') }}</label>
                     <div class="cv-opts cols-2">
-                      <button class="cv-opt" :class="{ active: deskGridShape === 'square' }" @click="deskGridShape = 'square'">Square</button>
-                      <button class="cv-opt" :class="{ active: deskGridShape === 'iso' }" @click="deskGridShape = 'iso'">Isometric</button>
+                      <button class="cv-opt" :class="{ active: deskGridShape === 'square' }" @click="deskGridShape = 'square'">{{ $t('common.square') }}</button>
+                      <button class="cv-opt" :class="{ active: deskGridShape === 'iso' }" @click="deskGridShape = 'iso'">{{ $t('common.isometric') }}</button>
                     </div>
                   </div>
                   <div class="cv-field">
-                    <label class="cv-label">Grid cell</label>
+                    <label class="cv-label">{{ $t('c_PXEditor.gridCell') }}</label>
                     <div class="resize-fields">
                       <label class="resize-field">
-                        <span class="resize-field-label">Width</span>
+                        <span class="resize-field-label">{{ $t('c_PXEditor.width') }}</span>
                         <input class="resize-input wide" type="number" min="1" max="64" :value="deskGridCell.width" @input="setDeskCell('width', ($event.target as HTMLInputElement).value)">
                       </label>
                       <label class="resize-field">
-                        <span class="resize-field-label">Height</span>
+                        <span class="resize-field-label">{{ $t('common.height') }}</span>
                         <input class="resize-input wide" type="number" min="1" max="64" :value="deskGridCell.height" @input="setDeskCell('height', ($event.target as HTMLInputElement).value)">
                       </label>
                     </div>
                   </div>
                   <div class="cv-field">
-                    <label class="cv-label">Line style</label>
+                    <label class="cv-label">{{ $t('common.lineStyle') }}</label>
                     <div class="cv-opts cols-3">
                       <button v-for="st in (['solid','dashed','dots'] as const)" :key="st" class="cv-opt cv-cap" :class="{ active: deskGridStyle === st }" @click="deskGridStyle = st">{{ st }}</button>
                     </div>
                   </div>
                   <div class="cv-field">
-                    <label class="cv-label">Line color</label>
+                    <label class="cv-label">{{ $t('c_PXEditor.lineColor') }}</label>
                     <div class="cv-opts cols-2">
-                      <button class="cv-opt" :class="{ active: !deskGridColor }" @click="deskGridColor = ''">Auto</button>
+                      <button class="cv-opt" :class="{ active: !deskGridColor }" @click="deskGridColor = ''">{{ $t('common.auto') }}</button>
                       <label class="cv-opt cv-swatch" :class="{ active: !!deskGridColor }">
-                        <span class="desk-sw" :style="{ background: deskGridColor || '#888' }"/><span>Custom</span>
+                        <span class="desk-sw" :style="{ background: deskGridColor || '#888' }"/><span>{{ $t('c_PXEditor.custom') }}</span>
                         <input type="color" class="cv-swatch-input" :value="deskGridColor || '#888888'" @input="deskGridColor = ($event.target as HTMLInputElement).value">
                       </label>
                     </div>
@@ -3537,11 +3540,11 @@ watch(
             </div>
 
             <div v-else-if="settingsView === 'board'" class="file-menu settings-sub" @click.stop>
-              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>Board</span></button>
+              <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>{{ $t('c_PXEditor.board') }}</span></button>
               <div class="settings-body">
 
                 <div class="cv-field">
-                  <label class="cv-label">Grid mode</label>
+                  <label class="cv-label">{{ $t('c_PXEditor.gridMode') }}</label>
                   <div class="cv-opts cols-3">
                     <button
                         v-for="m in (['square','iso','off'] as const)"
@@ -3553,10 +3556,10 @@ watch(
                   </div>
                 </div>
                 <div v-if="(editorData.meta?.iso?.mode ?? 'square') === 'iso'" class="cv-field">
-                  <label class="cv-label">Iso cell size</label>
+                  <label class="cv-label">{{ $t('c_PXEditor.isoCellSize') }}</label>
                   <div class="resize-fields">
                     <label class="resize-field">
-                      <span class="resize-field-label">Width</span>
+                      <span class="resize-field-label">{{ $t('c_PXEditor.width') }}</span>
                       <input
                           class="resize-input wide" type="number" min="1" max="32"
                           :value="(editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).width"
@@ -3564,7 +3567,7 @@ watch(
                       >
                     </label>
                     <label class="resize-field">
-                      <span class="resize-field-label">Height</span>
+                      <span class="resize-field-label">{{ $t('common.height') }}</span>
                       <input
                           class="resize-input wide" type="number" min="1" max="32"
                           :value="(editorData.meta?.iso?.cell ?? { width: 2, height: 1 }).height"
@@ -3575,21 +3578,21 @@ watch(
                 </div>
 
                 <div class="cv-field">
-                  <label class="cv-label">Board grid size</label>
+                  <label class="cv-label">{{ $t('c_PXEditor.boardGridSize') }}</label>
                   <div class="cv-opts cols-4">
                     <button v-for="n in [1, 2, 4, 8]" :key="n" class="cv-opt" :class="{ active: checkerSize === n }" @click="setCheckerSize(n)">{{ n }}</button>
                   </div>
                   <div class="resize-fields">
                     <label class="resize-field">
-                      <span class="resize-field-label">Custom (px)</span>
+                      <span class="resize-field-label">{{ $t('c_PXEditor.customPx') }}</span>
                       <input class="resize-input wide" type="number" min="1" max="64" :value="checkerSize" @input="setCheckerSize(($event.target as HTMLInputElement).value)">
                     </label>
                   </div>
                 </div>
                 <div class="cv-field">
-                  <label class="cv-label">Board grid colors</label>
+                  <label class="cv-label">{{ $t('c_PXEditor.boardGridColors') }}</label>
                   <div class="cv-opts cols-3">
-                    <button class="cv-opt" :class="{ active: !checkerA && !checkerB }" @click="checkerA = ''; checkerB = ''">Default</button>
+                    <button class="cv-opt" :class="{ active: !checkerA && !checkerB }" @click="checkerA = ''; checkerB = ''">{{ $t('c_PXEditor.default') }}</button>
                     <label class="cv-opt cv-swatch">
                       <span class="desk-sw" :style="{ background: checkerA || '#ffffff' }"/><span>A</span>
                       <input type="color" class="cv-swatch-input" :value="checkerA || '#ffffff'" @input="checkerA = ($event.target as HTMLInputElement).value">
@@ -3602,24 +3605,24 @@ watch(
                 </div>
 
                 <div class="cv-field">
-                  <label class="cv-label">Guides <template v-if="guideCount">({{ guideCount }})</template></label>
+                  <label class="cv-label">{{ $t('c_PXEditor.guides') }} <template v-if="guideCount">({{ guideCount }})</template></label>
                   <div class="cv-opts cols-2">
-                    <button class="cv-opt" title="Add a vertical guide line" @click="addGuide('v')">+ Vertical</button>
-                    <button class="cv-opt" title="Add a horizontal guide line" @click="addGuide('h')">+ Horizontal</button>
+                    <button class="cv-opt" :title="$t('c_PXEditor.addAVerticalGuideLine')" @click="addGuide('v')">{{ $t('c_PXEditor.vertical') }}</button>
+                    <button class="cv-opt" :title="$t('c_PXEditor.addAHorizontalGuideLine')" @click="addGuide('h')">{{ $t('c_PXEditor.horizontal') }}</button>
                   </div>
                   <div class="cv-opts cols-3" style="margin-top: 4px">
-                    <button class="cv-opt" title="Add centre cross guides" @click="addGuidePreset('center')">Center</button>
-                    <button class="cv-opt" title="Add rule-of-thirds guides" @click="addGuidePreset('thirds')">Thirds</button>
-                    <button class="cv-opt" :disabled="!guideCount" @click="clearGuides">Clear</button>
+                    <button class="cv-opt" :title="$t('c_PXEditor.addCentreCrossGuides')" @click="addGuidePreset('center')">{{ $t('c_PXEditor.center') }}</button>
+                    <button class="cv-opt" :title="$t('c_PXEditor.addRuleOfThirdsGuides')" @click="addGuidePreset('thirds')">{{ $t('c_PXEditor.thirds') }}</button>
+                    <button class="cv-opt" :disabled="!guideCount" @click="clearGuides">{{ $t('c_PXEditor.clear') }}</button>
                   </div>
-                  <p class="cv-hint">Drag a line with the Select tool — drop it outside the board to remove.</p>
+                  <p class="cv-hint" v-html="$t('c_PXEditor.dragALineWithTheSelect')"/>
                 </div>
                 <div class="cv-field">
-                  <label class="cv-label">Guide color</label>
+                  <label class="cv-label">{{ $t('c_PXEditor.guideColor') }}</label>
                   <div class="cv-opts cols-2">
-                    <button class="cv-opt" :class="{ active: !guideColor }" @click="guideColor = ''">Auto</button>
+                    <button class="cv-opt" :class="{ active: !guideColor }" @click="guideColor = ''">{{ $t('common.auto') }}</button>
                     <label class="cv-opt cv-swatch" :class="{ active: !!guideColor }">
-                      <span class="desk-sw" :style="{ background: guideColor || '#38BDF8' }"/><span>Custom</span>
+                      <span class="desk-sw" :style="{ background: guideColor || '#38BDF8' }"/><span>{{ $t('c_PXEditor.custom') }}</span>
                       <input type="color" class="cv-swatch-input" :value="guideColor || '#38BDF8'" @input="guideColor = ($event.target as HTMLInputElement).value">
                     </label>
                   </div>
@@ -3630,13 +3633,13 @@ watch(
         </ui-dropdown-menu>
 
         <div class="toolbar-sep"/>
-        <ui-tooltip text="Agent — ask for a change in words">
+        <ui-tooltip :text="$t('c_PXEditor.agentAskForAChangeIn')">
           <button
               type="button"
               class="toolbar-btn"
               :class="{active: agentOpen}"
               :aria-pressed="agentOpen"
-              aria-label="Agent"
+              :aria-label="$t('common.agent')"
               @click="toggleAgent"
           >
             <span class="icon icon-auto-fix"/>
@@ -3645,54 +3648,54 @@ watch(
       </div>
       <div class="toolbar-main no-scrollbar">
       <div class="toolbar-group">
-        <ui-tooltip :text="`Undo (${modK}Z)`">
-          <button class="toolbar-btn" aria-label="Undo" :disabled="!store.canUndo" @click="doUndo()"><span class="icon icon-undo"/></button>
+        <ui-tooltip :text="`${$t('common.undo')} (${modK}Z)`">
+          <button class="toolbar-btn" :aria-label="$t('common.undo')" :disabled="!store.canUndo" @click="doUndo()"><span class="icon icon-undo"/></button>
         </ui-tooltip>
-        <ui-tooltip :text="`Redo (${modK}${shiftK}Z)`">
-          <button class="toolbar-btn" aria-label="Redo" :disabled="!store.canRedo" @click="doRedo()"><span class="icon icon-redo"/></button>
+        <ui-tooltip :text="`${$t('common.redo')} (${modK}${shiftK}Z)`">
+          <button class="toolbar-btn" :aria-label="$t('c_PXEditor.redo')" :disabled="!store.canRedo" @click="doRedo()"><span class="icon icon-redo"/></button>
         </ui-tooltip>
       </div>
       <div class="toolbar-sep"/>
       <div class="toolbar-group">
-        <ui-tooltip :text="`Zoom in (${modK}=)`">
-          <button class="toolbar-btn" aria-label="Zoom in" @click="zoomIn"><span class="icon icon-zoom-in"/></button>
+        <ui-tooltip :text="`${$t('common.zoomIn')} (${modK}=)`">
+          <button class="toolbar-btn" :aria-label="$t('common.zoomIn')" @click="zoomIn"><span class="icon icon-zoom-in"/></button>
         </ui-tooltip>
-        <ui-tooltip :text="`Zoom out (${modK}-)`">
-          <button class="toolbar-btn" aria-label="Zoom out" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
+        <ui-tooltip :text="`${$t('common.zoomOut')} (${modK}-)`">
+          <button class="toolbar-btn" :aria-label="$t('common.zoomOut')" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
         </ui-tooltip>
-        <ui-tooltip text="Fit all boards in view">
-          <button class="toolbar-btn" @click="fitAllBoards"><span class="fit-label">FIT</span></button>
+        <ui-tooltip :text="$t('c_PXEditor.fitAllBoardsInView')">
+          <button class="toolbar-btn" @click="fitAllBoards"><span class="fit-label">{{ $t('common.fit') }}</span></button>
         </ui-tooltip>
-        <ui-tooltip text="Zoom level — click for 100%">
-          <button class="toolbar-btn zoom-readout" aria-label="Reset zoom to 100%" @click="zoomTo100">{{ Math.round(zoom * 100) }}%</button>
+        <ui-tooltip :text="$t('c_PXEditor.zoomLevelClickFor100')">
+          <button class="toolbar-btn zoom-readout" :aria-label="$t('c_PXEditor.resetZoomTo100')" @click="zoomTo100">{{ Math.round(zoom * 100) }}%</button>
         </ui-tooltip>
       </div>
       <div class="toolbar-fs">
-        <ui-dropdown-menu class="fs-hide" position="right" label="Fullscreen">
-          <ui-tooltip text="Fullscreen">
-            <button class="toolbar-btn" aria-label="Fullscreen"><span class="icon icon-fullscreen"/></button>
+        <ui-dropdown-menu class="fs-hide" position="right" :label="$t('common.fullscreen')">
+          <ui-tooltip :text="$t('c_PXEditor.fullscreen')">
+            <button class="toolbar-btn" :aria-label="$t('c_PXEditor.fullscreen')"><span class="icon icon-fullscreen"/></button>
           </ui-tooltip>
           <template #menu>
             <div class="file-menu">
               <button class="file-menu-item" @click="enterOsFullscreen">
-                <span class="icon icon-fullscreen"/><span>Fullscreen</span>
+                <span class="icon icon-fullscreen"/><span>{{ $t('c_PXEditor.fullscreen') }}</span>
               </button>
               <button class="file-menu-item" @click="enterWindowFullscreen">
-                <span class="icon icon-window-maximize"/><span>Fullscreen in window</span>
+                <span class="icon icon-window-maximize"/><span>{{ $t('c_PXEditor.fullscreenInWindow') }}</span>
               </button>
             </div>
           </template>
         </ui-dropdown-menu>
-        <ui-tooltip class="fs-only" text="Exit fullscreen (Esc)">
-          <button class="toolbar-btn" aria-label="Exit fullscreen" @click="exitFullscreen"><span class="icon icon-fullscreen-exit"/></button>
+        <ui-tooltip class="fs-only" :text="$t('c_PXEditor.exitFullscreenEsc')">
+          <button class="toolbar-btn" :aria-label="$t('c_PXEditor.exitFullscreen')" @click="exitFullscreen"><span class="icon icon-fullscreen-exit"/></button>
         </ui-tooltip>
       </div>
       </div>
       <div class="toolbar-end">
-        <ui-tooltip text="Publish & share — your work autosaves as you draw">
-          <button class="publish-toolbar-btn tm-publish" aria-label="Publish and share" @click="openPublish">
+        <ui-tooltip :text="$t('c_PXEditor.publishShareYourWorkAutosavesAs')">
+          <button class="publish-toolbar-btn tm-publish" :aria-label="$t('c_PXEditor.publishAndShare')" @click="openPublish">
             <span class="icon icon-earth"/>
-            <span class="tm-publish-label">Publish</span>
+            <span class="tm-publish-label">{{ $t('c_PXEditor.publish') }}</span>
           </button>
         </ui-tooltip>
       </div>
@@ -3702,23 +3705,23 @@ watch(
 
       <Widget class="tool-rail">
         <div class="tools tools-rail no-scrollbar">
-          <ui-tooltip text="Brush (B)">
-            <Square aria-label="Brush" @click="store.setTool('brush')" :class="{ active: store.currentTool === 'brush' }">
+          <ui-tooltip :text="$t('c_PXEditor.brushB')">
+            <Square :aria-label="$t('c_PXEditor.brush')" @click="store.setTool('brush')" :class="{ active: store.currentTool === 'brush' }">
               <span class="icon icon-square"/>
             </Square>
           </ui-tooltip>
-          <ui-tooltip text="Iso line (L)">
-            <Square aria-label="Iso line" @click="store.setTool('iso-line')" :class="{ active: store.currentTool === 'iso-line' }">
+          <ui-tooltip :text="$t('c_PXEditor.isoLineL')">
+            <Square :aria-label="$t('c_PXEditor.isoLine')" @click="store.setTool('iso-line')" :class="{ active: store.currentTool === 'iso-line' }">
               <span class="icon icon-rhombus"/>
             </Square>
           </ui-tooltip>
-          <ui-tooltip text="Fill (G)">
-            <Square aria-label="Fill" @click="store.setTool('bucket')" :class="{ active: store.currentTool === 'bucket' }">
+          <ui-tooltip :text="$t('c_PXEditor.fillG')">
+            <Square :aria-label="$t('common.fill')" @click="store.setTool('bucket')" :class="{ active: store.currentTool === 'bucket' }">
               <span class="icon icon-bucket"/>
             </Square>
           </ui-tooltip>
-          <ui-tooltip text="Art brush (A) — stamp a tile or saved art">
-            <Square aria-label="Art brush" @click="store.setTool('stamp')" :class="{ active: store.currentTool === 'stamp' }">
+          <ui-tooltip :text="$t('c_PXEditor.artBrushAStampATile')">
+            <Square :aria-label="$t('c_PXEditor.artBrush')" @click="store.setTool('stamp')" :class="{ active: store.currentTool === 'stamp' }">
               <span class="icon icon-stamp"/>
             </Square>
           </ui-tooltip>
@@ -3726,7 +3729,7 @@ watch(
               v-if="store.currentTool === 'brush' || store.currentTool === 'eraser'"
               class="brush-sizes"
               role="group"
-              aria-label="Brush size"
+              :aria-label="$t('common.brushSize')"
           >
             <button
                 v-for="n in [1, 2, 3, 4, 5]"
@@ -3734,8 +3737,8 @@ watch(
                 type="button"
                 class="brush-size"
                 :class="{ active: store.brushSize === n }"
-                :title="`Brush size ${n}`"
-                :aria-label="`Brush size ${n}`"
+                :title="$t('common.brushSizeN', {n})"
+                :aria-label="$t('common.brushSizeN', {n})"
                 :aria-pressed="store.brushSize === n"
                 @click="store.setBrushSize(n)"
             >
@@ -3748,46 +3751,46 @@ watch(
 
           <div class="tools-sep"/>
 
-          <ui-tooltip text="Move (V) — hold Space to pan the view">
-            <Square aria-label="Move" @click="store.setTool('move')" :class="{ active: store.currentTool === 'move' }">
+          <ui-tooltip :text="$t('c_PXEditor.moveVHoldSpaceToPan')">
+            <Square :aria-label="$t('c_PXEditor.move')" @click="store.setTool('move')" :class="{ active: store.currentTool === 'move' }">
               <span class="icon icon-move"/>
             </Square>
           </ui-tooltip>
-          <ui-tooltip text="Select (M)">
-            <Square aria-label="Select" @click="toggleSelect()" :class="{ active: store.currentTool === 'select' }">
+          <ui-tooltip :text="$t('c_PXEditor.selectM')">
+            <Square :aria-label="$t('common.select')" @click="toggleSelect()" :class="{ active: store.currentTool === 'select' }">
               <span class="icon icon-select"/>
             </Square>
           </ui-tooltip>
-          <ui-tooltip text="Mirror drawing — horizontal (toggle)">
-            <Square aria-label="Mirror drawing horizontally" @click="store.toggleMirror('horizontal')" :class="{ active: store.mirrorHorizontal }">
+          <ui-tooltip :text="$t('c_PXEditor.mirrorDrawingHorizontalToggle')">
+            <Square :aria-label="$t('c_PXEditor.mirrorDrawingHorizontally')" @click="store.toggleMirror('horizontal')" :class="{ active: store.mirrorHorizontal }">
               <span class="icon icon-reflect-horizontal"/>
             </Square>
           </ui-tooltip>
-          <ui-tooltip text="Mirror drawing — vertical (toggle)">
-            <Square aria-label="Mirror drawing vertically" @click="store.toggleMirror('vertical')" :class="{ active: store.mirrorVertical }">
+          <ui-tooltip :text="$t('c_PXEditor.mirrorDrawingVerticalToggle')">
+            <Square :aria-label="$t('c_PXEditor.mirrorDrawingVertically')" @click="store.toggleMirror('vertical')" :class="{ active: store.mirrorVertical }">
               <span class="icon icon-reflect-vertical"/>
             </Square>
           </ui-tooltip>
 
           <div class="tools-sep"/>
 
-          <ui-tooltip text="Flip horizontally — layer, or selection if active">
-            <Square aria-label="Flip horizontally" @click="store.flipSelectionHorizontal">
+          <ui-tooltip :text="$t('c_PXEditor.flipHorizontallyLayerOrSelectionIf')">
+            <Square :aria-label="$t('c_PXEditor.flipHorizontally')" @click="store.flipSelectionHorizontal">
               <span class="icon icon-flip-h"/>
             </Square>
           </ui-tooltip>
-          <ui-tooltip text="Flip vertically — layer, or selection if active">
-            <Square aria-label="Flip vertically" @click="store.flipSelectionVertical">
+          <ui-tooltip :text="$t('c_PXEditor.flipVerticallyLayerOrSelectionIf')">
+            <Square :aria-label="$t('c_PXEditor.flipVertically')" @click="store.flipSelectionVertical">
               <span class="icon icon-flip-v"/>
             </Square>
           </ui-tooltip>
-          <ui-tooltip v-if="store.selectionState.bounds.active" text="Merge pixels — the selection becomes 1 pixel and the whole canvas re-tiles in blocks of that size, aligned to it">
-            <Square aria-label="Merge pixels by selection block" @click="onMergeBlock">
+          <ui-tooltip v-if="store.selectionState.bounds.active" :text="$t('c_PXEditor.mergePixelsTheSelectionBecomes1')">
+            <Square :aria-label="$t('c_PXEditor.mergePixelsBySelectionBlock')" @click="onMergeBlock">
               <span class="icon icon-arrow-collapse-all"/>
             </Square>
           </ui-tooltip>
-          <ui-tooltip v-if="selectedLayers.size >= 2" :text="`Merge ${selectedLayers.size} selected layers into one`">
-            <Square aria-label="Merge selected layers" @click="onMergeLayers">
+          <ui-tooltip v-if="selectedLayers.size >= 2" :text="$t('c_PXEditor.mergeNSelectedLayers', {count: selectedLayers.size})">
+            <Square :aria-label="$t('c_PXEditor.mergeSelectedLayers')" @click="onMergeLayers">
               <span class="icon icon-merge"/>
             </Square>
           </ui-tooltip>
@@ -3796,10 +3799,10 @@ watch(
             <div class="tools-sep"/>
             <Square
                 :class="{ active: store.allFrames }"
-                title="All-frames mode — paint, erase, fill and move affect every frame at once"
+                :title="$t('c_PXEditor.allFramesModePaintEraseFill')"
                 @click="store.allFrames = !store.allFrames"
             >
-              <span class="move-all-label">ALL</span>
+              <span class="move-all-label">{{ $t('c_PXEditor.all') }}</span>
             </Square>
           </template>
         </div>
@@ -3848,7 +3851,7 @@ watch(
           </Square>
         </Widget>
 
-        <Widget title="Palette">
+        <Widget :title="$t('common.palette')">
           <template #ctl>
             <div class="widget-ctl-group">
               <span v-if="store.currentTool === 'picker'" class="pick-readout">
@@ -3856,24 +3859,24 @@ watch(
                   <span class="pick-swatch" :style="{ background: editorData.colors[store.pickedColorIndex] }"/>
                   <span class="pick-text">#{{ store.pickedColorIndex }} · {{ editorData.colors[store.pickedColorIndex] }}</span>
                 </template>
-                <span v-else class="pick-text pick-hint">Tap a pixel…</span>
+                <span v-else class="pick-text pick-hint">{{ $t('c_PXEditor.tapAPixel') }}</span>
               </span>
-              <button class="widget-ctl-btn" @click="showPalettePicker = true" title="Palette library — browse, apply, save, extract from image">
+              <button class="widget-ctl-btn" @click="showPalettePicker = true" :title="$t('c_PXEditor.paletteLibraryBrowseApplySaveExtra')">
                 <span class="icon icon-grid"/>
-                <span>Library</span>
+                <span>{{ $t('c_PXEditor.library') }}</span>
               </button>
-              <button class="widget-ctl-btn" @click="paletteRef?.addColor()" title="Add color">
+              <button class="widget-ctl-btn" @click="paletteRef?.addColor()" :title="$t('c_PXEditor.addColor')">
                 <span class="icon icon-plus"/>
-                <span>Add</span>
+                <span>{{ $t('common.add') }}</span>
               </button>
               <button
                   class="widget-ctl-btn"
                   :class="{active: paletteModify}"
                   @click="paletteRef?.toggleModify()"
-                  title="Toggle edit mode"
+                  :title="$t('c_PXEditor.toggleEditMode')"
               >
                 <span class="icon icon-adjust"/>
-                <span>Edit</span>
+                <span>{{ $t('common.edit') }}</span>
               </button>
             </div>
           </template>
@@ -3882,9 +3885,9 @@ watch(
       </div>
 
       <div class="editor-sidebar">
-        <Widget title="Preview" class="preview-widget">
+        <Widget :title="$t('common.preview')" class="preview-widget">
           <template #ctl>
-            <a v-if="editorData.id_string" class="widget-ctl-btn" title="Open public page" target="_blank" :href="`/art/${editorData.id_string}`">
+            <a v-if="editorData.id_string" class="widget-ctl-btn" :title="$t('common.openPublicPage')" target="_blank" :href="`/art/${editorData.id_string}`">
               <span class="icon icon-link"/>
             </a>
           </template>
@@ -3907,19 +3910,19 @@ watch(
                 @tileset-change="store.setArtTileset($event)"
             />
 
-            <Widget title="Layers" class="layers">
+            <Widget :title="$t('common.layers')" class="layers">
               <template #ctl>
                 <div class="widget-ctl-group">
                   <button
                       class="widget-ctl-btn"
                       :class="{ active: multiSelectLayers }"
-                      title="Select multiple layers — or hold Shift and click"
-                      aria-label="Select multiple layers"
+                      :title="$t('c_PXEditor.selectMultipleLayersOrHoldShift')"
+                      :aria-label="$t('c_PXEditor.selectMultipleLayers')"
                       @click="toggleLayerMultiSelect"
                   >
                     <span class="icon icon-check"/>
                   </button>
-                  <button class="widget-ctl-btn" @click="store.addLayer" title="Add new layer" aria-label="Add new layer">
+                  <button class="widget-ctl-btn" @click="store.addLayer" :title="$t('c_PXEditor.addNewLayer')" :aria-label="$t('c_PXEditor.addNewLayer')">
                     <span class="icon icon-plus"/>
                   </button>
                 </div>
@@ -3938,7 +3941,7 @@ watch(
               <span v-else class="layer-num" aria-hidden="true">{{ visibleLayers.length - i }}</span>
               <EditableText
                   v-model="editorData.layers[row.index]!.name"
-                  placeholder="Untitled layer"
+                  :placeholder="$t('c_PXEditor.untitledLayer')"
                   class="layer-name"
                   @changed="store.saveState()"
               />
@@ -3946,8 +3949,8 @@ watch(
                   v-if="visibleLayers.length > 1"
                   @click.stop="store.deleteLayer(row.index)"
                   class="layer-del"
-                  title="Delete layer"
-                  aria-label="Delete layer"
+                  :title="$t('common.deleteLayer')"
+                  :aria-label="$t('common.deleteLayer')"
               >
                 <span class="icon icon-trash"/>
               </button>
@@ -3967,34 +3970,34 @@ watch(
     <UiModal v-if="showPublishModal" @close="showPublishModal = false">
 
           <template v-if="publishStep === 'edit'">
-            <h3 class="publish-heading">Publish your pixel art</h3>
+            <h3 class="publish-heading">{{ $t('c_PXEditor.publishYourPixelArt') }}</h3>
             <div class="publish-form">
               <div>
-                <label class="publish-label">Title</label>
+                <label class="publish-label">{{ $t('common.title') }}</label>
                 <input
                     type="text"
                     v-model="editorData.name"
-                    placeholder="What does it show?"
+                    :placeholder="$t('c_PXEditor.whatDoesItShow')"
                     maxlength="60"
                     class="publish-input"
                 />
               </div>
               <div>
-                <label class="publish-label">Description</label>
+                <label class="publish-label">{{ $t('common.description') }}</label>
                 <textarea
                     v-model="editorData.desc"
-                    placeholder="A sentence or two about it..."
+                    :placeholder="$t('c_PXEditor.aSentenceOrTwoAboutIt')"
                     maxlength="300"
                     rows="2"
                     class="publish-input publish-textarea"
                 />
               </div>
               <div>
-                <label class="publish-label">Tags</label>
-                <TagInput v-model="editorData.tags" placeholder="Add tags..."/>
+                <label class="publish-label">{{ $t('common.tags') }}</label>
+                <TagInput v-model="editorData.tags" :placeholder="$t('c_PXEditor.addTags')"/>
               </div>
               <div>
-                <label class="publish-label">Slug</label>
+                <label class="publish-label">{{ $t('common.slug') }}</label>
                 <input
                     type="text"
                     v-model="editorData.id_string"
@@ -4007,7 +4010,7 @@ watch(
                   v-if="aiMeta?.enabled"
                   class="publish-ai-row"
                   :disabled="aiBusy"
-                  title="AI writes the title, description, tags and a matching URL slug from the artwork"
+                  :title="$t('c_PXEditor.aiWritesTheTitleDescriptionTags')"
                   @click="genMetaWithAI"
               >
                 <span class="icon icon-auto-fix"/>
@@ -4016,7 +4019,7 @@ watch(
               </button>
             </div>
             <div class="publish-status-row">
-              <label class="publish-label" for="publish-status">Status</label>
+              <label class="publish-label" for="publish-status">{{ $t('common.status') }}</label>
               <select id="publish-status" v-model="publishStatus" class="publish-input">
                 <option v-for="s in PUBLISH_STATUSES" :key="s.value" :value="s.value">{{ s.label }}</option>
               </select>
@@ -4042,29 +4045,29 @@ watch(
               <div class="social-grid">
                 <a :href="socialUrls.twitter" target="_blank" rel="noopener noreferrer" class="social-btn">
                   <span class="icon icon-x"/>
-                  <span>Twitter</span>
+                  <span>{{ $t('common.twitter') }}</span>
                 </a>
                 <a :href="socialUrls.reddit" target="_blank" rel="noopener noreferrer" class="social-btn">
                   <span class="icon icon-reddit"/>
-                  <span>Reddit</span>
+                  <span>{{ $t('common.reddit') }}</span>
                 </a>
                 <a :href="socialUrls.pinterest" target="_blank" rel="noopener noreferrer" class="social-btn">
                   <span class="icon icon-pinterest"/>
-                  <span>Pinterest</span>
+                  <span>{{ $t('common.pinterest') }}</span>
                 </a>
                 <button class="social-btn" @click="exportFile('png')">
                   <span class="icon icon-download"/>
-                  <span>Download</span>
+                  <span>{{ $t('common.download') }}</span>
                 </button>
               </div>
-              <nuxt-link
+              <NuxtLinkLocale
                   :to="`/art/${editorData.id_string}`"
                   class="btn primary wide"
               >
-                View Page
-              </nuxt-link>
+                {{ $t('c_PXEditor.viewPage') }}
+              </NuxtLinkLocale>
               <button class="share-dismiss" @click="showPublishModal = false">
-                Continue Editing
+                {{ $t('c_PXEditor.continueEditing') }}
               </button>
             </div>
           </template>
@@ -4073,13 +4076,13 @@ watch(
     <UiModal
         v-if="showOnboarding"
         class="onb-modal"
-        title="New pixel art"
-        sub="Set up your first board."
+        :title="$t('c_PXEditor.newPixelArt')"
+        :sub="$t('c_PXEditor.setUpYourFirstBoard')"
         @close="skipOnboarding"
     >
       <div class="onb-body">
         <div class="onb-field">
-          <label class="onb-label">Board size</label>
+          <label class="onb-label">{{ $t('c_PXEditor.boardSize') }}</label>
           <div class="onb-chips">
             <button
                 v-for="s in SIZE_PRESETS"
@@ -4092,7 +4095,7 @@ watch(
         </div>
 
         <div class="onb-field">
-          <label class="onb-label">Colors</label>
+          <label class="onb-label">{{ $t('common.colors') }}</label>
           <div class="onb-chips">
             <button
                 v-for="c in COLOR_COUNTS"
@@ -4113,14 +4116,14 @@ watch(
         </div>
 
         <div class="onb-field">
-          <label class="onb-label">Reference image (optional)</label>
+          <label class="onb-label">{{ $t('c_PXEditor.referenceImageOptional') }}</label>
           <div class="onb-ref-row">
             <button class="onb-ref-btn" @click="pickOnbReference">
               <span class="icon icon-image"/>
-              <span>{{ onbRefImage ? 'Replace' : 'Add image' }}</span>
+              <span>{{ onbRefImage ? $t('common.replace') : $t('c_PXEditor.addImage') }}</span>
             </button>
             <span v-if="onbRefImage" class="onb-ref-status">
-              <span class="icon icon-check"/> Loaded
+              <span class="icon icon-check"/> {{ $t('c_PXEditor.loaded') }}
             </span>
             <button v-if="onbRefImage" class="onb-ref-clear" @click="onbRefImage = null">
               <span class="icon icon-trash"/>
@@ -4129,21 +4132,21 @@ watch(
         </div>
 
         <ul class="onb-tips">
-          <li><span class="icon icon-square"/>Draw empty canvas to add a board</li>
-          <li><span class="icon icon-dots"/>{{ coarsePointer ? 'Tap the ⋮ on a board for options' : 'Right-click a board for options' }}</li>
-          <li><span class="icon icon-fullscreen"/>Fullscreen: top-right of the toolbar</li>
+          <li><span class="icon icon-square"/>{{ $t('c_PXEditor.drawEmptyCanvasToAddA') }}</li>
+          <li><span class="icon icon-dots"/>{{ coarsePointer ? $t('c_PXEditor.tapTheDotsForBoardOptions') : $t('c_PXEditor.rightClickABoardForOptions') }}</li>
+          <li><span class="icon icon-fullscreen"/>{{ $t('c_PXEditor.fullscreenTopRightOfTheToolbar') }}</li>
         </ul>
 
-        <button class="btn primary block" @click="finishOnboarding">Start drawing</button>
+        <button class="btn primary block" @click="finishOnboarding">{{ $t('common.startDrawing') }}</button>
       </div>
     </UiModal>
 
     <UiModal v-if="showPngModal" class="png-modal" @close="showPngModal = false">
-          <h3 class="publish-heading">Download PNG</h3>
-          <p class="publish-sub">Pick an export scale — bigger scale = sharper, larger file.</p>
+          <h3 class="publish-heading">{{ $t('common.downloadPng') }}</h3>
+          <p class="publish-sub" v-html="$t('c_PXEditor.pickAnExportScaleBiggerScale')"/>
 
           <div class="onb-field">
-            <label class="onb-label">Scale</label>
+            <label class="onb-label">{{ $t('c_PXEditor.scale') }}</label>
             <div class="onb-chips">
               <button
                   v-for="s in PNG_SCALES"
@@ -4156,30 +4159,30 @@ watch(
           </div>
 
           <p class="png-dims">
-            Output:
+            {{ $t('c_PXEditor.output') }}
             <strong>{{ editorData.width * pngScale }}×{{ editorData.height * pngScale }}px</strong>
             <span class="png-dims-src">(from {{ editorData.width }}×{{ editorData.height }})</span>
           </p>
 
           <button class="btn primary wide" @click="exportPng(pngScale)">
             <span class="icon icon-download"/>
-            <span>Download PNG</span>
+            <span>{{ $t('common.downloadPng') }}</span>
           </button>
-          <button class="share-dismiss" @click="showPngModal = false">Cancel</button>
+          <button class="share-dismiss" @click="showPngModal = false">{{ $t('common.cancel') }}</button>
       </UiModal>
 
     <UiModal v-if="showImportModal" class="png-modal" @close="showImportModal = false">
       <h3 class="publish-heading">Import {{ importPicked.length }} file{{ importPicked.length > 1 ? 's' : '' }}</h3>
-      <p class="publish-sub">Choose how to read the pixels and where they go.</p>
+      <p class="publish-sub" v-html="$t('c_PXEditor.chooseHowToReadThePixels')"/>
 
       <div class="onb-field">
-        <label class="onb-label">Pixels</label>
+        <label class="onb-label">{{ $t('common.pixels') }}</label>
         <div class="onb-chips">
           <button class="onb-chip" :class="{ active: importProcess === 'filter' }" @click="importProcess = 'filter'">
-            Pixel filter
+            {{ $t('c_PXEditor.pixelFilter') }}
           </button>
           <button class="onb-chip" :class="{ active: importProcess === 'original' }" @click="importProcess = 'original'">
-            Original 1:1
+            {{ $t('c_PXEditor.original11') }}
           </button>
         </div>
         <p class="png-dims">
@@ -4190,16 +4193,16 @@ watch(
       </div>
 
       <div class="onb-field">
-        <label class="onb-label">Add to</label>
+        <label class="onb-label">{{ $t('c_PXEditor.addTo') }}</label>
         <div class="onb-chips">
           <button v-if="importPicked.length === 1" class="onb-chip" :class="{ active: importDest === 'replace' }" @click="importDest = 'replace'">
-            Current canvas
+            {{ $t('c_PXEditor.currentCanvas') }}
           </button>
           <button class="onb-chip" :class="{ active: importDest === 'boards' }" @click="importDest = 'boards'">
             {{ importPicked.length > 1 ? 'Boards' : 'New board' }}
           </button>
           <button class="onb-chip" :class="{ active: importDest === 'frames' }" @click="importDest = 'frames'">
-            Animation frames
+            {{ $t('common.animationFrames') }}
           </button>
         </div>
         <p class="png-dims">
@@ -4215,25 +4218,22 @@ watch(
         <span class="icon icon-upload"/>
         <span>{{ importBusy ? 'Importing…' : 'Import' }}</span>
       </button>
-      <button class="share-dismiss" @click="showImportModal = false">Cancel</button>
+      <button class="share-dismiss" @click="showImportModal = false">{{ $t('common.cancel') }}</button>
     </UiModal>
 
     <UiModal v-if="showDeleteConfirm" class="del-modal" @close="showDeleteConfirm = false">
-          <h3 class="publish-heading">Delete this art?</h3>
-          <p class="publish-sub">
-            This artwork will be removed. If the tileset strip is showing sibling tiles the editor opens one; otherwise the canvas is cleared for a new one.
-            This can't be undone.
-          </p>
+          <h3 class="publish-heading">{{ $t('c_PXEditor.deleteThisArt2') }}</h3>
+          <p class="publish-sub" v-html="$t('c_PXEditor.thisArtworkWillBeRemovedIf')"/>
           <button class="btn block del-confirm-btn" :disabled="deleting" @click="destroyCurrent">
             <span class="icon icon-trash"/>
             <span>{{ deleting ? 'Deleting…' : 'Delete' }}</span>
           </button>
-          <button class="share-dismiss" @click="showDeleteConfirm = false">Cancel</button>
+          <button class="share-dismiss" @click="showDeleteConfirm = false">{{ $t('common.cancel') }}</button>
       </UiModal>
 
     <EditorLoadBrowser
         v-if="showArtPicker"
-        title="Load board"
+        :title="$t('c_PXEditor.loadBoard2')"
         :items="browseBoards"
         :loading="auth.isLogged && pickerLoading"
         filterable
@@ -4258,22 +4258,22 @@ watch(
             @pointerdown.stop
         >
           <button class="file-menu-item file-menu-danger" @click="hideBoard(boardMenu.id)">
-            <span class="icon icon-eye-cross"/><span>Hide board</span>
+            <span class="icon icon-eye-cross"/><span>{{ $t('c_PXEditor.hideBoard') }}</span>
           </button>
         </div>
       </div>
     </Teleport>
 
     <UiModal v-if="showLoginPrompt" @close="showLoginPrompt = false">
-          <h3 class="login-heading">Login to share</h3>
-          <p class="login-msg">Sign in to publish and share your pixel art. Your local work will be synced to the cloud.</p>
+          <h3 class="login-heading">{{ $t('c_PXEditor.loginToShare') }}</h3>
+          <p class="login-msg" v-html="$t('c_PXEditor.signInToPublishAndShare')"/>
           <div class="share-stack">
             <a :href="googleAuthUrl" class="btn primary wide">
               <span class="icon icon-social"/>
-              <span>Login with Google</span>
+              <span>{{ $t('c_PXEditor.loginWithGoogle') }}</span>
             </a>
             <button class="share-dismiss" @click="showLoginPrompt = false">
-              Cancel
+              {{ $t('common.cancel') }}
             </button>
           </div>
       </UiModal>

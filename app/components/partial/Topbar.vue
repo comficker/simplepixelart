@@ -9,28 +9,33 @@ const CRUMB_TARGET: Record<string, string> = {
   art: '/arts',
 }
 
+const {t, locales} = useI18n()
+const LOCALE_SEGMENTS = new Set((locales.value as {code: string}[]).map(l => l.code))
+
 const LABELS: Record<string, string> = {
-  arts: 'Discovery', art: 'Discovery', work: 'Your work', editor: 'Editor',
-  converter: 'Converter', generator: 'Generator',
-  tilesets: 'Tilesets', slicer: 'Slicer', tilemaps: 'Tilemaps',
-  palettes: 'Palettes', challenges: 'Challenges', creator: 'Creators', settings: 'Settings',
-  collections: 'Collections', missions: 'Missions', tag: 'Tags',
-  'easy-pixel-art': 'Easy pixel art',
-  'color-palette-from-image': 'Extract', 'color-palette-from-color': 'By color',
+  arts: 'nav.discovery', art: 'nav.discovery', work: 'nav.yourWork', editor: 'crumb.editor',
+  converter: 'nav.converter', generator: 'nav.generator',
+  tilesets: 'crumb.tilesets', slicer: 'nav.slicer', tilemaps: 'crumb.tilemaps',
+  palettes: 'nav.palettes', challenges: 'nav.challenges', creator: 'crumb.creators', settings: 'common.settings',
+  collections: 'crumb.collections', missions: 'crumb.missions', tag: 'common.tags',
+  'easy-pixel-art': 'crumb.easyPixelArt',
+  'color-palette-from-image': 'nav.extract', 'color-palette-from-color': 'crumb.byColor',
 }
 
 const config = useRuntimeConfig()
 const siteUrl = (config.public.siteUrl as string) || 'https://simplepixelart.com'
 
 const crumbs = computed(() => {
-  const parts = route.path.split('/').filter(Boolean)
+  // The locale prefix is not a page, so /ja/editor should read "Editor",
+  // not "Ja > Editor".
+  const parts = route.path.split('/').filter(Boolean).filter((seg, i) => !(i === 0 && LOCALE_SEGMENTS.has(seg)))
   return parts.map((seg, i) => {
     const own = '/' + parts.slice(0, i + 1).join('/')
     const to = (i < parts.length - 1 && CRUMB_TARGET[seg]) || own
     return {
       to,
       linked: routePaths.has(to),
-      label: LABELS[seg] || decodeURIComponent(seg).replace(/[-_]+/g, ' ').replace(/^\w/, c => c.toUpperCase()),
+      label: LABELS[seg] ? t(LABELS[seg]) : decodeURIComponent(seg).replace(/[-_]+/g, ' ').replace(/^\w/, c => c.toUpperCase()),
     }
   })
 })
@@ -57,11 +62,11 @@ useHead({
 
 <template>
   <div class="dash-top">
-    <nav class="dash-crumbs" aria-label="Breadcrumb">
-      <nuxt-link to="/" class="dash-crumb">Home</nuxt-link>
+    <nav class="dash-crumbs" :aria-label="$t('c_Topbar.breadcrumb')">
+      <NuxtLinkLocale to="/" class="dash-crumb">{{ $t('common.home') }}</NuxtLinkLocale>
       <template v-for="(c, i) in crumbs" :key="c.to">
         <span class="icon icon-chevron-right dash-crumb-sep" aria-hidden="true"/>
-        <nuxt-link v-if="i < crumbs.length - 1 && c.linked" :to="c.to" class="dash-crumb">{{ c.label }}</nuxt-link>
+        <NuxtLinkLocale v-if="i < crumbs.length - 1 && c.linked" :to="c.to" class="dash-crumb">{{ c.label }}</NuxtLinkLocale>
         <span v-else class="dash-crumb" :class="{'is-current': i === crumbs.length - 1}" :aria-current="i === crumbs.length - 1 ? 'page' : undefined">{{ c.label }}</span>
       </template>
     </nav>
