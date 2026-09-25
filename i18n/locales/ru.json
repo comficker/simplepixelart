@@ -358,7 +358,8 @@
     "sliceASpritesheetPngIntoAnimation": "Нарезает PNG спрайт-листа на кадры анимации."
   },
   "c_SubmitModal": {
-    "submitAnArtToThisChallenge": "Отправить работу на этот челлендж"
+    "submitAnArtToThisChallenge": "Отправить работу на этот челлендж",
+    "youHaveNoSavedArts": "Сохранённых работ пока нет — сначала нарисуйте одну."
   },
   "c_TagInput": {
     "removeTag": "Убрать тег"
@@ -408,7 +409,9 @@
   },
   "c_ToolMoved": {
     "takingYouThereNow": ". Переносим вас туда…",
-    "thisToolNowLivesAt": "Этот инструмент теперь здесь"
+    "theXHasMovedTo": "{name} переехал на {to}.",
+    "thisToolNowLivesAt": "Этот инструмент теперь здесь",
+    "xHasMoved": "{name} переехал"
   },
   "c_ToolPaths": {
     "pixelArtTools": "Инструменты пиксель-арта"
@@ -665,9 +668,11 @@
     "whPixelArt": "Пиксель-арт {w}×{h}"
   },
   "p_arts": {
+    "browseThousandsOfFreePixelArt": "Тысячи бесплатных работ в пиксель-арте: спрайты, 8- и 16-битные дизайны, персонажи и иконки. Любую можно переделать в редакторе или скачать для игры, NFT-коллекции или своего проекта.",
     "pixelArtGallery": "Галерея пиксель-арта"
   },
   "p_arts_id_string": {
+    "browseXPixelArtCreations": "Пиксель-арт по теме «{tag}»: спрайты, персонажи и иконки в 8- и 16-битном стиле. Любую работу можно переделать в редакторе или скачать для игры, NFT-коллекции или своего проекта.",
     "xPixelArt": "Пиксель-арт: {x}"
   },
   "p_auth_callback": {
@@ -1040,6 +1045,7 @@
     "writesTitlesDescriptionsAndTagsFor": "Пишет заголовки, описания и теги к вашим работам при публикации."
   },
   "p_palettes": {
+    "browseFilterAndApplyReadyMade": "Просматривайте, фильтруйте и применяйте готовые палитры — или соберите свою.",
     "colorPalettes": "Цветовые палитры"
   },
   "p_palettes_color-palette-from-color": {
@@ -1206,6 +1212,7 @@
     "newWorld": "Новый мир",
     "noArtFoundTryAnotherSearch": "Ничего не найдено — попробуйте другой запрос.",
     "noInstallAndNoSignupTo": ". Начать можно без установки и регистрации — карта сохраняется в коллекцию или прямо в браузере.",
+    "noTilemapsYet": "Тайлмапов пока нет — нарисуйте первый.",
     "openThisWorldSPublicPage": "Открыть публичную страницу этого мира",
     "orAnyPieceFromThe": "или любой работой из",
     "orUseSearchAbove": "или воспользуйтесь поиском выше.",
@@ -1231,6 +1238,7 @@
     "tiledTmjTilesetPngsLoadsIn": ".tmj Tiled + PNG тайлсета — открывается в Phaser, Tiled, Godot (через импортёр) и Unity",
     "tilemap": "Тайлмап",
     "tilemapEditor": "Редактор тайлмапов",
+    "tilemapEditor2": "Редактор тайлмапов",
     "tilesetEditor": "редактор тайлсетов",
     "turnsPixelArtIntoMapsLay": "превращает пиксель-арт в карты. Кладите тайлы на плоскую",
     "undoZ": "Отменить (⌘Z)",
@@ -1322,6 +1330,7 @@
     "nTiles": "Тайлов: {count}",
     "noTilesYet": "Тайлов пока нет.",
     "noTilesetOpen": "Тайлсет не открыт",
+    "noTilesetsYet": "Тайлсетов пока нет — создайте первый.",
     "nothingFound": "Ничего не найдено.",
     "onlyTheTopNRowsOf": "Применяются только верхние N строк графики кромки (0 — вся графика)",
     "openPublicPage": "Открыть публичную страницу",
@@ -1487,6 +1496,7 @@
     "deleteNSelectedItems": "Удалить выбранных: {count}",
     "deselectAll": "Снять выделение",
     "draft": "Черновик",
+    "everythingYouHaveMade": "Всё, что вы сделали: работы, коллекции и тайлсеты.",
     "exitSelectMode": "Выйти из режима выбора",
     "more": "Ещё",
     "nameAZ": "Название А–Я",

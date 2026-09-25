@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const {t} = useI18n()
 import type {APIResponse, ResponseSharedPage, SharedPage, TagSchema} from "~/types";
 
 const route = useRoute()
@@ -66,7 +67,7 @@ const filteredRelated = computed(() =>
 )
 
 const fallbackDesc = computed(() =>
-    `Browse ${tagTitle.value.toLowerCase()} pixel art creations — sprites, characters and icons in 8-bit and 16-bit style. Remix any piece in the editor or download for your game, NFT, or project.`,
+    t('p_arts_id_string.browseXPixelArtCreations', {tag: tagTitle.value.toLowerCase()}),
 )
 
 const canonicalUrl = computed(() => {

@@ -669,7 +669,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <BrowseLayout class="work-page" :title="$t('p_work.yourWork')" desc="Everything you have made — artworks, collections and tilesets.">
+  <BrowseLayout class="work-page" :title="$t('p_work.yourWork')" :desc="$t('p_work.everythingYouHaveMade')">
     <template #actions>
       <NuxtLinkLocale v-if="tab === 'artworks'" to="/editor?new=true" class="btn primary">
         <span class="icon icon-plus"/><span>{{ $t('p_work.newArtwork') }}</span>

@@ -358,7 +358,8 @@
     "sliceASpritesheetPngIntoAnimation": "스프라이트 시트 PNG를 애니메이션 프레임으로 자릅니다."
   },
   "c_SubmitModal": {
-    "submitAnArtToThisChallenge": "이 챌린지에 작품 제출"
+    "submitAnArtToThisChallenge": "이 챌린지에 작품 제출",
+    "youHaveNoSavedArts": "저장된 작품이 아직 없습니다. 먼저 하나 그려 보세요."
   },
   "c_TagInput": {
     "removeTag": "태그 제거"
@@ -408,7 +409,9 @@
   },
   "c_ToolMoved": {
     "takingYouThereNow": ". 지금 이동합니다…",
-    "thisToolNowLivesAt": "이 도구는 이제 여기에 있습니다"
+    "theXHasMovedTo": "{name}의 주소가 {to} 로 바뀌었습니다.",
+    "thisToolNowLivesAt": "이 도구는 이제 여기에 있습니다",
+    "xHasMoved": "{name}의 주소가 바뀌었습니다"
   },
   "c_ToolPaths": {
     "pixelArtTools": "픽셀 아트 도구"
@@ -665,9 +668,11 @@
     "whPixelArt": "{w}×{h} 픽셀 아트"
   },
   "p_arts": {
+    "browseThousandsOfFreePixelArt": "수천 점의 무료 픽셀 아트를 둘러보세요. 스프라이트, 8비트·16비트 디자인, 캐릭터, 아이콘까지. 어떤 작품이든 편집기에서 리믹스하거나 게임·NFT·개인 프로젝트에 쓰도록 내려받을 수 있습니다.",
     "pixelArtGallery": "픽셀 아트 갤러리"
   },
   "p_arts_id_string": {
+    "browseXPixelArtCreations": "{tag} 픽셀 아트 작품을 둘러보세요. 8비트·16비트 풍의 스프라이트, 캐릭터, 아이콘까지. 어떤 작품이든 편집기에서 리믹스하거나 게임·NFT·개인 프로젝트에 쓰도록 내려받을 수 있습니다.",
     "xPixelArt": "{x} 픽셀 아트"
   },
   "p_auth_callback": {
@@ -1040,6 +1045,7 @@
     "writesTitlesDescriptionsAndTagsFor": "작품을 게시할 때 제목·설명·태그를 대신 써 줍니다."
   },
   "p_palettes": {
+    "browseFilterAndApplyReadyMade": "완성된 팔레트를 둘러보고, 걸러내고, 바로 적용하세요. 직접 만들 수도 있습니다.",
     "colorPalettes": "색상 팔레트"
   },
   "p_palettes_color-palette-from-color": {
@@ -1206,6 +1212,7 @@
     "newWorld": "새 월드",
     "noArtFoundTryAnotherSearch": "작품을 찾지 못했습니다 — 다른 검색어를 써보세요.",
     "noInstallAndNoSignupTo": "의 어떤 작품으로든 칠하세요. 설치도 가입도 없이 시작할 수 있고, 지도는 컬렉션이나 이 브라우저에 그대로 저장됩니다.",
+    "noTilemapsYet": "타일맵이 아직 없습니다. 하나 그려서 시작하세요.",
     "openThisWorldSPublicPage": "이 월드의 공개 페이지 열기",
     "orAnyPieceFromThe": "이나",
     "orUseSearchAbove": "에서 추가하거나 위의 검색을 쓰세요.",
@@ -1231,6 +1238,7 @@
     "tiledTmjTilesetPngsLoadsIn": "Tiled의 .tmj + 타일셋 PNG — Phaser, Tiled, Godot（임포터 경유）, Unity에서 열립니다",
     "tilemap": "타일맵",
     "tilemapEditor": "타일맵 편집기",
+    "tilemapEditor2": "타일맵 편집기",
     "tilesetEditor": "타일셋 편집기",
     "turnsPixelArtIntoMapsLay": "는 픽셀 아트를 지도로 바꿉니다. 평평한",
     "undoZ": "실행 취소（⌘Z）",
@@ -1322,6 +1330,7 @@
     "nTiles": "타일 {count}개",
     "noTilesYet": "아직 타일이 없습니다.",
     "noTilesetOpen": "열린 타일셋이 없습니다",
+    "noTilesetsYet": "타일셋이 아직 없습니다. 하나 만들어서 시작하세요.",
     "nothingFound": "찾은 것이 없습니다.",
     "onlyTheTopNRowsOf": "가장자리 아트의 위쪽 N줄만 적용합니다（0이면 전체）",
     "openPublicPage": "공개 페이지 열기",
@@ -1487,6 +1496,7 @@
     "deleteNSelectedItems": "선택한 {count}개 삭제",
     "deselectAll": "선택 해제",
     "draft": "초안",
+    "everythingYouHaveMade": "당신이 만든 모든 것 — 작품, 컬렉션, 타일셋.",
     "exitSelectMode": "선택 모드 종료",
     "more": "더 보기",
     "nameAZ": "이름 A–Z",

@@ -358,7 +358,8 @@
     "sliceASpritesheetPngIntoAnimation": "Divide um PNG de spritesheet em quadros de animação."
   },
   "c_SubmitModal": {
-    "submitAnArtToThisChallenge": "Envie uma obra para este desafio"
+    "submitAnArtToThisChallenge": "Envie uma obra para este desafio",
+    "youHaveNoSavedArts": "Você ainda não tem obras salvas — desenhe uma primeiro."
   },
   "c_TagInput": {
     "removeTag": "Remover a tag"
@@ -408,7 +409,9 @@
   },
   "c_ToolMoved": {
     "takingYouThereNow": ". Levando você até lá…",
-    "thisToolNowLivesAt": "Esta ferramenta agora fica em"
+    "theXHasMovedTo": "{name} mudou para {to}.",
+    "thisToolNowLivesAt": "Esta ferramenta agora fica em",
+    "xHasMoved": "{name} mudou de endereço"
   },
   "c_ToolPaths": {
     "pixelArtTools": "Ferramentas de pixel art"
@@ -665,9 +668,11 @@
     "whPixelArt": "Pixel art {w}×{h}"
   },
   "p_arts": {
+    "browseThousandsOfFreePixelArt": "Explore milhares de peças de pixel art gratuitas: sprites, designs de 8 e 16 bits, personagens e ícones. Remixe qualquer uma no editor ou baixe para o seu jogo, sua coleção NFT ou seu projeto.",
     "pixelArtGallery": "Galeria de Pixel Art"
   },
   "p_arts_id_string": {
+    "browseXPixelArtCreations": "Explore pixel art de {tag}: sprites, personagens e ícones em estilo de 8 e 16 bits. Remixe qualquer peça no editor ou baixe para o seu jogo, sua coleção NFT ou seu projeto.",
     "xPixelArt": "Pixel art de {x}"
   },
   "p_auth_callback": {
@@ -1040,6 +1045,7 @@
     "writesTitlesDescriptionsAndTagsFor": "Escreve títulos, descrições e tags para sua arte na hora de publicar."
   },
   "p_palettes": {
+    "browseFilterAndApplyReadyMade": "Explore, filtre e aplique paletas prontas — ou crie a sua.",
     "colorPalettes": "Paletas de cores"
   },
   "p_palettes_color-palette-from-color": {
@@ -1206,6 +1212,7 @@
     "newWorld": "Novo mundo",
     "noArtFoundTryAnotherSearch": "Nada encontrado — tente outra busca.",
     "noInstallAndNoSignupTo": ". Sem instalação e sem cadastro para começar — seu mapa é salvo numa coleção ou direto no seu navegador.",
+    "noTilemapsYet": "Ainda não há tilemaps — pinte um para começar.",
     "openThisWorldSPublicPage": "Abrir a página pública deste mundo",
     "orAnyPieceFromThe": "ou com qualquer peça da",
     "orUseSearchAbove": ", ou use a busca acima.",
@@ -1231,6 +1238,7 @@
     "tiledTmjTilesetPngsLoadsIn": ".tmj do Tiled + PNGs do tileset — carrega no Phaser, Tiled, Godot (via importador) e Unity",
     "tilemap": "Tilemap",
     "tilemapEditor": "Editor de tilemaps",
+    "tilemapEditor2": "Editor de tilemaps",
     "tilesetEditor": "editor de tilesets",
     "turnsPixelArtIntoMapsLay": "transforma pixel art em mapas. Assente tiles numa",
     "undoZ": "Desfazer (⌘Z)",
@@ -1322,6 +1330,7 @@
     "nTiles": "{count} tiles",
     "noTilesYet": "Ainda não há tiles.",
     "noTilesetOpen": "Nenhum tileset aberto",
+    "noTilesetsYet": "Ainda não há tilesets — crie um para começar.",
     "nothingFound": "Nada encontrado.",
     "onlyTheTopNRowsOf": "Só as N primeiras linhas da arte de borda são aplicadas (0 = arte inteira)",
     "openPublicPage": "Abrir a página pública",
@@ -1487,6 +1496,7 @@
     "deleteNSelectedItems": "Excluir {count} itens selecionados",
     "deselectAll": "Desmarcar",
     "draft": "Rascunho",
+    "everythingYouHaveMade": "Tudo o que você criou — obras, coleções e tilesets.",
     "exitSelectMode": "Sair do modo de seleção",
     "more": "Mais",
     "nameAZ": "Nome A–Z",

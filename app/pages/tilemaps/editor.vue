@@ -2244,7 +2244,7 @@ const faq = computed(() => [
         folder
         empty-icon="icon-grid"
         :new-label="world ? t('p_tilemaps_editor.newWorld') : t('p_tilemaps_editor.newMap')"
-        empty-text="No tilemaps yet — paint one to get started."
+        :empty-text="$t('p_tilemaps_editor.noTilemapsYet')"
         @select="pickTilemap"
         @create="pickTilemap('__new__')"
         @close="showLoadTm = false"

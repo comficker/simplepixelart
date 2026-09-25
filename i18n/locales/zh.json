@@ -358,7 +358,8 @@
     "sliceASpritesheetPngIntoAnimation": "把精灵表 PNG 切分成动画帧。"
   },
   "c_SubmitModal": {
-    "submitAnArtToThisChallenge": "向这个挑战投稿作品"
+    "submitAnArtToThisChallenge": "向这个挑战投稿作品",
+    "youHaveNoSavedArts": "你还没有保存过作品——先画一幅吧。"
   },
   "c_TagInput": {
     "removeTag": "移除标签"
@@ -408,7 +409,9 @@
   },
   "c_ToolMoved": {
     "takingYouThereNow": "。正在带你过去…",
-    "thisToolNowLivesAt": "这个工具已移至"
+    "theXHasMovedTo": "{name} 已迁移至 {to}。",
+    "thisToolNowLivesAt": "这个工具已移至",
+    "xHasMoved": "{name} 已迁移"
   },
   "c_ToolPaths": {
     "pixelArtTools": "像素画工具"
@@ -665,9 +668,11 @@
     "whPixelArt": "{w}×{h} 像素画"
   },
   "p_arts": {
+    "browseThousandsOfFreePixelArt": "浏览数千幅免费像素画——精灵、8 位与 16 位设计、角色和图标。任意一幅都能在编辑器里改编，也可以下载用于你的游戏、NFT 或项目。",
     "pixelArtGallery": "像素画图库"
   },
   "p_arts_id_string": {
+    "browseXPixelArtCreations": "浏览 {tag} 主题的像素画作品——8 位与 16 位风格的精灵、角色和图标。任意一幅都能在编辑器里改编，也可以下载用于你的游戏、NFT 或项目。",
     "xPixelArt": "{x} 像素画"
   },
   "p_auth_callback": {
@@ -1040,6 +1045,7 @@
     "writesTitlesDescriptionsAndTagsFor": "发布作品时自动为你写标题、描述和标签。"
   },
   "p_palettes": {
+    "browseFilterAndApplyReadyMade": "浏览、筛选并直接套用现成配色——也可以自己做一套。",
     "colorPalettes": "配色方案"
   },
   "p_palettes_color-palette-from-color": {
@@ -1206,6 +1212,7 @@
     "newWorld": "新建世界",
     "noArtFoundTryAnotherSearch": "没有找到作品 — 换个词试试。",
     "noInstallAndNoSignupTo": "里的任意作品来画。无需安装、无需注册即可开始——地图会存进合集，或者就存在你的浏览器里。",
+    "noTilemapsYet": "还没有图块地图——画一张开始吧。",
     "openThisWorldSPublicPage": "打开这个世界的公开页面",
     "orAnyPieceFromThe": "或",
     "orUseSearchAbove": "添加，或者用上面的搜索。",
@@ -1231,6 +1238,7 @@
     "tiledTmjTilesetPngsLoadsIn": "Tiled 的 .tmj + 图块集 PNG——可在 Phaser、Tiled、Godot（经导入器）、Unity 中加载",
     "tilemap": "图块地图",
     "tilemapEditor": "图块地图编辑器",
+    "tilemapEditor2": "图块地图编辑器",
     "tilesetEditor": "图块集编辑器",
     "turnsPixelArtIntoMapsLay": "把像素画变成地图。把图块铺在平面",
     "undoZ": "撤销（⌘Z）",
@@ -1322,6 +1330,7 @@
     "nTiles": "{count} 块图块",
     "noTilesYet": "还没有图块。",
     "noTilesetOpen": "未打开图块集",
+    "noTilesetsYet": "还没有图块集——创建一个开始吧。",
     "nothingFound": "没有找到内容。",
     "onlyTheTopNRowsOf": "只取边缘素材最上面的 N 行（0 表示整张）",
     "openPublicPage": "打开公开页面",
@@ -1487,6 +1496,7 @@
     "deleteNSelectedItems": "删除选中的 {count} 项",
     "deselectAll": "取消选择",
     "draft": "草稿",
+    "everythingYouHaveMade": "你做过的一切——作品、合集和图块集。",
     "exitSelectMode": "退出选择模式",
     "more": "更多",
     "nameAZ": "名称 A–Z",
