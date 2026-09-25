@@ -116,10 +116,6 @@ export default defineNuxtConfig({
                 {rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png'},
                 {rel: 'manifest', href: '/site.webmanifest'},
                 {rel: 'preconnect', href: 'https://touch.ninosaur.com'},
-                // The UI font is self-hosted from public/fonts, so there is no
-                // third-party stylesheet to fetch and no swap trick to play.
-                {rel: 'preload', href: '/fonts/iAWriterQuattroS-Regular.woff2', as: 'font', type: 'font/woff2', crossorigin: ''},
-                {rel: 'preload', href: '/fonts/iAWriterQuattroS-Bold.woff2', as: 'font', type: 'font/woff2', crossorigin: ''},
             ],
             meta: [
                 {

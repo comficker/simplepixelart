@@ -80,40 +80,6 @@ a {
     text-decoration: none;
 }
 
-/* iA Writer Quattro -- SIL OFL 1.1, self-hosted from public/fonts.
-   Static Regular/Bold only, so the 800 on headings renders as 700. */
-@font-face {
-    font-family: "iA Writer Quattro";
-    src: url("/fonts/iAWriterQuattroS-Regular.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "iA Writer Quattro";
-    src: url("/fonts/iAWriterQuattroS-Italic.woff2") format("woff2");
-    font-weight: 400;
-    font-style: italic;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "iA Writer Quattro";
-    src: url("/fonts/iAWriterQuattroS-Bold.woff2") format("woff2");
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "iA Writer Quattro";
-    src: url("/fonts/iAWriterQuattroS-BoldItalic.woff2") format("woff2");
-    font-weight: 700;
-    font-style: italic;
-    font-display: swap;
-}
-
 :root {
     --radius: 6px;
     --radius-sm: 4px;
@@ -141,12 +107,11 @@ a {
     --shadow-modal: 0 8px 24px -12px rgba(0, 0, 0, 0.22);
     --transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* iA Writer Quattro: a modified IBM Plex that keeps digits at full mono
-       width -- so board sizes, zoom % and palette hexes still line up -- while
-       letting narrow letters shrink. Prose costs ~17% more width than Inter
-       instead of the ~31% a true mono costs. */
-    --font-display: "iA Writer Quattro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    --font-body: "iA Writer Quattro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    /* The OS font: nothing to download, and it is the one the reader
+       already reads everything else in. Code, hex values and keycaps keep
+       their own monospace stack where they are set. */
+    --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
     --text-2xs: 0.6875rem;
     --text-xs: 0.8125rem;

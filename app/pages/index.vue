@@ -416,7 +416,7 @@ useCustomSeoMeta({
   flex-wrap: wrap;
   /* em, not rem: the word gap has to scale with the clamped title size */
   gap: 0 0.25em;
-  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
   font-weight: 800;
   font-variation-settings: "wght" 800;
   letter-spacing: -0.035em;

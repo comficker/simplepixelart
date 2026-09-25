@@ -92,6 +92,16 @@ const shown = computed(() => {
   }
 }
 
+/* Phone portrait only: a third of a 390px screen is a ~114px tile, which reads
+   as a grid of equal targets. The same ratio at 768px would be 240px square. */
+@media (max-width: 480px) {
+  .studio-path {
+    aspect-ratio: 1;
+    justify-content: center;
+    padding: var(--space-2);
+  }
+}
+
 .studio-path-title {
   font-family: var(--font-display);
   font-size: var(--text-2xs);
