@@ -358,7 +358,8 @@
     "sliceASpritesheetPngIntoAnimation": "スプライトシートのPNGをアニメーションのコマに切り分けます。"
   },
   "c_SubmitModal": {
-    "submitAnArtToThisChallenge": "このチャレンジに作品を投稿"
+    "submitAnArtToThisChallenge": "このチャレンジに作品を投稿",
+    "youHaveNoSavedArts": "保存された作品がまだありません。まず1枚描いてみてください。"
   },
   "c_TagInput": {
     "removeTag": "タグを削除"
@@ -408,7 +409,9 @@
   },
   "c_ToolMoved": {
     "takingYouThereNow": "。すぐに移動します…",
-    "thisToolNowLivesAt": "このツールの移動先は"
+    "theXHasMovedTo": "{name}は {to} に移転しました。",
+    "thisToolNowLivesAt": "このツールの移動先は",
+    "xHasMoved": "{name}は移転しました"
   },
   "c_ToolPaths": {
     "pixelArtTools": "ドット絵ツール"
@@ -665,9 +668,11 @@
     "whPixelArt": "{w}×{h}のドット絵"
   },
   "p_arts": {
+    "browseThousandsOfFreePixelArt": "何千点もの無料ドット絵を見てみましょう。スプライト、8ビット・16ビットのデザイン、キャラクター、アイコン。どれもエディタでリミックスできますし、ゲームやNFT、自分のプロジェクト用にダウンロードもできます。",
     "pixelArtGallery": "ドット絵ギャラリー"
   },
   "p_arts_id_string": {
+    "browseXPixelArtCreations": "{tag}のドット絵作品を見てみましょう。8ビット・16ビット調のスプライト、キャラクター、アイコン。どれもエディタでリミックスできますし、ゲームやNFT、自分のプロジェクト用にダウンロードもできます。",
     "xPixelArt": "{x}のドット絵"
   },
   "p_auth_callback": {
@@ -1040,6 +1045,7 @@
     "writesTitlesDescriptionsAndTagsFor": "公開時に作品のタイトル・説明・タグを書いてくれます。"
   },
   "p_palettes": {
+    "browseFilterAndApplyReadyMade": "出来合いのパレットを見て、絞り込んで、そのまま適用。自分で作ることもできます。",
     "colorPalettes": "カラーパレット"
   },
   "p_palettes_color-palette-from-color": {
@@ -1206,6 +1212,7 @@
     "newWorld": "新しいワールド",
     "noArtFoundTryAnotherSearch": "作品が見つかりません — 別の語で検索してください。",
     "noInstallAndNoSignupTo": "の作品で描けます。インストールも登録も不要です。マップはコレクションに、あるいはこのブラウザにそのまま保存されます。",
+    "noTilemapsYet": "タイルマップがまだありません。1枚描いてみましょう。",
     "openThisWorldSPublicPage": "このワールドの公開ページを開く",
     "orAnyPieceFromThe": "や",
     "orUseSearchAbove": "、または上の検索から。",
@@ -1231,6 +1238,7 @@
     "tiledTmjTilesetPngsLoadsIn": "Tiled の .tmj + タイルセットPNG — Phaser、Tiled、Godot（インポータ経由）、Unity で読み込めます",
     "tilemap": "タイルマップ",
     "tilemapEditor": "タイルマップエディタ",
+    "tilemapEditor2": "タイルマップエディタ",
     "tilesetEditor": "タイルセットエディタ",
     "turnsPixelArtIntoMapsLay": "はドット絵を地図に変えます。タイルを平らな",
     "undoZ": "元に戻す（⌘Z）",
@@ -1322,6 +1330,7 @@
     "nTiles": "{count}タイル",
     "noTilesYet": "まだタイルがありません。",
     "noTilesetOpen": "タイルセットが開かれていません",
+    "noTilesetsYet": "タイルセットがまだありません。1つ作ってみましょう。",
     "nothingFound": "見つかりませんでした。",
     "onlyTheTopNRowsOf": "辺アートの上からNの行だけを使います（0 は全体）",
     "openPublicPage": "公開ページを開く",
@@ -1487,6 +1496,7 @@
     "deleteNSelectedItems": "選択した{count}件を削除",
     "deselectAll": "選択を解除",
     "draft": "下書き",
+    "everythingYouHaveMade": "あなたが作ったものすべて — 作品、コレクション、タイルセット。",
     "exitSelectMode": "選択モードを終了",
     "more": "もっと見る",
     "nameAZ": "名前 A→Z",

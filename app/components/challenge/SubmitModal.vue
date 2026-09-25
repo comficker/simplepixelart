@@ -63,7 +63,7 @@ onMounted(load)
       :title="$t('c_SubmitModal.submitAnArtToThisChallenge')"
       :items="items"
       :loading="loading"
-      empty-text="You have no saved arts yet — draw one first."
+      :empty-text="$t('c_SubmitModal.youHaveNoSavedArts')"
       filterable
       new-label="New canvas"
       @select="pick"

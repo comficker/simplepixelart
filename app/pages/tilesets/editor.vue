@@ -3573,7 +3573,7 @@ const faq = computed(() => [
         folder
         empty-icon="icon-select"
         new-label="New tileset"
-        empty-text="No tilesets yet — create one to get started."
+        :empty-text="$t('p_tilesets_editor.noTilesetsYet')"
         @select="pickLoad"
         @create="pickLoad('__new__')"
         @close="showLoad = false"

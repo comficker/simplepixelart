@@ -29,6 +29,6 @@ useCustomSeoMeta({
 <template>
   <ItemPaletteList
       :title="$t('p_palettes.colorPalettes')"
-      desc="Browse, filter, and apply ready-made palettes — or create your own."
+      :desc="$t('p_palettes.browseFilterAndApplyReadyMade')"
   />
 </template>

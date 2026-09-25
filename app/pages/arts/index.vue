@@ -65,7 +65,7 @@ useCustomSeoMeta({
         :limit="24"
         show-filter
         :title="$t('p_arts.pixelArtGallery')"
-        desc="Browse thousands of free pixel art creations — sprites, 8-bit and 16-bit designs, characters and icons. Remix any piece in the editor or download for your game, NFT, or project."
+        :desc="$t('p_arts.browseThousandsOfFreePixelArt')"
     >
       <template v-if="tags.length" #filters-extra>
         <BrowseFilter :label="$t('common.tags')" icon="icon-flag" :value="String(tagsRes?.count || tags.length)">

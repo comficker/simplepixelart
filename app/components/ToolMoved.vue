@@ -1,10 +1,11 @@
 <script setup lang="ts">
 const props = defineProps<{ to: string; name: string }>()
 const route = useRoute()
+const {t} = useI18n()
 
 useCustomSeoMeta({
-  title: `${props.name} has moved`,
-  description: `The ${props.name} has moved to ${props.to}.`,
+  title: () => t('c_ToolMoved.xHasMoved', {name: props.name}),
+  description: () => t('c_ToolMoved.theXHasMovedTo', {name: props.name, to: props.to}),
   canonical: `https://simplepixelart.com${props.to}`,
   robots: 'noindex, follow',
 })
@@ -19,7 +20,7 @@ onMounted(() => {
   <div class="page">
     <div class="empty-state tool-moved">
       <span class="icon icon-move empty-state-icon"/>
-      <h1 class="empty-state-title">{{ name }} has moved</h1>
+      <h1 class="empty-state-title">{{ $t('c_ToolMoved.xHasMoved', {name}) }}</h1>
       <p class="empty-state-body">
         {{ $t('c_ToolMoved.thisToolNowLivesAt') }} <code>{{ to }}</code>{{ $t('c_ToolMoved.takingYouThereNow') }} </p>
       <NuxtLinkLocale :to="{ path: to, query: route.query }" class="btn primary empty-state-action">
