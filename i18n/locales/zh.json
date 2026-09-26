@@ -131,6 +131,20 @@
   "c_LoadBrowser": {
     "recent": "最近"
   },
+  "c_LoginModal": {
+    "alreadyHaveAnAccount": "已有账号？立即登录",
+    "couldNotSignIn": "登录失败，请重试。",
+    "createAccount": "创建账号",
+    "createAnAccount": "创建账号",
+    "loginToShare": "登录后分享",
+    "noAccountCreateOne": "还没有账号？立即创建",
+    "passwordTooShort": "密码至少需要 8 个字符",
+    "pickAUsername": "请填写用户名",
+    "signedIn": "已登录",
+    "usernameInvalid": "至少 3 个字符，可用字母、数字、点和连字符",
+    "usernameTaken": "该用户名已被使用",
+    "wrongUsernameOrPassword": "用户名或密码错误"
+  },
   "c_NotifyBell": {
     "nothingYetPublishArtAnd": "还什么都没有——发布作品、关注创作者试试。",
     "notifications": "通知"

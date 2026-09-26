@@ -139,6 +139,20 @@
   "c_LoadBrowser": {
     "recent": "Recent"
   },
+  "c_LoginModal": {
+    "alreadyHaveAnAccount": "Already have an account? Sign in",
+    "couldNotSignIn": "Could not sign in. Please try again.",
+    "createAccount": "Create account",
+    "createAnAccount": "Create an account",
+    "loginToShare": "Login to share",
+    "noAccountCreateOne": "No account? Create one",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "pickAUsername": "Pick a username",
+    "signedIn": "Signed in",
+    "usernameInvalid": "At least 3 characters — letters, numbers, dots or dashes",
+    "usernameTaken": "That username is taken",
+    "wrongUsernameOrPassword": "Wrong username or password"
+  },
   "c_Modal": {},
   "c_NotifyBell": {
     "nothingYetPublishArtAnd": "Nothing yet — publish art and follow creators.",

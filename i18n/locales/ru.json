@@ -131,6 +131,20 @@
   "c_LoadBrowser": {
     "recent": "Недавние"
   },
+  "c_LoginModal": {
+    "alreadyHaveAnAccount": "Уже есть аккаунт? Войдите",
+    "couldNotSignIn": "Не удалось войти. Попробуйте ещё раз.",
+    "createAccount": "Создать аккаунт",
+    "createAnAccount": "Создать аккаунт",
+    "loginToShare": "Войдите, чтобы поделиться",
+    "noAccountCreateOne": "Нет аккаунта? Создайте",
+    "passwordTooShort": "Пароль должен содержать не менее 8 символов",
+    "pickAUsername": "Укажите имя пользователя",
+    "signedIn": "Вы вошли",
+    "usernameInvalid": "Не менее 3 символов: буквы, цифры, точки или дефисы",
+    "usernameTaken": "Это имя пользователя занято",
+    "wrongUsernameOrPassword": "Неверное имя пользователя или пароль"
+  },
   "c_NotifyBell": {
     "nothingYetPublishArtAnd": "Пока пусто — публикуйте работы и подписывайтесь на авторов.",
     "notifications": "Уведомления"

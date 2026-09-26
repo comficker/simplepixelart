@@ -53,6 +53,25 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    /** Username + password, against /auth/login or /auth/register.
+     *
+     *  Both endpoints answer the same way: the token pair on success, and a
+     *  `{messages: [CODE]}` list of uppercase codes on failure -- so one
+     *  caller handles either. The request still carries the current Bearer
+     *  token when there is one: that is how the backend recognises a
+     *  device-auth guest and folds its work into the account being signed
+     *  into, the same as the OAuth path.
+     */
+    const loginLocal = async (username: string, password: string, mode: 'login' | 'register' = 'login') => {
+        const res = await useNativeFetch<{ refresh: string, access: string }>(
+            mode === 'register' ? '/auth/register' : '/auth/login',
+            {method: 'POST', body: {username, password}}
+        )
+        authToken.value = res.access
+        authTokenRefresh.value = res.refresh
+        await fetchInfo()
+    }
+
     const logout = async () => {
         resetCookie()
         resetStorage()
@@ -78,6 +97,7 @@ export const useAuthStore = defineStore('auth', () => {
         fetchInfo,
         logged,
         authOAUTH,
+        loginLocal,
         logout,
         refreshToken
     }

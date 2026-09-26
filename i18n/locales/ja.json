@@ -131,6 +131,20 @@
   "c_LoadBrowser": {
     "recent": "最近"
   },
+  "c_LoginModal": {
+    "alreadyHaveAnAccount": "すでにアカウントをお持ちの方はログイン",
+    "couldNotSignIn": "ログインできませんでした。もう一度お試しください。",
+    "createAccount": "アカウント作成",
+    "createAnAccount": "アカウントを作成",
+    "loginToShare": "ログインして共有",
+    "noAccountCreateOne": "アカウントをお持ちでない方はこちら",
+    "passwordTooShort": "パスワードは8文字以上にしてください",
+    "pickAUsername": "ユーザー名を入力してください",
+    "signedIn": "ログインしました",
+    "usernameInvalid": "3文字以上、英数字・ドット・ハイフンが使えます",
+    "usernameTaken": "そのユーザー名は使用されています",
+    "wrongUsernameOrPassword": "ユーザー名またはパスワードが違います"
+  },
   "c_NotifyBell": {
     "nothingYetPublishArtAnd": "まだ何もありません。作品を公開したり、作家をフォローしてみてください。",
     "notifications": "お知らせ"

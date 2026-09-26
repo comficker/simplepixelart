@@ -22,13 +22,6 @@ const config = useRuntimeConfig()
 
 const activeTilesetId = computed<string | null>(() => store.editorData?.meta?.tileset?.id || null)
 
-const googleAuthUrl = computed(() => {
-  const apiBase = (config.public.api as string) || ''
-  if (typeof window === 'undefined') return `${apiBase}/auth/google`
-  const next = `${window.location.origin}/auth/callback`
-  return `${apiBase}/auth/google?state=${encodeURIComponent(next)}`
-})
-
 const showPublishModal = ref(false)
 const publishStep = ref<'edit' | 'done'>('edit')
 
@@ -4264,19 +4257,11 @@ watch(
       </div>
     </Teleport>
 
-    <UiModal v-if="showLoginPrompt" @close="showLoginPrompt = false">
-          <h3 class="login-heading">{{ $t('c_PXEditor.loginToShare') }}</h3>
-          <p class="login-msg" v-html="$t('c_PXEditor.signInToPublishAndShare')"/>
-          <div class="share-stack">
-            <a :href="googleAuthUrl" class="btn primary wide">
-              <span class="icon icon-social"/>
-              <span>{{ $t('c_PXEditor.loginWithGoogle') }}</span>
-            </a>
-            <button class="share-dismiss" @click="showLoginPrompt = false">
-              {{ $t('common.cancel') }}
-            </button>
-          </div>
-      </UiModal>
+    <PartialLoginModal
+        v-if="showLoginPrompt"
+        @close="showLoginPrompt = false"
+        @success="openPublish"
+    />
   </div>
 </template>
 
@@ -4377,11 +4362,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   }
 }
 
-.login-heading {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-}
 
 .png-modal .publish-heading {
   margin-bottom: 0;
@@ -4729,10 +4709,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   transform: translateY(-1px);
 }
 
-.login-msg {
-  font-size: var(--text-xs);
-  margin-bottom: 1rem;
-}
 </style>
 
 <style>

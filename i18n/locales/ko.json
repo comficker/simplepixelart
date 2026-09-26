@@ -131,6 +131,20 @@
   "c_LoadBrowser": {
     "recent": "최근"
   },
+  "c_LoginModal": {
+    "alreadyHaveAnAccount": "이미 계정이 있으신가요? 로그인",
+    "couldNotSignIn": "로그인하지 못했습니다. 다시 시도해 주세요.",
+    "createAccount": "계정 만들기",
+    "createAnAccount": "계정 만들기",
+    "loginToShare": "로그인하고 공유하기",
+    "noAccountCreateOne": "계정이 없으신가요? 만들기",
+    "passwordTooShort": "비밀번호는 8자 이상이어야 합니다",
+    "pickAUsername": "아이디를 입력하세요",
+    "signedIn": "로그인되었습니다",
+    "usernameInvalid": "3자 이상, 영문·숫자·점·하이픈을 사용할 수 있습니다",
+    "usernameTaken": "이미 사용 중인 아이디입니다",
+    "wrongUsernameOrPassword": "아이디 또는 비밀번호가 올바르지 않습니다"
+  },
   "c_NotifyBell": {
     "nothingYetPublishArtAnd": "아직 아무것도 없습니다. 작품을 게시하고 작가를 팔로우해 보세요.",
     "notifications": "알림"

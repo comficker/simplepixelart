@@ -131,6 +131,20 @@
   "c_LoadBrowser": {
     "recent": "Recentes"
   },
+  "c_LoginModal": {
+    "alreadyHaveAnAccount": "Já tem conta? Entre",
+    "couldNotSignIn": "Não foi possível entrar. Tente novamente.",
+    "createAccount": "Criar conta",
+    "createAnAccount": "Criar uma conta",
+    "loginToShare": "Entre para compartilhar",
+    "noAccountCreateOne": "Não tem conta? Crie uma",
+    "passwordTooShort": "A senha precisa ter pelo menos 8 caracteres",
+    "pickAUsername": "Escolha um nome de usuário",
+    "signedIn": "Sessão iniciada",
+    "usernameInvalid": "Mínimo de 3 caracteres: letras, números, pontos ou hífens",
+    "usernameTaken": "Esse nome de usuário já está em uso",
+    "wrongUsernameOrPassword": "Usuário ou senha incorretos"
+  },
   "c_NotifyBell": {
     "nothingYetPublishArtAnd": "Nada por enquanto — publique artes e siga criadores.",
     "notifications": "Notificações"
