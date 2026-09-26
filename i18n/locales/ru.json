@@ -353,7 +353,6 @@
     "followOnX": "Подписаться в X",
     "githubRepository": "Репозиторий на GitHub",
     "login": "Войти",
-    "logout": "Выйти",
     "openSourceOnGithub": "Открытый код на GitHub",
     "xTwitter": "X (Twitter)"
   },
@@ -521,6 +520,7 @@
     "lineStyle": "Стиль линии",
     "loading": "Загрузка…",
     "logInToSubmit": "Войдите, чтобы отправить",
+    "logOut": "Выйти",
     "mirrorDrawing": "Зеркальное рисование",
     "missions": "Миссии",
     "nColors": "Цветов: {count}",

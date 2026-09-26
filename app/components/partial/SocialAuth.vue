@@ -26,7 +26,7 @@ const loginModal = useLoginModal()
       <span class="icon icon-brand-x"/>
     </a>
     <span class="social-sep" aria-hidden="true"/>
-    <span v-if="auth.isLogged" class="social-auth-link" @click="auth.logout()">{{ $t('c_SocialAuth.logout') }}</span>
+    <NuxtLinkLocale v-if="auth.isLogged" to="/settings" class="social-auth-link">{{ $t('common.settings') }}</NuxtLinkLocale>
     <span v-else class="social-auth-link" @click="loginModal.show()">{{ $t('c_SocialAuth.login') }}</span>
   </div>
 </template>

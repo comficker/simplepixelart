@@ -15,6 +15,8 @@ type Cmd = {
   keywords?: string
   swatch?: { ring: string; ink: string }
   active?: boolean
+  /** Sits at the end of its group, whatever the alphabetical order says. */
+  last?: boolean
   run: () => void | Promise<void>
 }
 
@@ -129,7 +131,7 @@ const accountCommands = computed<Cmd[]>(() => {
         },
         {
           id: 'account:logout', label: t('c_CommandPalette.logOut'), icon: 'icon-x',
-          group: 'Account', keywords: 'sign out logout leave',
+          group: 'Account', keywords: 'sign out logout leave', last: true,
           run: () => auth.logout(),
         },
     )
@@ -222,7 +224,10 @@ const groupedBlocks = computed(() => {
   let index = 0
   for (const group of order) {
     const list = map.get(group)!
-    if (!q) list.sort((a, b) => a.label.localeCompare(b.label))
+    // Alphabetical, except for the ones that belong at the bottom: "Log out"
+    // sorted to the top of Account, above everything it signs you out of.
+    if (!q) list.sort((a, b) =>
+        (a.last ? 1 : 0) - (b.last ? 1 : 0) || a.label.localeCompare(b.label))
     blocks.push({ group, items: list.map(cmd => ({ cmd, index: index++ })) })
   }
   return blocks

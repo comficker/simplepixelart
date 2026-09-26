@@ -353,7 +353,6 @@
     "followOnX": "在 X 上关注",
     "githubRepository": "GitHub 仓库",
     "login": "登录",
-    "logout": "退出登录",
     "openSourceOnGithub": "在 GitHub 上开源",
     "xTwitter": "X (Twitter)"
   },
@@ -521,6 +520,7 @@
     "lineStyle": "线条样式",
     "loading": "加载中…",
     "logInToSubmit": "登录后提交",
+    "logOut": "退出登录",
     "mirrorDrawing": "镜像绘制",
     "missions": "任务",
     "nColors": "{count} 色",

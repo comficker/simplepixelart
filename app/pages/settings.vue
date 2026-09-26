@@ -127,6 +127,12 @@ watch(() => auth.logged, fillForm)
               <NuxtLinkLocale v-if="auth.logged?.username" :to="`/creator/${auth.logged.username}`" class="btn">
                 <span class="icon icon-user"/><span>{{ $t('p_settings.viewPublicProfile') }}</span>
               </NuxtLinkLocale>
+              <!-- The header link that used to do this now points here, so
+                   this is the only place outside the command palette that
+                   still offers it. -->
+              <button type="button" class="btn" @click="auth.logout()">
+                <span class="icon icon-x"/><span>{{ $t('common.logOut') }}</span>
+              </button>
             </div>
           </form>
         </section>

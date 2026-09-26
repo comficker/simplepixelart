@@ -353,7 +353,6 @@
     "followOnX": "Xでフォロー",
     "githubRepository": "GitHubリポジトリ",
     "login": "ログイン",
-    "logout": "ログアウト",
     "openSourceOnGithub": "GitHubでオープンソース",
     "xTwitter": "X (Twitter)"
   },
@@ -521,6 +520,7 @@
     "lineStyle": "線のスタイル",
     "loading": "読み込み中…",
     "logInToSubmit": "ログインして投稿",
+    "logOut": "ログアウト",
     "mirrorDrawing": "左右対称で描く",
     "missions": "ミッション",
     "nColors": "{count}色",

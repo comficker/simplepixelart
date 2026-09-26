@@ -353,7 +353,6 @@
     "followOnX": "Siga no X",
     "githubRepository": "Repositório no GitHub",
     "login": "Entrar",
-    "logout": "Sair",
     "openSourceOnGithub": "Código aberto no GitHub",
     "xTwitter": "X (Twitter)"
   },
@@ -521,6 +520,7 @@
     "lineStyle": "Estilo da linha",
     "loading": "Carregando…",
     "logInToSubmit": "Entre para enviar",
+    "logOut": "Sair",
     "mirrorDrawing": "Desenho espelhado",
     "missions": "Missões",
     "nColors": "{count} cores",

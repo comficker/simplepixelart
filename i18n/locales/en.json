@@ -364,7 +364,6 @@
     "followOnX": "Follow on X",
     "githubRepository": "GitHub repository",
     "login": "Login",
-    "logout": "Logout",
     "openSourceOnGithub": "Open source on GitHub",
     "xTwitter": "X (Twitter)"
   },
@@ -542,6 +541,7 @@
     "lineStyle": "Line style",
     "loading": "Loading…",
     "logInToSubmit": "Log in to submit",
+    "logOut": "Log out",
     "mirrorDrawing": "Mirror drawing",
     "missions": "Missions",
     "nColors": "{count} colors",

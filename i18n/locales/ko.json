@@ -353,7 +353,6 @@
     "followOnX": "X에서 팔로우",
     "githubRepository": "GitHub 저장소",
     "login": "로그인",
-    "logout": "로그아웃",
     "openSourceOnGithub": "GitHub에서 오픈소스",
     "xTwitter": "X (Twitter)"
   },
@@ -521,6 +520,7 @@
     "lineStyle": "선 스타일",
     "loading": "불러오는 중…",
     "logInToSubmit": "로그인 후 제출",
+    "logOut": "로그아웃",
     "mirrorDrawing": "대칭 그리기",
     "missions": "미션",
     "nColors": "{count}색",
