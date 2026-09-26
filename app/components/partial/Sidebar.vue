@@ -18,6 +18,13 @@ function openCommandPalette() {
   window.dispatchEvent(new KeyboardEvent('keydown', {key: 'k', metaKey: true, ctrlKey: true}))
 }
 
+// The project's own accounts. They used to sit in the top bar beside the
+// account link, which mixed "where this project lives" with "who you are".
+const SOCIAL = [
+  {href: 'https://github.com/comficker/simplepixelart', icon: 'icon-github', key: 'c_Sidebar.sourceOnGithub'},
+  {href: 'https://x.com/comficker', icon: 'icon-brand-x', key: 'c_Sidebar.followOnX'},
+]
+
 const PRIMARY = [
   {to: '/', icon: 'icon-home', key: 'nav.home'},
   {to: '/arts', icon: 'icon-explore', key: 'nav.discovery'},
@@ -66,6 +73,22 @@ const PRIMARY = [
         <span class="dash-tool-ic"><span class="icon" :class="t.icon"/></span>
         <span class="dash-label">{{ $t(t.i18n) }}</span>
       </NuxtLinkLocale>
+    </nav>
+
+    <div class="dash-sec"><span class="dash-label">{{ $t('c_Sidebar.community') }}</span></div>
+    <nav class="dash-nav" :aria-label="$t('c_Sidebar.community')">
+      <a
+          v-for="l in SOCIAL"
+          :key="l.href"
+          :href="l.href"
+          target="_blank"
+          rel="noopener"
+          class="hdr-link dash-link"
+          :title="$t(l.key)"
+      >
+        <span class="icon" :class="l.icon"/>
+        <span class="dash-label">{{ $t(l.key) }}</span>
+      </a>
     </nav>
 
     <div class="dash-foot">
@@ -162,7 +185,7 @@ const PRIMARY = [
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-1);
 }
 
 .dash-link {

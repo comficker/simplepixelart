@@ -15,11 +15,16 @@ export default function useLoginModal() {
   // it interrupted. Not part of `useState`: a function cannot be serialised
   // into the payload, and it is only ever set on the client.
   const onDone = useState<(() => void) | null>('login-modal-cb', () => null)
+  // Which form the modal opens on. A "Register" control wants the second one
+  // without the visitor having to find the switch at the bottom.
+  const mode = useState<'login' | 'register'>('login-modal-mode', () => 'login')
 
   return {
     open,
-    show(after?: () => void) {
+    mode,
+    show(after?: () => void, as: 'login' | 'register' = 'login') {
       onDone.value = after || null
+      mode.value = as
       open.value = true
     },
     hide() {

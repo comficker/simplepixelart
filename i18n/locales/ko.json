@@ -345,8 +345,11 @@
   },
   "c_Sidebar": {
     "collapseSidebar": "사이드바 접기",
+    "community": "커뮤니티",
     "expandSidebar": "사이드바 펼치기",
+    "followOnX": "X에서 팔로우",
     "sidebar": "사이드바",
+    "sourceOnGithub": "GitHub 소스",
     "tools": "도구"
   },
   "c_SocialAuth": {
@@ -442,6 +445,12 @@
     "noSections": "섹션이 없습니다.",
     "readme": "README",
     "tableOfContents": "목차"
+  },
+  "c_TopPrefs": {
+    "applyingTheme": "{name} 적용 중…",
+    "language": "언어",
+    "switchingTo": "{name}(으)로 전환 중…",
+    "theme": "테마"
   },
   "c_Topbar": {
     "breadcrumb": "탐색 경로"

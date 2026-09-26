@@ -345,8 +345,11 @@
   },
   "c_Sidebar": {
     "collapseSidebar": "Свернуть боковую панель",
+    "community": "Сообщество",
     "expandSidebar": "Развернуть боковую панель",
+    "followOnX": "Читать в X",
     "sidebar": "Боковая панель",
+    "sourceOnGithub": "Исходный код на GitHub",
     "tools": "Инструменты"
   },
   "c_SocialAuth": {
@@ -442,6 +445,12 @@
     "noSections": "Разделов нет.",
     "readme": "README",
     "tableOfContents": "Содержание"
+  },
+  "c_TopPrefs": {
+    "applyingTheme": "Применяем «{name}»…",
+    "language": "Язык",
+    "switchingTo": "Переключаем на «{name}»…",
+    "theme": "Тема"
   },
   "c_Topbar": {
     "breadcrumb": "Навигационная цепочка"

@@ -356,8 +356,11 @@
   },
   "c_Sidebar": {
     "collapseSidebar": "Collapse sidebar",
+    "community": "Community",
     "expandSidebar": "Expand sidebar",
+    "followOnX": "Follow on X",
     "sidebar": "Sidebar",
+    "sourceOnGithub": "Source on GitHub",
     "tools": "Tools"
   },
   "c_SocialAuth": {
@@ -460,6 +463,12 @@
     "tableOfContents": "Table of contents"
   },
   "c_Tooltip": {},
+  "c_TopPrefs": {
+    "applyingTheme": "Applying {name}…",
+    "language": "Language",
+    "switchingTo": "Switching to {name}…",
+    "theme": "Theme"
+  },
   "c_TopProgress": {},
   "c_Topbar": {
     "breadcrumb": "Breadcrumb"

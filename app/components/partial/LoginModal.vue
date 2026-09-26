@@ -8,7 +8,7 @@ const auth = useAuthStore()
 const editor = useEditor()
 const googleAuthUrl = useGoogleAuthUrl()
 
-const mode = ref<'login' | 'register'>('login')
+const mode = ref<'login' | 'register'>(useLoginModal().mode.value)
 const form = reactive({username: '', email: '', password: '', repeat: ''})
 const reveal = ref(false)
 const busy = ref(false)

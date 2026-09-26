@@ -345,8 +345,11 @@
   },
   "c_Sidebar": {
     "collapseSidebar": "サイドバーを畳む",
+    "community": "コミュニティ",
     "expandSidebar": "サイドバーを開く",
+    "followOnX": "X でフォロー",
     "sidebar": "サイドバー",
+    "sourceOnGithub": "GitHub のソース",
     "tools": "ツール"
   },
   "c_SocialAuth": {
@@ -442,6 +445,12 @@
     "noSections": "見出しがありません。",
     "readme": "README",
     "tableOfContents": "目次"
+  },
+  "c_TopPrefs": {
+    "applyingTheme": "{name} を適用しています…",
+    "language": "言語",
+    "switchingTo": "{name} に切り替えています…",
+    "theme": "テーマ"
   },
   "c_Topbar": {
     "breadcrumb": "パンくず"

@@ -16,6 +16,7 @@ useHead({
   meta: computed(() => localeHead.value?.meta || []),
 })
 const loginModal = useLoginModal()
+const rebuildVeil = useRebuildVeil()
 const sideState = useStatefulCookie('dash_side')
 const sideCollapsed = computed(() => sideState.value === 'collapsed')
 const editorBootBg = ref('#1b1b1f')
@@ -79,10 +80,39 @@ if (import.meta.client) {
         </div>
       </Transition>
     </Teleport>
+    <Teleport to="body">
+      <Transition name="editor-boot">
+        <div v-if="rebuildVeil.open.value" class="editor-boot-veil rebuild-veil" role="status" aria-live="polite">
+          <div class="eb-loader" aria-hidden="true">
+            <span
+                v-for="i in 9"
+                :key="i"
+                :style="{ animationDelay: ((Math.floor((i - 1) / 3) + (i - 1) % 3) * 0.11) + 's' }"
+            />
+          </div>
+          <p class="rebuild-veil-label">{{ rebuildVeil.label.value }}</p>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <style>
+/* The rebuild veil uses the editor's boot chrome, plus room for a line of
+   text under the loader. */
+.rebuild-veil {
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--background);
+}
+
+.rebuild-veil-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
 .editor-boot-veil {
   position: fixed;
   inset: 0;

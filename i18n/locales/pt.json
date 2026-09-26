@@ -345,8 +345,11 @@
   },
   "c_Sidebar": {
     "collapseSidebar": "Recolher a barra lateral",
+    "community": "Comunidade",
     "expandSidebar": "Expandir a barra lateral",
+    "followOnX": "Siga no X",
     "sidebar": "Barra lateral",
+    "sourceOnGithub": "Código no GitHub",
     "tools": "Ferramentas"
   },
   "c_SocialAuth": {
@@ -442,6 +445,12 @@
     "noSections": "Sem seções.",
     "readme": "README",
     "tableOfContents": "Sumário"
+  },
+  "c_TopPrefs": {
+    "applyingTheme": "Aplicando {name}…",
+    "language": "Idioma",
+    "switchingTo": "Mudando para {name}…",
+    "theme": "Tema"
   },
   "c_Topbar": {
     "breadcrumb": "Trilha de navegação"

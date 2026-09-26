@@ -345,8 +345,11 @@
   },
   "c_Sidebar": {
     "collapseSidebar": "收起侧边栏",
+    "community": "社区",
     "expandSidebar": "展开侧边栏",
+    "followOnX": "在 X 上关注",
     "sidebar": "侧边栏",
+    "sourceOnGithub": "GitHub 源码",
     "tools": "工具"
   },
   "c_SocialAuth": {
@@ -442,6 +445,12 @@
     "noSections": "没有章节。",
     "readme": "README",
     "tableOfContents": "目录"
+  },
+  "c_TopPrefs": {
+    "applyingTheme": "正在应用{name}…",
+    "language": "语言",
+    "switchingTo": "正在切换到{name}…",
+    "theme": "主题"
   },
   "c_Topbar": {
     "breadcrumb": "面包屑导航"

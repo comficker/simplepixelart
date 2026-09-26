@@ -71,9 +71,12 @@ useHead({
       </template>
     </nav>
     <div class="dash-top-ctl">
+      <PartialTopPrefs/>
+      <PartialSocialAuth compact/>
+      <!-- Balance and notifications only exist once signed in, so they sit
+           last and the bar does not reflow when they appear. -->
       <PartialNotifyBell/>
       <WalletMenu/>
-      <PartialSocialAuth/>
     </div>
   </div>
 </template>
@@ -131,10 +134,32 @@ useHead({
   color: color-mix(in oklab, var(--muted) 60%, transparent);
 }
 
+/* No gap: each control's own padding is the spacing, so the row reads as one
+   strip of hit areas rather than floating labels. The padding is trimmed here
+   only -- .hdr-link and .btn are site-wide chrome and keep their own size
+   everywhere else. */
 .dash-top-ctl {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 0;
   margin-left: auto;
+}
+
+/* SocialAuth brings its own gap for the footer; in the bar the padding does
+   the spacing there too. */
+.dash-top-ctl .social-auth {
+  gap: 0;
+}
+
+.dash-top-ctl .hdr-link {
+  padding: var(--space-1) var(--space-2);
+}
+
+.dash-top-ctl .btn {
+  padding: var(--space-1) var(--space-3);
+}
+
+.dash-top-ctl .social-sep {
+  margin: 0 var(--space-2);
 }
 </style>
