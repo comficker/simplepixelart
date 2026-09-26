@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {toast} from 'vue-sonner'
+import {PROFILE_LINKS} from '~/helper/profileLinks'
 
 const auth = useAuthStore()
 const {current, setTheme, themes} = useTheme() as any
@@ -14,6 +15,8 @@ useCustomSeoMeta({
 })
 
 const form = reactive({username: '', first_name: '', last_name: '', bio: ''})
+const links = reactive<Record<string, string>>(
+    Object.fromEntries(PROFILE_LINKS.map(l => [l.key, ''])))
 const savingProfile = ref(false)
 
 function fillForm() {
@@ -23,6 +26,8 @@ function fillForm() {
   form.first_name = u.first_name || ''
   form.last_name = u.last_name || ''
   form.bio = u.meta?.bio || ''
+  const saved = u.meta?.links || {}
+  for (const l of PROFILE_LINKS) links[l.key] = saved[l.key] || ''
 }
 
 const PROFILE_ERRORS: Record<string, string> = {
@@ -34,7 +39,9 @@ async function saveProfile() {
   if (savingProfile.value) return
   savingProfile.value = true
   try {
-    await useNativeFetch('/auth/profile', {method: 'PATCH', body: {...form}})
+    // `links` goes as its own object: update_profile takes either shape, and
+    // nesting keeps a platform named like a profile field from colliding.
+    await useNativeFetch('/auth/profile', {method: 'PATCH', body: {...form, links: {...links}}})
     await auth.fetchInfo()
     fillForm()
     toast.success('Profile saved')
@@ -163,6 +170,34 @@ watch(() => auth.logged, fillForm)
           </form>
         </section>
 
+        <section v-if="auth.isLogged" class="set-section">
+          <h2 class="set-section-title">{{ $t('p_settings.links') }}</h2>
+          <p class="set-help text-xs">{{ $t('p_settings.whereElseYouPost') }}</p>
+          <form class="set-form" @submit.prevent="saveProfile">
+            <div class="set-links">
+              <!-- Not type="url": the backend adds the scheme, so the field
+                   has to accept "artstation.com/you" the way it asks for it.
+                   type="url" silently refused to submit the whole form. -->
+              <label v-for="l in PROFILE_LINKS" :key="l.key" class="set-field">
+                <span class="set-label">{{ l.label }}</span>
+                <input
+                    v-model="links[l.key]"
+                    class="set-input"
+                    inputmode="url"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    :placeholder="l.placeholder"
+                >
+              </label>
+            </div>
+            <div class="set-actions">
+              <button type="submit" class="btn primary" :disabled="savingProfile">
+                {{ savingProfile ? $t('common.loading') : $t('p_settings.saveLinks') }}
+              </button>
+            </div>
+          </form>
+        </section>
+
         <section class="set-section">
           <h2 class="set-section-title">{{ $t('p_settings.appearance') }}</h2>
           <div class="set-themes">
@@ -218,6 +253,13 @@ watch(() => auth.logged, fillForm)
 </template>
 
 <style scoped>
+/* Two per row like .set-row, but for a list of unknown length. */
+.set-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
 .set-panel {
   max-width: 640px;
   margin-inline: auto;

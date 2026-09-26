@@ -22,8 +22,10 @@ onBeforeUnmount(() => {
   <div class="browse" :class="{'sheet-open': sheetOpen}">
     <div class="screen-head">
       <div class="screen-head-text">
-        <h1 v-if="title" class="screen-title">{{ title }}</h1>
-        <p v-if="desc" class="screen-desc">{{ desc }}</p>
+        <slot name="head">
+          <h1 v-if="title" class="screen-title">{{ title }}</h1>
+          <p v-if="desc" class="screen-desc">{{ desc }}</p>
+        </slot>
       </div>
       <div class="screen-actions">
         <slot name="actions"/>

@@ -164,6 +164,11 @@ function isCurrentPreset(p: {width: number, height: number}): boolean {
       <slot name="filters-extra"/>
     </template>
 
+    <template v-if="showFilter && $slots.head" #head><slot name="head"/></template>
+    <template v-if="showFilter && $slots.actions" #actions><slot name="actions"/></template>
+
+    <slot name="before"/>
+
     <div v-if="isLoading" class="skeleton-grid">
       <div v-for="i in effectiveLimit" :key="`sk-${i}`" class="skeleton skeleton-square"/>
     </div>
