@@ -89,14 +89,25 @@ const faq = computed(() => [
 // client-side navigation each round trip costs about a second of latency.
 useArtListFetch({limit: 32, ordering: '-updated', hideIp: true})
 
+/* A fixed number of rows so the hero keeps its height while the site is
+   young and only a couple of creators qualify: the short list is padded with
+   placeholders rather than leaving a gap. */
+const CREATOR_ROWS = 3
+
 // Awaited together: these two are independent, and awaiting them one after
 // the other made the server wait out both round trips before the artwork list
 // (fetched by item-list further down) could even start.
-const [{data: aiEnabled}, {data: homeChallenge}] = await Promise.all([
+const [{data: aiEnabled}, {data: topCreators}, {data: homeChallenge}] = await Promise.all([
   useAuthFetch<boolean>('/coloring/economy/', {
     key: 'home-ai-image-enabled',
     transform: (s: any) => !!s?.ai_image_enabled,
     default: () => false,
+  }),
+  useAuthFetch<any>('/coloring/creators/top/', {
+    key: 'home-top-creators',
+    query: {limit: CREATOR_ROWS},
+    transform: (s: any) => s?.results || [],
+    default: () => [],
   }),
   useAuthFetch<any>('/coloring/challenges/', {
     key: 'home-weekly-challenge',
@@ -111,6 +122,11 @@ const [{data: aiEnabled}, {data: homeChallenge}] = await Promise.all([
     default: () => null,
   }),
 ])
+
+const creatorRows = computed(() => {
+  const rows = topCreators.value || []
+  return Array.from({length: CREATOR_ROWS}, (_, i) => rows[i] || null)
+})
 
 const challengeDaysLeft = computed(() => {
   if (!homeChallenge.value?.ends) return 0
@@ -224,26 +240,69 @@ useCustomSeoMeta({
 
     <div class="screen home-stack">
       <section class="home-hero">
-        <span class="home-hero-eyebrow">{{ $t('p_index.freeNoSignupRunsInYour') }}</span>
-        <h1 class="home-hero-title">
-          <span class="home-hero-title-main">{{ $t('p_index.makePixelArt') }}</span>
-          <span class="home-hero-title-accent">{{ $t('p_index.inSeconds') }}</span>
-        </h1>
-        <p class="home-hero-tagline">{{ $t('p_index.heroTagline') }}</p>
-        <form v-if="aiEnabled" class="home-ai" @submit.prevent="goGenerate">
-          <input
-              v-model="aiPrompt"
-              class="home-ai-input"
-              type="text"
-              maxlength="300"
-              :placeholder="$t('p_index.describeASpriteASleepingOrange')"
-              :aria-label="$t('p_index.describeThePixelArtToGenerate')"
-          >
-          <button type="submit" class="btn primary home-ai-btn" :disabled="aiPrompt.trim().length < 3">
-            <span class="icon icon-auto-fix"/><span>{{ $t('common.generate') }}</span>
-          </button>
-        </form>
-        <div class="home-tools"><ToolPaths exclude="ai"/></div>
+        <div class="home-hero-main">
+          <span class="home-hero-eyebrow">{{ $t('p_index.freeNoSignupRunsInYour') }}</span>
+          <h1 class="home-hero-title">
+            <span class="home-hero-title-main">{{ $t('p_index.makePixelArt') }}</span>
+            <span class="home-hero-title-accent">{{ $t('p_index.inSeconds') }}</span>
+          </h1>
+          <p class="home-hero-tagline">{{ $t('p_index.heroTagline') }}</p>
+          <form v-if="aiEnabled" class="home-ai" @submit.prevent="goGenerate">
+            <input
+                v-model="aiPrompt"
+                class="home-ai-input"
+                type="text"
+                maxlength="300"
+                :placeholder="$t('p_index.describeASpriteASleepingOrange')"
+                :aria-label="$t('p_index.describeThePixelArtToGenerate')"
+            >
+            <button type="submit" class="btn primary home-ai-btn" :disabled="aiPrompt.trim().length < 3">
+              <span class="icon icon-auto-fix"/><span>{{ $t('common.generate') }}</span>
+            </button>
+          </form>
+          <div class="home-tools"><ToolPaths exclude="ai"/></div>
+        </div>
+
+        <div class="home-hero-aside">
+          <section v-if="topCreators?.length" class="home-aside-sec">
+            <div class="home-aside-cap">
+              <span>{{ $t('p_index.topCreators') }}</span>
+              <NuxtLinkLocale to="/creator" class="home-aside-more">{{ $t('p_index.viewAll') }}</NuxtLinkLocale>
+            </div>
+            <ol class="home-creators">
+              <li v-for="(c, i) in creatorRows" :key="c ? c.username : `slot-${i}`">
+                <NuxtLinkLocale v-if="c" :to="`/creator/${c.username}`" class="home-creator">
+                  <span class="home-creator-rank">{{ i + 1 }}</span>
+                  <span class="home-creator-avatar">
+                    <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
+                    <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
+                  </span>
+                  <span class="home-creator-name">{{ c.username }}</span>
+                  <span class="home-creator-n">{{ c.arts }}</span>
+                </NuxtLinkLocale>
+                <span v-else class="home-creator" aria-hidden="true">
+                  <span class="home-creator-rank">{{ i + 1 }}</span>
+                  <span class="skeleton home-creator-slot-avatar"/>
+                  <span class="skeleton skeleton-line-sm home-creator-slot-name"/>
+                </span>
+              </li>
+            </ol>
+          </section>
+
+          <section v-if="homeChallenge" class="home-aside-sec">
+            <div class="home-aside-cap">
+              <span>{{ $t('p_index.weeklyChallenge') }}</span>
+              <NuxtLinkLocale to="/challenges" class="home-aside-more">{{ $t('p_index.viewAll') }}</NuxtLinkLocale>
+            </div>
+            <NuxtLinkLocale :to="`/challenges/${homeChallenge.id_string}`" class="home-challenge-link">
+              <span class="home-challenge-name">{{ homeChallenge.name }}</span>
+              <span class="home-challenge-sub">
+                {{ challengeDaysLeft }} {{ challengeDaysLeft === 1 ? 'day' : 'days' }} left ·
+                {{ homeChallenge.entries }} {{ homeChallenge.entries === 1 ? 'entry' : 'entries' }} · {{ $t('p_index.joinChallenge') }} →
+              </span>
+            </NuxtLinkLocale>
+          </section>
+        </div>
       </section>
 
       <Widget v-if="showStudio" :title="auth.logged ? $t('p_index.yourStudio') : $t('p_index.startAProject')">
@@ -297,15 +356,6 @@ useCustomSeoMeta({
             </div>
           </div>
       </Widget>
-
-      <NuxtLinkLocale v-if="homeChallenge" :to="`/challenges/${homeChallenge.id_string}`" class="home-challenge-link">
-        <span class="home-challenge-tag"><span class="icon icon-flag"/>{{ $t('p_index.weeklyChallenge') }}</span>
-        <span class="home-challenge-name">{{ homeChallenge.name }}</span>
-        <span class="home-challenge-sub">
-          {{ challengeDaysLeft }} {{ challengeDaysLeft === 1 ? 'day' : 'days' }} left ·
-          {{ homeChallenge.entries }} {{ homeChallenge.entries === 1 ? 'entry' : 'entries' }} · Join →
-        </span>
-      </NuxtLinkLocale>
 
       <!-- SPA_728_90. A fixed 728px unit, so it only renders where the main
            column actually clears it: measured 736px at 768, 760 at 1024, 716
@@ -401,20 +451,17 @@ useCustomSeoMeta({
   }
 }
 
+/* No padding and no gap on the frame itself: every divider inside runs edge
+   to edge, and each block carries its own padding instead. */
 .home-hero {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  padding: var(--space-5) var(--space-4);
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
   background:
     radial-gradient(120% 120% at 100% 0%, color-mix(in oklab, var(--surface-2) 85%, transparent), transparent 62%),
     var(--surface);
-}
-
-@media (min-width: 1024px) {
-  .home-hero {
-    padding: var(--space-6) var(--space-5);
-  }
 }
 
 .home-hero-eyebrow {
@@ -462,6 +509,163 @@ useCustomSeoMeta({
   max-width: 560px;
 }
 
+.home-hero-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: var(--space-4);
+}
+
+/* No frame and no padding of its own: the hero is one panel split by a
+   single rule, and each section inside pads itself so that rule runs edge
+   to edge. */
+.home-hero-aside {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-self: stretch;
+  min-width: 0;
+  border-top: 1px solid var(--border);
+}
+
+.home-aside-sec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-4);
+}
+
+.home-aside-sec + .home-aside-sec {
+  border-top: 1px solid var(--border);
+}
+
+/* Same caption as a widget head, without the box: uppercase, muted, small. */
+.home-aside-cap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  font-variation-settings: "wght" 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.home-aside-more {
+  color: var(--muted);
+  transition: color var(--transition);
+}
+
+.home-hero .home-challenge-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+}
+
+.home-creators {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  padding: 0;
+}
+
+.home-creator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+  font-size: var(--text-xs);
+}
+
+.home-creator-rank {
+  width: 1.25em;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.home-creator-avatar,
+.home-creator-slot-avatar {
+  width: var(--space-6);
+  height: var(--space-6);
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+}
+
+.home-creator-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-weight: 800;
+  font-size: var(--text-2xs);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.home-creator-slot-name {
+  width: 40%;
+}
+
+.home-creator-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-creator-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-creator-n {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .home-challenge-link:hover .home-challenge-name,
+  .home-creator:hover .home-creator-name,
+  .home-aside-more:hover {
+    color: var(--primary);
+  }
+}
+
+/* Two equal columns, split by one rule. Below this the hero is a single
+   column and the same rule runs across the top of the aside instead. */
+@media (min-width: 1360px) {
+  /* Grid, not flex: two 1fr tracks stay exactly equal, where flex-basis 0
+     would hand the aside its padding and divider on top of its share. */
+  .home-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .home-hero-main,
+  .home-hero-aside {
+    min-width: 0;
+  }
+
+  .home-hero-aside {
+    justify-content: center;
+    border-top: 0;
+    border-left: 1px solid var(--border);
+  }
+}
+
 .home-hero .home-tools {
   margin-top: var(--space-4);
 }
@@ -492,34 +696,6 @@ useCustomSeoMeta({
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--surface);
-  transition: background var(--transition);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .home-challenge-link:hover {
-    background: var(--surface-2);
-  }
-}
-
-.home-challenge-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 2px 8px;
-  font-size: var(--text-2xs);
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--primary-foreground);
-  background: var(--primary);
-  border-radius: 999px;
-}
-
-.home-challenge-tag .icon {
-  width: 0.9em;
-  height: 0.9em;
 }
 
 .home-challenge-name {
