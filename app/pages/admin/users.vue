@@ -243,7 +243,7 @@ watch(isStaff, (v) => { if (v) load() })
   padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--background);
+  background: var(--surface-2);
   color: var(--foreground);
   font-size: var(--text-xs);
 }

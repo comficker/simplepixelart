@@ -420,7 +420,7 @@ async function destroy() {
   width: 100%;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--border);
-  background: var(--background);
+  background: var(--surface-2);
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
   color: var(--foreground);

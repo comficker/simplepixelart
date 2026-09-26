@@ -834,7 +834,7 @@ const faq = computed(() => [
   gap: var(--space-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--background);
+  background: var(--surface-2);
   padding: var(--space-2);
   transition: border-color var(--transition);
 }

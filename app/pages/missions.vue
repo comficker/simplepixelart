@@ -547,7 +547,7 @@ watch(() => auth.isLogged, (v) => {
   padding: 0 var(--space-3);
   border: 1px solid color-mix(in oklab, var(--primary) 25%, var(--border));
   border-radius: var(--radius-sm);
-  background: var(--background);
+  background: var(--surface-2);
   color: var(--foreground);
   font-size: var(--text-xs);
 }

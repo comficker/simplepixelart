@@ -184,7 +184,9 @@ a {
 [data-theme="light"] {
     --background: #f3f1ec;
     --foreground: #1c1a17;
-    --border: color-mix(in oklab, #b5ae9f 55%, transparent);
+    /* Was 55%, the strongest of any theme: on a near-white surface that read
+       as ruled lines rather than edges. */
+    --border: color-mix(in oklab, #b5ae9f 32%, transparent);
     --primary: #2550cf;
     --primary-foreground: #ffffff;
     --secondary: #3c3833;
@@ -305,7 +307,11 @@ h6 {
 input[type=text],
 input[type=number],
 textarea {
-    background: var(--surface);
+    /* Not --surface: that is what the page and every panel are painted with,
+       so the field dissolved into whatever sat behind it. --surface-2 is the
+       step away from the page in every theme -- lighter on the dark ones,
+       slightly recessed on the light ones. */
+    background: var(--surface-2);
     color: var(--foreground);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
