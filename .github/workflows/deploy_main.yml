@@ -62,9 +62,17 @@ jobs:
       # The old step ran the build inside an `ssh <<EOF` heredoc, so the exit
       # code came from the last line (pm2 restart) and a failed build still
       # reported a green deploy.
+      # pm2 restart returns before Nitro is listening, and a single curl five
+      # seconds later caught a 502 on 2026-09-26 and failed a deploy that had
+      # in fact gone through. Give the server up to a minute to come up first.
       - name: Smoke test
         run: |
-          sleep 5
+          for i in $(seq 1 12); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://simplepixelart.com/)
+            [ "$code" = 200 ] && break
+            echo "waiting for the server ($code)"
+            sleep 5
+          done
           for p in / /ja/ /editor /arts /sitemap-index.xml; do
             code=$(curl -s -o /dev/null -w '%{http_code}' "https://simplepixelart.com$p")
             echo "$p $code"
