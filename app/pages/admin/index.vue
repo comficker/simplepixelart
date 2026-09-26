@@ -39,6 +39,7 @@ async function load() {
     ])
     stats.value = s
     config.value = e.config
+    loadCoupons()
     checks.value = e.checks
     if (!Array.isArray(config.value.missions)) config.value.missions = []
     config.value.missions.forEach((m: Mission) => { m.enabled = m.enabled !== false })
@@ -54,6 +55,87 @@ async function load() {
 }
 
 const missions = computed<Mission[]>(() => config.value?.missions || [])
+
+interface Coupon {
+  id: number
+  code: string
+  amount: number
+  max_uses: number
+  expires_at: string | null
+  note: string
+  used: number
+  expired: boolean
+}
+
+const coupons = ref<Coupon[]>([])
+const draft = reactive({code: '', amount: 50, max_uses: 0, expires_at: '', note: ''})
+const couponBusy = ref(false)
+
+const COUPON_ERRORS: Record<string, string> = {
+  CODE_BLANK: 'A coupon needs a code',
+  CODE_INVALID: 'Letters, numbers and . _ - only, 3-40 characters',
+  CODE_DUPLICATE: 'That code already exists',
+  AMOUNT_INVALID: 'Amount must be between 1 and 100000',
+  MAX_USES_INVALID: 'Max uses cannot be negative',
+  EXPIRES_AT_INVALID: 'That expiry date is not valid',
+}
+
+function couponError(e: any, fallback: string) {
+  const code = e?.response?._data?.[0] || e?.data?.[0]
+  toast.error(COUPON_ERRORS[code] || fallback)
+}
+
+async function loadCoupons() {
+  if (!isStaff.value) return
+  try {
+    const res = await useNativeFetch<{ results: Coupon[] }>('/coloring/admin/coupons/')
+    coupons.value = res.results
+  } catch {
+    toast.error('Could not load coupons')
+  }
+}
+
+async function addCoupon() {
+  if (couponBusy.value) return
+  couponBusy.value = true
+  try {
+    const made = await useNativeFetch<Coupon>('/coloring/admin/coupons/', {
+      method: 'POST',
+      body: {
+        code: draft.code,
+        amount: draft.amount,
+        max_uses: draft.max_uses,
+        // <input type=datetime-local> has no zone; send the browser's.
+        expires_at: draft.expires_at ? new Date(draft.expires_at).toISOString() : null,
+        note: draft.note,
+      },
+    })
+    coupons.value.unshift(made)
+    draft.code = ''
+    draft.note = ''
+    draft.expires_at = ''
+    toast.success(`${made.code} is live`)
+  } catch (e: any) {
+    couponError(e, 'Could not create the coupon')
+  } finally {
+    couponBusy.value = false
+  }
+}
+
+async function retireCoupon(c: Coupon) {
+  if (couponBusy.value) return
+  if (!confirm(`Retire ${c.code}? Credits already redeemed are kept.`)) return
+  couponBusy.value = true
+  try {
+    await useNativeFetch(`/coloring/admin/coupons/${c.id}/`, {method: 'DELETE'})
+    coupons.value = coupons.value.filter(x => x.id !== c.id)
+    toast.success(`${c.code} retired`)
+  } catch (e: any) {
+    couponError(e, 'Could not retire the coupon')
+  } finally {
+    couponBusy.value = false
+  }
+}
 
 function chargedCost(spec: { usd?: number; tokens?: number }): number {
   if (spec.tokens != null && spec.tokens !== ('' as any)) return Math.max(1, Math.floor(spec.tokens))
@@ -286,6 +368,50 @@ watch(isStaff, (v) => { if (v) load() })
               <button class="btn primary" :disabled="saving" @click="saveConfig">
                 {{ saving ? 'Saving…' : 'Save config' }}
               </button>
+            </div>
+
+            <h2 class="adm-section-title">Coupons</h2>
+            <div class="adm-table-wrap">
+              <table class="adm-table">
+                <thead>
+                <tr><th>Code</th><th>Credits</th><th>Used</th><th>Expires</th><th>Note</th><th/></tr>
+                </thead>
+                <tbody>
+                <tr v-for="c in coupons" :key="c.id">
+                  <td>{{ c.code }}</td>
+                  <td>{{ c.amount }}</td>
+                  <td>{{ c.used }}<span v-if="c.max_uses"> / {{ c.max_uses }}</span></td>
+                  <td>
+                    <template v-if="c.expires_at">
+                      {{ new Date(c.expires_at).toLocaleDateString() }}
+                      <span v-if="c.expired"> · expired</span>
+                    </template>
+                    <template v-else>never</template>
+                  </td>
+                  <td>{{ c.note }}</td>
+                  <td>
+                    <button class="btn adm-ic" title="Retire coupon" @click="retireCoupon(c)">
+                      <span class="icon icon-trash"/>
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="!coupons.length">
+                  <td colspan="6">No coupons yet.</td>
+                </tr>
+                <tr>
+                  <td><input v-model="draft.code" class="adm-input" placeholder="SPRING24"></td>
+                  <td><input v-model.number="draft.amount" type="number" min="1" class="adm-input adm-input-n"></td>
+                  <td><input v-model.number="draft.max_uses" type="number" min="0" class="adm-input adm-input-n" title="0 = unlimited"></td>
+                  <td><input v-model="draft.expires_at" type="datetime-local" class="adm-input"></td>
+                  <td><input v-model="draft.note" class="adm-input" placeholder="What it is for"></td>
+                  <td>
+                    <button class="btn adm-ic" title="Create coupon" :disabled="couponBusy" @click="addCoupon">
+                      <span class="icon icon-plus"/>
+                    </button>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
             </div>
           </template>
         </template>

@@ -3,6 +3,7 @@ const loginModal = useLoginModal()
 import {toast} from 'vue-sonner'
 
 const auth = useAuthStore()
+const {t} = useI18n()
 
 interface Mission {
   code: string
@@ -82,6 +83,34 @@ async function claimMission(m: Mission) {
     toast.error('Could not claim — refresh and try again')
   } finally {
     claiming.value = ''
+  }
+}
+
+const redeemCode = ref('')
+const redeeming = ref(false)
+
+const REDEEM_ERRORS: Record<string, string> = {
+  COUPON_NOT_FOUND: 'redeemNotFound',
+  COUPON_EXPIRED: 'redeemExpired',
+  COUPON_EXHAUSTED: 'redeemExhausted',
+  COUPON_ALREADY_REDEEMED: 'redeemAlready',
+}
+
+async function redeem() {
+  const code = redeemCode.value.trim()
+  if (!code || redeeming.value) return
+  redeeming.value = true
+  try {
+    const res = await useNativeFetch<{ granted: number; balance: number }>(
+        '/coloring/economy/redeem/', {method: 'POST', body: {code}})
+    if (sum.value) sum.value.balance = res.balance
+    redeemCode.value = ''
+    toast.success(`+${res.granted} credits`)
+  } catch (e: any) {
+    const key = REDEEM_ERRORS[e?.response?._data?.[0] || e?.data?.[0]]
+    toast.error(key ? t(`p_missions.${key}`) : t('p_missions.redeemFailed'))
+  } finally {
+    redeeming.value = false
   }
 }
 
@@ -205,6 +234,30 @@ watch(() => auth.isLogged, (v) => {
                 <template v-else>{{ $t('p_missions.claim') }}</template>
               </button>
             </div>
+          </div>
+
+          <div class="msn-invite">
+            <div class="msn-invite-head">
+              <span class="icon icon-ticket msn-invite-ic"/>
+              <div class="msn-row-main">
+                <div class="msn-invite-title">{{ $t('p_missions.redeemACode') }}</div>
+                <div class="msn-invite-sub">{{ $t('p_missions.gotACodeFromAStream') }}</div>
+              </div>
+            </div>
+            <form class="msn-invite-bar" @submit.prevent="redeem">
+              <input
+                  v-model="redeemCode"
+                  class="msn-invite-link"
+                  :placeholder="$t('p_missions.enterYourCode')"
+                  :aria-label="$t('p_missions.redeemACode')"
+                  maxlength="40"
+                  autocapitalize="characters"
+                  spellcheck="false"
+              >
+              <button class="btn primary" type="submit" :disabled="redeeming || !redeemCode.trim()">
+                <span class="icon icon-coin"/><span>{{ redeeming ? $t('common.loading') : $t('p_missions.redeem') }}</span>
+              </button>
+            </form>
           </div>
 
           <div v-if="sum.referral?.signup_reward" class="msn-invite">
