@@ -40,7 +40,7 @@ export const THEMES = [
 
 export type ThemeId = typeof THEMES[number]['id']
 
-const DEFAULT_THEME: ThemeId = 'light'
+const DEFAULT_THEME: ThemeId = 'dark'
 
 export function useTheme() {
   const cookie = useStatefulCookie('theme')
