@@ -119,9 +119,6 @@ onMounted(() => {
 }
 
 .ad-slot {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-
   min-height: 280px;
   display: flex;
   flex-direction: column;

@@ -246,13 +246,6 @@ useCustomSeoMeta({
         <div class="home-tools"><ToolPaths exclude="ai"/></div>
       </section>
 
-      <!-- SPA_728_90. A fixed 728px unit, so it only renders where the main
-           column actually clears it: measured 736px at 768, 760 at 1024, 716
-           at 1280 (the doc rail takes its share), 876 at 1440. -->
-      <Widget class="home-leaderboard" :title="$t('c_AdSlot.advertisement')">
-        <AdSlot slot="8090404628" :width="728" :height="90" bare/>
-      </Widget>
-
       <Widget v-if="showStudio" :title="auth.logged ? $t('p_index.yourStudio') : $t('p_index.startAProject')">
         <template #ctl>
           <NuxtLinkLocale to="/work" class="widget-ctl-btn">
@@ -313,6 +306,13 @@ useCustomSeoMeta({
           {{ homeChallenge.entries }} {{ homeChallenge.entries === 1 ? 'entry' : 'entries' }} · Join →
         </span>
       </NuxtLinkLocale>
+
+      <!-- SPA_728_90. A fixed 728px unit, so it only renders where the main
+           column actually clears it: measured 736px at 768, 760 at 1024, 716
+           at 1280 (the doc rail takes its share), 876 at 1440. -->
+      <Widget class="home-leaderboard" :title="$t('c_AdSlot.advertisement')">
+        <AdSlot slot="8090404628" :width="728" :height="90" bare/>
+      </Widget>
 
       <Widget :title="$t('p_index.whatSNew')" class="home-library">
         <template #ctl>
