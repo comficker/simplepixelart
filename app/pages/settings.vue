@@ -3,7 +3,7 @@ import {toast} from 'vue-sonner'
 
 const auth = useAuthStore()
 const {current, setTheme, themes} = useTheme() as any
-const googleAuthUrl = useGoogleAuthUrl()
+const loginModal = useLoginModal()
 const {current: resultsCols, options: resultsColOptions, setResultsCols} = useResultsCols()
 
 useCustomSeoMeta({
@@ -98,7 +98,7 @@ watch(() => auth.logged, fillForm)
           <h2 class="set-section-title">{{ $t('p_settings.account') }}</h2>
           <div v-if="!auth.isLogged" class="set-signin">
             <p class="text-xs text-muted" v-html="$t('p_settings.signInToManageYourUsername')"/>
-            <a :href="googleAuthUrl" class="btn primary">{{ $t('common.signIn') }}</a>
+            <button class="btn primary" @click="loginModal.show()">{{ $t('common.signIn') }}</button>
           </div>
           <form v-else class="set-form" @submit.prevent="saveProfile">
             <label class="set-field">

@@ -9,8 +9,6 @@ import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
 import type {EditorData} from '~/types'
 
 const auth = useAuthStore()
-const config = useRuntimeConfig()
-const requestURL = useRequestURL()
 const route = useRoute()
 
 useCustomSeoMeta({
@@ -45,10 +43,7 @@ useCustomSeoMeta({
   ],
 })
 
-const googleAuthUrl = computed(() => {
-  const apiBase = (config.public.api as string) || ''
-  return `${apiBase}/auth/google?state=${encodeURIComponent(`${requestURL.origin}/auth/callback`)}`
-})
+const loginModal = useLoginModal()
 
 const SIZES: (number | 'auto')[] = ['auto', 16, 32, 64, 128]
 const COLOR_COUNTS = [8, 16, 32]
@@ -512,9 +507,9 @@ const faq = computed(() => [
               :disabled="busy || !auth.isLogged"
               @keydown.enter.prevent="generate"
           >
-          <a v-if="!auth.isLogged" :href="googleAuthUrl" class="btn primary gen-send">
+          <button v-if="!auth.isLogged" class="btn primary gen-send" @click="loginModal.show()">
             <span class="icon icon-user"/><span>{{ $t('common.signIn') }}</span>
-          </a>
+          </button>
           <button
               v-else
               class="btn primary gen-send"

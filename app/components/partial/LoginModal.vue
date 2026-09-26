@@ -9,8 +9,11 @@ const editor = useEditor()
 const googleAuthUrl = useGoogleAuthUrl()
 
 const mode = ref<'login' | 'register'>('login')
-const form = reactive({username: '', password: ''})
+const form = reactive({username: '', email: '', password: '', repeat: ''})
+const reveal = ref(false)
 const busy = ref(false)
+
+const isRegister = computed(() => mode.value === 'register')
 
 // The backend answers both endpoints with a list of uppercase codes. Anything
 // not listed here is a server-side problem, not something the player can fix,
@@ -21,13 +24,27 @@ const ERRORS: Record<string, string> = {
   USERNAME_INVALID: t('c_LoginModal.usernameInvalid'),
   USERNAME_DUPLICATE: t('c_LoginModal.usernameTaken'),
   PASSWORD_TOO_SHORT: t('c_LoginModal.passwordTooShort'),
+  EMAIL_INVALID: t('c_LoginModal.emailInvalid'),
+  EMAIL_DUPLICATE: t('c_LoginModal.emailTaken'),
+}
+
+function switchMode() {
+  mode.value = isRegister.value ? 'login' : 'register'
+  form.repeat = ''
 }
 
 async function submit() {
   if (busy.value) return
+  if (isRegister.value && form.password !== form.repeat) {
+    toast.error(t('c_LoginModal.passwordsDoNotMatch'))
+    return
+  }
   busy.value = true
   try {
-    await auth.loginLocal(form.username.trim(), form.password, mode.value)
+    await auth.loginLocal(
+        form.username.trim(), form.password, mode.value,
+        isRegister.value ? form.email.trim() : undefined,
+    )
     // Same tail as the OAuth callback: local work goes to the cloud and a
     // pending referral is claimed. Skipping it here would make signing in
     // with a password quietly lose the drawings Google sign-in keeps.
@@ -37,8 +54,8 @@ async function submit() {
     emit('success')
     emit('close')
   } catch (e: any) {
-    const code = e?.response?._data?.messages?.[0] || e?.data?.messages?.[0]
-    toast.error(ERRORS[code] || t('c_LoginModal.couldNotSignIn'))
+    const codes: string[] = e?.response?._data?.messages || e?.data?.messages || []
+    toast.error(ERRORS[codes[0]] || t('c_LoginModal.couldNotSignIn'))
   } finally {
     busy.value = false
   }
@@ -47,49 +64,143 @@ async function submit() {
 
 <template>
   <UiModal
-      :title="mode === 'register' ? $t('c_LoginModal.createAnAccount') : $t('c_LoginModal.loginToShare')"
+      :title="isRegister ? $t('c_LoginModal.createAnAccount') : $t('c_LoginModal.loginToShare')"
       :sub="$t('c_PXEditor.signInToPublishAndShare')"
       @close="emit('close')"
   >
-    <div class="share-stack">
+    <div class="share-stack login-stack">
       <a :href="googleAuthUrl" class="btn secondary wide">
         <span class="icon icon-social"/>
         <span>{{ $t('c_PXEditor.loginWithGoogle') }}</span>
       </a>
 
-      <form class="publish-form" @submit.prevent="submit">
+      <form class="publish-form login-form" @submit.prevent="submit">
         <div>
-          <label class="publish-label" for="login-username">{{ $t('p_settings.username') }}</label>
+          <label class="publish-label" for="login-username">
+            {{ isRegister ? $t('p_settings.username') : $t('c_LoginModal.usernameOrEmail') }}
+          </label>
           <input
               id="login-username"
               v-model="form.username"
               class="publish-input"
-              autocomplete="username"
+              :autocomplete="isRegister ? 'username' : 'username email'"
               autocapitalize="off"
               spellcheck="false"
               required
           >
         </div>
+
+        <div v-if="isRegister">
+          <label class="publish-label" for="login-email">{{ $t('c_LoginModal.emailOptional') }}</label>
+          <input
+              id="login-email"
+              v-model="form.email"
+              type="email"
+              class="publish-input"
+              autocomplete="email"
+              autocapitalize="off"
+              spellcheck="false"
+          >
+        </div>
+
         <div>
           <label class="publish-label" for="login-password">{{ $t('p_settings.password') }}</label>
+          <!-- The eye sits inside the field's box rather than beside it, so
+               the input keeps the full width the other fields have. -->
+          <div class="login-reveal">
+            <input
+                id="login-password"
+                v-model="form.password"
+                :type="reveal ? 'text' : 'password'"
+                class="publish-input"
+                :autocomplete="isRegister ? 'new-password' : 'current-password'"
+                :minlength="isRegister ? 8 : undefined"
+                required
+            >
+            <button
+                type="button"
+                class="login-reveal-btn"
+                :aria-label="reveal ? $t('c_LoginModal.hidePassword') : $t('c_LoginModal.showPassword')"
+                :title="reveal ? $t('c_LoginModal.hidePassword') : $t('c_LoginModal.showPassword')"
+                :aria-pressed="reveal"
+                @click="reveal = !reveal"
+            >
+              <span class="icon" :class="reveal ? 'icon-eye-cross' : 'icon-eye'"/>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="isRegister">
+          <label class="publish-label" for="login-repeat">{{ $t('c_LoginModal.repeatPassword') }}</label>
           <input
-              id="login-password"
-              v-model="form.password"
-              type="password"
+              id="login-repeat"
+              v-model="form.repeat"
+              :type="reveal ? 'text' : 'password'"
               class="publish-input"
-              :autocomplete="mode === 'register' ? 'new-password' : 'current-password'"
-              :minlength="mode === 'register' ? 8 : undefined"
+              autocomplete="new-password"
+              minlength="8"
               required
           >
         </div>
-        <button class="btn primary wide" type="submit" :disabled="busy">
-          {{ busy ? $t('common.loading') : (mode === 'register' ? $t('c_LoginModal.createAccount') : $t('common.signIn')) }}
+
+        <button class="btn primary wide login-submit" type="submit" :disabled="busy">
+          {{ busy ? $t('common.loading') : (isRegister ? $t('c_LoginModal.createAccount') : $t('common.signIn')) }}
         </button>
       </form>
 
-      <button class="share-dismiss" type="button" @click="mode = mode === 'login' ? 'register' : 'login'">
-        {{ mode === 'login' ? $t('c_LoginModal.noAccountCreateOne') : $t('c_LoginModal.alreadyHaveAnAccount') }}
+      <button class="share-dismiss" type="button" @click="switchMode">
+        {{ isRegister ? $t('c_LoginModal.alreadyHaveAnAccount') : $t('c_LoginModal.noAccountCreateOne') }}
       </button>
     </div>
   </UiModal>
 </template>
+
+<style scoped>
+/* One rhythm for the whole modal: the fields sit a step apart, and the two
+   things that are not fields -- Google above, the submit below -- get a
+   wider step so the form reads as one block between them. */
+.login-stack {
+  gap: var(--space-5);
+}
+
+.login-form {
+  gap: var(--space-3);
+}
+
+.login-submit {
+  margin-top: var(--space-2);
+}
+
+.login-reveal {
+  position: relative;
+}
+
+.login-reveal .publish-input {
+  padding-right: 2.25rem;
+}
+
+.login-reveal-btn {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 0.625rem;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.login-reveal-btn .icon {
+  width: 15px;
+  height: 15px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .login-reveal-btn:hover {
+    color: var(--foreground);
+  }
+}
+</style>

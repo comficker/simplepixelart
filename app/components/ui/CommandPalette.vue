@@ -29,12 +29,7 @@ const VIEW_TITLE: Record<Exclude<View, 'root'>, string> = {theme: 'Theme', langu
 const router = useRouter()
 const { current, setTheme, themes } = useTheme() as any
 const auth = useAuthStore()
-const config = useRuntimeConfig()
-const requestURL = useRequestURL()
-const googleAuthUrl = computed(() => {
-  const apiBase = (config.public.api as string) || ''
-  return `${apiBase}/auth/google?state=${encodeURIComponent(`${requestURL.origin}/auth/callback`)}`
-})
+const loginModal = useLoginModal()
 
 const open = ref(false)
 const query = ref('')
@@ -102,9 +97,9 @@ const accountCommands = computed<Cmd[]>(() => {
   const cmds: Cmd[] = []
   if (!auth.isLogged) {
     cmds.push({
-      id: 'account:login', label: t('c_CommandPalette.signIn'), icon: 'icon-user', hint: t('c_CommandPalette.google'),
-      group: 'Account', keywords: 'login signin account google',
-      run: () => { window.location.href = googleAuthUrl.value },
+      id: 'account:login', label: t('c_CommandPalette.signIn'), icon: 'icon-user',
+      group: 'Account', keywords: 'login signin account google password',
+      run: () => { loginModal.show() },
     })
   }
   cmds.push({
@@ -393,12 +388,12 @@ onBeforeUnmount(() => {
             <span class="cmdk-stat-label">{{ $t('c_CommandPalette.storage') }}</span>
             <span class="cmdk-stat-bar"><span class="cmdk-stat-fill" :style="{ width: storage.pct + '%' }"/></span>
             <span class="cmdk-stat-val">{{ storage.usedMB }} MB · {{ storage.pct }}%</span>
-            <a
+            <button
                 v-if="!auth.isLogged && storage.pct >= 70"
-                :href="googleAuthUrl"
                 class="cmdk-stat-cta"
                 :title="$t('c_CommandPalette.signInToBackYourLocal')"
-            >{{ $t('c_CommandPalette.signInToBackUp') }}</a>
+                @click="closePalette(); loginModal.show()"
+            >{{ $t('c_CommandPalette.signInToBackUp') }}</button>
             <span v-else-if="storage.boards" class="cmdk-stat-meta">{{ storage.boards }} board{{ storage.boards === 1 ? '' : 's' }}</span>
           </div>
           <div class="cmdk-foot">

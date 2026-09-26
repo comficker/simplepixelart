@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const auth = useAuthStore()
-const googleAuthUrl = useGoogleAuthUrl()
+const loginModal = useLoginModal()
 </script>
 
 <template>
@@ -27,7 +27,7 @@ const googleAuthUrl = useGoogleAuthUrl()
     </a>
     <span class="social-sep" aria-hidden="true"/>
     <span v-if="auth.isLogged" class="social-auth-link" @click="auth.logout()">{{ $t('c_SocialAuth.logout') }}</span>
-    <a v-else :href="googleAuthUrl" class="social-auth-link">{{ $t('c_SocialAuth.login') }}</a>
+    <span v-else class="social-auth-link" @click="loginModal.show()">{{ $t('c_SocialAuth.login') }}</span>
   </div>
 </template>
 

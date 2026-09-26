@@ -62,10 +62,18 @@ export const useAuthStore = defineStore('auth', () => {
      *  device-auth guest and folds its work into the account being signed
      *  into, the same as the OAuth path.
      */
-    const loginLocal = async (username: string, password: string, mode: 'login' | 'register' = 'login') => {
+    const loginLocal = async (
+        username: string,
+        password: string,
+        mode: 'login' | 'register' = 'login',
+        email?: string,
+    ) => {
+        // On the way in `username` may be either a username or an email --
+        // the backend resolves it. On the way up it is always the username,
+        // with the email a separate optional field.
         const res = await useNativeFetch<{ refresh: string, access: string }>(
             mode === 'register' ? '/auth/register' : '/auth/login',
-            {method: 'POST', body: {username, password}}
+            {method: 'POST', body: email ? {username, password, email} : {username, password}}
         )
         authToken.value = res.access
         authTokenRefresh.value = res.refresh

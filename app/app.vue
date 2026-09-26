@@ -15,6 +15,7 @@ useHead({
   link: computed(() => localeHead.value?.link || []),
   meta: computed(() => localeHead.value?.meta || []),
 })
+const loginModal = useLoginModal()
 const sideState = useStatefulCookie('dash_side')
 const sideCollapsed = computed(() => sideState.value === 'collapsed')
 const editorBootBg = ref('#1b1b1f')
@@ -58,6 +59,7 @@ if (import.meta.client) {
       <PartialFooter/>
     </div>
     <UiCommandPalette/>
+    <PartialLoginModal v-if="loginModal.open.value" @close="loginModal.hide()" @success="loginModal.done()"/>
     <ClientOnly>
       <PartialConsentBanner/>
     </ClientOnly>

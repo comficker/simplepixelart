@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const googleAuthUrl = useGoogleAuthUrl()
+const loginModal = useLoginModal()
 import {toast} from 'vue-sonner'
 
 const auth = useAuthStore()
@@ -159,7 +159,7 @@ watch(() => auth.isLogged, (v) => {
           <span class="icon icon-coin empty-icon"/>
           <h2 class="msn-empty-title">{{ $t('p_missions.signInToEarnCredits') }}</h2>
           <p class="text-xs" v-html="$t('p_missions.dailyBonusMissionsAndInvitesReward')"/>
-          <a :href="googleAuthUrl" class="btn primary">{{ $t('common.signIn') }}</a>
+          <button class="btn primary" @click="loginModal.show()">{{ $t('common.signIn') }}</button>
         </div>
 
         <div v-else-if="loading && !sum" class="msn-list" aria-busy="true">
