@@ -135,3 +135,18 @@ export function pruneStorageKeys(prefix: string, max = 30) {
         for (const {k} of entries.slice(0, entries.length - max)) localStorage.removeItem(k)
     } catch {  }
 }
+
+/**
+ * Whole days left until the end of `ends`, a YYYY-MM-DD day.
+ *
+ * Counted in UTC on purpose. Reading the day in local time made the server,
+ * which runs in UTC, and a visitor east of it disagree by one, so the
+ * countdown rendered on the server did not match the one the browser
+ * computed and hydration reported a mismatch.
+ */
+export function daysLeftUntil(ends?: string | null): number {
+    if (!ends) return 0
+    const end = Date.parse(`${ends}T23:59:59Z`)
+    if (Number.isNaN(end)) return 0
+    return Math.max(0, Math.ceil((end - Date.now()) / 86400000))
+}

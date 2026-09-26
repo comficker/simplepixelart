@@ -2,7 +2,7 @@
 const localePath = useLocalePath()
 const {t} = useI18n()
 import type {APIResponse, EditorData, SharedPage} from "~/types";
-import {getStorageItem} from "~/helper/utils";
+import {daysLeftUntil, getStorageItem} from "~/helper/utils";
 
 type WorkItem = (SharedPage | EditorData) & {
   id: string | number
@@ -128,11 +128,7 @@ const creatorRows = computed(() => {
   return Array.from({length: CREATOR_ROWS}, (_, i) => rows[i] || null)
 })
 
-const challengeDaysLeft = computed(() => {
-  if (!homeChallenge.value?.ends) return 0
-  const end = new Date(`${homeChallenge.value.ends}T23:59:59`)
-  return Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400000))
-})
+const challengeDaysLeft = computed(() => daysLeftUntil(homeChallenge.value?.ends))
 const aiPrompt = ref('')
 
 function goGenerate() {

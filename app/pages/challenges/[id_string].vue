@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const artImage = useArtImage()
 import type {APIResponse, SharedPage} from '~/types'
+import {daysLeftUntil} from '~/helper/utils'
 
 interface Entry {
   id: number
@@ -47,9 +48,7 @@ const winners = computed(() => challenge.value?.winners || [])
 const showSubmit = ref(false)
 
 function daysLeft(): number {
-  if (!challenge.value) return 0
-  const end = new Date(`${challenge.value.ends}T23:59:59`)
-  return Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400000))
+  return daysLeftUntil(challenge.value?.ends)
 }
 
 function fmtRange(): string {

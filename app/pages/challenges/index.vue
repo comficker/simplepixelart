@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import {daysLeftUntil} from '~/helper/utils'
+
 const artImage = useArtImage()
 interface Entry {
   id: number
@@ -31,8 +33,7 @@ const past = computed(() => data.value?.past || [])
 const showSubmit = ref(false)
 
 function daysLeft(c: ChallengeItem): number {
-  const end = new Date(`${c.ends}T23:59:59`)
-  return Math.max(0, Math.ceil((end.getTime() - Date.now()) / 86400000))
+  return daysLeftUntil(c.ends)
 }
 
 function thumb(e: Entry): string {
