@@ -800,7 +800,10 @@ footer {
 html,
 body,
 .no-scrollbar,
-.browse-filters {
+.browse-filters,
+.tool-doc,
+.readme > .readme-body,
+.readme > .agent {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
@@ -808,7 +811,10 @@ body,
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar,
-.browse-filters::-webkit-scrollbar {
+.browse-filters::-webkit-scrollbar,
+.tool-doc::-webkit-scrollbar,
+.readme > .readme-body::-webkit-scrollbar,
+.readme > .agent::-webkit-scrollbar {
     display: none;
 }
 
