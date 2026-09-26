@@ -61,6 +61,7 @@ if (import.meta.client) {
     </div>
     <UiCommandPalette/>
     <PartialLoginModal v-if="loginModal.open.value" @close="loginModal.hide()" @success="loginModal.done()"/>
+    <PartialSyncPrompt/>
     <ClientOnly>
       <PartialConsentBanner/>
     </ClientOnly>

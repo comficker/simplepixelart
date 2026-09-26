@@ -5,7 +5,7 @@ const emit = defineEmits<{ close: []; success: [] }>()
 
 const {t} = useI18n()
 const auth = useAuthStore()
-const editor = useEditor()
+const localSync = useLocalSync()
 const googleAuthUrl = useGoogleAuthUrl()
 
 const mode = ref<'login' | 'register'>(useLoginModal().mode.value)
@@ -45,11 +45,10 @@ async function submit() {
         form.username.trim(), form.password, mode.value,
         isRegister.value ? form.email.trim() : undefined,
     )
-    // Same tail as the OAuth callback: local work goes to the cloud and a
-    // pending referral is claimed. Skipping it here would make signing in
-    // with a password quietly lose the drawings Google sign-in keeps.
-    try { await editor.syncLocalToCloud() } catch {}
+    // Uploading the signed-out work is offered, not done: it is the user's
+    // drawings going onto an account. The referral is claimed either way.
     await attachPendingReferral()
+    localSync.offer()
     toast.success(t('c_LoginModal.signedIn'))
     emit('success')
     emit('close')

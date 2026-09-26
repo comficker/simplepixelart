@@ -11,7 +11,6 @@ const router = useRouter()
 const authToken = useStatefulCookie('auth_token')
 const authTokenRefresh = useStatefulCookie('auth_token_refresh')
 const auth = useAuthStore()
-const editor = useEditor()
 
 const error = ref<string | null>(null)
 
@@ -38,9 +37,10 @@ onMounted(async () => {
   }
 
   if (auth.isLogged) {
-    try { await editor.syncLocalToCloud() }
-    catch {}
     await attachPendingReferral()
+    // Offered on the page we land on, not here -- this view unmounts the
+    // moment the redirect below runs.
+    useLocalSync().offer()
   }
 
   const next = (route.query.next as string | undefined) || '/'

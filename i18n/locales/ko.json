@@ -385,6 +385,14 @@
     "submitAnArtToThisChallenge": "이 챌린지에 작품 제출",
     "youHaveNoSavedArts": "저장된 작품이 아직 없습니다. 먼저 하나 그려 보세요."
   },
+  "c_SyncPrompt": {
+    "keepThemOnThisDevice": "이 기기에 보관",
+    "madeWhileSignedOut": "로그아웃 상태로 이 기기에서 {count}개를 만들었습니다.",
+    "syncYourWork": "작업물을 동기화할까요?",
+    "uploadThem": "내 계정에 업로드",
+    "uploading": "{total}개 중 {done}개 업로드 중…",
+    "uploadingShort": "업로드 중…"
+  },
   "c_TagInput": {
     "removeTag": "태그 제거"
   },

@@ -399,6 +399,14 @@
     "youHaveNoSavedArts": "You have no saved arts yet — draw one first."
   },
   "c_Switch": {},
+  "c_SyncPrompt": {
+    "keepThemOnThisDevice": "Keep them on this device",
+    "madeWhileSignedOut": "You made {count} artwork(s) on this device while signed out.",
+    "syncYourWork": "Sync your work?",
+    "uploadThem": "Upload to my account",
+    "uploading": "Uploading {done} of {total}…",
+    "uploadingShort": "Uploading…"
+  },
   "c_TagInput": {
     "removeTag": "Remove tag"
   },

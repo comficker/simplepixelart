@@ -385,6 +385,14 @@
     "submitAnArtToThisChallenge": "このチャレンジに作品を投稿",
     "youHaveNoSavedArts": "保存された作品がまだありません。まず1枚描いてみてください。"
   },
+  "c_SyncPrompt": {
+    "keepThemOnThisDevice": "この端末に残す",
+    "madeWhileSignedOut": "ログアウト中にこの端末で {count} 点作成しました。",
+    "syncYourWork": "作品を同期しますか？",
+    "uploadThem": "アカウントにアップロード",
+    "uploading": "{total} 点中 {done} 点をアップロード中…",
+    "uploadingShort": "アップロード中…"
+  },
   "c_TagInput": {
     "removeTag": "タグを削除"
   },

@@ -2147,11 +2147,21 @@ export const useEditor = defineStore('editor', () => {
         saveState();
     }
 
-    async function syncLocalToCloud() {
+    /** How many local artworks are waiting to be uploaded. */
+    function localPendingCount() {
+        const workspaces: { [key: string]: EditorData } = getStorageItem('workspaces')
+        return Object.values(workspaces).filter(w => w && validateEditorData(w)).length
+    }
+
+    /** `onProgress` lets a caller show what is happening; uploads are one at a
+     *  time already, so it fires per artwork. */
+    async function syncLocalToCloud(onProgress?: (done: number, total: number) => void) {
         if (!auth.isLogged) return
         const workspaces: { [key: string]: EditorData } = getStorageItem('workspaces')
         const keys = Object.keys(workspaces)
         if (keys.length === 0) return
+        const total = keys.filter(k => workspaces[k] && validateEditorData(workspaces[k]!)).length
+        onProgress?.(0, total)
 
         let synced = 0
         const failed: string[] = []
@@ -2178,6 +2188,7 @@ export const useEditor = defineStore('editor', () => {
                     body: payload
                 })
                 synced++
+                onProgress?.(synced, total)
             } catch (e) {
                 failed.push(key)
                 console.error(`Failed to sync workspace ${key}:`, e)
@@ -2233,6 +2244,7 @@ export const useEditor = defineStore('editor', () => {
         mirrorHorizontal,
         mirrorVertical,
         localWS,
+        localPendingCount,
         selectionState,
         validBounds,
         drawTurn,

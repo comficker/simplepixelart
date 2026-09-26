@@ -385,6 +385,14 @@
     "submitAnArtToThisChallenge": "Отправить работу на этот челлендж",
     "youHaveNoSavedArts": "Сохранённых работ пока нет — сначала нарисуйте одну."
   },
+  "c_SyncPrompt": {
+    "keepThemOnThisDevice": "Оставить на этом устройстве",
+    "madeWhileSignedOut": "Вы создали {count} работ(ы) на этом устройстве без входа в аккаунт.",
+    "syncYourWork": "Синхронизировать работы?",
+    "uploadThem": "Загрузить в аккаунт",
+    "uploading": "Загружено {done} из {total}…",
+    "uploadingShort": "Загрузка…"
+  },
   "c_TagInput": {
     "removeTag": "Убрать тег"
   },

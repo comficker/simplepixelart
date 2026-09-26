@@ -385,6 +385,14 @@
     "submitAnArtToThisChallenge": "向这个挑战投稿作品",
     "youHaveNoSavedArts": "你还没有保存过作品——先画一幅吧。"
   },
+  "c_SyncPrompt": {
+    "keepThemOnThisDevice": "保留在本设备",
+    "madeWhileSignedOut": "你在退出登录时于本设备创作了 {count} 幅作品。",
+    "syncYourWork": "同步你的作品？",
+    "uploadThem": "上传到我的账号",
+    "uploading": "正在上传第 {done} / {total} 幅…",
+    "uploadingShort": "上传中…"
+  },
   "c_TagInput": {
     "removeTag": "移除标签"
   },

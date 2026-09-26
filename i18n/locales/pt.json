@@ -385,6 +385,14 @@
     "submitAnArtToThisChallenge": "Envie uma obra para este desafio",
     "youHaveNoSavedArts": "Você ainda não tem obras salvas — desenhe uma primeiro."
   },
+  "c_SyncPrompt": {
+    "keepThemOnThisDevice": "Manter neste dispositivo",
+    "madeWhileSignedOut": "Você criou {count} obra(s) neste dispositivo sem estar conectado.",
+    "syncYourWork": "Sincronizar seu trabalho?",
+    "uploadThem": "Enviar para minha conta",
+    "uploading": "Enviando {done} de {total}…",
+    "uploadingShort": "Enviando…"
+  },
   "c_TagInput": {
     "removeTag": "Remover a tag"
   },
