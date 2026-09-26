@@ -122,6 +122,43 @@ async function addCoupon() {
   }
 }
 
+interface Redemption {
+  user_id: number
+  username: string
+  amount: number
+  created: string
+}
+
+const openCoupon = ref<number | null>(null)
+const redemptions = ref<Record<number, {
+  count: number; total: number; page: number; results: Redemption[]
+}>>({})
+const loadingRedemptions = ref<number | null>(null)
+
+async function fetchRedemptions(c: Coupon, page = 1) {
+  loadingRedemptions.value = c.id
+  try {
+    const res = await useNativeFetch<{
+      count: number; total: number; page: number; results: Redemption[]
+    }>(`/coloring/admin/coupons/${c.id}/redemptions/?page=${page}`)
+    const held = redemptions.value[c.id]
+    redemptions.value[c.id] = page > 1 && held
+        ? {...res, results: [...held.results, ...res.results]}
+        : res
+  } catch {
+    toast.error('Could not load redemptions')
+  } finally {
+    loadingRedemptions.value = null
+  }
+}
+
+function toggleRedemptions(c: Coupon) {
+  if (openCoupon.value === c.id) { openCoupon.value = null; return }
+  openCoupon.value = c.id
+  // Re-fetch on open: the count moves while the dashboard is sitting there.
+  fetchRedemptions(c)
+}
+
 async function retireCoupon(c: Coupon) {
   if (couponBusy.value) return
   if (!confirm(`Retire ${c.code}? Credits already redeemed are kept.`)) return
@@ -377,24 +414,67 @@ watch(isStaff, (v) => { if (v) load() })
                 <tr><th>Code</th><th>Credits</th><th>Used</th><th>Expires</th><th>Note</th><th/></tr>
                 </thead>
                 <tbody>
-                <tr v-for="c in coupons" :key="c.id">
-                  <td>{{ c.code }}</td>
-                  <td>{{ c.amount }}</td>
-                  <td>{{ c.used }}<span v-if="c.max_uses"> / {{ c.max_uses }}</span></td>
-                  <td>
-                    <template v-if="c.expires_at">
-                      {{ new Date(c.expires_at).toLocaleDateString() }}
-                      <span v-if="c.expired"> · expired</span>
-                    </template>
-                    <template v-else>never</template>
-                  </td>
-                  <td>{{ c.note }}</td>
-                  <td>
-                    <button class="btn adm-ic" title="Retire coupon" @click="retireCoupon(c)">
-                      <span class="icon icon-trash"/>
-                    </button>
-                  </td>
-                </tr>
+                <template v-for="c in coupons" :key="c.id">
+                  <tr>
+                    <td>{{ c.code }}</td>
+                    <td>{{ c.amount }}</td>
+                    <td>{{ c.used }}<span v-if="c.max_uses"> / {{ c.max_uses }}</span></td>
+                    <td>
+                      <template v-if="c.expires_at">
+                        {{ new Date(c.expires_at).toLocaleDateString() }}
+                        <span v-if="c.expired"> · expired</span>
+                      </template>
+                      <template v-else>never</template>
+                    </td>
+                    <td>{{ c.note }}</td>
+                    <td>
+                      <div class="adm-actions">
+                        <button
+                            class="btn adm-ic"
+                            :title="openCoupon === c.id ? 'Hide who claimed it' : 'Who claimed it'"
+                            :disabled="!c.used"
+                            @click="toggleRedemptions(c)"
+                        >
+                          <span class="icon" :class="openCoupon === c.id ? 'icon-eye-cross' : 'icon-eye'"/>
+                        </button>
+                        <button class="btn adm-ic" title="Retire coupon" @click="retireCoupon(c)">
+                          <span class="icon icon-trash"/>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr v-if="openCoupon === c.id">
+                    <td colspan="6">
+                      <template v-if="redemptions[c.id]">
+                        <div class="adm-actions">
+                          <span>
+                            {{ redemptions[c.id].count }} claim{{ redemptions[c.id].count === 1 ? '' : 's' }}
+                            · {{ redemptions[c.id].total }} credits given
+                          </span>
+                          <button
+                              v-if="redemptions[c.id].results.length < redemptions[c.id].count"
+                              class="btn"
+                              :disabled="loadingRedemptions === c.id"
+                              @click="fetchRedemptions(c, redemptions[c.id].page + 1)"
+                          >Load more</button>
+                        </div>
+                        <table class="adm-table">
+                          <thead>
+                          <tr><th>Who</th><th>Credits</th><th>When</th></tr>
+                          </thead>
+                          <tbody>
+                          <tr v-for="r in redemptions[c.id].results" :key="r.user_id">
+                            <td>{{ r.username }}</td>
+                            <td>{{ r.amount }}</td>
+                            <td>{{ new Date(r.created).toLocaleString() }}</td>
+                          </tr>
+                          </tbody>
+                        </table>
+                      </template>
+                      <span v-else>Loading…</span>
+                    </td>
+                  </tr>
+                </template>
                 <tr v-if="!coupons.length">
                   <td colspan="6">No coupons yet.</td>
                 </tr>
