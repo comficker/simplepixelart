@@ -8,4 +8,7 @@ export default defineI18nConfig(() => ({
   // the console with a warning for every one of them.
   missingWarn: false,
   fallbackWarn: false,
+  // README and FAQ copy carries inline markup on purpose and is rendered
+  // through v-html; the compiler side is already told so in nuxt.config.
+  warnHtmlMessage: false,
 }))

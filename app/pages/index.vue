@@ -246,6 +246,13 @@ useCustomSeoMeta({
         <div class="home-tools"><ToolPaths exclude="ai"/></div>
       </section>
 
+      <!-- SPA_728_90. A fixed 728px unit, so it only renders where the main
+           column actually clears it: measured 736px at 768, 760 at 1024, 716
+           at 1280 (the doc rail takes its share), 876 at 1440. -->
+      <Widget class="home-leaderboard" :title="$t('c_AdSlot.advertisement')">
+        <AdSlot slot="8090404628" :width="728" :height="90" bare/>
+      </Widget>
+
       <Widget v-if="showStudio" :title="auth.logged ? $t('p_index.yourStudio') : $t('p_index.startAProject')">
         <template #ctl>
           <NuxtLinkLocale to="/work" class="widget-ctl-btn">
@@ -377,9 +384,6 @@ useCustomSeoMeta({
         {{ $t('p_index.startWith') }} <NuxtLinkLocale to="/easy-pixel-art">{{ $t('p_index.easyPixelArt') }}</NuxtLinkLocale> {{ $t('p_index.smallGridsThreeColorsAndA') }} <NuxtLinkLocale to="/editor">{{ $t('p_index.pixelArtEditor') }}</NuxtLinkLocale> {{ $t('p_index.toMakePixelArtOnlineFor') }} </p>
 
       <QnA :title="$t('common.questionsAmpAnswers')" :items="faq"/>
-      <ClientOnly>
-        <AdSlot slot="6499761093"/>
-      </ClientOnly>
     </template>
   </ToolLayout>
 </template>
@@ -387,6 +391,16 @@ useCustomSeoMeta({
 <style scoped>
 /* No flat gap: each element sets its own top margin, so the eyebrow reads as a
    label on the title and the AI form gets real separation from the copy. */
+.home-leaderboard {
+  display: none;
+}
+
+@media (min-width: 768px) and (max-width: 1199px), (min-width: 1360px) {
+  .home-leaderboard {
+    display: block;
+  }
+}
+
 .home-hero {
   display: flex;
   flex-direction: column;

@@ -620,11 +620,6 @@ const previewStyle = computed(() => {
         </p>
       </Widget>
 
-      <ClientOnly v-if="hasOriginalContent">
-        <div class="art-ad">
-          <AdSlot slot="6499761093" size="medium"/>
-        </div>
-      </ClientOnly>
     </template>
 
   </ToolLayout>
@@ -882,7 +877,6 @@ const previewStyle = computed(() => {
   .art-size-pill:hover { color: var(--primary); }
 }
 
-.art-ad { display: flex; justify-content: center; }
 
 .art-meta-side { margin: 0; display: flex; flex-direction: column; }
 

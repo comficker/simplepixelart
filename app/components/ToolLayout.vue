@@ -77,6 +77,12 @@ function nudge(step: number) {
     />
     <div class="tool-doc">
       <slot name="aside"/>
+      <!-- One ad per readme screen, in the rail above the readme. It is a
+           direct child of .tool-doc like ToolReadme, so the rail's own rules
+           give it the same flat panel and divider. -->
+      <Widget v-if="$slots.doc" :title="$t('c_AdSlot.advertisement')">
+        <AdSlot slot="7838948172" bare/>
+      </Widget>
       <ToolReadme v-if="$slots.doc" :agent="agent">
         <slot name="doc"/>
       </ToolReadme>
