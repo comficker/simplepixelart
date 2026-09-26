@@ -386,6 +386,23 @@ input[type=number] {
     }
 }
 
+/* Home puts the footer bar in the tool layout's status slot, because at
+   1280+ the page is pinned to the viewport and the real footer below it is
+   hidden (see the rule in that block). Narrower than that the real footer is
+   back, so the status copy is a second footer stranded mid-page -- it showed
+   the same four links again, above the readme. */
+@media (max-width: 1279px) {
+    .editor-foot:has(> .footer-left) {
+        display: none;
+    }
+
+    /* Stacked under the tool instead of beside it, so the separator that is
+       a left border at 1280+ has to become a top one. */
+    .main-wrapper.dash .page > .tool-doc {
+        border-top: 1px solid var(--border);
+    }
+}
+
 @media (min-width: 1280px) {
     .main-wrapper.dash:has(.page > .tool-doc) .dash-main {
         height: 100vh;
@@ -801,6 +818,10 @@ html,
 body,
 .no-scrollbar,
 .browse-filters,
+.tool-main,
+/* The tool pane itself rarely overflows -- this is the child that actually
+   scrolls inside it, and so the one whose scrollbar was showing. */
+.main-wrapper.dash .tool-main > .screen,
 .tool-doc,
 .readme > .readme-body,
 .readme > .agent {
@@ -812,6 +833,8 @@ html::-webkit-scrollbar,
 body::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar,
 .browse-filters::-webkit-scrollbar,
+.tool-main::-webkit-scrollbar,
+.main-wrapper.dash .tool-main > .screen::-webkit-scrollbar,
 .tool-doc::-webkit-scrollbar,
 .readme > .readme-body::-webkit-scrollbar,
 .readme > .agent::-webkit-scrollbar {

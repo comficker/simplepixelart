@@ -21,6 +21,16 @@
   padding-bottom: 0;
 }
 
+/* Stacked, so it needs the vertical room the one-line desktop bar gets from
+   its min-height -- without it the first row sat on the border above. */
+@media (max-width: 1023px) {
+  .footer-bar {
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+  }
+}
+
 @media (max-width: 640px) {
   .footer-bar {
     flex-direction: column;
