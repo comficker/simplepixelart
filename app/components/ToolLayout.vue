@@ -4,7 +4,10 @@ import useStatefulCookie from '~/composables/useStatefulCookie'
 withDefaults(defineProps<{ title: string; titleTag?: 'h1' | 'h2'; agent?: boolean }>(),
     {titleTag: 'h2', agent: false})
 
-const DOC_MIN = 300
+// 360 leaves the rail's ad unit 343px after the panel border and body padding,
+// enough for a 336x280 -- at 300 it was 283 and the responsive unit had no
+// standard size that fit.
+const DOC_MIN = 360
 
 const pageEl = ref<HTMLElement | null>(null)
 const dragging = ref(false)

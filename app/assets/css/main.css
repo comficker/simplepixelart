@@ -407,7 +407,7 @@ input[type=number] {
     .main-wrapper.dash .page:has(> .tool-doc) {
         padding: 0;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 0px clamp(300px, var(--doc-w, 300px), 50%);
+        grid-template-columns: minmax(0, 1fr) 0px clamp(360px, var(--doc-w, 360px), 50%);
         grid-template-rows: minmax(0, 1fr);
         column-gap: 0;
         row-gap: 0;
@@ -452,6 +452,34 @@ input[type=number] {
         min-width: 0;
         min-height: 0;
         margin-top: 0;
+        overflow-y: auto;
+    }
+
+    /* With a readme in the rail, the readme is the thing that scrolls -- not
+       the rail. Whatever sits above it (the ad widget, a page's aside) stays
+       put, and so do the README / Agent tabs; only the readme body moves.
+       A rail without a readme (the art page's aside stack) keeps scrolling as
+       a whole via the rule above. */
+    .main-wrapper.dash .page > .tool-doc:has(> .readme) {
+        display: flex;
+        flex-direction: column;
+        overflow-y: hidden;
+    }
+
+    .main-wrapper.dash .page > .tool-doc:has(> .readme) > * {
+        flex: 0 0 auto;
+    }
+
+    .main-wrapper.dash .page > .tool-doc:has(> .readme) > .readme {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    .main-wrapper.dash .page > .tool-doc:has(> .readme) > .readme > :is(.readme-body, .agent) {
+        flex: 1 1 auto;
+        min-height: 0;
         overflow-y: auto;
     }
 
