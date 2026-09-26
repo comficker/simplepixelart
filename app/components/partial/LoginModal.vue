@@ -172,8 +172,10 @@ async function submit() {
   gap: var(--space-3);
 }
 
+/* The submit is not another field, so it takes the wider step -- the form's
+   own gap already covers part of the distance. */
 .login-submit {
-  margin-top: var(--space-2);
+  margin-top: calc(var(--space-5) - var(--space-3));
 }
 
 /* The stack gap already spaces it; its own margin only made this one step
@@ -182,12 +184,19 @@ async function submit() {
   margin-top: 0;
 }
 
+/* The button's width is stated once and used twice -- as its own box, and as
+   the room the text keeps clear of it -- so the two cannot drift apart.
+   1.25em is what .icon measures, and em resolves against each element's own
+   font-size, so the button has to carry the field's size for the two to
+   agree: on the button's inherited 16px it came out 4px wider than the
+   padding and the text slid under it. */
 .login-reveal {
+  --reveal-w: calc(1.25em + var(--space-2) * 2);
   position: relative;
 }
 
 .login-reveal .publish-input {
-  padding-right: 2.25rem;
+  padding-right: var(--reveal-w);
 }
 
 .login-reveal-btn {
@@ -195,18 +204,16 @@ async function submit() {
   top: 0;
   bottom: 0;
   right: 0;
+  font-size: var(--text-xs);
+  width: var(--reveal-w);
   display: flex;
   align-items: center;
-  padding: 0 0.625rem;
+  justify-content: center;
+  padding: 0;
   border: 0;
   background: none;
   color: var(--muted);
   cursor: pointer;
-}
-
-.login-reveal-btn .icon {
-  width: 15px;
-  height: 15px;
 }
 
 @media (hover: hover) and (pointer: fine) {
