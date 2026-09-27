@@ -24,6 +24,14 @@ interface Mission {
 
 const isStaff = computed(() => !!(auth.logged as any)?.is_staff)
 const stats = ref<Stats | null>(null)
+/* The backend echoes whatever it stored, so a config saved before a knob
+   existed comes back without it and the v-model would read through null. */
+function normalizeConfig() {
+  const c = config.value
+  if (!c) return
+  if (!c.bots) c.bots = {in_leaderboard: false}
+}
+
 const config = ref<any>(null)
 const checks = ref<string[]>([])
 const loading = ref(false)
@@ -47,6 +55,7 @@ async function load() {
     if (!config.value.ai) config.value.ai = {enabled: true}
     if (config.value.ai.image_enabled === undefined) config.value.ai.image_enabled = false
     if (!config.value.actions) config.value.actions = {}
+    normalizeConfig()
   } catch {
     toast.error('Could not load dashboard')
   } finally {
@@ -202,6 +211,7 @@ async function saveConfig() {
       method: 'PUT', body: {config: config.value},
     })
     config.value = res.config
+    normalizeConfig()
     toast.success('Config saved — live immediately')
   } catch {
     toast.error('Could not save config')
@@ -340,6 +350,11 @@ watch(isStaff, (v) => { if (v) load() })
               <label class="adm-knob adm-knob-check" title="Image generation needs a BILLING-enabled Gemini key (free tier has zero image quota) — turn on only after billing is set up">
                 <span>AI image gen</span>
                 <input v-model="config.ai.image_enabled" type="checkbox">
+              </label>
+
+              <label class="adm-knob adm-knob-check" title="Show automated accounts in the creator ranking. They stay labelled as bots wherever they appear.">
+                <span>Bots in leaderboard</span>
+                <input v-model="config.bots.in_leaderboard" type="checkbox">
               </label>
             </div>
 

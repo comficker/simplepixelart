@@ -8,6 +8,7 @@ interface RankedCreator {
   username: string
   avatar: string | null
   arts: number
+  is_bot?: boolean
 }
 
 /* Rolling windows, which is what the API counts: a calendar period empties
@@ -141,6 +142,7 @@ useCustomSeoMeta({
               <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
             </span>
             <span class="rank-name">{{ c.username }}</span>
+            <span v-if="c.is_bot" class="rank-bot">{{ $t('common.bot') }}</span>
             <span class="rank-count">{{ $t('p_creator.artCount', c.arts, {count: c.arts}) }}</span>
           </NuxtLinkLocale>
         </li>

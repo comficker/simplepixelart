@@ -274,6 +274,7 @@ useCustomSeoMeta({
                     <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
                   </span>
                   <span class="rank-name">{{ c.username }}</span>
+                  <span v-if="c.is_bot" class="rank-bot">{{ $t('common.bot') }}</span>
                   <span class="rank-count">{{ c.arts }}</span>
                 </NuxtLinkLocale>
                 <span v-else class="rank-row" aria-hidden="true">

@@ -164,6 +164,11 @@ const PUBLISH_STATUSES = [
   {value: 'draft', label: t('c_PXEditor.privateDraftOnlyYouCanSee'), action: 'saveDraft'},
 ] as const
 const publishStatus = ref<'public' | 'draft'>('draft')
+
+/* Staff only: hand the piece to the bot accounts so it picks up likes and
+   the creator picks up followers over the next few hours. */
+const isAdmin = computed(() => !!auth.logged?.is_staff)
+const boostOnPublish = ref(false)
 const publishAction = computed(() =>
     t('common.' + (PUBLISH_STATUSES.find(s => s.value === publishStatus.value)?.action || 'save')))
 
@@ -173,6 +178,7 @@ function openPublish() {
     return
   }
   publishStatus.value = editorData.value.is_public ? 'public' : 'draft'
+  boostOnPublish.value = false
   publishStep.value = 'edit'
   showPublishModal.value = true
   loadEconomyForPublish()
@@ -227,10 +233,28 @@ async function genMetaWithAI() {
   }
 }
 
+async function boostArt() {
+  const id = editorData.value.id
+  // id_string only exists once the server has the page: without it `id` is
+  // still the local draft key and the request would address the wrong row.
+  if (!id || !editorData.value.id_string) {
+    toast.error('Saved, but the boost needs the artwork on the server first')
+    return
+  }
+  try {
+    await useNativeFetch(`/coloring/shared-pages/${id}/boost/`, {method: 'POST', body: {}})
+    toast.success('Queued for bot activity')
+  } catch (e: any) {
+    const code = e?.response?._data?.[0] || e?.data?.[0]
+    toast.error(code === 'BOOST_ALREADY_QUEUED' ? 'Already queued' : 'Could not queue the boost')
+  }
+}
+
 async function saveArt() {
   editorData.value.is_public = publishStatus.value === 'public'
   store.saveState(false)
   await store.saveNow()
+  if (isAdmin.value && boostOnPublish.value && editorData.value.is_public) await boostArt()
   if (editorData.value.id_string) {
     publishStep.value = 'done'
   } else {
@@ -4016,6 +4040,10 @@ watch(
               <select id="publish-status" v-model="publishStatus" class="publish-input">
                 <option v-for="s in PUBLISH_STATUSES" :key="s.value" :value="s.value">{{ s.label }}</option>
               </select>
+            </div>
+            <div v-if="isAdmin && publishStatus === 'public'" class="publish-status-row">
+              <label class="publish-label" for="publish-boost">{{ $t('c_PXEditor.boostWithBotActivity') }}</label>
+              <input id="publish-boost" v-model="boostOnPublish" type="checkbox">
             </div>
             <div class="publish-actions">
               <button class="btn primary block" @click="saveArt">
