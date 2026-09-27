@@ -165,8 +165,9 @@ const PUBLISH_STATUSES = [
 ] as const
 const publishStatus = ref<'public' | 'draft'>('draft')
 
-/* Staff only: hand the piece to the bot accounts so it picks up likes and
-   the creator picks up followers over the next few hours. */
+/* Staff only: publish the piece under one of the bot accounts instead of
+   this one, so the creator board has something to rank before the site has
+   real accounts. A small drip of likes and follows rides along. */
 const isAdmin = computed(() => !!auth.logged?.is_staff)
 const boostOnPublish = ref(false)
 const publishAction = computed(() =>
@@ -242,11 +243,14 @@ async function boostArt() {
     return
   }
   try {
-    await useNativeFetch(`/coloring/shared-pages/${id}/boost/`, {method: 'POST', body: {}})
-    toast.success('Queued for bot activity')
+    const res = await useNativeFetch<{creator: string | null}>(
+        `/coloring/shared-pages/${id}/boost/`, {method: 'POST', body: {}})
+    toast.success(res.creator ? `Published as @${res.creator}` : 'Queued for bot activity')
   } catch (e: any) {
     const code = e?.response?._data?.[0] || e?.data?.[0]
-    toast.error(code === 'BOOST_ALREADY_QUEUED' ? 'Already queued' : 'Could not queue the boost')
+    toast.error(code === 'NO_BOTS_AVAILABLE'
+        ? 'No bot accounts available'
+        : 'Could not hand this over to a bot account')
   }
 }
 
@@ -4042,7 +4046,7 @@ watch(
               </select>
             </div>
             <div v-if="isAdmin && publishStatus === 'public'" class="publish-status-row">
-              <label class="publish-label" for="publish-boost">{{ $t('c_PXEditor.boostWithBotActivity') }}</label>
+              <label class="publish-label" for="publish-boost">{{ $t('c_PXEditor.publishAsABotCreator') }}</label>
               <input id="publish-boost" v-model="boostOnPublish" type="checkbox">
             </div>
             <div class="publish-actions">

@@ -29,7 +29,8 @@ const stats = ref<Stats | null>(null)
 function normalizeConfig() {
   const c = config.value
   if (!c) return
-  if (!c.bots) c.bots = {in_leaderboard: false}
+  if (!c.bots) c.bots = {in_leaderboard: true, auto_boost: true}
+  if (c.bots.auto_boost === undefined) c.bots.auto_boost = true
 }
 
 const config = ref<any>(null)
@@ -355,6 +356,11 @@ watch(isStaff, (v) => { if (v) load() })
               <label class="adm-knob adm-knob-check" title="Show automated accounts in the creator ranking. They stay labelled as bots wherever they appear.">
                 <span>Bots in leaderboard</span>
                 <input v-model="config.bots.in_leaderboard" type="checkbox">
+              </label>
+
+              <label class="adm-knob adm-knob-check" title="Every page that turns public picks up bot likes, and its creator picks up bot followers, over the next few hours.">
+                <span>Auto bot activity</span>
+                <input v-model="config.bots.auto_boost" type="checkbox">
               </label>
             </div>
 
