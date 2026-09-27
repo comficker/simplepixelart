@@ -826,8 +826,19 @@
     "turnAnyPhotoIntoPixelArt": "どんな写真も数秒でドット絵に。無料、登録不要、すべてブラウザ上で処理されます。"
   },
   "p_creator": {
+    "allTime": "全期間",
+    "artCount": "{count} 作品",
+    "creatorCount": "{count} 人のクリエイター",
     "discoverArtistsFromTheSimplepixela": "SimplePixelArt.comのコミュニティで活動する作家を見つけましょう。ポートフォリオを巡って、それぞれのドット絵作品に触れてみてください。",
-    "pixelArtCreators": "ドット絵クリエイター"
+    "noCreatorsYet": "クリエイターがいません",
+    "nobodyPublishedInThisPeriod": "この期間に公開した人はいません。",
+    "pixelArtCreators": "ピクセルアートのトップクリエイター",
+    "rankedByThePublicWorkThey": "期間中に公開した作品数で並べています。",
+    "ranking": "ランキング",
+    "thisMonth": "今月",
+    "thisQuarter": "四半期",
+    "thisWeek": "今週",
+    "today": "今日"
   },
   "p_creator_id_string": {
     "collections": "コレクション",
@@ -1595,6 +1606,10 @@
       "description": "写真を数秒でドット絵に変換できる無料ツール。色数は4〜64色から選べ、ノイズ除去、色の置き換え、リアルタイムプレビューに対応。",
       "keywords": "画像 ドット絵 変換, 写真 ドット絵, ドット絵 変換 無料, ピクセル化, イラスト ドット絵",
       "title": "画像をドット絵に変換"
+    },
+    "creators": {
+      "description": "SimplePixelArt.com で最も多く公開しているピクセルアートのクリエイターを、日・週・月・四半期で並べています。",
+      "title": "ピクセルアートのクリエイター — ランキング"
     },
     "editor": {
       "description": "無料でドット絵を描けるオンラインエディタ。ブラシ、塗りつぶし、レイヤー、左右対称モード、カスタムパレットに対応。PNGで書き出せます。",

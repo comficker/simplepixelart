@@ -826,8 +826,19 @@
     "turnAnyPhotoIntoPixelArt": "어떤 사진이든 몇 초 만에 픽셀 아트로. 무료, 가입 없이, 모든 처리가 브라우저에서 이뤄집니다."
   },
   "p_creator": {
+    "allTime": "전체 기간",
+    "artCount": "{count}개 작품",
+    "creatorCount": "{count}명의 크리에이터",
     "discoverArtistsFromTheSimplepixela": "SimplePixelArt.com 커뮤니티의 작가들을 만나 보세요. 포트폴리오를 둘러보며 그들의 픽셀 아트를 살펴보세요.",
-    "pixelArtCreators": "픽셀 아트 크리에이터"
+    "noCreatorsYet": "크리에이터가 없습니다",
+    "nobodyPublishedInThisPeriod": "이 기간에 공개한 사람이 없습니다.",
+    "pixelArtCreators": "픽셀 아트 톱 크리에이터",
+    "rankedByThePublicWorkThey": "해당 기간에 공개한 작품 수로 순위를 매깁니다.",
+    "ranking": "랭킹",
+    "thisMonth": "이번 달",
+    "thisQuarter": "이번 분기",
+    "thisWeek": "이번 주",
+    "today": "오늘"
   },
   "p_creator_id_string": {
     "collections": "컬렉션",
@@ -1595,6 +1606,10 @@
       "description": "사진을 몇 초 만에 픽셀 아트로 바꾸는 무료 온라인 도구. 색상 수 조절(4~64색), 픽셀 정리, 색상 교체, 실시간 미리보기를 지원합니다.",
       "keywords": "이미지 픽셀 아트 변환, 사진 도트 변환, 픽셀 아트 변환기, 이미지 픽셀화, 사진 도트화",
       "title": "이미지를 픽셀 아트로 변환"
+    },
+    "creators": {
+      "description": "SimplePixelArt.com에서 가장 많이 공개하는 픽셀 아트 크리에이터를 일, 주, 월, 분기별로 정리했습니다.",
+      "title": "픽셀 아트 크리에이터 — 랭킹"
     },
     "editor": {
       "description": "무료 온라인 픽셀 아트 편집기. 브러시, 채우기, 레이어, 대칭 그리기, 사용자 팔레트를 지원하고 PNG로 내보낼 수 있습니다. 설치도 가입도 필요 없습니다.",

@@ -265,21 +265,21 @@ useCustomSeoMeta({
               <span>{{ $t('p_index.topCreators') }}</span>
               <NuxtLinkLocale to="/creator" class="home-aside-more">{{ $t('p_index.viewAll') }}</NuxtLinkLocale>
             </div>
-            <ol class="home-creators">
+            <ol class="rank-list">
               <li v-for="(c, i) in creatorRows" :key="c ? c.username : `slot-${i}`">
-                <NuxtLinkLocale v-if="c" :to="`/creator/${c.username}`" class="home-creator">
-                  <span class="home-creator-rank">{{ i + 1 }}</span>
-                  <span class="home-creator-avatar">
+                <NuxtLinkLocale v-if="c" :to="`/creator/${c.username}`" class="rank-row">
+                  <span class="rank-n">{{ i + 1 }}</span>
+                  <span class="rank-avatar">
                     <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
                     <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
                   </span>
-                  <span class="home-creator-name">{{ c.username }}</span>
-                  <span class="home-creator-n">{{ c.arts }}</span>
+                  <span class="rank-name">{{ c.username }}</span>
+                  <span class="rank-count">{{ c.arts }}</span>
                 </NuxtLinkLocale>
-                <span v-else class="home-creator" aria-hidden="true">
-                  <span class="home-creator-rank">{{ i + 1 }}</span>
-                  <span class="skeleton home-creator-slot-avatar"/>
-                  <span class="skeleton skeleton-line-sm home-creator-slot-name"/>
+                <span v-else class="rank-row" aria-hidden="true">
+                  <span class="rank-n">{{ i + 1 }}</span>
+                  <span class="skeleton rank-skeleton-avatar"/>
+                  <span class="skeleton skeleton-line-sm rank-skeleton-name"/>
                 </span>
               </li>
             </ol>
@@ -564,75 +564,8 @@ useCustomSeoMeta({
   font-size: var(--text-sm);
 }
 
-.home-creators {
-  display: flex;
-  flex-direction: column;
-  list-style: none;
-  padding: 0;
-}
-
-.home-creator {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-1) 0;
-  font-size: var(--text-xs);
-}
-
-.home-creator-rank {
-  width: 1.25em;
-  flex-shrink: 0;
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-}
-
-.home-creator-avatar,
-.home-creator-slot-avatar {
-  width: var(--space-6);
-  height: var(--space-6);
-  flex-shrink: 0;
-  border-radius: var(--radius-sm);
-}
-
-.home-creator-avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  font-weight: 800;
-  font-size: var(--text-2xs);
-  color: var(--primary-foreground);
-  background: var(--primary);
-}
-
-.home-creator-slot-name {
-  width: 40%;
-}
-
-.home-creator-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.home-creator-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.home-creator-n {
-  flex-shrink: 0;
-  font-variant-numeric: tabular-nums;
-  color: var(--muted);
-}
-
 @media (hover: hover) and (pointer: fine) {
   .home-challenge-link:hover .home-challenge-name,
-  .home-creator:hover .home-creator-name,
   .home-aside-more:hover {
     color: var(--primary);
   }

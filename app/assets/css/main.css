@@ -4260,3 +4260,125 @@ html.editor-fullscreen .consent {
         min-height: 32px;
     }
 }
+
+/* Ranked list of creators: the hero's short board and the ranking page's
+   long one are the same row, so they share one chrome. */
+.rank-list {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    padding: 0;
+}
+
+.rank-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-1) 0;
+    font-size: var(--text-xs);
+}
+
+.rank-n {
+    width: 1.25em;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+}
+
+.rank-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--space-6);
+    height: var(--space-6);
+    flex-shrink: 0;
+    overflow: hidden;
+    font-weight: 800;
+    font-size: var(--text-2xs);
+    color: var(--primary-foreground);
+    background: var(--primary);
+    border-radius: var(--radius-sm);
+}
+
+.rank-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.rank-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rank-count {
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+}
+
+/* A row waiting for data: same geometry, no content. */
+.rank-skeleton-avatar {
+    width: var(--space-6);
+    height: var(--space-6);
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+}
+
+.rank-skeleton-name {
+    width: 40%;
+}
+
+/* The board on its own page: taller rows, divided, and roomy enough to read
+   as the page's content rather than a side list. */
+.rank-list.lg {
+    font-size: var(--text-sm);
+}
+
+.rank-list.lg .rank-row {
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    font-size: inherit;
+}
+
+.rank-list.lg .rank-row + .rank-row,
+.rank-list.lg li + li .rank-row {
+    border-top: 1px solid var(--border);
+}
+
+/* Left aligned, so the first glyph sits on the row's padding rather than
+   16px plus whatever the number column reserves for two digits. */
+.rank-list.lg .rank-n {
+    width: 2em;
+}
+
+.rank-list.lg .rank-avatar,
+.rank-list.lg .rank-skeleton-avatar {
+    width: calc(var(--space-6) * 1.5);
+    height: calc(var(--space-6) * 1.5);
+    font-size: var(--text-xs);
+}
+
+/* The podium is marked by colour alone. The three are derived from the amber
+   already in the palette rather than being new values. */
+.rank-list.lg .rank-row.top-1 .rank-n {
+    color: var(--warning);
+}
+
+.rank-list.lg .rank-row.top-2 .rank-n {
+    color: color-mix(in oklab, var(--warning) 70%, var(--muted));
+}
+
+.rank-list.lg .rank-row.top-3 .rank-n {
+    color: color-mix(in oklab, var(--warning) 45%, var(--muted));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .rank-row:hover .rank-name {
+        color: var(--primary);
+    }
+}

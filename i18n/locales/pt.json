@@ -826,8 +826,19 @@
     "turnAnyPhotoIntoPixelArt": "Transforme qualquer foto em pixel art em segundos — grátis, sem cadastro e com tudo rodando no seu navegador."
   },
   "p_creator": {
+    "allTime": "Desde sempre",
+    "artCount": "1 obra | {count} obras",
+    "creatorCount": "1 criador | {count} criadores",
     "discoverArtistsFromTheSimplepixela": "Descubra os artistas da comunidade do SimplePixelArt.com. Percorra seus portfólios e explore suas criações em pixel art.",
-    "pixelArtCreators": "Criadores de Pixel Art"
+    "noCreatorsYet": "Nenhum criador aqui",
+    "nobodyPublishedInThisPeriod": "Ninguém publicou nada neste período.",
+    "pixelArtCreators": "Melhores criadores de pixel art",
+    "rankedByThePublicWorkThey": "Classificados pelos trabalhos públicos que publicaram no período.",
+    "ranking": "Classificação",
+    "thisMonth": "Este mês",
+    "thisQuarter": "Este trimestre",
+    "thisWeek": "Esta semana",
+    "today": "Hoje"
   },
   "p_creator_id_string": {
     "collections": "Coleções",
@@ -1595,6 +1606,10 @@
       "description": "Transforme qualquer foto em pixel art em segundos. Ferramenta online gratuita com controle de paleta (4–64 cores), limpeza de pixels e pré-visualização ao vivo.",
       "keywords": "imagem para pixel art, foto para pixel art, conversor pixel art, pixelar imagem, transformar foto em pixel art",
       "title": "Converter Imagem em Pixel Art"
+    },
+    "creators": {
+      "description": "Os criadores de pixel art que mais publicam no SimplePixelArt.com, classificados por dia, semana, mês e trimestre.",
+      "title": "Criadores de pixel art — Classificação"
     },
     "editor": {
       "description": "Faça pixel art online de graça: pincéis, balde, camadas, modo espelho e paletas personalizadas, e exporte em PNG. Sem download e sem cadastro, direto no navegador.",

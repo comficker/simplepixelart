@@ -826,8 +826,19 @@
     "turnAnyPhotoIntoPixelArt": "几秒钟把任何照片变成像素画——免费、免注册，全部在你的浏览器里完成。"
   },
   "p_creator": {
+    "allTime": "全部时间",
+    "artCount": "{count} 件作品",
+    "creatorCount": "{count} 位创作者",
     "discoverArtistsFromTheSimplepixela": "发现 SimplePixelArt.com 社区里的创作者。浏览他们的作品集，看看各自的像素画创作。",
-    "pixelArtCreators": "像素画创作者"
+    "noCreatorsYet": "这里还没有创作者",
+    "nobodyPublishedInThisPeriod": "这个时间段没有人发布作品。",
+    "pixelArtCreators": "顶尖像素画创作者",
+    "rankedByThePublicWorkThey": "按该时间段内公开发布的作品数量排名。",
+    "ranking": "排行",
+    "thisMonth": "本月",
+    "thisQuarter": "本季度",
+    "thisWeek": "本周",
+    "today": "今天"
   },
   "p_creator_id_string": {
     "collections": "合集",
@@ -1595,6 +1606,10 @@
       "description": "几秒钟把照片转成像素画的免费在线工具。可控制调色板（4–64 色）、清理杂点、替换颜色，并实时预览效果。",
       "keywords": "图片转像素画, 照片转像素画, 像素画转换器, 图片像素化, 在线像素化",
       "title": "图片转像素画"
+    },
+    "creators": {
+      "description": "在 SimplePixelArt.com 发布最多的像素画创作者，按日、周、月、季度排行。",
+      "title": "像素画创作者 — 排行"
     },
     "editor": {
       "description": "免费的在线像素画编辑器：画笔、填充、图层、镜像绘制与自定义调色板，完成后可导出 PNG。无需下载，无需注册。",
