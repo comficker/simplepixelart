@@ -190,6 +190,7 @@
     "boardGridColors": "Board grid colors",
     "boardGridSize": "Board grid size",
     "boardSize": "Board size",
+    "boostWithBotActivity": "Boost with bot activity",
     "brush": "Brush",
     "brushB": "Brush (B)",
     "cellStyle": "Cell style",
@@ -506,6 +507,7 @@
     "auto": "Auto",
     "back": "Back",
     "background": "Background",
+    "bot": "bot",
     "browseGallery": "Browse gallery",
     "brushSize": "Brush size",
     "brushSizeN": "Brush size {n}",
@@ -644,6 +646,7 @@
     "twitter": "Twitter",
     "type": "Type",
     "undo": "Undo",
+    "untitled": "Untitled",
     "useX": "Use {x}",
     "view": "View",
     "viewAll": "View all",
@@ -759,7 +762,6 @@
     "browsePublicPixelArt": "Browse public pixel art",
     "cancelAndDiscardChanges": "Cancel and discard changes",
     "cancelDiscardChanges": "Cancel — discard changes",
-    "collection": "Collection",
     "collectionNotFound": "Collection not found",
     "collectionSettings": "Collection settings",
     "createYourOwn": "Create your own",
@@ -1625,6 +1627,11 @@
       "keywords": "pixel art gallery, free pixel art, pixel art sprites, 8-bit art, 16-bit art, pixel art download",
       "title": "Pixel Art Gallery — Browse & Remix"
     },
+    "collections": {
+      "description": "Browse sets of pixel art put together by creators on SimplePixelArt.com.",
+      "keywords": "pixel art collections, pixel art sets, pixel art gallery",
+      "title": "Pixel Art Collections"
+    },
     "converter": {
       "description": "Convert any photo into pixel art in seconds. Free online tool with palette control (4–64 colors), pixel cleaner, color swap and live preview.",
       "keywords": "image to pixel art, photo to pixel art, pixel art converter, pixelate image, picture to pixel art",
@@ -1663,5 +1670,13 @@
     "light": "Light",
     "nes": "NES",
     "synthwave": "Synthwave"
+  },
+  "p_collections": {
+    "collectionCount": "1 collection | {count} collections",
+    "noCollectionsYet": "No collections yet",
+    "nobodyHasPublishedASetYet": "Nobody has published a set yet.",
+    "pieceCount": "1 piece | {count} pieces",
+    "pixelArtCollections": "Pixel Art Collections",
+    "setsOfPixelArtPutTogether": "Sets of pixel art put together by the people who made it."
   }
 }

@@ -1952,6 +1952,11 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
         min-height: 0;
     }
 
+    /* A screen with nothing to filter keeps the chrome but not the empty rail. */
+    .browse.browse-bare {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .screen-head {
         grid-column: 1 / -1;
     }
@@ -4319,6 +4324,18 @@ html.editor-fullscreen .consent {
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
     color: var(--muted);
+}
+
+/* An automated account, wherever one is shown. The label is the point: a
+   board of creators should not read a bot as one of the site's people. */
+.rank-bot {
+    flex-shrink: 0;
+    padding: 0 var(--space-1);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
 }
 
 /* A row waiting for data: same geometry, no content. */

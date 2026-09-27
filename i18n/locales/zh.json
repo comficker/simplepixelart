@@ -181,6 +181,7 @@
     "boardGridColors": "画板网格颜色",
     "boardGridSize": "画板网格大小",
     "boardSize": "画板尺寸",
+    "boostWithBotActivity": "用机器人活动助推",
     "brush": "画笔",
     "brushB": "画笔（B）",
     "cellStyle": "单元格样式",
@@ -485,6 +486,7 @@
     "auto": "自动",
     "back": "返回",
     "background": "背景",
+    "bot": "机器人",
     "browseGallery": "浏览图库",
     "brushSize": "笔刷大小",
     "brushSizeN": "笔刷大小 {n}",
@@ -623,6 +625,7 @@
     "twitter": "Twitter",
     "type": "类型",
     "undo": "撤销",
+    "untitled": "未命名",
     "useX": "使用 {x}",
     "view": "视图",
     "viewAll": "查看全部",
@@ -738,7 +741,6 @@
     "browsePublicPixelArt": "浏览公开像素画",
     "cancelAndDiscardChanges": "取消并放弃更改",
     "cancelDiscardChanges": "取消 — 放弃更改",
-    "collection": "合集",
     "collectionNotFound": "未找到合集",
     "collectionSettings": "合集设置",
     "createYourOwn": "创建自己的",
@@ -1602,6 +1604,11 @@
       "keywords": "像素画图库, 免费像素画, 像素素材, 8位画, 16位画, 像素画下载",
       "title": "像素画图库 — 浏览与二次创作"
     },
+    "collections": {
+      "description": "浏览 SimplePixelArt.com 上创作者整理的像素画合集。",
+      "keywords": "像素画合集, 像素画套图, 像素画画廊",
+      "title": "像素画合集"
+    },
     "converter": {
       "description": "几秒钟把照片转成像素画的免费在线工具。可控制调色板（4–64 色）、清理杂点、替换颜色，并实时预览效果。",
       "keywords": "图片转像素画, 照片转像素画, 像素画转换器, 图片像素化, 在线像素化",
@@ -1640,5 +1647,13 @@
     "light": "浅色",
     "nes": "红白机",
     "synthwave": "赛博波"
+  },
+  "p_collections": {
+    "collectionCount": "{count} 个合集",
+    "noCollectionsYet": "还没有合集",
+    "nobodyHasPublishedASetYet": "还没有人发布合集。",
+    "pieceCount": "{count} 件作品",
+    "pixelArtCollections": "像素画合集",
+    "setsOfPixelArtPutTogether": "由创作者自己整理的像素画合集。"
   }
 }

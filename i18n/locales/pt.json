@@ -181,6 +181,7 @@
     "boardGridColors": "Cores da grade",
     "boardGridSize": "Tamanho da grade",
     "boardSize": "Tamanho da prancheta",
+    "boostWithBotActivity": "Impulsionar com atividade de bots",
     "brush": "Pincel",
     "brushB": "Pincel (B)",
     "cellStyle": "Estilo da célula",
@@ -485,6 +486,7 @@
     "auto": "Auto",
     "back": "Voltar",
     "background": "Fundo",
+    "bot": "bot",
     "browseGallery": "Ver galeria",
     "brushSize": "Tamanho do pincel",
     "brushSizeN": "Tamanho de pincel {n}",
@@ -623,6 +625,7 @@
     "twitter": "Twitter",
     "type": "Tipo",
     "undo": "Desfazer",
+    "untitled": "Sem título",
     "useX": "Usar {x}",
     "view": "Visualização",
     "viewAll": "Ver tudo",
@@ -738,7 +741,6 @@
     "browsePublicPixelArt": "Ver pixel art público",
     "cancelAndDiscardChanges": "Cancelar e descartar as mudanças",
     "cancelDiscardChanges": "Cancelar — descartar as mudanças",
-    "collection": "Coleção",
     "collectionNotFound": "Coleção não encontrada",
     "collectionSettings": "Configurações da coleção",
     "createYourOwn": "Crie a sua",
@@ -1602,6 +1604,11 @@
       "keywords": "galeria pixel art, pixel art grátis, sprites pixel art, arte 8 bits, arte 16 bits, baixar pixel art",
       "title": "Galeria de Pixel Art — Explore e Remixe"
     },
+    "collections": {
+      "description": "Explore conjuntos de pixel art reunidos por criadores no SimplePixelArt.com.",
+      "keywords": "coleções de pixel art, conjuntos de pixel art, galeria de pixel art",
+      "title": "Coleções de pixel art"
+    },
     "converter": {
       "description": "Transforme qualquer foto em pixel art em segundos. Ferramenta online gratuita com controle de paleta (4–64 cores), limpeza de pixels e pré-visualização ao vivo.",
       "keywords": "imagem para pixel art, foto para pixel art, conversor pixel art, pixelar imagem, transformar foto em pixel art",
@@ -1640,5 +1647,13 @@
     "light": "Claro",
     "nes": "NES",
     "synthwave": "Synthwave"
+  },
+  "p_collections": {
+    "collectionCount": "1 coleção | {count} coleções",
+    "noCollectionsYet": "Ainda não há coleções",
+    "nobodyHasPublishedASetYet": "Ninguém publicou um conjunto ainda.",
+    "pieceCount": "1 peça | {count} peças",
+    "pixelArtCollections": "Coleções de pixel art",
+    "setsOfPixelArtPutTogether": "Conjuntos de pixel art reunidos por quem os criou."
   }
 }

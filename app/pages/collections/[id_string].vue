@@ -206,22 +206,18 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
     </div>
 
     <template v-else-if="data">
-      <section class="cl-detail-hero">
-        <div class="cl-detail-head">
-          <span class="cl-detail-eyebrow">{{ $t('p_collections_id_string.collection') }}</span>
-          <h1 class="page-title">{{ title }}</h1>
-          <p v-if="desc" class="cl-detail-desc">{{ desc }}</p>
-          <div class="cl-detail-meta">
-            <span class="cl-detail-pill">{{ itemCount }} {{ itemCount === 1 ? 'piece' : 'pieces' }}</span>
-            <span v-if="formattedDate" class="cl-detail-pill">
-              <span class="icon icon-calender"/> Updated {{ formattedDate }}
-            </span>
-            <span v-if="!isPublic" class="cl-detail-pill cl-detail-pill-private">
-              <span class="icon icon-earth-off"/> {{ $t('common.private') }}
-            </span>
-          </div>
-        </div>
-        <div class="cl-hero-actions">
+      <BrowseLayout>
+      <template #head>
+        <h1 class="screen-title">{{ title }}</h1>
+        <p class="screen-desc">
+          {{ $t('p_collections.pieceCount', itemCount, {count: itemCount}) }}
+          <template v-if="formattedDate"> · {{ formattedDate }}</template>
+          <template v-if="!isPublic"> · {{ $t('common.private') }}</template>
+          <template v-if="desc"> — {{ desc }}</template>
+        </p>
+      </template>
+
+      <template #actions>
           <template v-if="!managing">
             <SocialSharing :meta="shareMeta" position="right" icon-only/>
             <button
@@ -262,11 +258,9 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
               <span class="icon icon-save"/>
             </button>
           </template>
-        </div>
-      </section>
+      </template>
 
-      <section v-if="items.length" class="cl-detail-grid-wrap">
-        <div class="cl-detail-grid">
+      <div v-if="items.length" class="results">
           <div v-for="(item, i) in items" :key="item.id" class="cl-manage-cell">
             <ItemCard :value="item" :priority="i < 4"/>
             <button
@@ -277,11 +271,10 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
             >
               <span class="icon icon-trash"/>
             </button>
-          </div>
         </div>
-      </section>
+      </div>
 
-      <section v-else-if="!managing" class="empty-state">
+      <div v-else-if="!managing" class="empty-state">
         <span class="empty-state-icon icon icon-rhombus" aria-hidden="true"/>
         <div class="empty-state-title">{{ $t('p_collections_id_string.emptyCollection') }}</div>
         <p class="empty-state-body" v-html="$t('p_collections_id_string.noPixelArtHasBeenAdded')"/>
@@ -289,7 +282,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
           <button v-if="isOwner" class="btn primary" @click="startManage">{{ $t('p_collections_id_string.addPixelArt') }}</button>
           <NuxtLinkLocale to="/arts" class="btn">{{ $t('common.browseGallery') }}</NuxtLinkLocale>
         </div>
-      </section>
+      </div>
 
       <section v-if="managing && isOwner" class="cl-manage-add">
         <header class="section-head">
@@ -322,7 +315,11 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
         </div>
       </section>
 
-      <div class="cl-detail-actions">
+      <template #foot>
+        <span class="browse-foot-start">
+          {{ $t('p_collections.pieceCount', itemCount, {count: itemCount}) }}
+        </span>
+        <span class="browse-foot-end cl-detail-actions">
         <NuxtLinkLocale to="/arts" class="btn">
           <span class="icon icon-grid"/>
           <span>{{ $t('p_collections_id_string.browseAllPixelArt') }}</span>
@@ -331,7 +328,9 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
           <span class="icon icon-pen"/>
           <span>{{ $t('p_collections_id_string.createYourOwn') }}</span>
         </NuxtLinkLocale>
-      </div>
+        </span>
+      </template>
+      </BrowseLayout>
 
       <CollectionEditModal
           v-if="showEditModal && isOwner"
@@ -344,71 +343,13 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
 </template>
 
 <style scoped>
-.cl-detail-hero {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-5);
-  flex-wrap: wrap;
+.cl-manage-add {
+  padding: var(--space-4) 0 0;
 }
 
-.cl-detail-head {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  min-width: 0;
-  flex: 1 1 280px;
-}
-
-.cl-detail-eyebrow {
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--primary);
-}
-
-.cl-detail-desc {
-  font-size: var(--text-sm);
-  color: var(--muted);
-  max-width: 60ch;
-}
-
-.cl-detail-meta {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  margin-top: var(--space-1);
-}
-
-.cl-detail-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 2px var(--space-3);
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--muted);
-  border: 1px solid var(--border);
-}
-
-.cl-detail-pill-private {
-  background: color-mix(in oklab, var(--primary) 14%, var(--surface));
-  color: var(--primary);
-  border-color: color-mix(in oklab, var(--primary) 40%, transparent);
-}
-
+/* .browse-foot-end already lays these out; this only lets them wrap. */
 .cl-detail-actions {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  justify-content: center;
   flex-wrap: wrap;
-  margin-top: var(--space-6);
 }
 
 .cl-detail-actions .btn {
@@ -417,34 +358,8 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
   gap: var(--space-2);
 }
 
-.cl-hero-actions {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
 .cl-icon-btn {
   padding: 0.5rem;
-}
-
-.cl-detail-grid {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(2, 1fr);
-}
-
-@media (min-width: 480px) {
-  .cl-detail-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (min-width: 768px) {
-  .cl-detail-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }
 
 .cl-manage-cell {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{ title: string; desc?: string }>()
+defineProps<{ title?: string; desc?: string }>()
 
 const sheetOpen = ref(false)
 
@@ -19,7 +19,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="browse" :class="{'sheet-open': sheetOpen}">
+  <div class="browse" :class="{'sheet-open': sheetOpen, 'browse-bare': !$slots.filters}">
     <div class="screen-head">
       <div class="screen-head-text">
         <slot name="head">
@@ -29,16 +29,16 @@ onBeforeUnmount(() => {
       </div>
       <div class="screen-actions">
         <slot name="actions"/>
-        <button type="button" class="btn browse-filters-open" @click="sheetOpen = true">
+        <button v-if="$slots.filters" type="button" class="btn browse-filters-open" @click="sheetOpen = true">
           <span class="icon icon-adjust"/>
           <span>{{ $t('c_BrowseLayout.filters') }}</span>
         </button>
       </div>
     </div>
 
-    <div class="browse-scrim" aria-hidden="true" @click="sheetOpen = false"/>
+    <div v-if="$slots.filters" class="browse-scrim" aria-hidden="true" @click="sheetOpen = false"/>
 
-    <aside class="browse-filters" :aria-label="$t('c_BrowseLayout.filters')">
+    <aside v-if="$slots.filters" class="browse-filters" :aria-label="$t('c_BrowseLayout.filters')">
       <div class="browse-filters-head">
         <span class="browse-filter-cap">{{ $t('c_BrowseLayout.filters') }}</span>
         <button

@@ -181,6 +181,7 @@
     "boardGridColors": "보드 그리드 색",
     "boardGridSize": "보드 그리드 크기",
     "boardSize": "보드 크기",
+    "boostWithBotActivity": "봇 활동으로 띄우기",
     "brush": "브러시",
     "brushB": "브러시（B）",
     "cellStyle": "셀 모양",
@@ -485,6 +486,7 @@
     "auto": "자동",
     "back": "뒤로",
     "background": "배경",
+    "bot": "봇",
     "browseGallery": "갤러리 보기",
     "brushSize": "브러시 크기",
     "brushSizeN": "브러시 크기 {n}",
@@ -623,6 +625,7 @@
     "twitter": "Twitter",
     "type": "유형",
     "undo": "실행 취소",
+    "untitled": "제목 없음",
     "useX": "{x} 사용",
     "view": "보기",
     "viewAll": "전체 보기",
@@ -738,7 +741,6 @@
     "browsePublicPixelArt": "공개 픽셀 아트 보기",
     "cancelAndDiscardChanges": "변경을 버리고 취소",
     "cancelDiscardChanges": "취소 — 변경 사항 버리기",
-    "collection": "컬렉션",
     "collectionNotFound": "컬렉션을 찾을 수 없습니다",
     "collectionSettings": "컬렉션 설정",
     "createYourOwn": "내 것 만들기",
@@ -1602,6 +1604,11 @@
       "keywords": "픽셀 아트 갤러리, 무료 픽셀 아트, 도트 소재, 8비트, 16비트, 픽셀 아트 다운로드",
       "title": "픽셀 아트 갤러리 — 둘러보기와 리믹스"
     },
+    "collections": {
+      "description": "SimplePixelArt.com의 크리에이터가 모은 픽셀 아트 묶음을 둘러보세요.",
+      "keywords": "픽셀 아트 컬렉션, 픽셀 아트 세트, 픽셀 아트 갤러리",
+      "title": "픽셀 아트 컬렉션"
+    },
     "converter": {
       "description": "사진을 몇 초 만에 픽셀 아트로 바꾸는 무료 온라인 도구. 색상 수 조절(4~64색), 픽셀 정리, 색상 교체, 실시간 미리보기를 지원합니다.",
       "keywords": "이미지 픽셀 아트 변환, 사진 도트 변환, 픽셀 아트 변환기, 이미지 픽셀화, 사진 도트화",
@@ -1640,5 +1647,13 @@
     "light": "라이트",
     "nes": "패미컴",
     "synthwave": "신스웨이브"
+  },
+  "p_collections": {
+    "collectionCount": "컬렉션 {count}개",
+    "noCollectionsYet": "아직 컬렉션이 없습니다",
+    "nobodyHasPublishedASetYet": "아직 아무도 묶음을 공개하지 않았습니다.",
+    "pieceCount": "작품 {count}개",
+    "pixelArtCollections": "픽셀 아트 컬렉션",
+    "setsOfPixelArtPutTogether": "만든 사람이 직접 모은 픽셀 아트 묶음입니다."
   }
 }

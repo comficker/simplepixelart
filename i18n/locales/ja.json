@@ -181,6 +181,7 @@
     "boardGridColors": "ボードのグリッド色",
     "boardGridSize": "ボードのグリッドサイズ",
     "boardSize": "ボードサイズ",
+    "boostWithBotActivity": "ボットのアクティビティで後押し",
     "brush": "ブラシ",
     "brushB": "ブラシ（B）",
     "cellStyle": "セルの形",
@@ -485,6 +486,7 @@
     "auto": "自動",
     "back": "戻る",
     "background": "背景",
+    "bot": "ボット",
     "browseGallery": "ギャラリーを見る",
     "brushSize": "ブラシサイズ",
     "brushSizeN": "ブラシサイズ {n}",
@@ -623,6 +625,7 @@
     "twitter": "Twitter",
     "type": "種類",
     "undo": "元に戻す",
+    "untitled": "無題",
     "useX": "{x}を使う",
     "view": "表示",
     "viewAll": "すべて見る",
@@ -738,7 +741,6 @@
     "browsePublicPixelArt": "公開ドット絵を見る",
     "cancelAndDiscardChanges": "変更を破棄して中止",
     "cancelDiscardChanges": "中止 — 変更を破棄",
-    "collection": "コレクション",
     "collectionNotFound": "コレクションが見つかりません",
     "collectionSettings": "コレクション設定",
     "createYourOwn": "自分のを作る",
@@ -1602,6 +1604,11 @@
       "keywords": "ドット絵 ギャラリー, 無料 ドット絵, ドット絵 素材, 8ビット, 16ビット, ドット絵 ダウンロード",
       "title": "ドット絵ギャラリー — 作品を見る・リミックス"
     },
+    "collections": {
+      "description": "SimplePixelArt.com のクリエイターがまとめたピクセルアートのセットを見る。",
+      "keywords": "ピクセルアート コレクション, ピクセルアート セット, ピクセルアート ギャラリー",
+      "title": "ピクセルアートのコレクション"
+    },
     "converter": {
       "description": "写真を数秒でドット絵に変換できる無料ツール。色数は4〜64色から選べ、ノイズ除去、色の置き換え、リアルタイムプレビューに対応。",
       "keywords": "画像 ドット絵 変換, 写真 ドット絵, ドット絵 変換 無料, ピクセル化, イラスト ドット絵",
@@ -1640,5 +1647,13 @@
     "light": "ライト",
     "nes": "ファミコン",
     "synthwave": "シンセウェイブ"
+  },
+  "p_collections": {
+    "collectionCount": "{count} コレクション",
+    "noCollectionsYet": "コレクションはまだありません",
+    "nobodyHasPublishedASetYet": "まだ誰もセットを公開していません。",
+    "pieceCount": "{count} 作品",
+    "pixelArtCollections": "ピクセルアートのコレクション",
+    "setsOfPixelArtPutTogether": "作者本人がまとめたピクセルアートのセットです。"
   }
 }
