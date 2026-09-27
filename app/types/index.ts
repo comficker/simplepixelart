@@ -231,6 +231,10 @@ export interface EditorData {
     palette?: number | null;
     updated: string;
     is_public: boolean;
+    // What the server actually stored. A publish can land as `pending` when
+    // the rights filter holds it, and the editor should say so rather than
+    // report the status it asked for.
+    status?: string;
     status?: string;
     meta?: EditorMeta;
 }

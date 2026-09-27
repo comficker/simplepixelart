@@ -160,6 +160,7 @@
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "Hoja de sprites a 1× + JSON en formato Aseprite (duraciones, etiquetas) para Phaser / Unity / Godot",
     "aSentenceOrTwoAboutIt": "Una o dos frases sobre ella...",
+    "aTagOrTitleMatchedSomethingProtected": "Una etiqueta o el título coincide con contenido protegido, así que aún no aparece. Apruébalo en el panel de administración para publicarlo.",
     "addAHorizontalGuideLine": "Añadir guía horizontal",
     "addAVerticalGuideLine": "Añadir guía vertical",
     "addCentreCrossGuides": "Añadir guías en cruz",
@@ -224,6 +225,7 @@
     "gridMode": "Modo de cuadrícula",
     "guideColor": "Color de la guía",
     "guides": "Guías",
+    "heldForReview": "Retenido para revisión",
     "hideBoard": "Ocultar el tablero",
     "hideBoardLabels": "Ocultar los nombres de los tableros",
     "hideReference": "Ocultar referencia",

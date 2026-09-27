@@ -160,6 +160,7 @@
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "1倍のスプライトシート + Asepriteフォーマットのjson（再生時間、タグ）。Phaser / Unity / Godot向け",
     "aSentenceOrTwoAboutIt": "ひとことで説明…",
+    "aTagOrTitleMatchedSomethingProtected": "タグかタイトルが保護対象に一致したため、まだ掲載されていません。管理画面で承認すると公開されます。",
     "addAHorizontalGuideLine": "水平ガイドを追加",
     "addAVerticalGuideLine": "垂直ガイドを追加",
     "addCentreCrossGuides": "中央十字ガイドを追加",
@@ -224,6 +225,7 @@
     "gridMode": "グリッドモード",
     "guideColor": "ガイドの色",
     "guides": "ガイド",
+    "heldForReview": "確認待ちです",
     "hideBoard": "ボードを隠す",
     "hideBoardLabels": "ボード名を隠す",
     "hideReference": "参照画像を隠す",

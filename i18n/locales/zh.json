@@ -160,6 +160,7 @@
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "1× 精灵表 + Aseprite 格式 JSON（时长、标签），供 Phaser / Unity / Godot 使用",
     "aSentenceOrTwoAboutIt": "用一两句话介绍…",
+    "aTagOrTitleMatchedSomethingProtected": "标签或标题与受保护内容匹配，所以还未展示。在后台通过审核后即可发布。",
     "addAHorizontalGuideLine": "添加水平参考线",
     "addAVerticalGuideLine": "添加垂直参考线",
     "addCentreCrossGuides": "添加中心十字参考线",
@@ -224,6 +225,7 @@
     "gridMode": "网格模式",
     "guideColor": "参考线颜色",
     "guides": "参考线",
+    "heldForReview": "等待审核",
     "hideBoard": "隐藏画板",
     "hideBoardLabels": "隐藏画板名称",
     "hideReference": "隐藏参考图",

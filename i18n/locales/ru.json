@@ -160,6 +160,7 @@
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "Спрайт-лист 1× + JSON в формате Aseprite (длительности, теги) для Phaser / Unity / Godot",
     "aSentenceOrTwoAboutIt": "Одна-две фразы о работе...",
+    "aTagOrTitleMatchedSomethingProtected": "Тег или название совпали с защищённым материалом, поэтому работа пока не опубликована. Одобрите её в админке.",
     "addAHorizontalGuideLine": "Добавить горизонтальную направляющую",
     "addAVerticalGuideLine": "Добавить вертикальную направляющую",
     "addCentreCrossGuides": "Добавить крест по центру",
@@ -224,6 +225,7 @@
     "gridMode": "Режим сетки",
     "guideColor": "Цвет направляющей",
     "guides": "Направляющие",
+    "heldForReview": "Ожидает проверки",
     "hideBoard": "Скрыть полотно",
     "hideBoardLabels": "Скрыть названия полотен",
     "hideReference": "Скрыть референс",

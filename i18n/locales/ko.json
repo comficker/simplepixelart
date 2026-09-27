@@ -160,6 +160,7 @@
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "1× 스프라이트 시트 + Aseprite 형식 JSON（지속 시간, 태그）. Phaser / Unity / Godot용",
     "aSentenceOrTwoAboutIt": "한두 문장으로 소개…",
+    "aTagOrTitleMatchedSomethingProtected": "태그나 제목이 보호 대상과 일치해 아직 공개되지 않았습니다. 관리자 화면에서 승인하면 게시됩니다.",
     "addAHorizontalGuideLine": "수평 안내선 추가",
     "addAVerticalGuideLine": "수직 안내선 추가",
     "addCentreCrossGuides": "중앙 십자 안내선 추가",
@@ -224,6 +225,7 @@
     "gridMode": "그리드 모드",
     "guideColor": "안내선 색",
     "guides": "안내선",
+    "heldForReview": "검토 대기 중",
     "hideBoard": "보드 숨기기",
     "hideBoardLabels": "보드 이름 숨기기",
     "hideReference": "참고 이미지 숨기기",

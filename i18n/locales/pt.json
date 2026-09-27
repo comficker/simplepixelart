@@ -160,6 +160,7 @@
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "Spritesheet em 1× + JSON no formato Aseprite (durações, tags) para Phaser / Unity / Godot",
     "aSentenceOrTwoAboutIt": "Uma ou duas frases sobre ela...",
+    "aTagOrTitleMatchedSomethingProtected": "Uma etiqueta ou o título corresponde a conteúdo protegido, então ainda não aparece. Aprove no painel de administração para publicar.",
     "addAHorizontalGuideLine": "Adicionar guia horizontal",
     "addAVerticalGuideLine": "Adicionar guia vertical",
     "addCentreCrossGuides": "Adicionar guias em cruz",
@@ -224,6 +225,7 @@
     "gridMode": "Modo de grade",
     "guideColor": "Cor da guia",
     "guides": "Guias",
+    "heldForReview": "Retido para revisão",
     "hideBoard": "Ocultar a prancheta",
     "hideBoardLabels": "Ocultar os nomes das pranchetas",
     "hideReference": "Ocultar referência",

@@ -234,6 +234,15 @@ async function genMetaWithAI() {
   }
 }
 
+/* A publish can come back held: the rights filter downgrades public to
+   pending when a name, description or tag matches something protected. */
+const heldForReview = computed(() => editorData.value.status === 'pending')
+
+const BOOST_ERRORS: Record<string, string> = {
+  PAGE_NOT_PUBLIC: 'Saved, but held for review — a tag flagged it. Approve it in /admin, then hand it over.',
+  NO_BOTS_AVAILABLE: 'No bot accounts available',
+}
+
 async function boostArt() {
   const id = editorData.value.id
   // id_string only exists once the server has the page: without it `id` is
@@ -248,9 +257,10 @@ async function boostArt() {
     toast.success(res.creator ? `Published as @${res.creator}` : 'Queued for bot activity')
   } catch (e: any) {
     const code = e?.response?._data?.[0] || e?.data?.[0]
-    toast.error(code === 'NO_BOTS_AVAILABLE'
-        ? 'No bot accounts available'
-        : 'Could not hand this over to a bot account')
+    /* PAGE_NOT_PUBLIC is the one that actually happens: a tag like a game
+       name trips the rights filter and the piece is held for review, so it
+       is not public at the moment the box is ticked. */
+    toast.error(BOOST_ERRORS[code] || `Could not hand this over to a bot account${code ? ` (${code})` : ''}`)
   }
 }
 
@@ -258,7 +268,11 @@ async function saveArt() {
   editorData.value.is_public = publishStatus.value === 'public'
   store.saveState(false)
   await store.saveNow()
-  if (isAdmin.value && boostOnPublish.value && editorData.value.is_public) await boostArt()
+  if (isAdmin.value && boostOnPublish.value && heldForReview.value) {
+    toast.error(BOOST_ERRORS.PAGE_NOT_PUBLIC)
+  } else if (isAdmin.value && boostOnPublish.value && editorData.value.is_public) {
+    await boostArt()
+  }
   if (editorData.value.id_string) {
     publishStep.value = 'done'
   } else {
@@ -4059,8 +4073,16 @@ watch(
 
           <template v-if="publishStep === 'done'">
             <div class="publish-done-header">
-              <h3 class="text-sm font-bold">{{ editorData.is_public ? 'Published!' : 'Saved — unlisted' }}</h3>
-              <p class="text-xs mt-1">{{ editorData.is_public ? 'Your pixel art is live. Share it!' : 'Only people with this link can see it — not listed in the gallery.' }}</p>
+              <h3 class="text-sm font-bold">
+                <template v-if="heldForReview">{{ $t('c_PXEditor.heldForReview') }}</template>
+                <template v-else-if="editorData.is_public">Published!</template>
+                <template v-else>Saved — unlisted</template>
+              </h3>
+              <p class="text-xs mt-1">
+                <template v-if="heldForReview">{{ $t('c_PXEditor.aTagOrTitleMatchedSomethingProtected') }}</template>
+                <template v-else-if="editorData.is_public">Your pixel art is live. Share it!</template>
+                <template v-else>Only people with this link can see it — not listed in the gallery.</template>
+              </p>
             </div>
             <div class="share-stack">
               <div class="publish-link" @click="copyLink">

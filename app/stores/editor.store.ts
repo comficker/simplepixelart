@@ -1110,6 +1110,7 @@ export const useEditor = defineStore('editor', () => {
                 })
                 editorData.value.id = result.id
                 editorData.value.id_string = result.id_string
+                editorData.value.status = result.status
                 history.value.forEach(item => {
                     item.id = result.id
                 })
@@ -1147,6 +1148,7 @@ export const useEditor = defineStore('editor', () => {
                 })
                 editorData.value.updated = result.updated
                 editorData.value.id_string = result.id_string
+                editorData.value.status = result.status
             } catch (e: any) {
                 const code = e?.statusCode ?? e?.response?.status
                 if (code !== 404) throw e
