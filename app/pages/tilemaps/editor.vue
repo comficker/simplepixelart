@@ -1717,10 +1717,23 @@ const faq = computed(() => [
 <template>
   <ToolLayout :title="$t('p_tilemaps_editor.tilemap')" class="tm-page">
 
-    <div v-if="loadingList" class="tm-skeleton" aria-busy="true" :aria-label="$t('p_tilemaps_editor.loading')">
-      <div class="skel skel-controls"/>
-      <div class="tm-layout">
-        <div class="tm-stage"><div class="skel skel-board"/></div>
+    <div
+        v-if="loadingList"
+        class="tm-skeleton tm-editor flat-editor"
+        aria-busy="true"
+        :aria-label="$t('p_tilemaps_editor.loading')"
+    >
+      <div class="editor-toolbar">
+        <div class="skeleton skel-btn"/>
+        <div class="skeleton skel-btn"/>
+        <div class="skeleton skel-btn"/>
+        <div class="skeleton skel-title"/>
+      </div>
+      <div class="tm-layout tm-layout-rail">
+        <div class="skel-rail">
+          <div v-for="n in 5" :key="n" class="skeleton skel-rail-btn"/>
+        </div>
+        <div class="tm-stage"><div class="skeleton skel-board"/></div>
       </div>
     </div>
 
@@ -1953,7 +1966,7 @@ const faq = computed(() => [
           </div>
 
           <div ref="stageEl" class="tm-stage no-scrollbar" @scroll.passive="debouncedViewSave()">
-          <div v-if="loadingDetail" class="skel skel-board"/>
+          <div v-if="loadingDetail" class="skeleton skel-board"/>
 
           <template v-else>
             <div class="tm-board" :class="{'tm-board-bg': !config.bg}" :style="{width: dispW + 'px', height: dispH + 'px'}">
@@ -2045,7 +2058,7 @@ const faq = computed(() => [
           <div class="tm-tiles no-scrollbar">
             <div class="tm-tiles-grid">
               <template v-if="paletteLoading">
-                <div v-for="n in 12" :key="n" class="skel tm-tile-skel"/>
+                <div v-for="n in 12" :key="n" class="skeleton tm-tile-skel"/>
               </template>
               <p v-else-if="!paletteItems.length" class="tm-hint tm-tiles-empty">
                 <template v-if="paletteMode === 'search'">{{ $t('p_tilemaps_editor.noArtFoundTryAnotherSearch') }}</template>
@@ -2538,19 +2551,20 @@ const faq = computed(() => [
 .tm-fade-enter-active, .tm-fade-leave-active { transition: opacity 0.2s ease; }
 .tm-fade-enter-from, .tm-fade-leave-to { opacity: 0; }
 
-.tm-skeleton { display: flex; flex-direction: column; gap: var(--space-3); }
-.skel {
-  background: linear-gradient(90deg,
-      var(--surface-2) 25%,
-      color-mix(in oklab, var(--surface-2) 45%, var(--surface)) 37%,
-      var(--surface-2) 63%);
-  background-size: 400% 100%;
-  animation: tm-shimmer 1.4s ease infinite;
-  border-radius: var(--radius-sm);
+/* The loading view is the editor's own frame with its contents greyed out,
+   so nothing moves when the real one arrives. Shapes only -- the shimmer and
+   the reduced-motion handling come from .skeleton in main.css. */
+.skel-btn { width: calc(var(--bar-h) - var(--space-2)); }
+.skel-title { flex: 0 1 25%; margin-left: var(--space-2); }
+/* The rail runs across the top on phones and down the side from 768, the
+   same way the real one does. */
+.skel-rail { display: flex; gap: var(--space-1); padding: var(--space-1); }
+.skel-rail-btn { flex: 0 0 auto; height: calc(var(--bar-h) - var(--space-2)); aspect-ratio: 1; }
+@media (min-width: 768px) {
+  .skel-rail { flex-direction: column; }
+  .skel-rail-btn { width: 100%; height: auto; }
 }
-@keyframes tm-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
-.skel-controls { width: 100%; height: 48px; }
-.skel-board { width: min(520px, 100%); aspect-ratio: 1; border-radius: var(--radius-sm); }
+.skel-board { width: 100%; height: 100%; }
 </style>
 
 <style>
