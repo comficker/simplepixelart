@@ -115,6 +115,8 @@ export default defineNuxtConfig({
                 {rel: 'icon', type: 'image/png', sizes: '512x512', href: '/android-chrome-512x512.png'},
                 {rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png'},
                 {rel: 'manifest', href: '/site.webmanifest'},
+                {rel: 'alternate', type: 'application/rss+xml',
+                    title: 'Simple Pixel Art — new pieces', href: '/rss.xml'},
                 {rel: 'preconnect', href: 'https://touch.ninosaur.com'},
             ],
             meta: [
