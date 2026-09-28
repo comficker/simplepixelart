@@ -2931,13 +2931,29 @@ function onPaste() {
 }
 
 function onTrimHidden() {
-  const removed = store.trimHiddenPixels()
+  const {removed, boards} = store.trimHiddenPixels()
   if (removed) {
     scheduleDraw()
-    toast.success(`Removed ${removed} hidden pixel${removed > 1 ? 's' : ''} outside the canvas`)
+    toast.success(`Removed ${removed} hidden pixel${removed > 1 ? 's' : ''} outside the canvas${acrossBoards(boards)}`)
   } else {
     toast.info('Nothing to trim — all pixels are inside the canvas')
   }
+}
+
+function onCleanupColors() {
+  const boards = store.cleanupUnusedColors()
+  if (boards) {
+    scheduleDraw()
+    toast.success(`Dropped the unused colors${acrossBoards(boards)}`)
+  } else {
+    toast.info('Nothing to clean up — every color is in use')
+  }
+}
+
+/* With no board selected these run over the whole canvas, so say when more
+   than the piece in front of you changed. */
+function acrossBoards(n: number) {
+  return n > 1 ? ` across ${n} boards` : ''
 }
 
 function exportFile(type: string) {
@@ -3417,7 +3433,7 @@ watch(
                 <span class="icon icon-broom"/>
                 <span>{{ $t('c_PXEditor.clearCurrentLayer') }}</span>
               </button>
-              <button class="file-menu-item" @click="store.cleanupUnusedColors()">
+              <button class="file-menu-item" @click="onCleanupColors">
                 <span class="icon icon-palette-swatch-outline"/>
                 <span>{{ $t('c_PXEditor.cleanupUnusedColors') }}</span>
               </button>

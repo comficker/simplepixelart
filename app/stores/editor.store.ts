@@ -453,14 +453,30 @@ export const useEditor = defineStore('editor', () => {
         if (!anim.shared.length) anim.shared.push({name: 'Background', pixels: markRaw({}), x: 0, y: 0})
     }
 
-    function forEachLayer(fn: (layer: Layer) => void) {
-        const anim = editorData.value.meta?.animation
+    function forEachLayerOf(data: EditorData, fn: (layer: Layer) => void) {
+        const anim = data.meta?.animation
         if (anim?.frames?.length) {
             anim.frames.forEach(f => f.layers?.forEach(fn))
             anim.shared?.forEach(fn)
         } else {
-            editorData.value.layers.forEach(fn)
+            data.layers.forEach(fn)
         }
+    }
+
+    function forEachLayer(fn: (layer: Layer) => void) {
+        forEachLayerOf(editorData.value, fn)
+    }
+
+    /* The boards a housekeeping op should act on. With nothing selected
+       inside a board the canvas as a whole is the subject -- the same scope
+       at which Delete removes a board rather than clearing a layer -- so
+       these run over every board instead of only the one being edited. */
+    function housekeepingTargets(): EditorData[] {
+        if (activeScope.value !== 'board' || !boards.value.length) return [editorData.value]
+        // The active board's stashed `data` can be a stale object, because
+        // undo and redo replace editorData wholesale and only a board switch
+        // stashes it back. Read the live one, the way the snapshot does.
+        return boards.value.map(b => b.id === activeBoardId.value ? editorData.value : b.data)
     }
 
     function linkActiveFrame() {
@@ -1624,15 +1640,15 @@ export const useEditor = defineStore('editor', () => {
         saveState()
     }
 
-    function cleanupUnusedColors() {
+    function cleanupUnusedColorsIn(data: EditorData): boolean {
         const used = new Set<number>()
-        forEachLayer(layer => {
+        forEachLayerOf(data, layer => {
             Object.values(layer.pixels).forEach(v => used.add(v))
         })
-        if (used.size === editorData.value.colors.length) return
+        if (used.size === data.colors.length) return false
         const remap: number[] = []
         const newColors: string[] = []
-        editorData.value.colors.forEach((c, i) => {
+        data.colors.forEach((c, i) => {
             if (used.has(i)) {
                 remap[i] = newColors.length
                 newColors.push(c)
@@ -1640,12 +1656,12 @@ export const useEditor = defineStore('editor', () => {
                 remap[i] = -1
             }
         })
-        if (newColors.length === 0 && editorData.value.colors.length > 0) {
-            newColors.push(editorData.value.colors[0]!)
+        if (newColors.length === 0 && data.colors.length > 0) {
+            newColors.push(data.colors[0]!)
             remap[0] = 0
         }
-        editorData.value.colors = newColors
-        forEachLayer(layer => {
+        data.colors = newColors
+        forEachLayerOf(data, layer => {
             const next: { [key: string]: number } = {}
             Object.keys(layer.pixels).forEach(key => {
                 const mapped = remap[layer.pixels[key]!]
@@ -1653,16 +1669,31 @@ export const useEditor = defineStore('editor', () => {
             })
             layer.pixels = markRaw(next)
         })
-        if (currentColorIndex.value >= newColors.length) {
-            currentColorIndex.value = newColors.length - 1
-        }
-        saveState()
+        return true
     }
 
-    function trimHiddenPixels(): number {
-        const w = editorData.value.width, h = editorData.value.height
+    /* Returns how many boards it changed, so the caller can say whether it
+       touched the whole canvas or just the piece in front of you. */
+    function cleanupUnusedColors(): number {
+        const targets = housekeepingTargets()
+        let changed = 0
+        for (const data of targets) if (cleanupUnusedColorsIn(data)) changed++
+        if (!changed) return 0
+        if (currentColorIndex.value >= editorData.value.colors.length) {
+            currentColorIndex.value = editorData.value.colors.length - 1
+        }
+        boardsRev.value++
+        saveState()
+        // Only the active board rides along in history; the others are
+        // written straight to the workspace snapshot, as setBg does.
+        if (targets.length > 1) saveWorkspaceLayout()
+        return changed
+    }
+
+    function trimHiddenPixelsIn(data: EditorData): number {
+        const w = data.width, h = data.height
         let removed = 0
-        forEachLayer(layer => {
+        forEachLayerOf(data, layer => {
             const lx = layer.x || 0, ly = layer.y || 0
             const keys = Object.keys(layer.pixels)
             const next: { [key: string]: number } = {}
@@ -1674,12 +1705,25 @@ export const useEditor = defineStore('editor', () => {
             }
             if (Object.keys(next).length !== keys.length) layer.pixels = markRaw(next)
         })
+        return removed
+    }
+
+    function trimHiddenPixels(): { removed: number; boards: number } {
+        const targets = housekeepingTargets()
+        let removed = 0
+        let boardsTouched = 0
+        for (const data of targets) {
+            const n = trimHiddenPixelsIn(data)
+            if (n) { removed += n; boardsTouched++ }
+        }
         if (removed) {
+            boardsRev.value++
             markFullRedraw()
             drawTurn.value++
             saveState()
+            if (targets.length > 1) saveWorkspaceLayout()
         }
-        return removed
+        return {removed, boards: boardsTouched}
     }
 
     function mergeSelectedBlock(): { w: number; h: number } | null {
