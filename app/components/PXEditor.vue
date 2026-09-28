@@ -228,10 +228,25 @@ async function genMetaWithAI() {
   } catch (e: any) {
     const s = e?.status ?? e?.response?.status
     if (s === 402) toast.error('Not enough credits — earn some in Missions')
+    /* A rate limit spends nothing -- it is refused before the view runs --
+       so the refund line would be a lie, and the real answer is how long
+       to wait. The header is authoritative; the body carries the same
+       number for the case where the header is stripped in between. */
+    else if (s === 429) toast.error(`Too many AI requests — try again in ${retryMinutes(e)}`)
+    else if (s === 503) toast.error('AI is switched off right now')
     else toast.error('AI could not read this one — your credit was refunded')
   } finally {
     aiBusy.value = false
   }
+}
+
+function retryMinutes(e: any) {
+  const header = Number(e?.response?.headers?.get?.('retry-after'))
+  const body = Number(String(e?.response?._data?.detail || '').match(/(\d+) second/)?.[1])
+  const secs = header || body
+  if (!secs) return 'a few minutes'
+  const mins = Math.ceil(secs / 60)
+  return mins <= 1 ? 'a minute' : `${mins} minutes`
 }
 
 /* A publish can come back held: the rights filter downgrades public to
