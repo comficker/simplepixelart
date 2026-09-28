@@ -355,15 +355,18 @@
     "collapseSidebar": "Contraer la barra lateral",
     "community": "Comunidad",
     "expandSidebar": "Desplegar la barra lateral",
+    "followOnMastodon": "Seguir en Mastodon",
     "followOnX": "Síguenos en X",
     "sidebar": "Barra lateral",
     "sourceOnGithub": "Código en GitHub",
     "tools": "Herramientas"
   },
   "c_SocialAuth": {
+    "followOnMastodon": "Seguir en Mastodon",
     "followOnX": "Síguenos en X",
     "githubRepository": "Repositorio de GitHub",
     "login": "Entrar",
+    "mastodon": "Mastodon",
     "openSourceOnGithub": "Código abierto en GitHub",
     "xTwitter": "X (Twitter)"
   },

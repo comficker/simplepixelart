@@ -355,15 +355,18 @@
     "collapseSidebar": "收起侧边栏",
     "community": "社区",
     "expandSidebar": "展开侧边栏",
+    "followOnMastodon": "在 Mastodon 关注",
     "followOnX": "在 X 上关注",
     "sidebar": "侧边栏",
     "sourceOnGithub": "GitHub 源码",
     "tools": "工具"
   },
   "c_SocialAuth": {
+    "followOnMastodon": "在 Mastodon 关注",
     "followOnX": "在 X 上关注",
     "githubRepository": "GitHub 仓库",
     "login": "登录",
+    "mastodon": "Mastodon",
     "openSourceOnGithub": "在 GitHub 上开源",
     "xTwitter": "X (Twitter)"
   },

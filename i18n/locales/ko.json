@@ -355,15 +355,18 @@
     "collapseSidebar": "사이드바 접기",
     "community": "커뮤니티",
     "expandSidebar": "사이드바 펼치기",
+    "followOnMastodon": "Mastodon에서 팔로우",
     "followOnX": "X에서 팔로우",
     "sidebar": "사이드바",
     "sourceOnGithub": "GitHub 소스",
     "tools": "도구"
   },
   "c_SocialAuth": {
+    "followOnMastodon": "Mastodon에서 팔로우",
     "followOnX": "X에서 팔로우",
     "githubRepository": "GitHub 저장소",
     "login": "로그인",
+    "mastodon": "Mastodon",
     "openSourceOnGithub": "GitHub에서 오픈소스",
     "xTwitter": "X (Twitter)"
   },

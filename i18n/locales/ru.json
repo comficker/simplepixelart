@@ -355,15 +355,18 @@
     "collapseSidebar": "Свернуть боковую панель",
     "community": "Сообщество",
     "expandSidebar": "Развернуть боковую панель",
+    "followOnMastodon": "Читать в Mastodon",
     "followOnX": "Читать в X",
     "sidebar": "Боковая панель",
     "sourceOnGithub": "Исходный код на GitHub",
     "tools": "Инструменты"
   },
   "c_SocialAuth": {
+    "followOnMastodon": "Читать в Mastodon",
     "followOnX": "Подписаться в X",
     "githubRepository": "Репозиторий на GitHub",
     "login": "Войти",
+    "mastodon": "Mastodon",
     "openSourceOnGithub": "Открытый код на GitHub",
     "xTwitter": "X (Twitter)"
   },
