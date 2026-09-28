@@ -99,6 +99,7 @@ export const useEditor = defineStore('editor', () => {
         selectionState.value.bounds.active = false
         selectionState.value.selecting = false
         layerActive.value = false
+        nothingSelected.value = false
         sharedRev.value++
         markFullRedraw()
         drawTurn.value++
@@ -467,12 +468,11 @@ export const useEditor = defineStore('editor', () => {
         forEachLayerOf(editorData.value, fn)
     }
 
-    /* The boards a housekeeping op should act on. With nothing selected
-       inside a board the canvas as a whole is the subject -- the same scope
-       at which Delete removes a board rather than clearing a layer -- so
-       these run over every board instead of only the one being edited. */
+    /* The boards a housekeeping op should act on. With nothing selected the
+       canvas as a whole is the subject, so these run over every board
+       instead of only the one being edited. */
     function housekeepingTargets(): EditorData[] {
-        if (activeScope.value !== 'board' || !boards.value.length) return [editorData.value]
+        if (!nothingSelected.value || !boards.value.length) return [editorData.value]
         // The active board's stashed `data` can be a stale object, because
         // undo and redo replace editorData wholesale and only a board switch
         // stashes it back. Read the live one, the way the snapshot does.
@@ -652,6 +652,16 @@ export const useEditor = defineStore('editor', () => {
     });
 
     const layerActive = ref(true)
+    /* Nothing at all is selected: Esc, or a click on canvas where no board
+       is. Distinct from the `board` scope you get by clicking a board's own
+       chrome -- there the board is still the subject, which is why Copy
+       takes the whole board and Delete removes it. Here no board is drawn
+       as the one being edited, and the housekeeping commands treat the
+       whole canvas as their subject.
+
+       Every path that engages with a board clears it: picking a layer,
+       switching board, clicking a board's chrome, or drawing on one. */
+    const nothingSelected = ref(false)
     const activeScope = computed<'selection' | 'layer' | 'board'>(() => {
         if (selectionState.value.bounds.active) return 'selection'
         if (layerActive.value) return 'layer'
@@ -660,6 +670,16 @@ export const useEditor = defineStore('editor', () => {
     function activateLayer(index?: number) {
         if (typeof index === 'number') currentLayerIndex.value = index
         layerActive.value = true
+        nothingSelected.value = false
+    }
+
+    function selectNothing() {
+        layerActive.value = false
+        nothingSelected.value = true
+        if (selectionState.value.bounds.active) {
+            selectionState.value.bounds.active = false
+            selectionState.value.selecting = false
+        }
     }
 
     function ensureIsoMeta() {
@@ -2285,6 +2305,8 @@ export const useEditor = defineStore('editor', () => {
         colorIndexAt,
         currentLayerIndex,
         layerActive,
+        nothingSelected,
+        selectNothing,
         activeScope,
         activateLayer,
         mirrorHorizontal,

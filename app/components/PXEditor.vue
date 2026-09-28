@@ -1096,6 +1096,7 @@ function activeBoardRect(): { sx: number; sy: number; bw: number; bh: number } |
 }
 
 function handleAt(e: MouseEvent | TouchEvent): '' | 'e' | 's' | 'se' {
+  if (store.nothingSelected) return '';
   const r = activeBoardRect();
   if (!r || r.bw < 36 || r.bh < 36) return '';
   const {x: clientX, y: clientY} = getClientPos(e);
@@ -1485,6 +1486,12 @@ function startDraw(e: any) {
     store.setActiveBoard(hit.id);
     return;
   }
+  if (store.nothingSelected) {
+    store.nothingSelected = false;
+    store.activateLayer();
+    scheduleDraw();
+    return;
+  }
   const {x, y} = getPixelPos(e);
   if (store.currentTool === 'picker') {
     const ci = store.colorIndexAt(x, y);
@@ -1680,11 +1687,7 @@ function stopDraw() {
     if (w >= MARQUEE_MIN && h >= MARQUEE_MIN) {
       store.addBoard(Math.round(w), Math.round(h), {x: Math.round(x0), y: Math.round(y0)});
     } else {
-      store.layerActive = false;
-      if (store.selectionState.bounds.active) {
-        store.selectionState.bounds.active = false;
-        store.selectionState.selecting = false;
-      }
+      store.selectNothing();
     }
     cancelScheduledDraw();
     drawEditor();
@@ -1703,6 +1706,7 @@ function stopDraw() {
       store.setActiveBoard(id);
     } else {
       store.layerActive = false;
+      store.nothingSelected = false;
     }
     cancelScheduledDraw();
     drawEditor();
@@ -1868,6 +1872,14 @@ function handleKeyDown(e: any) {
     return;
   }
 
+  if (e.key === 'Escape') {
+    if (boardMenu.value) closeBoardMenu();
+    else store.selectNothing();
+    scheduleDraw();
+    e.preventDefault();
+    return;
+  }
+
   if (e.code === 'Space') {
     spacePressed.value = true;
     e.preventDefault();
@@ -1916,7 +1928,9 @@ function handleKeyDown(e: any) {
     store.setActiveFrame(Math.max(0, store.currentFrameIndex) + (key === ',' ? -1 : 1));
     e.preventDefault();
   } else if (!mod && (e.key === 'Backspace' || e.key === 'Delete')) {
-    if (store.activeScope === 'board' && store.boards.length > 1) {
+    if (store.nothingSelected) {
+      // Nothing is selected, so there is nothing for Delete to act on.
+    } else if (store.activeScope === 'board' && store.boards.length > 1) {
       hideBoard(store.activeBoardId);
     } else {
       store.clearCurrentLayer();
@@ -2212,7 +2226,7 @@ function drawBoardChrome(): void {
     const w = b.data.width, h = b.data.height;
     const {x: sx, y: sy} = boardScreen(b.x, b.y);
     const bw = w * z, bh = h * z;
-    const active = b.id === store.activeBoardId;
+    const active = b.id === store.activeBoardId && !store.nothingSelected;
     if (b.data.meta?.bg?.type !== 'transparent') {
       ctx.strokeStyle = active ? BOARD_ACTIVE : 'rgba(0,0,0,0.35)';
       ctx.lineWidth = active ? 2 : 1;
@@ -3276,6 +3290,10 @@ watch([cam, zoom], () => {
 }, {deep: true});
 
 watch(() => store.onionSkin, () => scheduleDraw())
+/* The board chrome reads this, and the canvas is painted imperatively, so
+   it has to be told. Every path that selects or deselects goes through the
+   flag, which is cheaper than remembering to redraw at each of them. */
+watch(() => store.nothingSelected, () => scheduleDraw())
 
 let restoringHistory = false;
 
