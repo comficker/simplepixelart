@@ -243,6 +243,7 @@
     "loaded": "Cargado",
     "loginToShare": "Inicia sesión para compartir",
     "loginWithGoogle": "Entrar con Google",
+    "mergeColorsAutomaticallyOrByPick": "Combinar colores: automáticamente o eligiéndolos",
     "mergeNSelectedLayers": "Fusionar las {count} capas seleccionadas en una",
     "mergePixelsBySelectionBlock": "Unir píxeles por selección",
     "mergePixelsTheSelectionBecomes1": "Fusionar píxeles: la selección pasa a ser 1 píxel y todo el lienzo se rehace en bloques de ese tamaño, alineados a ella",
@@ -308,10 +309,14 @@
   },
   "c_Palette": {
     "colorNHex": "Color {n}: {hex}",
+    "colorNHexNPixels": "{hex} · {count} px",
     "eraser": "Goma",
     "eraserEPaintWithTransparencyTo": "Borrador (E): pinta con transparencia para quitar píxeles",
     "eyedropper": "Cuentagotas",
     "eyedropperClickAPixelToGrab": "Cuentagotas: haz clic en un píxel para tomar su color y sigue dibujando",
+    "mergeSimilar": "Combinar similares",
+    "nothingAlikeEnough": "Ningún color es lo bastante parecido",
+    "pickTwoOrMoreColors": "Elige dos o más colores",
     "removeCurrentColor": "Quitar el color actual"
   },
   "c_PaletteList": {
@@ -542,6 +547,8 @@
     "loading": "Cargando…",
     "logInToSubmit": "Inicia sesión para enviar",
     "logOut": "Cerrar sesión",
+    "manual": "Manual",
+    "merge": "Combinar",
     "mirrorDrawing": "Dibujo en espejo",
     "missions": "Misiones",
     "nColors": "{count} colores",

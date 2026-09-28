@@ -6,7 +6,7 @@ import {cloneDeep, debounce, generateUUID, getStorageItem, key2Point, sharedPage
 import {DEFAULT_EDITOR_DATA} from "~/helper/constants";
 import {markRaw, ref, shallowRef, toRaw} from "vue";
 import {layers2MapNumbers} from "~/helper/canvas";
-import {isSameColor, rgbToHex} from "~/helper/color";
+import {hexColorDelta, isSameColor, rgbToHex} from "~/helper/color";
 import {importFileGrid, importOriginalGrid, shouldIgnoreColor} from "~/helper/pixel";
 import {loadWorkspaceFull, saveWorkspaceFull, clearWorkspaceFull} from "~/helper/workspaceSnapshot";
 import {toast} from "vue-sonner";
@@ -1710,6 +1710,119 @@ export const useEditor = defineStore('editor', () => {
         return changed
     }
 
+    /* Pixels per colour index, over every layer and frame. Merging keeps
+       whichever colour of a group the artwork leans on hardest, so the
+       picture shifts as little as it can. */
+    function colorUsage(): number[] {
+        const counts = new Array(editorData.value.colors.length).fill(0)
+        forEachLayer(layer => {
+            for (const key of Object.keys(layer.pixels)) {
+                const v = layer.pixels[key]!
+                if (v >= 0 && v < counts.length) counts[v]++
+            }
+        })
+        return counts
+    }
+
+    // hexColorDelta wants six bare hex digits and returns 1 for a pair that
+    // matches exactly. Anything else in the slot is left to stand alone
+    // rather than silently grouped with whatever NaN compares against.
+    function bareHex(hex: string | undefined): string | null {
+        const h = (hex || '').replace('#', '').trim()
+        return /^[0-9a-fA-F]{6}$/.test(h) ? h : null
+    }
+
+    /* Colours grouped by how alike they look, on the same similarity scale
+       isSameColor uses. Greedy and in palette order: a colour joins the
+       first group whose anchor it resembles, so the same palette always
+       groups the same way and the slider's preview matches what the merge
+       will do. Only groups worth merging come back. */
+    function similarColorGroups(threshold: number): number[][] {
+        const colors = editorData.value.colors
+        const groups: number[][] = []
+        const anchors: string[] = []
+        for (let i = 0; i < colors.length; i++) {
+            const hex = bareHex(colors[i])
+            if (hex === null) continue
+            let placed = false
+            for (let g = 0; g < groups.length; g++) {
+                if (hexColorDelta(anchors[g]!, hex) >= threshold) {
+                    groups[g]!.push(i)
+                    placed = true
+                    break
+                }
+            }
+            if (!placed) {
+                groups.push([i])
+                anchors.push(hex)
+            }
+        }
+        return groups.filter(g => g.length > 1)
+    }
+
+    /* Repoint each group's pixels onto the colour the artwork uses most and
+       drop the others. Returns how many colours went.
+
+       Groups are made disjoint as they are read, so a colour claimed by an
+       earlier group cannot be swallowed by a later one -- a survivor must
+       never itself be one of the removed, or the pixels pointed at it would
+       land nowhere. */
+    function mergeColorGroups(groups: number[][]): number {
+        const n = editorData.value.colors.length
+        const usage = colorUsage()
+        const winner = new Map<number, number>()
+        const doomed = new Set<number>()
+        const claimed = new Set<number>()
+
+        for (const raw of groups) {
+            const group = [...new Set(raw)]
+                .filter(i => Number.isInteger(i) && i >= 0 && i < n && !claimed.has(i))
+            if (group.length < 2) continue
+            // Most pixels wins; the lower index breaks a tie, so the result
+            // does not depend on the order the group was built in.
+            const keep = group.reduce((a, b) =>
+                (usage[b]! > usage[a]! || (usage[b] === usage[a] && b < a)) ? b : a)
+            for (const i of group) {
+                claimed.add(i)
+                if (i !== keep) {
+                    winner.set(i, keep)
+                    doomed.add(i)
+                }
+            }
+        }
+        if (!doomed.size) return 0
+
+        const shift: number[] = []
+        const newColors: string[] = []
+        for (let i = 0; i < n; i++) {
+            if (doomed.has(i)) { shift[i] = -1; continue }
+            shift[i] = newColors.length
+            newColors.push(editorData.value.colors[i]!)
+        }
+        const finalIndex = (i: number) => {
+            const target = winner.has(i) ? winner.get(i)! : i
+            const next = shift[target]
+            return next === undefined ? -1 : next
+        }
+
+        editorData.value.colors = newColors
+        forEachLayer(layer => {
+            const next: { [key: string]: number } = {}
+            for (const key of Object.keys(layer.pixels)) {
+                const mapped = finalIndex(layer.pixels[key]!)
+                if (mapped >= 0) next[key] = mapped
+            }
+            layer.pixels = markRaw(next)
+        })
+        if (currentColorIndex.value >= newColors.length) {
+            currentColorIndex.value = newColors.length - 1
+        }
+        markFullRedraw()
+        drawTurn.value++
+        saveState()
+        return doomed.size
+    }
+
     function trimHiddenPixelsIn(data: EditorData): number {
         const w = data.width, h = data.height
         let removed = 0
@@ -2348,6 +2461,9 @@ export const useEditor = defineStore('editor', () => {
         bucketFill,
         removeColor,
         cleanupUnusedColors,
+        colorUsage,
+        similarColorGroups,
+        mergeColorGroups,
         trimHiddenPixels,
         mergeSelectedBlock,
         clipboard,

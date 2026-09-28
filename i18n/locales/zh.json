@@ -243,6 +243,7 @@
     "loaded": "已载入",
     "loginToShare": "登录后分享",
     "loginWithGoogle": "使用 Google 登录",
+    "mergeColorsAutomaticallyOrByPick": "合并颜色 — 自动，或自行挑选",
     "mergeNSelectedLayers": "把选中的 {count} 个图层合并为一个",
     "mergePixelsBySelectionBlock": "按选区合并像素",
     "mergePixelsTheSelectionBecomes1": "合并像素——选区变成 1 个像素，整张画布按该尺寸重新分块并与之对齐",
@@ -308,10 +309,14 @@
   },
   "c_Palette": {
     "colorNHex": "颜色 {n}：{hex}",
+    "colorNHexNPixels": "{hex} · {count} px",
     "eraser": "橡皮",
     "eraserEPaintWithTransparencyTo": "橡皮（E）——用透明色绘制来擦除像素",
     "eyedropper": "吸管",
     "eyedropperClickAPixelToGrab": "取色器——点击某个像素取它的颜色，然后继续作画",
+    "mergeSimilar": "合并相近色",
+    "nothingAlikeEnough": "没有足够接近的颜色",
+    "pickTwoOrMoreColors": "选择两种或更多颜色",
     "removeCurrentColor": "移除当前颜色"
   },
   "c_PaletteList": {
@@ -542,6 +547,8 @@
     "loading": "加载中…",
     "logInToSubmit": "登录后提交",
     "logOut": "退出登录",
+    "manual": "手动",
+    "merge": "合并",
     "mirrorDrawing": "镜像绘制",
     "missions": "任务",
     "nColors": "{count} 色",

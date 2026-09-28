@@ -243,6 +243,7 @@
     "loaded": "Загружено",
     "loginToShare": "Войдите, чтобы поделиться",
     "loginWithGoogle": "Войти через Google",
+    "mergeColorsAutomaticallyOrByPick": "Объединить цвета — автоматически или выбрав вручную",
     "mergeNSelectedLayers": "Объединить выбранные слои ({count}) в один",
     "mergePixelsBySelectionBlock": "Объединить пиксели по выделению",
     "mergePixelsTheSelectionBecomes1": "Слить пиксели — выделение станет одним пикселем, а весь холст перестроится блоками этого размера с выравниванием по нему",
@@ -308,10 +309,14 @@
   },
   "c_Palette": {
     "colorNHex": "Цвет {n}: {hex}",
+    "colorNHexNPixels": "{hex} · {count} px",
     "eraser": "Ластик",
     "eraserEPaintWithTransparencyTo": "Ластик (E) — рисует прозрачностью и стирает пиксели",
     "eyedropper": "Пипетка",
     "eyedropperClickAPixelToGrab": "Пипетка — щёлкните пиксель, чтобы взять его цвет, и продолжайте рисовать",
+    "mergeSimilar": "Похожие цвета",
+    "nothingAlikeEnough": "Нет достаточно похожих цветов",
+    "pickTwoOrMoreColors": "Выберите два цвета или больше",
     "removeCurrentColor": "Убрать текущий цвет"
   },
   "c_PaletteList": {
@@ -542,6 +547,8 @@
     "loading": "Загрузка…",
     "logInToSubmit": "Войдите, чтобы отправить",
     "logOut": "Выйти",
+    "manual": "Вручную",
+    "merge": "Объединить",
     "mirrorDrawing": "Зеркальное рисование",
     "missions": "Миссии",
     "nColors": "Цветов: {count}",

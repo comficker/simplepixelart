@@ -243,6 +243,7 @@
     "loaded": "読み込み済み",
     "loginToShare": "ログインして共有",
     "loginWithGoogle": "Googleでログイン",
+    "mergeColorsAutomaticallyOrByPick": "色を結合 — 自動、または自分で選んで",
     "mergeNSelectedLayers": "選択した{count}枚のレイヤーを1枚に統合",
     "mergePixelsBySelectionBlock": "選択範囲でピクセルを統合",
     "mergePixelsTheSelectionBecomes1": "ピクセルを統合 — 選択範囲が1ピクセルになり、キャンバス全体がそのサイズのブロックで、選択範囲を基準に敷き直されます",
@@ -308,10 +309,14 @@
   },
   "c_Palette": {
     "colorNHex": "色 {n}: {hex}",
+    "colorNHexNPixels": "{hex} · {count} px",
     "eraser": "消しゴム",
     "eraserEPaintWithTransparencyTo": "消しゴム（E） — 透明で塗ってピクセルを消します",
     "eyedropper": "スポイト",
     "eyedropperClickAPixelToGrab": "スポイト — ピクセルをクリックして色を取り、そのまま描き続けられます",
+    "mergeSimilar": "似た色をまとめる",
+    "nothingAlikeEnough": "十分に近い色がありません",
+    "pickTwoOrMoreColors": "2色以上を選んでください",
     "removeCurrentColor": "この色を削除"
   },
   "c_PaletteList": {
@@ -542,6 +547,8 @@
     "loading": "読み込み中…",
     "logInToSubmit": "ログインして投稿",
     "logOut": "ログアウト",
+    "manual": "手動",
+    "merge": "結合",
     "mirrorDrawing": "左右対称で描く",
     "missions": "ミッション",
     "nColors": "{count}色",

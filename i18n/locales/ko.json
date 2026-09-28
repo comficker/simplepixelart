@@ -243,6 +243,7 @@
     "loaded": "불러옴",
     "loginToShare": "로그인 후 공유",
     "loginWithGoogle": "Google로 로그인",
+    "mergeColorsAutomaticallyOrByPick": "색 병합 — 자동 또는 직접 선택",
     "mergeNSelectedLayers": "선택한 레이어 {count}개를 하나로 병합",
     "mergePixelsBySelectionBlock": "선택 영역으로 픽셀 병합",
     "mergePixelsTheSelectionBecomes1": "픽셀 병합 — 선택 영역이 1픽셀이 되고, 캔버스 전체가 그 크기의 블록으로 선택 영역에 맞춰 다시 짜입니다",
@@ -308,10 +309,14 @@
   },
   "c_Palette": {
     "colorNHex": "색 {n}: {hex}",
+    "colorNHexNPixels": "{hex} · {count} px",
     "eraser": "지우개",
     "eraserEPaintWithTransparencyTo": "지우개（E） — 투명으로 칠해 픽셀을 지웁니다",
     "eyedropper": "스포이드",
     "eyedropperClickAPixelToGrab": "스포이트 — 픽셀을 눌러 색을 가져온 뒤 계속 그리세요",
+    "mergeSimilar": "비슷한 색 병합",
+    "nothingAlikeEnough": "충분히 비슷한 색이 없습니다",
+    "pickTwoOrMoreColors": "두 가지 이상 색을 선택하세요",
     "removeCurrentColor": "현재 색 제거"
   },
   "c_PaletteList": {
@@ -542,6 +547,8 @@
     "loading": "불러오는 중…",
     "logInToSubmit": "로그인 후 제출",
     "logOut": "로그아웃",
+    "manual": "수동",
+    "merge": "병합",
     "mirrorDrawing": "대칭 그리기",
     "missions": "미션",
     "nColors": "{count}색",

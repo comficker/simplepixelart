@@ -838,6 +838,7 @@ const editorData = computed(() => store.editorData)
 
 const paletteRef = ref<{ addColor: () => void; toggleModify: () => void; removeColor: () => void } | null>(null)
 const paletteModify = ref(false)
+const paletteMerge = ref(false)
 const showPalettePicker = ref(false)
 const showStripImport = ref(false)
 
@@ -3962,9 +3963,19 @@ watch(
                 <span class="icon icon-adjust"/>
                 <span>{{ $t('common.edit') }}</span>
               </button>
+              <button
+                  v-if="paletteModify"
+                  class="widget-ctl-btn"
+                  :class="{active: paletteMerge}"
+                  @click="paletteRef?.toggleMerge()"
+                  :title="$t('c_PXEditor.mergeColorsAutomaticallyOrByPick')"
+              >
+                <span class="icon icon-merge"/>
+                <span>{{ $t('common.merge') }}</span>
+              </button>
             </div>
           </template>
-          <editor-palette ref="paletteRef" v-model:modify="paletteModify"/>
+          <editor-palette ref="paletteRef" v-model:modify="paletteModify" v-model:merge="paletteMerge"/>
         </Widget>
       </div>
 

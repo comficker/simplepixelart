@@ -243,6 +243,7 @@
     "loaded": "Carregado",
     "loginToShare": "Entre para compartilhar",
     "loginWithGoogle": "Entrar com o Google",
+    "mergeColorsAutomaticallyOrByPick": "Combinar cores — automaticamente ou escolhendo",
     "mergeNSelectedLayers": "Fundir as {count} camadas selecionadas em uma",
     "mergePixelsBySelectionBlock": "Unir pixels pela seleção",
     "mergePixelsTheSelectionBecomes1": "Fundir pixels — a seleção vira 1 pixel e a tela inteira se refaz em blocos desse tamanho, alinhados a ela",
@@ -308,10 +309,14 @@
   },
   "c_Palette": {
     "colorNHex": "Cor {n}: {hex}",
+    "colorNHexNPixels": "{hex} · {count} px",
     "eraser": "Borracha",
     "eraserEPaintWithTransparencyTo": "Borracha (E) — pinta com transparência para remover pixels",
     "eyedropper": "Conta-gotas",
     "eyedropperClickAPixelToGrab": "Conta-gotas — clique num pixel para pegar a cor dele e continue desenhando",
+    "mergeSimilar": "Combinar similares",
+    "nothingAlikeEnough": "Nenhuma cor parecida o bastante",
+    "pickTwoOrMoreColors": "Escolha duas ou mais cores",
     "removeCurrentColor": "Remover a cor atual"
   },
   "c_PaletteList": {
@@ -542,6 +547,8 @@
     "loading": "Carregando…",
     "logInToSubmit": "Entre para enviar",
     "logOut": "Sair",
+    "manual": "Manual",
+    "merge": "Combinar",
     "mirrorDrawing": "Desenho espelhado",
     "missions": "Missões",
     "nColors": "{count} cores",
