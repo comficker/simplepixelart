@@ -100,6 +100,39 @@ async function syndicate(row: Row, republish: boolean) {
   }
 }
 
+/* Queueing every piece the filter is showing. This is what adding a channel
+   after the fact needs: one press instead of a click per artwork. */
+const bulk = ref<null | { republish: boolean }>(null)
+const bulkBusy = ref(false)
+
+async function runBulk() {
+  if (!bulk.value || bulkBusy.value) return
+  bulkBusy.value = true
+  try {
+    const res = await useNativeFetch<{ pieces: number; queued: number; remaining: number }>(
+        '/coloring/admin/arts/syndicate-all/', {
+          method: 'POST',
+          body: {
+            q: q.value || undefined,
+            status: statusFilter.value || undefined,
+            social: socialFilter.value || undefined,
+            republish: bulk.value.republish,
+          },
+        })
+    if (!res.queued) toast.info('Nothing to queue — everything shown is already out')
+    else toast.success(
+        `Queued ${res.queued} post${res.queued > 1 ? 's' : ''} across ${res.pieces} piece${res.pieces > 1 ? 's' : ''}`
+        + (res.remaining ? ` · ${res.remaining} left, press again` : ''))
+    bulk.value = null
+    await load()
+  } catch (e: any) {
+    const code = e?.response?._data?.[0] || e?.data?.[0]
+    toast.error(code === 'NO_CHANNELS' ? 'No channels configured yet' : 'Could not queue these')
+  } finally {
+    bulkBusy.value = false
+  }
+}
+
 onMounted(load)
 watch(isStaff, (v) => { if (v) load() })
 </script>
@@ -111,6 +144,15 @@ watch(isStaff, (v) => { if (v) load() })
         <h1 class="adm-title"><span class="icon icon-image"/><span>Arts</span></h1>
         <div class="adm-head-actions">
           <NuxtLinkLocale to="/admin" class="btn"><span class="icon icon-adjust"/><span>Overview</span></NuxtLinkLocale>
+          <button
+              v-if="isStaff"
+              class="btn"
+              :disabled="loading || noChannels || !data?.count"
+              :title="`Queue every piece this filter is showing (${data?.count || 0})`"
+              @click="bulk = {republish: false}"
+          >
+            <span class="icon icon-social"/><span>Queue all</span>
+          </button>
           <button v-if="isStaff" class="btn" :disabled="loading" @click="load">
             <span class="icon icon-refresh"/><span>Refresh</span>
           </button>
@@ -231,6 +273,29 @@ watch(isStaff, (v) => { if (v) load() })
         </template>
       </div>
     </section>
+
+    <UiModal
+        v-if="bulk"
+        title="Queue these for the social channels"
+        :sub="`${data?.count || 0} piece(s) match the filter on screen.`"
+        width="420px"
+        @close="bulk = null"
+    >
+      <div class="art-bulk">
+        <p class="art-bulk-note">
+          Nothing is posted now — the cron sends them, a batch at a time, which
+          is what keeps a few hundred pieces from landing on a channel at once.
+        </p>
+        <label class="art-bulk-opt">
+          <input v-model="bulk.republish" type="checkbox">
+          <span>Also send to channels that already have them</span>
+        </label>
+        <button class="btn primary art-bulk-go" :disabled="bulkBusy" @click="runBulk">
+          <span class="icon icon-social"/>
+          <span>{{ bulkBusy ? 'Queueing…' : `Queue ${data?.count || 0}` }}</span>
+        </button>
+      </div>
+    </UiModal>
   </div>
 </template>
 
@@ -375,6 +440,32 @@ watch(isStaff, (v) => { if (v) load() })
   display: flex;
   gap: var(--space-1);
   justify-content: flex-end;
+}
+
+.art-bulk {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.art-bulk-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.art-bulk-opt {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+}
+
+.art-bulk-go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
 }
 
 .art-pager {
