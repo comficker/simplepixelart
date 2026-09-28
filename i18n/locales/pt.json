@@ -1646,6 +1646,15 @@
       "description": "Biblioteca de paletas de cores para pixel art. Filtre pelo número de cores, ordene por popularidade e aplique qualquer paleta com um clique.",
       "keywords": "paleta pixel art, paleta de cores, paleta retrô, cores 8 bits, paleta para jogos",
       "title": "Paletas de Cores para Pixel Art"
+    },
+    "tag": {
+      "description": "Veja {count} criações de pixel art de {tag} no SimplePixelArt.com: sprites, designs e modelos em 8 e 16 bits prontos para remixar ou baixar.",
+      "descriptionEmpty": "Veja criações gratuitas de pixel art de {tag} no SimplePixelArt.com: sprites, designs e modelos em 8 e 16 bits prontos para remixar ou baixar.",
+      "descriptionOne": "Veja a criação de pixel art de {tag} no SimplePixelArt.com: sprites, designs e modelos em 8 e 16 bits prontos para remixar ou baixar.",
+      "keywords": "pixel art de {tag}, sprite de {tag}, {tag} 8 bits, {tag} 16 bits, modelo de pixel art de {tag}, pixel art de {tag} grátis, baixar pixel art de {tag}",
+      "title": "Pixel art de {tag} — Sprites grátis",
+      "titleCount": "Pixel art de {tag} — {count} sprites",
+      "titlePage": "Pixel art de {tag} — Página {page}"
     }
   },
   "theme": {

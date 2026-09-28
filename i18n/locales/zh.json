@@ -1646,6 +1646,15 @@
       "description": "像素画配色方案库。按颜色数量筛选、按热度排序，一键套用到你的作品上。",
       "keywords": "像素画配色, 调色板, 复古配色, 8位配色, 游戏美术配色",
       "title": "像素画配色方案"
+    },
+    "tag": {
+      "description": "在 SimplePixelArt.com 浏览 {count} 张{tag}像素画：8 位和 16 位精灵图、设计与模板，可直接二次创作或下载。",
+      "descriptionEmpty": "在 SimplePixelArt.com 免费浏览{tag}像素画：8 位和 16 位精灵图、设计与模板，可直接二次创作或下载。",
+      "descriptionOne": "在 SimplePixelArt.com 浏览{tag}像素画：8 位和 16 位精灵图、设计与模板，可直接二次创作或下载。",
+      "keywords": "{tag}像素画, {tag}精灵图, {tag}像素图, {tag} 8位, {tag} 16位, {tag}像素画模板, {tag}像素画免费, {tag}像素画下载",
+      "title": "{tag}像素画 — 免费精灵图",
+      "titleCount": "{tag}像素画 — {count} 张精灵图",
+      "titlePage": "{tag}像素画 — 第 {page} 页"
     }
   },
   "theme": {

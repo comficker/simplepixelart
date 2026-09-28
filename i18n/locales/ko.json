@@ -1646,6 +1646,15 @@
       "description": "픽셀 아트용 색상 팔레트 모음. 색상 수로 거르고 인기순으로 정렬해, 클릭 한 번으로 작품에 적용할 수 있습니다.",
       "keywords": "픽셀 아트 팔레트, 색상 팔레트, 레트로 팔레트, 8비트 색상, 게임 아트 색상",
       "title": "픽셀 아트 색상 팔레트"
+    },
+    "tag": {
+      "description": "SimplePixelArt.com에서 {tag} 픽셀 아트 {count}개를 살펴보세요. 8비트·16비트 스프라이트와 템플릿을 바로 리믹스하거나 내려받을 수 있습니다.",
+      "descriptionEmpty": "SimplePixelArt.com에서 {tag} 픽셀 아트를 무료로 살펴보세요. 8비트·16비트 스프라이트와 템플릿을 바로 리믹스하거나 내려받을 수 있습니다.",
+      "descriptionOne": "SimplePixelArt.com에서 {tag} 픽셀 아트를 살펴보세요. 8비트·16비트 스프라이트와 템플릿을 바로 리믹스하거나 내려받을 수 있습니다.",
+      "keywords": "{tag} 픽셀 아트, {tag} 스프라이트, {tag} 도트 그림, {tag} 8비트, {tag} 16비트, {tag} 픽셀 아트 템플릿, {tag} 픽셀 아트 무료, {tag} 픽셀 아트 다운로드",
+      "title": "{tag} 픽셀 아트 — 무료 스프라이트",
+      "titleCount": "{tag} 픽셀 아트 — 스프라이트 {count}개",
+      "titlePage": "{tag} 픽셀 아트 — {page}페이지"
     }
   },
   "theme": {

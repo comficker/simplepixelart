@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const {t} = useI18n()
+const {t, locale} = useI18n()
 import type {APIResponse, TagSchema} from "~/types";
 
 const route = useRoute()
@@ -15,7 +15,7 @@ useArtListFetch({limit: 24})
 
 const {data: tagsRes} = await useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {
   params: {page_size: 30, has_pages: 1},
-  key: 'arts-tags',
+  key: `arts-tags-${locale.value}`,
 })
 
 const tags = computed(() => tagsRes.value?.results || [])

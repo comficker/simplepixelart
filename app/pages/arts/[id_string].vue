@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const {t} = useI18n()
+const {t, locale, defaultLocale} = useI18n()
 import type {APIResponse, ResponseSharedPage, SharedPage, TagSchema} from "~/types";
 
 const route = useRoute()
@@ -23,7 +23,7 @@ const hasFilterQuery = computed(() =>
 
 const tagFetch = (isSizeSlug.value || isColorSlug.value || isNewSlug.value || !isValidSlug.value)
     ? null
-    : useAuthFetch<TagSchema>(`/coloring/tags/${idString.value}/`, { key: `tag-${idString.value}` })
+    : useAuthFetch<TagSchema>(`/coloring/tags/${idString.value}/`, { key: `tag-${locale.value}-${idString.value}` })
 
 const statsFetch = useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
   params: {
@@ -36,7 +36,7 @@ const statsFetch = useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
 
 const relatedFetch = useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {
   params: {page_size: 30, has_pages: 1},
-  key: 'tag-related',
+  key: `tag-related-${locale.value}`,
 })
 
 const gridPrewarm = useArtListFetch({limit: 24}).fetch
@@ -53,7 +53,12 @@ const tagTitle = computed(() => {
   if (sizeFromSlug.value) return sizeFromSlug.value
   return idString.value.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 })
-const tagDesc = computed(() => tag.value?.desc || '')
+// The tag row's `desc` is written in English only -- there is no
+// desc_translations to go with title_translations -- so outside /arts/x it is
+// dropped rather than stranding an English sentence in Japanese.
+const localDesc = computed(() =>
+    locale.value === defaultLocale ? (tag.value?.desc || '') : '',
+)
 
 const totalCount = computed(() => stats.value?.count || 0)
 const firstSample = computed<SharedPage | undefined>(() => stats.value?.results?.[0])
@@ -110,36 +115,33 @@ const ogImage = computed(() => {
 })
 
 const seoTitle = computed(() => {
-  if (page.value > 1) return `${tagTitle.value} Pixel Art — Page ${page.value}`
-  if (isSizeSlug.value && totalCount.value) {
-    return `${tagTitle.value} Pixel Art — ${totalCount.value} Sprites`
+  if (page.value > 1) return t('seo.tag.titlePage', {tag: tagTitle.value, page: page.value})
+  // Only past one: "32x32 Pixel Art - 1 Sprites" reads as a bug, and the
+  // plain title already says everything at that point.
+  if (isSizeSlug.value && totalCount.value > 1) {
+    return t('seo.tag.titleCount', {tag: tagTitle.value, count: totalCount.value})
   }
-  return `${tagTitle.value} Pixel Art — Free Sprites`
+  return t('seo.tag.title', {tag: tagTitle.value})
 })
 
 const seoDesc = computed(() => {
-  if (tagDesc.value) {
-    return `${tagDesc.value} Browse ${totalCount.value || 'free'} ${tagTitle.value.toLowerCase()} pixel art creations — remix or download for your game, NFT, or project on SimplePixelArt.com.`
-  }
-  return `Browse ${totalCount.value || 'free'} ${tagTitle.value.toLowerCase()} pixel art creations on SimplePixelArt.com — 8-bit and 16-bit sprites, designs, and templates ready to remix or download.`
+  // `desc` is already a meta description, written to 140-160 characters by
+  // rewrite_tag_desc. Appending the template to it made 300+, which Google
+  // cuts in half, so it stands alone where it exists.
+  if (localDesc.value) return localDesc.value
+  const args = {tag: tagTitle.value.toLowerCase(), count: totalCount.value}
+  // Three forms rather than one template with a number in it: every locale
+  // here agrees the noun with the count, so "1 creations" and its Spanish and
+  // Russian equivalents are all wrong, and vue-i18n's default plural rule only
+  // knows two forms (which Russian needs three of).
+  return totalCount.value > 1 ? t('seo.tag.description', args)
+      : totalCount.value === 1 ? t('seo.tag.descriptionOne', args)
+          : t('seo.tag.descriptionEmpty', args)
 })
 
-const seoKeywords = computed(() => {
-  const t = tagTitle.value.toLowerCase()
-  return [
-    `${t} pixel art`,
-    `${t} sprite`,
-    `${t} sprites`,
-    `${t} 8-bit`,
-    `${t} 16-bit`,
-    `${t} pixel art template`,
-    `${t} pixel art free`,
-    `pixel art ${t}`,
-    `${t} pixel art download`,
-    `${t} pixel art gallery`,
-    'pixel art community',
-  ].join(', ')
-})
+const seoKeywords = computed(() =>
+    t('seo.tag.keywords', {tag: tagTitle.value.toLowerCase()}),
+)
 
 const items = computed(() => {
   const list = stats.value?.results || []
@@ -158,7 +160,7 @@ const structuredData = computed(() => {
       about: {
         '@type': 'Thing',
         name: tagTitle.value,
-        ...(tagDesc.value ? {description: tagDesc.value} : {}),
+        ...(localDesc.value ? {description: localDesc.value} : {}),
       },
       isPartOf: {
         '@type': 'WebSite',
@@ -188,7 +190,6 @@ const structuredData = computed(() => {
 
 
 useCustomSeoMeta({
-  untranslated: true,
   title: seoTitle,
   description: seoDesc,
   keywords: seoKeywords,
@@ -206,7 +207,7 @@ useCustomSeoMeta({
 
 <template>
   <div class="page">
-    <item-list :limit="24" show-filter :title="$t('p_arts_id_string.xPixelArt', {x: tagTitle})" :desc="tagDesc || fallbackDesc">
+    <item-list :limit="24" show-filter :title="$t('p_arts_id_string.xPixelArt', {x: tagTitle})" :desc="localDesc || fallbackDesc">
       <template v-if="filteredRelated.length" #filters-extra>
         <BrowseFilter :label="$t('common.tags')" icon="icon-flag" :value="String(filteredRelated.length)">
           <BrowseOpt v-for="t in filteredRelated" :key="t.id_string" :to="`/arts/${t.id_string}`">
