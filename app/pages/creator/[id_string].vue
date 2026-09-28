@@ -39,7 +39,6 @@ const {data: worksCount} = await useAuthFetch<ResponseSharedPage>('/coloring/sha
 
 interface CreatorProfile {
   username: string
-  is_bot?: boolean
   avatar: string | null
   bio?: string
   links?: Record<string, string>
@@ -196,7 +195,6 @@ useCustomSeoMeta({
         <div class="creator-id">
           <h1 class="screen-title">
             <span>@{{ username }}</span>
-            <span v-if="profile?.is_bot" class="rank-bot creator-bot">{{ $t('common.bot') }}</span>
           </h1>
           <ul v-if="profile" class="creator-stats" :aria-label="$t('p_creator_id_string.creatorStats')">
             <li><strong>{{ profile.arts }}</strong><span>{{ profile.arts === 1 ? 'art' : 'arts' }}</span></li>
@@ -276,11 +274,6 @@ useCustomSeoMeta({
 
 /* The handle reads like anyone else's, so an automated account says so
    here rather than leaving the page to imply a person. */
-.creator-bot {
-  margin-left: var(--space-2);
-  vertical-align: middle;
-}
-
 .creator-avatar {
   display: flex;
   align-items: center;
