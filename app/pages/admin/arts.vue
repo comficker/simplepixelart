@@ -111,7 +111,7 @@ watch(isStaff, (v) => { if (v) load() })
   <div class="page">
     <section class="readme adm-panel">
       <div class="adm-head">
-        <h1 class="adm-title"><span class="icon icon-rhombus"/><span>Arts</span></h1>
+        <h1 class="adm-title"><span class="icon icon-image"/><span>Arts</span></h1>
         <div class="adm-head-actions">
           <NuxtLinkLocale to="/admin" class="btn"><span class="icon icon-adjust"/><span>Overview</span></NuxtLinkLocale>
           <button v-if="isStaff" class="btn" :disabled="loading" @click="load">
@@ -196,7 +196,7 @@ watch(isStaff, (v) => { if (v) load() })
                         title="Send to the channels it has not reached"
                         @click="syndicate(r, false)"
                     >
-                      <span class="icon icon-share"/><span>Publish</span>
+                      <span class="icon icon-social"/><span>Publish</span>
                     </button>
                     <button
                         class="btn"
@@ -204,7 +204,7 @@ watch(isStaff, (v) => { if (v) load() })
                         title="Post again everywhere, including where it already went"
                         @click="syndicate(r, true)"
                     >
-                      <span class="icon icon-refresh"/>
+                      <span class="icon icon-sync"/>
                     </button>
                   </div>
                 </td>
