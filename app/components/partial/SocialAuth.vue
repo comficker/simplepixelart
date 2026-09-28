@@ -33,17 +33,6 @@ const loginModal = useLoginModal()
     >
       <span class="icon icon-brand-x"/>
     </a>
-    <a
-        v-if="!compact"
-        href="https://mastodon.social/@comficker"
-        target="_blank"
-        rel="me noopener"
-        class="social-ic"
-        :title="$t('c_SocialAuth.followOnMastodon')"
-        :aria-label="$t('c_SocialAuth.mastodon')"
-    >
-      <span class="icon icon-at"/>
-    </a>
     <span v-if="!compact" class="social-sep" aria-hidden="true"/>
     <!-- Settings works signed out too -- theme, language and app data are all
          on it -- so it is not hidden behind an account any more. -->

@@ -366,18 +366,15 @@
     "collapseSidebar": "Collapse sidebar",
     "community": "Community",
     "expandSidebar": "Expand sidebar",
-    "followOnMastodon": "Follow on Mastodon",
     "followOnX": "Follow on X",
     "sidebar": "Sidebar",
     "sourceOnGithub": "Source on GitHub",
     "tools": "Tools"
   },
   "c_SocialAuth": {
-    "followOnMastodon": "Follow on Mastodon",
     "followOnX": "Follow on X",
     "githubRepository": "GitHub repository",
     "login": "Login",
-    "mastodon": "Mastodon",
     "openSourceOnGithub": "Open source on GitHub",
     "xTwitter": "X (Twitter)"
   },

@@ -23,15 +23,6 @@ function openCommandPalette() {
 const SOCIAL = [
   {href: 'https://github.com/comficker/simplepixelart', icon: 'icon-github', key: 'c_Sidebar.sourceOnGithub'},
   {href: 'https://x.com/comficker', icon: 'icon-brand-x', key: 'c_Sidebar.followOnX'},
-  // rel="me" is how Mastodon verifies the link back: it fetches this page
-  // and looks for an anchor carrying it that points at the profile. It has
-  // to be in the server-rendered HTML, which this is.
-  {
-    href: 'https://mastodon.social/@comficker',
-    icon: 'icon-at',
-    key: 'c_Sidebar.followOnMastodon',
-    rel: 'me noopener',
-  },
 ]
 
 const PRIMARY = [
@@ -91,7 +82,7 @@ const PRIMARY = [
           :key="l.href"
           :href="l.href"
           target="_blank"
-          :rel="l.rel || 'noopener'"
+          rel="noopener"
           class="hdr-link dash-link"
           :title="$t(l.key)"
       >
