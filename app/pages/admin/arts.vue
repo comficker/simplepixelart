@@ -79,16 +79,13 @@ async function syndicate(row: Row, republish: boolean) {
   if (sending.value) return
   sending.value = row.id
   try {
-    const res = await useNativeFetch<{
-      shared: string[]; queued: string[]
-      failed: { platform: string; error: string }[]; social: Social[]
-    }>('/coloring/admin/arts/syndicate/', {method: 'POST', body: {id: row.id, republish}})
+    const res = await useNativeFetch<{ queued: string[]; social: Social[] }>(
+        '/coloring/admin/arts/syndicate/', {method: 'POST', body: {id: row.id, republish}})
     row.social = res.social
-    if (res.shared.length) toast.success(`Posted to ${res.shared.join(', ')}`)
-    if (res.queued.length) toast.info(`Queued — the cron sends ${res.queued.join(', ')}`)
-    for (const f of res.failed) toast.error(`${f.platform}: ${f.error}`)
-    if (!res.shared.length && !res.queued.length && !res.failed.length) {
-      toast.info('Already on every channel — use Republish to post again')
+    if (res.queued.length) {
+      toast.success(`Queued for ${res.queued.join(', ')} — sending within 10 minutes`)
+    } else {
+      toast.info('Already on every channel — use Republish to send it again')
     }
   } catch (e: any) {
     const code = e?.response?._data?.[0] || e?.data?.[0]
@@ -146,7 +143,7 @@ watch(isStaff, (v) => { if (v) load() })
 
           <p v-if="noChannels" class="art-note">
             No social channels configured for this site yet — add one in the
-            Ninosaur dashboard, then Publish will have somewhere to send to.
+            Ninosaur dashboard, then Publish will have somewhere to queue for.
           </p>
 
           <div v-if="data" class="adm-table-wrap">
@@ -184,7 +181,9 @@ watch(isStaff, (v) => { if (v) load() })
                         v-else
                         class="art-chip"
                         :class="`is-${socialFor(r, c.platform)!.status}`"
-                        :title="socialFor(r, c.platform)!.error || undefined"
+                        :title="socialFor(r, c.platform)!.error
+                          || (socialFor(r, c.platform)!.status === 'pending'
+                              ? 'Queued — the cron sends it within 10 minutes' : undefined)"
                     >{{ socialFor(r, c.platform)!.status === 'none' ? '—' : socialFor(r, c.platform)!.status }}</span>
                   </template>
                 </td>
@@ -193,7 +192,7 @@ watch(isStaff, (v) => { if (v) load() })
                     <button
                         class="btn"
                         :disabled="r.status !== 'public' || noChannels || sending === r.id"
-                        title="Send to the channels it has not reached"
+                        title="Queue for the channels it has not reached"
                         @click="syndicate(r, false)"
                     >
                       <span class="icon icon-social"/><span>Publish</span>
@@ -201,7 +200,7 @@ watch(isStaff, (v) => { if (v) load() })
                     <button
                         class="btn"
                         :disabled="r.status !== 'public' || noChannels || sending === r.id"
-                        title="Post again everywhere, including where it already went"
+                        title="Queue again everywhere, including where it already went"
                         @click="syndicate(r, true)"
                     >
                       <span class="icon icon-sync"/>
