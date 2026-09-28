@@ -505,10 +505,22 @@ const previewStyle = computed(() => {
         <NuxtLinkLocale
             :to="`/editor?id=${route.params.id_string}`"
             class="btn"
-            :title="isOwner ? 'Edit this pixel art' : 'Remix this pixel art'"
+            :title="isOwner ? 'Edit this pixel art' : 'Open a copy of this pixel art to change'"
         >
           <span class="icon icon-pen"/>
-          <span>{{ isOwner ? 'Edit this' : 'Remix this' }}</span>
+          <span>{{ isOwner ? 'Edit' : 'Remix' }}</span>
+        </NuxtLinkLocale>
+        <!-- Staff can change the piece itself, not a copy of it. Beside Remix
+             rather than instead of it: a moderator fixing a stray pixel and a
+             moderator making their own version are different jobs. -->
+        <NuxtLinkLocale
+            v-if="isAdmin && !isOwner"
+            :to="`/editor?id=${route.params.id_string}&edit=1`"
+            class="btn art-act-mod"
+            title="Change this artwork itself — it stays the author's"
+        >
+          <span class="icon icon-pencil"/>
+          <span>Edit</span>
         </NuxtLinkLocale>
       </div>
     </Widget>
@@ -651,6 +663,12 @@ const previewStyle = computed(() => {
   height: 100%;
   object-fit: contain;
   image-rendering: pixelated;
+}
+
+/* Reads as the moderator action it is, next to the button everyone gets. */
+.art-act-mod {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .art-remix-badge {
@@ -817,8 +835,10 @@ const previewStyle = computed(() => {
 }
 
 
-.art-actions { display: flex; flex-direction: column; gap: var(--space-2); }
-.art-actions .btn { width: 100%; justify-content: center; }
+/* Side by side, wrapping when the aside is too narrow for both. One button
+   still fills the row, which is what it did when this was a column. */
+.art-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.art-actions .btn { flex: 1 1 6rem; justify-content: center; }
 
 .art-stage { min-height: 0; }
 

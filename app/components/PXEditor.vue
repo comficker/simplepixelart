@@ -3170,7 +3170,7 @@ onMounted(async () => {
     const q = {...route.query}; delete q.new
     router.replace({query: q}).catch(() => {})
   } else {
-    await store.load(route.query.id?.toString())
+    await store.load(route.query.id?.toString(), route.query.edit === '1')
   }
   if (route.query.ai) {
     navigateTo(localePath(`/generate?prompt=${encodeURIComponent(String(route.query.ai).slice(0, 300))}`))

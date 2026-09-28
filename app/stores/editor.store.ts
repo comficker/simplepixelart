@@ -1044,14 +1044,24 @@ export const useEditor = defineStore('editor', () => {
         input.click();
     }
 
-    async function load(id: string | undefined) {
+    /* `inPlace` opens somebody else's piece as itself rather than as a copy
+       of it -- what a moderator needs to fix a name or a stray pixel on work
+       that is already published. Only staff get it: the API refuses the save
+       for anyone else, and letting the editor believe otherwise would lose
+       their work at the first save. */
+    async function load(id: string | undefined, inPlace = false) {
+        const asOwner = inPlace && !!auth.logged?.is_staff
+
         async function loadCloudPage(id: number | string) {
             try {
                 const res = await useNativeFetch<SharedPage>(`/coloring/shared-pages/${id}/`)
-                let template: number | null = null
+                // Whatever this piece was already remixed from. Starting at
+                // null meant saving a remix cleared the link back to its
+                // source -- the badge on the art page reads this field.
+                let template: number | null = res.template ?? null
                 let tempId: string | number = res.id
                 let idString = res.id_string
-                if (auth.logged?.id !== res?.user?.id) {
+                if (!asOwner && auth.logged?.id !== res?.user?.id) {
                     template = res.id
                     tempId = generateUUID()
                     idString = ''
