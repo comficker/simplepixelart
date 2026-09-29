@@ -2,7 +2,7 @@
 const {t} = useI18n()
 
 const localePath = useLocalePath()
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 
 type Cmd = {
   id: string
@@ -33,7 +33,11 @@ const { current, setTheme, themes } = useTheme() as any
 const auth = useAuthStore()
 const loginModal = useLoginModal()
 
-const open = ref(false)
+// Owned by the composable: app.vue keeps the Cmd-K listener and loads this
+// component the first time the palette is wanted, so the open flag has to
+// outlive the component rather than be a local ref.
+const cmdk = useCommandPalette()
+const open = cmdk.open
 const query = ref('')
 const selected = ref(0)
 const inputEl = ref<HTMLInputElement | null>(null)
@@ -238,7 +242,7 @@ const flatItems = computed(() => groupedBlocks.value.flatMap(b => b.items.map(i 
 watch(query, () => { selected.value = 0 })
 
 function openPalette() {
-  open.value = true
+  cmdk.show()
   view.value = 'root'
   query.value = ''
   selected.value = 0
@@ -249,7 +253,7 @@ function openPalette() {
 }
 
 function closePalette() {
-  open.value = false
+  cmdk.hide()
 }
 
 function move(delta: number) {
@@ -295,22 +299,11 @@ function onKey(e: KeyboardEvent) {
   else if (e.key === 'Enter') { e.preventDefault(); activate() }
 }
 
-function onGlobalKey(e: KeyboardEvent) {
-  const isK = e.key === 'k' || e.key === 'K'
-  if (isK && (e.metaKey || e.ctrlKey)) {
-    e.preventDefault()
-    open.value ? closePalette() : openPalette()
-  }
-}
-
 defineExpose({ open: openPalette, close: closePalette })
 
-onMounted(() => {
-  window.addEventListener('keydown', onGlobalKey)
-})
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onGlobalKey)
-})
+// Mounted because someone asked for it, so run the opening routine now: the
+// keystroke that loaded this component already happened.
+onMounted(() => { if (open.value) openPalette() })
 </script>
 
 <template>

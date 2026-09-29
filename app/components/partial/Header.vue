@@ -1,11 +1,12 @@
 <script setup lang="ts">
+const cmdk = useCommandPalette()
 const isMac = ref(true)
 onMounted(() => {
   isMac.value = /Mac|iPhone|iPad/.test(navigator.platform)
 })
 
 function openCommandPalette() {
-  window.dispatchEvent(new KeyboardEvent('keydown', {key: 'k', metaKey: true, ctrlKey: true}))
+  cmdk.show()
 }
 </script>
 <template>

@@ -36,9 +36,15 @@ export default defineNuxtConfig({
         baseUrl: 'https://simplepixelart.com',
     },
     nitro: {
-        // Pre-compress hashed assets at build; the node server (and gzip_static/
-        // brotli_static in nginx) can serve .br/.gz without on-the-fly work.
-        compressPublicAssets: {gzip: true, brotli: true},
+        // Pre-compress hashed assets at build so nginx's gzip_static can serve
+        // them without compressing on every request. Brotli is off: nginx 1.18
+        // on the box has no brotli module (and Debian ships none for it), so
+        // the 96 .br files it produced were 664 KB deployed and never read.
+        // Cloudflare is what would serve brotli, and it cannot -- gzip_static
+        // hands it a gzip body, which it passes through rather than
+        // recompressing. Turning gzip_static off would get brotli from the
+        // edge; that trade is a deploy-side decision, not a build one.
+        compressPublicAssets: {gzip: true, brotli: false},
         routeRules: {
             // Old color-tool slugs → keyword-rich slugs (permanent 301).
             '/palettes/extract': {redirect: {to: '/palettes/color-palette-from-image', statusCode: 301}},

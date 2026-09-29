@@ -16,11 +16,23 @@ useHead({
   meta: computed(() => localeHead.value?.meta || []),
 })
 const loginModal = useLoginModal()
+const cmdk = useCommandPalette()
 const rebuildVeil = useRebuildVeil()
 const sideState = useStatefulCookie('dash_side')
 const sideCollapsed = computed(() => sideState.value === 'collapsed')
 const editorBootBg = ref('#1b1b1f')
 if (import.meta.client) {
+  // The palette is loaded on demand, so the shortcut that loads it lives here
+  // rather than inside it.
+  const onCmdK = (e: KeyboardEvent) => {
+    if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      cmdk.toggle()
+    }
+  }
+  window.addEventListener('keydown', onCmdK)
+  onBeforeUnmount(() => window.removeEventListener('keydown', onCmdK))
+
   const router = useRouter()
   const FS_KEY = 'editor_fullscreen'
   router.beforeEach((to, from) => {
@@ -59,7 +71,7 @@ if (import.meta.client) {
       </main>
       <PartialFooter/>
     </div>
-    <UiCommandPalette/>
+    <LazyUiCommandPalette v-if="cmdk.loaded.value"/>
     <PartialLoginModal v-if="loginModal.open.value" @close="loginModal.hide()" @success="loginModal.done()"/>
     <PartialSyncPrompt/>
     <ClientOnly>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const cmdk = useCommandPalette()
 import {TOOLS} from '~/helper/tools'
 import useStatefulCookie from '~/composables/useStatefulCookie'
 
@@ -15,7 +16,7 @@ onMounted(() => {
 })
 
 function openCommandPalette() {
-  window.dispatchEvent(new KeyboardEvent('keydown', {key: 'k', metaKey: true, ctrlKey: true}))
+  cmdk.show()
 }
 
 // The project's own accounts. They used to sit in the top bar beside the
