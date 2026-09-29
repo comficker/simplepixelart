@@ -216,7 +216,11 @@ async function genMetaWithAI() {
             height: editorData.value.height,
             colors: editorData.value.colors,
             tags: editorData.value.tags || [],
+            // What the artist has already typed. The model rewrites these
+            // rather than replacing them, so a piece they have named and
+            // described comes back as their listing, tidied.
             name: editorData.value.name || '',
+            desc: editorData.value.desc || '',
           },
         })
     editorData.value.name = res.title
