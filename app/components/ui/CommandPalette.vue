@@ -289,7 +289,14 @@ function back() {
 
 function onKey(e: KeyboardEvent) {
   if (!open.value) return
-  if (e.key === 'Escape') {
+  // The search input stops propagation, so Cmd-K never reached the window
+  // listener while it had focus -- which is every moment right after the
+  // palette opens. The shortcut has to close from in here.
+  if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
+    e.preventDefault()
+    closePalette()
+  }
+  else if (e.key === 'Escape') {
     e.preventDefault()
     view.value === 'root' ? closePalette() : back()
   }
