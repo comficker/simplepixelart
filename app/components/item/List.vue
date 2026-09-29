@@ -80,10 +80,10 @@ const {page, prevTo, nextTo} = usePageLinks(data)
 
 function setSize(preset: {width: number, height: number} | null) {
   if (sizeSlugMatch.value) {
-    router.push(preset
+    router.push(localePath(preset
         ? `/arts/size-${preset.width}x${preset.height}`
         : '/arts',
-    )
+    ))
     return
   }
   const q: Record<string, any> = {...route.query}

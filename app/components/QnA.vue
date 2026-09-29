@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const localHtml = useLocalHtml()
 const {t} = useI18n()
 
 export interface QnAItem {
@@ -29,7 +30,7 @@ withDefaults(defineProps<{
           <span class="qa-chevron" aria-hidden="true"/>
           <span class="qa-q-text">{{ item.q }}</span>
         </summary>
-        <div class="qa-a" v-html="item.a"/>
+        <div class="qa-a" v-html="localHtml(item.a)"/>
       </details>
     </div>
   </section>

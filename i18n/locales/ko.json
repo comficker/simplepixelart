@@ -116,7 +116,7 @@
     "openCommandPaletteThemesNavigation": "명령 팔레트 열기(테마, 이동 등)"
   },
   "c_List": {
-    "allViews": "모든 조회수",
+    "allViews": "모든 보기",
     "any": "모두",
     "anySize": "모든 크기",
     "itemCount": "{count}개",

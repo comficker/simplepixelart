@@ -3982,7 +3982,7 @@ watch(
       <div class="editor-sidebar">
         <Widget :title="$t('common.preview')" class="preview-widget">
           <template #ctl>
-            <a v-if="editorData.id_string" class="widget-ctl-btn" :title="$t('common.openPublicPage')" target="_blank" :href="`/art/${editorData.id_string}`">
+            <a v-if="editorData.id_string" class="widget-ctl-btn" :title="$t('common.openPublicPage')" target="_blank" :href="localePath(`/art/${editorData.id_string}`)">
               <span class="icon icon-link"/>
             </a>
           </template>

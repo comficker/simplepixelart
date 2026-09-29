@@ -116,7 +116,7 @@
     "openCommandPaletteThemesNavigation": "コマンドパレットを開く（テーマ、移動など）"
   },
   "c_List": {
-    "allViews": "すべての閲覧数",
+    "allViews": "すべての視点",
     "any": "指定なし",
     "anySize": "すべてのサイズ",
     "itemCount": "{count} 件",

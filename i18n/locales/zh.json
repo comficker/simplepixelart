@@ -116,7 +116,7 @@
     "openCommandPaletteThemesNavigation": "打开命令面板（主题、导航等）"
   },
   "c_List": {
-    "allViews": "全部浏览量",
+    "allViews": "全部视图",
     "any": "不限",
     "anySize": "任意尺寸",
     "itemCount": "{count} 项",
@@ -539,7 +539,7 @@
     "howItWorks": "工作原理",
     "howToUseIt": "使用方法",
     "importSpriteStrip": "导入精灵条",
-    "isometric": "等轴",
+    "isometric": "等轴测",
     "layer": "图层",
     "layers": "图层",
     "light": "浅色",

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const {t} = useI18n()
+const localePath = useLocalePath()
 import {toast} from 'vue-sonner'
 import type {EditorData, SharedPage} from '~/types'
 import {tileImageUrl} from '~/helper/tilemap'
@@ -3022,7 +3023,7 @@ const faq = computed(() => [
         <ui-tooltip :text="$t('p_tilesets_editor.editTilesInThePixelEditor2')">
           <a
               v-if="tileset.id_string"
-              :href="`/editor?tileset=${tileset.id_string}`"
+              :href="localePath(`/editor?tileset=${tileset.id_string}`)"
               target="_blank"
               rel="noopener"
               class="toolbar-btn"

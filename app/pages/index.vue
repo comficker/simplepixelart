@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const localHtml = useLocalHtml()
 const localePath = useLocalePath()
 const {t} = useI18n()
 import type {APIResponse, EditorData, SharedPage} from "~/types";
@@ -393,18 +394,18 @@ useCustomSeoMeta({
 
       <h2>{{ $t('p_index.threeWaysToStart') }}</h2>
       <ol>
-        <li v-html="$t('p_index.strongDrawFromScratchStrongOpen')"/>
-        <li v-html="$t('p_index.strongConvertAPhotoStrongDrop')"/>
-        <li v-html="$t('p_index.strongRemixATemplateStrongBrowse')"/>
-        <li v-html="$t('p_index.strongStartFromAPaletteStrong')"/>
+        <li v-html="localHtml($t('p_index.strongDrawFromScratchStrongOpen'))"/>
+        <li v-html="localHtml($t('p_index.strongConvertAPhotoStrongDrop'))"/>
+        <li v-html="localHtml($t('p_index.strongRemixATemplateStrongBrowse'))"/>
+        <li v-html="localHtml($t('p_index.strongStartFromAPaletteStrong'))"/>
       </ol>
 
       <h2>{{ $t('p_index.builtForGameDevelopers') }}</h2>
       <p v-html="$t('p_index.theWholeGameAssetPipelineLives')"/>
       <ol>
-        <li v-html="$t('p_index.strongDrawSpritesStrongInThe')"/>
-        <li v-html="$t('p_index.strongBuildTilesetsStrongAHref')"/>
-        <li v-html="$t('p_index.strongPaintTilemapsStrongGridOr')"/>
+        <li v-html="localHtml($t('p_index.strongDrawSpritesStrongInThe'))"/>
+        <li v-html="localHtml($t('p_index.strongBuildTilesetsStrongAHref'))"/>
+        <li v-html="localHtml($t('p_index.strongPaintTilemapsStrongGridOr'))"/>
         <li v-html="$t('p_index.strongExportGameReadyStrongSprite')"/>
       </ol>
 
@@ -413,17 +414,17 @@ useCustomSeoMeta({
         <li v-html="$t('p_index.strongFullEditorStrongBrushEraser')"/>
         <li v-html="$t('p_index.strongAnimationStrongFrameByFrame')"/>
         <li v-html="$t('p_index.strongMirrorDrawingStrongDrawSymme')"/>
-        <li v-html="$t('p_index.strongPaletteManagerStrongBuildSav')"/>
+        <li v-html="localHtml($t('p_index.strongPaletteManagerStrongBuildSav'))"/>
         <li v-html="$t('p_index.strongPhotoToPixelArtStrong')"/>
         <li v-html="$t('p_index.strongTilesetsTilemapsStrongAutoti')"/>
-        <li><strong>{{ $t('common.weeklyChallenges') }}</strong> {{ $t('p_index.aFresh') }} <a href="/challenges">{{ $t('p_index.themeEveryWeek') }}</a>{{ $t('p_index.communityVotedWinners') }}</li>
+        <li><strong>{{ $t('common.weeklyChallenges') }}</strong> {{ $t('p_index.aFresh') }} <NuxtLinkLocale to="/challenges">{{ $t('p_index.themeEveryWeek') }}</NuxtLinkLocale>{{ $t('p_index.communityVotedWinners') }}</li>
         <li v-html="$t('p_index.strongExportAnywhereStrongCleanPng')"/>
       </ul>
 
       <h2>{{ $t('p_index.popularCanvasSizes') }}</h2>
       <p>
         {{ $t('p_index.startFromAPreset') }}
-        <template v-for="(s, i) in sizes" :key="s"><a :href="`/arts/size-${s}`">{{ s }}</a><span v-if="i < sizes.length - 1" aria-hidden="true"> · </span></template>.
+        <template v-for="(s, i) in sizes" :key="s"><NuxtLinkLocale :to="`/arts/size-${s}`">{{ s }}</NuxtLinkLocale><span v-if="i < sizes.length - 1" aria-hidden="true"> · </span></template>.
       </p>
 
       <h2>{{ $t('p_index.newToPixelArt') }}</h2>

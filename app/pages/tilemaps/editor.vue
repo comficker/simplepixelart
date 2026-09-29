@@ -434,7 +434,7 @@ async function fetchMyTilesets() {
 async function onSourceSelect(v: string, el: HTMLSelectElement) {
   if (v === '__manage__') {
     el.value = world.value?.tileset_id_string || ''
-    router.push(world.value ? `/tilesets/editor?id=${world.value.tileset_id_string}` : '/tilesets/editor')
+    router.push(localePath(world.value ? `/tilesets/editor?id=${world.value.tileset_id_string}` : '/tilesets/editor'))
     return
   }
   if (!v) selectSource(null)
