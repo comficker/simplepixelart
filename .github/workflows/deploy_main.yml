@@ -66,20 +66,25 @@ jobs:
       # 502 for a moment after the first one answers -- waiting on / alone
       # failed a deploy on 2026-09-26 that had in fact gone through. Every
       # path gets its own retry.
-      # --max-time because the retries were only notional: curl with no
-      # deadline will sit on a stalled connection, so one hang ate the whole
-      # 12-attempt budget and failed the run. That is what happened on
-      # 2026-09-30, on a release that was live and serving the moment it
-      # finished -- /arts left no trace in nginx or in Cloudflare's firewall
-      # events, which is what a connection that never completed looks like.
+      # The retries never ran when it mattered. `run:` is executed with
+      # `bash -e`, and `code=$(curl ...)` is a plain assignment, so any curl
+      # that exits non-zero -- a stalled connection, a reset, a timeout --
+      # takes the whole step down before the loop can try again. Twice on
+      # 2026-09-30, on releases that were live and serving: /arts left no
+      # trace in nginx's log and none in Cloudflare's firewall events, which
+      # is what a connection that never completed looks like.
+      # `|| true` keeps the assignment succeeding; curl still writes 000 to
+      # stdout for a transport failure, so it is retried like any other
+      # non-200. --max-time bounds a single stalled attempt.
       - name: Smoke test
         run: |
           for p in / /ja/ /editor /arts /sitemap-index.xml; do
+            code=000
             for i in $(seq 1 12); do
-              code=$(curl -s -o /dev/null --max-time 15 -w '%{http_code}' "https://simplepixelart.com$p")
-              [ "$code" = 200 ] && break
+              code=$(curl -s -o /dev/null --max-time 15 -w '%{http_code}' "https://simplepixelart.com$p" || true)
+              if [ "$code" = 200 ]; then break; fi
               sleep 5
             done
-            echo "$p $code"
-            [ "$code" = 200 ] || exit 1
+            echo "$p $code (attempt $i)"
+            if [ "$code" != 200 ]; then exit 1; fi
           done
