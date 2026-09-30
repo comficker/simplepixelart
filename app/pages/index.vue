@@ -88,7 +88,7 @@ const faq = computed(() => [
 // item-list further down calls useArtListFetch with the same key, so it joins
 // this in-flight request instead of opening a second round trip — on a
 // client-side navigation each round trip costs about a second of latency.
-useArtListFetch({limit: 32, ordering: '-updated', hideIp: true})
+useArtListFetch({limit: 32, ordering: '-updated'})
 
 /* A fixed number of rows so the hero keeps its height while the site is
    young and only a couple of creators qualify: the short list is padded with

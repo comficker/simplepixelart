@@ -3,7 +3,6 @@ const localePath = useLocalePath()
 import type {SharedPage} from "~/types";
 import {editorDataToJSON, editorDataToSVG} from "~/helper/canvas";
 import {sharedPage2EditorData} from "~/helper/utils";
-import {looksLikeProtectedIP} from "~/helper/ip-denylist";
 
 const route = useRoute();
 const router = useRouter();
@@ -105,20 +104,12 @@ const meta = computed(() => {
   }
 })
 
-const looksLikeIP = computed(() => looksLikeProtectedIP(
-    data.value?.name,
-    data.value?.desc,
-    meta.value.tags,
-))
-// The same answer sitemap-page.xml is built from. Recomputing it here let the
-// two drift, and they did: the sitemap advertised 190 pages this rule then
-// noindexed. The local check stays as the fallback, for a backend that has not
-// shipped the field yet.
+// The same answer sitemap-page.xml is built from, so the two cannot disagree
+// the way they did for 190 pages. The local check stays as the fallback, for a
+// backend that has not shipped the field yet.
 const hasOriginalContent = computed(() =>
     data.value?.indexable ?? (
-        data.value?.status === 'public'
-        && !!meta.value.desc
-        && !looksLikeIP.value
+        data.value?.status === 'public' && !!meta.value.desc
     )
 )
 

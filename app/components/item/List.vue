@@ -2,9 +2,8 @@
 const {t} = useI18n()
 const localePath = useLocalePath()
 import BrowseLayout from "~/components/BrowseLayout.vue";
-import {looksLikeProtectedIP} from "~/helper/ip-denylist";
 
-const {limit, showFilter, status, hideIp, exactLimit, ordering, hidePaginator, title, desc} = defineProps({
+const {limit, showFilter, status, exactLimit, ordering, hidePaginator, title, desc} = defineProps({
   title: {
     type: String,
     default: ''
@@ -29,10 +28,6 @@ const {limit, showFilter, status, hideIp, exactLimit, ordering, hidePaginator, t
     type: String,
     default: 'public'
   },
-  hideIp: {
-    type: Boolean,
-    default: false
-  },
   exactLimit: {
     type: Boolean,
     default: false
@@ -50,7 +45,7 @@ const search = ref('')
 
 const {
   fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive, effectiveLimit,
-} = useArtListFetch({limit, status, ordering, hideIp, exact: exactLimit, search})
+} = useArtListFetch({limit, status, ordering, exact: exactLimit, search})
 
 const SIZE_PRESETS = [
   {width: 8, height: 8},
@@ -67,11 +62,7 @@ const hasActiveFilters = computed(() =>
 
 const {data, pending} = await listFetch
 
-const visibleResults = computed(() => {
-  const items = data.value?.results || []
-  if (!hideIp) return items
-  return items.filter(it => !looksLikeProtectedIP(it.name)).slice(0, effectiveLimit.value)
-})
+const visibleResults = computed(() => data.value?.results || [])
 
 const isLoading = computed(() => pending.value && !data.value?.results?.length)
 const isEmpty = computed(() => !pending.value && data.value && visibleResults.value.length === 0)

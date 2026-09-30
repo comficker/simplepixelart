@@ -4,7 +4,6 @@ export function useArtListFetch(opts: {
     limit?: number
     status?: string
     ordering?: string
-    hideIp?: boolean
     exact?: boolean
     search?: Ref<string>
 } = {}) {
@@ -16,7 +15,6 @@ export function useArtListFetch(opts: {
     const limit = opts.limit ?? 20
     const status = opts.status ?? 'public'
     const ordering = opts.ordering ?? ''
-    const hideIp = opts.hideIp ?? false
     const exact = opts.exact ?? false
     const search = opts.search ?? ref('')
 
@@ -52,7 +50,7 @@ export function useArtListFetch(opts: {
         status: isNewView.value ? 'public,pending' : status,
         slug: isNewView.value ? '/arts' : path.value,
         page: route.query.page ? Number.parseInt(route.query.page.toString()) : 1,
-        page_size: hideIp ? effectiveLimit.value + 6 : effectiveLimit.value,
+        page_size: effectiveLimit.value,
         search: search.value,
         ordering: ordering || (isNewView.value ? '-updated' : undefined),
         related: relatedId.value,
