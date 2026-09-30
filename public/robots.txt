@@ -14,5 +14,29 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
+# Bulk AI scrapers. Measured 2026-09-30: these five were 6,898 of 13,361
+# external requests in one hour against a 1 vCPU origin shared by every site
+# here, while Googlebot was 147. Each hit costs a full SSR render plus two or
+# three API calls, and none of them send a reader back.
+# Also enforced in nginx and Cloudflare, since robots.txt is advisory —
+# this is the polite half, so a well-behaved crawler stops asking instead of
+# collecting 403s.
+# Not listed on purpose: Applebot, OAI-SearchBot and ClaudeBot power search
+# answers that do cite and link back.
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
 # Sitemap location
 Sitemap: https://simplepixelart.com/sitemap-index.xml
