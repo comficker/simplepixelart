@@ -44,7 +44,7 @@ const gridPrewarm = useArtListFetch({limit: 24}).fetch
 await Promise.all([tagFetch, statsFetch, relatedFetch, gridPrewarm].filter(Boolean))
 const tag = tagFetch ? tagFetch.data : ref<TagSchema | null>(null)
 const tagError = tagFetch ? tagFetch.error : ref<any>(null)
-const {data: stats} = statsFetch
+const {data: stats, error: statsError} = statsFetch
 const {data: relatedTags} = relatedFetch
 
 const tagTitle = computed(() => {
@@ -99,7 +99,12 @@ const robotsValue = computed(() => {
   if (isNewSlug.value) return 'noindex, follow'
   if (hasFilterQuery.value) return 'noindex, follow'
   if (page.value > 1) return 'noindex, follow'
-  if ((isColorSlug.value || isSizeSlug.value) && totalCount.value === 0) return 'noindex, follow'
+  // Any empty listing, not just a colour or size slug. 96 of 630 tags have a
+  // row but no public art left, and they were serving 200 with an empty grid --
+  // which is what Search Console counts as a soft 404.
+  // Only when the count is actually known: a failed request reads as zero, and
+  // noindexing a good page over an API blip is the worse mistake.
+  if (!statsError.value && stats.value && totalCount.value === 0) return 'noindex, follow'
   return 'index, follow'
 })
 

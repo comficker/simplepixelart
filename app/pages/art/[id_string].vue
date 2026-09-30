@@ -110,10 +110,16 @@ const looksLikeIP = computed(() => looksLikeProtectedIP(
     data.value?.desc,
     meta.value.tags,
 ))
+// The same answer sitemap-page.xml is built from. Recomputing it here let the
+// two drift, and they did: the sitemap advertised 190 pages this rule then
+// noindexed. The local check stays as the fallback, for a backend that has not
+// shipped the field yet.
 const hasOriginalContent = computed(() =>
-    data.value?.status === 'public'
-    && !!meta.value.desc
-    && !looksLikeIP.value
+    data.value?.indexable ?? (
+        data.value?.status === 'public'
+        && !!meta.value.desc
+        && !looksLikeIP.value
+    )
 )
 
 useCustomSeoMeta({

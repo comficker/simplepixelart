@@ -1,38 +1,33 @@
 import {ofetch} from "ofetch";
-import {APIResponse, SharedPage} from "~/types";
 
 const domain = "simplepixelart.com"
 
+type Row = { id_string: string; updated: string }
+
 export default defineEventHandler(async (event) => {
-    let out = '<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="/sitemap-template.xsl"?>'
-    out = out + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-    // Page through until exhausted (bounded for safety; one sitemap file stays
-    // well under the 50k-URL limit). A failed fetch serves what we have so far
-    // instead of a 500 to crawlers.
-    const PER = 1000
-    const MAX_PAGES = 40
-    for (let page = 1; page <= MAX_PAGES; page++) {
-        const res: APIResponse<SharedPage> | null = await ofetch(`https://touch.ninosaur.com/coloring/shared-pages/`, {
-            query: {
-                page_size: PER,
-                status: 'public',
-                is_template: true,
-                page
-            }
-        }).catch(() => null)
-        const results = res?.results || []
-        results.forEach(item => {
-            out = out + '<url>' +
-                `<loc>https://${domain}/art/${item.id_string}</loc>` +
-                `<lastmod>${item.updated}</lastmod>` +
-                '<changefreq>daily</changefreq>' +
-                '<priority>0.8</priority>' +
-                '</url>'
-        })
-        if (!res?.links?.next || results.length < PER) break
-    }
-    out = out + '</urlset>'
+    // Only the art the page will actually let Google index. This used to list
+    // every public template, but /art/<slug> noindexes anything without a
+    // description or matching the IP deny-list -- 190 of 393 URLs, which is
+    // most of Search Console's "Excluded by 'noindex' tag". The backend owns
+    // the rule (SharedPage.is_indexable) so the sitemap and the page cannot
+    // disagree again.
+    // A failed fetch serves a valid empty urlset rather than a 500 to crawlers.
+    const rows: Row[] | null = await ofetch(
+        `https://touch.ninosaur.com/coloring/shared-pages/indexable/`,
+    ).catch(() => null)
+
+    const lastmod = new Date().toISOString()
+    const urls = (rows || []).map(r =>
+        '<url>' +
+        `<loc>https://${domain}/art/${r.id_string}</loc>` +
+        `<lastmod>${r.updated || lastmod}</lastmod>` +
+        '<changefreq>weekly</changefreq>' +
+        '<priority>0.8</priority>' +
+        '</url>',
+    ).join('')
+
     defaultContentType(event, "text/xml")
     setHeader(event, 'cache-control', 'public, max-age=3600, stale-while-revalidate=86400')
-    return out
+    return '<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="/sitemap-template.xsl"?>' +
+        `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`
 })

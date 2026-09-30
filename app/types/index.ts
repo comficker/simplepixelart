@@ -60,6 +60,9 @@ export interface SharedPage {
     /** List rows only: annotated flags, so the grid can skip meta entirely. */
     is_anim?: boolean
     has_image?: boolean
+    /** Detail only: whether /art/<slug> should be indexed. The backend owns the
+     *  rule so sitemap-page.xml and the page agree. */
+    indexable?: boolean
     colors: any[]
     map_numbers: { [key: string]: number }
     layers: Layer[]
