@@ -66,11 +66,17 @@ jobs:
       # 502 for a moment after the first one answers -- waiting on / alone
       # failed a deploy on 2026-09-26 that had in fact gone through. Every
       # path gets its own retry.
+      # --max-time because the retries were only notional: curl with no
+      # deadline will sit on a stalled connection, so one hang ate the whole
+      # 12-attempt budget and failed the run. That is what happened on
+      # 2026-09-30, on a release that was live and serving the moment it
+      # finished -- /arts left no trace in nginx or in Cloudflare's firewall
+      # events, which is what a connection that never completed looks like.
       - name: Smoke test
         run: |
           for p in / /ja/ /editor /arts /sitemap-index.xml; do
             for i in $(seq 1 12); do
-              code=$(curl -s -o /dev/null -w '%{http_code}' "https://simplepixelart.com$p")
+              code=$(curl -s -o /dev/null --max-time 15 -w '%{http_code}' "https://simplepixelart.com$p")
               [ "$code" = 200 ] && break
               sleep 5
             done
