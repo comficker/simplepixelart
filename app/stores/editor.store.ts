@@ -2166,6 +2166,52 @@ export const useEditor = defineStore('editor', () => {
         return null
     }
 
+    /** Append frames the agent generated, right after the current one.
+     *
+     * Each grid becomes one single-layer frame; its colours are merged into
+     * the board's palette by hex, so a frame drawn in the board's own colours
+     * (the fit pipeline snaps them) adds no palette entries at all. On a
+     * static board ensureAnimation first wraps the existing layers as frame 1
+     * — the caller drops a leading "base" frame for that case — and the plan's
+     * fps becomes the animation's. One history entry: undo removes the lot. */
+    function applyAgentFrames(
+        frameGrids: { colors: string[]; pixels: { [key: string]: number } }[],
+        fpsWanted?: number,
+    ): number {
+        if (!frameGrids.length) return 0
+        const hadAnim = !!editorData.value.meta?.animation?.frames?.length
+        ensureAnimation()
+        const anim = editorData.value.meta!.animation!
+        if (!hadAnim && fpsWanted) anim.fps = Math.max(2, Math.min(24, fpsWanted))
+        const duration = Math.round(1000 / (anim.fps || 10))
+        // A fresh animation plays at one speed throughout: ensureAnimation gave
+        // the wrapped first frame its 100ms default, which is not this plan's.
+        if (!hadAnim) for (const f of anim.frames) f.duration = duration
+        const palette = editorData.value.colors
+        const at = Math.max(0, currentFrameIndex.value)
+        let added = 0
+        for (const g of frameGrids) {
+            if (anim.frames.length >= MAX_FRAMES) {
+                toast.error(`Max ${MAX_FRAMES} frames`)
+                break
+            }
+            const remap = g.colors.map(hex => findOrCreateColor(hex.toUpperCase(), palette))
+            const pixels: { [key: string]: number } = {}
+            for (const key of Object.keys(g.pixels)) pixels[key] = remap[g.pixels[key]!] ?? 0
+            anim.frames.splice(at + 1 + added, 0, {
+                id: generateUUID(),
+                layers: [{name: 'Layer 1', pixels: markRaw(pixels), x: 0, y: 0}],
+                duration,
+            })
+            shiftTagsOnInsert(at + 1 + added)
+            added++
+        }
+        if (!added) return 0
+        setActiveFrame(at + added)
+        saveState()
+        return added
+    }
+
     function applyAgentOps(ops: AgentOp[]): { applied: number; pixels: number } {
         let applied = 0
         let pixels = 0
@@ -2456,6 +2502,7 @@ export const useEditor = defineStore('editor', () => {
         layerCount,
         applyAgentOps,
         applyAgentArt,
+        applyAgentFrames,
         pickColorAt,
         useColor,
         mergeVirtualLayer,

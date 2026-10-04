@@ -21,6 +21,15 @@ export interface AgentTurn {
     // An ops turn that changed something: on touch it offers an Undo button,
     // since a keyboard shortcut is no use there.
     undoable?: boolean
+    // An animation plan waiting for a yes: frame instructions in play order
+    // ("base" = the art unchanged) and the speed the agent suggested.
+    animatePlan?: { frames: string[]; fps: number }
+    // Generated frames ready to add, each already fitted to this board.
+    frames?: AgentGrid[]
+    fps?: number
+    // The plan opened on the art as it is — on a still board that frame is
+    // already there, so apply skips it.
+    baseFirst?: boolean
 }
 
 const STORE_KEY = 'agent_sessions'

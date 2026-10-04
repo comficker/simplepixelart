@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import {defineComponent, h, type PropType} from 'vue'
 import {toast} from 'vue-sonner'
-import {aiImageToGrid} from '~/helper/pixel'
-import {drawThumbnail} from '~/helper/canvas'
-import {rgbToHex} from '~/helper/color'
+import {fitRedrawToBoard, imageToNativeGrid} from '~/helper/pixel/agentFit'
+import {drawThumbnail, layers2MapNumbers} from '~/helper/canvas'
 
 const store = useEditor()
 const auth = useAuthStore()
@@ -64,8 +64,9 @@ async function send() {
   await scrollDown()
   try {
     const res = await useNativeFetch<{
-      reply: string; action: 'ops' | 'redraw' | 'none'
-      ops: any[]; redraw_prompt: string; balance: number
+      reply: string; action: 'ops' | 'redraw' | 'animate' | 'none'
+      ops: any[]; redraw_prompt: string; frames?: string[]; fps?: number
+      balance: number
     }>('/coloring/economy/agent/', {
       method: 'POST',
       body: {
@@ -106,6 +107,13 @@ async function send() {
     } else if (res.action === 'redraw') {
       turns.value = [...turns.value, {
         role: 'agent', text: res.reply, redrawPrompt: res.redraw_prompt || message,
+      }]
+    } else if (res.action === 'animate' && (res.frames?.length ?? 0) >= 2) {
+      // A plan, not frames: each non-"base" entry is a paid generation, so
+      // nothing is drawn until the user has seen the list and the price.
+      turns.value = [...turns.value, {
+        role: 'agent', text: res.reply,
+        animatePlan: {frames: res.frames!, fps: res.fps || 8},
       }]
     } else {
       turns.value = [...turns.value, {role: 'agent', text: res.reply}]
@@ -176,150 +184,23 @@ function undoLast() {
   store.undo()
 }
 
-/** Turn the model's picture into the grid the board will receive.
- *
- * The first version of this drew the 1024px render into a W×H canvas with
- * smoothing off, which keeps one source pixel per ~64x64 block and discards
- * the rest — the result looked nothing like what the user had approved. This
- * goes through aiImageToGrid instead, the same reconstruction the image
- * importer uses: a colour histogram per destination cell picks the dominant
- * colour, the flat background is peeled off, and the subject is cropped.
- *
- * That pipeline is square-only, so for a non-square board we reconstruct at
- * max(W, H) and place the drawn subject in the middle of the board. */
-async function imageToBoardGrid(dataUrl: string, W: number, H: number) {
-  const side = Math.max(W, H)
-  let q = await aiImageToGrid(dataUrl, side, 64, {removeGround: true, fillGrid: true})
-  if (q) q.indexed = dropFlatGround(q.indexed, q.palette)
-  let box = q && paintedBox(q.indexed)
-  // The subject is fit to the square, so on a tall or wide board it can come
-  // back too big for the board. Reconstruct one size down rather than cropping
-  // the sprite's arms off.
-  if (q && box && (box.w > W || box.h > H)) {
-    const smaller = Math.max(8, Math.floor(side * Math.min(W / box.w, H / box.h)))
-    if (smaller < side) {
-      const retry = await aiImageToGrid(dataUrl, smaller, 64, {removeGround: true, fillGrid: true})
-      if (retry) retry.indexed = dropFlatGround(retry.indexed, retry.palette)
-      const retryBox = retry && paintedBox(retry.indexed)
-      if (retry && retryBox) { q = retry; box = retryBox }
-    }
-  }
-  if (!q || !box) return null
-  return cutGrid(q, box, W, H)
+/** The art as the board shows it right now — flattened across layers with
+ * their offsets applied, in the board's own palette. This is what a redraw is
+ * held to (position, scale, colours) and what a "base" animation frame is. */
+function boardGrid(): AgentGrid | null {
+  const ed = editorData.value
+  const pixels = layers2MapNumbers(ed)
+  if (!Object.keys(pixels).length) return null
+  return {colors: [...ed.colors], pixels, w: ed.width, h: ed.height}
 }
 
-/** The model's own grid, at the size it actually drew.
- *
- * The board-fit version has to answer "what fits in 32x32". This one asks the
- * reconstruction to detect the render's own pixel pitch instead, so a sprite
- * the model drew at 48 across stays 48 across on a board of its own. */
-async function imageToNativeGrid(dataUrl: string) {
-  const q = await aiImageToGrid(dataUrl, 'auto', 64, {removeGround: true, fillGrid: true})
-  if (!q) return null
-  q.indexed = dropFlatGround(q.indexed, q.palette)
-  const box = paintedBox(q.indexed)
-  if (!box) return null
-  // The board is the art's own extent — no margin, nothing to centre in.
-  return cutGrid(q, box, box.w, box.h)
-}
-
-/** Lift the drawn area out of a reconstruction and centre it on a W×H board. */
-function cutGrid(
-    q: { palette: [number, number, number][]; indexed: number[][] },
-    box: { x: number; y: number; w: number; h: number },
-    W: number, H: number,
-) {
-  // Clip only if the drawing still overflows the board.
-  const cw = Math.min(box.w, W), ch = Math.min(box.h, H)
-  const srcX = box.x + Math.floor((box.w - cw) / 2)
-  const srcY = box.y + Math.floor((box.h - ch) / 2)
-  const dstX = Math.floor((W - cw) / 2), dstY = Math.floor((H - ch) / 2)
-
-  const pixels: Record<string, number> = {}
-  const remap = new Map<number, number>()
-  const colors: string[] = []
-  for (let y = 0; y < ch; y++) {
-    for (let x = 0; x < cw; x++) {
-      // Index 0 is the peeled background: leave those cells empty so the
-      // sprite arrives with transparency, not a slab of colour behind it.
-      const idx = q.indexed[srcY + y]?.[srcX + x] ?? 0
-      if (!idx) continue
-      let mapped = remap.get(idx)
-      if (mapped === undefined) {
-        const c = q.palette[idx]!
-        mapped = colors.length
-        colors.push(rgbToHex(c[0], c[1], c[2]).toUpperCase())
-        remap.set(idx, mapped)
-      }
-      pixels[`${dstX + x}_${dstY + y}`] = mapped
-    }
-  }
-  if (!colors.length) return null
-  return {colors, pixels, w: W, h: H}
-}
-
-/** Second pass at the flat ground the prompt asked the model for.
- *
- * peelGround floods in from the border and gives up when the border ring is
- * not one colour, which a render with any noise in its background is not — the
- * board then arrives with a slab of beige behind the sprite.
- *
- * The four corners of the drawn area are the most reliable sample of that
- * background: a sprite reaches the edge of its frame often, all four corners
- * rarely. Agreeing corners identify the colour; the generator prompt then
- * guarantees it "appears NOWHERE inside" the subject, so every cell of it can
- * go — enclosed ones included, like the inside of a coil or the gap under a
- * raised arm, which a flood from outside can never reach. */
-function dropFlatGround(indexed: number[][], palette: [number, number, number][]) {
-  // Read the corners of what was drawn: the reconstruction leaves a margin,
-  // so the grid's own corners are empty by construction.
-  const box = paintedBox(indexed)
-  if (!box || box.w < 4 || box.h < 4) return indexed
-  const corners: [number, number, number][] = []
-  const {x, y, w, h} = box
-  for (const [cx, cy] of [[x, y], [x + w - 1, y], [x, y + h - 1], [x + w - 1, y + h - 1]]) {
-    const c = palette[indexed[cy!]?.[cx!] ?? 0]
-    if (indexed[cy!]?.[cx!] && c) corners.push(c)
-  }
-  if (corners.length < 3) return indexed
-
-  // The ground is what at least three corners agree on, to within the drift
-  // a noisy render puts into one flat colour.
-  const TOL = 24
-  const agrees = (a: [number, number, number], b: [number, number, number]) =>
-    (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2 < TOL ** 2
-  const ground = corners.find(c => corners.filter(o => agrees(c, o)).length >= 3)
-  if (!ground) return indexed
-
-  const drop = new Set<number>()
-  for (let i = 1; i < palette.length; i++) {
-    const c = palette[i]
-    if (c && agrees(c, ground)) drop.add(i)
-  }
-  if (!drop.size) return indexed
-  return indexed.map(row => row.map(i => (drop.has(i) ? 0 : i)))
-}
-
-/** Bounding box of the cells that actually got a colour. */
-function paintedBox(indexed: number[][]) {
-  let x0 = Infinity, y0 = Infinity, x1 = -1, y1 = -1
-  for (let y = 0; y < indexed.length; y++) {
-    const row = indexed[y]!
-    for (let x = 0; x < row.length; x++) {
-      if (!row[x]) continue
-      if (x < x0) x0 = x
-      if (x > x1) x1 = x
-      if (y < y0) y0 = y
-      if (y > y1) y1 = y
-    }
-  }
-  if (x1 < 0) return null
-  return {x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1}
-}
-
-/** Quantise a proposal against the board it would land on. */
+/** Quantise a proposal against the board it would land on — and, when the
+ * board has art (a redraw is almost always an edit of it), against that art:
+ * fitRedrawToBoard matches its scale, snaps to its palette and aligns to its
+ * position, instead of re-centring a re-quantised sprite that then landed a
+ * few pixels off everything the user had. */
 function toBoardGrid(dataUrl: string) {
-  return imageToBoardGrid(dataUrl, editorData.value.width, editorData.value.height)
+  return fitRedrawToBoard(dataUrl, editorData.value.width, editorData.value.height, boardGrid())
 }
 
 /** Draw a grid into a canvas at 1px per pixel; CSS scales it up, crisply. */
@@ -379,6 +260,122 @@ async function redraw(turn: any) {
   }
 }
 
+// Which frame is being drawn right now, for the progress line under the log.
+const animStep = ref<{ n: number; total: number } | null>(null)
+
+function paidFrames(plan: { frames: string[] }): number {
+  return plan.frames.filter(f => f !== 'base').length
+}
+
+/** The expensive path for an animation: one gen-image per non-"base" frame.
+ *
+ * Every frame is generated from the SAME reference — the art as it is now —
+ * and fitted against it, so the frames agree with each other instead of each
+ * drifting its own way; frame-to-frame drift is exactly what reads as jitter
+ * on playback. "base" frames are the art itself and cost nothing. */
+async function animate(turn: AgentTurn) {
+  if (busy.value || !turn.animatePlan) return
+  if (!auth.isLogged) { toast.error('Sign in to use the agent'); return }
+  busy.value = true
+  const plan = turn.animatePlan
+  const base = boardGrid()
+  const reference = artDataUrl()
+  const grids: AgentGrid[] = []
+  const keep = () => {
+    // Keep whatever already succeeded if it still plays as an animation —
+    // those frames are paid for.
+    if (grids.length >= 2) {
+      turn.frames = grids
+      turn.fps = plan.fps
+      turn.baseFirst = plan.frames[0] === 'base'
+      turn.animatePlan = undefined
+      turns.value = [...turns.value]
+      return true
+    }
+    return false
+  }
+  try {
+    for (let i = 0; i < plan.frames.length; i++) {
+      const instruction = plan.frames[i]!
+      if (instruction === 'base') {
+        if (base) grids.push(base)
+        continue
+      }
+      animStep.value = {n: i + 1, total: plan.frames.length}
+      await scrollDown()
+      const res = await useNativeFetch<{ image: string; balance: number }>(
+          '/coloring/economy/gen-image/', {
+            method: 'POST',
+            body: {
+              prompt: instruction,
+              size: editorData.value.width,
+              height: editorData.value.height,
+              colors: editorData.value.colors.length || 16,
+              reference,
+              reference_kind: 'art',
+            },
+          })
+      setBalance(res.balance)
+      const grid = await fitRedrawToBoard(
+          res.image, editorData.value.width, editorData.value.height, base)
+      if (grid) grids.push(grid)
+    }
+    if (!keep()) toast.error('Could not read those frames')
+  } catch (e: any) {
+    const s = e?.status ?? e?.response?.status
+    if (s === 402) toast.error('Not enough credits — earn some in Missions')
+    else toast.error('A frame failed to generate')
+    keep()
+  } finally {
+    animStep.value = null
+    busy.value = false
+    await scrollDown()
+  }
+}
+
+/** On a still board ensureAnimation keeps the art itself as frame 1, so a
+ * plan that opened on "base" would add that frame twice — skip it there. */
+function framesToAdd(turn: AgentTurn): AgentGrid[] {
+  if (!turn.frames?.length) return []
+  const hasAnim = (editorData.value.meta?.animation?.frames?.length ?? 0) > 0
+  return !hasAnim && turn.baseFirst ? turn.frames.slice(1) : turn.frames
+}
+
+function applyFrames(turn: AgentTurn) {
+  if (!turn.frames?.length || busy.value) return
+  const grids = framesToAdd(turn)
+  const added = store.applyAgentFrames(grids, turn.fps)
+  if (!added) { toast.error('Could not add the frames'); return }
+  turn.done = `Added ${added} frame${added > 1 ? 's' : ''} — undo with ${modKey()}Z`
+  turn.frames = undefined
+  turn.fps = undefined
+  turns.value = [...turns.value]
+}
+
+/** The generated frames, playing at the plan's speed. Its own component so
+ * the interval lives and dies with the canvas, not with the chat. */
+const AnimPreview = defineComponent({
+  props: {
+    frames: {type: Array as PropType<AgentGrid[]>, required: true},
+    fps: {type: Number, default: 8},
+  },
+  setup(props) {
+    const el = ref<HTMLCanvasElement | null>(null)
+    let timer = 0
+    let i = 0
+    const tick = () => {
+      paintPreview(el.value, props.frames[i % props.frames.length])
+      i++
+    }
+    onMounted(() => {
+      tick()
+      timer = window.setInterval(tick, 1000 / Math.max(2, Math.min(24, props.fps)))
+    })
+    onBeforeUnmount(() => window.clearInterval(timer))
+    return () => h('canvas', {ref: el, class: 'agent-preview pixelated'})
+  },
+})
+
 async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: boolean) {
   if (!grid) return
   busy.value = true
@@ -409,6 +406,7 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
             <li>{{ $t('c_AgentChat.example1') }}</li>
             <li>{{ $t('c_AgentChat.example2') }}</li>
             <li>{{ $t('c_AgentChat.example3') }}</li>
+            <li>{{ $t('c_AgentChat.example4') }}</li>
           </ul>
           <p class="text-2xs text-muted" v-html="$t('c_AgentChat.exactChangesApplyStraightAwayAnd')"/>
         </div>
@@ -423,6 +421,42 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
             </button>
             <button class="btn" :disabled="busy" @click="t.redrawPrompt = undefined">{{ $t('c_AgentChat.noThanks') }}</button>
           </div>
+
+          <template v-if="t.animatePlan">
+            <ol class="agent-frame-plan text-2xs text-muted">
+              <li v-for="(f, j) in t.animatePlan.frames" :key="j">
+                {{ f === 'base' ? $t('c_AgentChat.frameAsIs') : f }}
+              </li>
+            </ol>
+            <div class="settings-row">
+              <button class="btn primary" :disabled="busy" @click="animate(t)">
+                <span class="icon icon-auto-fix"/>
+                <span>
+                  {{ $t('c_AgentChat.animateFrames', {count: t.animatePlan.frames.length}) }}{{
+                    cost?.redraw == null ? '' : ` — ${paidFrames(t.animatePlan) * cost.redraw}`
+                  }}
+                </span>
+              </button>
+              <button class="btn" :disabled="busy" @click="t.animatePlan = undefined">{{ $t('c_AgentChat.noThanks') }}</button>
+            </div>
+          </template>
+
+          <template v-if="t.frames?.length">
+            <div class="agent-proposal">
+              <figure>
+                <AnimPreview :frames="t.frames" :fps="t.fps || 8"/>
+                <figcaption class="text-2xs text-muted">
+                  {{ $t('c_AgentChat.framesCaption', {count: t.frames.length, fps: t.fps || 8}) }}
+                </figcaption>
+              </figure>
+            </div>
+            <div class="settings-row">
+              <button class="btn primary" :disabled="busy" @click="applyFrames(t)">
+                {{ $t('c_AgentChat.addFrames', framesToAdd(t).length) }}
+              </button>
+              <button class="btn" :disabled="busy" @click="t.frames = undefined">{{ $t('c_AgentChat.noThanks') }}</button>
+            </div>
+          </template>
 
           <template v-if="t.grid">
             <div class="agent-proposal">
@@ -468,7 +502,9 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
           </p>
         </div>
 
-        <p v-if="busy" class="agent-text text-sm text-muted">{{ $t('c_AgentChat.thinking') }}</p>
+        <p v-if="busy" class="agent-text text-sm text-muted">
+          {{ animStep ? $t('c_AgentChat.drawingFrame', animStep) : $t('c_AgentChat.thinking') }}
+        </p>
       </div>
     </div>
 
@@ -585,6 +621,16 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
 
 .agent-preview {
   image-rendering: pixelated;
+}
+
+/* The frame plan reads as what it is: a numbered play order. */
+.agent-frame-plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: var(--space-4);
+  list-style: decimal;
 }
 
 /* Touch targets: the desktop sizes here are 34 and 36, both under the 44px
