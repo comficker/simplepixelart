@@ -451,7 +451,7 @@ onMounted(() => { if (open.value) openPalette() })
 
 .cmdk-search-icon {
   color: var(--muted);
-  font-size: 16px;
+  width: var(--icon-md); height: var(--icon-md);
   flex-shrink: 0;
 }
 
@@ -542,13 +542,12 @@ onMounted(() => { if (open.value) openPalette() })
 
 .cmdk-item-icon {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: var(--icon-md);
+  height: var(--icon-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--primary);
-  font-size: 14px;
 }
 
 .cmdk-item-label {
@@ -614,7 +613,7 @@ onMounted(() => { if (open.value) openPalette() })
 }
 
 .cmdk-empty .icon {
-  font-size: 22px;
+  width: var(--icon-lg); height: var(--icon-lg);
   opacity: 0.6;
 }
 
@@ -630,7 +629,7 @@ onMounted(() => { if (open.value) openPalette() })
 }
 .cmdk-stat.warn { --stat-accent: #d98a1f; }
 .cmdk-stat.full { --stat-accent: #dc4b3f; color: var(--foreground); }
-.cmdk-stat-icon { font-size: 13px; color: var(--stat-accent); flex: none; }
+.cmdk-stat-icon { width: var(--icon-sm); height: var(--icon-sm); color: var(--stat-accent); flex: none; }
 .cmdk-stat-label {
   font-weight: 700;
   letter-spacing: 0.02em;

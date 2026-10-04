@@ -269,8 +269,8 @@ watch(() => auth.isLogged, () => loadSources())
 }
 
 .stp-search .icon {
-  width: 13px;
-  height: 13px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   flex-shrink: 0;
 }
 

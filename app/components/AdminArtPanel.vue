@@ -217,7 +217,7 @@ async function destroy() {
 }
 
 .admin-trigger .icon {
-  font-size: 15px;
+  width: var(--icon-md); height: var(--icon-md);
   color: var(--primary);
 }
 

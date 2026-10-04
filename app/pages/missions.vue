@@ -356,7 +356,7 @@ watch(() => auth.isLogged, (v) => {
 }
 
 .msn-use > .icon {
-  font-size: 22px;
+  width: var(--icon-lg); height: var(--icon-lg);
   color: var(--primary);
 }
 
@@ -480,7 +480,7 @@ watch(() => auth.isLogged, (v) => {
 }
 
 .msn-empty .empty-icon {
-  font-size: 48px;
+  width: calc(var(--icon-lg) * 2); height: calc(var(--icon-lg) * 2);
   color: var(--primary);
 }
 
@@ -511,7 +511,7 @@ watch(() => auth.isLogged, (v) => {
 }
 
 .msn-invite-ic {
-  font-size: 26px;
+  width: var(--icon-lg); height: var(--icon-lg);
   color: var(--primary);
   flex-shrink: 0;
   margin-top: 2px;
@@ -560,8 +560,8 @@ watch(() => auth.isLogged, (v) => {
 }
 
 .msn-invite-stats .icon {
-  width: 13px;
-  height: 13px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   color: var(--primary);
 }
 

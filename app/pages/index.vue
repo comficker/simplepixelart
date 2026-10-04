@@ -718,7 +718,7 @@ useCustomSeoMeta({
 }
 
 .studio-new-icon {
-  font-size: 28px;
+  width: var(--icon-lg); height: var(--icon-lg);
 }
 
 .studio-new-label {
@@ -794,8 +794,8 @@ useCustomSeoMeta({
 }
 
 .studio-empty-thumb .icon {
-  width: 28px;
-  height: 28px;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
 }
 
 </style>

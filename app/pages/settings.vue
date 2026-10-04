@@ -391,8 +391,8 @@ watch(() => auth.logged, fillForm)
 .set-theme .icon-check {
   margin-left: auto;
   color: var(--primary);
-  width: 13px;
-  height: 13px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .set-theme-dot {

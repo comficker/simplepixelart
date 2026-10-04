@@ -460,8 +460,8 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
 }
 
 .cl-manage-add-plus .icon {
-  width: 12px;
-  height: 12px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .cl-detail-error {

@@ -129,8 +129,8 @@ useHead({
 
 .dash-crumb-sep {
   flex-shrink: 0;
-  width: 14px;
-  height: 14px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   color: color-mix(in oklab, var(--muted) 60%, transparent);
 }
 

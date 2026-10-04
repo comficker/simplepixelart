@@ -2366,7 +2366,7 @@ const faq = computed(() => [
   cursor: pointer;
 }
 
-.ts-settings-x .icon { width: 0.875rem; height: 0.875rem; }
+.ts-settings-x .icon { width: var(--icon-sm); height: var(--icon-sm); }
 
 .ts-settings-x:hover {
   background: var(--surface-2);
@@ -2397,7 +2397,7 @@ const faq = computed(() => [
 }
 
 .ts-preview-empty .icon {
-  font-size: 26px;
+  width: var(--icon-lg); height: var(--icon-lg);
   opacity: 0.7;
 }
 
@@ -2625,8 +2625,8 @@ const faq = computed(() => [
 }
 
 .ts-region-del .icon {
-  width: 0.85em;
-  height: 0.85em;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2650,8 +2650,8 @@ const faq = computed(() => [
 }
 
 .ts-sync .icon {
-  width: 0.8em;
-  height: 0.8em;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .ts-sync:disabled {

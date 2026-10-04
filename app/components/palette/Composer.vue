@@ -170,8 +170,8 @@ async function publish() {
 }
 
 .composer-link .icon {
-  width: 12px;
-  height: 12px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .composer-swatches {
@@ -233,7 +233,7 @@ async function publish() {
 }
 
 .composer-sw-wrap:hover .composer-sw-x { opacity: 1; }
-.composer-sw-x .icon { width: 10px; height: 10px; }
+.composer-sw-x .icon { width: var(--icon-sm); height: var(--icon-sm); }
 
 .composer-name {
   width: 100%;

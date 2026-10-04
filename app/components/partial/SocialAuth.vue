@@ -82,8 +82,8 @@ const loginModal = useLoginModal()
 }
 
 .social-ic .icon {
-  width: 17px;
-  height: 17px;
+  width: var(--icon-md);
+  height: var(--icon-md);
 }
 
 .social-sep {

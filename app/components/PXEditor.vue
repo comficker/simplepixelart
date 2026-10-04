@@ -4610,7 +4610,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   border-radius: var(--radius-sm);
 }
 
-.settings-chev { margin-left: auto; font-size: 14px; opacity: 0.45; }
+.settings-chev { margin-left: auto; width: var(--icon-sm); height: var(--icon-sm); opacity: 0.45; }
 
 .settings-sub {
   width: 290px;
@@ -4634,7 +4634,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   color: var(--foreground);
   cursor: pointer;
 }
-.settings-back .icon { font-size: 18px; }
+.settings-back .icon { width: var(--icon-md); height: var(--icon-md); }
 .settings-back:hover { color: var(--primary); }
 
 .settings-body {
@@ -4813,8 +4813,8 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 }
 
 .bg-art-thumb-empty .icon {
-  width: 18px;
-  height: 18px;
+  width: var(--icon-md);
+  height: var(--icon-md);
 }
 
 .bg-art-thumb.active {

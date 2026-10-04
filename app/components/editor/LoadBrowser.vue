@@ -141,8 +141,8 @@ const shown = computed(() => {
 }
 
 .lb-search .icon {
-  width: 15px;
-  height: 15px;
+  width: var(--icon-md);
+  height: var(--icon-md);
   flex-shrink: 0;
 }
 
@@ -164,7 +164,7 @@ const shown = computed(() => {
 }
 
 .lb-caret {
-  font-size: 13px;
+  width: var(--icon-sm); height: var(--icon-sm);
   color: var(--muted);
 }
 

@@ -128,7 +128,7 @@ watch(() => auth.isLogged, (v) => {
 }
 
 .wallet-chip .icon {
-  font-size: 0.95em;
+  width: var(--icon-md); height: var(--icon-md);
   color: var(--primary);
 }
 
@@ -183,8 +183,8 @@ watch(() => auth.isLogged, (v) => {
 }
 
 .wallet-row-side .icon {
-  width: 13px;
-  height: 13px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .wallet-row-title {

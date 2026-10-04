@@ -774,8 +774,8 @@ const faq = computed(() => [
 }
 
 .gen-ref-x .icon {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .gen-ref-x:hover {
@@ -799,8 +799,8 @@ const faq = computed(() => [
 }
 
 .gen-attach .icon {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: var(--icon-md);
+  height: var(--icon-md);
 }
 
 .gen-attach:hover:not(:disabled) {
@@ -903,7 +903,7 @@ const faq = computed(() => [
   opacity: 0.8;
 }
 
-.gen-cost .icon { width: 12px; height: 12px; }
+.gen-cost .icon { width: var(--icon-sm); height: var(--icon-sm); }
 
 .gen-row2 { margin-top: var(--space-2); }
 
@@ -965,7 +965,7 @@ const faq = computed(() => [
   transition: opacity var(--transition), color var(--transition);
 }
 
-.gen-hist-x .icon { width: 0.625rem; height: 0.625rem; }
+.gen-hist-x .icon { width: var(--icon-sm); height: var(--icon-sm); }
 
 .gen-hist-item:hover .gen-hist-x,
 .gen-hist-x:focus-visible { opacity: 1; }

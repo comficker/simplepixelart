@@ -301,8 +301,8 @@ useCustomSeoMeta({
 }
 
 .scheme-refresh .icon {
-  width: 15px;
-  height: 15px;
+  width: var(--icon-md);
+  height: var(--icon-md);
 }
 
 .scheme-presets {

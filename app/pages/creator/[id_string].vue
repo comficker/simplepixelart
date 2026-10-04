@@ -354,8 +354,8 @@ useCustomSeoMeta({
 }
 
 .creator-links .icon {
-  width: 12px;
-  height: 12px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 @media (hover: hover) and (pointer: fine) {

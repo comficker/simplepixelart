@@ -98,6 +98,11 @@ a {
     --space-4: 1rem;      
     --space-5: 1.25rem;   
     --space-6: 1.5rem;    
+
+    /* Three icon sizes: beside a small label, inside a control, in a toolbar. */
+    --icon-sm: calc(var(--space-4) - var(--space-1) / 2);
+    --icon-md: var(--space-4);
+    --icon-lg: var(--space-6);
     --bar-h: 48px;
     --sidebar-w: 190px;
     --filters-w: 250px;
@@ -815,9 +820,18 @@ footer {
 .icon {
     mask-repeat: no-repeat;
     background: currentColor;
-    width: 1.25em;
-    height: 1.25em;
+    /* rem, not em: sized by the text around it, an icon came out at
+       13.75px, 16.25px, 16.6px... depending on where it sat. */
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
     display: inline-flex;
+}
+
+/* Toolbars and tool rails: the large size, everywhere. */
+:is(.toolbar-btn, .publish-toolbar-btn, .square) .icon {
+    width: var(--icon-lg);
+    height: var(--icon-lg);
 }
 
 html,
@@ -1720,8 +1734,8 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
 
 .browse-filter-btn > .icon {
     flex-shrink: 0;
-    width: 13px;
-    height: 13px;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
     color: var(--muted);
 }
 
@@ -1748,8 +1762,8 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
 
 .browse-filter-btn .icon-chevron-down {
     flex-shrink: 0;
-    width: 12px;
-    height: 12px;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
     color: var(--muted);
 }
 
@@ -1830,8 +1844,8 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
 }
 
 .browse-opt .icon {
-    width: 12px;
-    height: 12px;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
     flex-shrink: 0;
     color: var(--primary);
 }
@@ -1852,8 +1866,8 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     position: absolute;
     left: var(--space-3);
     top: 50%;
-    width: 13px;
-    height: 13px;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
     transform: translateY(-50%);
     color: var(--muted);
     pointer-events: none;
@@ -2365,7 +2379,7 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
 }
 
 .dropzone-icon {
-    font-size: 32px;
+    width: var(--icon-lg); height: var(--icon-lg);
     color: var(--primary);
 }
 
@@ -2904,8 +2918,8 @@ canvas.iso-line { cursor: crosshair; }
 }
 
 .widget-ctl-btn .icon {
-    width: 11px;
-    height: 11px;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
 }
 
 .widget-ctl-name {
@@ -3039,8 +3053,8 @@ canvas.iso-line { cursor: crosshair; }
 }
 
 .layer-check .icon {
-    width: 11px;
-    height: 11px;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
 }
 
 .layers .layer-del {
@@ -3069,7 +3083,7 @@ canvas.iso-line { cursor: crosshair; }
 }
 
 .layers .layer-del .icon {
-    font-size: 0.85em;
+    width: var(--icon-sm); height: var(--icon-sm);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -3338,8 +3352,8 @@ html.editor-fullscreen .consent {
 }
 
 .onb-tips .icon {
-    width: 15px;
-    height: 15px;
+    width: var(--icon-md);
+    height: var(--icon-md);
     flex-shrink: 0;
     color: var(--muted);
 }
@@ -3418,7 +3432,7 @@ html.editor-fullscreen .consent {
 }
 
 .publish-ai-row .icon-auto-fix {
-    font-size: 13px;
+    width: var(--icon-sm); height: var(--icon-sm);
 }
 
 .publish-ai-cost {
@@ -3430,8 +3444,8 @@ html.editor-fullscreen .consent {
 }
 
 .publish-ai-cost .icon {
-    width: 11px;
-    height: 11px;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
 }
 
 .publish-link {
@@ -3756,7 +3770,7 @@ html.editor-fullscreen .consent {
 }
 
 .tool-empty .icon {
-    font-size: 28px;
+    width: var(--icon-lg); height: var(--icon-lg);
     opacity: 0.6;
 }
 
@@ -3824,7 +3838,7 @@ html.editor-fullscreen .consent {
   border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface);
 }
 .tm-search:focus-within { border-color: var(--primary); }
-.tm-search .icon-search { color: var(--muted); font-size: 0.9em; flex: none; }
+.tm-search .icon-search { color: var(--muted); width: var(--icon-sm); height: var(--icon-sm); flex: none; }
 .tm-search input {
   flex: 1; min-width: 0; border: 0; background: transparent; outline: none;
   font-size: var(--text-xs); color: var(--foreground);
@@ -3836,7 +3850,7 @@ html.editor-fullscreen .consent {
   padding: 0;
   justify-content: center;
 }
-.tm-iconbtn .icon { width: 15px; height: 15px; }
+.tm-iconbtn .icon { width: var(--icon-md); height: var(--icon-md); }
 
 .tm-save {
   position: relative;
@@ -3904,7 +3918,7 @@ html.editor-fullscreen .consent {
 
 .tm-stage-fab-btn:hover { color: var(--primary); }
 
-.tm-stage-fab-btn .icon { width: 14px; height: 14px; }
+.tm-stage-fab-btn .icon { width: var(--icon-md); height: var(--icon-md); }
 
 .tm-zoom {
   position: absolute; bottom: 0.75rem; right: 0.75rem;
@@ -4024,7 +4038,7 @@ html.editor-fullscreen .consent {
 
 .readme-tab.is-active { color: var(--foreground); }
 .readme-tab:not(.is-active):hover { color: var(--primary); }
-.readme-tab .icon { width: 11px; height: 11px; }
+.readme-tab .icon { width: var(--icon-sm); height: var(--icon-sm); }
 
 .readme-actions { display: flex; align-items: center; gap: var(--space-1); }
 
@@ -4188,7 +4202,7 @@ html.editor-fullscreen .consent {
 .prose .gh-alert { padding: var(--space-2) var(--space-4); border-left: 3px solid var(--border); }
 .prose .gh-alert > * + * { margin-top: var(--space-1); }
 .gh-alert-title { display: flex; align-items: center; gap: var(--space-2); font-weight: 600; }
-.gh-alert-title .icon { font-size: 15px; }
+.gh-alert-title .icon { width: var(--icon-md); height: var(--icon-md); }
 .prose .gh-tip { border-left-color: var(--success); }
 .prose .gh-tip .gh-alert-title { color: var(--success); }
 

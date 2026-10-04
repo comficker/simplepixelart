@@ -125,8 +125,8 @@ const isAnim = computed(() => value.is_anim
 }
 
 .card-empty .icon {
-  width: 32px;
-  height: 32px;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
 }
 
 .card .size-full {

@@ -532,7 +532,7 @@ onUnmounted(() => { store.isPlaying = false })
   cursor: pointer;
 }
 
-.tl-op .icon { font-size: 12px; }
+.tl-op .icon { width: var(--icon-sm); height: var(--icon-sm); }
 .tl-op:hover:not(:disabled) { color: var(--foreground); }
 .tl-op:disabled { opacity: 0.35; cursor: not-allowed; }
 
@@ -822,7 +822,7 @@ onUnmounted(() => { store.isPlaying = false })
   cursor: pointer;
 }
 
-.tl-addcol .icon { font-size: 12px; }
+.tl-addcol .icon { width: var(--icon-sm); height: var(--icon-sm); }
 .tl-addcol:hover { color: var(--primary); border-color: var(--primary); }
 
 .tl-rowname {

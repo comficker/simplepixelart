@@ -1157,8 +1157,8 @@ onMounted(() => {
 }
 
 .work-select-dot .icon {
-  width: 13px;
-  height: 13px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .work-ic-btn {
@@ -1444,8 +1444,8 @@ onMounted(() => {
 }
 
 .work-status.badge-ic .icon {
-  width: 13px;
-  height: 13px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .work-more-tl {

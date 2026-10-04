@@ -221,7 +221,7 @@ function statusBadge(s?: string) {
   border-radius: var(--radius-pill);
 }
 
-.work-status .icon { width: 13px; height: 13px; }
+.work-status .icon { width: var(--icon-sm); height: var(--icon-sm); }
 .badge-public { background: var(--primary); color: var(--primary-foreground); }
 .badge-pending { background: var(--warning); color: var(--warning-foreground); }
 .badge-draft { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }

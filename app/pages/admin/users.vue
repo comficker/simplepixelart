@@ -258,8 +258,8 @@ watch(isStaff, (v) => { if (v) load() })
   left: 8px;
   top: 50%;
   translate: 0 -50%;
-  width: 14px;
-  height: 14px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   color: var(--muted);
   pointer-events: none;
 }

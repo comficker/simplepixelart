@@ -144,8 +144,9 @@ header .brand-name-main {
   -webkit-tap-highlight-color: transparent;
 }
 
-.hdr-link .icon {
-  font-size: 0.95em;
+.hdr-link > .icon {
+  width: var(--icon-md);
+  height: var(--icon-md);
   flex-shrink: 0;
 }
 
