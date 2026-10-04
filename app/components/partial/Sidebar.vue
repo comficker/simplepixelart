@@ -28,10 +28,30 @@ const SOCIAL = [
 
 const PRIMARY = [
   {to: '/', icon: 'icon-home', key: 'nav.home'},
-  {to: '/arts', icon: 'icon-explore', key: 'nav.discovery'},
-  {to: '/palettes', icon: 'icon-bucket', key: 'nav.palettes'},
   {to: '/challenges', icon: 'icon-flag', key: 'nav.challenges'},
   {to: '/work', icon: 'icon-workspace', key: 'nav.yourWork'},
+]
+
+// Grouped by what you are doing rather than "page vs tool": browsing and
+// making pixel art, working with colour, building for a game. Discovery and
+// Palettes sit with the tools they lead into, so they wear the same chip.
+const tool = (key: (typeof TOOLS)[number]['key']) => TOOLS.find(t => t.key === key)!
+const SECTIONS = [
+  {
+    key: 'c_Sidebar.pixelArt',
+    items: [
+      {key: 'discovery', to: '/arts', icon: 'icon-explore', i18n: 'nav.discovery', c1: '#38bdf8', c2: '#0284c7'},
+      tool('draw'), tool('ai'), tool('convert'), tool('slicer'),
+    ],
+  },
+  {
+    key: 'c_Sidebar.color',
+    items: [
+      {key: 'palettes', to: '/palettes', icon: 'icon-bucket', i18n: 'nav.palettes', c1: '#fb923c', c2: '#ea580c'},
+      tool('extract'),
+    ],
+  },
+  {key: 'c_Sidebar.gameDev', items: [tool('tileset'), tool('tilemap')]},
 ]
 </script>
 
@@ -61,20 +81,22 @@ const PRIMARY = [
       </NuxtLinkLocale>
     </nav>
 
-    <div class="dash-sec"><span class="dash-label">{{ $t('c_Sidebar.tools') }}</span></div>
-    <nav class="dash-nav" :aria-label="$t('c_Sidebar.tools')">
-      <NuxtLinkLocale
-          v-for="t in TOOLS"
-          :key="t.key"
-          :to="t.to"
-          class="hdr-link dash-link"
-          :style="{'--ic-1': t.c1, '--ic-2': t.c2}"
-          :title="$t(t.i18n)"
-      >
-        <span class="dash-tool-ic"><span class="icon" :class="t.icon"/></span>
-        <span class="dash-label">{{ $t(t.i18n) }}</span>
-      </NuxtLinkLocale>
-    </nav>
+    <template v-for="sec in SECTIONS" :key="sec.key">
+      <div class="dash-sec"><span class="dash-label">{{ $t(sec.key) }}</span></div>
+      <nav class="dash-nav" :aria-label="$t(sec.key)">
+        <NuxtLinkLocale
+            v-for="t in sec.items"
+            :key="t.key"
+            :to="t.to"
+            class="hdr-link dash-link"
+            :style="{'--ic-1': t.c1, '--ic-2': t.c2}"
+            :title="$t(t.i18n)"
+        >
+          <span class="dash-tool-ic"><span class="icon" :class="t.icon"/></span>
+          <span class="dash-label">{{ $t(t.i18n) }}</span>
+        </NuxtLinkLocale>
+      </nav>
+    </template>
 
     <div class="dash-sec"><span class="dash-label">{{ $t('c_Sidebar.community') }}</span></div>
     <nav class="dash-nav" :aria-label="$t('c_Sidebar.community')">
@@ -142,6 +164,8 @@ const PRIMARY = [
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  /* The bar's height less the row's 1px bottom border: 47px. */
+  height: calc(var(--bar-h) - 1px);
   min-width: 0;
   color: var(--foreground);
 }
@@ -151,8 +175,8 @@ const PRIMARY = [
 }
 
 .dash-collapse .icon {
-  width: 15px;
-  height: 15px;
+  width: var(--icon-md);
+  height: var(--icon-md);
 }
 
 .dash-brand-logo {
@@ -202,7 +226,7 @@ const PRIMARY = [
 
 .dash-sec {
   margin-top: var(--space-1);
-  padding: var(--space-3) var(--space-6) var(--space-1);
+  padding: var(--space-2) var(--space-4) 0;
   border-top: 1px solid var(--border);
   font-size: var(--text-2xs);
   font-weight: 700;
@@ -215,16 +239,16 @@ const PRIMARY = [
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: var(--space-5);
+  height: var(--space-5);
   flex-shrink: 0;
-  border-radius: 4px;
+  border-radius: var(--space-1);
   background: linear-gradient(135deg, var(--ic-1), var(--ic-2));
 }
 
 .dash-tool-ic .icon {
-  width: 11px;
-  height: 11px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   color: #fff;
 }
 

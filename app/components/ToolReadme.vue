@@ -1,17 +1,32 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, useSlots } from 'vue'
 
-const props = withDefaults(defineProps<{ toc?: boolean; agent?: boolean }>(), {
+const props = withDefaults(defineProps<{
+  toc?: boolean
+  agent?: boolean
+  // A tool's own panel as the first tab (the tilemap's tile picker).
+  panelLabel?: string
+  panelIcon?: string
+}>(), {
   toc: true,
   // Only the editor has art for an agent to edit, so only it asks for the tab.
   agent: false,
 })
+
+const hasPanel = !!useSlots().panel
+const panelOpen = ref(false)
 
 // Shared with the editor's toolbar button: either can open the tab. Asked for
 // only when the page wants the tab — the panel reaches into the editor store,
 // and every tool page renders a README, so reaching for it unconditionally
 // built that whole store on pages with no canvas, Home among them.
 const agentOpen = props.agent ? useAgentPanel().open : ref(false)
+watch(agentOpen, (v) => { if (v) panelOpen.value = false })
+
+function show(tab: 'panel' | 'readme' | 'agent') {
+  panelOpen.value = tab === 'panel'
+  agentOpen.value = tab === 'agent'
+}
 
 const root = ref<HTMLElement | null>(null)
 const tocOpen = ref(false)
@@ -54,17 +69,24 @@ function goTo(id: string) {
     <div class="readme-head">
       <div class="readme-tabs">
         <button
+            v-if="hasPanel"
             type="button"
             class="readme-tab"
-            :class="{'is-active': !agentOpen}"
-            @click="agentOpen = false"
+            :class="{'is-active': panelOpen}"
+            @click="show('panel')"
+        ><span class="icon" :class="panelIcon || 'icon-grid'"/>{{ panelLabel }}</button>
+        <button
+            type="button"
+            class="readme-tab"
+            :class="{'is-active': !agentOpen && !panelOpen}"
+            @click="show('readme')"
         ><span class="icon icon-file"/>{{ $t('c_ToolReadme.readme') }}</button>
         <button
             v-if="agent"
             type="button"
             class="readme-tab"
             :class="{'is-active': agentOpen}"
-            @click="agentOpen = true"
+            @click="show('agent')"
         ><span class="icon icon-auto-fix"/>{{ $t('common.agent') }}</button>
       </div>
       <div v-if="agent && agentOpen" class="readme-actions">
@@ -78,7 +100,7 @@ function goTo(id: string) {
           <span class="icon icon-close"/>
         </button>
       </div>
-      <div v-if="toc && !agentOpen" class="readme-actions">
+      <div v-if="toc && !agentOpen && !panelOpen" class="readme-actions">
         <button
             type="button"
             class="widget-ctl-btn"
@@ -90,8 +112,13 @@ function goTo(id: string) {
         </button>
       </div>
     </div>
+    <!-- v-show: the panel keeps its state (a drawn canvas, a scroll
+         position) while the readme is read. -->
+    <div v-if="hasPanel" v-show="panelOpen" class="readme-panel">
+      <slot name="panel"/>
+    </div>
     <EditorAgentChat v-if="agent && agentOpen"/>
-    <div v-else class="readme-body prose">
+    <div v-else-if="!panelOpen" class="readme-body prose">
       <slot/>
     </div>
 

@@ -686,8 +686,8 @@ const previewStyle = computed(() => {
 }
 
 .art-remix-badge .icon {
-  width: 11px;
-  height: 11px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .art-anim-badge {
@@ -832,16 +832,6 @@ const previewStyle = computed(() => {
 }
 
 
-/* Side by side, wrapping when the aside is too narrow for both. One button
-   still fills the row, which is what it did when this was a column. */
-.art-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-.art-actions .btn { flex: 1 1 6rem; justify-content: center; }
-
-.art-stage { min-height: 0; }
-
-@media (max-width: 1279px) {
-  .art-stage { max-height: 60vh; }
-}
 
 .art-preview-ctl {
   position: absolute;
@@ -888,44 +878,13 @@ const previewStyle = computed(() => {
   cursor: pointer;
 }
 
-.art-size-pill .icon { width: 13px; height: 13px; }
+.art-size-pill .icon { width: var(--icon-sm); height: var(--icon-sm); }
 
 @media (hover: hover) and (pointer: fine) {
   .art-size-pill:hover { color: var(--primary); }
 }
 
 
-.art-meta-side { margin: 0; display: flex; flex-direction: column; }
-
-.art-meta-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: 6px 0;
-  font-size: var(--text-xs);
-}
-
-.art-meta-row + .art-meta-row {
-  border-top: 1px solid var(--border);
-}
-
-.art-meta-row dt {
-  margin: 0;
-  color: var(--muted);
-  flex-shrink: 0;
-}
-
-.art-meta-row dd {
-  margin: 0;
-  min-width: 0;
-  text-align: right;
-  color: var(--foreground);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.art-meta-link { color: var(--foreground); }
 
 .art-meta-row-tags { align-items: flex-start; }
 
@@ -938,9 +897,6 @@ const previewStyle = computed(() => {
 
 .art-meta-tags .art-meta-link { color: var(--primary); font-weight: 600; }
 
-@media (hover: hover) and (pointer: fine) {
-  .art-meta-link:hover { color: var(--primary); }
-}
 
 .art-desc { margin-top: var(--space-3); }
 </style>

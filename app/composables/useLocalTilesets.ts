@@ -21,6 +21,7 @@ export interface LocalTileset {
   meta?: {
     registry?: Record<string, string>
     groups?: any[]
+    solid?: number[]
     cell?: { w: number; h: number }
     iso?: boolean
     board?: any
@@ -138,16 +139,17 @@ export function useLocalTilesets() {
       ? cloneDeep(ts.meta!.groups)
       : [{id: 'g0', name: 'Tiles', kind: 'group', tiles: ts.tiles.map(t => t.tid).filter(v => v != null)}]
     const cell = ts.meta?.cell || {w: 16, h: 16}
-    return {id: ts.id, name: ts.name, registry, groups, cell, iso: !!ts.meta?.iso, thumbs, board: ts.meta?.board, pends: ts.meta?.pends}
+    return {id: ts.id, name: ts.name, registry, groups, solid: ts.meta?.solid || [], cell, iso: !!ts.meta?.iso, thumbs, board: ts.meta?.board, pends: ts.meta?.pends}
   }
 
-  function saveEditorModel(id: string, patch: {name?: string; registry?: Record<string, string>; groups?: any[]; cell?: {w: number; h: number}; iso?: boolean; board?: any; pends?: any}) {
+  function saveEditorModel(id: string, patch: {name?: string; registry?: Record<string, string>; groups?: any[]; solid?: number[]; cell?: {w: number; h: number}; iso?: boolean; board?: any; pends?: any}) {
     const ts = get(id)
     if (!ts) return
     if (typeof patch.name === 'string' && patch.name.trim()) ts.name = patch.name.trim()
     ts.meta = {
       registry: patch.registry ? {...patch.registry} : ts.meta?.registry,
       groups: Array.isArray(patch.groups) ? cloneDeep(patch.groups) : ts.meta?.groups,
+      solid: Array.isArray(patch.solid) ? [...patch.solid] : ts.meta?.solid,
       cell: patch.cell || ts.meta?.cell,
       iso: patch.iso !== undefined ? patch.iso : ts.meta?.iso,
       board: patch.board !== undefined ? patch.board : ts.meta?.board,

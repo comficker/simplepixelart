@@ -1,6 +1,35 @@
 
 export type TilemapMode = 'grid' | 'iso'
-export type LayerKind = 'ground' | 'sprite'
+export type LayerKind = 'ground' | 'sprite' | 'object'
+
+// A cell holds a tile id, with its orientation in the bits above it — the
+// layout Tiled uses for gids, scaled down to stay a safe positive integer.
+// Applied the way Tiled and Godot apply them: the diagonal flip (swap x and
+// y) first, then horizontal, then vertical. Turning right is diagonal + H.
+export const FLIP_H = 1 << 28
+export const FLIP_V = 1 << 27
+export const FLIP_D = 1 << 26
+export const TILE_MASK = FLIP_D - 1
+export const tileOf = (v: number) => v & TILE_MASK
+export const flagsOf = (v: number) => v & (FLIP_H | FLIP_V | FLIP_D)
+
+/** Orientation after turning a tile a quarter right (dir 1) or left (-1). */
+export function rotateFlags(f: number, dir: 1 | -1): number {
+  const h = !!(f & FLIP_H), v = !!(f & FLIP_V), d = !!(f & FLIP_D)
+  // Right: (d, h, v) -> (!d, !v, h). Left: (d, h, v) -> (!d, v, !h).
+  const nd = !d
+  const nh = dir > 0 ? !v : v
+  const nv = dir > 0 ? h : !h
+  return (nh ? FLIP_H : 0) | (nv ? FLIP_V : 0) | (nd ? FLIP_D : 0)
+}
+
+/** A named point on an object layer — a spawn, a door, a trigger. */
+export interface TilemapObject {
+  id: string
+  name: string
+  col: number
+  row: number
+}
 
 export interface TilemapLayer {
   id: string
@@ -10,6 +39,7 @@ export interface TilemapLayer {
   ySort: boolean
   cells: Record<string, number>
   terrain: Record<string, string>
+  objects?: TilemapObject[]
 }
 
 export interface TilemapConfig {
@@ -24,7 +54,7 @@ export interface TilemapConfig {
   layers: TilemapLayer[]
 }
 
-export const CELL_PRESETS = [24, 32, 48, 64, 96]
+export const CELL_PRESETS = [16, 24, 32, 48, 64, 96]
 export const MIN_CELL = 8
 export const MAX_CELL = 256
 export const ISO_RATIOS = [
@@ -35,7 +65,7 @@ export const ISO_RATIOS = [
 export const MIN_ISO_RATIO = 0.25
 export const MAX_ISO_RATIO = 2
 export const MIN_DIM = 2
-export const MAX_DIM = 64
+export const MAX_DIM = 128
 export const MAX_LAYERS = 12
 
 function cleanCells(raw: any): Record<string, number> {
@@ -78,8 +108,20 @@ export function cellRoll(seed: number, col: number, row: number): number {
   return (h >>> 0) / 4294967296
 }
 
+function cleanObjects(raw: any): TilemapObject[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+      .filter(o => o && Number.isFinite(+o.col) && Number.isFinite(+o.row))
+      .map((o, i) => ({
+        id: typeof o.id === 'string' && o.id ? o.id : `obj-${i + 1}`,
+        name: typeof o.name === 'string' && o.name.trim() ? o.name.trim().slice(0, 40) : 'spawn',
+        col: Math.max(0, Math.round(+o.col)),
+        row: Math.max(0, Math.round(+o.row)),
+      }))
+}
+
 function normLayer(l: any, i: number): TilemapLayer {
-  const kind: LayerKind = l?.kind === 'sprite' ? 'sprite' : 'ground'
+  const kind: LayerKind = l?.kind === 'sprite' || l?.kind === 'object' ? l.kind : 'ground'
   return {
     id: (typeof l?.id === 'string' && l.id) ? l.id : `layer-${i + 1}`,
     name: (typeof l?.name === 'string' && l.name) ? l.name : `Layer ${i + 1}`,
@@ -88,6 +130,7 @@ function normLayer(l: any, i: number): TilemapLayer {
     ySort: typeof l?.ySort === 'boolean' ? l.ySort : kind === 'sprite',
     cells: cleanCells(l?.cells),
     terrain: cleanTerrain(l?.terrain),
+    ...(kind === 'object' ? {objects: cleanObjects(l?.objects)} : {}),
   }
 }
 
@@ -198,30 +241,54 @@ function ready(img?: HTMLImageElement): img is HTMLImageElement {
   return !!img && img.complete && img.naturalWidth > 0
 }
 
+// `src`, when given, is what gets painted — an animation frame — while `img`
+// (the tile's still PNG) still decides the size and the cells it spans.
+/** drawImage into a box, turned and mirrored in place by a cell's flags. */
+function drawOriented(ctx: CanvasRenderingContext2D, src: CanvasImageSource,
+                      x: number, y: number, w: number, h: number, flags: number) {
+  if (!flags) {
+    ctx.drawImage(src, x, y, w, h)
+    return
+  }
+  const d = !!(flags & FLIP_D)
+  ctx.save()
+  ctx.translate(x + w / 2, y + h / 2)
+  // Canvas applies these last-first, so the image sees D, then H, then V.
+  if (flags & FLIP_V) ctx.scale(1, -1)
+  if (flags & FLIP_H) ctx.scale(-1, 1)
+  if (d) ctx.transform(0, 1, 1, 0, 0, 0)
+  // A diagonal flip swaps the box's sides, so draw the swapped box.
+  const dw = d ? h : w, dh = d ? w : h
+  ctx.drawImage(src, -dw / 2, -dh / 2, dw, dh)
+  ctx.restore()
+}
+
 export function drawGround(ctx: CanvasRenderingContext2D, img: HTMLImageElement,
-                           c: TilemapConfig, g: TileGeometry, col: number, row: number, s: number) {
+                           c: TilemapConfig, g: TileGeometry, col: number, row: number, s: number,
+                           src: CanvasImageSource = img, flags = 0) {
   if (c.mode === 'iso') {
     const span = Math.max(1, Math.round(img.naturalWidth / g.tileW))
     const iw = Math.round(g.tileW * span * s)
     const ih = Math.round(img.naturalHeight * ((g.tileW * span) / (img.naturalWidth || 1)) * s)
     const {x: cx, y: cy} = cellCenter(c, g, col, row)
     const baseY = cy + g.tileH / 2
-    ctx.drawImage(img, Math.round(cx * s - iw / 2), Math.round(baseY * s - ih), iw, ih)
+    drawOriented(ctx, src, Math.round(cx * s - iw / 2), Math.round(baseY * s - ih), iw, ih, flags)
   } else {
     const spanC = Math.max(1, Math.round(img.naturalWidth / g.tileW))
     const spanR = Math.max(1, Math.round(img.naturalHeight / g.tileH))
     const x0 = Math.round(col * g.tileW * s), x1 = Math.round((col + spanC) * g.tileW * s)
     const y1 = Math.round((row + 1) * g.tileH * s), y0 = Math.round((row + 1 - spanR) * g.tileH * s)
-    ctx.drawImage(img, x0, y0, x1 - x0, y1 - y0)
+    drawOriented(ctx, src, x0, y0, x1 - x0, y1 - y0, flags)
   }
 }
 
 function drawSprite(ctx: CanvasRenderingContext2D, img: HTMLImageElement,
-                    c: TilemapConfig, g: TileGeometry, col: number, row: number, s: number) {
+                    c: TilemapConfig, g: TileGeometry, col: number, row: number, s: number,
+                    src: CanvasImageSource = img, flags = 0) {
   const iw = Math.round(img.naturalWidth * s), ih = Math.round(img.naturalHeight * s)
   const {x: cx, y: cy} = cellCenter(c, g, col, row)
   const baseY = c.mode === 'iso' ? (cy + g.tileH / 2) : (row + 1) * g.tileH
-  ctx.drawImage(img, Math.round(cx * s - iw / 2), Math.round(baseY * s - ih), iw, ih)
+  drawOriented(ctx, src, Math.round(cx * s - iw / 2), Math.round(baseY * s - ih), iw, ih, flags)
 }
 
 function depthKey(c: TilemapConfig, col: number, row: number): number {
@@ -230,45 +297,52 @@ function depthKey(c: TilemapConfig, col: number, row: number): number {
 
 function drawLayer(ctx: CanvasRenderingContext2D, c: TilemapConfig, g: TileGeometry,
                    layer: Record<string, number>, images: ImgMap,
-                   how: (i: HTMLImageElement, col: number, row: number) => void,
-                   ySort: boolean) {
+                   how: (i: HTMLImageElement, col: number, row: number, src: CanvasImageSource | undefined, flags: number) => void,
+                   ySort: boolean, frameOf?: FrameOf) {
   const placed = Object.entries(layer)
-      .map(([k, id]) => {
+      .map(([k, v]) => {
         const [col, row] = k.split('_').map(Number)
-        return {col: col!, row: row!, id}
+        return {col: col!, row: row!, id: tileOf(v), flags: flagsOf(v)}
       })
   if (ySort) {
     placed.sort((a, b) => depthKey(c, a.col, a.row) - depthKey(c, b.col, b.row) || a.row - b.row || a.col - b.col)
   } else {
     placed.sort((a, b) => a.row - b.row || a.col - b.col)
   }
-  for (const {col, row, id} of placed) {
+  for (const {col, row, id, flags} of placed) {
     const img = images.get(id)
-    if (ready(img)) how(img, col, row)
+    if (ready(img)) how(img, col, row, frameOf?.(id, col, row) ?? undefined, flags)
   }
 }
+
+// The frame of an animated tile to paint at this cell right now, or null to
+// paint its still image. Left out, every tile is drawn still (exports, thumbs).
+export type FrameOf = (id: number, col: number, row: number) => CanvasImageSource | null
 
 export function drawPlacedTiles(ctx: CanvasRenderingContext2D, c: TilemapConfig,
-                                g: TileGeometry, images: ImgMap, scale = 1) {
+                                g: TileGeometry, images: ImgMap, scale = 1, frameOf?: FrameOf) {
   ctx.imageSmoothingEnabled = false
   for (const layer of c.layers) {
-    if (!layer.visible) continue
+    if (!layer.visible || layer.kind === 'object') continue
     const how = layer.kind === 'sprite'
-        ? (img: HTMLImageElement, col: number, row: number) => drawSprite(ctx, img, c, g, col, row, scale)
-        : (img: HTMLImageElement, col: number, row: number) => drawGround(ctx, img, c, g, col, row, scale)
-    drawLayer(ctx, c, g, layer.cells, images, how, layer.ySort ?? (layer.kind === 'sprite'))
+        ? (img: HTMLImageElement, col: number, row: number, src: CanvasImageSource | undefined, flags: number) =>
+            drawSprite(ctx, img, c, g, col, row, scale, src, flags)
+        : (img: HTMLImageElement, col: number, row: number, src: CanvasImageSource | undefined, flags: number) =>
+            drawGround(ctx, img, c, g, col, row, scale, src, flags)
+    drawLayer(ctx, c, g, layer.cells, images, how, layer.ySort ?? (layer.kind === 'sprite'), frameOf)
   }
 }
 
+/** Tile ids on the map, orientation stripped. */
 export function placedIds(c: TilemapConfig): number[] {
   const ids: number[] = []
-  for (const layer of c.layers) for (const id of Object.values(layer.cells)) ids.push(id)
+  for (const layer of c.layers) for (const v of Object.values(layer.cells)) ids.push(tileOf(v))
   return ids
 }
 
 export function renderTilemap(ctx: CanvasRenderingContext2D, c: TilemapConfig,
-                              g: TileGeometry, images: ImgMap, scale = 1) {
+                              g: TileGeometry, images: ImgMap, scale = 1, frameOf?: FrameOf) {
   ctx.clearRect(0, 0, g.width * scale, g.height * scale)
   if (c.bg) { ctx.fillStyle = c.bg; ctx.fillRect(0, 0, g.width * scale, g.height * scale) }
-  drawPlacedTiles(ctx, c, g, images, scale)
+  drawPlacedTiles(ctx, c, g, images, scale, frameOf)
 }

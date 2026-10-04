@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import {ref, computed, watch, onMounted, onBeforeUnmount} from 'vue'
+import {ref, shallowRef, computed, watch, onMounted, onBeforeUnmount} from 'vue'
 import type {SharedPage} from '~/types'
 import {
   type TilemapConfig, normalizeTilemap, computeGeometry, renderTilemap, tileImageUrl, placedIds,
 } from '~/helper/tilemap'
+import {type TileAnim, animFrame, cellPhase} from '~/helper/tile-anim'
 
 const props = defineProps<{
   config: any
   items: SharedPage[]
+  // Fill a detail page's stage edge to edge, instead of a framed 16:9 card.
+  flush?: boolean
 }>()
 
 const apiBase = useRuntimeConfig().public.api as string
@@ -41,22 +44,60 @@ function measure() {
   const availW = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
   const availH = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
   if (availW <= 0 || availH <= 0) return
-  const s = Math.min(availW / cv.width, availH / cv.height, 1)
+  const fit = Math.min(availW / cv.width, availH / cv.height)
+  // A detail page's stage has room to spare: grow by whole steps, so every
+  // pixel stays the same size.
+  const s = props.flush && fit >= 2 ? Math.floor(fit) : Math.min(fit, 1)
   baseW.value = Math.max(1, cv.width * s)
 }
 
 let ro: ResizeObserver | null = null
 
+// Animated tiles play here too — this is the map as visitors see it. A tile
+// whose frames cannot be read (a draft of someone else's) stays still.
+const {load: loadTileAnims} = useTileAnims()
+const tileAnims = shallowRef(new Map<number, TileAnim>())
+let animNow = 0
+function frameOf(id: number, col: number, row: number) {
+  const a = tileAnims.value.get(id)
+  return a ? animFrame(a, animNow, cellPhase(col, row)) : null
+}
+
 function draw() {
   const cv = canvas.value
   if (!cv) return
   const g = computeGeometry(cfg.value)
-  cv.width = Math.max(1, Math.round(g.width))
-  cv.height = Math.max(1, Math.round(g.height))
+  const w = Math.max(1, Math.round(g.width)), h = Math.max(1, Math.round(g.height))
+  // Resizing a canvas reallocates it; an animation frame only repaints.
+  const resized = cv.width !== w || cv.height !== h
+  if (resized) {
+    cv.width = w
+    cv.height = h
+  }
   const ctx = cv.getContext('2d')
   if (!ctx) return
-  renderTilemap(ctx, cfg.value, g, tileImages)
-  measure()
+  animNow = performance.now()
+  renderTilemap(ctx, cfg.value, g, tileImages, 1, frameOf)
+  if (resized) measure()
+}
+
+// ~20 repaints a second is plenty for pixel art. Nothing moves for someone
+// who asked their system for less motion.
+let animReq = 0
+let animLast = 0
+function animLoop(t: number) {
+  animReq = 0
+  if (!tileAnims.value.size) return
+  if (t - animLast >= 50) {
+    animLast = t
+    draw()
+  }
+  animReq = requestAnimationFrame(animLoop)
+}
+async function refreshAnims() {
+  if (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  tileAnims.value = await loadTileAnims([...usedIds.value])
+  if (tileAnims.value.size && !animReq) animReq = requestAnimationFrame(animLoop)
 }
 
 function loadImages() {
@@ -68,25 +109,44 @@ function loadImages() {
     if (!page?.id_string) continue
     const img = new Image()
     img.onload = draw
+    img.crossOrigin = 'anonymous'
     img.src = tileImageUrl(apiBase, page.id_string)
     tileImages.set(id, img)
   }
   draw()
 }
 
+/** The map as a PNG at `scale`, from the tiles already loaded here — still
+ * frames, as an export is. */
+function toPng(scale = 1): Promise<Blob | null> {
+  const g = computeGeometry(cfg.value)
+  const cv = document.createElement('canvas')
+  cv.width = Math.max(1, Math.round(g.width * scale))
+  cv.height = Math.max(1, Math.round(g.height * scale))
+  const ctx = cv.getContext('2d')
+  if (!ctx) return Promise.resolve(null)
+  renderTilemap(ctx, cfg.value, g, tileImages, scale)
+  return new Promise(resolve => cv.toBlob(resolve, 'image/png'))
+}
+defineExpose({toPng})
+
 onMounted(() => {
   loadImages()
+  refreshAnims()
   if (viewport.value) {
     ro = new ResizeObserver(measure)
     ro.observe(viewport.value)
   }
 })
-onBeforeUnmount(() => { ro?.disconnect() })
-watch([cfg, () => props.items], loadImages, {deep: true})
+onBeforeUnmount(() => {
+  ro?.disconnect()
+  if (animReq) cancelAnimationFrame(animReq)
+})
+watch([cfg, () => props.items], () => { loadImages(); refreshAnims() }, {deep: true})
 </script>
 
 <template>
-  <div class="tm-showcase" :class="`tm-${cfg.mode}`">
+  <div class="tm-showcase" :class="[`tm-${cfg.mode}`, {'is-flush': flush}]">
     <div ref="viewport" class="tm-viewport">
       <canvas ref="canvas" class="tm-showcase-canvas" :style="canvasStyle"/>
     </div>
@@ -108,6 +168,14 @@ watch([cfg, () => props.items], loadImages, {deep: true})
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
+}
+
+.tm-showcase.is-flush {
+  aspect-ratio: auto;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
 }
 
 .tm-viewport {

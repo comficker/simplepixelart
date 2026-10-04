@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import useStatefulCookie from '~/composables/useStatefulCookie'
 
-withDefaults(defineProps<{ title: string; titleTag?: 'h1' | 'h2'; agent?: boolean }>(),
-    {titleTag: 'h2', agent: false})
+withDefaults(defineProps<{
+  title: string
+  titleTag?: 'h1' | 'h2'
+  agent?: boolean
+  panelLabel?: string
+  panelIcon?: string
+}>(), {titleTag: 'h2', agent: false})
 
 // 360 leaves the rail's ad unit 343px after the panel border and body padding,
 // enough for a 336x280 -- at 300 it was 283 and the responsive unit had no
@@ -86,7 +91,8 @@ function nudge(step: number) {
       <Widget v-if="$slots.doc" :title="$t('c_AdSlot.advertisement')">
         <AdSlot slot="7838948172" bare/>
       </Widget>
-      <ToolReadme v-if="$slots.doc" :agent="agent">
+      <ToolReadme v-if="$slots.doc" :agent="agent" :panel-label="panelLabel" :panel-icon="panelIcon">
+        <template v-if="$slots.panel" #panel><slot name="panel"/></template>
         <slot name="doc"/>
       </ToolReadme>
     </div>

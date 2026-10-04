@@ -1,7 +1,8 @@
 <script setup lang="ts">
 const localePath = useLocalePath()
 import {toast} from 'vue-sonner'
-import {tileImageUrl} from '~/helper/tilemap'
+import TilemapShowcase from '~/components/tilemap/TilemapShowcase.vue'
+import {normalizeTilemap, computeGeometry, tileImageUrl} from '~/helper/tilemap'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -19,13 +20,15 @@ const isPublic = computed(() => data.value?.status === 'public')
 const isOwner = computed(() =>
     !!auth.logged?.username && data.value?.username === auth.logged.username,
 )
+const meta = computed(() => data.value?.meta || {})
+const registry = computed<Record<string, string>>(() => meta.value.registry || {})
 
 const tiles = computed(() =>
-    Object.entries(data.value?.meta?.registry || {}).map(([id, id_string]) => ({
+    Object.entries(registry.value).map(([id, id_string]) => ({
       id: Number(id), id_string: id_string as string,
     })),
 )
-const publicWorlds = computed(() =>
+const visibleWorlds = computed(() =>
     (data.value?.worlds || []).filter((w: any) => isOwner.value || w.status === 'public'),
 )
 
@@ -33,11 +36,64 @@ function tileSrc(idString: string) {
   return tileImageUrl(apiBase, idString)
 }
 
+// Tiles the way the editor arranges them: its groups and terrains, then
+// whatever no group holds.
+const groups = computed(() => {
+  const reg = registry.value
+  const seen = new Set<number>()
+  const out = (Array.isArray(meta.value.groups) ? meta.value.groups : []).map((g: any, i: number) => {
+    const terrain = g?.kind === 'terrain'
+    const ids: number[] = (terrain ? Object.values(g?.map || {}) : (g?.tiles || [])).map(Number)
+    const unique = [...new Set(ids)].filter(id => reg[String(id)])
+    unique.forEach(id => seen.add(id))
+    return {
+      id: String(g?.id || `g${i}`),
+      name: String(g?.name || (terrain ? 'Terrain' : 'Group')),
+      terrain,
+      tiles: unique.map(id => ({id, src: tileSrc(reg[String(id)]!)})),
+    }
+  }).filter((g: any) => g.tiles.length)
+  const rest = tiles.value.filter(t => !seen.has(t.id))
+  if (rest.length) out.push({id: '__rest', name: 'Other', terrain: false, tiles: rest.map(t => ({id: t.id, src: tileSrc(t.id_string)}))})
+  return out
+})
+const terrainCount = computed(() => groups.value.filter((g: any) => g.terrain).length)
+
+// Big groups open on demand: a tileset can hold thousands of tiles.
+const PEEK = 12
+const openGroups = ref(new Set<string>())
+function toggleGroup(id: string) {
+  const s = new Set(openGroups.value)
+  s.has(id) ? s.delete(id) : s.add(id)
+  openGroups.value = s
+}
+
+// The page shows the tileset in use: the world its owner picked in the
+// editor, or the latest one this visitor can see.
+const previewId = computed(() => {
+  const ids = visibleWorlds.value.map((w: any) => w.id_string)
+  return ids.includes(meta.value.preview) ? meta.value.preview : ids[0] || ''
+})
+const {data: world} = previewId.value
+    ? await useAuthFetch<any>(`/coloring/worlds/${previewId.value}/`)
+    : {data: ref<any>(null)}
+const worldRatio = computed(() => {
+  if (!world.value?.meta?.config) return null
+  const g = computeGeometry(normalizeTilemap(world.value.meta.config))
+  return `${Math.round(g.width)} / ${Math.round(g.height)}`
+})
+const worldItems = computed(() =>
+    Object.entries({...(world.value?.registry || {}), ...(world.value?.meta?.tiles || {})}).map(([id, id_string]) => ({
+      id: Number(id), id_string: id_string as string,
+    })),
+)
+
 const tilesetUrl = `${config.public.siteUrl}/tilesets/${route.params.id_string}`
+const seoDesc = `A pixel art tileset with ${tiles.value.length} tiles on SimplePixelArt${data.value?.username ? ` by @${data.value.username}` : ''}. Clone it and paint your own worlds in the free tilemap editor.`
 useCustomSeoMeta({
   untranslated: true,
   title: `${title.value} — Pixel Art Tileset`,
-  description: `A pixel art tileset with ${tiles.value.length} tiles on SimplePixelArt${data.value?.username ? ` by @${data.value.username}` : ''}. Clone it and paint your own worlds in the free tilemap editor.`,
+  description: seoDesc,
   canonical: tilesetUrl,
   robots: isPublic.value ? 'index, follow' : 'noindex, follow',
   script: isPublic.value ? [{
@@ -61,6 +117,18 @@ useCustomSeoMeta({
   }] : [],
 })
 
+const shareMeta = computed(() => ({title: title.value, desc: seoDesc}))
+
+const formattedDate = computed(() => {
+  const d = data.value?.updated
+  if (!d) return null
+  try {
+    return new Date(d).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})
+  } catch {
+    return null
+  }
+})
+
 const cloning = ref(false)
 async function cloneTileset() {
   if (!auth.isLogged) {
@@ -73,7 +141,7 @@ async function cloneTileset() {
       method: 'POST',
       body: {
         name: `${title.value} (copy)`,
-        meta: {registry: data.value?.meta?.registry || {}},
+        meta: {registry: registry.value},
       },
     })
     navigateTo(localePath(`/tilesets/editor?id=${t.id_string}`))
@@ -86,173 +154,227 @@ async function cloneTileset() {
 </script>
 
 <template>
-  <div class="page">
-    <div v-if="error || !data" class="empty-state">
-      <span class="empty-state-icon icon icon-grid" aria-hidden="true"/>
-      <div class="empty-state-title">{{ $t('p_tilesets_id_string.tilesetNotFound') }}</div>
-      <p class="empty-state-body" v-html="$t('p_tilesets_id_string.thisTilesetMayBePrivateOr')"/>
-      <NuxtLinkLocale to="/tilesets/editor" class="btn primary empty-state-action">{{ $t('p_tilesets_id_string.buildYourOwn') }}</NuxtLinkLocale>
+  <div v-if="error || !data" class="page empty-state">
+    <span class="empty-state-icon icon icon-grid" aria-hidden="true"/>
+    <div class="empty-state-title">{{ $t('p_tilesets_id_string.tilesetNotFound') }}</div>
+    <p class="empty-state-body" v-html="$t('p_tilesets_id_string.thisTilesetMayBePrivateOr')"/>
+    <NuxtLinkLocale to="/tilesets/editor" class="btn primary empty-state-action">{{ $t('p_tilesets_id_string.buildYourOwn') }}</NuxtLinkLocale>
+  </div>
+
+  <ToolLayout v-else :title="title" title-tag="h1">
+    <template #head>
+      <SocialSharing :meta="shareMeta" position="right"/>
+    </template>
+
+    <div class="flat-editor art-editor">
+      <div class="tm-stage art-stage tsd-stage" :class="{'is-world': worldRatio}" :style="worldRatio ? {'--tsd-ratio': worldRatio} : undefined">
+        <ClientOnly v-if="world?.meta?.config">
+          <TilemapShowcase flush :config="world.meta.config" :items="worldItems as any"/>
+        </ClientOnly>
+        <div v-else class="tsd-sheet">
+          <img v-for="t in tiles.slice(0, 120)" :key="t.id" :src="tileSrc(t.id_string)" :alt="t.id_string" loading="lazy">
+        </div>
+      </div>
     </div>
 
-    <template v-else>
-      <section class="tsd-hero">
-        <div class="tsd-head">
-          <span class="tsd-eyebrow">{{ $t('common.tileset') }}</span>
-          <h1 class="page-title">{{ title }}</h1>
-          <div class="tsd-meta">
-            <span class="tsd-pill">{{ tiles.length }} {{ tiles.length === 1 ? 'tile' : 'tiles' }}</span>
-            <span v-if="data.username" class="tsd-pill">by @{{ data.username }}</span>
-            <span v-if="!isPublic" class="tsd-pill tsd-pill-private">{{ $t('common.private') }}</span>
-          </div>
-        </div>
-        <div class="tsd-actions">
+    <template #status>
+      <p class="editor-foot-hint text-xs text-muted">
+        <template v-if="world?.meta?.config">
+          <NuxtLinkLocale :to="`/worlds/${world.id_string}`">{{ world.name || 'Untitled' }}</NuxtLinkLocale> ·
+        </template>
+        {{ tiles.length }} tiles · {{ groups.length }} groups
+      </p>
+      <p v-if="formattedDate" class="text-xs text-muted">{{ formattedDate }}</p>
+    </template>
+
+    <template #aside>
+      <Widget>
+        <div class="art-actions">
           <NuxtLinkLocale v-if="isOwner" :to="`/tilesets/editor?id=${data.id_string}`" class="btn primary">
             <span class="icon icon-pen"/>
             <span>{{ $t('common.editTileset') }}</span>
           </NuxtLinkLocale>
-          <button v-else class="btn primary" :disabled="cloning" @click="cloneTileset">
+          <button v-else type="button" class="btn primary" :disabled="cloning" @click="cloneTileset">
             <span class="icon icon-plus"/>
             <span>{{ cloning ? 'Cloning…' : 'Use this tileset' }}</span>
           </button>
         </div>
-      </section>
+      </Widget>
 
-      <section v-if="tiles.length" class="tsd-tiles" :aria-label="$t('common.tiles')">
-        <NuxtLinkLocale
-            v-for="t in tiles"
-            :key="t.id"
-            :to="`/art/${t.id_string}`"
-            class="tsd-tile"
-            :title="t.id_string"
-        >
-          <img :src="tileSrc(t.id_string)" :alt="t.id_string" loading="lazy">
-        </NuxtLinkLocale>
-      </section>
+      <Widget :title="$t('p_art_id_string.meta')">
+        <dl class="art-meta-side">
+          <div v-if="data.username" class="art-meta-row">
+            <dt>{{ $t('p_art_id_string.creator') }}</dt>
+            <dd><NuxtLinkLocale :to="`/creator/${data.username}`" class="art-meta-link">@{{ data.username }}</NuxtLinkLocale></dd>
+          </div>
+          <div class="art-meta-row">
+            <dt>{{ $t('common.tiles') }}</dt>
+            <dd>{{ tiles.length }}</dd>
+          </div>
+          <div v-if="terrainCount" class="art-meta-row">
+            <dt>{{ $t('p_tilesets_id_string.terrains') }}</dt>
+            <dd>{{ terrainCount }}</dd>
+          </div>
+          <div v-if="meta.cell" class="art-meta-row">
+            <dt>{{ $t('common.cellSize') }}</dt>
+            <dd>{{ meta.cell.w }}×{{ meta.cell.h || meta.cell.w }}px</dd>
+          </div>
+          <div class="art-meta-row">
+            <dt>{{ $t('p_tilesets_editor.tileShape') }}</dt>
+            <dd>{{ meta.iso ? $t('common.isometric') : $t('common.grid') }}</dd>
+          </div>
+          <div v-if="!isPublic" class="art-meta-row">
+            <dt>{{ $t('p_tilesets_editor.visibility') }}</dt>
+            <dd>{{ $t('common.private') }}</dd>
+          </div>
+          <div v-if="formattedDate" class="art-meta-row">
+            <dt>{{ $t('p_art_id_string.updated') }}</dt>
+            <dd>{{ formattedDate }}</dd>
+          </div>
+        </dl>
+      </Widget>
 
-      <section v-if="publicWorlds.length" class="tsd-worlds" :aria-label="$t('p_tilesets_id_string.worldsUsingThisTileset')">
-        <span class="tsd-label">{{ $t('p_tilesets_id_string.worldsBuiltWithThisTileset') }}</span>
-        <div class="tsd-world-chips">
-          <NuxtLinkLocale
-              v-for="w in publicWorlds"
-              :key="w.id_string"
-              :to="`/worlds/${w.id_string}`"
-              class="tsd-world-chip"
-          >{{ w.name || 'Untitled' }}</NuxtLinkLocale>
+      <Widget v-if="groups.length" :title="$t('p_tilesets_id_string.groups')">
+        <div class="tsd-groups">
+          <section v-for="g in groups" :key="g.id" class="tsd-group">
+            <button
+                type="button"
+                class="tsd-group-head"
+                :aria-expanded="openGroups.has(g.id)"
+                :disabled="g.tiles.length <= PEEK"
+                @click="toggleGroup(g.id)"
+            >
+              <span class="icon" :class="g.terrain ? 'icon-rhombus' : 'icon-grid'" aria-hidden="true"/>
+              <span class="tsd-group-name">{{ g.name }}</span>
+              <span class="text-muted">{{ g.tiles.length }}</span>
+              <span v-if="g.tiles.length > PEEK" class="icon" :class="openGroups.has(g.id) ? 'icon-expand-up' : 'icon-expand-down'" aria-hidden="true"/>
+            </button>
+            <div class="tsd-tiles">
+              <img
+                  v-for="t in openGroups.has(g.id) ? g.tiles : g.tiles.slice(0, PEEK)"
+                  :key="t.id"
+                  :src="t.src"
+                  alt=""
+                  loading="lazy"
+                  class="tsd-tile"
+              >
+            </div>
+          </section>
         </div>
-      </section>
+      </Widget>
+
+      <Widget v-if="visibleWorlds.length" :title="$t('p_tilesets_id_string.worldsBuiltWithThisTileset')">
+        <ul class="tsd-worlds">
+          <li v-for="w in visibleWorlds" :key="w.id_string">
+            <NuxtLinkLocale :to="`/worlds/${w.id_string}`" class="art-meta-link">{{ w.name || 'Untitled' }}</NuxtLinkLocale>
+            <span v-if="w.id_string === previewId" class="text-muted">{{ $t('p_tilesets_id_string.shownAbove') }}</span>
+            <span v-else-if="w.status !== 'public'" class="text-muted">{{ $t('common.private') }}</span>
+          </li>
+        </ul>
+      </Widget>
     </template>
-  </div>
+  </ToolLayout>
 </template>
 
 <style scoped>
-.tsd-hero {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-5);
-  flex-wrap: wrap;
+.tsd-stage.is-world {
+  padding: 0;
 }
 
-.tsd-head {
+@media (max-width: 767px) {
+  .tsd-stage.is-world { aspect-ratio: var(--tsd-ratio); }
+}
+
+.tsd-sheet {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-6) * 2), 1fr));
+  gap: var(--space-2);
+  align-self: flex-start;
+  width: 100%;
+}
+
+.tsd-sheet img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.tsd-groups {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.tsd-eyebrow {
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--primary);
-}
-
-.tsd-meta {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-
-.tsd-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px var(--space-3);
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--muted);
-  border: 1px solid var(--border);
-}
-
-.tsd-pill-private {
-  background: color-mix(in oklab, var(--primary) 14%, var(--surface));
-  color: var(--primary);
-  border-color: color-mix(in oklab, var(--primary) 40%, transparent);
-}
-
-.tsd-actions {
-  display: flex;
   gap: var(--space-3);
-  flex-shrink: 0;
+}
+
+.tsd-group-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  margin-bottom: var(--space-1);
+  padding: 0;
+  font-size: var(--text-xs);
+  text-align: left;
+  color: var(--foreground);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.tsd-group-head:disabled {
+  cursor: default;
+}
+
+.tsd-group-head .icon {
+  color: var(--muted);
+}
+
+.tsd-group-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.tsd-group-head .text-muted {
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
 }
 
 .tsd-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-  gap: var(--space-2);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-1);
 }
 
 .tsd-tile {
-  aspect-ratio: 1;
-  padding: var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background:
-      repeating-conic-gradient(var(--surface-2) 0 25%, transparent 0 50%)
-      0 0 / 12px 12px;
-  transition: border-color var(--transition);
-}
-
-.tsd-tile img {
   width: 100%;
-  height: 100%;
+  aspect-ratio: 1;
   object-fit: contain;
   image-rendering: pixelated;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
 }
 
 .tsd-worlds {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-}
-
-.tsd-label {
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.tsd-world-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.tsd-world-chip {
-  padding: 5px 12px;
-  background: color-mix(in oklab, var(--surface-2) 60%, transparent);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--foreground);
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
   font-size: var(--text-xs);
-  font-weight: 600;
-  transition: border-color var(--transition);
 }
 
+.tsd-worlds li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.tsd-worlds .text-muted {
+  font-size: var(--text-2xs);
+}
 </style>

@@ -505,7 +505,7 @@ input[type=number] {
         min-height: 0;
     }
 
-    .main-wrapper.dash .page > .tool-doc:has(> .readme) > .readme > :is(.readme-body, .agent) {
+    .main-wrapper.dash .page > .tool-doc:has(> .readme) > .readme > :is(.readme-body, .agent, .readme-panel) {
         flex: 1 1 auto;
         min-height: 0;
         overflow-y: auto;
@@ -2687,6 +2687,7 @@ canvas.iso-line { cursor: crosshair; }
 /* The options sit in equal 1fr columns and may shrink, which squeezed an icon
    to zero width and left the label standing alone. */
 .cv-opt .icon { flex: none; }
+.cv-opt > span:not(.icon, .desk-sw) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cv-opt .desk-sw { width: 12px; height: 12px; }
 .cv-cap { text-transform: capitalize; }
 
@@ -3830,7 +3831,7 @@ html.editor-fullscreen .consent {
   text-transform: uppercase; color: var(--muted);
   display: flex; justify-content: space-between; align-items: center;
 }
-.tm-label em { font-style: normal; color: var(--foreground); font-weight: 600; letter-spacing: 0; }
+.tm-label em { font-style: normal; color: var(--foreground); font-weight: 600; letter-spacing: 0; text-transform: none; }
 
 .tm-search {
   display: flex; align-items: center; gap: 0.4rem;
@@ -3887,12 +3888,39 @@ html.editor-fullscreen .consent {
 }
 
 .tm-world-select {
-  height: var(--tm-ctl, 34px); max-width: 160px; padding: 0 0.6rem;
+  height: var(--tm-ctl, 34px); max-width: 160px; padding: 0 var(--space-3);
   border: 1px solid var(--border); border-radius: var(--radius-sm);
-  background: var(--surface); color: var(--foreground);
+  background-color: var(--surface); color: var(--foreground);
   font-size: var(--text-xs); font-weight: 600; cursor: pointer;
 }
 .tm-world-select:focus { border-color: var(--primary); }
+
+/* One dropdown look for the editors' native selects: the browser's arrow
+   sat flush against the border and differed per platform. The caret is two
+   gradient triangles in the text colour, so it follows the theme. */
+select:is(.tm-world-select, .publish-input, .tsx-import):not([multiple]) {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: calc(var(--space-3) * 2 + var(--space-2));
+  text-overflow: ellipsis;
+  background-image:
+      linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+      linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+      calc(100% - var(--space-3) - var(--space-1)) 50%,
+      calc(100% - var(--space-3)) 50%;
+  background-size: var(--space-1) var(--space-1);
+  background-repeat: no-repeat;
+}
+select.publish-input { height: var(--tm-ctl, 34px); cursor: pointer; }
+
+/* Game-dev editors: every icon inside a control is one size, and toolbars
+   and the tool rail use the large one. */
+:is(.tm-page, .tsx-page) :is(.editor, .flat-editor, .readme-panel) .icon:not(:is(.toolbar-btn, .publish-toolbar-btn, .square) .icon) {
+  width: var(--icon-md);
+  height: var(--icon-md);
+}
+
 
 .tm-stage-fab {
   position: absolute;
@@ -4412,4 +4440,54 @@ html.editor-fullscreen .consent {
     .rank-row:hover .rank-name {
         color: var(--primary);
     }
+}
+
+/* ── Detail pages (art, world) ───────────────────────────────────────────
+   The stage, the action row and the META list of a detail page. Shared so a
+   world reads like an artwork: same stage, same rail, same rows. */
+/* Side by side, wrapping when the aside is too narrow for both. One button
+   still fills the row, which is what it did when this was a column. */
+.art-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.art-actions .btn { flex: 1 1 6rem; justify-content: center; }
+
+.art-stage { min-height: 0; }
+
+@media (max-width: 1279px) {
+  .art-stage { max-height: 60vh; }
+}
+
+.art-meta-side { margin: 0; display: flex; flex-direction: column; }
+
+.art-meta-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 6px 0;
+  font-size: var(--text-xs);
+}
+
+.art-meta-row + .art-meta-row {
+  border-top: 1px solid var(--border);
+}
+
+.art-meta-row dt {
+  margin: 0;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.art-meta-row dd {
+  margin: 0;
+  min-width: 0;
+  text-align: right;
+  color: var(--foreground);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.art-meta-link { color: var(--foreground); }
+
+@media (hover: hover) and (pointer: fine) {
+  .art-meta-link:hover { color: var(--primary); }
 }

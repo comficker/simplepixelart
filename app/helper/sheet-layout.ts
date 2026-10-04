@@ -1,5 +1,5 @@
 
-import {BLOB_SLOTS, TERRAIN_SLOTS, type TerrainType} from '~/helper/autotile'
+import {BLOB_SLOTS, CORNER_SLOTS, TERRAIN_SLOTS, type TerrainType} from '~/helper/autotile'
 
 export interface SheetCell {
   w: number
@@ -59,7 +59,7 @@ export interface SheetSource {
 }
 
 export function terrainSlotsOf(type?: TerrainType) {
-  return type === 'blob47' ? BLOB_SLOTS : TERRAIN_SLOTS
+  return type === 'blob47' ? BLOB_SLOTS : type === 'corner16' ? CORNER_SLOTS : TERRAIN_SLOTS
 }
 
 export function terrainGridNOf(type?: TerrainType) {

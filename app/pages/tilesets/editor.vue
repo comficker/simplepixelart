@@ -4,9 +4,10 @@ const localePath = useLocalePath()
 import {toast} from 'vue-sonner'
 import type {EditorData, SharedPage} from '~/types'
 import {tileImageUrl} from '~/helper/tilemap'
-import {type Terrain, type TerrainRelations, type TerrainType, slotSides, terrainMask} from '~/helper/autotile'
+import {type Terrain, type TerrainRelations, type TerrainType, cornerSides, slotSides, terrainMask} from '~/helper/autotile'
 import {type SheetSource, buildSheet, layoutGroup, sheetColumns, terrainGridNOf, terrainSlotsOf, tileCells as cellsOf} from '~/helper/sheet-layout'
-import {type EngineSheet, buildGodotTileSet, buildTiledTileset} from '~/helper/engine-export'
+import {buildGodotTileSet, buildTiledTileset} from '~/helper/engine-export'
+import {canvasBytes, packTileset} from '~/helper/tileset-pack'
 import {createZip} from '~/helper/zip'
 import {cloneDeep, debounce, generateUUID, pruneStorageKeys} from '~/helper/utils'
 import {layers2MapNumbers} from '~/helper/canvas'
@@ -111,9 +112,14 @@ interface TilesetRow {
   status: string
   registry: Record<string, string>
   groups: TileGroup[]
+  // Tiles that block movement (full-tile collision), by tile id. Exported as
+  // a physics layer for Godot and a collision box per tile for Tiled.
+  solid: number[]
   cell: { w: number; h: number }
   iso: boolean
   worlds: { id_string: string; name: string; status: string }[]
+  // The world the tileset's page shows off; '' = the latest one.
+  preview: string
   localId?: string
 }
 
@@ -141,7 +147,7 @@ function normGroups(rawGroups: any, rawTerrains: any, registry: Record<string, s
       ...(kind === 'terrain'
           ? {
             map: cleanMap(g?.map, registry),
-            type: (g?.type === 'blob47' ? 'blob47' : 'wang16') as TerrainType,
+            type: (g?.type === 'blob47' || g?.type === 'corner16' ? g.type : 'wang16') as TerrainType,
             ...(g?.builder ? {builder: g.builder} : {}),
             ...(g?.relations && (Array.isArray(g.relations.connects) || g.relations.priority)
                 ? {
@@ -325,7 +331,9 @@ function loadLocalLibTileset(id: string): boolean {
     cell: {w: Number(m.cell?.w) || 16, h: Number(m.cell?.h) || 16},
     iso: !!m.iso,
     groups: normGroups(m.groups, [], m.registry),
+    solid: (m.solid || []).map(Number).filter((n: number) => m.registry[String(n)]),
     worlds: [],
+    preview: '',
     localId: id,
   }
   applyBoardMeta(m.board)
@@ -344,7 +352,7 @@ function loadLocalLibTileset(id: string): boolean {
   syncHistory()
   const restored = restoreViewState()
   if (!restored) zoom.value = autoZoom(tileset.value.cell.w)
-  if (tileset.value.groups.some(g => g.x == null || g.y == null)) autoArrange(false)
+  placeUnplaced()
   dirty.value = false
   if (!restored) nextTick(fitView)
   router.replace({query: {id}})
@@ -369,9 +377,13 @@ async function loadTileset(slug: string) {
       },
       iso: !!meta.iso,
       groups: normGroups(meta.groups, meta.terrains, meta.registry || {}),
+      solid: (Array.isArray(meta.solid) ? meta.solid : []).map(Number).filter((n: number) => (meta.registry || {})[String(n)]),
       worlds: Array.isArray(t.worlds) ? t.worlds : [],
+      preview: typeof meta.preview === 'string' ? meta.preview : '',
     }
     applyBoardMeta(meta.board)
+    // Sizes first: placing groups and framing the view both depend on them.
+    await loadTileSizes(tileset.value.registry)
     selectedTileId.value = null
     selectedGroupId.value = null
     pendingBuilds.clear()
@@ -380,9 +392,9 @@ async function loadTileset(slug: string) {
     syncHistory()
     const restored = restoreViewState()
     if (!restored) zoom.value = autoZoom(tileset.value.cell.w)
-    if (tileset.value.groups.some(g => g.x == null || g.y == null)) autoArrange(false)
+    placeUnplaced()
     dirty.value = false
-    if (!restored) nextTick(fitView)
+    if (!restored) nextTick(initialView)
     syncBuilders()
     router.replace({query: {id: t.id_string}})
   } catch {
@@ -431,9 +443,11 @@ function blankTileset(): TilesetRow {
     status: 'draft',
     registry: {},
     groups: [{id: 'g0', name: 'Tiles', kind: 'group', tiles: []}],
+    solid: [],
     cell: {w: 32, h: 32},
     iso: false,
     worlds: [],
+    preview: '',
   }
 }
 
@@ -476,6 +490,7 @@ function saveLibState() {
     name: tileset.value.name,
     registry: tileset.value.registry,
     groups: tileset.value.groups,
+    solid: tileset.value.solid,
     cell: tileset.value.cell,
     iso: tileset.value.iso,
     board: {bg: boardBg.value, grid: boardGrid.value, gridStep: boardGridStep.value, gridStyle: boardGridStyle.value},
@@ -606,6 +621,8 @@ async function save() {
           iso: tileset.value.iso,
           groups: tileset.value.groups,
           terrains: terrains.value,
+          solid: tileset.value.solid,
+          preview: tileset.value.preview,
           board: {
             bg: boardBg.value,
             grid: boardGrid.value,
@@ -672,6 +689,45 @@ function contentBBox() {
 function fitZoom() {
   zoom.value = autoZoom(tileset.value?.cell.w || 32)
   fitView()
+}
+
+/** Bring a group into view at a size you can work at. Picked from the list it
+ * could be anywhere on a board of thirty-odd groups, and selecting it used to
+ * only change its outline colour. Zoom stays on the editor's own steps
+ * (whole numbers, or 1/n below 1) so pixels stay square, and never past 4x:
+ * three tiles filling the board are no easier to work with. */
+function focusGroup(gid: string) {
+  const el = stageEl.value
+  const g = tileset.value?.groups.find(x => x.id === gid)
+  if (!el || !g) return
+  const L = g.kind === 'group' ? layoutGroupTiles(g) : null
+  const s = L ? {w: L.w, h: L.h} : groupSizeNative(g)
+  const x0 = (g.x ?? 0) + (L?.minX ?? 0)
+  const y0 = (g.y ?? 0) + (L?.minY ?? 0)
+  const pad = 48
+  const fit = Math.min((el.clientWidth - pad * 2) / s.w, (el.clientHeight - pad * 2 - HEAD_H) / s.h)
+  const stepped = fit >= 1 ? Math.floor(fit) : 1 / Math.ceil(1 / fit)
+  zoom.value = Math.max(ZMIN, Math.min(4, stepped))
+  const z = zoom.value
+  cam.value = {
+    x: Math.round(el.clientWidth / 2 - (x0 + s.w / 2) * z),
+    y: Math.round(el.clientHeight / 2 - (y0 + s.h / 2) * z + HEAD_H / 2),
+  }
+  scheduleDraw()
+}
+
+/** First view of a tileset nobody has looked at here before: the whole board
+ * when it fits at a working zoom, else its first group — a whole big board at
+ * a quarter scale is a field of specks, and no place to start. */
+function initialView() {
+  const el = stageEl.value
+  const box = contentBBox()
+  const g0 = tileset.value?.groups[0]
+  if (!el || !box || !g0) return fitView()
+  const z = zoom.value
+  const fits = (box.maxX - box.minX) * z <= el.clientWidth && (box.maxY - box.minY) * z <= el.clientHeight
+  if (fits) fitView()
+  else focusGroup(g0.id)
 }
 
 function fitView() {
@@ -793,12 +849,53 @@ const terrains = computed<Terrain[]>(() =>
 
 const sheetCols = computed(() => sheetColumns(plainGroups.value))
 
+// Every tile's size, read from the API when the tileset opens. The layout
+// used to learn sizes from the images as they arrived, so a big tileset was
+// laid out with every tile one cell wide and then grew into its neighbours
+// as the art came in; and it needed every image just to know where things
+// go. Plain Map, outside Vue: it is read per tile, per frame.
+const tileSizes = new Map<string, { w: number; h: number }>()
+
+async function loadTileSizes(registry: Record<string, string>) {
+  const ids = Object.keys(registry).map(Number).filter(id => !tileSizes.has(registry[String(id)]!))
+  const CHUNK = 400
+  const ask = async (chunk: number[], user?: string) => {
+    const seen = new Set<number>()
+    try {
+      const res = await useNativeFetch<{ results: any[] }>('/coloring/shared-pages/', {
+        params: {ids: chunk.join(','), page_size: chunk.length, ...(user ? {user} : {})},
+      })
+      for (const p of res?.results || []) {
+        const w = Number(p.width), h = Number(p.height)
+        if (p.id_string && w > 0 && h > 0) tileSizes.set(String(p.id_string), {w, h})
+        seen.add(Number(p.id))
+      }
+    } catch { /* sizes then come from the images, as before */ }
+    return seen
+  }
+  const me = auth.logged?.username
+  const work: Promise<void>[] = []
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const chunk = ids.slice(i, i + CHUNK)
+    work.push((async () => {
+      // Tiles are mostly the owner's drafts, which list only when the owner
+      // asks for their own; public art from others lists for anyone.
+      const seen = me ? await ask(chunk, me) : new Set<number>()
+      const rest = chunk.filter(id => !seen.has(id))
+      if (rest.length) await ask(rest)
+    })())
+  }
+  await Promise.all(work)
+}
+
 const sheetSource = computed<SheetSource>(() => ({
   cell: tileset.value?.cell || {w: 32, h: 32},
-  slugOf: (id: number) => tileset.value?.registry[String(id)] || null,
+  // Raw, not the reactive proxy: this runs for every tile on every frame.
+  slugOf: (id: number) => (tileset.value ? toRaw(tileset.value).registry[String(id)] : null) || null,
   sizeOf: (slug: string | null) => {
-    const img = slug ? imgCache.get(slug) : null
-    return img ? {w: img.naturalWidth, h: img.naturalHeight} : null
+    if (!slug) return null
+    const img = imgCache.get(slug)
+    return img ? {w: img.naturalWidth, h: img.naturalHeight} : (tileSizes.get(slug) || null)
   },
 }))
 
@@ -923,15 +1020,21 @@ function engineReadme(kind: 'godot' | 'tiled', name: string, base: string, image
 2. Open ${base}.tres — the atlas and the terrain sets are already filled in.
 3. Add a TileMapLayer node, assign this TileSet, then paint from the Terrains tab.
 
-Terrains built as "wang16" use Match Sides; "blob47" ones use Match Corners and Sides.
+Terrains built as "wang16" use Match Sides; "blob47" ones use Match Corners and Sides;
+"corner16" ones use Match Corners. Solid tiles carry a collision box on physics layer 0,
+and animated tiles play from ${base}_anim.png (atlas source 1).
 Move the files apart and Godot will ask you to re-point the texture.
 `
       : `${head}
 1. Keep ${base}.tsx and ${image} in the same folder.
 2. In Tiled: Map > Add External Tileset… and pick ${base}.tsx
 3. Each terrain is a Wang set — paint with the Terrain Brush (U).
+Solid tiles carry a collision box. Animated tiles ship as stills here — the Godot
+export plays them.
 `
 }
+
+const {load: loadTileAnims} = useTileAnims()
 
 async function exportEngine(kind: 'godot' | 'tiled') {
   const ts = tileset.value
@@ -939,36 +1042,31 @@ async function exportEngine(kind: 'godot' | 'tiled') {
   exporting.value = true
   try {
     const {w, h} = ts.cell
-    const L = await buildExport(exportGroups.value)
-    if (!L.blocks.length) {
+    const groups = exportGroups.value
+    await buildExport(groups)                     // loads every tile's image
+    const base = `${ts.id_string}${exportSuffix.value}_tileset`
+    const image = `${base}_${w}x${h}.png`
+    // Godot plays animated tiles from their own atlas; Tiled gets the stills.
+    const ids = groups.flatMap(g => g.kind === 'group' ? g.tiles : Object.values(g.map || {}).map(Number))
+    const anims = kind === 'godot' ? await loadTileAnims(ids) : new Map()
+    const pack = packTileset({
+      name: ts.name, image, animImage: `${base}_anim.png`, groups, src: sheetSource.value,
+      imageOf: slug => imgCache.get(slug) || null, solid: new Set(ts.solid), anims,
+    })
+    if (!pack.sheet.blocks.length) {
       toast.error('Nothing to export in this group')
       return
     }
-    const blob = await renderSheet(L)
-    if (!blob) throw new Error('no blob')
-    const base = `${ts.id_string}${exportSuffix.value}_tileset`
-    const image = `${base}_${w}x${h}.png`
-    const sheet: EngineSheet = {
-      name: ts.name,
-      image,
-      cell: {w, h},
-      size: {w: L.w, h: L.h},
-      tiles: L.tiles.map(t => ({x: t.x, y: t.y, w: t.w, h: t.h, ...(t.prob ? {prob: t.prob} : {})})),
-      terrains: L.terrains.map(t => ({
-        name: t.name,
-        type: t.type,
-        slots: Object.entries(t.slots).map(([mask, s]) => ({mask: Number(mask), x: s.x, y: s.y})),
-      })),
-    }
     const enc = new TextEncoder()
-    const files = [{name: image, data: new Uint8Array(await blob.arrayBuffer())}]
+    const files = [{name: image, data: await canvasBytes(pack.canvas)}]
+    if (pack.animCanvas) files.push({name: `${base}_anim.png`, data: await canvasBytes(pack.animCanvas)})
     let skipped = 0
     if (kind === 'godot') {
-      const out = buildGodotTileSet(sheet)
+      const out = buildGodotTileSet(pack.engine)
       skipped = out.skipped
       files.push({name: `${base}.tres`, data: enc.encode(out.text)})
     } else {
-      files.push({name: `${base}.tsx`, data: enc.encode(buildTiledTileset(sheet))})
+      files.push({name: `${base}.tsx`, data: enc.encode(buildTiledTileset(pack.engine))})
     }
     files.push({name: 'README.txt', data: enc.encode(engineReadme(kind, ts.name, base, image))})
     downloadBlob(createZip(files), `${base}_${kind}.zip`)
@@ -992,6 +1090,52 @@ const selectedTile = computed(() =>
         ? tiles.value.find(t => t.id === selectedTileId.value) || null
         : null,
 )
+
+// Collision: a tile is solid or it is not — the whole tile blocks. That is
+// what a top-down map needs from a tileset; shaped collision stays a job for
+// the engine.
+const solidSet = computed(() => new Set(tileset.value?.solid || []))
+const selectionSolid = computed(() =>
+    selectedTileIds.value.length > 0 && selectedTileIds.value.every(id => solidSet.value.has(id)))
+
+function toggleSolid() {
+  const ts = tileset.value
+  if (!ts || !selectedTileIds.value.length) return
+  commit()
+  const on = !selectionSolid.value
+  const set = new Set(ts.solid)
+  for (const id of selectedTileIds.value) on ? set.add(id) : set.delete(id)
+  ts.solid = [...set]
+  dirty.value = true
+  scheduleDraw()
+}
+
+let hatchPattern: CanvasPattern | null = null
+function hatch(ctx: CanvasRenderingContext2D) {
+  if (hatchPattern) return hatchPattern
+  const c = document.createElement('canvas')
+  c.width = c.height = 6
+  const x = c.getContext('2d')!
+  x.strokeStyle = 'rgba(239, 68, 68, 0.75)'
+  x.lineWidth = 1
+  x.beginPath()
+  x.moveTo(0, 6); x.lineTo(6, 0)
+  x.stroke()
+  hatchPattern = ctx.createPattern(c, 'repeat')
+  return hatchPattern
+}
+
+/** Mark a solid tile on the board: red hatching and a red edge. */
+function markSolid(ctx: CanvasRenderingContext2D, r: { x: number; y: number; w: number; h: number }) {
+  const pat = hatch(ctx)
+  if (pat) {
+    ctx.fillStyle = pat
+    ctx.fillRect(r.x, r.y, r.w, r.h)
+  }
+  ctx.strokeStyle = 'rgba(239, 68, 68, 0.9)'
+  ctx.lineWidth = 1
+  ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1)
+}
 
 function isTileSelected(id: number) {
   return selectedTileIds.value.includes(id)
@@ -1130,10 +1274,12 @@ function removeGroup(gid: string) {
 function toggleTerrainType(g: TileGroup) {
   if (g.kind !== 'terrain') return
   commit()
-  g.type = g.type === 'blob47' ? 'wang16' : 'blob47'
-  if (g.type === 'wang16' && g.map) {
+  // Cycles Wang 16 -> Blob 47 -> Corner 16. Slots that do not exist in the
+  // new type go; the rest stay, so a mis-click is one more click to undo.
+  g.type = g.type === 'wang16' || !g.type ? 'blob47' : g.type === 'blob47' ? 'corner16' : 'wang16'
+  if (g.type !== 'blob47' && g.map) {
     for (const m of Object.keys(g.map)) {
-      if (Number(m) > 15) delete g.map[m]
+      if (Number(m) > 15 || (g.type === 'corner16' && Number(m) === 0)) delete g.map[m]
     }
   }
   dirty.value = true
@@ -1985,7 +2131,7 @@ async function syncBuilders() {
   const ts = tileset.value
   if (!ts) return
   const targets = ts.groups.filter(g =>
-      g.kind === 'terrain' && (g.builder as any)?.base && (g.builder as any)?.pages && ts.registry[String((g.builder as any).base)])
+      g.kind === 'terrain' && g.type !== 'corner16' && (g.builder as any)?.base && (g.builder as any)?.pages && ts.registry[String((g.builder as any).base)])
   if (!targets.length) return
   const ids = [...new Set(targets.map(g => Number((g.builder as any).base)))]
   const updatedAt: Record<number, string> = {}
@@ -2014,7 +2160,7 @@ async function syncBuilders() {
 function slotClick(g: TileGroup, mask: number) {
   const map = g.map || (g.map = {})
   if (selectedTileId.value != null) {
-    if (mask === centerMask(g) && !Object.keys(map).length) {
+    if (g.type !== 'corner16' && mask === centerMask(g) && !Object.keys(map).length) {
       quickBuild(g, selectedTileId.value)
       return
     }
@@ -2058,63 +2204,85 @@ function groupSizeNative(g: TileGroup) {
   return {w: L.w, h: L.h}
 }
 
+// The same rects, by group: draw walks a group's own tiles instead of
+// scanning every rect on the board once per group (35 groups x 2,100 tiles).
+let layoutIndex = new Map<string, { head: HitRect; body: HitRect; items: HitRect[] }>()
+
 function computeLayout() {
-  const ts = tileset.value
   const rects: HitRect[] = []
-  if (!ts) return rects
+  layoutIndex = new Map()
+  if (!tileset.value) return rects
+  // Raw: this runs every frame, over every tile.
+  const ts = toRaw(tileset.value)
   const z = zoom.value
+  const cx = cam.value.x, cy = cam.value.y
   for (const g of ts.groups) {
-    const size = groupSizeNative(g)
-    const sx = Math.round(cam.value.x + (g.x ?? 0) * z)
-    const sy = Math.round(cam.value.y + (g.y ?? 0) * z)
-    const bw = size.w * z
-    const bh = size.h * z
+    const sx = Math.round(cx + (g.x ?? 0) * z)
+    const sy = Math.round(cy + (g.y ?? 0) * z)
+    const items: HitRect[] = []
+    let head: HitRect
+    let body: HitRect
     if (g.kind === 'group') {
+      // Laid out once — groupSizeNative would lay the same group out again.
       const L = layoutGroupTiles(g)
+      const bw = L.w * z
       const bx = sx + L.minX * z
       const by = sy + L.minY * z
-      rects.push({kind: 'head', group: g.id, index: 0, x: bx, y: by - HEAD_H, w: Math.max(120, bw), h: HEAD_H})
-      rects.push({kind: 'body', group: g.id, index: 0, x: bx, y: by, w: bw, h: bh})
-      g.tiles.forEach((_, i) => {
+      head = {kind: 'head', group: g.id, index: 0, x: bx, y: by - HEAD_H, w: Math.max(120, bw), h: HEAD_H}
+      body = {kind: 'body', group: g.id, index: 0, x: bx, y: by, w: bw, h: L.h * z}
+      for (let i = 0; i < g.tiles.length; i++) {
         const r = L.rects[i]!
-        rects.push({
-          kind: 'tile', group: g.id, index: i,
-          x: sx + r.x * z, y: sy + r.y * z, w: r.w * z, h: r.h * z,
-        })
-      })
+        items.push({kind: 'tile', group: g.id, index: i, x: sx + r.x * z, y: sy + r.y * z, w: r.w * z, h: r.h * z})
+      }
     } else {
-      rects.push({kind: 'head', group: g.id, index: 0, x: sx, y: sy - HEAD_H, w: Math.max(120, bw), h: HEAD_H})
-      rects.push({kind: 'body', group: g.id, index: 0, x: sx, y: sy, w: bw, h: bh})
+      const size = groupSizeNative(g)
+      const bw = size.w * z
+      head = {kind: 'head', group: g.id, index: 0, x: sx, y: sy - HEAD_H, w: Math.max(120, bw), h: HEAD_H}
+      body = {kind: 'body', group: g.id, index: 0, x: sx, y: sy, w: bw, h: size.h * z}
       const n = terrainGridN(g)
       const sw = (size.w * z - (n - 1) * SLOT_GAP_N * z) / n
       terrainSlots(g).forEach((mask, i) => {
-        rects.push({
+        items.push({
           kind: 'slot', group: g.id, index: mask,
           x: sx + (i % n) * (sw + SLOT_GAP_N * z), y: sy + Math.floor(i / n) * (sw + SLOT_GAP_N * z), w: sw, h: sw,
         })
       })
     }
+    rects.push(head, body, ...items)
+    layoutIndex.set(g.id, {head, body, items})
   }
   return rects
 }
 
-function autoArrange(markDirty = true) {
-  const ts = tileset.value
-  if (!ts || !ts.groups.length) return
-  if (markDirty) commit()
-  for (const g of ts.groups) delete g.pos
-  const items = ts.groups.map(g => ({g, ...groupSizeNative(g)}))
-  items.sort((a, b) => ((a.g.y ?? 0) - (b.g.y ?? 0)) || ((a.g.x ?? 0) - (b.g.x ?? 0)))
-  ts.groups = items.map(i => i.g)
+// A board label is drawn in screen pixels, so in board units it is wider the
+// further out you zoom. A group is never packed narrower than its own name,
+// or the names run into each other.
+let labelCtx: CanvasRenderingContext2D | null = null
+function labelWidthNative(g: TileGroup) {
+  if (typeof document === 'undefined') return 0
+  labelCtx ||= document.createElement('canvas').getContext('2d')
+  if (!labelCtx) return 0
+  labelCtx.font = '700 10px sans-serif'
+  return Math.ceil((labelCtx.measureText(g.name.toUpperCase()).width + 36) / zoom.value)
+}
+
+/** Lay groups out in rows from (x0, y0), wrapping at `width`. Moves groups;
+ * never touches the tiles inside them. */
+function packGroups(groups: TileGroup[], x0: number, y0: number, width?: number) {
+  const items = groups.map((g) => {
+    const s = groupSizeNative(g)
+    return {g, w: Math.max(s.w, labelWidthNative(g)), h: s.h}
+  })
+  if (!items.length) return
   const vGap = GAP_N + Math.ceil(HEAD_H / zoom.value)
-  const area = items.reduce((s, i) => s + (i.w + GAP_N) * (i.h + vGap), 0)
-  const target = Math.max(...items.map(i => i.w), Math.ceil(Math.sqrt(area)))
-  let x = 0
-  let y = 0
+  const area = items.reduce((sum, i) => sum + (i.w + GAP_N) * (i.h + vGap), 0)
+  const target = width ?? Math.max(...items.map(i => i.w), Math.ceil(Math.sqrt(area)))
+  let x = x0
+  let y = y0
   let rowH = 0
   for (const it of items) {
-    if (x > 0 && x + it.w > target) {
-      x = 0
+    if (x > x0 && x + it.w > x0 + target) {
+      x = x0
       y += rowH + vGap
       rowH = 0
     }
@@ -2123,9 +2291,46 @@ function autoArrange(markDirty = true) {
     x += it.w + GAP_N
     rowH = Math.max(rowH, it.h)
   }
+}
+
+function autoArrange(markDirty = true) {
+  const ts = tileset.value
+  if (!ts || !ts.groups.length) return
+  if (markDirty) commit()
+  // Groups only. A group's own tile pins (`pos` — a sliced sheet, tiles laid
+  // out by hand) are the author's work; arranging the board used to wipe
+  // them, which turned a 1700-tile sheet into an anonymous square.
+  ts.groups = [...ts.groups].sort((a, b) => ((a.y ?? 0) - (b.y ?? 0)) || ((a.x ?? 0) - (b.x ?? 0)))
+  packGroups(ts.groups, 0, 0)
   if (markDirty) dirty.value = true
   nextTick(fitView)
   scheduleDraw()
+}
+
+/** On open: place the groups that have no position yet (added by an import,
+ * a script, an older version) below everything already placed. Placed
+ * groups and pinned tiles stay exactly where they are — this runs on every
+ * load, and used to re-arrange the whole board and drop every pin instead. */
+function placeUnplaced() {
+  const ts = tileset.value
+  if (!ts) return
+  const loose = ts.groups.filter(g => g.x == null || g.y == null)
+  if (!loose.length) return
+  const placed = ts.groups.filter(g => g.x != null && g.y != null)
+  if (!placed.length) {
+    packGroups(loose, 0, 0)
+    return
+  }
+  let minX = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  for (const g of placed) {
+    const sz = groupSizeNative(g)
+    minX = Math.min(minX, g.x!)
+    maxX = Math.max(maxX, g.x! + sz.w)
+    maxY = Math.max(maxY, g.y! + sz.h)
+  }
+  packGroups(loose, minX, maxY + GAP_N + Math.ceil(HEAD_H / zoom.value), maxX - minX)
 }
 
 const imgCache = new Map<string, HTMLImageElement | null>()
@@ -2184,6 +2389,19 @@ const boardDrag = ref<{
 let dropSpot: HitRect | null = null
 
 const selectedGroupId = ref<string | null>(null)
+
+// The side list, filterable once it is long (a pack import makes dozens).
+const groupQuery = ref('')
+const listedGroups = computed(() => {
+  const all = tileset.value?.groups || []
+  const q = groupQuery.value.trim().toLowerCase()
+  return q ? all.filter(g => g.name.toLowerCase().includes(q)) : all
+})
+
+function pickGroupFromList(gid: string) {
+  if (selectedGroupId.value !== gid) selectGroup(gid)
+  focusGroup(gid)
+}
 
 function selectGroup(gid: string) {
   selectedGroupId.value = selectedGroupId.value === gid ? null : gid
@@ -2255,28 +2473,47 @@ function draw() {
     }
   }
 
-  for (const g of ts.groups) {
-    const head = layoutRects.find(r => r.kind === 'head' && r.group === g.id)!
-    const body = layoutRects.find(r => r.kind === 'body' && r.group === g.id)!
+  const raw = toRaw(ts)
+  const selected = new Set(selectedTileIds.value)
+  const onScreen = (r: { x: number; y: number; w: number; h: number }) =>
+      r.x < W && r.y < H && r.x + r.w > 0 && r.y + r.h > 0
+  for (const g of raw.groups) {
+    const entry = layoutIndex.get(g.id)
+    if (!entry) continue
+    const {head, body} = entry
+    // A group off screen costs nothing: no tiles walked, no images asked for.
+    if (!onScreen(body) && !onScreen(head)) continue
     const active = selectedGroupId.value === g.id || (d?.kind === 'head' && d.group === g.id)
 
     if (showBoardChrome.value) {
       ctx.font = '700 10px sans-serif'
       ctx.textBaseline = 'middle'
       ctx.fillStyle = active ? primary : muted
-      const label = g.name.toUpperCase()
-      ctx.fillText(label, head.x, head.y + HEAD_H / 2 - 2)
-      const lw = ctx.measureText(label).width
+      const count = g.kind === 'terrain'
+          ? `${pendingBuilds.has(g.id) ? `${pendingBuilds.get(g.id)!.variants.size} pending` : Object.keys(g.map || {}).length}/${terrainSlots(g).length}`
+          : String(g.tiles.length)
+      // Zoomed out, a name is wider than its group and ran into the next
+      // one. Keep it inside the group: drop the count, then shorten the name.
+      const room = Math.max(body.w, 48)
+      let label = g.name.toUpperCase()
       ctx.font = '600 10px sans-serif'
-      ctx.fillStyle = muted
-      ctx.globalAlpha = 0.6
-      ctx.fillText(
-          g.kind === 'terrain'
-              ? `${pendingBuilds.has(g.id) ? `${pendingBuilds.get(g.id)!.variants.size} pending` : Object.keys(g.map || {}).length}/${terrainSlots(g).length}`
-              : String(g.tiles.length),
-          head.x + lw + 8, head.y + HEAD_H / 2 - 2,
-      )
-      ctx.globalAlpha = 1
+      const cw = ctx.measureText(count).width + 8
+      ctx.font = '700 10px sans-serif'
+      let lw = ctx.measureText(label).width
+      const showCount = lw + cw <= room
+      if (!showCount && lw > room) {
+        while (label.length > 1 && ctx.measureText(`${label}…`).width > room) label = label.slice(0, -1)
+        label = `${label}…`
+        lw = ctx.measureText(label).width
+      }
+      ctx.fillText(label, head.x, head.y + HEAD_H / 2 - 2)
+      if (showCount) {
+        ctx.font = '600 10px sans-serif'
+        ctx.fillStyle = muted
+        ctx.globalAlpha = 0.6
+        ctx.fillText(count, head.x + lw + 8, head.y + HEAD_H / 2 - 2)
+        ctx.globalAlpha = 1
+      }
     }
 
     if (g.kind === 'group') {
@@ -2293,19 +2530,29 @@ function draw() {
         ctx.fillText('drag tiles here', body.x + 8, body.y + body.h / 2)
         ctx.globalAlpha = 1
       }
-      for (const r of layoutRects) {
-        if (r.kind !== 'tile' || r.group !== g.id) continue
+      for (const r of entry.items) {
+        if (!onScreen(r)) continue
         const id = g.tiles[r.index]!
-        const img = boardImg(ts.registry[String(id)] || '')
+        const slug = raw.registry[String(id)] || ''
+        // Only tiles you can see ask for their image, and not while a tile
+        // is a speck: a 2,000-tile sheet used to request every image at once.
+        const img = r.w < 2 && r.h < 2 ? (imgCache.get(slug) || null) : boardImg(slug)
         if (d?.kind === 'tile' && (d.id === id || d.others?.some(o => o.id === id))) ctx.globalAlpha = 0.3
-        if (img) {
+        if (!img) {
+          // Still coming in: hold its place so the group keeps its shape.
+          ctx.fillStyle = muted
+          ctx.globalAlpha = 0.12
+          ctx.fillRect(r.x, r.y, r.w, r.h)
+          ctx.globalAlpha = 1
+        } else {
           const z = zoom.value
           const dw = img.naturalWidth * z
           const dh = img.naturalHeight * z
           ctx.drawImage(img, r.x + Math.floor((r.w - dw) / 2), r.y + Math.floor((r.h - dh) / 2), dw, dh)
         }
         ctx.globalAlpha = 1
-        if (isTileSelected(id)) {
+        if (solidSet.value.has(id) && r.w >= 4) markSolid(ctx, r)
+        if (selected.has(id)) {
           ctx.strokeStyle = primary
           ctx.lineWidth = 2
           ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2)
@@ -2323,8 +2570,8 @@ function draw() {
     } else {
       const gridPath = new Path2D()
       const gsnap = (v: number) => Math.round(v * dpr) / dpr + 0.5 / dpr
-      for (const r of layoutRects) {
-        if (r.kind !== 'slot' || r.group !== g.id) continue
+      for (const r of entry.items) {
+        if (!onScreen(r)) continue
         const slug = slotTile(g, r.index)
         const pendCv = !slug ? pendingBuilds.get(g.id)?.canvases.get(r.index) : null
         if (checker && slug) {
@@ -2333,11 +2580,13 @@ function draw() {
         }
         if (slug) {
           drawTileImage(ctx, slug, r.x, r.y, r.w, r.h)
+          const sid = g.map?.[String(r.index)]
+          if (sid != null && solidSet.value.has(Number(sid))) markSolid(ctx, r)
         } else if (pendCv) {
           ctx.drawImage(pendCv, r.x, r.y, r.w, r.h)
         }
         gridPath.rect(gsnap(r.x), gsnap(r.y), gsnap(r.x + r.w) - gsnap(r.x), gsnap(r.y + r.h) - gsnap(r.y))
-        if (!Object.keys(g.map || {}).length && !pendingBuilds.has(g.id) && r.index === centerMask(g)) {
+        if (g.type !== 'corner16' && !Object.keys(g.map || {}).length && !pendingBuilds.has(g.id) && r.index === centerMask(g)) {
           ctx.strokeStyle = primary
           ctx.lineWidth = 2
           ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2)
@@ -2351,8 +2600,7 @@ function draw() {
           ctx.globalAlpha = 1
         }
         if (pendCv) continue
-        if (!Object.keys(g.map || {}).length && !pendingBuilds.has(g.id) && r.index === centerMask(g)) continue
-        const sides = slotSides(r.index)
+        if (g.type !== 'corner16' && !Object.keys(g.map || {}).length && !pendingBuilds.has(g.id) && r.index === centerMask(g)) continue
         const gs = slug ? 3 : Math.max(4, Math.round(r.w / 9))
         const gap = slug ? 1 : 2
         const cx = slug ? r.x + 4 + gs : r.x + r.w / 2
@@ -2363,6 +2611,16 @@ function draw() {
           ctx.fillRect(Math.round(cx + dx * (gs + gap) - gs / 2), Math.round(cy + dy * (gs + gap) - gs / 2), gs, gs)
           ctx.globalAlpha = 1
         }
+        if (g.type === 'corner16') {
+          // Corner set: the slot is which corners are terrain, nothing else.
+          const c = cornerSides(r.index)
+          dot(-1, -1, c.tl)
+          dot(1, -1, c.tr)
+          dot(-1, 1, c.bl)
+          dot(1, 1, c.br)
+          continue
+        }
+        const sides = slotSides(r.index)
         dot(0, 0, true)
         dot(0, -1, sides.n)
         dot(1, 0, sides.e)
@@ -2415,13 +2673,15 @@ function scheduleDraw() {
   })
 }
 
+// Redraw on any edit, and on any change of view. These were one watcher that
+// JSON-stringified every group — 1,700 tile pins and all — on each pan event,
+// which made it the costliest thing on the board. An edit is now a deep watch
+// (it only walks the tileset when the tileset changed); a pan compares five
+// numbers.
+watch(tileset, () => nextTick(scheduleDraw), {deep: true, immediate: true})
 watch(
-    () => {
-      const ts = tileset.value
-      return ts ? JSON.stringify([ts.groups, Object.keys(ts.registry), ts.cell]) + `|${zoom.value}|${cam.value.x},${cam.value.y}|${selectedTileId.value}|${selectedGroupId.value}` : ''
-    },
-    () => nextTick(scheduleDraw),
-    {immediate: true},
+    () => [zoom.value, cam.value.x, cam.value.y, selectedTileId.value, selectedGroupId.value],
+    () => scheduleDraw(),
 )
 
 watch(
@@ -2526,7 +2786,7 @@ function boardUp(e: PointerEvent) {
       const hit = hitAt(d.px, d.py)
       if (hit?.kind === 'slot' && groupById(hit.group)?.kind === 'terrain') {
         const to = groupById(hit.group)!
-        if (hit.index === centerMask(to) && !Object.keys(to.map || {}).length) {
+        if (to.type !== 'corner16' && hit.index === centerMask(to) && !Object.keys(to.map || {}).length) {
           quickBuild(to, d.id)
         } else {
           ;(to.map || (to.map = {}))[String(hit.index)] = d.id
@@ -2971,14 +3231,18 @@ const faq = computed(() => [
             <ui-tooltip
                 v-if="activeGroup.kind === 'terrain'"
                 :text="activeGroup.type === 'blob47'
-                  ? 'Blob set — 47 tiles with corners (side-scrollers). Switch to Wang 16.'
-                  : 'Wang set — 16 tiles, borders mid-tile (top-down). Switch to Blob 47.'"
+                  ? 'Blob set — 47 tiles with corners (side-scrollers). Switch to Corner 16.'
+                  : activeGroup.type === 'corner16'
+                    ? 'Corner set — 15 tiles chosen by which corners are filled; painting spills half a cell (most farm packs). Switch to Wang 16.'
+                    : 'Wang set — 16 tiles, borders mid-tile (top-down). Switch to Blob 47.'"
             >
               <button class="toolbar-btn tsx-tb-type" @click="toggleTerrainType(activeGroup)">
-                {{ activeGroup.type === 'blob47' ? '47' : '16' }}
+                {{ activeGroup.type === 'blob47' ? '47' : activeGroup.type === 'corner16' ? 'C' : '16' }}
               </button>
             </ui-tooltip>
-            <ui-tooltip v-if="activeGroup.kind === 'terrain'" :text="$t('p_tilesets_editor.buildBordersGenerateEveryVariantFr')">
+            <!-- Build Borders composes edges around one base tile; a corner set
+                 is drawn by hand, corner by corner, so there is nothing to build. -->
+            <ui-tooltip v-if="activeGroup.kind === 'terrain' && activeGroup.type !== 'corner16'" :text="$t('p_tilesets_editor.buildBordersGenerateEveryVariantFr')">
               <button class="toolbar-btn" @click="openBuild">
                 <span class="icon icon-auto-fix"/>
               </button>
@@ -3084,6 +3348,11 @@ const faq = computed(() => [
               <img :src="tileSrc(selectedTile.id_string)" alt="" class="tsx-selbar-thumb">
               <span class="tsx-selbar-name">{{ selectedTileIds.length > 1 ? $t('p_tilesets_editor.nTiles', {count: selectedTileIds.length}) : selectedTile.id_string }}</span>
               <span class="tsx-selbar-hint">{{ selectedTileIds.length > 1 ? 'drag moves them together' : 'click a terrain slot to place' }}</span>
+              <ui-tooltip :text="selectionSolid ? $t('p_tilesets_editor.solidOn') : $t('p_tilesets_editor.solidOff')">
+                <button class="tsx-selbar-btn" :class="{active: selectionSolid}" :aria-pressed="selectionSolid" @click="toggleSolid">
+                  <span class="icon icon-square"/>
+                </button>
+              </ui-tooltip>
               <ui-tooltip :text="$t('p_tilesets_editor.removeSelectedDel')">
                 <button class="tsx-selbar-btn danger" @click="deleteSelectedTiles">
                   <span class="icon icon-trash"/>
@@ -3126,12 +3395,20 @@ const faq = computed(() => [
               </ui-tooltip>
             </span>
           </span>
+          <input
+              v-if="tileset.groups.length > 12"
+              v-model="groupQuery"
+              type="search"
+              class="tsx-group-filter"
+              :placeholder="$t('p_tilesets_editor.filterGroups')"
+              :aria-label="$t('p_tilesets_editor.filterGroups')"
+          >
           <div
-              v-for="g in tileset.groups"
+              v-for="g in listedGroups"
               :key="g.id"
               class="tsx-group-row"
               :class="{active: selectedGroupId === g.id}"
-              @click="selectedGroupId === g.id || selectGroup(g.id)"
+              @click="pickGroupFromList(g.id)"
           >
             <span v-if="g.kind === 'terrain'" class="icon icon-rhombus tsx-kind-ic" :title="$t('p_tilesets_editor.terrainAutoTile')"/>
             <span v-else class="icon icon-grid tsx-kind-ic" :title="$t('p_tilesets_editor.group')"/>
@@ -3184,7 +3461,7 @@ const faq = computed(() => [
             >
             <span class="cv-hex">{{ boardBg }}</span>
           </div>
-          <div class="cv-opts cols-4">
+          <div class="cv-opts cols-2">
             <button
                 v-for="p in BOARD_PRESETS"
                 :key="p.color"
@@ -3272,6 +3549,16 @@ const faq = computed(() => [
                 <span class="text-xs">{{ $t('common.isometric') }}</span>
                 <span class="text-xs text-muted">{{ tileset.iso ? '— diamond tiles; the tilemap opens in isometric mode' : '— top-down square tiles (grid)' }}</span>
               </div>
+            </div>
+            <div v-if="tileset.worlds.length">
+              <label class="publish-label">{{ $t('p_tilesets_editor.previewWorld') }}</label>
+              <select v-model="tileset.preview" class="publish-input" @change="dirty = true">
+                <option value="">{{ $t('p_tilesets_editor.latestWorld') }}</option>
+                <option v-for="w in tileset.worlds" :key="w.id_string" :value="w.id_string">
+                  {{ w.name || 'Untitled' }}{{ w.status === 'public' ? '' : ` (${$t('common.private')})` }}
+                </option>
+              </select>
+              <p class="text-xs text-muted">{{ $t('p_tilesets_editor.previewWorldHint') }}</p>
             </div>
             <div>
               <label class="publish-label">{{ $t('p_tilesets_editor.visibility') }}</label>
@@ -3707,7 +3994,8 @@ const faq = computed(() => [
 
 .tsx-selbar-btn:hover { background: var(--surface-2); color: var(--foreground); }
 .tsx-selbar-btn.danger:hover { color: var(--danger); }
-.tsx-selbar-btn .icon { width: 13px; height: 13px; }
+/* Solid is on: the same red as the hatching on the board. */
+.tsx-selbar-btn.active { color: var(--danger); background: color-mix(in oklab, var(--danger) 12%, transparent); }
 
 .tsx-pop-enter-active, .tsx-pop-leave-active { transition: opacity 140ms ease, transform 140ms ease; }
 .tsx-pop-enter-from, .tsx-pop-leave-to { opacity: 0; transform: translateY(6px); }
@@ -3733,7 +4021,6 @@ const faq = computed(() => [
 }
 
 .tsx-mini-btn:hover { color: var(--foreground); }
-.tsx-mini-btn .icon { width: 12px; height: 12px; }
 
 .tsx-add-src {
   display: flex;
@@ -3834,8 +4121,8 @@ const faq = computed(() => [
   position: absolute;
   right: 1px;
   bottom: 1px;
-  width: 11px;
-  height: 11px;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
   color: var(--primary);
   background: var(--surface);
   border-radius: var(--radius-sm);
@@ -3861,9 +4148,20 @@ const faq = computed(() => [
   box-shadow: inset 2px 0 0 0 var(--primary);
 }
 
+/* Same height and type as a group's own name field, so the list reads as one. */
+.tsx-group-filter {
+  width: 100%;
+  height: var(--ctl-sm, 26px);
+  margin-bottom: var(--space-1);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--foreground);
+  font-size: var(--text-xs);
+}
+
 .tsx-kind-ic {
-  width: 12px;
-  height: 12px;
   flex-shrink: 0;
   color: var(--muted);
 }
