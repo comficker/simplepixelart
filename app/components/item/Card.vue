@@ -1,7 +1,7 @@
 <template>
   <NuxtLinkLocale class="card" :to="to" :title="value.name">
     <div class="square">
-      <div class="inside card-pad" :class="{'card-cover': cover}">
+      <div class="inside card-pad" :class="{'art-cover': cover}">
         <img
             v-if="!isDraw && !imgError"
             :src="src"
@@ -72,13 +72,8 @@ const artImage = useArtImage()
 const imgError = ref(false)
 
 const src = computed(() => artImage(value))
-// A piece clearly off square (a wide scene, a tall portrait) fills the card
-// edge to edge instead of floating as a strip in it. Near-square sprites
-// keep the whole piece: cropping a 8x10 sprite takes its ears off.
-const cover = computed(() => {
-  const r = value.width && value.height ? value.width / value.height : 1
-  return r > 1.25 || r < 0.8
-})
+// Not square: fill the card edge to edge (.art-cover in main.css).
+const cover = computed(() => !!value.width && !!value.height && value.width !== value.height)
 watch(src, () => { imgError.value = false })
 const to = computed(() => {
   return (isDraw || isRemix) ? `/editor?id=${value.id_string || value.id}` : `/art/${value.id_string}`
@@ -182,13 +177,6 @@ const compact = (n: number) => new Intl.NumberFormat(locale.value, {notation: 'c
   object-fit: contain;
 }
 
-.card .card-cover {
-  padding: 0;
-}
-
-.card .card-cover .size-full {
-  object-fit: cover;
-}
 
 /* Views and likes over the bottom-left of the art: small, and only once
    there is something to count. */

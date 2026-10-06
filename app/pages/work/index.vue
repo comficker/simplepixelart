@@ -773,7 +773,7 @@ onMounted(() => {
           </button>
           <NuxtLinkLocale class="work-canvas" :to="`/editor?id=${item.id_string || item.id}`">
             <div class="square">
-              <div class="inside work-art-pad">
+              <div class="inside work-art-pad" :class="{'art-cover': isCloud(item) && item.width !== item.height}">
                 <img
                     v-if="isCloud(item) && item.has_image !== false && !failedThumb[item.id]"
                     :src="thumbUrl(item)"

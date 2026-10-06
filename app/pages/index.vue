@@ -270,7 +270,7 @@ useCustomSeoMeta({
             >
               <div class="studio-canvas">
                 <div class="square">
-                  <div class="inside">
+                  <div class="inside" :class="{'art-cover': isCloudWork(item) && item.width !== item.height}">
                     <img
                         v-if="isCloudWork(item) && item.has_image !== false && !failedThumb[item.id]"
                         :src="workThumbUrl(item)"

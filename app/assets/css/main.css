@@ -999,6 +999,16 @@ footer {
     padding: var(--space-3);
 }
 
+/* A piece that is not square fills its tile edge to edge (cropped to the
+   centre) instead of floating as a strip inside the padding. */
+.square .inside.art-cover {
+    padding: 0;
+}
+
+.square .inside.art-cover > img {
+    object-fit: cover;
+}
+
 .icon {
     mask-repeat: no-repeat;
     background: currentColor;
