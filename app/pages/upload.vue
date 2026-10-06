@@ -53,11 +53,11 @@ const PREVIEW_SIZES = ['original', 32, 64, 128, 256, 'full'] as const
 type PreviewSize = typeof PREVIEW_SIZES[number]
 const previewSize = ref<PreviewSize>(256)
 const previewSizeLabel = (s: PreviewSize) =>
-    s === 'full' ? 'Fit to view'
-        : s === 'original' ? `Original · ${piece.value?.width}×${piece.value?.height}`
+    s === 'full' ? t('p_upload.fitToView')
+        : s === 'original' ? t('p_upload.originalSize', {w: piece.value?.width, h: piece.value?.height})
             : `${s}px`
 const previewSizeShort = computed(() =>
-    previewSize.value === 'full' ? 'Fit' : previewSize.value === 'original' ? '1:1' : `${previewSize.value}px`)
+    previewSize.value === 'full' ? t('p_upload.fit') : previewSize.value === 'original' ? '1:1' : `${previewSize.value}px`)
 const previewStyle = computed(() => {
   const w = piece.value?.width || 1, h = piece.value?.height || 1
   const s = previewSize.value
@@ -71,7 +71,7 @@ const canPublish = computed(() => !!piece.value && !piece.value.tooBig && state.
 
 function titleFromFile(file: string) {
   const base = file.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim()
-  return base ? base[0]!.toUpperCase() + base.slice(1) : 'Untitled'
+  return base ? base[0]!.toUpperCase() + base.slice(1) : t('common.untitled')
 }
 
 function toPiece(file: File, grids: Cell[][][], durations: number[] = []): Piece {
@@ -135,7 +135,7 @@ async function setFile(list: FileList | File[] | null | undefined) {
     piece.value = next
     if (!nameTouched.value) name.value = titleFromFile(file.name)
   } catch {
-    toast.error(`Could not read ${file.name}`)
+    toast.error(t('p_upload.couldNotReadFile', {name: file.name}))
   } finally {
     reading.value = false
   }
@@ -209,7 +209,7 @@ async function create(p: Piece, isPublic: boolean) {
   const res = await useNativeFetch<any>('/coloring/shared-pages/', {
     method: 'POST',
     body: {
-      name: name.value.trim() || 'Untitled',
+      name: name.value.trim() || t('common.untitled'),
       desc: desc.value.trim(),
       tags: tags.value,
       width: p.width,
@@ -236,7 +236,7 @@ async function publishExisting(p: Piece) {
   else delete meta.license
   await useNativeFetch(`/coloring/shared-pages/${p.id}/`, {
     method: 'PATCH',
-    body: {name: name.value.trim() || 'Untitled', desc: desc.value.trim(), tags: tags.value, is_public: true, meta},
+    body: {name: name.value.trim() || t('common.untitled'), desc: desc.value.trim(), tags: tags.value, is_public: true, meta},
   })
 }
 
@@ -306,16 +306,16 @@ async function publish() {
   }
 }
 
-const FAQ = [
-  {q: 'What can I upload?', a: 'Pixel art you made, as PNG, GIF or WebP — exported at its own size or scaled up. The upload finds the pixel grid and turns each file into an editable piece. Photos and paintings belong in the converter.', icon: 'icon-image'},
-  {q: 'Can I upload work made in Aseprite or another editor?', a: 'Yes. Export a PNG at any whole-number scale; the page detects the scale and stores the art at its true size, so it stays sharp at every zoom.', icon: 'icon-pen'},
-  {q: 'Who owns what I upload?', a: 'You do. Pick a license when you publish: keep all rights, let others use it with credit (CC BY 4.0), or give it away (CC0). The license shows on the piece’s page.', icon: 'icon-check'},
-  {q: 'Will people find it?', a: 'Every piece gets its own page, its palette is linked into the palette library, and a piece with a description can show up in Google results.', icon: 'icon-search'},
-]
+const FAQ = computed(() => [
+  {q: t('p_upload.faq0q'), a: t('p_upload.faq0a'), icon: 'icon-image'},
+  {q: t('p_upload.faq1q'), a: t('p_upload.faq1a'), icon: 'icon-pen'},
+  {q: t('p_upload.faq2q'), a: t('p_upload.faq2a'), icon: 'icon-check'},
+  {q: t('p_upload.faq3q'), a: t('p_upload.faq3a'), icon: 'icon-search'},
+])
 
 useCustomSeoMeta({
-  title: 'Upload Your Pixel Art',
-  description: 'Share the pixel art you already made: drop in PNGs, keep them pixel-sharp at their true size, pick a license and publish to your SimplePixelArt profile.',
+  title: () => t('p_upload.seoTitle'),
+  description: () => t('p_upload.seoDescription'),
   canonical: 'https://simplepixelart.com/upload',
   robots: 'index, follow',
 })
@@ -391,7 +391,7 @@ useCustomSeoMeta({
     <template v-if="piece" #status>
       <p class="editor-foot-hint text-xs text-muted">
         <template v-if="state === 'done'">{{ $t('p_upload.published') }} · </template>
-        {{ piece.width }}×{{ piece.height }}px · {{ piece.colors.length }} {{ $t('common.colors').toLowerCase() }}
+        {{ piece.width }}×{{ piece.height }}px · {{ $t('common.nColors', {count: piece.colors.length}) }}
         <template v-if="piece.frames.length"> · {{ $t('p_upload.framesN', {n: piece.frames.length}) }}</template>
       </p>
     </template>
@@ -405,7 +405,7 @@ useCustomSeoMeta({
           </template>
 
           <template v-else-if="state === 'done' && piece">
-            <p class="up-note">{{ $t('p_upload.isPublished', {name: name || 'Untitled'}) }}</p>
+            <p class="up-note">{{ $t('p_upload.isPublished', {name: name || $t('common.untitled')}) }}</p>
             <NuxtLinkLocale :to="`/art/${piece.id_string}`" class="btn primary block">{{ $t('p_upload.viewPiece') }}</NuxtLinkLocale>
             <button type="button" class="btn block" @click="reset">{{ $t('p_upload.uploadAnother') }}</button>
           </template>

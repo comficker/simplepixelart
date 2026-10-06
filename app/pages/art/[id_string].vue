@@ -10,7 +10,7 @@ const route = useRoute();
 const router = useRouter();
 const config = useRuntimeConfig()
 const auth = useAuthStore()
-const {t} = useI18n()
+const {t, locale} = useI18n()
 const {data, pending, error} = await useAuthFetch<SharedPage>(`/coloring/shared-pages/${route.params.id_string}/`)
 
 if (import.meta.server && !data.value) {
@@ -273,7 +273,7 @@ const download = (type: string) => {
 }
 
 const formattedDate = computed(() =>
-    data.value?.updated ? new Date(data.value.updated).toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}) : ''
+    data.value?.updated ? new Date(data.value.updated).toLocaleDateString(locale.value, {year: 'numeric', month: 'short', day: 'numeric'}) : ''
 )
 
 const maxDim = computed(() => Math.max(data.value?.width || 1, data.value?.height || 1))
@@ -334,12 +334,12 @@ type PreviewSize = 'full' | 'original' | number
 const previewSize = ref<PreviewSize>(256)
 
 const previewSizeLabel = (s: PreviewSize) =>
-    s === 'full' ? 'Fit to view'
-        : s === 'original' ? `Original · ${data.value?.width}×${data.value?.height}`
+    s === 'full' ? t('p_art_id_string.fitToView')
+        : s === 'original' ? t('p_art_id_string.originalSize', {w: data.value?.width, h: data.value?.height})
             : `${s}px`
 
 const previewSizeShort = computed(() =>
-    previewSize.value === 'full' ? 'Fit'
+    previewSize.value === 'full' ? t('p_art_id_string.fit')
         : previewSize.value === 'original' ? '1:1'
             : `${previewSize.value}px`)
 
@@ -355,10 +355,10 @@ const COORD_MIN_CELL = 24
 const cellSize = ref(16)
 
 const viewLabel = computed(() =>
-    beadView.value && coordView.value ? 'Beads + xy'
-        : beadView.value ? 'Beads'
-            : coordView.value ? 'Coords'
-                : 'Pixels')
+    beadView.value && coordView.value ? t('p_art_id_string.beadsXy')
+        : beadView.value ? t('p_art_id_string.beads')
+            : coordView.value ? t('p_art_id_string.coords')
+                : t('common.pixels'))
 
 watch(coordView, (on) => {
   // Turning labels on at 8px a cell would draw nothing legible, which reads as
@@ -466,7 +466,7 @@ const previewStyle = computed(() => {
         >
         <div v-if="isAnimatedArt" class="art-anim-badge" :title="$t('common.animatedArtwork')">
           <span class="art-anim-dot" aria-hidden="true"/>
-          <span>Animated · {{ animation.frames.length }}f</span>
+          <span>{{ $t('p_art_id_string.animatedBadge', {n: animation.frames.length}) }}</span>
         </div>
         <NuxtLinkLocale
             v-if="data.template_info"
@@ -524,7 +524,7 @@ const previewStyle = computed(() => {
                     @click="cellSize = opt"
                 >
                   <span class="file-menu-label">
-                    <span>{{ opt }}px a cell</span>
+                    <span>{{ $t('p_art_id_string.pxACell', {n: opt}) }}</span>
                     <span v-if="cellSize === opt" class="icon icon-check"/>
                   </span>
                 </button>
@@ -560,9 +560,9 @@ const previewStyle = computed(() => {
 
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">
-        {{ data.width }}×{{ data.height }}px · {{ Object.keys(data.map_numbers).length }} pixels
-        <template v-if="data.colors?.length"> · {{ data.colors.length }} colors</template>
-        <template v-if="isAnimatedArt"> · {{ animation.frames.length }} frames</template>
+        {{ data.width }}×{{ data.height }}px · {{ $t('p_art_id_string.pixelCount', Object.keys(data.map_numbers).length, {count: Object.keys(data.map_numbers).length}) }}
+        <template v-if="data.colors?.length"> · {{ $t('common.nColors', {count: data.colors.length}) }}</template>
+        <template v-if="isAnimatedArt"> · {{ $t('p_art_id_string.frameCount', animation.frames.length, {count: animation.frames.length}) }}</template>
       </p>
       <p v-if="formattedDate" class="text-xs text-muted">{{ formattedDate }}</p>
     </template>
@@ -607,19 +607,19 @@ const previewStyle = computed(() => {
         </button>
         <div class="file-menu-sep"/>
         <button class="drop-item btn-split" @click="download('square')">
-          <span>{{ $t('p_art_id_string.pngSquare') }}</span><span class="text-muted">1080×1080 · social</span>
+          <span>{{ $t('p_art_id_string.pngSquare') }}</span><span class="text-muted">1080×1080 · {{ $t('p_art_id_string.dlSocial') }}</span>
         </button>
         <button v-if="isAnimatedArt" class="drop-item btn-split" @click="download('gif')">
-          <span>{{ $t('p_art_id_string.animatedGif') }}</span><span class="text-muted">{{ animation.frames.length }} frames</span>
+          <span>{{ $t('p_art_id_string.animatedGif') }}</span><span class="text-muted">{{ $t('p_art_id_string.frameCount', animation.frames.length, {count: animation.frames.length}) }}</span>
         </button>
         <button class="drop-item btn-split" @click="download('svg')">
-          <span>{{ $t('p_art_id_string.svg') }}</span><span class="text-muted">vector</span>
+          <span>{{ $t('p_art_id_string.svg') }}</span><span class="text-muted">{{ $t('p_art_id_string.dlVector') }}</span>
         </button>
         <button class="drop-item btn-split" @click="download('pdf')">
-          <span>{{ $t('p_art_id_string.pdf') }}</span><span class="text-muted">print</span>
+          <span>{{ $t('p_art_id_string.pdf') }}</span><span class="text-muted">{{ $t('p_art_id_string.dlPrint') }}</span>
         </button>
         <button class="drop-item btn-split" @click="download('json')">
-          <span>{{ $t('p_art_id_string.json') }}</span><span class="text-muted">source</span>
+          <span>{{ $t('p_art_id_string.json') }}</span><span class="text-muted">{{ $t('p_art_id_string.dlSource') }}</span>
         </button>
       </div>
     </Widget>

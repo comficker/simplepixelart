@@ -40,8 +40,8 @@ const tileStripRef = ref<{
 
 const shareMeta = computed(() => ({
   url: `${config.public.siteUrl || 'https://simplepixelart.com'}/art/${editorData.value.id_string}`,
-  title: `${editorData.value.name || 'Untitled'} - Pixel Art`,
-  desc: editorData.value.desc || 'Check out this pixel art!',
+  title: t('c_PXEditor.shareTitle', {name: editorData.value.name || t('common.untitled')}),
+  desc: editorData.value.desc || t('c_PXEditor.shareDesc'),
   imgSrc: `${config.public.api}/coloring/files/art-social/${editorData.value.id_string}.png`
 }))
 
@@ -94,7 +94,7 @@ async function loadTileRef(idStr: string, tsId?: string) {
     store.addBoardWithData(data)
     focusActiveBoard()
   } catch {
-    toast.error('Could not open that tile')
+    toast.error(t('c_PXEditor.couldNotOpenTile'))
   } finally {
     if (typeof requestAnimationFrame !== 'undefined') {
       requestAnimationFrame(() => { canvasReady.value = true })
@@ -129,7 +129,7 @@ async function destroyCurrent() {
       await useNativeFetch(`/coloring/shared-pages/${id}/`, {method: 'DELETE'})
     }
   } catch {
-    toast.error('Delete failed')
+    toast.error(t('c_PXEditor.deleteFailed'))
     deleting.value = false
     return
   }
@@ -147,7 +147,7 @@ async function destroyCurrent() {
     scheduleDraw()
     if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(() => { canvasReady.value = true })
     else canvasReady.value = true
-    toast.success('Deleted — opened next tile in the tileset')
+    toast.success(t('c_PXEditor.deletedOpenedNext'))
   } else {
     store.resetEditorData()
     localStorage.setItem('workspace_current', '')
@@ -155,15 +155,15 @@ async function destroyCurrent() {
     setupCanvas()
     newSize.value = {width: editorData.value.width, height: editorData.value.height}
     scheduleDraw()
-    toast.success('Deleted')
+    toast.success(t('c_PXEditor.deleted'))
   }
   deleting.value = false
 }
 
-const PUBLISH_STATUSES = [
+const PUBLISH_STATUSES = computed(() => [
   {value: 'public', label: t('c_PXEditor.publicListedInTheGallery'), action: 'publish'},
   {value: 'draft', label: t('c_PXEditor.privateDraftOnlyYouCanSee'), action: 'saveDraft'},
-] as const
+] as const)
 const publishStatus = ref<'public' | 'draft'>('draft')
 const publishLicense = ref('')
 
@@ -173,7 +173,7 @@ const publishLicense = ref('')
 const isAdmin = computed(() => !!auth.logged?.is_staff)
 const boostOnPublish = ref(false)
 const publishAction = computed(() =>
-    t('common.' + (PUBLISH_STATUSES.find(s => s.value === publishStatus.value)?.action || 'save')))
+    t('common.' + (PUBLISH_STATUSES.value.find(s => s.value === publishStatus.value)?.action || 'save')))
 
 function openPublish() {
   if (!auth.isLogged) {
@@ -233,17 +233,17 @@ async function genMetaWithAI() {
     if (res.tags?.length) editorData.value.tags = res.tags
     if (res.slug && !editorData.value.is_public) editorData.value.id_string = res.slug
     if (aiMeta.value) aiMeta.value.balance = res.balance
-    toast.success(`Filled by AI · −${aiMeta.value?.cost ?? 1} credit`)
+    toast.success(t('c_PXEditor.filledByAi', {count: aiMeta.value?.cost ?? 1}))
   } catch (e: any) {
     const s = e?.status ?? e?.response?.status
-    if (s === 402) toast.error('Not enough credits — earn some in Missions')
+    if (s === 402) toast.error(t('c_AgentChat.notEnoughCredits'))
     /* A rate limit spends nothing -- it is refused before the view runs --
        so the refund line would be a lie, and the real answer is how long
        to wait. The header is authoritative; the body carries the same
        number for the case where the header is stripped in between. */
-    else if (s === 429) toast.error(`Too many AI requests — try again in ${retryMinutes(e)}`)
-    else if (s === 503) toast.error('AI is switched off right now')
-    else toast.error('AI could not read this one — your credit was refunded')
+    else if (s === 429) toast.error(t('c_PXEditor.tooManyAiRequests', {time: retryMinutes(e)}))
+    else if (s === 503) toast.error(t('c_PXEditor.aiSwitchedOff'))
+    else toast.error(t('c_PXEditor.aiCouldNotRead'))
   } finally {
     aiBusy.value = false
   }
@@ -253,9 +253,9 @@ function retryMinutes(e: any) {
   const header = Number(e?.response?.headers?.get?.('retry-after'))
   const body = Number(String(e?.response?._data?.detail || '').match(/(\d+) second/)?.[1])
   const secs = header || body
-  if (!secs) return 'a few minutes'
-  const mins = Math.ceil(secs / 60)
-  return mins <= 1 ? 'a minute' : `${mins} minutes`
+  if (!secs) return t('c_PXEditor.aFewMinutes')
+  const mins = Math.max(1, Math.ceil(secs / 60))
+  return t('c_PXEditor.nMinutes', {count: mins}, mins)
 }
 
 /* A publish can come back held: the rights filter downgrades public to
@@ -307,14 +307,14 @@ async function saveArt() {
     publishStep.value = 'done'
   } else {
     showPublishModal.value = false
-    toast.success('Saved')
+    toast.success(t('c_PXEditor.saved'))
   }
 }
 
 function copyLink() {
   const url = `${config.public.siteUrl || 'https://simplepixelart.com'}/art/${editorData.value.id_string}`
   navigator.clipboard.writeText(url)
-  toast.success('Link copied!')
+  toast.success(t('c_PXEditor.linkCopied'))
 }
 
 const EDITOR_SIZE = ref(384)
@@ -646,9 +646,9 @@ async function loadArtIntoBoard(art: {id: string; name: string}) {
     store.addBoardWithData(data);
     fitAllBoards();
     showArtPicker.value = false;
-    toast.success(`Added “${data.name || 'art'}” to the canvas`);
+    toast.success(t('c_PXEditor.addedToCanvas', {name: data.name || t('common.untitled')}));
   } catch (e) {
-    toast.error('Could not load that art');
+    toast.error(t('c_StampPicker.couldNotLoadArt'));
   } finally {
     loadingArtInsert.value = false;
   }
@@ -754,11 +754,11 @@ function onPickBoard(id: string) {
   let ws: Record<string, any> = {};
   try { ws = JSON.parse(localStorage.getItem('workspaces') || '{}'); } catch {  }
   const ed = ws[id];
-  if (!ed) { toast.error('Could not open that board'); return; }
+  if (!ed) { toast.error(t('c_PXEditor.couldNotOpenBoard')); return; }
   store.addBoardWithData(JSON.parse(JSON.stringify(ed)));
   fitAllBoards();
   showArtPicker.value = false;
-  toast.success(`Added “${ed.name || 'board'}” to the canvas`);
+  toast.success(t('c_PXEditor.addedToCanvas', {name: ed.name || t('common.untitled')}));
 }
 
 function onNewBlankBoard() {
@@ -1091,12 +1091,12 @@ function onContextMenu(e: MouseEvent) {
 function hideBoard(id: string) {
   closeBoardMenu();
   if (store.boards.length <= 1) {
-    toast.info("Can't hide the only board");
+    toast.info(t('c_PXEditor.cantHideOnlyBoard'));
     return;
   }
   const b = store.boards.find(x => x.id === id);
   store.removeBoard(id);
-  toast.success(`Hid “${b?.data?.name || 'board'}” — reopen it from File → Load art`);
+  toast.success(t('c_PXEditor.hidBoard', {name: b?.data?.name || t('common.untitled')}));
 }
 
 const isResizingBoard = ref(false);
@@ -1339,14 +1339,14 @@ async function confirmImport() {
     importPicked.value = [];
     if (res.added) {
       if (dest === 'boards' && store.boards.length > 1) fitAllBoards();
-      toast.success(
-          dest === 'frames'
-              ? `Imported ${res.added} frame${res.added > 1 ? 's' : ''}`
-              : `Imported ${res.added} file${res.added > 1 ? 's' : ''}`
-          + (res.skipped ? ` · ${res.skipped} skipped` : ''),
-      );
+      const imported = dest === 'frames'
+          ? t('c_PXEditor.importedNFrames', {count: res.added}, res.added)
+          : t('c_PXEditor.importedNFiles', {count: res.added}, res.added);
+      toast.success(res.skipped && dest !== 'frames'
+          ? t('c_PXEditor.importedWithSkipped', {imported, count: res.skipped})
+          : imported);
     } else {
-      toast.error(res.skipped ? `Nothing imported — ${res.skipped} file${res.skipped > 1 ? 's' : ''} skipped` : 'Nothing could be imported');
+      toast.error(res.skipped ? t('c_PXEditor.nothingImportedSkipped', {count: res.skipped}, res.skipped) : t('c_PXEditor.nothingImported'));
     }
   } finally {
     importBusy.value = false;
@@ -2896,11 +2896,11 @@ function clearReference() {
 
 function onMergeBlock() {
   const res = store.mergeSelectedBlock()
-  if (!res) { toast.info('Select at least a 2-pixel-wide area to merge'); return }
+  if (!res) { toast.info(t('c_PXEditor.selectAreaToMerge')); return }
   newSize.value = {width: res.w, height: res.h}
   centerView()
   scheduleDraw()
-  toast.success(`Merged — canvas is now ${res.w}×${res.h}`)
+  toast.success(t('c_PXEditor.mergedCanvasNow', {w: res.w, h: res.h}))
 }
 
 const multiSelectLayers = ref(false)
@@ -2940,7 +2940,7 @@ function onMergeLayers() {
   selectedLayers.value = new Set()
   multiSelectLayers.value = false
   scheduleDraw()
-  toast.success('Merged layers into one')
+  toast.success(t('c_PXEditor.mergedLayers'))
 }
 
 watch([() => editorData.value.layers, () => editorData.value.layers.length, () => store.currentFrameIndex],
@@ -2948,25 +2948,25 @@ watch([() => editorData.value.layers, () => editorData.value.layers.length, () =
 
 function onCopy() {
   const scope = store.copyActiveScope()
-  if (scope) toast.success(`Copied ${scope}`)
-  else toast.info('Nothing to copy here')
+  if (scope) toast.success(t('c_PXEditor.copiedScope', {scope: t('common.scope_' + scope)}))
+  else toast.info(t('c_PXEditor.nothingToCopy'))
 }
 
 function onPaste() {
   const res = store.pasteClipboard()
-  if (!res) { toast.info('Clipboard is empty — copy something first'); return }
+  if (!res) { toast.info(t('c_PXEditor.clipboardEmpty')); return }
   if (res === 'board') focusActiveBoard()
   scheduleDraw()
-  toast.success(res === 'board' ? 'Pasted as a new board' : 'Pasted as a new layer')
+  toast.success(res === 'board' ? t('c_PXEditor.pastedAsBoard') : t('c_PXEditor.pastedAsLayer'))
 }
 
 function onTrimHidden() {
   const {removed, boards} = store.trimHiddenPixels()
   if (removed) {
     scheduleDraw()
-    toast.success(`Removed ${removed} hidden pixel${removed > 1 ? 's' : ''} outside the canvas${acrossBoards(boards)}`)
+    toast.success(acrossBoards(t('c_PXEditor.removedHiddenPixels', {count: removed}, removed), boards))
   } else {
-    toast.info('Nothing to trim — all pixels are inside the canvas')
+    toast.info(t('c_PXEditor.nothingToTrim'))
   }
 }
 
@@ -2974,16 +2974,16 @@ function onCleanupColors() {
   const boards = store.cleanupUnusedColors()
   if (boards) {
     scheduleDraw()
-    toast.success(`Dropped the unused colors${acrossBoards(boards)}`)
+    toast.success(acrossBoards(t('c_PXEditor.droppedUnusedColors'), boards))
   } else {
-    toast.info('Nothing to clean up — every color is in use')
+    toast.info(t('c_PXEditor.nothingToCleanUp'))
   }
 }
 
 /* With no board selected these run over the whole canvas, so say when more
    than the piece in front of you changed. */
-function acrossBoards(n: number) {
-  return n > 1 ? ` across ${n} boards` : ''
+function acrossBoards(text: string, n: number) {
+  return n > 1 ? t('c_PXEditor.acrossNBoards', {text, count: n}) : text
 }
 
 function exportFile(type: string) {
@@ -2997,7 +2997,7 @@ function exportFile(type: string) {
   a.download = `SimplePixelArt.${type}`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast.success(`Exported as ${type.toUpperCase()}`)
+  toast.success(t('c_PXEditor.exportedAs', {type: type.toUpperCase()}))
 }
 
 function openPngExport() {
@@ -3014,7 +3014,7 @@ function exportPng(scale: number) {
   a.download = `${editorData.value.name || 'SimplePixelArt'}.png`
   a.click()
   showPngModal.value = false
-  toast.success(`Exported PNG (${tmp.width}×${tmp.height})`)
+  toast.success(t('c_PXEditor.exportedPng', {w: tmp.width, h: tmp.height}))
 }
 
 function animationFrames() {
@@ -3037,10 +3037,10 @@ async function exportGif() {
         {fps: store.fps, loop: store.loopAnimation, bgColor, shared: toRaw(store.sharedLayers)},
     );
     downloadBlob(new Blob([bytes], {type: 'image/gif'}), `${editorData.value.name || 'SimplePixelArt'}.gif`);
-    toast.success('Exported GIF');
+    toast.success(t('c_PXEditor.exportedGif'));
   } catch (e) {
     console.error(e);
-    toast.error('GIF export failed');
+    toast.error(t('c_PXEditor.gifExportFailed'));
   }
 }
 
@@ -3058,10 +3058,10 @@ async function exportSpritesheet() {
     sheet.toBlob((blob) => {
       if (blob) downloadBlob(blob, `${editorData.value.name || 'SimplePixelArt'}-spritesheet.png`);
     });
-    toast.success('Exported spritesheet');
+    toast.success(t('c_PXEditor.exportedSpritesheet'));
   } catch (e) {
     console.error(e);
-    toast.error('Spritesheet export failed');
+    toast.error(t('c_PXEditor.spritesheetExportFailed'));
   }
 }
 
@@ -3091,10 +3091,10 @@ async function exportGame() {
         downloadBlob(new Blob([json], {type: 'application/json'}), `${name}-sheet.json`);
       }, 300);
     });
-    toast.success('Exported spritesheet + JSON for game engines');
+    toast.success(t('c_PXEditor.exportedGame'));
   } catch (e) {
     console.error(e);
-    toast.error('Game export failed');
+    toast.error(t('c_PXEditor.gameExportFailed'));
   }
 }
 
@@ -3347,7 +3347,7 @@ watch(
 
     <div class="editor-toolbar">
       <div class="toolbar-start">
-        <ui-tooltip class="fs-only" :text="hasPreviousScreen ? 'Back' : 'Home'">
+        <ui-tooltip class="fs-only" :text="hasPreviousScreen ? $t('common.back') : $t('common.home')">
           <button class="toolbar-btn" :aria-label="hasPreviousScreen ? $t('common.back') : $t('common.home')" @click="goBack">
             <span class="icon" :class="hasPreviousScreen ? 'icon-angle-left' : 'icon-home'"/>
           </button>
@@ -3512,15 +3512,15 @@ watch(
                       <span class="resize-field-label">{{ $t('c_PXEditor.width') }}</span>
                       <input class="resize-input wide" type="number" min="1" max="128" :value="newSize.width" @input="onResizeWidth(($event.target as HTMLInputElement).value)" @keydown.enter="applyResize">
                     </label>
-                    <button type="button" class="resize-link" :class="{ active: linkResize }" :aria-pressed="linkResize" :title="linkResize ? 'Aspect ratio locked' : 'Lock aspect ratio'" @click="linkResize = !linkResize"><span class="icon icon-link"/></button>
+                    <button type="button" class="resize-link" :class="{ active: linkResize }" :aria-pressed="linkResize" :title="linkResize ? $t('c_PXEditor.aspectLocked') : $t('c_PXEditor.lockAspect')" @click="linkResize = !linkResize"><span class="icon icon-link"/></button>
                     <label class="resize-field">
                       <span class="resize-field-label">{{ $t('common.height') }}</span>
                       <input class="resize-input wide" type="number" min="1" max="128" :value="newSize.height" @input="onResizeHeight(($event.target as HTMLInputElement).value)" @keydown.enter="applyResize">
                     </label>
                   </div>
                 </div>
-                <p v-if="resizeShrinks" class="resize-warn">Smaller than {{ editorData.width }}×{{ editorData.height }} — pixels outside the new bounds are cropped.</p>
-                <button class="btn primary wide" @click="applyResize">Resize to {{ clampDim(newSize.width) }}×{{ clampDim(newSize.height) }}</button>
+                <p v-if="resizeShrinks" class="resize-warn">{{ $t('c_PXEditor.resizeShrinkWarn', {w: editorData.width, h: editorData.height}) }}</p>
+                <button class="btn primary wide" @click="applyResize">{{ $t('c_PXEditor.resizeTo', {w: clampDim(newSize.width), h: clampDim(newSize.height)}) }}</button>
               </div>
             </div>
 
@@ -3537,7 +3537,7 @@ watch(
                   <button class="bg-tab" :class="{active: bgTab === 'solid'}" @click="bgTab = 'solid'; applyBgSolid()">
                     <span class="bg-tab-preview" :style="{background: bgSolidColor}" aria-hidden="true"/><span>{{ $t('c_PXEditor.solid') }}</span>
                   </button>
-                  <button class="bg-tab" :class="{active: bgTab === 'art'}" :disabled="!auth.isLogged" :title="auth.isLogged ? 'Use one of your arts' : 'Login required'" @click="bgTab = 'art'; auth.isLogged && !myArtsLoaded && loadMyArts()">
+                  <button class="bg-tab" :class="{active: bgTab === 'art'}" :disabled="!auth.isLogged" :title="auth.isLogged ? $t('c_PXEditor.useOneOfYourArts') : $t('c_PXEditor.loginRequired')" @click="bgTab = 'art'; auth.isLogged && !myArtsLoaded && loadMyArts()">
                     <span class="bg-tab-preview bg-tab-preview-art" aria-hidden="true"/><span>{{ $t('c_PXEditor.myArt') }}</span>
                   </button>
                 </div>
@@ -4117,7 +4117,7 @@ watch(
                   @click="genMetaWithAI"
               >
                 <span class="icon icon-auto-fix"/>
-                <span>{{ aiBusy ? 'Reading your art…' : 'Let AI fill these for you' }}</span>
+                <span>{{ aiBusy ? $t('c_PXEditor.readingYourArt') : $t('c_PXEditor.letAiFill') }}</span>
                 <span class="publish-ai-cost"><span class="icon icon-coin"/>{{ aiMeta.cost }}</span>
               </button>
             </div>
@@ -4149,13 +4149,13 @@ watch(
             <div class="publish-done-header">
               <h3 class="text-sm font-bold">
                 <template v-if="heldForReview">{{ $t('c_PXEditor.heldForReview') }}</template>
-                <template v-else-if="editorData.is_public">Published!</template>
-                <template v-else>Saved — unlisted</template>
+                <template v-else-if="editorData.is_public">{{ $t('c_PXEditor.published') }}</template>
+                <template v-else>{{ $t('c_PXEditor.savedUnlisted') }}</template>
               </h3>
               <p class="text-xs mt-1">
                 <template v-if="heldForReview">{{ $t('c_PXEditor.aTagOrTitleMatchedSomethingProtected') }}</template>
-                <template v-else-if="editorData.is_public">Your pixel art is live. Share it!</template>
-                <template v-else>Only people with this link can see it — not listed in the gallery.</template>
+                <template v-else-if="editorData.is_public">{{ $t('c_PXEditor.yourArtIsLive') }}</template>
+                <template v-else>{{ $t('c_PXEditor.onlyPeopleWithLink') }}</template>
               </p>
             </div>
             <div class="share-stack">
@@ -4282,7 +4282,7 @@ watch(
           <p class="png-dims">
             {{ $t('c_PXEditor.output') }}
             <strong>{{ editorData.width * pngScale }}×{{ editorData.height * pngScale }}px</strong>
-            <span class="png-dims-src">(from {{ editorData.width }}×{{ editorData.height }})</span>
+            <span class="png-dims-src">{{ $t('c_PXEditor.fromSize', {w: editorData.width, h: editorData.height}) }}</span>
           </p>
 
           <button class="btn primary wide" @click="exportPng(pngScale)">
@@ -4293,7 +4293,7 @@ watch(
       </UiModal>
 
     <UiModal v-if="showImportModal" class="png-modal" @close="showImportModal = false">
-      <h3 class="publish-heading">Import {{ importPicked.length }} file{{ importPicked.length > 1 ? 's' : '' }}</h3>
+      <h3 class="publish-heading">{{ $t('c_PXEditor.importNFiles', {count: importPicked.length}, importPicked.length) }}</h3>
       <p class="publish-sub" v-html="$t('c_PXEditor.chooseHowToReadThePixels')"/>
 
       <div class="onb-field">
@@ -4308,8 +4308,8 @@ watch(
         </div>
         <p class="png-dims">
           {{ importProcess === 'filter'
-            ? 'Resamples any image into pixel art (grid detection + palette).'
-            : 'Keeps every pixel and color exactly as-is — images up to 256×256.' }}
+            ? $t('c_PXEditor.importFilterHint')
+            : $t('c_PXEditor.importOriginalHint') }}
         </p>
       </div>
 
@@ -4320,7 +4320,7 @@ watch(
             {{ $t('c_PXEditor.currentCanvas') }}
           </button>
           <button class="onb-chip" :class="{ active: importDest === 'boards' }" @click="importDest = 'boards'">
-            {{ importPicked.length > 1 ? 'Boards' : 'New board' }}
+            {{ importPicked.length > 1 ? $t('c_PXEditor.boards') : $t('c_PXEditor.newBoard') }}
           </button>
           <button class="onb-chip" :class="{ active: importDest === 'frames' }" @click="importDest = 'frames'">
             {{ $t('common.animationFrames') }}
@@ -4328,16 +4328,16 @@ watch(
         </div>
         <p class="png-dims">
           {{ importDest === 'boards'
-            ? (importPicked.length > 1 ? 'Each file becomes its own board on the desk.' : 'The file becomes a new board beside the others.')
+            ? (importPicked.length > 1 ? $t('c_PXEditor.importBoardsHint') : $t('c_PXEditor.importBoardHint'))
             : importDest === 'frames'
-              ? 'Files become the frames of one animation, in pick order (replaces the current canvas).'
-              : 'Replaces the artwork on the current canvas.' }}
+              ? $t('c_PXEditor.importFramesHint')
+              : $t('c_PXEditor.importReplaceHint') }}
         </p>
       </div>
 
       <button class="btn primary wide" :disabled="importBusy" @click="confirmImport">
         <span class="icon icon-upload"/>
-        <span>{{ importBusy ? 'Importing…' : 'Import' }}</span>
+        <span>{{ importBusy ? $t('c_StripImport.importing') : $t('c_StripImport.import') }}</span>
       </button>
       <button class="share-dismiss" @click="showImportModal = false">{{ $t('common.cancel') }}</button>
     </UiModal>
@@ -4347,7 +4347,7 @@ watch(
           <p class="publish-sub" v-html="$t('c_PXEditor.thisArtworkWillBeRemovedIf')"/>
           <button class="btn block del-confirm-btn" :disabled="deleting" @click="destroyCurrent">
             <span class="icon icon-trash"/>
-            <span>{{ deleting ? 'Deleting…' : 'Delete' }}</span>
+            <span>{{ deleting ? $t('c_PXEditor.deleting') : $t('c_PXEditor.delete') }}</span>
           </button>
           <button class="share-dismiss" @click="showDeleteConfirm = false">{{ $t('common.cancel') }}</button>
       </UiModal>
@@ -4358,8 +4358,8 @@ watch(
         :items="browseBoards"
         :loading="auth.isLogged && pickerLoading"
         filterable
-        new-label="Blank board"
-        :empty-text="auth.isLogged ? 'No saved arts yet — publish one first.' : 'No local boards yet — draw something first.'"
+        :new-label="$t('c_PXEditor.blankBoard')"
+        :empty-text="auth.isLogged ? $t('c_PXEditor.noSavedArts') : $t('c_PXEditor.noLocalBoards')"
         @select="onPickBoard"
         @create="onNewBlankBoard"
         @close="showArtPicker = false"

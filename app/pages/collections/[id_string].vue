@@ -15,6 +15,7 @@ interface CollectionDetail extends Collection {
 const route = useRoute()
 const config = useRuntimeConfig()
 const auth = useAuthStore()
+const {t, locale} = useI18n()
 
 const {data, error} = await useAuthFetch<CollectionDetail>(
     `/coloring/collections/${route.params.id_string}/`,
@@ -24,7 +25,7 @@ if (error.value && import.meta.server) {
   setResponseStatus(useRequestEvent()!, 404)
 }
 
-const title = computed(() => data.value?.title || data.value?.name || 'Untitled collection')
+const title = computed(() => data.value?.title || data.value?.name || t('p_collections_id_string.untitledCollection'))
 const desc = computed(() => data.value?.desc || '')
 const items = computed<SharedPage[]>(() => Array.isArray(data.value?.items) ? data.value!.items : [])
 const itemCount = computed(() => items.value.length)
@@ -51,7 +52,7 @@ const formattedDate = computed(() => {
   const d = data.value?.updated
   if (!d) return null
   try {
-    return new Date(d).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})
+    return new Date(d).toLocaleDateString(locale.value, {year: 'numeric', month: 'short', day: 'numeric'})
   } catch {
     return null
   }
@@ -129,7 +130,7 @@ async function fetchMyArts() {
     })
     myArts.value = res.results
   } catch {
-    toast.error('Could not load your artworks')
+    toast.error(t('p_collections_id_string.couldNotLoadYourArtworks'))
   } finally {
     loadingMyArts.value = false
   }
@@ -173,9 +174,9 @@ async function saveManage() {
     originalItems = [...originalItems.filter(i => !removedOk.has(i.id)), ...addedOk]
     const failed = added.length + removed.length - addedOk.length - removedOk.size
     if (failed) {
-      toast.error(`Could not save ${failed} ${failed === 1 ? 'change' : 'changes'}`)
+      toast.error(t('p_collections_id_string.couldNotSaveNChanges', failed, {count: failed}))
     } else {
-      toast.success('Collection updated')
+      toast.success(t('p_collections_id_string.collectionUpdated'))
       managing.value = false
     }
   } finally {
@@ -259,7 +260,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
             </button>
             <button
                 class="btn primary cl-icon-btn"
-                :title="savingManage ? 'Saving…' : 'Save changes'"
+                :title="savingManage ? $t('common.saving') : $t('p_collections_id_string.saveChanges')"
                 :aria-label="$t('p_collections_id_string.saveChanges')"
                 :disabled="savingManage"
                 @click="saveManage"
@@ -300,7 +301,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
         </header>
         <p v-if="loadingMyArts" class="text-xs text-muted">{{ $t('p_collections_id_string.loadingYourArtworks') }}</p>
         <p v-else-if="!addableArts.length" class="text-xs text-muted">
-          {{ myArts.length ? 'All your artworks are already in this collection.' : 'You have no cloud artworks yet.' }}
+          {{ myArts.length ? $t('p_collections_id_string.allYourArtworksAlreadyIn') : $t('p_collections_id_string.noCloudArtworksYet') }}
         </p>
         <div v-else class="cl-manage-add-grid no-scrollbar">
           <button
@@ -313,7 +314,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
             <img
                 v-if="a.id_string && !failedThumb[a.id]"
                 :src="thumbUrl(a)"
-                :alt="a.name || 'Pixel art'"
+                :alt="a.name || $t('p_collections_id_string.pixelArtAlt')"
                 class="cl-manage-add-img"
                 loading="lazy"
                 @error="failedThumb[a.id] = true"

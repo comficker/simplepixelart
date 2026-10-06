@@ -1,7 +1,8 @@
 <script setup lang="ts">
+const {t} = useI18n()
 useCustomSeoMeta({
-  title: "About SimplePixelArt.com",
-  description: "Learn about SimplePixelArt.com — a free online pixel art editor and gallery where anyone can create, share, and discover pixel art.",
+  title: () => t('p_about.aboutSimplepixelartCom'),
+  description: () => t('p_about.seoDescription'),
   keywords: "about simple pixel art, pixel art editor, pixel art community, free pixel art maker",
   canonical: "https://simplepixelart.com/about",
 });

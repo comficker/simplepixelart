@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {reactive, computed} from 'vue'
 
+const {t} = useI18n()
+
 const props = withDefaults(defineProps<{
   name: string
   previewImgs: string[]
@@ -17,7 +19,7 @@ function statusIcon(s?: string) {
   return s === 'public' ? 'icon-earth' : s === 'pending' ? 'icon-clock' : 'icon-earth-off'
 }
 function statusTitle(s?: string) {
-  return s === 'public' ? 'Public' : s === 'pending' ? 'Pending review' : 'Private'
+  return s === 'public' ? t('common.public') : s === 'pending' ? t('c_WorkTile.pendingReview') : t('common.private')
 }
 function statusBadge(s?: string) {
   return s === 'public' ? 'badge-public' : s === 'pending' ? 'badge-pending' : 'badge-draft'

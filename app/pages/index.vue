@@ -328,8 +328,8 @@ useCustomSeoMeta({
             <NuxtLinkLocale :to="`/challenges/${homeChallenge.id_string}`" class="home-challenge-link">
               <span class="home-challenge-name">{{ homeChallenge.name }}</span>
               <span class="home-challenge-sub">
-                {{ challengeDaysLeft }} {{ challengeDaysLeft === 1 ? 'day' : 'days' }} left ·
-                <template v-if="homeChallenge.entries">{{ homeChallenge.entries }} {{ homeChallenge.entries === 1 ? 'entry' : 'entries' }} · {{ $t('p_index.joinChallenge') }}</template>
+                {{ $t('p_index.daysLeft', challengeDaysLeft, {count: challengeDaysLeft}) }} ·
+                <template v-if="homeChallenge.entries">{{ $t('p_index.entryCount', homeChallenge.entries, {count: homeChallenge.entries}) }} · {{ $t('p_index.joinChallenge') }}</template>
                 <template v-else>{{ $t('p_index.beTheFirstToEnter') }}</template>
               </span>
             </NuxtLinkLocale>
@@ -354,7 +354,7 @@ useCustomSeoMeta({
                 :key="item.id as any"
                 :to="`/editor?id=${item.id_string || item.id}`"
                 class="studio-card"
-                :title="item.name || 'Untitled'"
+                :title="item.name || $t('common.untitled')"
             >
               <div class="studio-canvas">
                 <div class="square">
@@ -362,7 +362,7 @@ useCustomSeoMeta({
                     <img
                         v-if="isCloudWork(item) && item.has_image !== false && !failedThumb[item.id]"
                         :src="workThumbUrl(item)"
-                        :alt="item.name || 'Pixel art'"
+                        :alt="item.name || $t('p_index.pixelArtAlt')"
                         class="size-full"
                         loading="lazy"
                         decoding="async"

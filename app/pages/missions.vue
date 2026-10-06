@@ -30,8 +30,8 @@ interface Summary {
 }
 
 useCustomSeoMeta({
-  title: 'Missions',
-  description: 'Earn credits by creating and sharing pixel art.',
+  title: () => t('common.missions'),
+  description: () => t('p_missions.seoDescription'),
   canonical: 'https://simplepixelart.com/missions',
   robots: 'noindex, follow',
 })
@@ -45,7 +45,7 @@ async function load() {
   try {
     sum.value = await useNativeFetch<Summary>('/coloring/economy/')
   } catch {
-    toast.error('Could not load missions')
+    toast.error(t('p_missions.couldNotLoadMissions'))
   } finally {
     loading.value = false
   }
@@ -61,15 +61,15 @@ async function claimDaily() {
       sum.value.balance = res.balance
       sum.value.daily_claimed = true
     }
-    toast.success(`+${res.granted} credits`)
+    toast.success(t('p_missions.plusNCredits', res.granted, {count: res.granted}))
   } catch (e: any) {
     // Only the backend's own "already claimed" marks it done; a network or
     // throttle failure leaves the button for another try.
     if ((e?.response?._data?.[0] || e?.data?.[0]) === 'DAILY_ALREADY_CLAIMED') {
-      toast.error('Already claimed today')
+      toast.error(t('p_missions.alreadyClaimedToday'))
       if (sum.value) sum.value.daily_claimed = true
     } else {
-      toast.error('Could not claim — try again')
+      toast.error(t('p_missions.couldNotClaimTryAgain'))
     }
   } finally {
     claiming.value = ''
@@ -84,9 +84,9 @@ async function claimMission(m: Mission) {
         '/coloring/economy/missions/claim/', {method: 'POST', body: {code: m.code}})
     if (sum.value) sum.value.balance = res.balance
     m.claimed = true
-    toast.success(`+${res.granted} credits`)
+    toast.success(t('p_missions.plusNCredits', res.granted, {count: res.granted}))
   } catch {
-    toast.error('Could not claim — refresh and try again')
+    toast.error(t('p_missions.couldNotClaimRefresh'))
   } finally {
     claiming.value = ''
   }
@@ -111,7 +111,7 @@ async function redeem() {
         '/coloring/economy/redeem/', {method: 'POST', body: {code}})
     if (sum.value) sum.value.balance = res.balance
     redeemCode.value = ''
-    toast.success(`+${res.granted} credits`)
+    toast.success(t('p_missions.plusNCredits', res.granted, {count: res.granted}))
   } catch (e: any) {
     const key = REDEEM_ERRORS[e?.response?._data?.[0] || e?.data?.[0]]
     toast.error(key ? t(`p_missions.${key}`) : t('p_missions.redeemFailed'))
@@ -129,9 +129,9 @@ async function copyInvite() {
   if (!inviteLink.value) return
   try {
     await navigator.clipboard.writeText(inviteLink.value)
-    toast.success('Invite link copied')
+    toast.success(t('p_missions.inviteLinkCopied'))
   } catch {
-    toast.error('Could not copy — select the link manually')
+    toast.error(t('p_missions.couldNotCopySelectManually'))
   }
 }
 
@@ -227,13 +227,13 @@ watch(() => auth.isLogged, (v) => {
               <div class="msn-row-main">
                 <div class="msn-row-title">{{ m.title }}</div>
               </div>
-              <span class="msn-chip">{{ m.period === 'once' ? 'Once' : 'Daily' }}</span>
+              <span class="msn-chip">{{ m.period === 'once' ? $t('p_missions.once') : $t('p_missions.daily') }}</span>
               <span class="msn-reward"><span class="icon icon-coin"/>{{ m.reward }}</span>
               <button
                   class="btn msn-claim"
                   :class="{primary: m.done && !m.claimed}"
                   :disabled="m.claimed || !m.done || claiming === m.code"
-                  :title="m.claimed ? 'Claimed' : m.done ? 'Claim reward' : 'Not completed yet'"
+                  :title="m.claimed ? $t('p_missions.claimed') : m.done ? $t('p_missions.claimReward') : $t('p_missions.notCompletedYet')"
                   @click="claimMission(m)"
               >
                 <template v-if="m.claimed"><span class="icon icon-check"/><span>{{ $t('p_missions.claimed') }}</span></template>
@@ -285,8 +285,8 @@ watch(() => auth.isLogged, (v) => {
             </div>
             <p v-if="sum.referral.invited" class="msn-invite-stats text-xs">
               <span class="icon icon-check"/>
-              {{ sum.referral.invited }} friend{{ sum.referral.invited === 1 ? '' : 's' }} joined
-              · {{ sum.referral.earned }} credits earned
+              {{ $t('p_missions.friendsJoined', sum.referral.invited, {count: sum.referral.invited}) }}
+              · {{ $t('p_missions.creditsEarned', sum.referral.earned || 0, {count: sum.referral.earned || 0}) }}
             </p>
           </div>
 

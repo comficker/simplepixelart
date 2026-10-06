@@ -8,7 +8,7 @@
           role="dialog"
           aria-modal="true"
           :aria-labelledby="title ? headingId : undefined"
-          :aria-label="title ? undefined : (ariaLabel || 'Dialog')"
+          :aria-label="title ? undefined : (ariaLabel || $t('c_Modal.dialog'))"
           :style="width ? {maxWidth: width} : undefined"
           v-bind="$attrs"
       >

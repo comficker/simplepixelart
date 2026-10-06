@@ -11,4 +11,18 @@ export default defineI18nConfig(() => ({
   // README and FAQ copy carries inline markup on purpose and is rendered
   // through v-html; the compiler side is already told so in nuxt.config.
   warnHtmlMessage: false,
+  // Russian messages carry three forms ("one | few | many"); vue-i18n's
+  // default rule reads three forms as "zero | one | many", which printed
+  // "1 работы" for a single item.
+  pluralRules: {
+    ru(choice: number, choicesLength: number) {
+      if (choicesLength < 3) return choice === 1 ? 0 : 1
+      const n = Math.abs(choice) % 100
+      const n1 = n % 10
+      if (n > 10 && n < 20) return 2
+      if (n1 === 1) return 0
+      if (n1 >= 2 && n1 <= 4) return 1
+      return 2
+    },
+  },
 }))

@@ -9,6 +9,7 @@ interface Notif {
 }
 
 const auth = useAuthStore()
+const {t} = useI18n()
 const unread = ref(0)
 const items = ref<Notif[]>([])
 const loading = ref(false)
@@ -48,13 +49,14 @@ const KIND_ICON: Record<string, string> = {
 }
 
 function textOf(n: Notif): string {
-  const who = n.actor?.username ? `@${n.actor.username}` : 'Someone'
-  if (n.kind === 'follow') return `${who} started following you`
-  if (n.kind === 'comment') return `${who} commented on “${n.meta?.target_name || 'your art'}”`
-  if (n.kind === 'like') return `${who} liked “${n.meta?.target_name || 'your art'}”`
-  if (n.kind === 'new_art') return `${who} published “${n.meta?.target_name || 'a new piece'}”`
-  if (n.kind === 'challenge') return `Your piece placed #${n.meta?.place} in “${n.meta?.challenge_name}”`
-  if (n.kind === 'remix') return `${who} made their own version of “${n.meta?.original_name || 'your art'}”`
+  const who = n.actor?.username ? `@${n.actor.username}` : t('c_NotifyBell.someone')
+  const yourArt = t('c_NotifyBell.yourArt')
+  if (n.kind === 'follow') return t('c_NotifyBell.startedFollowing', {who})
+  if (n.kind === 'comment') return t('c_NotifyBell.commentedOn', {who, name: n.meta?.target_name || yourArt})
+  if (n.kind === 'like') return t('c_NotifyBell.liked', {who, name: n.meta?.target_name || yourArt})
+  if (n.kind === 'new_art') return t('c_NotifyBell.published', {who, name: n.meta?.target_name || t('c_NotifyBell.aNewPiece')})
+  if (n.kind === 'challenge') return t('c_NotifyBell.challengePlaced', {place: n.meta?.place, name: n.meta?.challenge_name})
+  if (n.kind === 'remix') return t('c_NotifyBell.remixed', {who, name: n.meta?.original_name || yourArt})
   return `${who} · ${n.kind}`
 }
 
@@ -66,10 +68,10 @@ function linkOf(n: Notif): string {
 
 function ago(iso: string): string {
   const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000))
-  if (s < 60) return `${s}s`
-  if (s < 3600) return `${Math.floor(s / 60)}m`
-  if (s < 86400) return `${Math.floor(s / 3600)}h`
-  return `${Math.floor(s / 86400)}d`
+  if (s < 60) return t('c_NotifyBell.agoS', {n: s})
+  if (s < 3600) return t('c_NotifyBell.agoM', {n: Math.floor(s / 60)})
+  if (s < 86400) return t('c_NotifyBell.agoH', {n: Math.floor(s / 3600)})
+  return t('c_NotifyBell.agoD', {n: Math.floor(s / 86400)})
 }
 
 onMounted(fetchUnread)
@@ -98,7 +100,7 @@ watch(() => auth.isLogged, (v) => { if (v) fetchUnread() })
             <span class="file-menu-label is-stacked">
               <span class="notify-text">{{ textOf(n) }}</span>
               <span class="notify-sub">
-                <template v-if="n.meta?.excerpt">“{{ n.meta.excerpt }}” · </template>{{ ago(n.created) }} ago
+                <template v-if="n.meta?.excerpt">“{{ n.meta.excerpt }}” · </template>{{ ago(n.created) }}
               </span>
             </span>
           </NuxtLinkLocale>

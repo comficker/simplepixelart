@@ -3,13 +3,14 @@ import {toast} from 'vue-sonner'
 import {PROFILE_LINKS} from '~/helper/profileLinks'
 
 const auth = useAuthStore()
+const {t} = useI18n()
 const {current, setTheme, themes} = useTheme() as any
 const loginModal = useLoginModal()
 const {current: resultsCols, options: resultsColOptions, setResultsCols} = useResultsCols()
 
 useCustomSeoMeta({
-  title: 'Settings',
-  description: 'Manage your account, appearance and app data.',
+  title: () => t('common.settings'),
+  description: () => t('p_settings.seoDescription'),
   canonical: 'https://simplepixelart.com/settings',
   robots: 'noindex, follow',
 })
@@ -31,8 +32,8 @@ function fillForm() {
 }
 
 const PROFILE_ERRORS: Record<string, string> = {
-  USERNAME_INVALID: 'Username must be 3–30 letters, numbers, . _ or -',
-  USERNAME_DUPLICATE: 'That username is taken',
+  USERNAME_INVALID: 'usernameInvalid',
+  USERNAME_DUPLICATE: 'usernameTaken',
 }
 
 async function saveProfile() {
@@ -44,10 +45,10 @@ async function saveProfile() {
     await useNativeFetch('/auth/profile', {method: 'PATCH', body: {...form, links: {...links}}})
     await auth.fetchInfo()
     fillForm()
-    toast.success('Profile saved')
+    toast.success(t('p_settings.profileSaved'))
   } catch (e: any) {
     const code = e?.response?._data?.[0] || e?.data?.[0]
-    toast.error(PROFILE_ERRORS[code] || 'Could not save profile')
+    toast.error(t(`p_settings.${PROFILE_ERRORS[code] || 'couldNotSaveProfile'}`))
   } finally {
     savingProfile.value = false
   }
@@ -58,14 +59,14 @@ const savingPw = ref(false)
 const hasPassword = computed(() => !!(auth.logged as any)?.has_password)
 
 const PW_ERRORS: Record<string, string> = {
-  PASSWORD_TOO_SHORT: 'Password must be at least 6 characters',
-  PASSWORD_WRONG: 'Current password is incorrect',
+  PASSWORD_TOO_SHORT: 'passwordTooShort',
+  PASSWORD_WRONG: 'passwordWrong',
 }
 
 async function savePassword() {
   if (savingPw.value) return
   if (pw.next !== pw.confirm) {
-    toast.error('Passwords do not match')
+    toast.error(t('p_settings.passwordsDoNotMatch'))
     return
   }
   savingPw.value = true
@@ -76,10 +77,10 @@ async function savePassword() {
     })
     pw.current = ''; pw.next = ''; pw.confirm = ''
     await auth.fetchInfo()
-    toast.success('Password updated')
+    toast.success(t('p_settings.passwordUpdated'))
   } catch (e: any) {
     const code = e?.response?._data?.[0] || e?.data?.[0]
-    toast.error(PW_ERRORS[code] || 'Could not update password')
+    toast.error(t(`p_settings.${PW_ERRORS[code] || 'couldNotUpdatePassword'}`))
   } finally {
     savingPw.value = false
   }
@@ -131,7 +132,7 @@ watch(() => auth.logged?.id, fillForm)
             </label>
             <div class="set-actions">
               <button type="submit" class="btn primary" :disabled="savingProfile">
-                {{ savingProfile ? 'Saving…' : 'Save profile' }}
+                {{ savingProfile ? $t('common.saving') : $t('p_settings.saveProfile') }}
               </button>
               <NuxtLinkLocale v-if="auth.logged?.username" :to="`/creator/${auth.logged.username}`" class="btn">
                 <span class="icon icon-user"/><span>{{ $t('p_settings.viewPublicProfile') }}</span>
@@ -166,7 +167,7 @@ watch(() => auth.logged?.id, fillForm)
             </div>
             <div class="set-actions">
               <button type="submit" class="btn primary" :disabled="savingPw || !pw.next">
-                {{ savingPw ? 'Saving…' : hasPassword ? 'Change password' : 'Set password' }}
+                {{ savingPw ? $t('common.saving') : hasPassword ? $t('p_settings.changePassword') : $t('p_settings.setPassword') }}
               </button>
             </div>
           </form>

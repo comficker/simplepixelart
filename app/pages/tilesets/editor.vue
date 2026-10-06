@@ -20,8 +20,8 @@ const apiBase = useRuntimeConfig().public.api as string
 const {confirm} = useConfirm()
 
 useCustomSeoMeta({
-  title: 'Tileset Editor — Auto-Tile Terrains',
-  description: 'Free online tileset builder: group tiles, auto-generate Wang 16 and blob 47 terrains from one base tile, then export Godot 4, Tiled or PNG + JSON.',
+  title: () => t('p_tilesets_editor.seoTitle'),
+  description: () => t('p_tilesets_editor.seoDescription'),
   keywords: 'tileset editor, tileset maker, autotile generator, wang tiles, blob tileset, terrain tileset, pixel art tileset builder, godot tileset export, tiled tsx export, tileset png export, 2d game tileset tool, auto tiling',
   canonical: 'https://simplepixelart.com/tilesets/editor',
   robots: () => route.query.id ? 'noindex, follow' : 'index, follow',
@@ -138,7 +138,7 @@ function normGroups(rawGroups: any, rawTerrains: any, registry: Record<string, s
     const kind = g?.kind === 'terrain' ? 'terrain' as const : 'group' as const
     return {
       id: String(g?.id || `g${i}`),
-      name: String(g?.name || (kind === 'terrain' ? 'Terrain' : 'Group')),
+      name: String(g?.name || (kind === 'terrain' ? t('p_tilesets_editor.terrainName') : t('p_tilesets_editor.group'))),
       kind,
       tiles: kind === 'group'
           ? (Array.isArray(g?.tiles) ? g.tiles : [])
@@ -180,11 +180,11 @@ function normGroups(rawGroups: any, rawTerrains: any, registry: Record<string, s
   })
   for (const tr of (Array.isArray(rawTerrains) ? rawTerrains : [])) {
     if (tr?.id && !groups.some(g => g.id === String(tr.id))) {
-      groups.push({id: String(tr.id), name: String(tr.name || 'Terrain'), kind: 'terrain', tiles: [], map: cleanMap(tr.map, registry)})
+      groups.push({id: String(tr.id), name: String(tr.name || t('p_tilesets_editor.terrainName')), kind: 'terrain', tiles: [], map: cleanMap(tr.map, registry)})
     }
   }
   if (!groups.some(g => g.kind === 'group')) {
-    groups.unshift({id: 'g0', name: 'Tiles', kind: 'group', tiles: []})
+    groups.unshift({id: 'g0', name: t('common.tiles'), kind: 'group', tiles: []})
   }
   const inTerrain = new Set<number>()
   for (const g of groups) {
@@ -209,12 +209,12 @@ const saving = ref(false)
 const dirty = ref(false)
 const showSettings = ref(false)
 
-const BOARD_PRESETS = [
-  {name: 'Charcoal', color: '#1b1b1f'},
-  {name: 'Slate', color: '#26272b'},
-  {name: 'Paper', color: '#f5f5f4'},
-  {name: 'White', color: '#ffffff'},
-]
+const BOARD_PRESETS = computed(() => [
+  {name: t('p_tilesets_editor.presetCharcoal'), color: '#1b1b1f'},
+  {name: t('p_tilesets_editor.presetSlate'), color: '#26272b'},
+  {name: t('p_tilesets_editor.presetPaper'), color: '#f5f5f4'},
+  {name: t('p_tilesets_editor.presetWhite'), color: '#ffffff'},
+])
 const BOARD_GRID_STEPS = [1, 2, 4]
 const boardBg = ref('#1b1b1f')
 const boardGrid = ref(true)
@@ -307,7 +307,7 @@ function refreshArt() {
   imgCache.clear()
   scheduleDraw()
   syncBuilders()
-  toast.success('Tiles refreshed')
+  toast.success(t('p_tilesets_editor.tilesRefreshed'))
 }
 
 async function fetchMyTilesets() {
@@ -362,15 +362,15 @@ function loadLocalLibTileset(id: string): boolean {
 
 async function loadTileset(slug: string) {
   if (slug.startsWith('local:')) {
-    if (!loadLocalLibTileset(slug)) { toast.error('Could not open that tileset'); openBlank() }
+    if (!loadLocalLibTileset(slug)) { toast.error(t('p_tilesets_editor.couldNotOpenTileset')); openBlank() }
     return
   }
   try {
-    const t = await useNativeFetch<any>(`/coloring/tilesets/${slug}/`)
-    const meta = t.meta || {}
+    const row = await useNativeFetch<any>(`/coloring/tilesets/${slug}/`)
+    const meta = row.meta || {}
     tileset.value = {
-      id: t.id, id_string: t.id_string, name: t.name || 'Untitled',
-      status: t.status,
+      id: row.id, id_string: row.id_string, name: row.name || t('common.untitled'),
+      status: row.status,
       registry: {...(meta.registry || {})},
       cell: {
         w: Number(meta.cell?.w) || 32,
@@ -379,7 +379,7 @@ async function loadTileset(slug: string) {
       iso: !!meta.iso,
       groups: normGroups(meta.groups, meta.terrains, meta.registry || {}),
       solid: (Array.isArray(meta.solid) ? meta.solid : []).map(Number).filter((n: number) => (meta.registry || {})[String(n)]),
-      worlds: Array.isArray(t.worlds) ? t.worlds : [],
+      worlds: Array.isArray(row.worlds) ? row.worlds : [],
       preview: typeof meta.preview === 'string' ? meta.preview : '',
     }
     applyBoardMeta(meta.board)
@@ -397,9 +397,9 @@ async function loadTileset(slug: string) {
     dirty.value = false
     if (!restored) nextTick(initialView)
     syncBuilders()
-    router.replace({query: {id: t.id_string}})
+    router.replace({query: {id: row.id_string}})
   } catch {
-    toast.error('Could not load that tileset')
+    toast.error(t('p_tilesets_editor.couldNotLoadTileset'))
   }
 }
 
@@ -408,9 +408,9 @@ async function onTilesetSelect(v: string) {
   // Guest tilesets autosave to this browser; only unsaved cloud edits can be lost.
   if (dirty.value && auth.isLogged && !tileset.value?.localId
       && !(await confirm({
-        title: 'Discard unsaved changes?',
-        message: 'Your edits to the current tileset have not been saved.',
-        confirmText: 'Discard',
+        title: t('p_tilesets_editor.discardTitle'),
+        message: t('p_tilesets_editor.discardMsg'),
+        confirmText: t('p_tilesets_editor.discard'),
         danger: true,
       }))) return
   if (v === '__new__') {
@@ -424,14 +424,14 @@ async function onTilesetSelect(v: string) {
 const showLoad = ref(false)
 const browseTilesets = computed(() => {
   if (auth.isLogged) {
-    return myTilesets.value.map((t: any) => ({
-      id: t.id_string, name: t.name || 'Untitled', status: t.status, updated: t.updated,
-      previewImgs: Object.values(t.meta?.registry || {}).slice(0, 4).map(s => tileImageUrl(apiBase, s as string)),
+    return myTilesets.value.map((ts: any) => ({
+      id: ts.id_string, name: ts.name || t('common.untitled'), status: ts.status, updated: ts.updated,
+      previewImgs: Object.values(ts.meta?.registry || {}).slice(0, 4).map(s => tileImageUrl(apiBase, s as string)),
     }))
   }
-  return localTs.list.value.map(t => ({
-    id: t.id, name: t.name || 'Untitled', status: 'draft', updated: new Date(t.created || 0).toISOString(),
-    previewImgs: t.tiles.slice(0, 4).map(x => x.thumb),
+  return localTs.list.value.map(ts => ({
+    id: ts.id, name: ts.name || t('common.untitled'), status: 'draft', updated: new Date(ts.created || 0).toISOString(),
+    previewImgs: ts.tiles.slice(0, 4).map(x => x.thumb),
   }))
 })
 
@@ -449,10 +449,10 @@ function blankTileset(): TilesetRow {
   return {
     id: 0,
     id_string: '',
-    name: 'My tileset',
+    name: t('p_tilesets_editor.myTileset'),
     status: 'draft',
     registry: {},
-    groups: [{id: 'g0', name: 'Tiles', kind: 'group', tiles: []}],
+    groups: [{id: 'g0', name: t('common.tiles'), kind: 'group', tiles: []}],
     solid: [],
     cell: {w: 32, h: 32},
     iso: false,
@@ -490,7 +490,7 @@ function saveLibState() {
   let id = tileset.value.localId
   if (!id) {
     if (!Object.keys(tileset.value.registry).length) return
-    const entry = localTs.create(tileset.value.name || 'Untitled')
+    const entry = localTs.create(tileset.value.name || t('common.untitled'))
     id = entry.id
     tileset.value.localId = id
     tileset.value.id_string = id
@@ -517,7 +517,7 @@ function migrateLegacyDraft(): string | null {
   try { localStorage.removeItem('spa_tileset_draft_v1') } catch {  }
   const reg = saved?.tileset?.registry
   if (!reg || !Object.keys(reg).length) return null
-  const entry = localTs.create(saved.tileset.name || 'My tileset')
+  const entry = localTs.create(saved.tileset.name || t('p_tilesets_editor.myTileset'))
   localTs.saveEditorModel(entry.id, {
     registry: reg,
     groups: Array.isArray(saved.tileset.groups) ? saved.tileset.groups : undefined,
@@ -543,19 +543,19 @@ watch(() => auth.isLogged ? null : tileset.value, () => {
 
 async function createTileset() {
   if (!auth.isLogged) {
-    const entry = localTs.create('My tileset')
+    const entry = localTs.create(t('p_tilesets_editor.myTileset'))
     loadLocalLibTileset(entry.id)
     return
   }
   try {
-    const t = await useNativeFetch<any>('/coloring/tilesets/', {
+    const row = await useNativeFetch<any>('/coloring/tilesets/', {
       method: 'POST',
-      body: {name: 'My tileset', meta: {registry: {}, groups: [{id: 'g0', name: 'Tiles', kind: 'group', tiles: []}]}},
+      body: {name: t('p_tilesets_editor.myTileset'), meta: {registry: {}, groups: [{id: 'g0', name: t('common.tiles'), kind: 'group', tiles: []}]}},
     })
-    await loadTileset(t.id_string)
+    await loadTileset(row.id_string)
     fetchMyTilesets()
   } catch {
-    toast.error('Could not create tileset')
+    toast.error(t('p_tilesets_editor.couldNotCreateTileset'))
   }
 }
 
@@ -606,7 +606,7 @@ async function save() {
     await materializePendingBuilds()
     saveLibState()
     dirty.value = false
-    toast.success('Saved in this browser')
+    toast.success(t('p_tilesets_editor.savedInBrowser'))
     return
   }
   saving.value = true
@@ -645,9 +645,9 @@ async function save() {
       },
     })
     dirty.value = false
-    toast.success('Tileset saved')
+    toast.success(t('p_tilesets_editor.tilesetSaved'))
   } catch {
-    toast.error('Could not save tileset')
+    toast.error(t('p_tilesets_editor.couldNotSaveTileset'))
   } finally {
     saving.value = false
   }
@@ -962,14 +962,14 @@ async function exportPNG() {
     const {w, h} = ts.cell
     const L = await buildExport(exportGroups.value)
     if (!L.blocks.length) {
-      toast.error('Nothing to export in this group')
+      toast.error(t('p_tilesets_editor.nothingToExportGroup'))
       return
     }
     const blob = await renderSheet(L)
     if (!blob) throw new Error('no blob')
     downloadBlob(blob, `${ts.id_string}${exportSuffix.value}_tileset_${w}x${h}.png`)
   } catch {
-    toast.error('Could not export — some tiles failed to load')
+    toast.error(t('p_tilesets_editor.couldNotExportTilesFailed'))
   } finally {
     exporting.value = false
   }
@@ -1003,7 +1003,7 @@ async function exportJSON() {
         `${ts.id_string}${exportSuffix.value}_tileset.json`,
     )
   } catch {
-    toast.error('Could not export')
+    toast.error(t('p_tilesets_editor.couldNotExport'))
   } finally {
     exporting.value = false
   }
@@ -1051,7 +1051,7 @@ async function exportEngine(kind: 'godot' | 'tiled') {
       imageOf: slug => imgCache.get(slug) || null, solid: new Set(ts.solid), anims,
     })
     if (!pack.sheet.blocks.length) {
-      toast.error('Nothing to export in this group')
+      toast.error(t('p_tilesets_editor.nothingToExportGroup'))
       return
     }
     const enc = new TextEncoder()
@@ -1067,9 +1067,9 @@ async function exportEngine(kind: 'godot' | 'tiled') {
     }
     files.push({name: 'README.txt', data: enc.encode(engineReadme(kind, ts.name, base, image))})
     downloadBlob(createZip(files), `${base}_${kind}.zip`)
-    if (skipped) toast.warning(`${skipped} overlapping tile${skipped > 1 ? 's' : ''} left out of the atlas`)
+    if (skipped) toast.warning(t('p_tilesets_editor.overlappingLeftOut', {count: skipped}, skipped))
   } catch {
-    toast.error('Could not export')
+    toast.error(t('p_tilesets_editor.couldNotExport'))
   } finally {
     exporting.value = false
   }
@@ -1155,7 +1155,7 @@ function deleteSelectedTiles() {
   for (const id of [...selectedTileIds.value]) removeTileById(id)
   selectedTileIds.value = []
   dirty.value = true
-  toast.success(`Removed ${n} tile${n > 1 ? 's' : ''}`)
+  toast.success(t('p_tilesets_editor.removedNTiles', {count: n}, n))
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -1240,8 +1240,8 @@ function addGroup(kind: 'group' | 'terrain') {
       : 0
   const pos = {x: 0, y: ts.groups.length ? bottom + GAP_N + Math.ceil(HEAD_H / zoom.value) : 0}
   ts.groups.push(kind === 'terrain'
-      ? {id, name: `Terrain ${n}`, kind, tiles: [], map: {}, ...pos}
-      : {id, name: `Group ${n}`, kind, tiles: [], ...pos})
+      ? {id, name: t('p_tilesets_editor.terrainN', {n}), kind, tiles: [], map: {}, ...pos}
+      : {id, name: t('p_tilesets_editor.groupN', {n}), kind, tiles: [], ...pos})
   selectedGroupId.value = id
   selectedTileId.value = null
   dirty.value = true
@@ -1361,7 +1361,7 @@ function fillTerrainFromSelected(g: TileGroup) {
   }
   if (n) {
     dirty.value = true
-    toast.success(`Filled ${n} empty slot${n > 1 ? 's' : ''}`)
+    toast.success(t('p_tilesets_editor.filledNSlots', {count: n}, n))
   }
 }
 
@@ -1445,17 +1445,17 @@ const BUILD_TARGET_REFS = {
 
 const buildSlotDefs = computed(() => {
   const defs: { key: string; label: string; id: number | null; title: string }[] = [
-    {key: 'base', label: 'Base', id: buildBaseId.value, title: 'Fill texture — the middle of the terrain (required)'},
+    {key: 'base', label: t('p_tilesets_editor.slotBase'), id: buildBaseId.value, title: t('p_tilesets_editor.slotBaseHint')},
   ]
   if (buildStyle.value === 'fill') return defs
-  defs.push({key: 'under', label: 'Under', id: buildUnderId.value, title: 'Transition underlay — the terrain this one blends into (optional)'})
+  defs.push({key: 'under', label: t('p_tilesets_editor.slotUnder'), id: buildUnderId.value, title: t('p_tilesets_editor.slotUnderHint')})
   if (buildStyle.value === 'edge') {
     defs.push(
-        {key: 'edge', label: 'Edge', id: buildEdgeId.value, title: 'Top fringe, auto-rotated to the other sides (required)'},
-        {key: 'corner', label: 'Corner', id: buildCornerId.value, title: 'Top-left outer corner (optional) — click a picked tile again to clear'},
+        {key: 'edge', label: t('p_tilesets_editor.slotEdge'), id: buildEdgeId.value, title: t('p_tilesets_editor.slotEdgeHint')},
+        {key: 'corner', label: t('p_tilesets_editor.slotCorner'), id: buildCornerId.value, title: t('p_tilesets_editor.slotCornerHint')},
     )
     if (activeGroup.value?.type === 'blob47') {
-      defs.push({key: 'inner', label: 'Inner', id: buildInnerId.value, title: 'Inner corner, top-left (optional) — for blob47 concave joins'})
+      defs.push({key: 'inner', label: t('p_tilesets_editor.slotInner'), id: buildInnerId.value, title: t('p_tilesets_editor.slotInnerHint')})
     }
   }
   return defs
@@ -1465,14 +1465,18 @@ const buildSideDefs = computed(() => BUILD_SIDES.map(sd => ({
   key: `side-${sd}`,
   label: sd.toUpperCase(),
   id: buildSideIds[sd],
-  title: `${({n: 'North', e: 'East', s: 'South', w: 'West'})[sd]} edge override (optional) — authored like the top edge, auto-rotated. Click a picked tile again to clear.`,
+  title: t('p_tilesets_editor.sideEdgeOverride', {dir: ({n: t('p_tilesets_editor.dirNorth'), e: t('p_tilesets_editor.dirEast'), s: t('p_tilesets_editor.dirSouth'), w: t('p_tilesets_editor.dirWest')})[sd]}),
 })))
 
 const buildTargetLabel = computed(() => {
-  const t = buildTarget.value
-  if (t === 'vars') return 'Variations'
-  if (t.startsWith('side-')) return `${t.slice(5).toUpperCase()} edge`
-  return t.charAt(0).toUpperCase() + t.slice(1)
+  const tg = buildTarget.value
+  if (tg === 'vars') return t('p_tilesets_editor.variations')
+  if (tg.startsWith('side-')) return t('p_tilesets_editor.sideEdge', {x: tg.slice(5).toUpperCase()})
+  const slots: Record<string, string> = {
+    base: t('p_tilesets_editor.slotBase'), under: t('p_tilesets_editor.slotUnder'), edge: t('p_tilesets_editor.slotEdge'),
+    corner: t('p_tilesets_editor.slotCorner'), inner: t('p_tilesets_editor.slotInner'),
+  }
+  return slots[tg] || tg.charAt(0).toUpperCase() + tg.slice(1)
 })
 
 function assignBuildPick(id: number) {
@@ -2002,7 +2006,7 @@ function generateBorders(gArg?: TileGroup, silent = false) {
       dirty.value = true
       showBuild.value = false
       if (!auth.isLogged) autosaveLocal()
-      if (!silent) toast.success(`Filled ${fillMasks.length} tiles with the base`)
+      if (!silent) toast.success(t('p_tilesets_editor.filledNTilesWithBase', {count: fillMasks.length}, fillMasks.length))
       scheduleDraw()
       return
     }
@@ -2031,10 +2035,10 @@ function generateBorders(gArg?: TileGroup, silent = false) {
     dirty.value = true
     showBuild.value = false
     if (!auth.isLogged) autosaveLocal()
-    if (!silent) toast.success(`Borders composed — Save to create ${masks.length} tiles`)
+    if (!silent) toast.success(t('p_tilesets_editor.bordersComposed', {count: masks.length}, masks.length))
     scheduleDraw()
   } catch {
-    toast.error('Could not compose borders')
+    toast.error(t('p_tilesets_editor.couldNotComposeBorders'))
   } finally {
     building.value = false
   }
@@ -2119,7 +2123,7 @@ async function quickBuild(g: TileGroup, baseId: number, silent = false) {
   if (!slug) return
   seedBuildParams(g.builder)
   buildBaseId.value = baseId
-  if (!silent) toast.info?.(`Building borders from ${slug}…`)
+  if (!silent) toast.info?.(t('p_tilesets_editor.buildingBordersFrom', {x: slug}))
   await fetchBuildSources()
   if (buildStyle.value === 'edge' && !buildEdge.value) buildStyle.value = 'auto'
   await generateBorders(g, silent)
@@ -2151,7 +2155,7 @@ async function syncBuilders() {
     }
     if (fresh === r.baseUpdated) continue
     await quickBuild(g, Number(r.base), true)
-    toast.success(`"${g.name}" borders re-composed from the edited base — Save to apply`)
+    toast.success(t('p_tilesets_editor.bordersRecomposed', {name: g.name}))
   }
 }
 
@@ -2488,7 +2492,7 @@ function draw() {
       ctx.textBaseline = 'middle'
       ctx.fillStyle = active ? primary : muted
       const count = g.kind === 'terrain'
-          ? `${pendingBuilds.has(g.id) ? `${pendingBuilds.get(g.id)!.variants.size} pending` : Object.keys(g.map || {}).length}/${terrainSlots(g).length}`
+          ? `${pendingBuilds.has(g.id) ? t('p_tilesets_editor.pendingN', {count: pendingBuilds.get(g.id)!.variants.size}) : Object.keys(g.map || {}).length}/${terrainSlots(g).length}`
           : String(g.tiles.length)
       // Zoomed out, a name is wider than its group and ran into the next
       // one. Keep it inside the group: drop the count, then shorten the name.
@@ -2870,9 +2874,9 @@ const freshResults = computed(() => searchResults.value.filter(a => !inTileset(N
 
 const applyLabel = computed(() => {
   const parts: string[] = []
-  if (pickedCount.value) parts.push(`Add ${pickedCount.value}`)
-  if (removeCount.value) parts.push(`Remove ${removeCount.value}`)
-  return parts.length ? parts.join(' · ') : 'Apply'
+  if (pickedCount.value) parts.push(t('p_tilesets_editor.addN', {count: pickedCount.value}))
+  if (removeCount.value) parts.push(t('p_tilesets_editor.removeN', {count: removeCount.value}))
+  return parts.length ? parts.join(' · ') : t('p_tilesets_editor.apply')
 })
 
 async function runSearch() {
@@ -2920,7 +2924,7 @@ async function loadCollection(id: string) {
     searchQuery.value = ''
     searchResults.value = arts
   } catch {
-    toast.error('Could not load that collection')
+    toast.error(t('p_tilesets_editor.couldNotLoadCollection'))
   } finally {
     searching.value = false
   }
@@ -2965,7 +2969,7 @@ function applyChanges() {
     removeTileById(Number(id))
   }
   dirty.value = true
-  toast.success([added && `Added ${added}`, removed && `Removed ${removed}`].filter(Boolean).join(' · '))
+  toast.success([added && t('p_tilesets_editor.addedN', {count: added}), removed && t('p_tilesets_editor.removedN', {count: removed})].filter(Boolean).join(' · '))
   picked.value = {}
   toRemove.value = {}
   showAdd.value = false
@@ -3037,7 +3041,7 @@ async function pngToTile(file: File): Promise<{ ed: EditorData; thumb: string } 
 function ensureLocalTilesetId(): string | null {
   if (!tileset.value) return null
   if (tileset.value.localId) return tileset.value.localId
-  const entry = localTs.create(tileset.value.name || 'Untitled')
+  const entry = localTs.create(tileset.value.name || t('common.untitled'))
   tileset.value.localId = entry.id
   tileset.value.id_string = entry.id
   router.replace({query: {id: entry.id}})
@@ -3050,7 +3054,7 @@ async function onPngFiles(e: Event) {
   input.value = ''
   if (!files.length || !tileset.value || importingPng.value) return
   const home = tileset.value.groups.find(g => g.kind === 'group')
-  if (!home) { toast.error('No tile group to add to'); return }
+  if (!home) { toast.error(t('p_tilesets_editor.noTileGroupToAddTo')); return }
 
   importingPng.value = true
   commit()
@@ -3094,8 +3098,8 @@ async function onPngFiles(e: Event) {
       scheduleDraw()
       if (!auth.isLogged) autosaveLocal()
     }
-    const msg = [added && `Imported ${added} tile${added > 1 ? 's' : ''}`, skipped && `${skipped} skipped`].filter(Boolean).join(' · ')
-    added ? toast.success(msg) : toast.error(msg || 'No tiles imported')
+    const msg = [added && t('p_tilesets_editor.importedNTiles', {count: added}, added), skipped && t('p_tilesets_editor.nSkipped', {count: skipped})].filter(Boolean).join(' · ')
+    added ? toast.success(msg) : toast.error(msg || t('p_tilesets_editor.noTilesImported'))
   } finally {
     importingPng.value = false
   }
@@ -3154,7 +3158,7 @@ const faq = computed(() => [
                 <span class="icon icon-plus"/><span>{{ $t('common.newTileset') }}</span>
               </button>
               <button class="file-menu-item" :disabled="importingPng" @click="openPngImport">
-                <span class="icon icon-image"/><span>{{ importingPng ? 'Importing…' : 'Load PNG files…' }}</span>
+                <span class="icon icon-image"/><span>{{ importingPng ? $t('p_tilesets_editor.importing') : $t('p_tilesets_editor.loadPngFiles') }}</span>
               </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" :disabled="!tiles.length || exporting" @click="exportPNG">
@@ -3229,10 +3233,10 @@ const faq = computed(() => [
             <ui-tooltip
                 v-if="activeGroup.kind === 'terrain'"
                 :text="activeGroup.type === 'blob47'
-                  ? 'Blob set — 47 tiles with corners (side-scrollers). Switch to Corner 16.'
+                  ? $t('p_tilesets_editor.blobSetHint')
                   : activeGroup.type === 'corner16'
-                    ? 'Corner set — 15 tiles chosen by which corners are filled; painting spills half a cell (most farm packs). Switch to Wang 16.'
-                    : 'Wang set — 16 tiles, borders mid-tile (top-down). Switch to Blob 47.'"
+                    ? $t('p_tilesets_editor.cornerSetHint')
+                    : $t('p_tilesets_editor.wangSetHint')"
             >
               <button class="toolbar-btn tsx-tb-type" @click="toggleTerrainType(activeGroup)">
                 {{ activeGroup.type === 'blob47' ? '47' : activeGroup.type === 'corner16' ? 'C' : '16' }}
@@ -3269,7 +3273,7 @@ const faq = computed(() => [
                 <button class="toolbar-btn" :disabled="selectedWeight >= 9" @click="bumpWeight(1)"><span class="icon icon-plus"/></button>
               </ui-tooltip>
             </template>
-            <ui-tooltip :text="activeGroup.kind === 'group' ? 'Delete group — its tiles move to another group' : 'Delete terrain'">
+            <ui-tooltip :text="activeGroup.kind === 'group' ? $t('p_tilesets_editor.deleteGroupHint') : $t('p_tilesets_editor.deleteTerrain')">
               <button
                   class="toolbar-btn"
                   :disabled="activeGroup.kind === 'group' && plainGroups.length < 2"
@@ -3345,7 +3349,7 @@ const faq = computed(() => [
             <div v-if="selectedTile" class="tsx-selbar">
               <img :src="tileSrc(selectedTile.id_string)" alt="" class="tsx-selbar-thumb">
               <span class="tsx-selbar-name">{{ selectedTileIds.length > 1 ? $t('p_tilesets_editor.nTiles', {count: selectedTileIds.length}) : selectedTile.id_string }}</span>
-              <span class="tsx-selbar-hint">{{ selectedTileIds.length > 1 ? 'drag moves them together' : 'click a terrain slot to place' }}</span>
+              <span class="tsx-selbar-hint">{{ selectedTileIds.length > 1 ? $t('p_tilesets_editor.dragMovesTogether') : $t('p_tilesets_editor.clickTerrainSlotToPlace') }}</span>
               <ui-tooltip :text="selectionSolid ? $t('p_tilesets_editor.solidOn') : $t('p_tilesets_editor.solidOff')">
                 <button class="tsx-selbar-btn" :class="{active: selectionSolid}" :aria-pressed="selectionSolid" @click="toggleSolid">
                   <span class="icon icon-square"/>
@@ -3422,8 +3426,8 @@ const faq = computed(() => [
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">
         <template v-if="tileset">
-          {{ tiles.length }} tile{{ tiles.length === 1 ? '' : 's' }} ·
-          cell {{ tileset.cell.w }}×{{ tileset.cell.h }}px<template v-if="activeGroup"> ·
+          {{ $t('p_tilesets_editor.tileCount', {count: tiles.length}, tiles.length) }} ·
+          {{ $t('p_tilesets_editor.cellWH', {w: tileset.cell.w, h: tileset.cell.h}) }}<template v-if="activeGroup"> ·
             {{ activeGroup.name }}</template>
         </template>
         <template v-else>{{ $t('p_tilesets_editor.noTilesetOpen') }}</template>
@@ -3491,7 +3495,7 @@ const faq = computed(() => [
                   class="cv-opt"
                   :class="{ active: boardGridStep === s }"
                   @click="boardGridStep = s; onBoardChange()"
-              >{{ s === 1 ? '1 cell' : $t('p_tilesets_editor.nCells', {count: s}) }}</button>
+              >{{ s === 1 ? $t('p_tilesets_editor.oneCell') : $t('p_tilesets_editor.nCells', {count: s}) }}</button>
             </div>
           </div>
           <div class="cv-field">
@@ -3503,7 +3507,7 @@ const faq = computed(() => [
                   class="cv-opt cv-cap"
                   :class="{ active: boardGridStyle === st }"
                   @click="boardGridStyle = st; onBoardChange()"
-              >{{ st }}</button>
+              >{{ st === 'solid' ? $t('p_tilesets_editor.lineSolid') : st === 'dashed' ? $t('p_tilesets_editor.lineDashed') : $t('p_tilesets_editor.lineDots') }}</button>
             </div>
           </div>
         </template>
@@ -3545,7 +3549,7 @@ const faq = computed(() => [
                     @update:model-value="tileset.iso = $event; dirty = true"
                 />
                 <span class="text-xs">{{ $t('common.isometric') }}</span>
-                <span class="text-xs text-muted">{{ tileset.iso ? '— diamond tiles; the tilemap opens in isometric mode' : '— top-down square tiles (grid)' }}</span>
+                <span class="text-xs text-muted">{{ tileset.iso ? $t('p_tilesets_editor.isoOnHint') : $t('p_tilesets_editor.isoOffHint') }}</span>
               </div>
             </div>
             <div v-if="tileset.worlds.length">
@@ -3553,7 +3557,7 @@ const faq = computed(() => [
               <select v-model="tileset.preview" class="publish-input" @change="dirty = true">
                 <option value="">{{ $t('p_tilesets_editor.latestWorld') }}</option>
                 <option v-for="w in tileset.worlds" :key="w.id_string" :value="w.id_string">
-                  {{ w.name || 'Untitled' }}{{ w.status === 'public' ? '' : ` (${$t('common.private')})` }}
+                  {{ w.name || $t('common.untitled') }}{{ w.status === 'public' ? '' : ` (${$t('common.private')})` }}
                 </option>
               </select>
               <p class="text-xs text-muted">{{ $t('p_tilesets_editor.previewWorldHint') }}</p>
@@ -3566,20 +3570,20 @@ const faq = computed(() => [
                     @update:model-value="tileset.status = $event ? 'public' : 'private'; dirty = true"
                 />
                 <span class="text-xs">{{ $t('common.public') }}</span>
-                <span class="text-xs text-muted">{{ tileset.status === 'public' ? '— anyone can view and clone it' : '— only you can see it' }}</span>
+                <span class="text-xs text-muted">{{ tileset.status === 'public' ? $t('p_tilesets_editor.publicHint') : $t('p_tilesets_editor.privateHint') }}</span>
               </div>
             </div>
           </div>
           <div class="publish-actions">
             <button class="btn block" @click="showSettings = false">{{ $t('common.close') }}</button>
             <button class="btn primary block" :disabled="saving || !dirty" @click="async () => { await save(); if (!dirty) showSettings = false }">
-              {{ saving ? 'Saving…' : 'Save' }}
+              {{ saving ? $t('common.saving') : $t('common.save') }}
             </button>
           </div>
       </UiModal>
 
     <UiModal v-if="showRelations && activeGroup?.kind === 'terrain'" @close="showRelations = false">
-          <h3 class="publish-heading">{{ activeGroup.name }} — relations</h3>
+          <h3 class="publish-heading">{{ $t('p_tilesets_editor.relationsTitle', {name: activeGroup.name}) }}</h3>
           <div class="publish-form">
             <div>
               <label class="publish-label">{{ $t('p_tilesets_editor.priority') }}</label>
@@ -3607,7 +3611,7 @@ const faq = computed(() => [
                     @update:model-value="toggleConnect(activeGroup, t.id)"
                 />
                 <span class="tsx-rel-name">{{ t.name }}</span>
-                <span class="text-xs text-muted">priority {{ groupPriority(t) }}</span>
+                <span class="text-xs text-muted">{{ $t('p_tilesets_editor.priorityN', {n: groupPriority(t)}) }}</span>
               </div>
               <p class="text-xs text-muted tsx-rel-help" v-html="$t('p_tilesets_editor.connectedTerrainsMergeSeamlesslyAt')"/>
             </div>
@@ -3618,13 +3622,13 @@ const faq = computed(() => [
       </UiModal>
 
     <UiModal v-if="showBuild && activeGroup?.kind === 'terrain'" class="tsx-build-modal" @close="showBuild = false">
-          <h3 class="publish-heading">Build borders — {{ activeGroup.name }}</h3>
+          <h3 class="publish-heading">{{ $t('p_tilesets_editor.buildBordersTitle', {name: activeGroup.name}) }}</h3>
           <div class="tsx-build-cols">
             <div class="tsx-build-left">
 
               <div class="tsx-build-sec">
                 <span>{{ $t('p_tilesets_editor.style') }}</span>
-                <button type="button" class="tsx-build-morelink" @click="toggleBuildAdvanced">{{ buildAdvanced ? 'Less' : 'More' }}</button>
+                <button type="button" class="tsx-build-morelink" @click="toggleBuildAdvanced">{{ buildAdvanced ? $t('p_tilesets_editor.less') : $t('p_tilesets_editor.more') }}</button>
               </div>
               <div class="tsx-chips tsx-build-style">
                 <template v-if="tileset.iso">
@@ -3766,7 +3770,7 @@ const faq = computed(() => [
               <div class="tsx-build-body">
                 <canvas ref="buildDemoEl" class="tsx-build-preview"/>
               </div>
-              <div class="tsx-build-sec">All {{ activeGroup.type === 'blob47' ? 47 : 16 }} tiles</div>
+              <div class="tsx-build-sec">{{ $t('p_tilesets_editor.allNTiles', {count: activeGroup.type === 'blob47' ? 47 : 16}) }}</div>
               <div class="tsx-build-body tsx-build-varbody no-scrollbar">
                 <canvas ref="buildPreviewEl" class="tsx-build-preview"/>
               </div>
@@ -3800,7 +3804,7 @@ const faq = computed(() => [
             </div>
             <select v-model="collectionSel" class="tsx-import tsx-add-coll" @change="loadCollection(collectionSel)">
               <option value="">{{ $t('p_tilesets_editor.fromCollection') }}</option>
-              <option v-for="c in collections" :key="c.id" :value="c.id">{{ c.title || c.name || 'Untitled' }}</option>
+              <option v-for="c in collections" :key="c.id" :value="c.id">{{ c.title || c.name || $t('common.untitled') }}</option>
             </select>
           </div>
           <div class="tsx-add-body no-scrollbar">
@@ -3815,7 +3819,7 @@ const faq = computed(() => [
                     :key="t.id"
                     class="tsx-result added"
                     :class="{removing: toRemove[t.id]}"
-                    :title="toRemove[t.id] ? 'Will be removed — click to keep' : 'Click to remove from tileset'"
+                    :title="toRemove[t.id] ? $t('p_tilesets_editor.willBeRemoved') : $t('p_tilesets_editor.clickToRemoveFromTileset')"
                     @click="toggleRemove(t.id)"
                 >
                   <img :src="tileSrc(t.id_string)" :alt="t.id_string" loading="lazy">
@@ -3858,7 +3862,7 @@ const faq = computed(() => [
         filterable
         folder
         empty-icon="icon-select"
-        new-label="New tileset"
+        :new-label="$t('common.newTileset')"
         :empty-text="$t('p_tilesets_editor.noTilesetsYet')"
         @select="pickLoad"
         @create="pickLoad('__new__')"

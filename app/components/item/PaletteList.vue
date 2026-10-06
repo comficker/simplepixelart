@@ -137,7 +137,7 @@ const {page: currentPage, prevTo, nextTo} = usePageLinks(data)
       <div class="empty-state-title">{{ $t('c_PaletteList.noPalettesFound') }}</div>
       <p class="empty-state-body">
         <template v-if="hasFilters">{{ $t('c_PaletteList.nothingMatchesTheCurrentFilters') }}</template>
-        <template v-else-if="tag">Nothing is tagged “{{ tagLabel }}” yet.</template>
+        <template v-else-if="tag">{{ $t('c_PaletteList.nothingTaggedYet', {tag: tagLabel}) }}</template>
         <template v-else>{{ $t('c_PaletteList.theLibraryIsEmptyHereFor') }}</template>
       </p>
       <div class="empty-state-actions">

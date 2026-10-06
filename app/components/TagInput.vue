@@ -8,7 +8,6 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  placeholder: 'Add tag...',
   maxLength: 20,
   maxTags: 10,
   className: ''
@@ -68,13 +67,13 @@ function handleBlur() {
         v-if="props.modelValue.length < props.maxTags"
         ref="inputRef"
         v-model="inputValue"
-        :placeholder="props.modelValue.length ? '' : props.placeholder"
+        :placeholder="props.modelValue.length ? '' : (props.placeholder || $t('c_TagInput.addTag'))"
         :maxlength="props.maxLength"
         class="tag-field"
         @keydown="handleKeydown"
         @blur="handleBlur"
     />
-    <span v-else class="tag-max">Max {{ props.maxTags }} tags</span>
+    <span v-else class="tag-max">{{ $t('c_TagInput.maxTags', {n: props.maxTags}) }}</span>
   </div>
 </template>
 

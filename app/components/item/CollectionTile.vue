@@ -16,7 +16,7 @@ defineEmits<{ (e: 'error'): void }>()
           <img
               v-if="cover && !failed"
               :src="cover"
-              :alt="value.name || 'Collection'"
+              :alt="value.name || $t('c_CollectionTile.collection')"
               class="size-full"
               loading="lazy"
               decoding="async"

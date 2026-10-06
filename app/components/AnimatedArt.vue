@@ -91,7 +91,7 @@ onUnmounted(stop)
 </script>
 
 <template>
-  <div class="anim-art" @click="toggle" :title="playing ? 'Pause' : 'Play'">
+  <div class="anim-art" @click="toggle" :title="playing ? $t('c_AnimatedArt.pause') : $t('c_AnimatedArt.play')">
     <canvas ref="canvas" class="anim-art-canvas"/>
     <span v-if="!playing" class="anim-art-play" aria-hidden="true">
       <svg viewBox="0 0 24 24" width="40" height="40"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>

@@ -4,6 +4,7 @@ import {normalizeTilemap, computeGeometry, tileImageUrl, tileOf} from '~/helper/
 import {downloadBlob} from '~/helper/utils'
 
 const route = useRoute()
+const {locale} = useI18n()
 const config = useRuntimeConfig()
 const auth = useAuthStore()
 
@@ -99,7 +100,7 @@ const formattedDate = computed(() => {
   const d = data.value?.updated
   if (!d) return null
   try {
-    return new Date(d).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})
+    return new Date(d).toLocaleDateString(locale.value, {year: 'numeric', month: 'short', day: 'numeric'})
   } catch {
     return null
   }
@@ -114,7 +115,7 @@ const formattedDate = computed(() => {
     <NuxtLinkLocale to="/tilemaps/editor" class="btn primary empty-state-action">{{ $t('p_worlds_id_string.openTheWorldEditor') }}</NuxtLinkLocale>
   </div>
 
-  <ToolLayout v-else :title="title" title-tag="h1">
+  <ToolLayout v-else :title="data.name || $t('p_worlds_id_string.untitledWorld')" title-tag="h1">
     <template #head>
       <SocialSharing :meta="shareMeta" position="right"/>
     </template>
@@ -132,7 +133,7 @@ const formattedDate = computed(() => {
 
     <template #status>
       <p v-if="scene" class="editor-foot-hint text-xs text-muted">
-        {{ scene.cols }}×{{ scene.rows }} · {{ scene.cellW }}×{{ scene.cellH }}px cells · {{ tileCount }} tiles
+        {{ scene.cols }}×{{ scene.rows }} · {{ $t('p_worlds_id_string.cellsWH', {w: scene.cellW, h: scene.cellH}) }} · {{ $t('p_worlds_id_string.tileCount', {count: tileCount}, tileCount) }}
       </p>
       <p v-if="formattedDate" class="text-xs text-muted">{{ formattedDate }}</p>
     </template>

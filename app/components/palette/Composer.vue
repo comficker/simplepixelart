@@ -10,8 +10,8 @@ const props = withDefaults(defineProps<{
   namePlaceholder?: string
   defaultName?: string
 }>(), {
-  namePlaceholder: 'Palette name',
-  defaultName: 'My palette',
+  namePlaceholder: '',
+  defaultName: '',
 })
 
 const colors = defineModel<string[]>('colors', {required: true})
@@ -51,28 +51,28 @@ async function copyAll() {
     await navigator.clipboard.writeText(colors.value.join('\n'))
     toast.success(t('c_Composer.copiedNColors', {count: colors.value.length}))
   } catch {
-    toast.error('Copy failed')
+    toast.error(t('c_Composer.copyFailed'))
   }
 }
 
 async function publish() {
-  if (!auth.isLogged) { toast.error('Sign in to publish a palette'); return }
-  if (!colors.value.length) { toast.error('Add some colors first'); return }
+  if (!auth.isLogged) { toast.error(t('c_Composer.signInToPublishPalette')); return }
+  if (!colors.value.length) { toast.error(t('c_Composer.addColorsFirst')); return }
   saving.value = true
   try {
     const res = await useNativeFetch<Palette>('/coloring/palettes/', {
       method: 'POST',
       body: {
-        name: name.value.trim() || props.defaultName,
+        name: name.value.trim() || props.defaultName || t('c_Composer.myPalette'),
         colors: colors.value,
         source: props.source,
         tags: themes.value,
       },
     })
-    toast.success(`Published "${res.name}"`)
+    toast.success(t('c_Composer.publishedX', {name: res.name}))
     await navigateTo(localePath(`/palettes/${res.id_string}`))
   } catch {
-    toast.error('Publish failed')
+    toast.error(t('c_Composer.publishFailed'))
   } finally {
     saving.value = false
   }
@@ -82,7 +82,7 @@ async function publish() {
 <template>
   <div class="composer">
     <div class="composer-head">
-      <span class="tool-pane-cap" style="margin: 0;">{{ colors.length }} color{{ colors.length === 1 ? '' : 's' }}</span>
+      <span class="tool-pane-cap" style="margin: 0;">{{ $t('c_Composer.colorCount', {count: colors.length}, colors.length) }}</span>
       <div class="composer-head-actions">
         <button class="composer-link" type="button" @click="addColor">
           <span class="icon icon-plus"/><span>{{ $t('common.add') }}</span>
@@ -105,7 +105,7 @@ async function publish() {
         v-model="name"
         type="text"
         class="composer-name"
-        :placeholder="namePlaceholder"
+        :placeholder="namePlaceholder || $t('common.paletteName')"
         @keydown.enter="publish"
     />
 
@@ -122,7 +122,7 @@ async function publish() {
     <div class="composer-actions">
       <button class="btn primary" :disabled="saving || !colors.length" @click="publish">
         <span class="icon icon-check"/>
-        <span>{{ saving ? 'Publishing…' : 'Publish' }}</span>
+        <span>{{ saving ? $t('p_upload.publishing') : $t('common.publish') }}</span>
       </button>
       <a class="btn" :href="editorHref">
         <span class="icon icon-pen"/>

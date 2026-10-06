@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import useStatefulCookie from '~/composables/useStatefulCookie'
 
+const {t} = useI18n()
 useHead({
-  title: 'Signing in… — SimplePixelArt',
+  title: () => t('p_auth_callback.pageTitle'),
   meta: [{ name: 'robots', content: 'noindex, nofollow' }],
 })
 
@@ -19,7 +20,7 @@ onMounted(async () => {
   const refresh = (route.query.refresh_token as string | undefined) || ''
 
   if (!access || !refresh) {
-    error.value = 'Missing tokens. Please try again.'
+    error.value = t('p_auth_callback.missingTokens')
     return
   }
 
@@ -52,8 +53,8 @@ onMounted(async () => {
   <div class="callback">
     <div class="callback__card">
       <div v-if="!error" class="callback__spinner" aria-hidden="true" />
-      <h1 class="callback__title">{{ error ? 'Sign in failed' : 'Signing you in…' }}</h1>
-      <p class="callback__msg">{{ error || 'Just a moment.' }}</p>
+      <h1 class="callback__title">{{ error ? $t('p_auth_callback.signInFailed') : $t('p_auth_callback.signingYouIn') }}</h1>
+      <p class="callback__msg">{{ error || $t('p_auth_callback.justAMoment') }}</p>
       <NuxtLinkLocale v-if="error" to="/" class="btn primary">{{ $t('p_auth_callback.backHome') }}</NuxtLinkLocale>
     </div>
   </div>

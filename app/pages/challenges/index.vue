@@ -23,6 +23,7 @@ interface ChallengeItem {
 }
 
 const auth = useAuthStore()
+const {t, locale} = useI18n()
 const loginModal = useLoginModal()
 
 const {data, refresh} = await useAuthFetch<{ current: ChallengeItem | null; past: ChallengeItem[] }>(
@@ -42,13 +43,13 @@ function thumb(e: Entry): string {
 }
 
 function fmtRange(c: ChallengeItem): string {
-  const f = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})
+  const f = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString(locale.value, {month: 'short', day: 'numeric'})
   return `${f(c.starts)} – ${f(c.ends)}`
 }
 
 useCustomSeoMeta({
-  title: 'Weekly Pixel Art Challenges',
-  description: 'A new pixel art theme every week. Draw your take in the free editor, submit it, and the community votes the winners. Browse past challenges and winning sprites.',
+  title: () => t('p_challenges.seoTitle'),
+  description: () => t('p_challenges.seoDescription'),
   canonical: 'https://simplepixelart.com/challenges',
 })
 </script>
@@ -69,7 +70,7 @@ useCustomSeoMeta({
 
     <Widget v-if="current" :title="$t('p_challenges.thisWeek')">
       <div class="chal-card">
-        <span class="chal-dates">{{ fmtRange(current) }} · {{ daysLeft(current) }} {{ daysLeft(current) === 1 ? 'day' : 'days' }} left</span>
+        <span class="chal-dates">{{ fmtRange(current) }} · {{ $t('p_challenges.daysLeft', daysLeft(current), {count: daysLeft(current)}) }}</span>
         <h2 class="chal-name">{{ current.name }}</h2>
         <p v-if="current.desc" class="chal-desc">{{ current.desc }}</p>
         <div class="chal-actions">
@@ -80,7 +81,7 @@ useCustomSeoMeta({
             <span class="icon icon-flag"/><span>{{ $t('common.logInToSubmit') }}</span>
           </button>
           <NuxtLinkLocale :to="`/challenges/${current.id_string}`" class="section-link chal-view">
-            <template v-if="current.entries_count">{{ current.entries_count }} {{ current.entries_count === 1 ? 'entry' : 'entries' }} →</template>
+            <template v-if="current.entries_count">{{ $t('p_challenges.entryCount', current.entries_count, {count: current.entries_count}) }} →</template>
             <template v-else>{{ $t('common.beTheFirstToEnter') }}</template>
           </NuxtLinkLocale>
         </div>
@@ -115,7 +116,7 @@ useCustomSeoMeta({
           </div>
           <div class="chal-past-meta">
             <div class="chal-past-name">{{ c.name }}</div>
-            <div class="chal-past-sub">{{ fmtRange(c) }}<template v-if="c.entries_count"> · {{ c.entries_count }} {{ c.entries_count === 1 ? 'entry' : 'entries' }}</template></div>
+            <div class="chal-past-sub">{{ fmtRange(c) }}<template v-if="c.entries_count"> · {{ $t('p_challenges.entryCount', c.entries_count, {count: c.entries_count}) }}</template></div>
           </div>
         </NuxtLinkLocale>
       </div>

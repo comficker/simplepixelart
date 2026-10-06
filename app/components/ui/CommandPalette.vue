@@ -26,7 +26,25 @@ const GROUP_ORDER = ['Create', 'Go to', 'Preferences', 'Account', 'Help', 'Syste
 
 type View = 'root' | 'theme' | 'language'
 const view = ref<View>('root')
-const VIEW_TITLE: Record<Exclude<View, 'root'>, string> = {theme: 'Theme', language: 'Language'}
+const VIEW_TITLE = computed<Record<Exclude<View, 'root'>, string>>(() => ({theme: t('c_CommandPalette.theme'), language: t('c_CommandPalette.language')}))
+const GROUP_LABEL = computed<Record<string, string>>(() => ({
+  'Create': t('c_CommandPalette.group_create'),
+  'Go to': t('c_CommandPalette.group_goTo'),
+  'Preferences': t('c_CommandPalette.group_preferences'),
+  'Account': t('c_CommandPalette.group_account'),
+  'Help': t('c_CommandPalette.group_help'),
+  'System': t('c_CommandPalette.group_system'),
+  'Theme': t('c_CommandPalette.theme'),
+  'Language': t('c_CommandPalette.language'),
+}))
+const storageTitle = computed(() => {
+  const st = storage.value
+  if (!st) return ''
+  let out = t('c_CommandPalette.storageTitle', {used: st.usedMB, pct: st.pct})
+  if (st.boards) out += ` · ${t('c_CommandPalette.boardCount', st.boards, {count: st.boards})}`
+  if (st.arts) out += ` · ${t('c_CommandPalette.savedCount', {count: st.arts})}`
+  return out
+})
 
 const router = useRouter()
 const { current, setTheme, themes } = useTheme() as any
@@ -326,7 +344,7 @@ onMounted(() => { if (open.value) openPalette() })
                 ref="inputEl"
                 v-model="query"
                 class="cmdk-input"
-                :placeholder="view === 'root' ? 'Type a command or search…' : t('c_CommandPalette.searchX', {x: (VIEW_TITLE[view] || '').toLowerCase()})"
+                :placeholder="view === 'root' ? $t('c_CommandPalette.typeACommandOrSearch') : t('c_CommandPalette.searchX', {x: (VIEW_TITLE[view] || '').toLowerCase()})"
                 spellcheck="false"
                 autocomplete="off"
                 @keydown.stop="onKey"
@@ -340,7 +358,7 @@ onMounted(() => { if (open.value) openPalette() })
           <div ref="listEl" class="cmdk-list" role="listbox">
             <template v-if="flatItems.length">
               <div v-for="block in groupedBlocks" :key="block.group" class="cmdk-block">
-                <div v-if="view === 'root' || query" class="cmdk-group">{{ block.group }}</div>
+                <div v-if="view === 'root' || query" class="cmdk-group">{{ GROUP_LABEL[block.group] || block.group }}</div>
 
                 <div v-if="block.group === 'Theme' && view === 'theme'" class="cmdk-theme-row">
                   <button
@@ -352,7 +370,7 @@ onMounted(() => { if (open.value) openPalette() })
                       :data-idx="it.index"
                       role="option"
                       :aria-selected="it.index === selected"
-                      :title="it.cmd.label + (it.cmd.active ? ' (active)' : '')"
+                      :title="it.cmd.active ? $t('c_CommandPalette.xActive', {x: it.cmd.label}) : it.cmd.label"
                       :style="{ '--sw-ring': it.cmd.swatch?.ring, '--sw-ink': it.cmd.swatch?.ink }"
                       @mouseenter="selected = it.index"
                       @click="activate(it.cmd)"
@@ -382,14 +400,14 @@ onMounted(() => { if (open.value) openPalette() })
             </template>
             <div v-else class="cmdk-empty">
               <span class="icon icon-search" aria-hidden="true"/>
-              <span>No matches for “{{ query }}”</span>
+              <span>{{ $t('c_CommandPalette.noMatchesFor', {q: query}) }}</span>
             </div>
           </div>
           <div
               v-if="storage"
               class="cmdk-stat"
               :class="{ warn: storage.pct >= 70, full: storage.pct >= 90 }"
-              :title="`Local storage: ${storage.usedMB} MB of ~5 MB used (${storage.pct}%)${storage.boards ? ` · ${storage.boards} board${storage.boards === 1 ? '' : 's'}` : ''}${storage.arts ? ` · ${storage.arts} saved` : ''}`"
+              :title="storageTitle"
           >
             <span class="cmdk-stat-icon icon icon-save" aria-hidden="true"/>
             <span class="cmdk-stat-label">{{ $t('c_CommandPalette.storage') }}</span>
@@ -401,12 +419,12 @@ onMounted(() => { if (open.value) openPalette() })
                 :title="$t('c_CommandPalette.signInToBackYourLocal')"
                 @click="closePalette(); loginModal.show()"
             >{{ $t('c_CommandPalette.signInToBackUp') }}</button>
-            <span v-else-if="storage.boards" class="cmdk-stat-meta">{{ storage.boards }} board{{ storage.boards === 1 ? '' : 's' }}</span>
+            <span v-else-if="storage.boards" class="cmdk-stat-meta">{{ $t('c_CommandPalette.boardCount', storage.boards, {count: storage.boards}) }}</span>
           </div>
           <div class="cmdk-foot">
             <span class="cmdk-foot-grp"><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> {{ $t('c_CommandPalette.navigate') }}</span>
             <span class="cmdk-foot-grp"><kbd class="kbd">↵</kbd> {{ $t('c_CommandPalette.select') }}</span>
-            <span class="cmdk-foot-grp"><kbd class="kbd">esc</kbd> {{ view === 'root' ? 'close' : 'back' }}</span>
+            <span class="cmdk-foot-grp"><kbd class="kbd">esc</kbd> {{ view === 'root' ? $t('c_CommandPalette.close') : $t('c_CommandPalette.back') }}</span>
             <span class="cmdk-foot-spacer"/>
             <span class="cmdk-foot-brand">{{ $t('c_CommandPalette.simplepixel') }}<span class="cmdk-foot-brand-accent">{{ $t('c_CommandPalette.art') }}</span></span>
           </div>

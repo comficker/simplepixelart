@@ -1,7 +1,8 @@
 <script setup lang="ts">
+const {t} = useI18n()
 useCustomSeoMeta({
-  title: "Contact SimplePixelArt.com",
-  description: "Contact SimplePixelArt.com — report a bug, request a feature, flag content, or submit a business inquiry. We respond within 3 business days.",
+  title: () => t('p_contact.seoTitle'),
+  description: () => t('p_contact.seoDescription'),
   keywords: "contact simple pixel art, support, bug report, feedback",
   canonical: "https://simplepixelart.com/contact",
 });

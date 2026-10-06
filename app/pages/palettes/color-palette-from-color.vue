@@ -3,11 +3,11 @@ const {t} = useI18n()
 
 import {generatePalette, SCHEME_TYPES, type SchemeType} from "~/helper/color";
 
-const TONE_OPTIONS = [
+const TONE_OPTIONS = computed(() => [
   {key: 'subtle', label: t('p_palettes_color-palette-from-color.subtle'), spread: 0.16},
   {key: 'medium', label: t('p_palettes_color-palette-from-color.medium'), spread: 0.34},
   {key: 'strong', label: t('p_palettes_color-palette-from-color.strong'), spread: 0.52},
-] as const
+] as const)
 
 const base = ref('#4F7CFF')
 const type = ref<SchemeType>('complementary')
@@ -16,7 +16,7 @@ const tone = ref<'subtle' | 'medium' | 'strong'>('medium')
 const colors = ref<string[]>([])
 const variant = ref(0)
 
-const toneSpread = computed(() => TONE_OPTIONS.find(t => t.key === tone.value)?.spread ?? 0.34)
+const toneSpread = computed(() => TONE_OPTIONS.value.find(t => t.key === tone.value)?.spread ?? 0.34)
 
 function regen() {
   colors.value = generatePalette(base.value, type.value, count.value, toneSpread.value, variant.value)
@@ -24,7 +24,19 @@ function regen() {
 
 watch([base, type, count, tone], () => { variant.value = 0; regen() }, {immediate: true})
 
-const activeHint = computed(() => SCHEME_TYPES.find(s => s.key === type.value)?.hint || '')
+// Labels and hints live in i18n; SCHEME_TYPES only supplies the keys and order.
+const SCHEME_TEXT = computed<Record<SchemeType, { label: string; hint: string }>>(() => ({
+  complementary: {label: t('p_palettes_color-palette-from-color.complementary'), hint: t('p_palettes_color-palette-from-color.hintComplementary')},
+  analogous: {label: t('p_palettes_color-palette-from-color.analogous'), hint: t('p_palettes_color-palette-from-color.hintAnalogous')},
+  triadic: {label: t('p_palettes_color-palette-from-color.triadic'), hint: t('p_palettes_color-palette-from-color.hintTriadic')},
+  split: {label: t('p_palettes_color-palette-from-color.split'), hint: t('p_palettes_color-palette-from-color.hintSplit')},
+  tetradic: {label: t('p_palettes_color-palette-from-color.square'), hint: t('p_palettes_color-palette-from-color.hintSquare')},
+  monochromatic: {label: t('p_palettes_color-palette-from-color.monochrome'), hint: t('p_palettes_color-palette-from-color.hintMonochrome')},
+  shades: {label: t('p_palettes_color-palette-from-color.shadesAmpTints'), hint: t('p_palettes_color-palette-from-color.hintShades')},
+}))
+const SCHEMES = computed(() => SCHEME_TYPES.map(s => ({...s, ...(SCHEME_TEXT.value[s.key] || {})})))
+
+const activeHint = computed(() => SCHEMES.value.find(s => s.key === type.value)?.hint || '')
 
 const PRESETS = ['#FF5C5C', '#FF9F1C', '#FFD23F', '#2EC4B6', '#4F7CFF', '#7B5CFF', '#FF5C9E', '#1B2430']
 
@@ -41,18 +53,18 @@ function onHex(e: Event) {
   else el.value = base.value
 }
 
-const FAQ = [
-  {q: 'How do I make a color palette from one color?', a: 'Pick your base color, choose a harmony, then set how many colors and how much tonal spread you want. The matching colors are calculated from the color wheel instantly.', icon: 'icon-swap'},
-  {q: 'What do the harmony types mean?', a: 'Complementary uses the opposite color for high contrast. Analogous uses neighbours for a calm blend. Triadic and Square space colors evenly for vivid balance. Monochrome and Shades vary one hue tonally.', icon: 'icon-adjust'},
-  {q: 'Can I choose the number of colors?', a: 'Yes. Set the palette size from 2 to 16 colors, and pick a Tones level (Subtle, Medium or Strong) to control how light-to-dark the palette spreads.', icon: 'icon-grid'},
-  {q: 'Is it free?', a: 'Yes — completely free, no signup. You only need an account if you want to publish a palette to the public library.', icon: 'icon-check'},
-  {q: 'Can I edit the generated colors?', a: 'Yes. Click any swatch to adjust it, add or remove colors, then copy the hex codes, open them in the editor, or publish.', icon: 'icon-pen'},
-  {q: 'Where can I use the palette?', a: 'Copy the hex codes into any design or game project, open the palette straight in the pixel art editor, or save it to the library to reuse later.', icon: 'icon-pen'},
-]
+const FAQ = computed(() => [
+  {q: t('p_palettes_color-palette-from-color.faq0q'), a: t('p_palettes_color-palette-from-color.faq0a'), icon: 'icon-swap'},
+  {q: t('p_palettes_color-palette-from-color.faq1q'), a: t('p_palettes_color-palette-from-color.faq1a'), icon: 'icon-adjust'},
+  {q: t('p_palettes_color-palette-from-color.faq2q'), a: t('p_palettes_color-palette-from-color.faq2a'), icon: 'icon-grid'},
+  {q: t('p_palettes_color-palette-from-color.faq3q'), a: t('p_palettes_color-palette-from-color.faq3a'), icon: 'icon-check'},
+  {q: t('p_palettes_color-palette-from-color.faq4q'), a: t('p_palettes_color-palette-from-color.faq4a'), icon: 'icon-pen'},
+  {q: t('p_palettes_color-palette-from-color.faq5q'), a: t('p_palettes_color-palette-from-color.faq5a'), icon: 'icon-pen'},
+])
 
 useCustomSeoMeta({
-  title: "Color Palette from One Color",
-  description: "Pick one color and generate a matching palette — complementary, analogous, triadic, square, monochrome or shades. Copy the hex codes or edit them.",
+  title: () => t('p_palettes_color-palette-from-color.seoTitle'),
+  description: () => t('p_palettes_color-palette-from-color.seoDescription'),
   keywords: "color palette by color, color palette from color, color palette generator, palette from one color, color harmony palette, complementary colors, analogous colors, triadic colors, color combinations",
   canonical: "https://simplepixelart.com/palettes/color-palette-from-color",
   robots: "index, follow",
@@ -95,7 +107,7 @@ useCustomSeoMeta({
           },
           {
             '@type': 'FAQPage',
-            mainEntity: FAQ.map(f => ({
+            mainEntity: FAQ.value.map(f => ({
               '@type': 'Question',
               name: f.q,
               acceptedAnswer: {'@type': 'Answer', text: f.a},
@@ -151,7 +163,7 @@ useCustomSeoMeta({
         <span class="tool-pane-cap scheme-harm-cap">{{ $t('p_palettes_color-palette-from-color.harmony') }}</span>
         <div class="scheme-harm-grid">
           <button
-              v-for="h in SCHEME_TYPES" :key="h.key"
+              v-for="h in SCHEMES" :key="h.key"
               type="button"
               class="scheme-harm" :class="{ active: type === h.key }"
               @click="type = h.key"
@@ -191,7 +203,7 @@ useCustomSeoMeta({
             v-model:colors="colors"
             source="scheme"
             :name-placeholder="$t('common.paletteName')"
-            default-name="Color palette"
+            :default-name="$t('p_palettes_color-palette-from-color.defaultName')"
         />
       </div>
     </div>

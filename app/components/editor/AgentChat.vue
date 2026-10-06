@@ -4,6 +4,7 @@ import {toast} from 'vue-sonner'
 import {fitRedrawToBoard, imageToNativeGrid} from '~/helper/pixel/agentFit'
 import {drawThumbnail, layers2MapNumbers} from '~/helper/canvas'
 
+const {t} = useI18n()
 const store = useEditor()
 const auth = useAuthStore()
 const {turns, busy, close} = useAgentPanel()
@@ -55,7 +56,7 @@ async function scrollDown() {
 async function send() {
   const message = draft.value.trim()
   if (!message || busy.value) return
-  if (!auth.isLogged) { toast.error('Sign in to use the agent'); return }
+  if (!auth.isLogged) { toast.error(t('c_AgentChat.signInToUseTheAgent')); return }
   draft.value = ''
   await nextTick()
   grow()
@@ -89,21 +90,21 @@ async function send() {
       turns.value = [...turns.value, {
         role: 'agent',
         text: res.reply,
-        done: applied
-            ? `${describe(res.ops)}${pixels ? ` (${pixels} pixels)` : ''}`
-              + (touch.value ? '' : ` — undo with ${modKey()}Z`)
-            : 'Nothing changed.',
+        done: applied ? withUndoHint(pixels
+                ? t('c_AgentChat.doneWithPixels', {what: describe(res.ops), count: pixels}, pixels)
+                : describe(res.ops))
+            : t('c_AgentChat.nothingChanged'),
         undoable: applied > 0,
       }]
       // On a phone the sheet covers the art it just changed, so step aside and
       // put the undo where the user is looking instead.
       if (applied && touch.value) {
         close()
-        toast.success(describe(res.ops), {action: {label: 'Undo', onClick: undoLast}})
+        toast.success(describe(res.ops), {action: {label: t('common.undo'), onClick: undoLast}})
       }
       // No success toast on desktop: the turn itself says what happened, and
       // the toast stack sits bottom-right, on top of this panel's composer.
-      if (!applied) toast.error('That change did not apply')
+      if (!applied) toast.error(t('c_AgentChat.thatChangeDidNotApply'))
     } else if (res.action === 'redraw') {
       turns.value = [...turns.value, {
         role: 'agent', text: res.reply, redrawPrompt: res.redraw_prompt || message,
@@ -120,10 +121,10 @@ async function send() {
     }
   } catch (e: any) {
     const s = e?.status ?? e?.response?.status
-    if (s === 402) toast.error('Not enough credits — earn some in Missions')
-    else if (s === 401) toast.error('Sign in to use the agent')
-    else if (s === 503) toast.error('The agent is offline right now')
-    else toast.error('The agent could not answer — try again')
+    if (s === 402) toast.error(t('c_AgentChat.notEnoughCredits'))
+    else if (s === 401) toast.error(t('c_AgentChat.signInToUseTheAgent'))
+    else if (s === 503) toast.error(t('c_AgentChat.agentOffline'))
+    else toast.error(t('c_AgentChat.agentCouldNotAnswer'))
     // Roll back the turn we added optimistically, and hand the words back
     // rather than making the user retype them.
     turns.value = turns.value.slice(0, -1)
@@ -138,12 +139,17 @@ async function send() {
 
 function describe(ops: any[]): string {
   const names: Record<string, string> = {
-    replace_color: 'Recoloured',
-    remove_color: 'Removed a colour',
-    add_outline: 'Outlined',
-    flip: 'Flipped',
+    replace_color: t('c_AgentChat.opRecoloured'),
+    remove_color: t('c_AgentChat.opRemovedAColour'),
+    add_outline: t('c_AgentChat.opOutlined'),
+    flip: t('c_AgentChat.opFlipped'),
   }
   return ops.map(o => names[o.op] || o.op).join(', ')
+}
+
+/** "<text> — undo with ⌘Z" on desktop; touch gets an Undo button instead. */
+function withUndoHint(text: string): string {
+  return touch.value ? text : t('c_AgentChat.undoWith', {text, key: `${modKey()}Z`})
 }
 
 function modKey(): string {
@@ -249,11 +255,11 @@ async function redraw(turn: any) {
     turn.origGrid = origGrid ?? undefined
     turn.redrawPrompt = undefined
     setBalance(res.balance)
-    if (!grid) toast.error('Could not read that result')
+    if (!grid) toast.error(t('c_AgentChat.couldNotReadResult'))
   } catch (e: any) {
     const s = e?.status ?? e?.response?.status
-    if (s === 402) toast.error('Not enough credits for a redraw')
-    else toast.error('The redraw failed')
+    if (s === 402) toast.error(t('c_AgentChat.notEnoughCreditsRedraw'))
+    else toast.error(t('c_AgentChat.redrawFailed'))
   } finally {
     busy.value = false
     await scrollDown()
@@ -275,7 +281,7 @@ function paidFrames(plan: { frames: string[] }): number {
  * on playback. "base" frames are the art itself and cost nothing. */
 async function animate(turn: AgentTurn) {
   if (busy.value || !turn.animatePlan) return
-  if (!auth.isLogged) { toast.error('Sign in to use the agent'); return }
+  if (!auth.isLogged) { toast.error(t('c_AgentChat.signInToUseTheAgent')); return }
   busy.value = true
   const plan = turn.animatePlan
   const base = boardGrid()
@@ -320,11 +326,11 @@ async function animate(turn: AgentTurn) {
           res.image, editorData.value.width, editorData.value.height, base)
       if (grid) grids.push(grid)
     }
-    if (!keep()) toast.error('Could not read those frames')
+    if (!keep()) toast.error(t('c_AgentChat.couldNotReadFrames'))
   } catch (e: any) {
     const s = e?.status ?? e?.response?.status
-    if (s === 402) toast.error('Not enough credits — earn some in Missions')
-    else toast.error('A frame failed to generate')
+    if (s === 402) toast.error(t('c_AgentChat.notEnoughCredits'))
+    else toast.error(t('c_AgentChat.frameFailed'))
     keep()
   } finally {
     animStep.value = null
@@ -345,8 +351,8 @@ function applyFrames(turn: AgentTurn) {
   if (!turn.frames?.length || busy.value) return
   const grids = framesToAdd(turn)
   const added = store.applyAgentFrames(grids, turn.fps)
-  if (!added) { toast.error('Could not add the frames'); return }
-  turn.done = `Added ${added} frame${added > 1 ? 's' : ''} — undo with ${modKey()}Z`
+  if (!added) { toast.error(t('c_AgentChat.couldNotAddFrames')); return }
+  turn.done = t('c_AgentChat.undoWith', {text: t('c_AgentChat.addedNFrames', {count: added}, added), key: `${modKey()}Z`})
   turn.frames = undefined
   turn.fps = undefined
   turns.value = [...turns.value]
@@ -383,8 +389,8 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
     const {colors, pixels, w, h} = grid
     store.applyAgentArt(colors, pixels, w, h, asNewBoard)
     turn.done = asNewBoard
-        ? `Opened as a new ${w}×${h} board.`
-        : `Applied — undo with ${modKey()}Z`
+        ? t('c_AgentChat.openedAsNewBoard', {w, h})
+        : t('c_AgentChat.undoWith', {text: t('c_AgentChat.applied'), key: `${modKey()}Z`})
     turn.image = undefined
     turn.grid = undefined
     turn.origGrid = undefined
@@ -417,7 +423,7 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
           <div v-if="t.redrawPrompt" class="settings-row">
             <button class="btn primary" :disabled="busy" @click="redraw(t)">
               <span class="icon icon-auto-fix"/>
-              <span>Redraw{{ cost?.redraw == null ? '' : ` — ${cost.redraw}` }}</span>
+              <span>{{ $t('c_AgentChat.redraw') }}{{ cost?.redraw == null ? '' : ` — ${cost.redraw}` }}</span>
             </button>
             <button class="btn" :disabled="busy" @click="t.redrawPrompt = undefined">{{ $t('c_AgentChat.noThanks') }}</button>
           </div>
@@ -470,7 +476,7 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
                     class="agent-preview pixelated"
                 />
                 <figcaption class="text-2xs text-muted">
-                  {{ t.grid.w }}×{{ t.grid.h }} · {{ t.grid.colors.length }} colours — exactly what this board gets
+                  {{ $t('c_AgentChat.gridCaption', {w: t.grid.w, h: t.grid.h, count: t.grid.colors.length}) }}
                 </figcaption>
               </figure>
             </div>
@@ -479,7 +485,7 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
                 {{ $t('c_AgentChat.applyToThisBoard') }}
               </button>
               <button class="btn" :disabled="busy" @click="apply(t, t.grid, true)">
-                New board · {{ t.grid.w }}×{{ t.grid.h }}
+                {{ $t('c_AgentChat.newBoardSize', {w: t.grid.w, h: t.grid.h}) }}
               </button>
               <!-- The model's own size, kept as a separate board so the
                    detail it drew is not lost to this board's dimensions. -->
@@ -489,7 +495,7 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
                   :disabled="busy"
                   @click="apply(t, t.origGrid, true)"
               >
-                New board · {{ t.origGrid.w }}×{{ t.origGrid.h }} original
+                {{ $t('c_AgentChat.newBoardOriginal', {w: t.origGrid.w, h: t.origGrid.h}) }}
               </button>
             </div>
           </template>
@@ -523,7 +529,7 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
           class="btn primary tm-iconbtn"
           type="submit"
           :disabled="busy || !auth.isLogged || draft.trim().length < 2"
-          :title="cost?.chat == null ? 'Send' : $t('c_AgentChat.costsNCredit', {count: cost.chat})"
+          :title="cost?.chat == null ? $t('c_AgentChat.send') : $t('c_AgentChat.costsNCredit', {count: cost.chat})"
           :aria-label="$t('c_AgentChat.send')"
       >
         <span class="icon icon-angle-right"/>

@@ -25,6 +25,7 @@ interface ChallengeDetail {
 }
 
 const route = useRoute()
+const {t, locale} = useI18n()
 const auth = useAuthStore()
 const loginModal = useLoginModal()
 const slug = computed(() => route.params.id_string?.toString() || '')
@@ -51,8 +52,8 @@ const winners = computed(() => challenge.value?.winners || [])
 // the votes.
 const leaders = computed(() => (challenge.value?.top || []).filter(e => e.votes > 0))
 const shareMeta = computed(() => ({
-  title: challenge.value ? `${challenge.value.name} — pixel art challenge` : 'Pixel art challenge',
-  desc: challenge.value?.desc || 'Draw your take and enter.',
+  title: challenge.value ? t('p_challenges_id_string.shareTitle', {name: challenge.value.name}) : t('p_challenges_id_string.shareTitleFallback'),
+  desc: challenge.value?.desc || t('p_challenges_id_string.shareDesc'),
 }))
 const showSubmit = ref(false)
 
@@ -62,7 +63,7 @@ function daysLeft(): number {
 
 function fmtRange(): string {
   if (!challenge.value) return ''
-  const f = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})
+  const f = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString(locale.value, {month: 'short', day: 'numeric'})
   return `${f(challenge.value.starts)} – ${f(challenge.value.ends)}`
 }
 
@@ -98,14 +99,14 @@ useCustomSeoMeta({
           <p v-if="challenge.desc" class="screen-desc">{{ challenge.desc }}</p>
           <p class="chal-meta">
           <template v-if="challenge.state === 'active'">
-            <strong>{{ $t('p_challenges_id_string.liveNow') }}</strong> · {{ fmtRange() }} · {{ daysLeft() }} {{ daysLeft() === 1 ? 'day' : 'days' }} left
-            · <template v-if="challenge.entries_count">{{ challenge.entries_count }} {{ challenge.entries_count === 1 ? 'entry' : 'entries' }}</template>
+            <strong>{{ $t('p_challenges_id_string.liveNow') }}</strong> · {{ fmtRange() }} · {{ $t('p_challenges_id_string.daysLeft', daysLeft(), {count: daysLeft()}) }}
+            · <template v-if="challenge.entries_count">{{ $t('p_challenges_id_string.entryCount', challenge.entries_count, {count: challenge.entries_count}) }}</template>
             <template v-else>{{ $t('common.beTheFirstToEnter') }}</template>
           </template>
           <template v-else-if="challenge.state === 'ended'">
-            Ended · {{ fmtRange() }}<template v-if="challenge.entries_count"> · {{ challenge.entries_count }} {{ challenge.entries_count === 1 ? 'entry' : 'entries' }}</template>
+            {{ $t('p_challenges_id_string.endedRange', {range: fmtRange()}) }}<template v-if="challenge.entries_count"> · {{ $t('p_challenges_id_string.entryCount', challenge.entries_count, {count: challenge.entries_count}) }}</template>
           </template>
-            <template v-else>Starts {{ fmtRange() }}</template>
+            <template v-else>{{ $t('p_challenges_id_string.startsRange', {range: fmtRange()}) }}</template>
           </p>
           <div v-if="challenge.palette" class="chal-palette">
             <NuxtLinkLocale :to="`/palettes/${challenge.palette.id_string}`" class="chal-palette-strip" :title="challenge.palette.name">
@@ -156,7 +157,7 @@ useCustomSeoMeta({
             <span class="chal-medal">{{ medals[i] || '·' }}</span>
             <img :src="thumb(e)" :alt="e.name" loading="lazy" decoding="async">
             <span class="chal-winner-name">{{ e.name }}</span>
-            <span class="chal-winner-sub"><template v-if="e.username">@{{ e.username }} · </template>{{ e.votes }} {{ e.votes === 1 ? 'vote' : 'votes' }}</span>
+            <span class="chal-winner-sub"><template v-if="e.username">@{{ e.username }} · </template>{{ $t('p_challenges_id_string.voteCount', e.votes, {count: e.votes}) }}</span>
           </NuxtLinkLocale>
         </div>
       </Widget>
@@ -166,7 +167,7 @@ useCustomSeoMeta({
           <ItemCard v-for="p in entries" :key="p.id" :value="p"/>
         </div>
         <p v-else class="text-muted text-xs">
-          No public entries yet{{ challenge.state === 'active' ? ' — be the first!' : '.' }}
+          {{ challenge.state === 'active' ? $t('p_challenges_id_string.noEntriesYetActive') : $t('p_challenges_id_string.noEntriesYet') }}
         </p>
       </Widget>
 

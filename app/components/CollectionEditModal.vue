@@ -1,5 +1,5 @@
 <template>
-  <ui-modal :title="isEdit ? 'Edit collection' : 'New collection'" @close="$emit('close')">
+  <ui-modal :title="isEdit ? $t('c_CollectionEditModal.editCollection') : $t('c_CollectionEditModal.newCollection')" @close="$emit('close')">
     <div class="publish-form">
         <div>
           <label class="publish-label">{{ $t('common.title') }}</label>
@@ -36,7 +36,7 @@
         <div class="h-center gap-3">
           <ui-switch :model-value="form.status === 'public'" @update:model-value="form.status = $event ? 'public' : 'private'"/>
           <span class="text-xs">{{ $t('common.public') }}</span>
-          <span class="text-xs text-muted">{{ form.status === 'public' ? '— anyone with the link' : '— only you' }}</span>
+          <span class="text-xs text-muted">{{ form.status === 'public' ? $t('c_CollectionEditModal.anyoneWithTheLink') : $t('c_CollectionEditModal.onlyYou') }}</span>
         </div>
       </div>
     <div class="publish-actions">
@@ -52,6 +52,8 @@
 
 <script setup lang="ts">
 import {toast} from 'vue-sonner'
+
+const {t} = useI18n()
 
 type CollectionLike = {
   id?: number
@@ -78,7 +80,7 @@ const saving = ref(false)
 async function save() {
   const title = form.value.title.trim()
   if (!title) {
-    toast.error('Title is required')
+    toast.error(t('c_CollectionEditModal.titleIsRequired'))
     return
   }
   saving.value = true
@@ -98,7 +100,7 @@ async function save() {
             },
           },
       )
-      toast.success('Collection updated')
+      toast.success(t('c_CollectionEditModal.collectionUpdated'))
       emit('updated', updated)
     } else {
       const created = await useNativeFetch<CollectionLike>('/coloring/collections/', {
@@ -111,11 +113,11 @@ async function save() {
           type: 'saved',
         },
       })
-      toast.success('Collection created')
+      toast.success(t('c_CollectionEditModal.collectionCreated'))
       emit('created', created)
     }
   } catch {
-    toast.error('Save failed')
+    toast.error(t('c_CollectionEditModal.saveFailed'))
   } finally {
     saving.value = false
   }

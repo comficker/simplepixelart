@@ -161,10 +161,10 @@ async function bulkDelete() {
       }
       tilesetsList.value = tilesetsList.value.filter(t => !ids.has(t.id))
     }
-    toast.success(`Deleted ${ids.size} item${ids.size === 1 ? '' : 's'}`)
+    toast.success(t('p_work.deletedNItems', ids.size, {count: ids.size}))
     deselectAll()
   } catch {
-    toast.error('Some deletes failed')
+    toast.error(t('p_work.someDeletesFailed'))
     if (tab.value === 'artworks') fetchWorks()
     else if (tab.value === 'collections') fetchCollections()
     else if (tab.value === 'worlds') fetchWorlds()
@@ -176,8 +176,8 @@ async function bulkDelete() {
 }
 
 useCustomSeoMeta({
-  title: "Your Work",
-  description: "Manage your pixel art drafts, published works, and collections.",
+  title: () => t('p_work.seoTitle'),
+  description: () => t('p_work.seoDescription'),
   canonical: "https://simplepixelart.com/work",
   robots: 'noindex, follow',
 })
@@ -351,10 +351,10 @@ async function destroyWork(item: WorkItem) {
     }
     await purgeLocalArt(item.id)
     purgeLocalTile(item.id)
-    toast.success('Deleted')
+    toast.success(t('p_work.deleted'))
     if (!workspaces.value.length && workPage.value > 1) workPage.value--
   } catch {
-    toast.error('Delete failed')
+    toast.error(t('p_work.deleteFailed'))
     if (idx !== -1) workspaces.value.splice(idx, 0, item)
   }
 }
@@ -407,7 +407,7 @@ async function fetchCollections() {
     collections.value = res.results
     loadCovers()
   } catch {
-    toast.error('Could not load collections')
+    toast.error(t('p_work.couldNotLoadCollections'))
   } finally {
     loadingColls.value = false
   }
@@ -435,9 +435,9 @@ async function destroyColl(c: CollectionItem) {
 
   try {
     await useNativeFetch(`/coloring/collections/${c.id}/`, {method: 'DELETE'})
-    toast.success('Deleted')
+    toast.success(t('p_work.deleted'))
   } catch {
-    toast.error('Delete failed')
+    toast.error(t('p_work.deleteFailed'))
     if (idx !== -1) collections.value.splice(idx, 0, c)
   }
 }
@@ -488,7 +488,7 @@ async function fetchTilesets() {
       }))
     }
   } catch {
-    if (auth.logged?.id) toast.error('Could not load tilesets')
+    if (auth.logged?.id) toast.error(t('p_work.couldNotLoadTilesets'))
   } finally {
     loadingTilesets.value = false
   }
@@ -507,15 +507,15 @@ async function destroyTileset(t: any) {
   if (idx !== -1) tilesetsList.value.splice(idx, 1)
   if (t.local) {
     localTs.remove(String(t.id))
-    toast.success('Deleted')
+    toast.success(t('p_work.deleted'))
     return
   }
   try {
     await useNativeFetch(`/coloring/tilesets/${t.id_string}/`, {method: 'DELETE'})
     worldsList.value = worldsList.value.filter(w => w.tileset_id_string !== t.id_string)
-    toast.success('Deleted')
+    toast.success(t('p_work.deleted'))
   } catch {
-    toast.error('Delete failed')
+    toast.error(t('p_work.deleteFailed'))
     if (idx !== -1) tilesetsList.value.splice(idx, 0, t)
   }
 }
@@ -536,7 +536,7 @@ function readLocalWorld(): any[] {
   const hasCells = layers.some((l: any) => l?.cells && Object.keys(l.cells).length)
   if (!hasCells) return []
   return [{
-    id: 'local-world', id_string: '', name: 'Free-style map', status: 'draft', local: true,
+    id: 'local-world', id_string: '', name: t('p_work.freeStyleMap'), status: 'draft', local: true,
     registry, previewImgs: registryPreview(registry).map(artUrl),
     editUrl: '/tilemaps/editor',
   }]
@@ -556,7 +556,7 @@ async function fetchWorlds() {
       worldsList.value = readLocalWorld()
     }
   } catch {
-    if (auth.logged?.id) toast.error('Could not load worlds')
+    if (auth.logged?.id) toast.error(t('p_work.couldNotLoadWorlds'))
   } finally {
     loadingWorlds.value = false
   }
@@ -575,14 +575,14 @@ async function destroyWorld(w: any) {
   if (idx !== -1) worldsList.value.splice(idx, 1)
   if (w.local) {
     try { localStorage.removeItem(FREESTYLE_KEY) } catch {  }
-    toast.success('Deleted')
+    toast.success(t('p_work.deleted'))
     return
   }
   try {
     await useNativeFetch(`/coloring/worlds/${w.id_string}/`, {method: 'DELETE'})
-    toast.success('Deleted')
+    toast.success(t('p_work.deleted'))
   } catch {
-    toast.error('Delete failed')
+    toast.error(t('p_work.deleteFailed'))
     if (idx !== -1) worldsList.value.splice(idx, 0, w)
   }
 }
@@ -650,8 +650,8 @@ function statusIcon(status?: string): string {
 
 function statusTitle(status?: string): string {
   if (status === 'public') return t('common.public')
-  if (status === 'pending') return 'Pending review'
-  return 'Private draft'
+  if (status === 'pending') return t('p_work.pendingReview')
+  return t('p_work.privateDraft')
 }
 
 onMounted(() => {
@@ -766,7 +766,7 @@ onMounted(() => {
               v-if="selectMode"
               class="work-select-hit"
               :class="{on: selectedIds.has(item.id)}"
-              :aria-label="selectedIds.has(item.id) ? 'Deselect item' : 'Select item'"
+              :aria-label="selectedIds.has(item.id) ? $t('p_work.deselectItem') : $t('p_work.selectItem')"
               @click="onSelectClick($event, item.id)"
           >
             <span class="work-select-dot"><span class="icon icon-check"/></span>
@@ -777,7 +777,7 @@ onMounted(() => {
                 <img
                     v-if="isCloud(item) && item.has_image !== false && !failedThumb[item.id]"
                     :src="thumbUrl(item)"
-                    :alt="item.name || 'Pixel art'"
+                    :alt="item.name || $t('p_work.pixelArtAlt')"
                     class="size-full"
                     loading="lazy"
                     decoding="async"
@@ -800,7 +800,7 @@ onMounted(() => {
             <template #menu>
                 <div class="file-menu">
                   <button class="file-menu-item" disabled>
-                    <span>{{ item.name || 'Untitled' }}</span>
+                    <span>{{ item.name || $t('common.untitled') }}</span>
                   </button>
                   <div class="file-menu-sep"/>
                   <NuxtLinkLocale class="file-menu-item" :to="`/editor?id=${item.id_string || item.id}`">
@@ -812,7 +812,7 @@ onMounted(() => {
 
                   <button class="file-menu-item" data-keep-open @click="destroyWork(item)">
                     <span class="icon" :class="confirmingWorkId === item.id ? 'icon-check' : 'icon-trash'"/>
-                    <span>{{ confirmingWorkId === item.id ? 'Confirm delete' : 'Delete' }}</span>
+                    <span>{{ confirmingWorkId === item.id ? $t('p_work.confirmDelete') : $t('p_work.delete') }}</span>
                   </button>
                 </div>
             </template>
@@ -821,7 +821,7 @@ onMounted(() => {
       </TransitionGroup>
 
       <div v-else class="empty-state">
-        <p class="empty-state-body">No {{ workFilter === 'all' ? 'matching' : workFilter }} artworks.</p>
+        <p class="empty-state-body">{{ $t(`p_work.emptyArtworks_${workFilter}`) }}</p>
       </div>
     </template>
 
@@ -854,7 +854,7 @@ onMounted(() => {
               v-if="selectMode"
               class="work-select-hit"
               :class="{on: selectedIds.has(c.id)}"
-              :aria-label="selectedIds.has(c.id) ? 'Deselect item' : 'Select item'"
+              :aria-label="selectedIds.has(c.id) ? $t('p_work.deselectItem') : $t('p_work.selectItem')"
               @click="onSelectClick($event, c.id)"
           >
             <span class="work-select-dot"><span class="icon icon-check"/></span>
@@ -881,7 +881,7 @@ onMounted(() => {
             <span class="icon" :class="statusIcon(c.status)"/>
           </span>
           <div class="work-meta">
-            <div class="work-name" :title="c.name">{{ c.name || 'Untitled' }}</div>
+            <div class="work-name" :title="c.name">{{ c.name || $t('common.untitled') }}</div>
             <ui-dropdown-menu position="right">
               <button class="work-more-btn" :title="$t('p_work.more')" :aria-label="$t('p_work.collectionActions')">
                 <span class="icon icon-dots"/>
@@ -889,7 +889,7 @@ onMounted(() => {
               <template #menu>
                 <div class="file-menu">
                   <button class="file-menu-item" disabled>
-                    <span>{{ c.name || 'Untitled' }}</span>
+                    <span>{{ c.name || $t('common.untitled') }}</span>
                   </button>
                   <div class="file-menu-sep"/>
                   <NuxtLinkLocale class="file-menu-item" :to="`/collections/${c.id_string}`">
@@ -897,7 +897,7 @@ onMounted(() => {
                   </NuxtLinkLocale>
                   <button class="file-menu-item" data-keep-open @click="destroyColl(c)">
                     <span class="icon" :class="confirmingCollId === c.id ? 'icon-check' : 'icon-trash'"/>
-                    <span>{{ confirmingCollId === c.id ? 'Confirm delete' : 'Delete' }}</span>
+                    <span>{{ confirmingCollId === c.id ? $t('p_work.confirmDelete') : $t('p_work.delete') }}</span>
                   </button>
                 </div>
               </template>
@@ -907,7 +907,7 @@ onMounted(() => {
       </TransitionGroup>
 
       <div v-else class="empty-state">
-        <p class="empty-state-body">No {{ collFilter }} collections.</p>
+        <p class="empty-state-body">{{ $t(`p_work.emptyCollections_${collFilter}`) }}</p>
       </div>
     </template>
 
@@ -934,7 +934,7 @@ onMounted(() => {
               v-if="selectMode"
               class="work-select-hit"
               :class="{on: selectedIds.has(w.id)}"
-              :aria-label="selectedIds.has(w.id) ? 'Deselect item' : 'Select item'"
+              :aria-label="selectedIds.has(w.id) ? $t('p_work.deselectItem') : $t('p_work.selectItem')"
               @click="onSelectClick($event, w.id)"
           >
             <span class="work-select-dot"><span class="icon icon-check"/></span>
@@ -953,7 +953,7 @@ onMounted(() => {
             <span class="icon" :class="statusIcon(w.status)"/>
           </span>
           <div class="work-meta">
-            <div class="work-name" :title="w.name || 'Untitled'">{{ w.name || 'Untitled' }}</div>
+            <div class="work-name" :title="w.name || $t('common.untitled')">{{ w.name || $t('common.untitled') }}</div>
             <ui-dropdown-menu position="right">
               <button class="work-more-btn" :title="$t('p_work.more')" :aria-label="$t('p_work.worldActions')">
                 <span class="icon icon-dots"/>
@@ -961,7 +961,7 @@ onMounted(() => {
               <template #menu>
                 <div class="file-menu">
                   <button class="file-menu-item" disabled>
-                    <span>{{ w.name || 'Untitled' }}</span>
+                    <span>{{ w.name || $t('common.untitled') }}</span>
                   </button>
                   <div class="file-menu-sep"/>
                   <NuxtLinkLocale class="file-menu-item" :to="w.editUrl">
@@ -972,7 +972,7 @@ onMounted(() => {
                   </NuxtLinkLocale>
                   <button class="file-menu-item" data-keep-open @click="destroyWorld(w)">
                     <span class="icon" :class="confirmingWorldId === w.id ? 'icon-check' : 'icon-trash'"/>
-                    <span>{{ confirmingWorldId === w.id ? 'Confirm delete' : 'Delete' }}</span>
+                    <span>{{ confirmingWorldId === w.id ? $t('p_work.confirmDelete') : $t('p_work.delete') }}</span>
                   </button>
                 </div>
               </template>
@@ -982,7 +982,7 @@ onMounted(() => {
       </TransitionGroup>
 
       <div v-else class="empty-state">
-        <p class="empty-state-body">No {{ worldFilter }} worlds.</p>
+        <p class="empty-state-body">{{ $t(`p_work.emptyWorlds_${worldFilter}`) }}</p>
       </div>
     </template>
 
@@ -1009,7 +1009,7 @@ onMounted(() => {
               v-if="selectMode"
               class="work-select-hit"
               :class="{on: selectedIds.has(t.id)}"
-              :aria-label="selectedIds.has(t.id) ? 'Deselect item' : 'Select item'"
+              :aria-label="selectedIds.has(t.id) ? $t('p_work.deselectItem') : $t('p_work.selectItem')"
               @click="onSelectClick($event, t.id)"
           >
             <span class="work-select-dot"><span class="icon icon-check"/></span>
@@ -1028,7 +1028,7 @@ onMounted(() => {
             <span class="icon" :class="statusIcon(t.status)"/>
           </span>
           <div class="work-meta">
-            <div class="work-name" :title="t.name || 'Untitled'">{{ t.name || 'Untitled' }}</div>
+            <div class="work-name" :title="t.name || $t('common.untitled')">{{ t.name || $t('common.untitled') }}</div>
             <ui-dropdown-menu position="right">
               <button class="work-more-btn" :title="$t('p_work.more')" :aria-label="$t('p_work.tilesetActions')">
                 <span class="icon icon-dots"/>
@@ -1036,7 +1036,7 @@ onMounted(() => {
               <template #menu>
                 <div class="file-menu">
                   <button class="file-menu-item" disabled>
-                    <span>{{ t.name || 'Untitled' }}</span>
+                    <span>{{ t.name || $t('common.untitled') }}</span>
                   </button>
                   <div class="file-menu-sep"/>
                   <NuxtLinkLocale v-if="t.editUrl" class="file-menu-item" :to="t.editUrl">
@@ -1047,7 +1047,7 @@ onMounted(() => {
                   </NuxtLinkLocale>
                   <button class="file-menu-item" data-keep-open @click="destroyTileset(t)">
                     <span class="icon" :class="confirmingTilesetId === t.id ? 'icon-check' : 'icon-trash'"/>
-                    <span>{{ confirmingTilesetId === t.id ? 'Deletes its worlds too — confirm' : 'Delete' }}</span>
+                    <span>{{ confirmingTilesetId === t.id ? $t('p_work.deletesItsWorldsTooConfirm') : $t('p_work.delete') }}</span>
                   </button>
                 </div>
               </template>
@@ -1057,7 +1057,7 @@ onMounted(() => {
       </TransitionGroup>
 
       <div v-else class="empty-state">
-        <p class="empty-state-body">No {{ tilesetFilter }} tilesets.</p>
+        <p class="empty-state-body">{{ $t(`p_work.emptyTilesets_${tilesetFilter}`) }}</p>
       </div>
     </template>
 

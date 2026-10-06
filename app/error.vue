@@ -9,17 +9,18 @@ const props = defineProps<{
 // error.vue replaces app.vue, so nothing else sets the theme here; without
 // this the page fell back to :root, which is the Game Boy palette.
 useTheme()
+const {t} = useI18n()
 
 const is404 = computed(() => props.error.statusCode === 404)
-const heading = computed(() => is404.value ? 'Pixel out of bounds' : 'Something glitched')
+const heading = computed(() => is404.value ? t('c_error.heading404') : t('c_error.headingError'))
 const sub = computed(() =>
     is404.value
-        ? 'The page you’re looking for is off the canvas. It might have been moved or never existed.'
-        : 'Our canvas hit an unexpected error. The brush has been reset — try again.'
+        ? t('c_error.sub404')
+        : t('c_error.subError')
 )
 
 useHead({
-  title: is404.value ? '404 – Page not found' : 'Error',
+  title: () => is404.value ? t('c_error.title404') : t('c_error.titleError'),
   meta: [
     {name: 'robots', content: 'noindex, follow'},
   ],

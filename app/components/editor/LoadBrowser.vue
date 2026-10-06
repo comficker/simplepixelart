@@ -20,14 +20,15 @@ const props = defineProps<{
   emptyIcon?: string
 }>()
 
+const {t} = useI18n()
 const emit = defineEmits<{ select: [id: string]; create: []; close: [] }>()
 
 const q = ref('')
 const filter = ref<'all' | 'public' | 'private'>('all')
 const order = ref<'recent' | 'name'>('recent')
 
-const filterLabel = computed(() => filter.value === 'all' ? 'All' : filter.value === 'public' ? 'Public' : 'Private')
-const orderLabel = computed(() => order.value === 'name' ? 'Name' : 'Recent')
+const filterLabel = computed(() => t('common.' + filter.value))
+const orderLabel = computed(() => order.value === 'name' ? t('common.name') : t('c_LoadBrowser.recent'))
 
 const shown = computed(() => {
   let list = props.items

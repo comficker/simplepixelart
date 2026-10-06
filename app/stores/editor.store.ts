@@ -13,6 +13,8 @@ import {toast} from "vue-sonner";
 
 export const useEditor = defineStore('editor', () => {
     const auth = useAuthStore()
+    // Captured at setup: toasts below fire after awaits, outside the Nuxt context.
+    const {$i18n} = useNuxtApp()
 
     const {markHasWork} = useHasWork()
     const localTs = useLocalTilesets()
@@ -544,7 +546,7 @@ export const useEditor = defineStore('editor', () => {
         ensureAnimation()
         const anim = editorData.value.meta!.animation!
         if (anim.frames.length >= MAX_FRAMES) {
-            toast.error(`Max ${MAX_FRAMES} frames`)
+            toast.error($i18n.t('c_PXEditor.maxFrames', {max: MAX_FRAMES}))
             return
         }
         const at = currentFrameIndex.value
@@ -560,7 +562,7 @@ export const useEditor = defineStore('editor', () => {
         ensureAnimation()
         const anim = editorData.value.meta!.animation!
         if (anim.frames.length >= MAX_FRAMES) {
-            toast.error(`Max ${MAX_FRAMES} frames`)
+            toast.error($i18n.t('c_PXEditor.maxFrames', {max: MAX_FRAMES}))
             return
         }
         const src = anim.frames[i]
@@ -1072,7 +1074,7 @@ export const useEditor = defineStore('editor', () => {
             } catch (e: any) {
                 const code = e?.statusCode ?? e?.response?.status
                 if (code === 404 && typeof window !== 'undefined') {
-                    toast.info('That artwork was deleted — opening a new canvas')
+                    toast.info($i18n.t('c_PXEditor.artworkDeletedNewCanvas'))
                 }
                 return {
                     ...cloneDeep(DEFAULT_EDITOR_DATA),
@@ -1199,7 +1201,7 @@ export const useEditor = defineStore('editor', () => {
                 const code = e?.statusCode ?? e?.response?.status
                 if (code !== 404) throw e
                 await createCloud()
-                toast.info('The original was deleted — saved as a new artwork')
+                toast.info($i18n.t('c_PXEditor.originalDeletedSavedNew'))
             }
         }
 
@@ -1226,7 +1228,7 @@ export const useEditor = defineStore('editor', () => {
                 await save2Cloud();
             } catch (e) {
                 console.error('Failed to save to cloud, keeping local copy:', e);
-                toast.error('Cloud save failed — saved locally')
+                toast.error($i18n.t('c_PXEditor.cloudSaveFailed'))
             }
             save2Local(false)
         } else {
@@ -2192,7 +2194,7 @@ export const useEditor = defineStore('editor', () => {
         let added = 0
         for (const g of frameGrids) {
             if (anim.frames.length >= MAX_FRAMES) {
-                toast.error(`Max ${MAX_FRAMES} frames`)
+                toast.error($i18n.t('c_PXEditor.maxFrames', {max: MAX_FRAMES}))
                 break
             }
             const remap = g.colors.map(hex => findOrCreateColor(hex.toUpperCase(), palette))
@@ -2442,10 +2444,10 @@ export const useEditor = defineStore('editor', () => {
             for (const key of failed) keep[key] = workspaces[key]!
             try { localStorage.setItem('workspaces', JSON.stringify(keep)) } catch {  }
             localWS.value = keep
-            toast.error(`${failed.length} artwork${failed.length > 1 ? 's' : ''} failed to sync — kept locally`)
+            toast.error($i18n.t('c_PXEditor.syncFailed', {count: failed.length}, failed.length))
         }
         if (synced > 0) {
-            toast.success(`Synced ${synced} artwork${synced > 1 ? 's' : ''} to cloud`)
+            toast.success($i18n.t('c_PXEditor.synced', {count: synced}, synced))
         }
     }
 

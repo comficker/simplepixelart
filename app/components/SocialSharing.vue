@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {toast} from 'vue-sonner'
 
+const {t} = useI18n()
+
 type Meta = {
   url: string
   title: string
@@ -58,9 +60,9 @@ async function shareInstagram() {
     a.download = 'pixel-art-1080.png'
     a.click()
     setTimeout(() => URL.revokeObjectURL(a.href), 1000)
-    toast.success('Square image saved — attach it to your Instagram post')
+    toast.success(t('c_SocialSharing.squareImageSaved'))
   } catch {
-    toast.error('Could not load the share image')
+    toast.error(t('c_SocialSharing.couldNotLoadShareImage'))
   } finally {
     igBusy.value = false
   }

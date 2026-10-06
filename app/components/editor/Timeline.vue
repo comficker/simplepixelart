@@ -3,6 +3,7 @@ import {toRaw} from "vue";
 import {drawThumbnail} from "~/helper/canvas";
 import type {AnimationFrame, AnimationTag} from "~/types";
 
+const {t} = useI18n()
 const store = useEditor()
 
 // Drop the floating-selection layer: it is spliced into the layer arrays while
@@ -27,7 +28,7 @@ function rowName(li: number) {
     const n = f.layers[li]?.name
     if (n) return n
   }
-  return `Layer`
+  return t('c_Timeline.layer')
 }
 
 function rowNum(li: number) {
@@ -251,7 +252,7 @@ onUnmounted(() => { store.isPlaying = false })
           <button class="tl-op" :title="$t('c_Timeline.previousFrame')" :disabled="store.currentFrameIndex <= 0" @click="step(-1)">
             <span class="icon icon-angle-left"/>
           </button>
-          <button class="tl-play" :title="playing ? 'Pause' : 'Play'" @click="togglePlay">
+          <button class="tl-play" :title="playing ? $t('c_Timeline.pause') : $t('c_Timeline.play')" @click="togglePlay">
             <svg v-if="!playing" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
               <path d="M7 5v14l12-7z" fill="currentColor"/>
             </svg>
@@ -371,7 +372,7 @@ onUnmounted(() => { store.isPlaying = false })
               :key="d"
               class="tl-dir"
               :class="{active: store.activeTag.direction === d}"
-              :title="d"
+              :title="$t('c_Timeline.dir_' + d)"
               @click="patchTag({direction: d})"
           >{{ DIR_GLYPHS[d] }}</button>
         </div>
@@ -389,7 +390,7 @@ onUnmounted(() => { store.isPlaying = false })
               class="tl-tag"
               :class="{active: t.id === store.activeTagId}"
               :style="tagStyle(t)"
-              :title="`${t.name} — frames ${t.from + 1}–${t.to + 1} (${t.direction}). Click to play just this range.`"
+              :title="$t('c_Timeline.tagTitle', {name: t.name, from: t.from + 1, to: t.to + 1, dir: $t('c_Timeline.dir_' + t.direction)})"
               @click="selectTag(t)"
           >{{ t.name }} <i>{{ DIR_GLYPHS[t.direction] }}</i></button>
         </div>
@@ -402,7 +403,7 @@ onUnmounted(() => { store.isPlaying = false })
               class="tl-colhead"
               :class="{active: j === store.currentFrameIndex}"
               :style="colheadStyle(j)"
-              :title="store.isAnimated ? $t('c_Timeline.frameNMs', {n: j + 1, ms: frameMs(f)}) : 'Frame 1'"
+              :title="store.isAnimated ? $t('c_Timeline.frameNMs', {n: j + 1, ms: frameMs(f)}) : $t('c_Timeline.frameN', {n: 1})"
               @click="selectFrame(j)"
           >
             <b>{{ j + 1 }}</b>

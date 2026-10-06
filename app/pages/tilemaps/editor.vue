@@ -25,16 +25,16 @@ const auth = useAuthStore()
 const apiBase = useRuntimeConfig().public.api as string
 const localTs = useLocalTilesets()
 const {confirm} = useConfirm()
-const confirmDiscard = (what = 'the current world') => confirm({
-  title: 'Discard unsaved changes?',
-  message: `Your edits to ${what} have not been saved.`,
-  confirmText: 'Discard',
+const confirmDiscard = (isMap = false) => confirm({
+  title: t('p_tilemaps_editor.discardTitle'),
+  message: isMap ? t('p_tilemaps_editor.discardMapMsg') : t('p_tilemaps_editor.discardWorldMsg'),
+  confirmText: t('p_tilemaps_editor.discard'),
   danger: true,
 })
 
 useCustomSeoMeta({
-  title: 'Tilemap Editor — Grid & Isometric',
-  description: 'Free online tilemap maker: paint pixel-art maps on a grid or isometric grid with stacked layers of tiles and sprites. Runs in your browser.',
+  title: () => t('p_tilemaps_editor.seoTitle'),
+  description: () => t('p_tilemaps_editor.seoDescription'),
   keywords: 'tilemap editor, tilemap maker, pixel art map maker, isometric tilemap creator, free online tilemap tool, grid map maker, 2d game map editor, tile map builder, sprite map maker, isometric pixel art',
   canonical: 'https://simplepixelart.com/tilemaps/editor',
   robots: () => route.query.world ? 'noindex, follow' : 'index, follow',
@@ -127,14 +127,14 @@ watch(brush, () => { brushFlags.value = 0 }, {flush: 'sync'})
 
 function orientBrush(op: 'h' | 'v' | 'right' | 'left') {
   if (typeof brush.value !== 'number') {
-    toast.info('Pick a single tile to flip or turn it')
+    toast.info(t('p_tilemaps_editor.pickSingleTileToTurn'))
     return
   }
   if (op === 'right' || op === 'left') {
     // A 2x1 tile turned would no longer fit the cells it covers.
     const img = tileImages.get(brush.value)
     if (img?.naturalWidth && Math.round(img.naturalWidth / config.cellW) !== Math.round(img.naturalHeight / config.cellH)) {
-      toast.info('Only square tiles can turn — flip this one instead')
+      toast.info(t('p_tilemaps_editor.onlySquareTilesTurn'))
       return
     }
     brushFlags.value = rotateFlags(brushFlags.value, op === 'right' ? 1 : -1)
@@ -185,7 +185,7 @@ function readTileGroups(raw: any, registry: Record<string, string>): TileBrowseG
         const tiles: number[] = g.tiles.map(Number).filter((id: number) => registry[String(id)])
         const pinned = g.pos && typeof g.pos === 'object' && tiles.length > 0
             && tiles.every(id => g.pos[String(id)])
-        return {id: String(g.id), name: String(g.name || 'Tiles'), tiles, pos: pinned ? g.pos : null}
+        return {id: String(g.id), name: String(g.name || t('common.tiles')), tiles, pos: pinned ? g.pos : null}
       })
       .filter((g: TileBrowseGroup) => g.tiles.length)
 }
@@ -712,7 +712,7 @@ async function fetchWorldSiblings() {
     const res = await useNativeFetch<{ results: any[] }>('/coloring/worlds/', {
       params: {mine: 1, tileset: world.value.tileset_id_string, page_size: 50, ordering: 'id'},
     })
-    worldSiblings.value = res.results.map(w => ({id_string: w.id_string, name: w.name || 'Untitled'}))
+    worldSiblings.value = res.results.map(w => ({id_string: w.id_string, name: w.name || t('common.untitled')}))
   } catch { worldSiblings.value = [] }
 }
 
@@ -724,9 +724,9 @@ async function loadWorld(slug: string): Promise<boolean> {
   try {
     const w = await useNativeFetch<any>(`/coloring/worlds/${slug}/`)
     world.value = {
-      id: w.id, id_string: w.id_string, name: w.name || 'Untitled',
+      id: w.id, id_string: w.id_string, name: w.name || t('common.untitled'),
       status: w.status, tileset_id_string: w.tileset_id_string,
-      tileset_name: w.tileset_name || 'Tileset',
+      tileset_name: w.tileset_name || t('common.tileset'),
     }
     tilesetRegistry.value = {...(w.registry || {})}
     for (const [id, ids] of Object.entries(w.registry || {})) {
@@ -742,7 +742,7 @@ async function loadWorld(slug: string): Promise<boolean> {
             .filter((g: any) => g?.kind === 'group' && g?.random && Array.isArray(g.tiles) && g.tiles.length)
             .map((g: any) => ({
               id: String(g.id),
-              name: String(g.name || 'Variants'),
+              name: String(g.name || t('p_tilemaps_editor.variants')),
               tiles: g.tiles.map(Number).filter((id: number) => (w.registry || {})[id]),
               weights: (g.weights && typeof g.weights === 'object') ? g.weights : {},
             }))
@@ -781,7 +781,7 @@ async function loadWorld(slug: string): Promise<boolean> {
     fetchWorldSiblings()
     return true
   } catch {
-    toast.error('Could not load that world')
+    toast.error(t('p_tilemaps_editor.couldNotLoadWorld'))
     return false
   } finally {
     loadingDetail.value = false
@@ -870,18 +870,18 @@ onBeforeUnmount(() => { if (animReq) cancelAnimationFrame(animReq) })
 async function fetchMyTilesets() {
   if (!auth.isLogged) {
     refreshLocalThumbs()
-    myTilesets.value = localTs.list.value.map(t => ({
-      id_string: t.id, name: t.name || 'Untitled',
-      count: t.tiles.length, worlds: [], local: true,
+    myTilesets.value = localTs.list.value.map(ts => ({
+      id_string: ts.id, name: ts.name || t('common.untitled'),
+      count: ts.tiles.length, worlds: [], local: true,
     }))
     return
   }
   try {
     const res = await useNativeFetch<{ results: any[] }>('/coloring/tilesets/', {params: {page_size: 100}})
-    myTilesets.value = (res.results || []).map(t => ({
-      id_string: t.id_string, name: t.name || 'Untitled',
-      count: Object.keys(t.meta?.registry || {}).length,
-      worlds: Array.isArray(t.worlds) ? t.worlds : [],
+    myTilesets.value = (res.results || []).map(ts => ({
+      id_string: ts.id_string, name: ts.name || t('common.untitled'),
+      count: Object.keys(ts.meta?.registry || {}).length,
+      worlds: Array.isArray(ts.worlds) ? ts.worlds : [],
     }))
   } catch { myTilesets.value = [] }
 }
@@ -920,8 +920,8 @@ async function selectTileset(slug: string) {
   if (slug.startsWith('local:')) { loadLocalTilesetPalette(slug); return }
   if (world.value?.tileset_id_string === slug) return
   if (dirty.value && !(await confirmDiscard())) return
-  const t = myTilesets.value.find(x => x.id_string === slug)
-  const newest = t?.worlds?.[0]
+  const mt = myTilesets.value.find(x => x.id_string === slug)
+  const newest = mt?.worlds?.[0]
   if (newest) {
     router.replace({query: {world: newest.id_string}})
     await loadWorld(newest.id_string)
@@ -930,18 +930,18 @@ async function selectTileset(slug: string) {
   try {
     const w = await useNativeFetch<any>('/coloring/worlds/', {
       method: 'POST',
-      body: {tileset: slug, name: 'World 1', meta: {config: null}},
+      body: {tileset: slug, name: t('p_tilemaps_editor.worldN', {n: 1}), meta: {config: null}},
     })
     router.replace({query: {world: w.id_string}})
     await loadWorld(w.id_string)
   } catch {
-    toast.error('Could not open that tileset')
+    toast.error(t('p_tilemaps_editor.couldNotOpenTileset'))
   }
 }
 
 function loadLocalTilesetPalette(localId: string) {
   const m = localTs.editorModel(localId)
-  if (!m) { toast.error('That tileset is no longer available'); return }
+  if (!m) { toast.error(t('p_tilemaps_editor.tilesetNoLongerAvailable')); return }
   refreshLocalThumbs()
   const reg: Record<string, string> = m.registry || {}
   tilesetRegistry.value = {...reg}
@@ -951,7 +951,7 @@ function loadLocalTilesetPalette(localId: string) {
           .filter((g: any) => g?.kind === 'terrain' && g?.map && Object.keys(g.map).length)
           .map((g: any) => ({
             id: String(g.id),
-            name: String(g.name || 'Terrain'),
+            name: String(g.name || t('p_tilemaps_editor.terrain')),
             type: g.type === 'blob47' || g.type === 'corner16' ? g.type : 'wang16',
             map: Object.fromEntries(Object.entries(g.map).map(([k, v]) => [k, Number(v)])),
             ...(g.relations ? {relations: g.relations} : {}),
@@ -961,7 +961,7 @@ function loadLocalTilesetPalette(localId: string) {
       ? m.groups
           .filter((g: any) => g?.kind === 'group' && g?.random && Array.isArray(g.tiles) && g.tiles.length)
           .map((g: any) => ({
-            id: String(g.id), name: String(g.name || 'Variants'),
+            id: String(g.id), name: String(g.name || t('p_tilemaps_editor.variants')),
             tiles: g.tiles.map(Number).filter((id: number) => reg[String(id)]),
             weights: (g.weights && typeof g.weights === 'object') ? g.weights : {},
           }))
@@ -973,7 +973,7 @@ function loadLocalTilesetPalette(localId: string) {
   items.value = Object.entries(reg).map(([id, slug]) => ({
     id: Number(id), id_string: slug, name: slug,
   })) as any
-  guestTileset.value = {id: localId, name: m.name || 'Tileset'}
+  guestTileset.value = {id: localId, name: m.name || t('common.tileset')}
   if (placedIds(config).length === 0) {
     if (m.cell?.w) {
       config.cellW = Math.max(MIN_CELL, Math.min(MAX_CELL, Number(m.cell.w) || config.cellW))
@@ -1008,7 +1008,7 @@ function refreshTiles() {
   if (sheetGroup.value) for (const id of sheetGroup.value.tiles) ensureImage(id)
   scheduleSheet()
   draw()
-  toast.success('Tiles refreshed')
+  toast.success(t('p_tilemaps_editor.tilesRefreshed'))
 }
 
 async function switchWorld(slug: string) {
@@ -1026,20 +1026,20 @@ async function newWorld() {
       method: 'POST',
       body: {
         tileset: world.value.tileset_id_string,
-        name: `World ${worldSiblings.value.length + 1}`,
+        name: t('p_tilemaps_editor.worldN', {n: worldSiblings.value.length + 1}),
         meta: {config: normalizeTilemap(null)},
       },
     })
     router.replace({query: {world: w.id_string}})
     await loadWorld(w.id_string)
   } catch {
-    toast.error('Could not create world')
+    toast.error(t('p_tilemaps_editor.couldNotCreateWorld'))
   }
 }
 
 async function newMap() {
   if (world.value) { newWorld(); return }
-  if (dirty.value && !(await confirmDiscard('this map'))) return
+  if (dirty.value && !(await confirmDiscard(true))) return
   enterFreeStyle({fresh: true})
 }
 
@@ -1062,7 +1062,7 @@ async function fetchMyWorlds() {
 const browseTilemaps = computed(() => {
   if (auth.isLogged) {
     return myWorlds.value.map((w: any) => ({
-      id: w.id_string, name: w.name || 'Untitled', status: w.status, updated: w.updated,
+      id: w.id_string, name: w.name || t('common.untitled'), status: w.status, updated: w.updated,
       previewImgs: Object.values(w.registry || {}).slice(0, 4).map((s: any) => tileImageUrl(apiBase, s)),
     }))
   }
@@ -1070,7 +1070,7 @@ const browseTilemaps = computed(() => {
   for (const id of placedIds(config)) if (knownTiles[id]) reg[id] = knownTiles[id]
   if (!Object.keys(reg).length) return []
   return [{
-    id: 'freestyle', name: 'Free-style map', status: 'draft',
+    id: 'freestyle', name: t('p_tilemaps_editor.freeStyleMap'), status: 'draft',
     previewImgs: Object.values(reg).slice(0, 4).map(s => tileImageUrl(apiBase, s)),
   }]
 })
@@ -1250,7 +1250,7 @@ async function prepareGameExport() {
 async function exportTiled() {
   const base = exportName()
   if (!placedIds(config).length && !config.layers.some(l => l.objects?.length)) {
-    toast.error('Place some tiles first')
+    toast.error(t('p_tilemaps_editor.placeSomeTilesFirst'))
     return
   }
   const enc = new TextEncoder()
@@ -1261,7 +1261,7 @@ async function exportTiled() {
     for (const im of images) files.push({name: im.name, data: await canvasBytes(im.canvas)})
     files.push({name: 'README.txt', data: enc.encode(tiledReadme(base))})
     downloadBlob(createZip(files), `${base}_tiled.zip`)
-    if (missing) toast.warning(`${missing} tile image${missing > 1 ? 's' : ''} not loaded yet — those cells were left empty`)
+    if (missing) toast.warning(t('p_tilemaps_editor.tileImagesNotLoaded', {count: missing}, missing))
     return
   }
   try {
@@ -1275,20 +1275,20 @@ async function exportTiled() {
       {name: 'README.txt', data: enc.encode(tiledReadme(base))},
     ]
     downloadBlob(createZip(files), `${base}_tiled.zip`)
-    if (missing) toast.warning(`${missing} tile${missing > 1 ? 's' : ''} could not be exported`)
-    else toast.success('Exported for Tiled — the map uses the tileset it was made with')
+    if (missing) toast.warning(t('p_tilemaps_editor.tilesNotExported', {count: missing}, missing))
+    else toast.success(t('p_tilemaps_editor.exportedForTiled'))
   } catch {
-    toast.error('Could not export — some tiles failed to load')
+    toast.error(t('p_tilemaps_editor.couldNotExportTilesFailed'))
   }
 }
 
 async function exportGodot() {
   if (config.mode === 'iso') {
-    toast.info('Godot export works on grid maps — use the Tiled export for this one')
+    toast.info(t('p_tilemaps_editor.godotGridOnly'))
     return
   }
   if (!placedIds(config).length && !config.layers.some(l => l.objects?.length)) {
-    toast.error('Place some tiles first')
+    toast.error(t('p_tilemaps_editor.placeSomeTilesFirst'))
     return
   }
   try {
@@ -1304,10 +1304,10 @@ async function exportGodot() {
       {name: 'README.txt', data: enc.encode(godotReadme(x.base, x.tilesetBase))},
     ]
     downloadBlob(createZip(files), `${x.base}_godot.zip`)
-    if (missing) toast.warning(`${missing} tile${missing > 1 ? 's' : ''} could not be exported`)
-    else toast.success('Exported a Godot 4 scene')
+    if (missing) toast.warning(t('p_tilemaps_editor.tilesNotExported', {count: missing}, missing))
+    else toast.success(t('p_tilemaps_editor.exportedGodot'))
   } catch {
-    toast.error('Could not export — some tiles failed to load')
+    toast.error(t('p_tilemaps_editor.couldNotExportTilesFailed'))
   }
 }
 
@@ -1688,7 +1688,7 @@ function newLayerId() {
 function addLayer() {
   if (config.layers.length >= MAX_LAYERS) return
   pushHistory()
-  const layer = makeLayer(`Layer ${config.layers.length + 1}`, newLayerId(), 'sprite')
+  const layer = makeLayer(t('p_tilemaps_editor.layerN', {n: config.layers.length + 1}), newLayerId(), 'sprite')
   config.layers.push(layer)
   activeLayerId.value = layer.id
   touch()
@@ -1705,7 +1705,7 @@ function setLayerKind(id: string, kind: LayerKind) {
 function addObjectLayer() {
   if (config.layers.length >= MAX_LAYERS) return
   pushHistory()
-  const layer = makeLayer('Objects', newLayerId(), 'object')
+  const layer = makeLayer(t('p_tilemaps_editor.objects'), newLayerId(), 'object')
   layer.objects = []
   config.layers.push(layer)
   activeLayerId.value = layer.id
@@ -1781,7 +1781,7 @@ function startRename(id: string) {
 }
 function finishRename() {
   const l = config.layers.find(x => x.id === editingLayerId.value)
-  if (l) { l.name = (l.name || '').trim() || 'Layer'; touch() }
+  if (l) { l.name = (l.name || '').trim() || t('p_tilemaps_editor.layer'); touch() }
   editingLayerId.value = ''
 }
 function removeLayer(id: string) {
@@ -2370,7 +2370,7 @@ function copySelection() {
     }
   }
   clipboard = {w: s.c1 - s.c0 + 1, h: s.r1 - s.r0 + 1, cells, terrain: terr}
-  toast.success('Region copied')
+  toast.success(t('p_tilemaps_editor.regionCopied'))
 }
 
 function pasteClipboard() {
@@ -2439,9 +2439,9 @@ async function save() {
         body: {meta: {config: snapshot(), tiles: extraTiles()}},
       })
       dirty.value = false
-      toast.success('World saved')
+      toast.success(t('p_tilemaps_editor.worldSaved'))
     } catch {
-      toast.error('Could not save world')
+      toast.error(t('p_tilemaps_editor.couldNotSaveWorld'))
     } finally {
       saving.value = false
     }
@@ -2450,7 +2450,7 @@ async function save() {
   if (auth.isLogged) {
     saving.value = true
     try {
-      const name = 'My world'
+      const name = t('p_tilemaps_editor.myWorld')
       // A retry after the world POST failed reuses the tileset it already made.
       let tm = firstSaveTileset.value
       if (tm) {
@@ -2477,16 +2477,16 @@ async function save() {
       router.replace({query: {world: w.id_string}})
       dirty.value = false
       fetchWorldSiblings()
-      toast.success('World saved')
+      toast.success(t('p_tilemaps_editor.worldSaved'))
     } catch {
-      toast.error('Could not save world')
+      toast.error(t('p_tilemaps_editor.couldNotSaveWorld'))
     } finally {
       saving.value = false
     }
     return
   }
   saveFreeStyle()
-  toast.success('Saved in this browser')
+  toast.success(t('p_tilemaps_editor.savedInBrowser'))
 }
 
 const faq = computed(() => [
@@ -2750,7 +2750,7 @@ const faq = computed(() => [
                 <button
                     v-else
                     class="tm-layer-kind"
-                    :title="l.kind === 'sprite' ? 'Sprite layer (sits on top) — click for Ground' : 'Ground layer (fills cells) — click for Sprite'"
+                    :title="l.kind === 'sprite' ? $t('p_tilemaps_editor.spriteLayerHint') : $t('p_tilemaps_editor.groundLayerHint')"
                     @click.stop="setLayerKind(l.id, l.kind === 'ground' ? 'sprite' : 'ground')"
                 >
                   <span class="icon" :class="l.kind === 'sprite' ? 'icon-rhombus' : 'icon-grid'"/>
@@ -2759,7 +2759,7 @@ const faq = computed(() => [
                     v-if="l.kind !== 'object'"
                     class="tm-layer-kind tm-layer-ysort"
                     :class="{'tm-layer-ysort-on': l.ySort}"
-                    :title="l.ySort ? 'Y-sort on — tiles overlap by depth (lower on top); click to turn off' : 'Y-sort off — flat top-to-bottom order; click to sort by depth'"
+                    :title="l.ySort ? $t('p_tilemaps_editor.ySortOnHint') : $t('p_tilemaps_editor.ySortOffHint')"
                     @click.stop="toggleYSort(l.id)"
                 >
                   <span class="icon icon-arrange"/>
@@ -2835,10 +2835,10 @@ const faq = computed(() => [
 
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">
-        {{ config.mode === 'iso' ? 'Isometric' : 'Grid' }} {{ config.cols }}×{{ config.rows }} ·
-        cell {{ config.cellW }}×{{ config.cellH }}px ·
-        {{ config.layers.length }} layer{{ config.layers.length === 1 ? '' : 's' }} ·
-        {{ placedIds(config).length }} tiles placed
+        {{ config.mode === 'iso' ? $t('common.isometric') : $t('common.grid') }} {{ config.cols }}×{{ config.rows }} ·
+        {{ $t('p_tilemaps_editor.cellWH', {w: config.cellW, h: config.cellH}) }} ·
+        {{ $t('p_tilemaps_editor.layerCount', {count: config.layers.length}, config.layers.length) }} ·
+        {{ $t('p_tilemaps_editor.tilesPlaced', {count: placedIds(config).length}, placedIds(config).length) }}
       </p>
     </template>
 
@@ -2862,7 +2862,7 @@ const faq = computed(() => [
             >
               <option value="">{{ $t('p_tilemaps_editor.freeStyleSearchAnyArt') }}</option>
               <option v-for="t in myTilesets" :key="t.id_string" :value="t.id_string">
-                {{ t.name }} ({{ t.count }} tiles)
+                {{ $t('p_tilemaps_editor.tilesetOption', {name: t.name, count: t.count}, t.count) }}
               </option>
               <option value="__manage__">{{ $t('p_tilemaps_editor.manageTilesets') }}</option>
             </select>
@@ -2979,10 +2979,10 @@ const faq = computed(() => [
                 :key="it.id"
                 class="tm-tile"
                 :class="{active: brush === it.id}"
-                :title="it.name || 'Tile'"
+                :title="it.name || $t('p_tilemaps_editor.brushTile')"
                 @click="pickBrush(it.id as number)"
             >
-              <img :src="tileSrc(it)" :alt="it.name || 'Tile'" loading="lazy"/>
+              <img :src="tileSrc(it)" :alt="it.name || $t('p_tilemaps_editor.brushTile')" loading="lazy"/>
             </button>
           </div>
           <div v-if="sheetGroup && !paletteLoading" class="tm-sheet-wrap">
@@ -3055,7 +3055,7 @@ const faq = computed(() => [
               </div>
               <div class="tm-dims" :class="{'tm-dims-one': config.mode === 'iso'}">
                 <div class="tm-num">
-                  <span class="tm-num-cap">{{ config.mode === 'iso' ? 'Tile width' : 'Width' }}</span>
+                  <span class="tm-num-cap">{{ config.mode === 'iso' ? $t('p_tilemaps_editor.tileWidth') : $t('p_tilemaps_editor.width') }}</span>
                   <input
                       type="number" class="tm-cell-input" inputmode="numeric"
                       :min="MIN_CELL" :max="MAX_CELL" :value="config.cellW"
@@ -3096,7 +3096,7 @@ const faq = computed(() => [
               </div>
             </div>
             <div class="tm-group">
-              <span class="tm-label">{{ $t('p_tilemaps_editor.variantSeed') }} <em>{{ config.seed ? config.seed : 'random' }}</em></span>
+              <span class="tm-label">{{ $t('p_tilemaps_editor.variantSeed') }} <em>{{ config.seed ? config.seed : $t('p_tilemaps_editor.random') }}</em></span>
               <div class="tm-dims tm-dims-one">
                 <div class="tm-num">
                   <input
@@ -3123,7 +3123,7 @@ const faq = computed(() => [
                       :value="config.bg || '#1b1b2e'"
                       @input="setBg(($event.target as HTMLInputElement).value)"
                   />
-                  <span class="tm-bg-hex">{{ config.bg ? config.bg.toUpperCase() : 'None' }}</span>
+                  <span class="tm-bg-hex">{{ config.bg ? config.bg.toUpperCase() : $t('p_tilemaps_editor.none') }}</span>
                 </label>
                 <div class="tm-bg-presets">
                   <button

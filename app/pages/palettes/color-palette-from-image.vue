@@ -2,6 +2,8 @@
 import {toast} from "vue-sonner";
 import {extractPaletteFromFile} from "~/helper/palette";
 
+const {t} = useI18n()
+
 const count = ref(16)
 const detecting = ref(false)
 const colors = ref<string[]>([])
@@ -14,7 +16,7 @@ async function detect() {
   try {
     colors.value = await extractPaletteFromFile(lastFile, count.value)
   } catch {
-    toast.error('Could not read that image')
+    toast.error(t('p_palettes_color-palette-from-image.couldNotReadImage'))
   } finally {
     detecting.value = false
   }
@@ -42,29 +44,29 @@ function onDrop(e: DragEvent) {
   setFile(e.dataTransfer?.files?.[0])
 }
 
-let t: any = null
+let timer: any = null
 watch(count, () => {
   if (!lastFile) return
-  clearTimeout(t)
-  t = setTimeout(detect, 250)
+  clearTimeout(timer)
+  timer = setTimeout(detect, 250)
 })
 
 onBeforeUnmount(() => {
-  clearTimeout(t)
+  clearTimeout(timer)
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
 })
 
-const FAQ = [
-  {q: 'How do I get a color palette from an image?', a: 'Upload any photo, screenshot or illustration. The tool reads its pixels in your browser and extracts the most representative colors automatically — no upload to a server.', icon: 'icon-image'},
-  {q: 'How many colors can I extract?', a: 'Anywhere from 2 to 32. Drag the slider and the palette re-detects instantly so you can dial in the right level of detail.', icon: 'icon-adjust'},
-  {q: 'Is it free?', a: 'Yes — completely free, no signup needed to extract and copy. You only need an account if you want to publish a palette to the public library.', icon: 'icon-check'},
-  {q: 'Can I edit the colors afterwards?', a: 'Yes. Click any swatch to tweak its hex, remove ones you don’t want, or add new colors before you copy, open in the editor, or publish.', icon: 'icon-pen'},
-  {q: 'What image formats work?', a: 'PNG, JPG, WebP and GIF — anything your browser can display. Transparent pixels are ignored so they don’t pollute the palette.', icon: 'icon-file'},
-]
+const FAQ = computed(() => [
+  {q: t('p_palettes_color-palette-from-image.faq0q'), a: t('p_palettes_color-palette-from-image.faq0a'), icon: 'icon-image'},
+  {q: t('p_palettes_color-palette-from-image.faq1q'), a: t('p_palettes_color-palette-from-image.faq1a'), icon: 'icon-adjust'},
+  {q: t('p_palettes_color-palette-from-image.faq2q'), a: t('p_palettes_color-palette-from-image.faq2a'), icon: 'icon-check'},
+  {q: t('p_palettes_color-palette-from-image.faq3q'), a: t('p_palettes_color-palette-from-image.faq3a'), icon: 'icon-pen'},
+  {q: t('p_palettes_color-palette-from-image.faq4q'), a: t('p_palettes_color-palette-from-image.faq4a'), icon: 'icon-file'},
+])
 
 useCustomSeoMeta({
-  title: "Color Palette from Image",
-  description: "Extract a color palette from any image. Upload a photo, pick 2 to 32 colors, then copy the hex codes or open them in the pixel art editor.",
+  title: () => t('p_palettes_color-palette-from-image.seoTitle'),
+  description: () => t('p_palettes_color-palette-from-image.seoDescription'),
   keywords: "color palette for image, color palette from image, extract colors from image, image color palette generator, get colors from photo, image to palette, dominant colors extractor, photo color palette",
   canonical: "https://simplepixelart.com/palettes/color-palette-from-image",
   robots: "index, follow",
@@ -107,7 +109,7 @@ useCustomSeoMeta({
           },
           {
             '@type': 'FAQPage',
-            mainEntity: FAQ.map(f => ({
+            mainEntity: FAQ.value.map(f => ({
               '@type': 'Question',
               name: f.q,
               acceptedAnswer: {'@type': 'Answer', text: f.a},
@@ -160,7 +162,7 @@ useCustomSeoMeta({
             v-model:colors="colors"
             source="image"
             :name-placeholder="$t('common.paletteName')"
-            default-name="Extracted palette"
+            :default-name="$t('p_palettes_color-palette-from-image.defaultName')"
         />
         <div v-else class="ext-ph">
           <span class="tool-pane-cap">{{ $t('common.palette') }}</span>
@@ -179,7 +181,7 @@ useCustomSeoMeta({
 
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">
-        <template v-if="colors.length">{{ colors.length }} colors extracted</template>
+        <template v-if="colors.length">{{ $t('p_palettes_color-palette-from-image.nColorsExtracted', {count: colors.length}, colors.length) }}</template>
         <template v-else-if="previewUrl">{{ $t('p_palettes_color-palette-from-image.readingColors') }}</template>
         <template v-else>{{ $t('p_palettes_color-palette-from-image.noImageYetDropOneTo') }}</template>
       </p>

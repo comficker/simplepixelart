@@ -3,6 +3,7 @@ import {toast} from 'vue-sonner'
 import {detectStripLayout, sliceStrip} from '~/helper/strip'
 
 const open = defineModel<boolean>('open', {default: false})
+const {t} = useI18n()
 const store = useEditor()
 
 const MAX_FRAMES = 64
@@ -23,9 +24,9 @@ const cleanDivide = computed(() => Number.isInteger(frameW.value) && Number.isIn
 
 const problem = computed(() => {
   if (!imgW.value) return ''
-  if (cols.value < 1 || rows.value < 1) return 'Cols and rows must be at least 1.'
-  if (!cleanDivide.value) return `${imgW.value}×${imgH.value}px doesn't divide evenly into ${cols.value}×${rows.value} frames.`
-  if (frameCount.value > MAX_FRAMES) return `Max ${MAX_FRAMES} frames — reduce cols/rows.`
+  if (cols.value < 1 || rows.value < 1) return t('c_StripImport.colsRowsMin')
+  if (!cleanDivide.value) return t('c_StripImport.notEvenDivide', {w: imgW.value, h: imgH.value, cols: cols.value, rows: rows.value})
+  if (frameCount.value > MAX_FRAMES) return t('c_StripImport.maxFramesReduce', {max: MAX_FRAMES})
   return ''
 })
 
@@ -73,11 +74,11 @@ function doImport() {
   try {
     const frames = sliceStrip(imgEl.value, cols.value, rows.value)
     if (!frames.length) {
-      toast.error('Could not read any frames from this image')
+      toast.error(t('c_StripImport.noFramesRead'))
       return
     }
     store.loadAnimationFrames(frames)
-    toast.success(frames.length > 1 ? `Imported ${frames.length} frames` : 'Imported 1 frame')
+    toast.success(t('c_StripImport.importedNFrames', {count: frames.length}, frames.length))
     open.value = false
     reset()
   } finally {
@@ -126,8 +127,7 @@ watch(open, (v) => { if (v) reset() })
             </label>
             <div class="si-info">
               <template v-if="!problem">
-                {{ frameCount }} {{ frameCount === 1 ? 'frame' : 'frames' }} ·
-                {{ frameW }}×{{ frameH }}px each
+                {{ $t('c_StripImport.frameInfo', {count: frameCount, w: frameW, h: frameH}, frameCount) }}
               </template>
               <span v-else class="si-error">{{ problem }}</span>
             </div>
@@ -144,7 +144,7 @@ watch(open, (v) => { if (v) reset() })
               :disabled="!!problem || importing"
               @click="doImport"
           >
-            {{ importing ? 'Importing…' : 'Import' }}
+            {{ importing ? $t('c_StripImport.importing') : $t('c_StripImport.import') }}
           </button>
         </div>
     </UiModal>

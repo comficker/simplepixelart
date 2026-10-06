@@ -2,6 +2,7 @@
 import {toast} from 'vue-sonner'
 
 const auth = useAuthStore()
+const {t} = useI18n()
 
 interface Mission {
   code: string
@@ -47,9 +48,9 @@ async function claimDaily() {
       setBalance(res.balance)
       sum.value.daily_claimed = true
     }
-    toast.success(`+${res.granted} credits`)
+    toast.success(t('c_WalletMenu.plusNCredits', res.granted, {count: res.granted}))
   } catch {
-    toast.error('Already claimed today')
+    toast.error(t('c_WalletMenu.alreadyClaimedToday'))
     if (sum.value) sum.value.daily_claimed = true
   } finally {
     claiming.value = ''

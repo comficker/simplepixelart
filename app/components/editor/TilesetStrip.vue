@@ -161,7 +161,7 @@ async function pick(id: number | string | null) {
       emit('tileset-change', '')
       boundId.value = null
       selectedId.value = null
-      if (from) toast.success(`Removed from “${from.title}”`)
+      if (from) toast.success(t('c_TilesetStrip.removedFrom', {name: from.title}))
       return
     }
     if (!to) return
@@ -171,7 +171,7 @@ async function pick(id: number | string | null) {
     emit('tileset-change', String(to.id_string || to.id))
     boundId.value = to.id
     selectedId.value = to.id
-    toast.success(from ? `Moved to “${to.title}”` : `Added to “${to.title}”`)
+    toast.success(t(from ? 'c_TilesetStrip.movedTo' : 'c_TilesetStrip.addedTo', {name: to.title}))
   } finally {
     moving.value = false
   }
@@ -180,19 +180,19 @@ async function pick(id: number | string | null) {
 async function addToTileset(to: Ts): Promise<boolean> {
   if (to.local) {
     const ed = props.activeData
-    if (!ed) { toast.error('Nothing to add yet'); return false }
+    if (!ed) { toast.error(t('c_TilesetStrip.nothingToAdd')); return false }
     localTs.addTile(String(to.id), {name: ed.name, ed, thumb: localTs.edToThumb(ed)})
     return true
   }
   const slug = props.activeId
-  if (!slug || !props.activeSaved) { toast.error('Save the art first, then add it'); return false }
+  if (!slug || !props.activeSaved) { toast.error(t('c_TilesetStrip.saveFirst')); return false }
   try {
     await useNativeFetch(`/coloring/tilesets/${to.id_string}/add-tile/`, {
       method: 'POST', body: {page_id_string: slug},
     })
     return true
   } catch {
-    toast.error('Could not add the art')
+    toast.error(t('c_TilesetStrip.couldNotAdd'))
     return false
   }
 }
@@ -321,7 +321,7 @@ defineExpose({removeItem, refresh, siblingId})
         <div class="cstrip-new-actions">
           <button class="btn" @click="showNew = false">{{ $t('common.cancel') }}</button>
           <button class="btn primary" :disabled="!newTitle.trim() || creating" @click="createTileset">
-            {{ creating ? '…' : 'Create' }}
+            {{ creating ? '…' : $t('common.create') }}
           </button>
         </div>
       </div>
@@ -336,7 +336,7 @@ defineExpose({removeItem, refresh, siblingId})
             type="button"
             class="cstrip-thumb"
             :class="{active: item.active}"
-            :title="item.active ? 'Editing now' : 'Click to edit'"
+            :title="item.active ? $t('c_TilesetStrip.editingNow') : $t('c_TilesetStrip.clickToEdit')"
             @click="openTile(item)"
         >
           <img
@@ -351,7 +351,7 @@ defineExpose({removeItem, refresh, siblingId})
         </button>
       </div>
       <p v-else class="cstrip-empty">
-        {{ selectedId == null ? 'This art isn’t in a tileset. Pick one to add it.' : 'No tiles in this tileset yet.' }}
+        {{ selectedId == null ? $t('c_TilesetStrip.notInTileset') : $t('c_TilesetStrip.noTilesYet') }}
       </p>
     </div>
   </Widget>

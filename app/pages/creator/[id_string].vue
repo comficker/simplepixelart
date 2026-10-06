@@ -4,7 +4,7 @@ import {PROFILE_LINKS, linkHost} from '~/helper/profileLinks'
 import {tileImageUrl} from '~/helper/tilemap'
 import {toast} from 'vue-sonner'
 
-const {t} = useI18n()
+const {t, locale} = useI18n()
 
 const route = useRoute()
 const username = computed(() => route.params.id_string?.toString() || '')
@@ -125,8 +125,8 @@ onMounted(loadStats)
 watch(isSelf, loadStats)
 // A portfolio link worth posting: the profile, not one piece.
 const shareMeta = computed(() => ({
-  title: `@${username.value} on SimplePixelArt`,
-  desc: profile.value?.bio || `Pixel art by @${username.value}`,
+  title: t('p_creator_id_string.shareTitle', {user: `@${username.value}`}),
+  desc: profile.value?.bio || t('p_creator_id_string.pixelArtByUser', {user: `@${username.value}`}),
 }))
 
 /** Only the platforms this creator filled in, in the shared display order. */
@@ -140,7 +140,7 @@ const profileLinks = computed(() => {
 const joinedText = computed(() => {
   if (!profile.value?.joined) return ''
   return new Date(`${profile.value.joined}T00:00:00`)
-      .toLocaleDateString('en-US', {month: 'short', year: 'numeric'})
+      .toLocaleDateString(locale.value, {month: 'short', year: 'numeric'})
 })
 
 const collections = computed(() => collectionsRes.value?.results || [])
@@ -275,8 +275,8 @@ useCustomSeoMeta({
               :class="{'is-lead': i === 0}"
               :title="f.name"
           >
-            <img :src="tileImageUrl(apiBase, f.id_string)" :alt="f.name || 'Pixel art'" :loading="i === 0 ? 'eager' : 'lazy'">
-            <span class="cp-feat-name">{{ f.name || 'Untitled' }}</span>
+            <img :src="tileImageUrl(apiBase, f.id_string)" :alt="f.name || $t('p_creator_id_string.pixelArtAlt')" :loading="i === 0 ? 'eager' : 'lazy'">
+            <span class="cp-feat-name">{{ f.name || $t('common.untitled') }}</span>
           </NuxtLinkLocale>
         </div>
       </section>

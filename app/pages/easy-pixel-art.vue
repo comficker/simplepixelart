@@ -36,8 +36,8 @@ const faq = computed(() => [
 ])
 
 useCustomSeoMeta({
-  title: 'Easy Pixel Art for Beginners',
-  description: 'Easy pixel art for beginners: start on an 8×8 grid with three colors. A step-by-step method, the easiest canvas sizes and a free online editor.',
+  title: () => t('p_easy-pixel-art.seoTitle'),
+  description: () => t('p_easy-pixel-art.seoDescription'),
   keywords: 'easy pixel art, pixel art easy, simple pixel art, pixel art for beginners, easy pixel art ideas, small pixel art, 8x8 pixel art, easy pixel art grid, beginner pixel art',
   canonical: 'https://simplepixelart.com/easy-pixel-art',
   ogType: 'article',

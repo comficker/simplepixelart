@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const localePath = useLocalePath()
+const {t, locale} = useI18n()
 import {toast} from 'vue-sonner'
 import TilemapShowcase from '~/components/tilemap/TilemapShowcase.vue'
 import {normalizeTilemap, computeGeometry, tileImageUrl} from '~/helper/tilemap'
@@ -48,13 +49,13 @@ const groups = computed(() => {
     unique.forEach(id => seen.add(id))
     return {
       id: String(g?.id || `g${i}`),
-      name: String(g?.name || (terrain ? 'Terrain' : 'Group')),
+      name: String(g?.name || (terrain ? t('p_tilesets_id_string.terrain') : t('p_tilesets_editor.group'))),
       terrain,
       tiles: unique.map(id => ({id, src: tileSrc(reg[String(id)]!)})),
     }
   }).filter((g: any) => g.tiles.length)
   const rest = tiles.value.filter(t => !seen.has(t.id))
-  if (rest.length) out.push({id: '__rest', name: 'Other', terrain: false, tiles: rest.map(t => ({id: t.id, src: tileSrc(t.id_string)}))})
+  if (rest.length) out.push({id: '__rest', name: t('p_tilesets_id_string.other'), terrain: false, tiles: rest.map(t => ({id: t.id, src: tileSrc(t.id_string)}))})
   return out
 })
 const terrainCount = computed(() => groups.value.filter((g: any) => g.terrain).length)
@@ -123,7 +124,7 @@ const formattedDate = computed(() => {
   const d = data.value?.updated
   if (!d) return null
   try {
-    return new Date(d).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})
+    return new Date(d).toLocaleDateString(locale.value, {year: 'numeric', month: 'short', day: 'numeric'})
   } catch {
     return null
   }
@@ -141,16 +142,16 @@ async function cloneTileset() {
   // Everything the editor reads, minus the preview world — worlds aren't cloned.
   const {preview, ...cloneMeta} = meta.value
   try {
-    const t = await useNativeFetch<any>('/coloring/tilesets/', {
+    const created = await useNativeFetch<any>('/coloring/tilesets/', {
       method: 'POST',
       body: {
-        name: `${title.value} (copy)`,
+        name: t('p_tilesets_id_string.copyName', {name: title.value}),
         meta: cloneMeta,
       },
     })
-    navigateTo(localePath(`/tilesets/editor?id=${t.id_string}`))
+    navigateTo(localePath(`/tilesets/editor?id=${created.id_string}`))
   } catch {
-    toast.error('Could not clone tileset')
+    toast.error(t('p_tilesets_id_string.couldNotClone'))
   } finally {
     cloning.value = false
   }
@@ -165,7 +166,7 @@ async function cloneTileset() {
     <NuxtLinkLocale to="/tilesets/editor" class="btn primary empty-state-action">{{ $t('p_tilesets_id_string.buildYourOwn') }}</NuxtLinkLocale>
   </div>
 
-  <ToolLayout v-else :title="title" title-tag="h1">
+  <ToolLayout v-else :title="data.name || $t('p_tilesets_id_string.untitledTileset')" title-tag="h1">
     <template #head>
       <SocialSharing :meta="shareMeta" position="right"/>
     </template>
@@ -184,9 +185,9 @@ async function cloneTileset() {
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">
         <template v-if="world?.meta?.config">
-          <NuxtLinkLocale :to="`/worlds/${world.id_string}`">{{ world.name || 'Untitled' }}</NuxtLinkLocale> ·
+          <NuxtLinkLocale :to="`/worlds/${world.id_string}`">{{ world.name || $t('common.untitled') }}</NuxtLinkLocale> ·
         </template>
-        {{ tiles.length }} tiles · {{ groups.length }} groups
+        {{ $t('p_tilesets_id_string.tileCount', {count: tiles.length}, tiles.length) }} · {{ $t('p_tilesets_id_string.groupCount', {count: groups.length}, groups.length) }}
       </p>
       <p v-if="formattedDate" class="text-xs text-muted">{{ formattedDate }}</p>
     </template>
@@ -200,7 +201,7 @@ async function cloneTileset() {
           </NuxtLinkLocale>
           <button v-else type="button" class="btn primary" :disabled="cloning" @click="cloneTileset">
             <span class="icon icon-plus"/>
-            <span>{{ cloning ? 'Cloning…' : 'Use this tileset' }}</span>
+            <span>{{ cloning ? $t('p_tilesets_id_string.cloning') : $t('p_tilesets_id_string.useThisTileset') }}</span>
           </button>
         </div>
       </Widget>
@@ -270,7 +271,7 @@ async function cloneTileset() {
       <Widget v-if="visibleWorlds.length" :title="$t('p_tilesets_id_string.worldsBuiltWithThisTileset')">
         <ul class="tsd-worlds">
           <li v-for="w in visibleWorlds" :key="w.id_string">
-            <NuxtLinkLocale :to="`/worlds/${w.id_string}`" class="art-meta-link">{{ w.name || 'Untitled' }}</NuxtLinkLocale>
+            <NuxtLinkLocale :to="`/worlds/${w.id_string}`" class="art-meta-link">{{ w.name || $t('common.untitled') }}</NuxtLinkLocale>
             <span v-if="w.id_string === previewId" class="text-muted">{{ $t('p_tilesets_id_string.shownAbove') }}</span>
             <span v-else-if="w.status !== 'public'" class="text-muted">{{ $t('common.private') }}</span>
           </li>

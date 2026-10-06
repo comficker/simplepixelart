@@ -14,7 +14,7 @@ const {data: palette} = await useAuthFetch<Palette>(
 )
 
 if (!palette.value) {
-  throw createError({statusCode: 404, statusMessage: 'Palette not found', fatal: true})
+  throw createError({statusCode: 404, statusMessage: t('p_palettes_id_string.notFound'), fatal: true})
 }
 
 const pid = palette.value.id
@@ -42,20 +42,20 @@ async function toggleLike() {
         `/coloring/palettes/${palette.value!.id}/like/`, {method: 'POST'})
     liked.value = res.liked
     likeCount.value = res.like_count
-    if (res.counted) toast.success('Thanks for the love!')
+    if (res.counted) toast.success(t('p_palettes_id_string.thanksForTheLove'))
   } catch {
-    toast.error('Could not heart this palette')
+    toast.error(t('p_palettes_id_string.couldNotHeart'))
   } finally {
     liking.value = false
   }
 }
 
-const DL_FORMATS = [
+const DL_FORMATS = computed(() => [
   {ext: 'hex', label: 'Hex (.hex)'},
   {ext: 'gpl', label: 'GIMP (.gpl)'},
-  {ext: 'png', label: 'PNG strip'},
+  {ext: 'png', label: t('p_palettes_id_string.pngStrip')},
   {ext: 'json', label: 'JSON'},
-] as const
+])
 
 function dl(ext: string) {
   return `${config.public.api}/coloring/palettes/${palette.value!.id}/download/?ext=${ext}`
@@ -64,9 +64,9 @@ function dl(ext: string) {
 async function copy(text: string, label: string) {
   try {
     await navigator.clipboard.writeText(text)
-    toast.success(`Copied ${label}`)
+    toast.success(t('p_palettes_id_string.copiedX', {x: label}))
   } catch {
-    toast.error('Copy failed')
+    toast.error(t('p_palettes_id_string.copyFailed'))
   }
 }
 
@@ -108,6 +108,21 @@ const insights = computed(() => {
     lightest: light.hex.toUpperCase(),
   }
 })
+
+// Display names for the insight values; the values themselves stay English
+// because the (untranslated) SEO description reuses the tone.
+const insightLabels = computed<Record<string, string>>(() => ({
+  Warm: t('p_palettes_id_string.warm'),
+  Cool: t('p_palettes_id_string.cool'),
+  Neutral: t('p_palettes_id_string.neutral'),
+  Dark: t('common.dark'),
+  Light: t('common.light'),
+  Balanced: t('p_palettes_id_string.balanced'),
+  Grayscale: t('p_palettes_id_string.grayscale'),
+  Vivid: t('p_palettes_id_string.vivid'),
+  Pastel: t('p_palettes_id_string.pastel'),
+  Muted: t('p_palettes_id_string.muted'),
+}))
 
 const creator = computed(() => palette.value?.user?.username || '')
 
@@ -155,12 +170,12 @@ useCustomSeoMeta({
       <div>
         <h1 class="pd-title">{{ palette.name || palette.id_string }}</h1>
         <div class="pd-meta">
-          <span>{{ palette.color_count }} colors</span>
+          <span>{{ $t('common.nColors', {count: palette.color_count}) }}</span>
           <span v-if="usedCount" class="pd-dot">·</span>
-          <span v-if="usedCount">{{ usedCount }} {{ usedCount === 1 ? 'artwork' : 'artworks' }}</span>
+          <span v-if="usedCount">{{ $t('p_palettes_id_string.artworkCount', {count: usedCount}, usedCount) }}</span>
           <template v-if="palette.user">
             <span class="pd-dot">·</span>
-            <span>by <NuxtLinkLocale class="pd-creator" :to="`/creator/${palette.user.username}`">{{ palette.user.username }}</NuxtLinkLocale></span>
+            <i18n-t keypath="p_palettes_id_string.byX" tag="span"><template #name><NuxtLinkLocale class="pd-creator" :to="`/creator/${palette.user.username}`">{{ palette.user.username }}</NuxtLinkLocale></template></i18n-t>
           </template>
         </div>
       </div>
@@ -177,7 +192,7 @@ useCustomSeoMeta({
             :class="{'is-liked': liked}"
             :aria-pressed="liked"
             :disabled="liking"
-            :title="liked ? 'You hearted this today' : 'Heart this palette'"
+            :title="liked ? $t('p_palettes_id_string.youHeartedThisToday') : $t('p_palettes_id_string.heartThisPalette')"
             @click="toggleLike"
         >
           <span class="icon icon-heart"/>
@@ -227,9 +242,9 @@ useCustomSeoMeta({
         </div>
         <div class="pd-insights-right">
           <div class="pd-pills">
-            <span class="pd-pill">{{ insights.tone }}</span>
-            <span class="pd-pill">{{ insights.brightness }}</span>
-            <span class="pd-pill">{{ insights.saturation }}</span>
+            <span class="pd-pill">{{ insightLabels[insights.tone] }}</span>
+            <span class="pd-pill">{{ insightLabels[insights.brightness] }}</span>
+            <span class="pd-pill">{{ insightLabels[insights.saturation] }}</span>
           </div>
           <div class="pd-range">
             <span class="pd-range-cap">{{ $t('common.dark') }}</span>

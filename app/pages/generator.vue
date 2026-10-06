@@ -128,7 +128,7 @@ async function toReference(url: string, smooth: boolean): Promise<string> {
 
 async function pickReference(file: File | null | undefined) {
   if (!file) return
-  if (!file.type.startsWith('image/')) { toast.error('That file is not an image'); return }
+  if (!file.type.startsWith('image/')) { toast.error(t('p_generator.notAnImage')); return }
   try {
     const url = await new Promise<string>((ok, err) => {
       const r = new FileReader()
@@ -140,7 +140,7 @@ async function pickReference(file: File | null | undefined) {
     referenceName.value = file.name
     refining.value = false
   } catch {
-    toast.error('Could not read that image')
+    toast.error(t('p_generator.couldNotReadImage'))
   }
 }
 
@@ -151,13 +151,13 @@ async function refineResult() {
   if (!resultUrl.value || busy.value) return
   try {
     reference.value = await toReference(resultUrl.value, false)
-    referenceName.value = 'This sprite'
+    referenceName.value = t('p_generator.thisSprite')
     refining.value = true
     prompt.value = ''
     await nextTick()
     promptEl.value?.focus()
   } catch {
-    toast.error('Could not reuse that result')
+    toast.error(t('p_generator.couldNotReuseResult'))
   }
 }
 
@@ -223,10 +223,10 @@ async function claimDaily() {
         '/coloring/economy/daily/', {method: 'POST'})
     summary.value.balance = res.balance
     summary.value.dailyClaimed = true
-    toast.success(`+🪙${res.granted} daily bonus`)
+    toast.success(t('p_generator.dailyBonusToast', {n: res.granted}))
   } catch (e: any) {
     if ((e?.status ?? e?.response?.status) === 409) summary.value.dailyClaimed = true
-    else toast.error('Could not claim right now')
+    else toast.error(t('p_generator.couldNotClaim'))
   } finally {
     claiming.value = false
   }
@@ -244,7 +244,7 @@ async function convertResult() {
       fillGrid: fillGrid.value,
     })
     if (run !== convertRun) return
-    if (!q) { toast.error('Could not read the generated image'); return }
+    if (!q) { toast.error(t('p_generator.couldNotReadGenerated')); return }
     grid.value = q.indexed
     palette.value = q.palette.map(c => rgbToHex(c[0], c[1], c[2]).toUpperCase())
     await nextTick()
@@ -303,13 +303,13 @@ async function generate() {
     const codes = e?.data ?? e?.response?._data
     const code = Array.isArray(codes) ? codes[0] : ''
     if (s === 400 && String(code).startsWith('REFERENCE')) {
-      toast.error(code === 'REFERENCE_TOO_LARGE' ? 'That reference image is too large' : 'Could not use that reference image')
-    } else if (s === 401) toast.error('Sign in to generate')
+      toast.error(code === 'REFERENCE_TOO_LARGE' ? t('p_generator.referenceTooLarge') : t('p_generator.referenceUnusable'))
+    } else if (s === 401) toast.error(t('p_generator.signInToGenerate'))
     else if (s === 402) {
-      toast.error('Not enough credits — earn some in Missions')
+      toast.error(t('p_generator.notEnoughCredits'))
       await loadSummary()
-    } else if (s === 429) toast.error('Too many generations — take a short break')
-    else toast.error('Generation failed — your credits were refunded')
+    } else if (s === 429) toast.error(t('p_generator.tooManyGenerations'))
+    else toast.error(t('p_generator.generationFailed'))
     busy.value = false
     return
   }
@@ -325,7 +325,7 @@ async function generate() {
     if (refining.value) reference.value = await toReference(res.image, false)
     await convertResult()
   } catch {
-    toast.error('Could not process the generated image — find it in your history')
+    toast.error(t('p_generator.couldNotProcess'))
   } finally {
     busy.value = false
   }
@@ -347,7 +347,7 @@ async function restoreFromHistory(h: GenHistoryItem) {
         `/coloring/economy/gen-image/history/${h.id}/`)
     original = res.image
   } catch (e: any) {
-    toast.error('That picture is no longer stored')
+    toast.error(t('p_generator.noLongerStored'))
     history.value = history.value.filter(e2 => e2.id !== h.id)
     return
   }
@@ -385,7 +385,7 @@ async function sendToEditor() {
     try {
       const q = await aiImageToGrid(resultUrl.value, 'auto', 64,
           {removeGround: false, fillGrid: false, minShare: 0})
-      if (!q) { toast.error('Could not read the generated image'); return }
+      if (!q) { toast.error(t('p_generator.couldNotReadGenerated')); return }
       g = q.indexed
       pal = q.palette.map(c => rgbToHex(c[0], c[1], c[2]).toUpperCase())
       skip = -1
@@ -406,7 +406,7 @@ async function sendToEditor() {
       pixels[`${x}_${y}`] = m
     }
   }
-  if (!Object.keys(pixels).length) { toast.error('The result came out empty — try again'); return }
+  if (!Object.keys(pixels).length) { toast.error(t('p_generator.resultEmpty')); return }
   const id = generateUUID()
   const data: EditorData = {
     ...cloneDeep(DEFAULT_EDITOR_DATA),
@@ -423,6 +423,14 @@ async function sendToEditor() {
   localStorage.setItem('workspace_current', id)
   navigateTo(localePath(`/editor?id=${id}`))
 }
+
+const statusLine = computed(() => t('p_generator.statusLine', {
+  style: STYLES.value.find(s => s.v === style.value)?.l || style.value,
+  view: VIEWS.value.find(v => v.v === view.value)?.l || view.value,
+  size: size.value === 'auto' ? t('p_generator.autoSize') : `${size.value}×${size.value}px`,
+  colors: maxColors.value,
+  backdrop: BG_MODES.value.find(m => m.v === bgMode.value)?.l || bgMode.value,
+}))
 
 const faq = computed(() => [
   {q: t('p_generator.faq0q'), a: t('p_generator.faq0a')},
@@ -470,11 +478,11 @@ const faq = computed(() => [
         <div v-if="hasResult" class="tool-actions">
           <button
               class="btn primary block"
-              :title="previewMode === 'original' ? 'Open the original picture in the editor' : 'Open the pixel art in the editor'"
+              :title="previewMode === 'original' ? $t('p_generator.openOriginalTitle') : $t('p_generator.openPixelArtTitle')"
               @click="sendToEditor"
           >
             <span class="icon icon-pen"/>
-            <span>{{ previewMode === 'original' ? 'Open Original in Editor' : 'Open in Editor' }}</span>
+            <span>{{ previewMode === 'original' ? $t('p_generator.openOriginalInEditor') : $t('common.openInEditor2') }}</span>
           </button>
           <button
               class="btn block"
@@ -493,11 +501,11 @@ const faq = computed(() => [
 
         <div v-if="reference" class="gen-ref" :class="{'is-refining': refining}">
           <img :src="reference" alt="" class="gen-ref-thumb">
-          <span class="gen-ref-name">{{ refining ? 'Refining this sprite' : (referenceName || 'Reference image') }}</span>
+          <span class="gen-ref-name">{{ refining ? $t('p_generator.refiningThisSprite') : (referenceName || $t('p_generator.referenceImage')) }}</span>
           <button
               class="gen-ref-x"
-              :aria-label="refining ? 'Stop refining' : 'Remove reference'"
-              :title="refining ? 'Stop refining and describe a new sprite' : 'Remove reference'"
+              :aria-label="refining ? $t('p_generator.stopRefining') : $t('p_generator.removeReference')"
+              :title="refining ? $t('p_generator.stopRefiningTitle') : $t('p_generator.removeReference')"
               @click="clearReference"
           >
             <span class="icon icon-close"/>
@@ -508,7 +516,7 @@ const faq = computed(() => [
               class="gen-attach"
               :disabled="busy || !auth.isLogged"
               :aria-label="reference ? $t('p_generator.replaceReferenceImage') : $t('p_generator.attachAReferenceImage')"
-              :title="reference ? 'Replace the reference image' : 'Attach a reference image — the sprite is redrawn from it'"
+              :title="reference ? $t('p_generator.replaceTheReferenceImage') : $t('p_generator.attachReferenceTitle')"
               :class="{active: !!reference}"
             @click="fileEl?.click()"
           >
@@ -521,7 +529,7 @@ const faq = computed(() => [
               type="text"
               class="composer-input"
               maxlength="300"
-              :placeholder="refining ? 'What to change — “make the hat red”…' : reference ? 'What to change…' : hasResult ? 'Describe another sprite…' : 'A sleeping orange cat curled up…'"
+              :placeholder="refining ? $t('p_generator.phRefine') : reference ? $t('p_generator.phReference') : hasResult ? $t('p_generator.phAnother') : $t('p_generator.phDefault')"
               :disabled="busy || !auth.isLogged"
               @keydown.enter.prevent="generate"
           >
@@ -536,7 +544,7 @@ const faq = computed(() => [
               @click="generate"
           >
             <span class="icon" :class="busy ? 'icon-refresh' : 'icon-auto-fix'"/>
-            <span class="gen-send-label">{{ busy ? 'Generating…' : hasResult ? 'Again' : 'Generate' }}</span>
+            <span class="gen-send-label">{{ busy ? $t('p_generator.generating') : hasResult ? $t('p_generator.again') : $t('common.generate') }}</span>
             <span v-if="summary?.cost != null" class="gen-cost">
               <span class="icon icon-coin"/>{{ summary.cost }}
             </span>
@@ -545,13 +553,13 @@ const faq = computed(() => [
 
         <div v-if="broke || (summary && !summary.enabled)" class="gen-composer-foot">
           <template v-if="broke">
-            <span class="text-2xs text-muted">Need 🪙{{ summary!.cost }}</span>
+            <span class="text-2xs text-muted">{{ $t('p_generator.needCredits', {n: summary!.cost}) }}</span>
             <button
                 v-if="!summary!.dailyClaimed && summary!.dailyGrant > 0"
                 class="gen-link"
                 :disabled="claiming"
                 @click="claimDaily"
-            >{{ claiming ? 'Claiming…' : `${$t('p_generator.claim')} 🪙${summary!.dailyGrant}` }}</button>
+            >{{ claiming ? $t('p_generator.claiming') : `${$t('p_generator.claim')} 🪙${summary!.dailyGrant}` }}</button>
             <NuxtLinkLocale to="/missions" class="gen-link">{{ $t('common.earnCredits') }}</NuxtLinkLocale>
           </template>
           <span v-else class="text-2xs text-muted">{{ $t('p_generator.generationIsOffline') }}</span>
@@ -582,11 +590,11 @@ const faq = computed(() => [
           <div class="settings-row" :title="$t('p_generator.canvasSizeAutoKeepsTheModel')">
             <label v-for="s in SIZES" :key="s" class="pill" :class="{active: size === s}">
               <input type="radio" :value="s" v-model="size">
-              <span>{{ s === 'auto' ? 'Auto' : s }}</span>
+              <span>{{ s === 'auto' ? $t('common.auto') : s }}</span>
             </label>
           </div>
           <p v-if="size === 'auto' && hasResult" class="tool-note">
-            Auto → {{ grid.length }}×{{ grid.length }}
+            {{ $t('p_converter.autoResult', {w: grid.length, h: grid.length}) }}
           </p>
           <div class="settings-row gen-row2" :title="$t('p_generator.paletteSizeReConvertsForFree')">
             <label v-for="c in COLOR_COUNTS" :key="c" class="pill" :class="{active: maxColors === c}">
@@ -633,8 +641,7 @@ const faq = computed(() => [
 
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">
-        {{ style }} · {{ view }} view · {{ size === 'auto' ? 'auto size' : `${size}×${size}px` }} ·
-        {{ maxColors }} colors · backdrop {{ bgMode }}
+        {{ statusLine }}
       </p>
       <span class="text-xs text-muted">{{ busy ? $t('p_generator.generating') : hasResult ? $t('p_generator.ready') : $t('p_generator.idle') }}</span>
     </template>

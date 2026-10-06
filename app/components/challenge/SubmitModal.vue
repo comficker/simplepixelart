@@ -8,6 +8,7 @@ const props = defineProps<{ challenge: string }>()
 const emit = defineEmits<{ close: []; submitted: [] }>()
 
 const auth = useAuthStore()
+const {t} = useI18n()
 const items = ref<LoadItem[]>([])
 const loading = ref(false)
 const posting = ref(false)
@@ -42,14 +43,14 @@ async function pick(id: string) {
     })
     const it = items.value.find(i => i.id === id)
     if (it && it.status !== 'public') {
-      toast.info('Submitted — make it public so it shows in the entries')
+      toast.info(t('c_SubmitModal.submittedMakePublic'))
     } else {
-      toast.success('Entry submitted!')
+      toast.success(t('c_SubmitModal.entrySubmitted'))
     }
     emit('submitted')
     emit('close')
   } catch {
-    toast.error('Could not submit that art')
+    toast.error(t('c_SubmitModal.couldNotSubmit'))
   } finally {
     posting.value = false
   }
@@ -65,7 +66,7 @@ onMounted(load)
       :loading="loading"
       :empty-text="$t('c_SubmitModal.youHaveNoSavedArts')"
       filterable
-      new-label="New canvas"
+      :new-label="$t('c_SubmitModal.newCanvas')"
       @select="pick"
       @create="navigateTo(localePath('/editor?new=true'))"
       @close="emit('close')"

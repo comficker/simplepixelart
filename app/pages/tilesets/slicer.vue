@@ -14,8 +14,8 @@ import {createZip} from '~/helper/zip'
 const auth = useAuthStore()
 
 useCustomSeoMeta({
-  title: 'Tileset & Spritesheet Slicer',
-  description: 'Free online tileset and spritesheet slicer: cut sprites by grid, auto-detect packed sprites, or select each one, then export them all as a ZIP.',
+  title: () => t('p_tilesets_slicer.seoTitle'),
+  description: () => t('p_tilesets_slicer.seoDescription'),
   keywords: 'tileset slicer, spritesheet cutter, sprite extractor, manual sprite select, export sprites zip, auto detect sprites, cut tiles from image, pixel art tileset editor',
   canonical: 'https://simplepixelart.com/tilesets/slicer',
   script: [
@@ -133,18 +133,18 @@ let moveGrab = {dx: 0, dy: 0}
 const crispFactor = ref<'auto' | number>(1)
 const mergeTol = ref(0)
 const cleanInfo = ref('')
-const crispOptions: { v: 'auto' | number; l: string }[] = [
-  {v: 'auto', l: 'Auto'}, {v: 1, l: '1×'}, {v: 2, l: '2×'}, {v: 3, l: '3×'}, {v: 4, l: '4×'},
-]
+const crispOptions = computed<{ v: 'auto' | number; l: string }[]>(() => [
+  {v: 'auto', l: t('common.auto')}, {v: 1, l: '1×'}, {v: 2, l: '2×'}, {v: 3, l: '3×'}, {v: 4, l: '4×'},
+])
 const removeBg = ref(false)
 const removeBgTol = ref(30)
 const picking = ref(false)
 const despeckle = ref(false)
 const median = ref(false)
 const quantize = ref(0)
-const quantOptions: { v: number; l: string }[] = [
-  {v: 0, l: 'Off'}, {v: 4, l: '4'}, {v: 8, l: '8'}, {v: 16, l: '16'}, {v: 32, l: '32'},
-]
+const quantOptions = computed<{ v: number; l: string }[]>(() => [
+  {v: 0, l: t('common.off')}, {v: 4, l: '4'}, {v: 8, l: '8'}, {v: 16, l: '16'}, {v: 32, l: '32'},
+])
 const showSettings = ref(false)
 
 type Ts = { id: number | string; id_string: string; title: string; local?: boolean }
@@ -518,7 +518,7 @@ async function applySource() {
   if (editorProcess.value) {
     const url = await cleanSheet(raw)
     if (url) dataUrl = url
-    else toast.error('Could not process image — using the original')
+    else toast.error(t('p_tilesets_slicer.couldNotProcessImage'))
   }
   const img = new Image()
   img.onload = () => setSource(img, dataUrl)
@@ -567,7 +567,7 @@ function detect() {
     try {
       runDetect(sourceImage.value!)
     } catch (err) {
-      console.error(err); toast.error('Detection failed')
+      console.error(err); toast.error(t('p_tilesets_slicer.detectionFailed'))
     } finally {
       detecting.value = false; drawSheet()
     }
@@ -1446,7 +1446,7 @@ async function openInEditor() {
   const crop = processActive()
   if (!crop) return
   const editorData = canvasToEditorData(crop)
-  if (!editorData) { toast.error('That selection is empty'); return }
+  if (!editorData) { toast.error(t('p_tilesets_slicer.selectionEmpty')); return }
   const ws = getStorageItem('workspaces')
   ws[editorData.id] = editorData
   localStorage.setItem('workspaces', JSON.stringify(ws))
@@ -1456,7 +1456,7 @@ async function openInEditor() {
 
 async function openAllInEditor() {
   const boxes = tiles.value
-  if (!boxes.length) { toast.error('No tiles to open'); return }
+  if (!boxes.length) { toast.error(t('p_tilesets_slicer.noTilesToOpen')); return }
   const eds: EditorData[] = []
   boxes.forEach((b, i) => {
     const raw = cropBox(b)
@@ -1464,7 +1464,7 @@ async function openAllInEditor() {
     const ed = canvasToEditorData(processCanvas(raw), `Tile ${i + 1}`)
     if (ed) eds.push(ed)
   })
-  if (!eds.length) { toast.error('Those tiles are empty'); return }
+  if (!eds.length) { toast.error(t('p_tilesets_slicer.tilesEmpty')); return }
   const ws = getStorageItem('workspaces')
   ws[eds[0]!.id] = eds[0]
   localStorage.setItem('workspace_current', eds[0]!.id)
@@ -1493,7 +1493,7 @@ const MAX_ANIM_FRAMES = 64
 const openAsAnim = ref(false)
 async function openAsAnimation() {
   const boxes = tiles.value
-  if (boxes.length < 2) { toast.error('Cut at least 2 tiles to animate'); return }
+  if (boxes.length < 2) { toast.error(t('p_tilesets_slicer.cutAtLeast2')); return }
   const colors: string[] = []
   const colorIndex = new Map<string, number>()
   const frames: { id: string; layers: any[]; duration: number }[] = []
@@ -1519,8 +1519,8 @@ async function openAsAnimation() {
     fw = Math.max(fw, cv.width); fh = Math.max(fh, cv.height)
     frames.push({id: generateUUID(), layers: [{name: 'Layer 1', pixels, x: 0, y: 0}], duration: 100})
   }
-  if (frames.length < 2) { toast.error('Need at least 2 non-empty tiles to animate'); return }
-  if (boxes.length > MAX_ANIM_FRAMES) toast.info(`Using the first ${MAX_ANIM_FRAMES} tiles (frame limit)`)
+  if (frames.length < 2) { toast.error(t('p_tilesets_slicer.needAtLeast2')); return }
+  if (boxes.length > MAX_ANIM_FRAMES) toast.info(t('p_tilesets_slicer.usingFirstNTiles', {count: MAX_ANIM_FRAMES}))
   const ed = {
     ...cloneDeep(DEFAULT_EDITOR_DATA),
     id: generateUUID(),
@@ -1547,7 +1547,7 @@ async function loadTilesets() {
     const res = await useNativeFetch<{ results: any[] }>('/coloring/tilesets/', {
       params: {page_size: 100, ordering: '-updated'},
     })
-    tilesets.value = res.results.map(c => ({id: c.id, id_string: c.id_string, title: c.name || 'Untitled'}))
+    tilesets.value = res.results.map(c => ({id: c.id, id_string: c.id_string, title: c.name || t('common.untitled')}))
   } catch {
     
   } finally {
@@ -1575,9 +1575,9 @@ async function createTileset() {
     showNewTs.value = false
     newTsName.value = ''
     pickerRef.value?.close()
-    toast.success('Tileset created')
+    toast.success(t('p_tilesets_slicer.tilesetCreated'))
   } catch {
-    toast.error('Could not create tileset')
+    toast.error(t('p_tilesets_slicer.couldNotCreateTileset'))
   } finally {
     creatingTs.value = false
   }
@@ -1596,7 +1596,7 @@ async function syncTile(box: Box, index: number) {
   if (!raw) return
   const canvas = processCanvas(raw)
   const ed = canvasToEditorData(canvas, `Tile ${index + 1}`)
-  if (!ed) { toast.error('That tile is empty'); return }
+  if (!ed) { toast.error(t('p_tilesets_slicer.tileEmpty')); return }
   const sel = selectedTs.value
 
   if (!auth.isLogged) {
@@ -1604,12 +1604,12 @@ async function syncTile(box: Box, index: number) {
     try {
       if (sel?.local) {
         localTs.addTile(String(sel.id), {name: ed.name, ed, thumb: canvas.toDataURL('image/png')})
-        toast.success('Added to tileset')
+        toast.success(t('p_tilesets_slicer.addedToTileset'))
       } else {
         const ws = getStorageItem('workspaces')
         ws[ed.id] = ed
         localStorage.setItem('workspaces', JSON.stringify(ws))
-        toast.success('Synced to workspace')
+        toast.success(t('p_tilesets_slicer.syncedToWorkspace'))
       }
       syncedTiles.value = {...syncedTiles.value, [key]: {id: 0, id_string: ed.id}}
     } finally {
@@ -1637,13 +1637,13 @@ async function syncTile(box: Box, index: number) {
           method: 'POST', body: {page_id: page.id},
         })
       } catch {
-        toast.error('Synced, but adding to tileset failed')
+        toast.error(t('p_tilesets_slicer.syncedButAddFailed'))
       }
     }
     syncedTiles.value = {...syncedTiles.value, [key]: {id: page.id, id_string: page.id_string}}
-    toast.success(slug ? 'Synced to workspace + tileset' : 'Synced to workspace')
+    toast.success(slug ? t('p_tilesets_slicer.syncedToWorkspaceAndTileset') : t('p_tilesets_slicer.syncedToWorkspace'))
   } catch {
-    toast.error('Sync failed')
+    toast.error(t('p_tilesets_slicer.syncFailed'))
   } finally {
     syncingKey.value = null
   }
@@ -1657,7 +1657,7 @@ function downloadTile() {
   a.href = crop.toDataURL('image/png')
   a.download = `sprite_${b.x}_${b.y}.png`
   a.click()
-  toast.success('Sprite downloaded')
+  toast.success(t('p_tilesets_slicer.spriteDownloaded'))
 }
 
 function canvasHasPixels(cv: HTMLCanvasElement): boolean {
@@ -1680,7 +1680,7 @@ const exporting = ref(false)
 async function downloadAllZip() {
   const boxes = tiles.value
   if (!boxes.length || exporting.value) return
-  if (boxes.length > 2000) { toast.error('Too many tiles to ZIP — increase the tile size'); return }
+  if (boxes.length > 2000) { toast.error(t('p_tilesets_slicer.tooManyTilesToZip')); return }
   exporting.value = true
   try {
     const files: { name: string; data: Uint8Array }[] = []
@@ -1693,10 +1693,10 @@ async function downloadAllZip() {
       const data = await canvasToPngBytes(cv)
       if (data) files.push({name: `tile_${files.length + 1}.png`, data})
     }
-    if (!files.length) { toast.error('Nothing to export — all tiles are empty'); return }
+    if (!files.length) { toast.error(t('p_tilesets_slicer.nothingToExport')); return }
     const blob = createZip(files)
     downloadBlob(blob, 'tiles.zip')
-    toast.success(skipped ? `Exported ${files.length} tiles · ${skipped} empty skipped` : `Exported ${files.length} tiles`)
+    toast.success(skipped ? t('p_tilesets_slicer.exportedNTilesSkipped', {count: files.length, skipped}, files.length) : t('p_tilesets_slicer.exportedNTiles', {count: files.length}, files.length))
   } finally {
     exporting.value = false
   }
@@ -1849,7 +1849,7 @@ const faq = computed(() => [
               <div class="ts-bg-row">
                 <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
                 <span class="text-xs text-muted">{{ $t('common.background') }}</span>
-                <button class="ts-inline-btn" @click="detect" :disabled="detecting">{{ detecting ? '…' : 'Re-detect' }}</button>
+                <button class="ts-inline-btn" @click="detect" :disabled="detecting">{{ detecting ? '…' : $t('p_tilesets_slicer.reDetect') }}</button>
               </div>
               <div class="slider-row">
                 <label>{{ $t('p_tilesets_slicer.tolerance') }} <span>{{ tolerance }}</span></label>
@@ -1889,7 +1889,7 @@ const faq = computed(() => [
               size="sm"
               :title="$t('p_tilesets_slicer.runsTheSharedImportPipelineThe')"
           >
-            <span class="text-xs">{{ processing ? 'Processing…' : 'Clean sheet on load' }}</span>
+            <span class="text-xs">{{ processing ? $t('p_tilesets_slicer.processing') : $t('p_tilesets_slicer.cleanSheetOnLoad') }}</span>
           </ui-switch>
           <template v-if="editorProcess">
             <ui-switch
@@ -1901,14 +1901,14 @@ const faq = computed(() => [
             >
               <span class="text-xs">{{ $t('p_tilesets_slicer.keepBackground') }}</span>
             </ui-switch>
-            <p v-if="sheetInfo" class="text-2xs text-muted ts-sheetinfo">Detected {{ sheetInfo }}</p>
+            <p v-if="sheetInfo" class="text-2xs text-muted ts-sheetinfo">{{ $t('p_tilesets_slicer.detectedX', {x: sheetInfo}) }}</p>
           </template>
           <ui-switch v-model="removeBg" size="sm" class="ts-set-toggle"><span class="text-xs">{{ $t('p_tilesets_slicer.removeBackground') }}</span></ui-switch>
           <div v-if="removeBg" class="ts-bg-block">
             <div class="ts-bg-row">
               <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
               <button class="ts-pickbtn" :class="{active: picking}" @click="picking = !picking">
-                {{ picking ? 'Click a pixel…' : 'Pick color' }}
+                {{ picking ? $t('p_tilesets_slicer.clickAPixel') : $t('p_tilesets_slicer.pickColor') }}
               </button>
             </div>
             <div class="slider-row" style="margin-top: 0.5rem">
@@ -2015,7 +2015,7 @@ const faq = computed(() => [
                   class="ts-sync"
                   :class="{synced: !!syncedTiles[tileKey(t)]}"
                   :disabled="syncingKey === tileKey(t)"
-                  :title="syncedTiles[tileKey(t)] ? 'Added' : 'Sync to workspace / tileset'"
+                  :title="syncedTiles[tileKey(t)] ? $t('p_tilesets_slicer.added') : $t('p_tilesets_slicer.syncToWorkspaceTileset')"
                   @click.stop="syncTile(t, i)"
               >
                 <span class="icon" :class="syncedTiles[tileKey(t)] ? 'icon-check' : (syncingKey === tileKey(t) ? 'icon-undo spin' : 'icon-upload')"/>
@@ -2067,7 +2067,7 @@ const faq = computed(() => [
                         @keydown.esc="showNewTs = false"
                     >
                     <button class="btn primary" :disabled="!newTsName.trim() || creatingTs" @click="createTileset">
-                      {{ creatingTs ? '…' : 'Add' }}
+                      {{ creatingTs ? '…' : $t('common.add') }}
                     </button>
                   </div>
                   <button v-else class="file-menu-item" @click.stop="showNewTs = true">
@@ -2098,9 +2098,9 @@ const faq = computed(() => [
     </div>
       <template #status>
         <p class="editor-foot-hint text-xs text-muted">
-          <template v-if="mode === 'grid'">{{ tileCount }} cells · {{ cols }}×{{ rows }} · {{ tileW }}×{{ tileH }}px</template>
-          <template v-else-if="mode === 'auto'">{{ detecting ? 'Detecting…' : $t('p_tilesets_slicer.nSpritesClickOne', {count: boxes.length}) }}</template>
-          <template v-else>{{ regions.length }} region{{ regions.length === 1 ? '' : 's' }} — {{ selectShape === 'fixed' ? 'click to drop a box' : (selectShape === 'square' ? 'drag a square' : 'drag to add a box') }}</template>
+          <template v-if="mode === 'grid'">{{ $t('p_tilesets_slicer.cellCount', {count: tileCount}, tileCount) }} · {{ cols }}×{{ rows }} · {{ tileW }}×{{ tileH }}px</template>
+          <template v-else-if="mode === 'auto'">{{ detecting ? $t('p_tilesets_slicer.detecting') : $t('p_tilesets_slicer.nSpritesClickOne', {count: boxes.length}) }}</template>
+          <template v-else>{{ $t('p_tilesets_slicer.regionCount', {count: regions.length}, regions.length) }} — {{ selectShape === 'fixed' ? $t('p_tilesets_slicer.clickToDropABox') : (selectShape === 'square' ? $t('p_tilesets_slicer.dragASquare') : $t('p_tilesets_slicer.dragToAddABox')) }}</template>
         </p>
         <span v-if="processing" class="text-xs text-muted">{{ $t('p_tilesets_slicer.processing') }}</span>
       </template>

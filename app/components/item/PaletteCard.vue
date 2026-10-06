@@ -19,11 +19,11 @@ const overflow = computed(() => Math.max(0, value.colors.length - MAX_SWATCHES))
       />
     </div>
     <div class="pcard-head">
-      <p class="pcard-name">{{ value.name || value.id_string || 'Untitled' }}</p>
+      <p class="pcard-name">{{ value.name || value.id_string || $t('common.untitled') }}</p>
       <div class="pcard-meta">
         <span>{{ $t('common.nColors', {count: value.color_count}) }}</span>
         <template v-if="overflow"><span class="pcard-dot">·</span><span>+{{ overflow }}</span></template>
-        <template v-if="value.usage_count"><span class="pcard-dot">·</span><span>{{ value.usage_count }} uses</span></template>
+        <template v-if="value.usage_count"><span class="pcard-dot">·</span><span>{{ $t('c_PaletteCard.useCount', value.usage_count, {count: value.usage_count}) }}</span></template>
       </div>
     </div>
   </NuxtLinkLocale>

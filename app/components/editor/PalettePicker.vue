@@ -6,6 +6,7 @@ import {extractPaletteFromFile} from "~/helper/palette";
 import {PALETTE_THEMES} from "~/helper/constants";
 import type {Palette, ResponsePalette} from "~/types";
 
+const {t} = useI18n()
 const store = useEditor()
 const open = defineModel<boolean>('open', {default: false})
 
@@ -41,7 +42,7 @@ function setSort(s: string) { sort.value = s; fetchList() }
 
 function applyLibrary(p: Palette) {
   store.applyPalette(p.colors, mode.value, p.id)
-  toast.success(`${mode.value === 'append' ? 'Added' : 'Applied'} "${p.name}"`)
+  toast.success(t(mode.value === 'append' ? 'c_PalettePicker.addedName' : 'c_PalettePicker.appliedName', {name: p.name}))
   open.value = false
 }
 
@@ -57,7 +58,7 @@ function toggleTag(t: string) {
 
 async function saveCurrent() {
   const colors = toRaw(store.editorData.colors) || []
-  if (!colors.length) { toast.error('No colors to save'); return }
+  if (!colors.length) { toast.error(t('c_PalettePicker.noColorsToSave')); return }
   saving.value = true
   try {
     const res = await useNativeFetch<Palette>('/coloring/palettes/', {
@@ -65,10 +66,10 @@ async function saveCurrent() {
       body: {name: saveName.value.trim() || store.editorData.name || 'My palette', colors, tags: saveTags.value},
     })
     store.editorData.palette = res.id
-    toast.success(`Saved "${res.name}"`)
+    toast.success(t('c_PalettePicker.savedName', {name: res.name}))
     open.value = false
   } catch {
-    toast.error('Save failed')
+    toast.error(t('c_PalettePicker.saveFailed'))
   } finally {
     saving.value = false
   }
@@ -85,7 +86,7 @@ async function detect() {
   try {
     detected.value = await extractPaletteFromFile(lastFile, count.value)
   } catch {
-    toast.error('Could not read image')
+    toast.error(t('c_PalettePicker.couldNotReadImage'))
   } finally {
     detecting.value = false
   }
@@ -104,7 +105,7 @@ watch(count, () => { if (lastFile) reDetect() })
 function applyImage() {
   if (!detected.value.length) return
   store.applyPalette(detected.value, mode.value, null)
-  toast.success('Applied palette from image')
+  toast.success(t('c_PalettePicker.appliedFromImage'))
   open.value = false
 }
 
@@ -158,7 +159,7 @@ watch(open, (v) => {
     </div>
 
     <div v-else-if="tab === 'save'" class="pp-body">
-      <p class="pp-hint">Save the current {{ store.editorData.colors.length }}-color palette to the library and link it to this artwork.</p>
+      <p class="pp-hint">{{ $t('c_PalettePicker.saveHint', {count: store.editorData.colors.length}) }}</p>
       <div class="pp-cur-strip">
         <span v-for="(c, i) in store.editorData.colors" :key="i" class="pp-cur-sw" :style="{ backgroundColor: c }"/>
       </div>
@@ -173,7 +174,7 @@ watch(open, (v) => {
         >{{ t }}</button>
       </div>
       <button class="btn primary pp-action" :disabled="saving" @click="saveCurrent">
-        {{ saving ? 'Saving…' : 'Save palette' }}
+        {{ saving ? $t('common.saving') : $t('c_PalettePicker.savePalette') }}
       </button>
     </div>
 
@@ -181,7 +182,7 @@ watch(open, (v) => {
       <label class="pp-drop">
         <input type="file" accept="image/*" class="pp-file" @change="onFile"/>
         <span class="icon icon-image"/>
-        <span>{{ lastFile ? lastFile.name : 'Choose an image' }}</span>
+        <span>{{ lastFile ? lastFile.name : $t('p_palettes_color-palette-from-image.chooseAnImage') }}</span>
       </label>
       <div class="pp-count">
         <label>{{ $t('c_PalettePicker.colors') }} <strong>{{ count }}</strong></label>

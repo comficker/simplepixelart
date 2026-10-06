@@ -5,7 +5,7 @@
         <img
             v-if="!isDraw && !imgError"
             :src="src"
-            :alt="value.name || 'Pixel art artwork'"
+            :alt="value.name || $t('c_Card.pixelArtArtwork')"
             class="size-full"
             width="200"
             height="200"
@@ -23,7 +23,7 @@
             class="size-full"
             width="200"
             height="200"
-            :aria-label="value.name || 'Pixel art preview'"
+            :aria-label="value.name || $t('c_Card.pixelArtPreview')"
         />
         <span v-if="isAnim" class="card-anim-badge" :title="$t('common.animatedArtwork')">
           <svg viewBox="0 0 24 24" width="10" height="10"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>

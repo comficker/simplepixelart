@@ -214,7 +214,7 @@ function isCurrentPreset(p: {width: number, height: number}): boolean {
       <div class="empty-state-title">{{ $t('c_List.noPixelArtFound') }}</div>
       <p class="empty-state-body">
         <template v-if="search">
-          Nothing matches "{{ search }}". Try a different keyword.
+          {{ $t('c_List.nothingMatchesSearch', {q: search}) }}
         </template>
         <template v-else-if="hasActiveFilters"> {{ $t('c_List.noPixelArtMatchesTheCurrent') }} </template>
         <template v-else> {{ $t('c_List.theGalleryIsEmptyHereFor') }} </template>

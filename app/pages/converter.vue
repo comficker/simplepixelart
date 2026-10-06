@@ -203,7 +203,7 @@ function cleanOrphans() {
   const {grid, changed} = cleanOrphanCells(pixels.value)
   pixels.value = grid
   drawPreview()
-  toast.success(`Cleaned ${changed} orphan pixel${changed !== 1 ? 's' : ''}`)
+  toast.success(t('p_converter.cleanedOrphans', {count: changed}, changed))
 }
 
 function editColor(index: number, hex: string) {
@@ -217,7 +217,7 @@ function mergeColor(fromIdx: number, toIdx: number) {
   palette.value = palette.value.filter((_, i) => i !== fromIdx)
   selectedColorIndex.value = -1
   drawPreview()
-  toast.success('Colors merged')
+  toast.success(t('p_converter.colorsMerged'))
 }
 
 function drawPreview() {
@@ -343,11 +343,11 @@ const faq = computed(() => [
           <div class="settings-row" :title="$t('p_converter.autoReadsTheImageSOwn')">
             <label v-for="s in sizeOptions" :key="s" class="pill" :class="{active: outputSize === s}">
               <input type="radio" :value="s" v-model="outputSize">
-              <span>{{ s === 'auto' ? 'Auto' : s }}</span>
+              <span>{{ s === 'auto' ? $t('common.auto') : s }}</span>
             </label>
           </div>
           <p v-if="outputSize === 'auto' && pixels.length" class="tool-note">
-            Auto → {{ pixels[0]!.length }}×{{ pixels.length }}{{ isNative ? ' — native grid detected' : '' }}
+            {{ $t('p_converter.autoResult', {w: pixels[0]!.length, h: pixels.length}) }}{{ isNative ? $t('p_converter.nativeGridDetected') : '' }}
           </p>
         </Widget>
 
@@ -436,7 +436,7 @@ const faq = computed(() => [
         <template v-if="hasImage">
           {{ sourceImage?.naturalWidth }}×{{ sourceImage?.naturalHeight }}px →
           {{ pixels[0]?.length || 0 }}×{{ pixels.length }}px ·
-          {{ palette.length }} colors<template v-if="isNative"> {{ $t('p_converter.nativeGrid') }}</template>
+          {{ $t('common.nColors', {count: palette.length}) }}<template v-if="isNative"> {{ $t('p_converter.nativeGrid') }}</template>
         </template>
         <template v-else>{{ $t('p_converter.noImageYetDropOneTo') }}</template>
       </p>

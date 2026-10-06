@@ -160,7 +160,7 @@ async function pick(it: Thumb) {
       h = Number(p.height) || 0
       name = p.name || it.name
     }
-    if (!w || !h) { toast.error('That art has no pixels to brush'); return }
+    if (!w || !h) { toast.error(t('c_StampPicker.noPixelsToBrush')); return }
     const cells: (string | null)[][] = Array.from({length: h}, () => Array(w).fill(null))
     for (const k in grid) {
       const hex = colors[grid[k]!]
@@ -170,7 +170,7 @@ async function pick(it: Thumb) {
     }
     store.setStamp({key: it.key, name, w, h, cells})
   } catch {
-    toast.error('Could not load that art')
+    toast.error(t('c_StampPicker.couldNotLoadArt'))
   } finally {
     picking.value = false
   }
@@ -186,7 +186,7 @@ watch(() => auth.isLogged, () => loadSources())
       <ui-dropdown-menu>
         <button type="button" class="widget-ctl-btn" :title="$t('c_StampPicker.sourceX', {name: source?.title || ''})">
           <span class="icon" :class="srcIcon(source)"/>
-          <span class="widget-ctl-name">{{ source?.title || 'Source' }}</span>
+          <span class="widget-ctl-name">{{ source?.title || $t('c_StampPicker.source') }}</span>
           <span class="icon icon-chevron-down"/>
         </button>
         <template #menu>
@@ -239,7 +239,7 @@ watch(() => auth.isLogged, () => loadSources())
         </button>
       </div>
       <p v-else class="stp-empty">
-        {{ query ? $t('common.nothingMatchesQ', {q: query}) : 'Nothing here yet.' }}
+        {{ query ? $t('common.nothingMatchesQ', {q: query}) : $t('common.nothingHereYet') }}
       </p>
     </div>
   </Widget>
