@@ -246,6 +246,7 @@ useCustomSeoMeta({
           </div>
           <div class="home-tools"><ToolPaths/></div>
         </div>
+        <HeroShowcase/>
       </section>
 
       <Widget v-if="showStudio" :title="auth.logged ? $t('p_index.yourStudio') : $t('p_index.startAProject')">

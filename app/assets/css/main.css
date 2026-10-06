@@ -863,6 +863,9 @@ footer {
    text reads in every theme. On phones the scene gets room below the
    buttons. A page swaps the scene with --hero-img. */
 .page-hero {
+    /* The panel colour over the copy, clearing toward the scene. A variable
+       so a showcase piece (HeroShowcase) sits under the same wash. */
+    --hero-wash: linear-gradient(165deg, var(--surface) 0%, var(--surface) 46%, color-mix(in oklab, var(--surface) 80%, transparent) 56%, color-mix(in oklab, var(--surface) 50%, transparent) 66%, color-mix(in oklab, var(--surface) 22%, transparent) 76%, color-mix(in oklab, var(--surface) 0%, transparent) 88%);
     display: grid;
     /* minmax(0, …): the tool strip scrolls sideways; an auto column would
        grow to its full width and push the copy off a phone screen. */
@@ -871,7 +874,7 @@ footer {
     padding: var(--space-5) var(--space-4) calc(var(--space-6) * 5);
     image-rendering: pixelated;
     background:
-        linear-gradient(165deg, var(--surface) 0%, var(--surface) 46%, color-mix(in oklab, var(--surface) 80%, transparent) 56%, color-mix(in oklab, var(--surface) 50%, transparent) 66%, color-mix(in oklab, var(--surface) 22%, transparent) 76%, color-mix(in oklab, var(--surface) 0%, transparent) 88%),
+        var(--hero-wash),
         linear-gradient(var(--hero-scrim, transparent), var(--hero-scrim, transparent)),
         var(--hero-img, url('/images/creator-program-hero.png')) 96% 100% / cover no-repeat,
         var(--surface);
@@ -879,16 +882,32 @@ footer {
 
 @media (min-width: 1100px) {
     .page-hero {
+        --hero-wash: linear-gradient(to bottom right, var(--surface) 0%, var(--surface) 34%, color-mix(in oklab, var(--surface) 82%, transparent) 44%, color-mix(in oklab, var(--surface) 55%, transparent) 54%, color-mix(in oklab, var(--surface) 28%, transparent) 64%, color-mix(in oklab, var(--surface) 10%, transparent) 74%, color-mix(in oklab, var(--surface) 0%, transparent) 84%);
         grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
         align-items: center;
         min-height: calc(var(--space-6) * 11);
         padding-bottom: var(--space-5);
         background:
-            linear-gradient(to bottom right, var(--surface) 0%, var(--surface) 34%, color-mix(in oklab, var(--surface) 82%, transparent) 44%, color-mix(in oklab, var(--surface) 55%, transparent) 54%, color-mix(in oklab, var(--surface) 28%, transparent) 64%, color-mix(in oklab, var(--surface) 10%, transparent) 74%, color-mix(in oklab, var(--surface) 0%, transparent) 84%),
+            var(--hero-wash),
             linear-gradient(var(--hero-scrim, transparent), var(--hero-scrim, transparent)),
             var(--hero-img, url('/images/creator-program-hero.png')) 100% 100% / cover no-repeat,
             var(--surface);
     }
+}
+
+/* With picked community pieces (HeroShowcase) the piece replaces the
+   scene: same place, same wash, drawn by the showcase's own layers so it can
+   cross-fade. The copy stays on top of them. */
+.page-hero:has(> .hero-show) {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: var(--surface);
+}
+
+.page-hero:has(> .hero-show) > .page-hero-main {
+    position: relative;
+    z-index: 1;
 }
 
 /* Dark theme: a thin scrim over the whole scene, under the wash, so the
