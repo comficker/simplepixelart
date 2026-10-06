@@ -238,7 +238,6 @@ useCustomSeoMeta({
     <div class="screen home-stack">
       <section class="home-hero">
         <div class="home-hero-main">
-          <span class="home-hero-eyebrow">{{ $t('p_index.freeNoSignupRunsInYour') }}</span>
           <h1 class="home-hero-title">
             <span class="home-hero-title-main">{{ $t('p_index.findPixelArtYouLove') }}</span>
             <span class="home-hero-title-accent">{{ $t('p_index.thenMakeYourOwn') }}</span>
@@ -389,15 +388,6 @@ useCustomSeoMeta({
           </div>
       </Widget>
 
-      <!-- SPA_728_90 where the main column clears 728px (measured 736px at
-           768, 760 at 1024, 716 at 1280 with the doc rail, 876 at 1440), the
-           responsive unit everywhere else, phones included. Only the visible
-           one goes live: AdSlot skips a unit whose box is hidden. -->
-      <Widget class="home-leaderboard" :title="$t('c_AdSlot.advertisement')">
-        <div class="home-ad-fixed"><AdSlot slot="8090404628" :width="728" :height="90" bare/></div>
-        <div class="home-ad-fluid"><AdSlot slot="7838948172" size="small" bare/></div>
-      </Widget>
-
       <Widget :title="$t('p_index.whatSNew')" class="home-library">
         <template #ctl>
           <NuxtLinkLocale to="/arts/new" class="widget-ctl-btn">
@@ -405,6 +395,15 @@ useCustomSeoMeta({
           </NuxtLinkLocale>
         </template>
         <item-list :limit="32" hide-paginator ordering="-updated"/>
+      </Widget>
+
+      <!-- SPA_728_90 where the main column clears 728px (measured 736px at
+           768, 760 at 1024, 716 at 1280 with the doc rail, 876 at 1440), the
+           responsive unit everywhere else, phones included. Only the visible
+           one goes live: AdSlot skips a unit whose box is hidden. -->
+      <Widget class="home-leaderboard" :title="$t('c_AdSlot.advertisement')">
+        <div class="home-ad-fixed"><AdSlot slot="8090404628" :width="728" :height="90" bare/></div>
+        <div class="home-ad-fluid"><AdSlot slot="7838948172" size="small" bare/></div>
       </Widget>
     </div>
 
@@ -502,15 +501,7 @@ useCustomSeoMeta({
     var(--surface);
 }
 
-.home-hero-eyebrow {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--muted);
-}
-
 .home-hero-title {
-  margin-top: var(--space-2);
   display: flex;
   flex-wrap: wrap;
   /* em, not rem: the word gap has to scale with the clamped title size */

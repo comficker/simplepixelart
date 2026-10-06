@@ -134,9 +134,21 @@ onMounted(() => {
 }
 
 @media (max-width: 520px) {
+  .consent {
+    padding: var(--space-2);
+  }
+
   .consent-inner {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+
+  /* In the stacked layout the 240px basis became a height: a quarter of
+     the screen of empty box under two lines of text. */
+  .consent-text {
+    flex: none;
   }
   .consent-actions {
     justify-content: flex-end;
