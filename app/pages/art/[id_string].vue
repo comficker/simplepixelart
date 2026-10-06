@@ -11,7 +11,12 @@ const router = useRouter();
 const config = useRuntimeConfig()
 const auth = useAuthStore()
 const {t, locale} = useI18n()
-const {data, pending, error} = await useAuthFetch<SharedPage>(`/coloring/shared-pages/${route.params.id_string}/`)
+// `lite`: without the pixel grids. Whatever is fetched here is embedded in the
+// HTML, and the grids (every pixel twice, 400KB on a 200x80 scene) are only
+// needed by the bead and coordinate views, which load them on demand below.
+const {data, pending, error} = await useAuthFetch<SharedPage>(`/coloring/shared-pages/${route.params.id_string}/`, {
+  query: {lite: 1},
+})
 
 if (import.meta.server && !data.value) {
   setResponseStatus(useRequestEvent()!, 404)
@@ -136,7 +141,7 @@ const meta = computed(() => {
   const url = `${config.public.siteUrl}/art/${data.value.id_string}`
   const imgSrc = imgSocial.value
   const imgSrcOrigin = imgPreview.value
-  const pixelCount = data.value.map_numbers ? Object.keys(data.value.map_numbers).length : 0
+  const pixelCount = (data.value as any).pixel_count ?? Object.keys(data.value.map_numbers || {}).length
   const name = data.value.name?.trim()
   const author = data.value.user?.username || 'Anonymous'
   const size = `${data.value.width}x${data.value.height}`
@@ -363,6 +368,22 @@ const beadView = ref(false)
 const coordView = ref(false)
 const pixelView = computed(() => beadView.value || coordView.value)
 
+const pixelCount = computed(() => (data.value as any)?.pixel_count
+    ?? Object.keys(data.value?.map_numbers || {}).length)
+
+// The grid the pixel views draw, fetched the first time one is turned on.
+const mapNumbers = ref<Record<string, number> | null>(null)
+watch(pixelView, async (on) => {
+  if (!on || mapNumbers.value || !data.value) return
+  try {
+    const full = await useNativeFetch<SharedPage>(`/coloring/shared-pages/${data.value.id_string}/`)
+    mapNumbers.value = full.map_numbers || {}
+  } catch {
+    beadView.value = false
+    coordView.value = false
+  }
+})
+
 const CELL_SIZES = [8, 12, 16, 24, 32, 48] as const
 /** Below this "63,63" stops being readable at any font size that fits. */
 const COORD_MIN_CELL = 24
@@ -439,11 +460,11 @@ const previewStyle = computed(() => {
 
     <div class="flat-editor art-editor">
       <div class="tm-stage art-stage">
-        <ClientOnly v-if="pixelView">
+        <ClientOnly v-if="pixelView && mapNumbers">
           <ArtPixelCanvas
               :width="data.width"
               :height="data.height"
-              :map-numbers="data.map_numbers"
+              :map-numbers="mapNumbers"
               :colors="data.colors"
               :cell="cellSize"
               :bead="beadView"
@@ -577,7 +598,7 @@ const previewStyle = computed(() => {
 
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">
-        {{ data.width }}×{{ data.height }}px · {{ $t('p_art_id_string.pixelCount', Object.keys(data.map_numbers).length, {count: Object.keys(data.map_numbers).length}) }}
+        {{ data.width }}×{{ data.height }}px · {{ $t('p_art_id_string.pixelCount', pixelCount, {count: pixelCount}) }}
         <template v-if="data.colors?.length"> · {{ $t('common.nColors', {count: data.colors.length}) }}</template>
         <template v-if="isAnimatedArt"> · {{ $t('p_art_id_string.frameCount', animation.frames.length, {count: animation.frames.length}) }}</template>
       </p>
@@ -665,7 +686,7 @@ const previewStyle = computed(() => {
         </div>
         <div class="art-meta-row">
           <dt>{{ $t('common.pixels') }}</dt>
-          <dd>{{ Object.keys(data.map_numbers).length }}</dd>
+          <dd>{{ pixelCount }}</dd>
         </div>
         <div v-if="data.colors?.length" class="art-meta-row">
           <dt>{{ $t('common.colors') }}</dt>
