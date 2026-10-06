@@ -269,20 +269,26 @@ useCustomSeoMeta({
                 :placeholder="$t('p_index.describeASpriteASleepingOrange')"
                 :aria-label="$t('p_index.describeThePixelArtToGenerate')"
             >
-            <button type="submit" class="btn primary home-ai-btn" :disabled="aiPrompt.trim().length < 3">
-              <span class="icon icon-auto-fix"/><span>{{ $t('common.generate') }}</span>
+            <button
+                type="submit"
+                class="btn primary home-ai-btn"
+                :disabled="aiPrompt.trim().length < 3"
+                :title="$t('common.generate')"
+                :aria-label="$t('common.generate')"
+            >
+              <span class="icon icon-auto-fix"/>
             </button>
           </form>
           <div class="home-tools"><ToolPaths/></div>
         </div>
 
         <div class="home-hero-aside">
-          <section class="home-aside-sec">
+          <section v-if="newCreators?.length" class="home-aside-sec">
             <div class="home-aside-cap">
               <span>{{ $t('p_index.newCreators') }}</span>
               <NuxtLinkLocale to="/creator" class="home-aside-more">{{ $t('p_index.viewAll') }}</NuxtLinkLocale>
             </div>
-            <ol v-if="newCreators?.length" class="rank-list">
+            <ol class="rank-list">
               <li v-for="c in newCreators" :key="c.username">
                 <NuxtLinkLocale :to="`/creator/${c.username}`" class="rank-row" :title="`@${c.username}`">
                   <span class="rank-avatar">
@@ -294,7 +300,6 @@ useCustomSeoMeta({
                 </NuxtLinkLocale>
               </li>
             </ol>
-            <p class="home-aside-hint">{{ $t('p_index.newCreatorsHint') }}</p>
           </section>
 
           <section v-if="topCreators?.length" class="home-aside-sec">
@@ -390,11 +395,13 @@ useCustomSeoMeta({
           </div>
       </Widget>
 
-      <!-- SPA_728_90. A fixed 728px unit, so it only renders where the main
-           column actually clears it: measured 736px at 768, 760 at 1024, 716
-           at 1280 (the doc rail takes its share), 876 at 1440. -->
+      <!-- SPA_728_90 where the main column clears 728px (measured 736px at
+           768, 760 at 1024, 716 at 1280 with the doc rail, 876 at 1440), the
+           responsive unit everywhere else, phones included. Only the visible
+           one goes live: AdSlot skips a unit whose box is hidden. -->
       <Widget class="home-leaderboard" :title="$t('c_AdSlot.advertisement')">
-        <AdSlot slot="8090404628" :width="728" :height="90" bare/>
+        <div class="home-ad-fixed"><AdSlot slot="8090404628" :width="728" :height="90" bare/></div>
+        <div class="home-ad-fluid"><AdSlot slot="7838948172" size="small" bare/></div>
       </Widget>
 
       <Widget :title="$t('p_index.whatSNew')" class="home-library">
@@ -474,13 +481,17 @@ useCustomSeoMeta({
 <style scoped>
 /* No flat gap: each element sets its own top margin, so the eyebrow reads as a
    label on the title and the AI form gets real separation from the copy. */
-.home-leaderboard {
+.home-ad-fixed {
   display: none;
 }
 
 @media (min-width: 768px) and (max-width: 1199px), (min-width: 1360px) {
-  .home-leaderboard {
+  .home-ad-fixed {
     display: block;
+  }
+
+  .home-ad-fluid {
+    display: none;
   }
 }
 
@@ -510,14 +521,22 @@ useCustomSeoMeta({
   flex-wrap: wrap;
   /* em, not rem: the word gap has to scale with the clamped title size */
   gap: 0 0.25em;
-  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  /* Larger stops fitting each half on one line in the hero's column. */
+  font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl));
   font-weight: 800;
   font-variation-settings: "wght" 800;
   letter-spacing: -0.035em;
+  /* Two short lines set as one block: tight leading keeps them together. */
+  line-height: 1.02;
 }
 
 .home-hero-title-main {
   color: var(--foreground);
+}
+
+.home-hero-title-main,
+.home-hero-title-accent {
+  text-wrap: balance;
 }
 
 .home-hero-title-accent {
@@ -591,11 +610,6 @@ useCustomSeoMeta({
   image-rendering: pixelated;
   background: var(--surface-2);
   border-radius: var(--radius-sm);
-}
-
-.home-aside-hint {
-  font-size: var(--text-2xs);
-  color: var(--muted);
 }
 
 /* Same caption as a widget head, without the box: uppercase, muted, small. */
@@ -677,8 +691,11 @@ useCustomSeoMeta({
 }
 
 .home-ai-btn {
-  white-space: nowrap;
-  flex-shrink: 0;
+  /* Icon only: a square as tall as the prompt beside it. */
+  flex: 0 0 auto;
+  width: calc(var(--space-6) * 1.75);
+  padding: 0;
+  justify-content: center;
 }
 
 .home-challenge-link {
