@@ -62,6 +62,8 @@ export interface SharedPage {
     is_ai?: boolean
     /** Counted art-page views, on list rows and the detail. */
     view_count?: number
+    /** List rows: who made it, for the card's corner avatar. */
+    creator?: { username: string; avatar: string | null } | null
     has_image?: boolean
     /** Detail only: whether /art/<slug> should be indexed. The backend owns the
      *  rule so sitemap-page.xml and the page agree. */

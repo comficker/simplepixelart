@@ -40,6 +40,21 @@
             <span class="icon icon-heart"/>{{ compact(likes) }}
           </span>
         </span>
+        <!-- A span, not a link: the whole card is already one, and links
+             can't nest. It still behaves as a link for mouse and keyboard. -->
+        <span
+            v-if="creator"
+            class="card-creator"
+            role="link"
+            tabindex="0"
+            :title="`@${creator.username}`"
+            :aria-label="`@${creator.username}`"
+            @click.prevent.stop="goCreator"
+            @keydown.enter.prevent.stop="goCreator"
+        >
+          <img v-if="creator.avatar" :src="creator.avatar" alt="" loading="lazy">
+          <span v-else>{{ creator.username.slice(0, 1).toUpperCase() }}</span>
+        </span>
       </div>
     </div>
   </NuxtLinkLocale>
@@ -68,6 +83,20 @@ const isAi = computed(() => value.is_ai ?? !!(value.meta as any)?.ai)
 const views = computed(() => value.view_count || 0)
 const likes = computed(() => value.likes ?? (value.meta as any)?.vote_count ?? 0)
 const {locale} = useI18n()
+
+// The author, bottom-right. List rows carry `creator`; detail payloads `user`.
+// Left off on that creator's own page, where every card is theirs.
+const route = useRoute()
+const localePath = useLocalePath()
+const creator = computed(() => {
+  const c = (value as any).creator || (value as any).user
+  if (!c?.username || isDraw || isRemix) return null
+  if (route.params.id_string === c.username && route.path.includes('/creator/')) return null
+  return c as {username: string; avatar?: string | null}
+})
+function goCreator() {
+  if (creator.value) navigateTo(localePath(`/creator/${creator.value.username}`))
+}
 const compact = (n: number) => new Intl.NumberFormat(locale.value, {notation: 'compact', maximumFractionDigits: 1}).format(n)
 </script>
 
@@ -173,6 +202,44 @@ const compact = (n: number) => new Intl.NumberFormat(locale.value, {notation: 'c
 .card-stat .icon {
   width: var(--text-2xs);
   height: var(--text-2xs);
+}
+
+/* The author's avatar, bottom-right: small, and its own link. */
+.card-creator {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-5);
+  height: var(--space-5);
+  overflow: hidden;
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  color: var(--primary-foreground);
+  background: var(--primary-fill);
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+
+.card-creator img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-creator:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-creator:hover {
+    transform: scale(1.12);
+  }
 }
 
 /* Corner labels: animated, AI-drawn. One row, so both can show at once. */
