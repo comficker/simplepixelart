@@ -2,7 +2,7 @@ import {defineStore} from 'pinia'
 import type {AnimationTag, EditorData, Layer, SharedPage} from "~/types";
 import {useNativeFetch} from "~/composables/useCustomFetch";
 import {useHasWork} from "~/composables/useHasWork";
-import {cloneDeep, debounce, generateUUID, getStorageItem, key2Point, sharedPage2EditorData} from "~/helper/utils";
+import {cloneDeep, generateUUID, getStorageItem, key2Point, sharedPage2EditorData} from "~/helper/utils";
 import {DEFAULT_EDITOR_DATA} from "~/helper/constants";
 import {markRaw, ref, shallowRef, toRaw} from "vue";
 import {layers2MapNumbers} from "~/helper/canvas";
@@ -1130,15 +1130,22 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
+    // The tags each piece last saved with. Sending tags rewrites the piece's
+    // tag rows server-side, so a save only carries them when they changed.
+    const savedTags = new Map<string, string>()
+
     async function performSave() {
         async function save2Cloud() {
             const ed = toRaw(editorData.value)
             const anim = ed.meta?.animation
             const primaryLayers = anim?.frames?.length ? anim.frames[0]!.layers : ed.layers
-            const payload = {
+            const tagsKey = JSON.stringify(ed.tags || [])
+            // No map_numbers: it is every visible pixel again, and the server
+            // rebuilds it from the layers. `lite` answers with just the
+            // id, slug, status and timestamp read back below, not the piece.
+            const payload: Record<string, any> = {
                 name: ed.name || 'Untitled',
                 desc: ed.desc || '',
-                tags: ed.tags || [],
                 width: ed.width,
                 height: ed.height,
                 colors: ed.colors,
@@ -1146,7 +1153,6 @@ export const useEditor = defineStore('editor', () => {
                 template: ed.template,
                 palette: ed.palette ?? null,
                 id_string: ed.id_string,
-                map_numbers: layers2MapNumbers({...ed, layers: primaryLayers}),
                 is_public: ed.is_public,
                 meta: ed.meta ?? {},
             }
@@ -1154,8 +1160,10 @@ export const useEditor = defineStore('editor', () => {
                 const oldLocalKey = editorData.value.id.toString()
                 const result = await useNativeFetch<SharedPage>(`/coloring/shared-pages/`, {
                     method: 'POST',
-                    body: {...payload, id_string: ''}
+                    query: {lite: 1},
+                    body: {...payload, tags: ed.tags || [], id_string: ''}
                 })
+                savedTags.set(String(result.id), tagsKey)
                 editorData.value.id = result.id
                 editorData.value.id_string = result.id_string
                 editorData.value.status = result.status
@@ -1190,10 +1198,13 @@ export const useEditor = defineStore('editor', () => {
                 return
             }
             try {
-                const result = await useNativeFetch<SharedPage>(`/coloring/shared-pages/${editorData.value.id}/`, {
+                const id = String(editorData.value.id)
+                const result = await useNativeFetch<SharedPage>(`/coloring/shared-pages/${id}/`, {
                     method: 'PUT',
-                    body: payload
+                    query: {lite: 1},
+                    body: savedTags.get(id) === tagsKey ? payload : {...payload, tags: ed.tags || []},
                 })
+                savedTags.set(id, tagsKey)
                 editorData.value.updated = result.updated
                 editorData.value.id_string = result.id_string
                 editorData.value.status = result.status
@@ -1293,14 +1304,24 @@ export const useEditor = defineStore('editor', () => {
         }
     }
 
+    // A save waits for this long a pause in the changes: one request per
+    // pause, not one per stroke.
+    const SAVE_DELAY = 3000
     let savePending = false
-    const debouncedSave = debounce(() => { savePending = false; void saveNow() }, 1000)
-    function save() { savePending = true; debouncedSave() }
+    let saveTimer: ReturnType<typeof setTimeout> | null = null
+    function save() {
+        savePending = true
+        if (saveTimer) clearTimeout(saveTimer)
+        saveTimer = setTimeout(() => { saveTimer = null; savePending = false; void saveNow() }, SAVE_DELAY)
+    }
 
-    function flush(): void {
-        if (!savePending) return
+    // Stores whatever is waiting, now. Resolves once it is stored, so a caller
+    // about to tear the editor down can wait for it.
+    function flush(): Promise<void> {
+        if (!savePending) return saveInFlight ?? Promise.resolve()
+        if (saveTimer) { clearTimeout(saveTimer); saveTimer = null }
         savePending = false
-        void saveNow()
+        return saveNow()
     }
 
     function setPixelByIndex(x: number, y: number, paletteIndex: number): void {

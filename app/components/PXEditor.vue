@@ -3242,6 +3242,13 @@ onMounted(async () => {
 
 })
 
+// Leaving, or opening another piece in place: store what is still waiting
+// first. Unmounting resets the editor, and a save that fired after that
+// would store the blank canvas instead of the last strokes.
+const flushBeforeLeave = () => store.flush().catch(() => {})
+onBeforeRouteLeave(flushBeforeLeave)
+onBeforeRouteUpdate(flushBeforeLeave)
+
 onUnmounted(() => {
   if (drawRafId !== null) cancelAnimationFrame(drawRafId);
   if (miniMapRafId !== null) cancelAnimationFrame(miniMapRafId);
