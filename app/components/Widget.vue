@@ -45,7 +45,7 @@ defineProps<{ title?: string }>()
 .widget-head .title {
   padding: 0;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;

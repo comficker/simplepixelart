@@ -809,7 +809,7 @@ const previewStyle = computed(() => {
   align-items: center;
   gap: 5px;
   padding: var(--space-1) 9px var(--space-1) var(--space-2);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -831,7 +831,7 @@ const previewStyle = computed(() => {
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-1) 9px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -922,7 +922,7 @@ const previewStyle = computed(() => {
 
 .art-swatch-hex {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   text-align: center;
   color: var(--muted);

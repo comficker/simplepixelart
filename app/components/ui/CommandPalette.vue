@@ -462,7 +462,7 @@ onMounted(() => { if (open.value) openPalette() })
   background: transparent;
   border: none;
   outline: none;
-  font-size: 15px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--foreground);
   padding: 0;
@@ -504,7 +504,7 @@ onMounted(() => { if (open.value) openPalette() })
 }
 
 .cmdk-group {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;

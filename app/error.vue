@@ -114,7 +114,7 @@ const handleError = () => clearError({ redirect: '/' })
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 64px;
+  font-size: calc(var(--text-4xl) * 1.6);
   font-weight: 800;
   font-variation-settings: "wght" 800;
   letter-spacing: -0.04em;

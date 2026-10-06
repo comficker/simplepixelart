@@ -114,7 +114,7 @@ header .brand-name-stamp {
   display: inline-block;
   padding: 3px 7px 3px var(--space-2);
   transform: rotate(-2deg);
-  font-size: 8px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   font-variation-settings: "wght" 800;
   text-transform: uppercase;

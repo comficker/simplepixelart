@@ -127,7 +127,7 @@ watch(() => auth.isLogged, (v) => { if (v) fetchUnread() })
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   line-height: 1;
   color: var(--primary-foreground);

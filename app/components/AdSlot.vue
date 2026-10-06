@@ -218,7 +218,7 @@ onBeforeUnmount(() => {
 }
 
 .ad-label {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;

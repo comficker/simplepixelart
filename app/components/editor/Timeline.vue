@@ -557,7 +557,7 @@ onUnmounted(() => { store.isPlaying = false })
   border-radius: var(--radius-sm);
   background: var(--background);
   color: var(--foreground);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -592,7 +592,7 @@ onUnmounted(() => { store.isPlaying = false })
   border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
 }
@@ -624,7 +624,7 @@ onUnmounted(() => { store.isPlaying = false })
   border-radius: var(--radius-sm);
   background: var(--background);
   color: var(--foreground);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 
@@ -646,7 +646,7 @@ onUnmounted(() => { store.isPlaying = false })
   border-radius: var(--radius-sm);
   background: var(--background);
   color: var(--foreground);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-align: center;
 }
 
@@ -718,7 +718,7 @@ onUnmounted(() => { store.isPlaying = false })
   border: 0;
   border-radius: 3px;
   color: #fff;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
@@ -798,7 +798,7 @@ onUnmounted(() => { store.isPlaying = false })
 
 .tl-colhead i {
   font-style: normal;
-  font-size: 8px;
+  font-size: var(--text-2xs);
   font-variant-numeric: tabular-nums;
   opacity: 0.8;
 }
@@ -850,7 +850,7 @@ onUnmounted(() => { store.isPlaying = false })
   border-radius: 3px;
   background: var(--surface);
   border: 1px solid var(--border);
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 800;
 }
 
@@ -932,7 +932,7 @@ onUnmounted(() => { store.isPlaying = false })
 
 .tl-bgcel em {
   font-style: normal;
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--muted);
   white-space: nowrap;

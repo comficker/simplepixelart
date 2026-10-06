@@ -129,7 +129,7 @@ function handleBlur() {
   background: none;
   cursor: pointer;
   color: var(--muted);
-  font-size: 15px;
+  font-size: var(--text-sm);
   line-height: 1;
   border-radius: var(--radius-pill);
   transition: color var(--transition), background var(--transition);

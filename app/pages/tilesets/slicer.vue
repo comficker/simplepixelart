@@ -2316,7 +2316,7 @@ const faq = computed(() => [
 .ts-set-label {
   display: block;
   margin-bottom: var(--space-3);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2592,7 +2592,7 @@ const faq = computed(() => [
   width: 18px;
   height: 18px;
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   color: var(--primary-foreground);
   background: var(--primary-fill);

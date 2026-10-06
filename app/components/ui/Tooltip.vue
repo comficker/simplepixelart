@@ -139,7 +139,7 @@ function onEnter() {
     0 1px 2px rgba(0, 0, 0, 0.12),
     0 6px 16px -4px rgba(0, 0, 0, 0.18);
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.01em;
 

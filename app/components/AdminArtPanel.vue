@@ -225,7 +225,7 @@ async function destroy() {
   display: inline-flex;
   align-items: center;
   padding: 3px 7px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   letter-spacing: 0.1em;
   color: var(--primary-foreground, #fff);
@@ -318,7 +318,7 @@ async function destroy() {
 }
 
 .admin-group-label {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -335,7 +335,7 @@ async function destroy() {
 
 .admin-seg-btn {
   padding: 6px 14px;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: capitalize;
   color: var(--muted);

@@ -205,7 +205,7 @@ async function publish() {
 
 .composer-sw-hex {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   text-align: center;
   color: var(--muted);
@@ -227,7 +227,7 @@ async function publish() {
   background: var(--foreground);
   color: var(--background);
   cursor: pointer;
-  font-size: 9px;
+  font-size: var(--text-2xs);
   opacity: 0;
   transition: opacity 140ms ease;
 }
@@ -267,7 +267,7 @@ async function publish() {
   border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--foreground);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
   transition: border-color var(--transition), color var(--transition), background var(--transition);

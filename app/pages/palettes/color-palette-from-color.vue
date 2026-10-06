@@ -367,7 +367,7 @@ useCustomSeoMeta({
   border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--foreground);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
   transition: border-color var(--transition), color var(--transition), background var(--transition);

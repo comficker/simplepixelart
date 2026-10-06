@@ -349,7 +349,7 @@ useCustomSeoMeta({
 
 .pd-sw-hex {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   text-align: center;
   color: var(--muted);
@@ -405,7 +405,7 @@ useCustomSeoMeta({
 }
 
 .pd-dom-cap {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -433,7 +433,7 @@ useCustomSeoMeta({
 }
 
 .pd-pill {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 700;
   padding: var(--space-1) 0.7rem;
   border-radius: var(--radius-pill);
@@ -448,7 +448,7 @@ useCustomSeoMeta({
 }
 
 .pd-range-cap {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--muted);
 }

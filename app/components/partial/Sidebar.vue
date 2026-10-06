@@ -206,7 +206,7 @@ const SECTIONS = [
 .dash-brand-name span {
   display: block;
   margin-bottom: 3px;
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;

@@ -136,7 +136,7 @@ const isAnim = computed(() => value.is_anim
   align-items: center;
   gap: 3px;
   padding: 2px 6px;
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   letter-spacing: 0.06em;
   color: #fff;

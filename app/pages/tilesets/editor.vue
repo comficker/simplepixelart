@@ -4207,7 +4207,7 @@ const faq = computed(() => [
 .tsx-build-slotgrid .tooltip-wrapper > .tsx-build-slot { flex: 1; width: 100%; }
 
 .tsx-build-sec {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4231,7 +4231,7 @@ const faq = computed(() => [
 }
 
 .tsx-build-morelink {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: none;
@@ -4264,7 +4264,7 @@ const faq = computed(() => [
   border-radius: var(--radius-sm, 6px);
   background: var(--surface, #fff);
   color: var(--muted, #888);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   cursor: pointer;
 }
@@ -4302,7 +4302,7 @@ const faq = computed(() => [
 }
 
 .tsx-build-varcount {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   color: var(--primary, #6366f1);
   font-variant-numeric: tabular-nums;

@@ -4612,7 +4612,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 .resize-warn {
   display: flex;
   gap: var(--space-3);
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--muted);
   padding: var(--space-2) 0.625rem;
   background: var(--surface-2);
@@ -4672,7 +4672,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   background: transparent;
   border: 0;
   border-radius: calc(var(--radius-sm) - 2px);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--muted);
   cursor: pointer;

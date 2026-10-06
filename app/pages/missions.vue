@@ -385,7 +385,7 @@ watch(() => auth.isLogged, (v) => {
   transform: rotate(45deg);
   text-align: center;
   padding: 1px 0;
-  font-size: 8px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;

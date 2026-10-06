@@ -114,5 +114,5 @@ function toggle() {
 .size-md .ui-switch.on .thumb { transform: translate(16px, -50%); }
 .size-lg .ui-switch.on .thumb { transform: translate(20px, -50%); }
 
-.label { font-size: 14px; }
+.label { font-size: var(--text-sm); }
 </style>

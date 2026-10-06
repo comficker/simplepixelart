@@ -3249,7 +3249,7 @@ const faq = computed(() => [
 .tm-iso-ratio .tm-num-cap em { font-style: normal; text-transform: none; opacity: 0.7; }
 .tm-chips-ratio { grid-template-columns: repeat(3, 1fr); }
 .tm-num { display: flex; flex-direction: column; gap: 0.3rem; }
-.tm-num-cap { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.tm-num-cap { font-size: var(--text-2xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .tm-num-ctl {
   display: grid; grid-template-columns: var(--tm-ctl) 1fr var(--tm-ctl); align-items: center;
   height: var(--tm-ctl); border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -3326,12 +3326,12 @@ const faq = computed(() => [
   border: 1px solid var(--primary); border-radius: var(--radius-sm); background: var(--surface);
   font-weight: 600; font-size: var(--text-xs); color: var(--foreground); outline: none;
 }
-.tm-layer-count { font-size: 10px; color: var(--muted); flex: none; }
+.tm-layer-count { font-size: var(--text-2xs); color: var(--muted); flex: none; }
 
 .tm-layer-add {
   display: inline-flex; align-items: center; gap: 0.2rem; height: 22px; padding: 0 0.55rem;
   border: 1px solid var(--border); background: transparent; border-radius: var(--radius-pill);
-  cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  cursor: pointer; font-size: var(--text-2xs); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
   color: var(--foreground);
 }
 .tm-layer-add:hover:not(:disabled) { color: var(--primary); }

@@ -84,7 +84,7 @@ onMounted(async () => {
 }
 @keyframes cb-spin { to { transform: rotate(360deg); } }
 .callback__title {
-  font-size: 1.25rem;
+  font-size: var(--text-lg);
   font-weight: 700;
 }
 .callback__msg {
