@@ -96,14 +96,14 @@ useCustomSeoMeta({
 <template>
   <ToolLayout :title="$t('p_creator_program.title')" no-ad>
     <div class="screen home-stack">
-      <section class="cpg-hero">
-        <div class="cpg-hero-main">
-          <h1 class="cpg-title">
-            <span class="cpg-title-main">{{ $t('p_creator_program.heroTitleMain') }}</span>
-            <span class="cpg-title-accent">{{ $t('p_creator_program.heroTitleAccent') }}</span>
+      <section class="page-hero">
+        <div class="page-hero-main">
+          <h1 class="page-hero-title">
+            <span class="page-hero-title-main">{{ $t('p_creator_program.heroTitleMain') }}</span>
+            <span class="page-hero-title-accent">{{ $t('p_creator_program.heroTitleAccent') }}</span>
           </h1>
-          <p class="cpg-tagline">{{ $t('p_creator_program.heroTagline') }}</p>
-          <div class="cpg-cta">
+          <p class="page-hero-tagline">{{ $t('p_creator_program.heroTagline') }}</p>
+          <div class="page-hero-cta">
             <button type="button" class="btn primary" @click="toForm">
               <span class="icon icon-trophy"/><span>{{ $t('p_creator_program.applyCta') }}</span>
             </button>
@@ -206,78 +206,6 @@ useCustomSeoMeta({
 </template>
 
 <style scoped>
-/* The scene is true pixel art at its own 397x159 size (run through the
-   site's own image-to-pixel reconstruction), scaled up crisp by the browser.
-   The illustration sits bottom-right; a wash of the panel colour runs from
-   the top-left corner, under the copy, and clears toward the scene, so the
-   text reads in every theme. On phones the scene gets room below the
-   buttons. */
-.cpg-hero {
-  display: grid;
-  gap: var(--space-5);
-  padding: var(--space-5) var(--space-4) calc(var(--space-6) * 7);
-  image-rendering: pixelated;
-  background:
-    linear-gradient(165deg, var(--surface) 0%, var(--surface) 46%, color-mix(in oklab, var(--surface) 80%, transparent) 56%, color-mix(in oklab, var(--surface) 50%, transparent) 66%, color-mix(in oklab, var(--surface) 22%, transparent) 76%, color-mix(in oklab, var(--surface) 0%, transparent) 88%),
-    linear-gradient(var(--hero-scrim, transparent), var(--hero-scrim, transparent)),
-    url('/images/creator-program-hero.png') 96% 100% / cover no-repeat,
-    var(--surface);
-}
-
-@media (min-width: 1100px) {
-  .cpg-hero {
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-    align-items: center;
-    min-height: calc(var(--space-6) * 13);
-    padding-bottom: var(--space-5);
-    background:
-      linear-gradient(to bottom right, var(--surface) 0%, var(--surface) 34%, color-mix(in oklab, var(--surface) 82%, transparent) 44%, color-mix(in oklab, var(--surface) 55%, transparent) 54%, color-mix(in oklab, var(--surface) 28%, transparent) 64%, color-mix(in oklab, var(--surface) 10%, transparent) 74%, color-mix(in oklab, var(--surface) 0%, transparent) 84%),
-      linear-gradient(var(--hero-scrim, transparent), var(--hero-scrim, transparent)),
-      url('/images/creator-program-hero.png') 100% 100% / cover no-repeat,
-      var(--surface);
-  }
-}
-
-/* Dark theme: a thin scrim over the whole scene, under the wash, so the
-   bright sky sits in the dark page instead of punching out of it. */
-:global(html[data-theme="dark"]) .cpg-hero {
-  --hero-scrim: color-mix(in oklab, var(--surface) 30%, transparent);
-}
-
-/* Same type treatment as the home hero: one heavy two-line title. */
-.cpg-title {
-  display: flex;
-  flex-direction: column;
-  font-size: clamp(var(--text-3xl), 4.4vw, var(--text-4xl));
-  font-weight: 800;
-  font-variation-settings: "wght" 800;
-  letter-spacing: -0.035em;
-  line-height: 1.02;
-  text-wrap: balance;
-}
-
-.cpg-title-main {
-  color: var(--foreground);
-}
-
-.cpg-title-accent {
-  color: var(--primary);
-}
-
-.cpg-tagline {
-  margin-top: var(--space-3);
-  max-width: 60ch;
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.cpg-cta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-5);
-}
-
 .cpg-spots {
   margin-top: var(--space-3);
 }

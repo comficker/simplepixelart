@@ -1360,13 +1360,10 @@
   },
   "p_index": {
     "aFresh": "— 매주 새로운",
-    "beTheFirstToEnter": "첫 참가자가 되어 보세요",
     "browsePixelArt": "픽셀 아트 둘러보기",
     "browser": "브라우저",
     "builtForGameDevelopers": "게임 개발자를 위해",
     "communityVotedWinners": ". 수상작은 커뮤니티 투표로 정해집니다.",
-    "describeASpriteASleepingOrange": "스프라이트를 설명하세요 — “몸을 말고 자는 주황색 고양이”…",
-    "describeThePixelArtToGenerate": "만들고 싶은 픽셀 아트를 설명하세요",
     "easyPixelArt": "쉬운 픽셀 아트",
     "export": "내보내기",
     "faq0a": "<p>픽셀 아트는 누구나 몇 초 만에 만들 수 있어야 합니다. 설치도, 계정도, 학습 곡선도 필요 없습니다. 템플릿을 골라 리믹스하거나, 사진을 한 번의 클릭으로 픽셀 아트로 바꾸세요. 더 깊이 작업하려면 편집기에 레이어, 미러 드로잉, 선택 영역, 팔레트 관리가 모두 있습니다.</p> <p>모든 것이 브라우저에서 돌아갑니다. 로그아웃 상태에서는 작업이 기기에 자동 저장되고, Google로 로그인하면 클라우드에 동기화됩니다.</p>",
@@ -1389,7 +1386,6 @@
     "free": "무료",
     "heroTagline": "커뮤니티 작품을 둘러보고, 어떤 작품이든 나만의 버전을 만들고, 그린 것을 공개하세요 — 무료, 브라우저에서. 게임을 만든다면 스프라이트, 타일셋, 타일맵을 Godot, Unity, Phaser로 내보낼 수 있습니다.",
     "homeFacts": "무료 · 픽셀 아트를 만들고, 공유하고, 발견하세요",
-    "joinChallenge": "참가",
     "newBlankCanvas": "새 빈 캔버스",
     "newCreators": "새 크리에이터",
     "newHereOpenAnyArtworkFrom": "처음이신가요? 위 갤러리에서 아무 작품이나 열어 바로 편집해 보세요. 1분이면 첫 작품을 게시할 수 있습니다.",
@@ -1433,7 +1429,6 @@
     "whatSNew": "새로운 작품",
     "yourStudio": "내 스튜디오",
     "daysLeft": "{count}일 남음",
-    "entryCount": "응모작 {count}개",
     "pixelArtAlt": "픽셀 아트"
   },
   "p_missions": {

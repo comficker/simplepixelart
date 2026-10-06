@@ -1360,13 +1360,10 @@
   },
   "p_index": {
     "aFresh": "——每周一个全新的",
-    "beTheFirstToEnter": "成为第一个参与者",
     "browsePixelArt": "浏览像素画",
     "browser": "浏览器",
     "builtForGameDevelopers": "为游戏开发者打造",
     "communityVotedWinners": "，优胜者由社区投票选出。",
-    "describeASpriteASleepingOrange": "描述一个精灵 — “蜷着睡觉的橘猫”…",
-    "describeThePixelArtToGenerate": "描述你想生成的像素画",
     "easyPixelArt": "简单像素画",
     "export": "导出",
     "faq0a": "<p>任何人都该能在几秒内做出像素画——不用安装、不用注册、没有学习门槛。挑个模板改一改，或者一键把照片转成像素画。想深入创作时，编辑器里有图层、镜像绘制、选区和完整的调色板管理。</p> <p>整个平台都在浏览器里运行。未登录时作品自动保存在本地，用 Google 登录后会同步到云端。</p>",
@@ -1389,7 +1386,6 @@
     "free": "免费",
     "heroTagline": "浏览社区作品，为任意一幅制作你自己的版本，并发布你画的作品 — 免费，在浏览器中完成。在做游戏？精灵、图块集和图块地图可导出到 Godot、Unity 和 Phaser。",
     "homeFacts": "免费 · 创作、分享和发现像素画",
-    "joinChallenge": "参加",
     "newBlankCanvas": "新建空白画布",
     "newCreators": "新创作者",
     "newHereOpenAnyArtworkFrom": "第一次来？打开上方图库里的任意作品直接编辑——不到一分钟就能发布你的第一幅。",
@@ -1433,7 +1429,6 @@
     "whatSNew": "最新作品",
     "yourStudio": "我的工作室",
     "daysLeft": "还剩 {count} 天",
-    "entryCount": "{count} 件参赛作品",
     "pixelArtAlt": "像素画"
   },
   "p_missions": {

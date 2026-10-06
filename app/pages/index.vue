@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const localHtml = useLocalHtml()
-const localePath = useLocalePath()
-const {t} = useI18n()
+const {t, locale} = useI18n()
 import type {APIResponse, EditorData, SharedPage} from "~/types";
 import {daysLeftUntil, getStorageItem} from "~/helper/utils";
 import {tileImageUrl} from "~/helper/tilemap";
@@ -89,32 +88,30 @@ useArtListFetch({limit: 32, ordering: '-updated'})
    as something still loading. */
 const CREATOR_ROWS = 3
 
-// Awaited together: these two are independent, and awaiting them one after
+// Awaited together: these three are independent, and awaiting them one after
 // the other made the server wait out both round trips before the artwork list
 // (fetched by item-list further down) could even start.
-const [{data: aiEnabled}, {data: topCreators, pending: topCreatorsPending}, {data: homeChallenge}, {data: newCreators}] = await Promise.all([
-  useAuthFetch<boolean>('/coloring/economy/', {
-    key: 'home-ai-image-enabled',
-    transform: (s: any) => !!s?.ai_image_enabled,
-    default: () => false,
-  }),
+const [{data: topCreators, pending: topCreatorsPending}, {data: homeChallenges}, {data: newCreators}] = await Promise.all([
   useAuthFetch<any>('/coloring/creators/top/', {
     key: 'home-top-creators',
     query: {limit: CREATOR_ROWS},
     transform: (s: any) => s?.results || [],
     default: () => [],
   }),
+  // This week's theme, then the two before it. Each row leads with its best
+  // piece so far (top entry while live, winner once ended).
   useAuthFetch<any>('/coloring/challenges/', {
-    key: 'home-weekly-challenge',
-    transform: (s: any) => s?.current
-        ? {
-          id_string: s.current.id_string,
-          name: s.current.name,
-          ends: s.current.ends,
-          entries: s.current.entries_count,
-        }
-        : null,
-    default: () => null,
+    key: 'home-challenges',
+    transform: (s: any) => [s?.current, ...(s?.past || [])].filter(Boolean).slice(0, 3).map((c: any) => ({
+      id_string: c.id_string,
+      name: c.name,
+      starts: c.starts,
+      ends: c.ends,
+      active: c.state === 'active',
+      days: daysLeftUntil(c.ends),
+      art: (c.state === 'active' ? c.top : c.winners)?.[0] || null,
+    })),
+    default: () => [],
   }),
   useAuthFetch<any>('/coloring/creators/new/', {
     key: 'home-new-creators',
@@ -131,13 +128,9 @@ const creatorRows = computed(() => {
   return Array.from({length: CREATOR_ROWS}, (_, i) => rows[i] || null)
 })
 
-const challengeDaysLeft = computed(() => daysLeftUntil(homeChallenge.value?.ends))
-const aiPrompt = ref('')
-
-function goGenerate() {
-  const p = aiPrompt.value.trim()
-  if (p.length < 3) return
-  navigateTo(localePath(`/generator?prompt=${encodeURIComponent(p.slice(0, 300))}`))
+function challengeRange(c: { starts: string, ends: string }): string {
+  const f = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString(locale.value, {month: 'short', day: 'numeric'})
+  return `${f(c.starts)} – ${f(c.ends)}`
 }
 
 onMounted(() => {
@@ -236,14 +229,14 @@ useCustomSeoMeta({
     </template>
 
     <div class="screen home-stack">
-      <section class="home-hero">
-        <div class="home-hero-main">
-          <h1 class="home-hero-title">
-            <span class="home-hero-title-main">{{ $t('p_index.findPixelArtYouLove') }}</span>
-            <span class="home-hero-title-accent">{{ $t('p_index.thenMakeYourOwn') }}</span>
+      <section class="page-hero">
+        <div class="page-hero-main">
+          <h1 class="page-hero-title">
+            <span class="page-hero-title-main">{{ $t('p_index.findPixelArtYouLove') }}</span>
+            <span class="page-hero-title-accent">{{ $t('p_index.thenMakeYourOwn') }}</span>
           </h1>
-          <p class="home-hero-tagline">{{ $t('p_index.heroTagline') }}</p>
-          <div class="home-cta">
+          <p class="page-hero-tagline">{{ $t('p_index.heroTagline') }}</p>
+          <div class="page-hero-cta">
             <NuxtLinkLocale to="/arts" class="btn primary">
               <span class="icon icon-explore"/><span>{{ $t('p_index.browsePixelArt') }}</span>
             </NuxtLinkLocale>
@@ -251,88 +244,7 @@ useCustomSeoMeta({
               <span class="icon icon-pen"/><span>{{ $t('p_index.startDrawing') }}</span>
             </NuxtLinkLocale>
           </div>
-          <form v-if="aiEnabled" class="home-ai" @submit.prevent="goGenerate">
-            <div class="composer-box">
-              <input
-                  v-model="aiPrompt"
-                  type="text"
-                  class="composer-input"
-                  maxlength="300"
-                  :placeholder="$t('p_index.describeASpriteASleepingOrange')"
-                  :aria-label="$t('p_index.describeThePixelArtToGenerate')"
-              >
-              <button
-                  type="submit"
-                  class="btn primary composer-icon-btn"
-                  :disabled="aiPrompt.trim().length < 3"
-                  :title="$t('common.generate')"
-                  :aria-label="$t('common.generate')"
-              >
-                <span class="icon icon-auto-fix"/>
-              </button>
-            </div>
-          </form>
           <div class="home-tools"><ToolPaths/></div>
-        </div>
-
-        <div class="home-hero-aside">
-          <section v-if="newCreators?.length" class="home-aside-sec">
-            <div class="home-aside-cap">
-              <span>{{ $t('p_index.newCreators') }}</span>
-              <NuxtLinkLocale to="/creator" class="home-aside-more">{{ $t('p_index.viewAll') }}</NuxtLinkLocale>
-            </div>
-            <ol class="rank-list">
-              <li v-for="c in newCreators" :key="c.username">
-                <NuxtLinkLocale :to="`/creator/${c.username}`" class="rank-row" :title="`@${c.username}`">
-                  <span class="rank-avatar">
-                    <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
-                    <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
-                  </span>
-                  <span class="rank-name">{{ c.username }}</span>
-                  <img class="rank-art" :src="tileImageUrl(apiBase, c.art.id_string)" :alt="c.art.name" loading="lazy">
-                </NuxtLinkLocale>
-              </li>
-            </ol>
-          </section>
-
-          <section v-if="topCreators?.length" class="home-aside-sec">
-            <div class="home-aside-cap">
-              <span>{{ $t('p_index.topCreators') }}</span>
-              <NuxtLinkLocale to="/creator" class="home-aside-more">{{ $t('p_index.viewAll') }}</NuxtLinkLocale>
-            </div>
-            <ol class="rank-list">
-              <li v-for="(c, i) in creatorRows" :key="c ? c.username : `slot-${i}`">
-                <NuxtLinkLocale v-if="c" :to="`/creator/${c.username}`" class="rank-row">
-                  <span class="rank-avatar">
-                    <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
-                    <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
-                  </span>
-                  <span class="rank-name">{{ c.username }}</span>
-                  <span v-if="c.is_bot" class="rank-bot">{{ $t('common.bot') }}</span>
-                  <span class="rank-count">{{ c.arts }}</span>
-                </NuxtLinkLocale>
-                <span v-else class="rank-row" aria-hidden="true">
-                  <span class="skeleton rank-skeleton-avatar"/>
-                  <span class="skeleton skeleton-line-sm rank-skeleton-name"/>
-                </span>
-              </li>
-            </ol>
-          </section>
-
-          <section v-if="homeChallenge" class="home-aside-sec">
-            <div class="home-aside-cap">
-              <span>{{ $t('p_index.weeklyChallenge') }}</span>
-              <NuxtLinkLocale to="/challenges" class="home-aside-more">{{ $t('p_index.viewAll') }}</NuxtLinkLocale>
-            </div>
-            <NuxtLinkLocale :to="`/challenges/${homeChallenge.id_string}`" class="home-challenge-link">
-              <span class="home-challenge-name">{{ homeChallenge.name }}</span>
-              <span class="home-challenge-sub">
-                {{ $t('p_index.daysLeft', challengeDaysLeft, {count: challengeDaysLeft}) }} ·
-                <template v-if="homeChallenge.entries">{{ $t('p_index.entryCount', homeChallenge.entries, {count: homeChallenge.entries}) }} · {{ $t('p_index.joinChallenge') }}</template>
-                <template v-else>{{ $t('p_index.beTheFirstToEnter') }}</template>
-              </span>
-            </NuxtLinkLocale>
-          </section>
         </div>
       </section>
 
@@ -387,6 +299,72 @@ useCustomSeoMeta({
             </div>
           </div>
       </Widget>
+
+      <!-- Who is new, who leads, what to draw this week: one row, above the
+           gallery, out of the hero so the hero can carry the scene. -->
+      <div class="screen-row home-row">
+        <Widget v-if="newCreators?.length" :title="$t('p_index.newCreators')">
+          <template #ctl>
+            <NuxtLinkLocale to="/creator" class="widget-ctl-btn">
+              <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
+            </NuxtLinkLocale>
+          </template>
+          <ol class="rank-list">
+            <li v-for="c in newCreators" :key="c.username">
+              <NuxtLinkLocale :to="`/creator/${c.username}`" class="rank-row" :title="`@${c.username}`">
+                <span class="rank-avatar">
+                  <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
+                  <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
+                </span>
+                <span class="rank-name">{{ c.username }}</span>
+                <img class="rank-art" :src="tileImageUrl(apiBase, c.art.id_string)" :alt="c.art.name" loading="lazy">
+              </NuxtLinkLocale>
+            </li>
+          </ol>
+        </Widget>
+        <Widget v-if="topCreators?.length" :title="$t('p_index.topCreators')">
+          <template #ctl>
+            <NuxtLinkLocale to="/creator" class="widget-ctl-btn">
+              <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
+            </NuxtLinkLocale>
+          </template>
+          <ol class="rank-list">
+            <li v-for="(c, i) in creatorRows" :key="c ? c.username : `slot-${i}`">
+              <NuxtLinkLocale v-if="c" :to="`/creator/${c.username}`" class="rank-row">
+                <span class="rank-avatar">
+                  <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
+                  <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
+                </span>
+                <span class="rank-name">{{ c.username }}</span>
+                <span v-if="c.is_bot" class="rank-bot">{{ $t('common.bot') }}</span>
+                <span class="rank-count">{{ c.arts }}</span>
+              </NuxtLinkLocale>
+              <span v-else class="rank-row" aria-hidden="true">
+                <span class="skeleton rank-skeleton-avatar"/>
+                <span class="skeleton skeleton-line-sm rank-skeleton-name"/>
+              </span>
+            </li>
+          </ol>
+        </Widget>
+        <Widget v-if="homeChallenges?.length" :title="$t('p_index.weeklyChallenge')">
+          <template #ctl>
+            <NuxtLinkLocale to="/challenges" class="widget-ctl-btn">
+              <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
+            </NuxtLinkLocale>
+          </template>
+          <ol class="rank-list">
+            <li v-for="c in homeChallenges" :key="c.id_string">
+              <NuxtLinkLocale :to="`/challenges/${c.id_string}`" class="rank-row">
+                <img v-if="c.art" class="rank-art" :src="tileImageUrl(apiBase, c.art.id_string)" :alt="c.art.name" loading="lazy">
+                <span v-else class="rank-art home-chal-empty"><span class="icon icon-trophy"/></span>
+                <span class="rank-name">{{ c.name }}</span>
+                <span v-if="c.active" class="rank-count home-chal-live">{{ $t('p_index.daysLeft', c.days, {count: c.days}) }}</span>
+                <span v-else class="rank-count">{{ challengeRange(c) }}</span>
+              </NuxtLinkLocale>
+            </li>
+          </ol>
+        </Widget>
+      </div>
 
       <Widget :title="$t('p_index.whatSNew')" class="home-library">
         <template #ctl>
@@ -472,8 +450,6 @@ useCustomSeoMeta({
 </template>
 
 <style scoped>
-/* No flat gap: each element sets its own top margin, so the eyebrow reads as a
-   label on the title and the AI form gets real separation from the copy. */
 .home-ad-fixed {
   display: none;
 }
@@ -488,105 +464,9 @@ useCustomSeoMeta({
   }
 }
 
-/* No padding and no gap on the frame itself: every divider inside runs edge
-   to edge, and each block carries its own padding instead. */
-.home-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0;
-  padding: 0;
-  background:
-    radial-gradient(120% 120% at 100% 0%, color-mix(in oklab, var(--surface-2) 85%, transparent), transparent 62%),
-    var(--surface);
-}
-
-.home-hero-title {
-  display: flex;
-  flex-wrap: wrap;
-  /* em, not rem: the word gap has to scale with the clamped title size */
-  gap: 0 0.25em;
-  /* Larger stops fitting each half on one line in the hero's column. */
-  font-size: clamp(var(--text-3xl), 5vw, var(--text-4xl));
-  font-weight: 800;
-  font-variation-settings: "wght" 800;
-  letter-spacing: -0.035em;
-  /* Two short lines set as one block: tight leading keeps them together. */
-  line-height: 1.02;
-}
-
-.home-hero-title-main {
-  color: var(--foreground);
-}
-
-.home-hero-title-main,
-.home-hero-title-accent {
-  text-wrap: balance;
-}
-
-.home-hero-title-accent {
-  color: var(--primary);
-}
-
-.home-hero-tagline {
-  margin-top: var(--space-3);
-  color: var(--muted);
-  font-size: var(--text-sm);
-  /* 64ch keeps the copy to three lines on desktop and sits closer to the
-     title's width, so the block does not read as a narrow column. */
-  max-width: 64ch;
-}
-
-.home-cta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-5);
-}
-
-.home-ai {
-  /* Pinned to the foot of the hero's column, level with the bottom of the
-     aside beside it; the padding keeps the gap above when there is no slack. */
-  margin-top: auto;
-  padding-top: var(--space-5);
-  width: 100%;
-}
-
-.home-hero-main {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
-  padding: var(--space-4);
-}
-
-/* No frame and no padding of its own: the hero is one panel split by a
-   single rule, and each section inside pads itself so that rule runs edge
-   to edge. */
-.home-hero-aside {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  align-self: stretch;
-  min-width: 0;
-  border-top: 1px solid var(--border);
-}
-
-.home-aside-sec {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  min-width: 0;
-  padding: var(--space-4);
-}
-
-.home-aside-sec + .home-aside-sec {
-  border-top: 1px solid var(--border);
-}
-
 /* The creator's latest piece, beside their name: a first piece is the
    thing this list exists to show. */
-.home-hero .rank-art {
+.home-row .rank-art {
   width: var(--space-6);
   height: var(--space-6);
   flex-shrink: 0;
@@ -596,110 +476,26 @@ useCustomSeoMeta({
   border-radius: var(--radius-sm);
 }
 
-/* Same caption as a widget head, without the box: uppercase, muted, small. */
-.home-aside-cap {
+/* A theme nobody has entered yet: the trophy stands in for the piece. */
+.home-chal-empty {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  font-variation-settings: "wght" 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  justify-content: center;
   color: var(--muted);
 }
 
-.home-aside-more {
-  color: var(--muted);
-  transition: color var(--transition);
+.home-chal-empty .icon {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
-.home-hero .home-challenge-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--text-sm);
+.home-chal-live {
+  font-weight: 600;
+  color: var(--primary);
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .home-challenge-link:hover .home-challenge-name,
-  .home-aside-more:hover {
-    color: var(--primary);
-  }
-}
-
-/* Two equal columns, split by one rule. Below this the hero is a single
-   column and the same rule runs across the top of the aside instead. */
-@media (min-width: 1360px) {
-  /* Grid, not flex: two 1fr tracks stay exactly equal, where flex-basis 0
-     would hand the aside its padding and divider on top of its share. */
-  .home-hero {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: stretch;
-    gap: 0;
-  }
-
-  .home-hero-main,
-  .home-hero-aside {
-    min-width: 0;
-  }
-
-  .home-hero-aside {
-    justify-content: center;
-    border-top: 0;
-    border-left: 1px solid var(--border);
-  }
-}
-
-.home-hero .home-tools {
+.page-hero .home-tools {
   margin-top: var(--space-4);
-}
-
-
-.home-challenge-link {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.home-challenge-name {
-  font-weight: 800;
-  color: var(--foreground);
-}
-
-.home-challenge-sub {
-  margin-left: auto;
-  font-size: var(--text-xs);
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-/* Phones: the row cannot hold all three parts, and the auto margin left the
-   wrapped line pinned right. Lay it out as two rows instead. */
-@media (max-width: 767px) {
-  .home-challenge-link {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    row-gap: var(--space-1);
-  }
-
-  .home-challenge-name {
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .home-challenge-sub {
-    grid-column: 1 / -1;
-    margin-left: 0;
-    white-space: normal;
-  }
 }
 
 .home-library {

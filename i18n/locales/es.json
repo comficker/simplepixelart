@@ -1360,13 +1360,10 @@
   },
   "p_index": {
     "aFresh": "— un nuevo",
-    "beTheFirstToEnter": "Sé el primero en participar",
     "browsePixelArt": "Explorar pixel art",
     "browser": "navegador",
     "builtForGameDevelopers": "Hecho para quien desarrolla juegos",
     "communityVotedWinners": ", con ganadores elegidos por la comunidad.",
-    "describeASpriteASleepingOrange": "Describe un sprite — “un gato naranja durmiendo hecho un ovillo”…",
-    "describeThePixelArtToGenerate": "Describe el pixel art que quieres generar",
     "easyPixelArt": "pixel art fácil",
     "export": "exportar",
     "faq0a": "<p>Cualquiera debería poder hacer pixel art en segundos: sin instalar nada, sin cuenta, sin curva de aprendizaje. Elige una plantilla, remézclala o convierte cualquier foto en pixel art con un clic. Para trabajos más serios, el editor trae capas, dibujo en espejo, selecciones y un gestor de paletas completo.</p> <p>Toda la plataforma funciona en tu navegador. Sin sesión iniciada, tu trabajo se guarda solo en este dispositivo; al entrar con Google, se sincroniza en la nube.</p>",
@@ -1389,7 +1386,6 @@
     "free": "gratis",
     "heroTagline": "Explora obras de la comunidad, crea tu propia versión de cualquiera y publica lo que dibujes — gratis, en tu navegador. ¿Haces un juego? Sprites, tilesets y tilemaps se exportan a Godot, Unity y Phaser.",
     "homeFacts": "Gratis · Crea, comparte y descubre pixel art",
-    "joinChallenge": "Unirme",
     "newBlankCanvas": "Lienzo nuevo en blanco",
     "newCreators": "Nuevos creadores",
     "newHereOpenAnyArtworkFrom": "¿Es tu primera vez? Abre cualquier obra de la galería de arriba y empieza a editarla: puedes publicar tu primera pieza en menos de un minuto.",
@@ -1433,7 +1429,6 @@
     "whatSNew": "Novedades",
     "yourStudio": "Tu estudio",
     "daysLeft": "Queda 1 día | Quedan {count} días",
-    "entryCount": "1 participación | {count} participaciones",
     "pixelArtAlt": "Pixel art"
   },
   "p_missions": {

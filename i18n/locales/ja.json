@@ -1360,13 +1360,10 @@
   },
   "p_index": {
     "aFresh": "——毎週新しい",
-    "beTheFirstToEnter": "最初に参加しよう",
     "browsePixelArt": "ピクセルアートを見る",
     "browser": "ブラウザ",
     "builtForGameDevelopers": "ゲーム開発者のために",
     "communityVotedWinners": "。優秀作はコミュニティの投票で決まります。",
-    "describeASpriteASleepingOrange": "スプライトを説明 — 「丸くなって眠るオレンジ色の猫」…",
-    "describeThePixelArtToGenerate": "生成したいドット絵を説明",
     "easyPixelArt": "かんたんドット絵",
     "export": "書き出し",
     "faq0a": "<p>ドット絵は誰でも数秒で描けるべきです。インストールもアカウントも学習コストも要りません。テンプレートを選んでリミックスするか、写真をワンクリックでドット絵に変換できます。本格的に作り込むなら、エディタにはレイヤー、ミラー描画、選択範囲、パレット管理が揃っています。</p> <p>すべてブラウザ上で動きます。未ログイン時は端末内に自動保存され、Googleでログインするとクラウドへ同期されます。</p>",
@@ -1389,7 +1386,6 @@
     "free": "無料",
     "heroTagline": "コミュニティの作品を眺め、どれでも自分のバージョンを作り、描いたものを公開できます — 無料、ブラウザだけで。ゲーム制作なら、スプライト・タイルセット・タイルマップを Godot、Unity、Phaser へ書き出せます。",
     "homeFacts": "無料 · ピクセルアートを作って、共有して、見つける",
-    "joinChallenge": "参加する",
     "newBlankCanvas": "新しい空のキャンバス",
     "newCreators": "新しいクリエイター",
     "newHereOpenAnyArtworkFrom": "はじめてですか？上のギャラリーから好きな作品を開いて編集してみてください。1分かからず最初の1枚を公開できます。",
@@ -1433,7 +1429,6 @@
     "whatSNew": "新着",
     "yourStudio": "マイスタジオ",
     "daysLeft": "残り{count}日",
-    "entryCount": "{count}件の応募",
     "pixelArtAlt": "ピクセルアート"
   },
   "p_missions": {

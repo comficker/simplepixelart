@@ -754,7 +754,7 @@ input[type=number] {
 }
 
 @media (max-width: 899px) {
-    .home-hero .home-tools > .studio-paths {
+    .page-hero .home-tools > .studio-paths {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
@@ -855,8 +855,84 @@ footer {
     border-top: 1px solid var(--border);
 }
 
-/* One prompt row: a framed field with its action inside the frame. Shared by
-   the generator's composer and the home page's prompt. */
+/* A page hero (home, Creator Program): copy on the left over a scene.
+   The scene is true pixel art at its own 397x159 size (run through the
+   site's own image-to-pixel reconstruction), scaled up crisp by the browser.
+   The illustration sits bottom-right; a wash of the panel colour runs from
+   the top-left corner, under the copy, and clears toward the scene, so the
+   text reads in every theme. On phones the scene gets room below the
+   buttons. A page swaps the scene with --hero-img. */
+.page-hero {
+    display: grid;
+    /* minmax(0, …): the tool strip scrolls sideways; an auto column would
+       grow to its full width and push the copy off a phone screen. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-4) calc(var(--space-6) * 5);
+    image-rendering: pixelated;
+    background:
+        linear-gradient(165deg, var(--surface) 0%, var(--surface) 46%, color-mix(in oklab, var(--surface) 80%, transparent) 56%, color-mix(in oklab, var(--surface) 50%, transparent) 66%, color-mix(in oklab, var(--surface) 22%, transparent) 76%, color-mix(in oklab, var(--surface) 0%, transparent) 88%),
+        linear-gradient(var(--hero-scrim, transparent), var(--hero-scrim, transparent)),
+        var(--hero-img, url('/images/creator-program-hero.png')) 96% 100% / cover no-repeat,
+        var(--surface);
+}
+
+@media (min-width: 1100px) {
+    .page-hero {
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        align-items: center;
+        min-height: calc(var(--space-6) * 11);
+        padding-bottom: var(--space-5);
+        background:
+            linear-gradient(to bottom right, var(--surface) 0%, var(--surface) 34%, color-mix(in oklab, var(--surface) 82%, transparent) 44%, color-mix(in oklab, var(--surface) 55%, transparent) 54%, color-mix(in oklab, var(--surface) 28%, transparent) 64%, color-mix(in oklab, var(--surface) 10%, transparent) 74%, color-mix(in oklab, var(--surface) 0%, transparent) 84%),
+            linear-gradient(var(--hero-scrim, transparent), var(--hero-scrim, transparent)),
+            var(--hero-img, url('/images/creator-program-hero.png')) 100% 100% / cover no-repeat,
+            var(--surface);
+    }
+}
+
+/* Dark theme: a thin scrim over the whole scene, under the wash, so the
+   bright sky sits in the dark page instead of punching out of it. */
+[data-theme="dark"] .page-hero {
+    --hero-scrim: color-mix(in oklab, var(--surface) 30%, transparent);
+}
+
+/* One heavy two-line title: the main line, then the accent. */
+.page-hero-title {
+    display: flex;
+    flex-direction: column;
+    font-size: clamp(var(--text-3xl), 4.4vw, var(--text-4xl));
+    font-weight: 800;
+    font-variation-settings: "wght" 800;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
+    text-wrap: balance;
+}
+
+.page-hero-title-main {
+    color: var(--foreground);
+}
+
+.page-hero-title-accent {
+    color: var(--primary);
+}
+
+.page-hero-tagline {
+    margin-top: var(--space-3);
+    max-width: 60ch;
+    color: var(--muted);
+    font-size: var(--text-sm);
+}
+
+.page-hero-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+}
+
+/* One prompt row: a framed field with its action inside the frame (the
+   generator's composer). */
 .composer-box {
     display: flex;
     align-items: center;
@@ -891,14 +967,6 @@ footer {
     outline: none;
     box-shadow: none;
     border-color: transparent;
-}
-
-.composer-icon-btn {
-    flex: none;
-    width: calc(var(--space-6) + var(--space-4));
-    height: calc(var(--space-6) + var(--space-4));
-    padding: 0;
-    justify-content: center;
 }
 
 .square {
@@ -1659,8 +1727,10 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
 }
 
 @media (min-width: 1280px) {
+    /* As many equal columns as there are widgets. */
     .screen-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
     }
 
     .screen > .screen-row > .widget + .widget {

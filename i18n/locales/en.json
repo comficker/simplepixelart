@@ -1390,13 +1390,10 @@
   },
   "p_index": {
     "aFresh": "— a fresh",
-    "beTheFirstToEnter": "Be the first to enter",
     "browsePixelArt": "Browse pixel art",
     "browser": "browser",
     "builtForGameDevelopers": "Built for game developers",
     "communityVotedWinners": ", community-voted winners.",
-    "describeASpriteASleepingOrange": "Describe a sprite — “a sleeping orange cat”…",
-    "describeThePixelArtToGenerate": "Describe the pixel art to generate",
     "easyPixelArt": "easy pixel art",
     "export": "export",
     "faq0a": "<p>Anyone should be able to make pixel art in seconds — no installation, no account, no learning curve. Pick a template, remix it, or convert any photo into pixel art with one click. For deeper work, the editor has layers, mirror drawing, selections, and a full palette manager.</p> <p>The entire platform runs in your browser. Your work saves automatically to local storage when signed out, and syncs to the cloud when you log in with Google.</p>",
@@ -1419,7 +1416,6 @@
     "free": "free",
     "heroTagline": "Browse pieces from the community, make your own version of any of them, and publish what you draw — free, in your browser. Building a game? Sprites, tilesets and tilemaps export to Godot, Unity and Phaser.",
     "homeFacts": "Free · Make, share and discover pixel art",
-    "joinChallenge": "Join",
     "newBlankCanvas": "New blank canvas",
     "newCreators": "New creators",
     "newHereOpenAnyArtworkFrom": "New here? Open any artwork from the gallery above and start editing — you can publish your first piece in under a minute.",
@@ -1463,7 +1459,6 @@
     "whatSNew": "What's new",
     "yourStudio": "Your studio",
     "daysLeft": "1 day left | {count} days left",
-    "entryCount": "1 entry | {count} entries",
     "pixelArtAlt": "Pixel art"
   },
   "p_missions": {
