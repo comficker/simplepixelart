@@ -68,7 +68,9 @@
     "gif": "GIF",
     "noPreviewYet": "Sin vista previa",
     "pixelArtArtwork": "Obra de pixel art",
-    "pixelArtPreview": "Vista previa de pixel art"
+    "pixelArtPreview": "Vista previa de pixel art",
+    "views": "1 visita | {count} visitas",
+    "likes": "1 me gusta | {count} me gusta"
   },
   "c_CollectionEditModal": {
     "describeYourCollection": "Describe tu colección...",
@@ -964,7 +966,8 @@
     "originalSize": "Original · {w}×{h}",
     "pixelCount": "1 píxel | {count} píxeles",
     "pxACell": "{n}px por celda",
-    "madeWith": "Hecho con"
+    "madeWith": "Hecho con",
+    "views": "Visitas"
   },
   "p_arts": {
     "browseThousandsOfFreePixelArt": "Explora pixel art gratuito hecho por la comunidad: sprites, personajes e iconos. Cada remezcla da crédito al artista original.",

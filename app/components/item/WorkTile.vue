@@ -59,7 +59,7 @@ function statusBadge(s?: string) {
   border: 0;
   --fold-size: 14px;
   transition: --fold-size 220ms cubic-bezier(.22, .61, .36, 1), box-shadow var(--transition);
-  background: linear-gradient(225deg, transparent calc(var(--fold-size) * .7071 - .25px), var(--surface) calc(var(--fold-size) * .7071 + .25px));
+  background: linear-gradient(225deg, transparent calc(var(--fold-size) * .7071 - .25px), var(--card) calc(var(--fold-size) * .7071 + .25px));
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
 }
@@ -83,7 +83,7 @@ function statusBadge(s?: string) {
   right: 0;
   width: var(--fold-size);
   height: var(--fold-size);
-  background: linear-gradient(225deg, transparent calc(var(--fold-size) * .7071 - .25px), var(--border) calc(var(--fold-size) * .7071 + .25px) calc(50% + 1.25px), var(--surface) calc(50% + 1.75px));
+  background: linear-gradient(225deg, transparent calc(var(--fold-size) * .7071 - .25px), var(--border) calc(var(--fold-size) * .7071 + .25px) calc(50% + 1.25px), var(--surface-2) calc(50% + 1.75px));
   border-left: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   border-bottom-left-radius: var(--radius-sm);

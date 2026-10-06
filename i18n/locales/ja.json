@@ -68,7 +68,9 @@
     "gif": "GIF",
     "noPreviewYet": "プレビューなし",
     "pixelArtArtwork": "ピクセルアート作品",
-    "pixelArtPreview": "ピクセルアートのプレビュー"
+    "pixelArtPreview": "ピクセルアートのプレビュー",
+    "views": "{count} 回表示",
+    "likes": "{count} いいね"
   },
   "c_CollectionEditModal": {
     "describeYourCollection": "コレクションを説明…",
@@ -964,7 +966,8 @@
     "originalSize": "原寸 · {w}×{h}",
     "pixelCount": "{count} ピクセル",
     "pxACell": "1セル {n}px",
-    "madeWith": "制作方法"
+    "madeWith": "制作方法",
+    "views": "表示回数"
   },
   "p_arts": {
     "browseThousandsOfFreePixelArt": "コミュニティが描いた無料のドット絵 — スプライト、キャラクター、アイコン。リミックスには必ず元の作者のクレジットが付きます。",

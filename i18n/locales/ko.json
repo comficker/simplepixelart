@@ -68,7 +68,9 @@
     "gif": "GIF",
     "noPreviewYet": "미리보기 없음",
     "pixelArtArtwork": "픽셀 아트 작품",
-    "pixelArtPreview": "픽셀 아트 미리보기"
+    "pixelArtPreview": "픽셀 아트 미리보기",
+    "views": "조회 {count}회",
+    "likes": "좋아요 {count}개"
   },
   "c_CollectionEditModal": {
     "describeYourCollection": "컬렉션을 설명하세요…",
@@ -964,7 +966,8 @@
     "originalSize": "원본 · {w}×{h}",
     "pixelCount": "{count}픽셀",
     "pxACell": "셀당 {n}px",
-    "madeWith": "제작 방식"
+    "madeWith": "제작 방식",
+    "views": "조회수"
   },
   "p_arts": {
     "browseThousandsOfFreePixelArt": "커뮤니티가 만든 무료 픽셀 아트 — 스프라이트, 캐릭터, 아이콘. 모든 리믹스에는 원작자 크레딧이 붙습니다.",

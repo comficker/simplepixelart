@@ -767,7 +767,7 @@ useCustomSeoMeta({
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  background: var(--surface);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   transition: border-color var(--transition);
@@ -799,7 +799,7 @@ useCustomSeoMeta({
   background: linear-gradient(
     225deg,
     var(--border) calc(50% + 1.25px),
-    var(--surface) calc(50% + 1.75px)
+    var(--surface-2) calc(50% + 1.75px)
   );
   border-left: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -810,7 +810,7 @@ useCustomSeoMeta({
 
 .studio-canvas {
   display: block;
-  background: var(--surface);
+  background: var(--card);
   image-rendering: pixelated;
 }
 

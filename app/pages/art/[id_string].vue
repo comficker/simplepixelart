@@ -22,6 +22,18 @@ const license = computed(() => licenseOf((data.value?.meta as any)?.license))
 // A like is also how a piece is kept: /arts?sort=liked lists them.
 const liked = ref(!!data.value?.is_liked)
 const likes = ref(data.value?.likes || 0)
+
+// Counted from the browser, not the server render: the HTML is cached for
+// everyone and crawlers render it too. The server drops repeats and the
+// owner's own visits, and answers with the count.
+const views = ref(data.value?.view_count || 0)
+onMounted(async () => {
+  if (data.value?.status !== 'public') return
+  try {
+    const res = await useNativeFetch<{views: number}>(`/coloring/shared-pages/${data.value.id}/view/`, {method: 'POST'})
+    views.value = res.views
+  } catch { /* a missed view is not worth an error */ }
+})
 const liking = ref(false)
 const loginModal = useLoginModal()
 async function toggleLike() {
@@ -673,6 +685,10 @@ const previewStyle = computed(() => {
         <div v-if="data.remixes" class="art-meta-row">
           <dt>{{ $t('p_art_id_string.remixes') }}</dt>
           <dd>{{ data.remixes }}</dd>
+        </div>
+        <div v-if="views" class="art-meta-row">
+          <dt>{{ $t('p_art_id_string.views') }}</dt>
+          <dd>{{ views }}</dd>
         </div>
         <div v-if="formattedDate" class="art-meta-row">
           <dt>{{ $t('p_art_id_string.updated') }}</dt>

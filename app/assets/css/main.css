@@ -111,6 +111,10 @@ a {
     /* Fill behind white text (primary buttons, selected chips). Same as
        --primary unless a theme's primary is too light to carry white text. */
     --primary-fill: var(--primary);
+    /* Art cards: the face sits one step above the ground it lies on, in every
+       theme, so a piece reads as a tile rather than a hole in the panel. */
+    --card-ground: var(--surface);
+    --card: color-mix(in oklab, var(--surface) 55%, var(--surface-2));
     --filters-w: 250px;
 
     --shadow: none;
@@ -193,6 +197,10 @@ a {
 }
 
 [data-theme="light"] {
+    /* Light lifts the other way: cards are the paper, the ground behind
+       them is the warm page tone. */
+    --card-ground: var(--background);
+    --card: var(--surface);
     --background: #f3f1ec;
     --foreground: #1c1a17;
     /* Was 55%, the strongest of any theme: on a near-white surface that read
@@ -215,19 +223,28 @@ a {
 }
 
 [data-theme="dark"] {
-    --background: #111111;
-    --foreground: #e5e5e5;
-    --border: color-mix(in oklab, #333333 50%, transparent);
+    /* One neutral ramp, evenly spaced in OKLCH lightness (16.5 / 20.5 /
+       23 / 26 %) with a faint cool cast (hue 265, the primary's family), so
+       the greys and the blue read as one palette. Was pure grey #111 /
+       #1a1a1a / #262626 against a blue accent. */
+    --background: #0d0e11;
+    --surface: #16171a;
+    --card: #1c1d21;
+    --surface-2: #232428;
+    --card-ground: var(--surface);
+    /* Solid: the old #333 at 50% alpha came out near #232323, so edges
+       barely showed. */
+    --border: #303235;
+    --foreground: #e6e8eb;
+    /* Kept bright on purpose (was white at 80%): secondary text has to stay
+       easy to read on these panels. 9.6:1 on --surface. */
+    --muted: #ccced0;
     --primary: #3b82f6;
     /* White on #3b82f6 is 3.7:1; this shade passes AA (5.2:1). */
     --primary-fill: #2563eb;
     --primary-foreground: #ffffff;
     --secondary: rgba(255, 255, 255, 0.8);
-    --secondary-foreground: #111111;
-
-    --muted: rgb(255 255 255 / 0.8);
-    --surface: #1a1a1a;
-    --surface-2: #262626;
+    --secondary-foreground: #0d0e11;
 }
 
 [data-theme="cozy"] {
@@ -1257,6 +1274,12 @@ body::-webkit-scrollbar,
     .pal-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
+}
+
+/* Where art cards sit: --card-ground, one step below the card face. */
+.browse-content,
+.widget-body:has(> .results, > .page > .results, > .studio-grid) {
+    background: var(--card-ground);
 }
 
 .results {

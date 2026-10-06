@@ -68,7 +68,9 @@
     "gif": "GIF",
     "noPreviewYet": "Превью пока нет",
     "pixelArtArtwork": "Пиксель-арт",
-    "pixelArtPreview": "Превью пиксель-арта"
+    "pixelArtPreview": "Превью пиксель-арта",
+    "views": "{count} просмотр | {count} просмотра | {count} просмотров",
+    "likes": "{count} лайк | {count} лайка | {count} лайков"
   },
   "c_CollectionEditModal": {
     "describeYourCollection": "Опишите свою коллекцию...",
@@ -964,7 +966,8 @@
     "originalSize": "Оригинал · {w}×{h}",
     "pixelCount": "{count} пиксель | {count} пикселя | {count} пикселей",
     "pxACell": "{n}px на клетку",
-    "madeWith": "Создано с помощью"
+    "madeWith": "Создано с помощью",
+    "views": "Просмотры"
   },
   "p_arts": {
     "browseThousandsOfFreePixelArt": "Бесплатный пиксель-арт от сообщества — спрайты, персонажи и иконки. Каждый ремикс указывает автора оригинала.",

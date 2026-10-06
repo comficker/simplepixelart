@@ -1116,7 +1116,7 @@ onMounted(() => {
 
   --fold-size: 14px;
   transition: --fold-size 220ms cubic-bezier(.22,.61,.36,1);
-  background: linear-gradient(225deg, transparent calc(var(--fold-size) * 0.7071 - 0.25px), var(--surface) calc(var(--fold-size) * 0.7071 + 0.25px));
+  background: linear-gradient(225deg, transparent calc(var(--fold-size) * 0.7071 - 0.25px), var(--card) calc(var(--fold-size) * 0.7071 + 0.25px));
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
 }

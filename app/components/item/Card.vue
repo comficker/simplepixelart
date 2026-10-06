@@ -32,6 +32,14 @@
           </span>
           <span v-if="isAi" class="card-badge" :title="$t('common.aiGenerated')">{{ $t('common.ai') }}</span>
         </span>
+        <span v-if="views || likes" class="card-stats">
+          <span v-if="views" class="card-stat" :title="$t('c_Card.views', views, {count: views})">
+            <span class="icon icon-eye"/>{{ compact(views) }}
+          </span>
+          <span v-if="likes" class="card-stat" :title="$t('c_Card.likes', likes, {count: likes})">
+            <span class="icon icon-heart"/>{{ compact(likes) }}
+          </span>
+        </span>
       </div>
     </div>
   </NuxtLinkLocale>
@@ -56,6 +64,11 @@ const to = computed(() => {
 const isAnim = computed(() => value.is_anim
     ?? ((((value.meta as any)?.animation?.frames?.length) || 0) > 1))
 const isAi = computed(() => value.is_ai ?? !!(value.meta as any)?.ai)
+// List rows carry both; a zero shows nothing rather than a row of "0"s.
+const views = computed(() => value.view_count || 0)
+const likes = computed(() => value.likes ?? (value.meta as any)?.vote_count ?? 0)
+const {locale} = useI18n()
+const compact = (n: number) => new Intl.NumberFormat(locale.value, {notation: 'compact', maximumFractionDigits: 1}).format(n)
 </script>
 
 <style>
@@ -64,7 +77,7 @@ const isAi = computed(() => value.is_ai ?? !!(value.meta as any)?.ai)
   position: relative;
   image-rendering: pixelated;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--card);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
   transition: --fold-size 220ms cubic-bezier(.22,.61,.36,1);
@@ -95,7 +108,7 @@ const isAi = computed(() => value.is_ai ?? !!(value.meta as any)?.ai)
   background: linear-gradient(
     225deg,
     var(--border) calc(50% + 1.25px),
-    var(--surface) calc(50% + 1.75px)
+    var(--surface-2) calc(50% + 1.75px)
   );
   border-left: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -130,6 +143,36 @@ const isAi = computed(() => value.is_ai ?? !!(value.meta as any)?.ai)
 
 .card .size-full {
   object-fit: contain;
+}
+
+/* Views and likes over the bottom-left of the art: small, and only once
+   there is something to count. */
+.card-stats {
+  position: absolute;
+  left: 5px;
+  bottom: 5px;
+  display: flex;
+  gap: var(--space-1);
+  pointer-events: none;
+}
+
+.card-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.62);
+  border-radius: var(--radius-pill);
+}
+
+.card-stat .icon {
+  width: var(--text-2xs);
+  height: var(--text-2xs);
 }
 
 /* Corner labels: animated, AI-drawn. One row, so both can show at once. */

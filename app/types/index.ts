@@ -60,6 +60,8 @@ export interface SharedPage {
     /** List rows only: annotated flags, so the grid can skip meta entirely. */
     is_anim?: boolean
     is_ai?: boolean
+    /** Counted art-page views, on list rows and the detail. */
+    view_count?: number
     has_image?: boolean
     /** Detail only: whether /art/<slug> should be indexed. The backend owns the
      *  rule so sitemap-page.xml and the page agree. */

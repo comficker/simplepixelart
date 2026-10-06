@@ -68,7 +68,9 @@
     "gif": "GIF",
     "noPreviewYet": "暂无预览",
     "pixelArtArtwork": "像素画作品",
-    "pixelArtPreview": "像素画预览"
+    "pixelArtPreview": "像素画预览",
+    "views": "{count} 次浏览",
+    "likes": "{count} 个赞"
   },
   "c_CollectionEditModal": {
     "describeYourCollection": "描述你的合集…",
@@ -964,7 +966,8 @@
     "originalSize": "原始 · {w}×{h}",
     "pixelCount": "{count} 像素",
     "pxACell": "每格 {n}px",
-    "madeWith": "创作方式"
+    "madeWith": "创作方式",
+    "views": "浏览量"
   },
   "p_arts": {
     "browseThousandsOfFreePixelArt": "浏览社区创作的免费像素画——精灵图、角色和图标。每次改编都会署上原作者的名字。",
