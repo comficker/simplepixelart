@@ -273,7 +273,7 @@ useCustomSeoMeta({
               <span class="icon icon-auto-fix"/><span>{{ $t('common.generate') }}</span>
             </button>
           </form>
-          <div class="home-tools"><ToolPaths exclude="ai"/></div>
+          <div class="home-tools"><ToolPaths/></div>
         </div>
 
         <div class="home-hero-aside">

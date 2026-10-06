@@ -41,8 +41,7 @@ const SECTIONS = [
     key: 'c_Sidebar.pixelArt',
     items: [
       {key: 'discovery', to: '/arts', icon: 'icon-explore', i18n: 'nav.discovery', c1: '#38bdf8', c2: '#0284c7'},
-      {key: 'upload', to: '/upload', icon: 'icon-upload', i18n: 'nav.upload', c1: '#a3e635', c2: '#65a30d'},
-      tool('draw'), tool('ai'), tool('convert'), tool('slicer'),
+      tool('upload'), tool('draw'), tool('ai'), tool('convert'), tool('slicer'),
     ],
   },
   {

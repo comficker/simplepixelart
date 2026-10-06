@@ -92,13 +92,29 @@ const shown = computed(() => {
   }
 }
 
-/* Phone portrait only: a third of a 390px screen is a ~114px tile, which reads
-   as a grid of equal targets. The same ratio at 768px would be 240px square. */
-@media (max-width: 480px) {
+/* Phones: every tool on one row that scrolls sideways, each just its icon
+   and name -- no tile around it -- so the row costs one icon's height
+   instead of pushing the gallery out of the first screen. */
+@media (max-width: 767px) {
+  .studio-paths {
+    display: flex;
+    gap: var(--space-1);
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .studio-paths::-webkit-scrollbar {
+    display: none;
+  }
+
   .studio-path {
-    aspect-ratio: 1;
-    justify-content: center;
-    padding: var(--space-2);
+    flex: 0 0 calc(var(--space-6) * 2.5);
+    gap: var(--space-1);
+    padding: var(--space-1) 0;
+    background: transparent;
+    border: 0;
+    scroll-snap-align: start;
   }
 }
 

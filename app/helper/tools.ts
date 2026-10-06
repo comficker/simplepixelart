@@ -1,5 +1,6 @@
 export const TOOLS = [
   {key: 'draw', to: '/editor?new=true', icon: 'icon-pen', i18n: 'nav.draw', title: 'Draw', c1: '#7c8cff', c2: '#4f46e5'},
+  {key: 'upload', to: '/upload', icon: 'icon-upload', i18n: 'nav.upload', title: 'Upload', c1: '#a3e635', c2: '#65a30d'},
   {key: 'ai', to: '/generator', icon: 'icon-auto-fix', i18n: 'nav.generator', title: 'Generator', c1: '#a78bfa', c2: '#6d28d9'},
   {key: 'convert', to: '/converter', icon: 'icon-image', i18n: 'nav.converter', title: 'Converter', c1: '#34d399', c2: '#0d9488'},
   {key: 'slicer', to: '/tilesets/slicer', icon: 'icon-grid', i18n: 'nav.slicer', title: 'Slicer', c1: '#fbbf24', c2: '#d97706'},
