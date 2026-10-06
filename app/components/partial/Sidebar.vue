@@ -218,10 +218,22 @@ const SECTIONS = [
   width: 100%;
 }
 
+/* The current page is a filled row in the text colour, not a recoloured
+   one: blue text beside a green, purple or orange chip was a third colour
+   that matched none of them, and the shared .hdr-link rule even turned the
+   chip's white glyph blue. */
 .dash-side .dash-link.router-link-active {
-  color: var(--primary);
-  background: transparent;
+  color: var(--foreground);
+  background: var(--surface-2);
   box-shadow: none;
+}
+
+.dash-side .dash-link.router-link-active > .icon {
+  color: var(--foreground);
+}
+
+.dash-side .dash-link.router-link-active .dash-tool-ic .icon {
+  color: #fff;
 }
 
 .dash-sec {

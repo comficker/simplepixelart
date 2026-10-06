@@ -155,12 +155,11 @@ useHead({
   padding: var(--space-1) var(--space-2);
 }
 
-/* The bar's own controls carry the large icon; the menus they open keep
-   theirs. Still inside the 48px bar: 24px plus the 4px padding above and
-   below. */
+/* The bar's own controls carry the base 20px icon; the menus they open keep
+   theirs. */
 .dash-top .dash-top-ctl :is(.hdr-link, .wallet-chip) > .icon {
-  width: var(--icon-lg);
-  height: var(--icon-lg);
+  width: var(--space-5);
+  height: var(--space-5);
 }
 
 /* Active reads by colour and fill alone here; the outline made the current
