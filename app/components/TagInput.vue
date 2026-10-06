@@ -86,8 +86,8 @@ function handleBlur() {
   width: 100%;
   min-height: 2.25rem;
   padding: 5px var(--space-2);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: var(--field);
+  border: 1px solid var(--field-border);
   border-radius: var(--radius-sm);
   cursor: text;
   transition: border-color var(--transition), box-shadow var(--transition);
