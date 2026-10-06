@@ -238,7 +238,8 @@
     "remixed": "{who} さんが「{name}」の自分のバージョンを作りました",
     "someone": "誰か",
     "startedFollowing": "{who} さんがあなたをフォローしました",
-    "yourArt": "あなたの作品"
+    "yourArt": "あなたの作品",
+    "founding": "ファウンディングクリエイターになりました。バッジが付き、{n} クレジットがウォレットに入りました。"
   },
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "1倍のスプライトシート + Asepriteフォーマットのjson（再生時間、タグ）。Phaser / Unity / Godot向け",
@@ -530,7 +531,8 @@
     "gameDev": "ゲーム制作",
     "pixelArt": "ドット絵",
     "sidebar": "サイドバー",
-    "sourceOnGithub": "GitHub のソース"
+    "sourceOnGithub": "GitHub のソース",
+    "creatorProgram": "クリエイタープログラム"
   },
   "c_SocialAuth": {
     "followOnX": "Xでフォロー",
@@ -866,7 +868,8 @@
     "zoomIn": "拡大",
     "zoomOut": "縮小",
     "ai": "AI",
-    "aiGenerated": "AI生成"
+    "aiGenerated": "AI生成",
+    "foundingCreator": "ファウンディングクリエイター"
   },
   "crumb": {
     "byColor": "色から",
@@ -876,7 +879,8 @@
     "editor": "エディタ",
     "missions": "ミッション",
     "tilemaps": "タイルマップ",
-    "tilesets": "タイルセット"
+    "tilesets": "タイルセット",
+    "creatorProgram": "クリエイタープログラム"
   },
   "nav": {
     "challenges": "チャレンジ",
@@ -1139,7 +1143,8 @@
     "thisMonth": "今月",
     "thisQuarter": "四半期",
     "thisWeek": "今週",
-    "today": "今日"
+    "today": "今日",
+    "joinProgram": "クリエイタープログラムに参加"
   },
   "p_creator_id_string": {
     "allWorkN": "すべての作品（{n}）",
@@ -2406,5 +2411,72 @@
   },
   "c_WorkTile": {
     "pendingReview": "審査待ち"
+  },
+  "p_creator_program": {
+    "title": "クリエイタープログラム",
+    "seoTitle": "クリエイタープログラム — ピクセルアートがくっきり映える場所",
+    "seoDescription": "SimplePixelArtのクリエイタープログラムに参加しませんか。作品はドット一つまでくっきり表示され、リミックスには必ずあなたの名前が入り、ライセンスは自分で選べます。ファウンディング枠には限りがあります。",
+    "heroTitleMain": "あなたのドット絵を、もっと多くの人に。",
+    "heroTitleAccent": "いつでもあなたの名前と一緒に。",
+    "heroTagline": "最初の100人のファウンディングクリエイターを選んでいます。作品は私たちの X と Pinterest で紹介し、リミックスには必ず名前を表示。AI で作られた作品にはラベルを付けるので、手描きの作品が埋もれません。無料で、作品の権利はあなたのものです。",
+    "applyCta": "ファウンディングクリエイターに応募",
+    "seeGallery": "ギャラリーを見る",
+    "spotsLeft": "ファウンディングクリエイター枠 残り{n}／{limit}",
+    "whatYouGet": "得られるもの",
+    "valuePixelTitle": "どのサイズでもくっきり",
+    "valuePixelBody": "再圧縮もスムージングもなし。拡大すると、にじみではなくあなたのピクセルが見えます。",
+    "valueCreditTitle": "いつもクレジット付き",
+    "valueCreditBody": "作品のリミックスには必ず「リミックス元」としてあなたの名前が表示され、コピーできるクレジット表記も用意されています。",
+    "valueYoursTitle": "あなたの作品を、あなたの条件で",
+    "valueYoursBody": "初期設定は全著作権所有。CC BYやCC0で公開するかどうかは、作品ごとにあなたが選べます。",
+    "aiTitle": "人が作ったもの。そうでなければラベル付き",
+    "aiBody": "SimplePixelArtのAIツールで作った作品には、カードにもページにも必ずAIラベルが付き、編集しても外せません。手描きの作品は、あなたの名前と選んだライセンスで公開されます。",
+    "perksTitle": "ファウンディングクリエイターの特典",
+    "perkBadgeTitle": "ファウンディングクリエイターバッジ",
+    "perkBadgeBody": "プロフィールと、すべてのカードのあなたの名前の横に、ずっと表示されます。",
+    "perkCreditsTitle": "スタート用に{n}クレジット",
+    "perkCreditsBody": "サイトの有料ツールに使うのも、今後のために取っておくのも自由です。",
+    "perkFeatureTitle": "公式で紹介",
+    "perkFeatureBody": "ファウンディングクリエイターの作品を公式のXとPinterestで紹介します。必ずあなたの名前とリンクを添えて。",
+    "perkChallengeTitle": "週間チャレンジのお題を決める",
+    "perkChallengeBody": "週間チャレンジのテーマを一つ選べます。そのページにはあなたの名前が載ります。",
+    "assetsTitle": "ゲーム素材を作っていますか？",
+    "assetsBody": "タイルを描き、オートタイル地形を設定して、Godot・Tiled・Unity・Phaserへそのまま書き出せます。タイルセットを公開すると、あなたの名前入りの専用ページができます。",
+    "assetsCta": "タイルセットエディタを開く",
+    "howTitle": "参加の流れ",
+    "step1Title": "応募する",
+    "step1Body": "普段どこで作品を投稿しているか教えてください。1分で終わります。",
+    "step2Title": "作品をいくつか公開",
+    "step2Body": "自作の作品を3点以上アップロードしてください。下書きは非公開のままです。",
+    "step3Title": "バッジを受け取る",
+    "step3Body": "応募はすべてスタッフが確認し、その後バッジとクレジットを付与します。",
+    "applyTitle": "応募",
+    "linksLabel": "作品の投稿先（リンク3つまで）",
+    "linkPlaceholder": "ポートフォリオ、ArtStation、itch.io…",
+    "noteLabel": "伝えておきたいことは？（任意）",
+    "notePlaceholder": "描くのが好きなもの、サイトに期待すること…",
+    "submit": "応募を送信",
+    "signInToApply": "ログインして応募",
+    "appliedToast": "応募を送信しました。まもなく確認します",
+    "errLinks": "リンクを確認してください",
+    "errAlready": "すでに応募済みです",
+    "errGeneric": "送信できませんでした。もう一度お試しください",
+    "stateApplied": "応募を受け付けました。一件ずつスタッフが確認しています。承認されるとバッジが表示されます。",
+    "stateFounding": "あなたはファウンディングクリエイターです。早くから参加してくれてありがとう。",
+    "stateFull": "ファウンディングクリエイター枠はすべて埋まりました。投稿を続けてください。プログラムはまた募集を再開します。",
+    "stateDeclined": "前回の応募は承認されませんでした。いつでも再応募できます。",
+    "docIntro": "サイトづくりに関わってくれる、初期の小さなピクセルアーティストのグループです。ファウンディング枠には限りがあり、応募はすべてスタッフが確認します。",
+    "faq0q": "公開した作品の権利は誰のもの？",
+    "faq0a": "あなたのものです。作品は初期設定で全著作権所有です。ほかの人に再利用してほしい場合は、作品ごとにCC BYかCC0を選べます。",
+    "faq1q": "作品がリミックスされるとどうなりますか？",
+    "faq1a": "リミックスにはあなたの元作品へのリンクと名前が表示されます。作品ページでリミックスの数を確認できます。",
+    "faq2q": "サイトにAIアートはありますか？",
+    "faq2a": "サイトにはAIジェネレーターがあります。それで作られたものには、カードとページに必ずAIラベルが付き、編集しても外せません。",
+    "faq3q": "費用はかかりますか？",
+    "faq3a": "かかりません。プログラムは無料で、ファウンディングクリエイターには有料ツール用のスタータークレジットが付きます。",
+    "faq4q": "作品を取り下げられますか？",
+    "faq4a": "はい、いつでも。マイ作品から作品を非公開にするか削除できます。",
+    "perkProTitle": "新機能をいち早く、モバイル版 Pro は無料",
+    "perkProBody": "新しいツールを誰よりも先に試せて、モバイルアプリのリリース時には Pro が無料。"
   }
 }

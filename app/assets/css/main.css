@@ -115,6 +115,10 @@ a {
        theme, so a piece reads as a tile rather than a hole in the panel. */
     --card-ground: var(--surface);
     --card: color-mix(in oklab, var(--surface) 55%, var(--surface-2));
+    /* Text fields: a step off the panel. Light overrides it with plain white,
+       where --surface-2 read as a beige, yellowish box. */
+    --field: var(--surface-2);
+    --field-border: var(--border);
     --filters-w: 250px;
 
     --shadow: none;
@@ -201,6 +205,8 @@ a {
        them is the warm page tone. */
     --card-ground: var(--background);
     --card: var(--surface);
+    --field: #ffffff;
+    --field-border: color-mix(in oklab, #b5ae9f 60%, transparent);
     --background: #f3f1ec;
     --foreground: #1c1a17;
     /* Was 55%, the strongest of any theme: on a near-white surface that read
@@ -340,10 +346,10 @@ textarea {
     /* Not --surface: that is what the page and every panel are painted with,
        so the field dissolved into whatever sat behind it. --surface-2 is the
        step away from the page in every theme -- lighter on the dark ones,
-       slightly recessed on the light ones. */
-    background: var(--surface-2);
+       slightly recessed on the light ones (light: white, see --field). */
+    background: var(--field);
     color: var(--foreground);
-    border: 1px solid var(--border);
+    border: 1px solid var(--field-border);
     border-radius: var(--radius-sm);
     outline: none;
     padding: var(--space-2) var(--space-3);
@@ -828,9 +834,9 @@ footer {
 .adm-input {
     width: 100%;
     padding: var(--space-1) var(--space-2);
-    border: 1px solid var(--border);
+    border: 1px solid var(--field-border);
     border-radius: var(--radius-sm);
-    background: var(--surface-2);
+    background: var(--field);
     color: var(--foreground);
     font-size: var(--text-xs);
 }
@@ -855,9 +861,9 @@ footer {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    border: 1px solid var(--border);
+    border: 1px solid var(--field-border);
     border-radius: var(--radius);
-    background: var(--surface-2);
+    background: var(--field);
     padding: var(--space-2);
     transition: border-color var(--transition), box-shadow var(--transition);
 }
@@ -1613,7 +1619,8 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     flex-direction: column;
 }
 
-.screen > :is(.readme, .widget) {
+.screen > :is(.readme, .widget),
+.screen > .screen-row > .widget {
     border: 0;
     border-radius: 0;
     overflow: visible;
@@ -1628,12 +1635,38 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
 }
 
 .screen > .widget > .widget-head,
+.screen > .screen-row > .widget > .widget-head,
 .screen > .readme > .readme-head {
     padding: var(--space-1) var(--space-4);
 }
 
-.screen > .widget > .widget-body {
+.screen > .widget > .widget-body,
+.screen > .screen-row > .widget > .widget-body {
     padding: var(--space-4);
+}
+
+/* Two widgets side by side in a screen: the same flat chrome as a stacked
+   one, split by a single rule; stacked again where the column is narrow. */
+.screen-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* Named .widget + .widget: the flat-widget rule above zeroes every border on
+   a .widget, and a `*` selector here would lose to it. */
+.screen > .screen-row > .widget + .widget {
+    border-top: 1px solid var(--border);
+}
+
+@media (min-width: 1280px) {
+    .screen-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .screen > .screen-row > .widget + .widget {
+        border-top: 0;
+        border-left: 1px solid var(--border);
+    }
 }
 
 .browse {
@@ -3366,9 +3399,9 @@ html.editor-fullscreen .consent {
 .publish-input {
     width: 100%;
     font-size: var(--text-xs);
-    background: var(--surface-2);
+    background: var(--field);
     color: var(--foreground);
-    border: 1px solid var(--border);
+    border: 1px solid var(--field-border);
     border-radius: var(--radius-sm);
     padding: 6px 10px;
     font-family: inherit;

@@ -107,6 +107,10 @@ const SECTIONS = [
 
     <div class="dash-sec"><span class="dash-label">{{ $t('c_Sidebar.community') }}</span></div>
     <nav class="dash-nav" :aria-label="$t('c_Sidebar.community')">
+      <NuxtLinkLocale to="/creator-program" class="hdr-link dash-link" :title="$t('c_Sidebar.creatorProgram')">
+        <span class="dash-tool-ic dash-tool-ic-plain"><span class="icon icon-trophy"/></span>
+        <span class="dash-label">{{ $t('c_Sidebar.creatorProgram') }}</span>
+      </NuxtLinkLocale>
       <a
           v-for="l in SOCIAL"
           :key="l.href"
@@ -272,7 +276,8 @@ const SECTIONS = [
   background: var(--surface-2);
 }
 
-.dash-side .dash-tool-ic-plain .icon {
+.dash-side .dash-tool-ic-plain .icon,
+.dash-side .dash-link.router-link-active .dash-tool-ic-plain .icon {
   color: var(--foreground);
 }
 

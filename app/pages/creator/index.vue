@@ -100,6 +100,9 @@ useCustomSeoMeta({
         <span v-if="data?.count" class="rank-total">
           {{ $t('p_creator.creatorCount', data.count, {count: data.count}) }}
         </span>
+        <NuxtLinkLocale to="/creator-program" class="btn rank-program">
+          <span class="icon icon-trophy"/><span>{{ $t('p_creator.joinProgram') }}</span>
+        </NuxtLinkLocale>
       </div>
 
       <p class="rank-lead">{{ $t('p_creator.rankedByThePublicWorkThey') }}</p>
@@ -187,6 +190,10 @@ useCustomSeoMeta({
    line as the names under it. */
 .rank-head {
   padding-inline: var(--space-4);
+}
+
+.rank-program {
+  margin-left: var(--space-2);
 }
 
 .rank-title {

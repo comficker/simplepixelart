@@ -252,6 +252,9 @@ watch(isStaff, (v) => { if (v) load() })
           <NuxtLinkLocale v-if="isStaff" to="/admin/arts" class="btn">
             <span class="icon icon-image"/><span>Arts</span>
           </NuxtLinkLocale>
+          <NuxtLinkLocale v-if="isStaff" to="/admin/program" class="btn">
+            <span class="icon icon-trophy"/><span>Creator Program</span>
+          </NuxtLinkLocale>
           <NuxtLinkLocale v-if="isStaff" to="/admin/users" class="btn">
             <span class="icon icon-user"/><span>Users</span>
           </NuxtLinkLocale>

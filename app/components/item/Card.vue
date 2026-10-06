@@ -45,9 +45,10 @@
         <span
             v-if="creator"
             class="card-creator"
+            :class="{'is-founding': creator.founding}"
             role="link"
             tabindex="0"
-            :title="`@${creator.username}`"
+            :title="creator.founding ? `@${creator.username} · ${$t('common.foundingCreator')}` : `@${creator.username}`"
             :aria-label="`@${creator.username}`"
             @click.prevent.stop="goCreator"
             @keydown.enter.prevent.stop="goCreator"
@@ -92,7 +93,7 @@ const creator = computed(() => {
   const c = (value as any).creator || (value as any).user
   if (!c?.username || isDraw || isRemix) return null
   if (route.params.id_string === c.username && route.path.includes('/creator/')) return null
-  return c as {username: string; avatar?: string | null}
+  return c as {username: string; avatar?: string | null; founding?: boolean}
 })
 function goCreator() {
   if (creator.value) navigateTo(localePath(`/creator/${creator.value.username}`))
@@ -223,6 +224,11 @@ const compact = (n: number) => new Intl.NumberFormat(locale.value, {notation: 'c
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: transform var(--transition);
+}
+
+/* Founding Creators: a warm ring, the program's one mark on the card. */
+.card-creator.is-founding {
+  box-shadow: 0 0 0 2px var(--warning);
 }
 
 .card-creator img {

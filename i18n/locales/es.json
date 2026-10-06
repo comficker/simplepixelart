@@ -238,7 +238,8 @@
     "remixed": "{who} hizo su propia versión de «{name}»",
     "someone": "Alguien",
     "startedFollowing": "{who} empezó a seguirte",
-    "yourArt": "tu obra"
+    "yourArt": "tu obra",
+    "founding": "Ya eres creador fundador: tu insignia está activa y tienes {n} créditos en tu cartera."
   },
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "Hoja de sprites a 1× + JSON en formato Aseprite (duraciones, etiquetas) para Phaser / Unity / Godot",
@@ -530,7 +531,8 @@
     "gameDev": "Desarrollo de juegos",
     "pixelArt": "Pixel art",
     "sidebar": "Barra lateral",
-    "sourceOnGithub": "Código en GitHub"
+    "sourceOnGithub": "Código en GitHub",
+    "creatorProgram": "Programa de creadores"
   },
   "c_SocialAuth": {
     "followOnX": "Síguenos en X",
@@ -866,7 +868,8 @@
     "zoomIn": "Acercar",
     "zoomOut": "Alejar",
     "ai": "IA",
-    "aiGenerated": "Generado con IA"
+    "aiGenerated": "Generado con IA",
+    "foundingCreator": "Creador fundador"
   },
   "crumb": {
     "byColor": "Por color",
@@ -876,7 +879,8 @@
     "editor": "Editor",
     "missions": "Misiones",
     "tilemaps": "Tilemaps",
-    "tilesets": "Tilesets"
+    "tilesets": "Tilesets",
+    "creatorProgram": "Programa de creadores"
   },
   "nav": {
     "challenges": "Retos",
@@ -1139,7 +1143,8 @@
     "thisMonth": "Este mes",
     "thisQuarter": "Este trimestre",
     "thisWeek": "Esta semana",
-    "today": "Hoy"
+    "today": "Hoy",
+    "joinProgram": "Únete al programa de creadores"
   },
   "p_creator_id_string": {
     "allWorkN": "Todas las obras ({n})",
@@ -2406,5 +2411,72 @@
   },
   "c_WorkTile": {
     "pendingReview": "Pendiente de revisión"
+  },
+  "p_creator_program": {
+    "title": "Programa de creadores",
+    "seoTitle": "Programa de creadores — un hogar nítido para tu pixel art",
+    "seoDescription": "Únete al Programa de creadores de SimplePixelArt: tu pixel art se ve nítido, con crédito en cada remix y bajo la licencia que elijas. Las plazas fundadoras son limitadas.",
+    "heroTitleMain": "Que vean tu pixel art,",
+    "heroTitleAccent": "y con tu nombre, siempre.",
+    "heroTagline": "Estamos eligiendo a los primeros 100 creadores fundadores. Compartimos su trabajo en nuestro X y Pinterest, ponemos su nombre en cada remezcla y etiquetamos cada pieza hecha con IA para que el trabajo hecho a mano destaque. Es gratis y tu arte sigue siendo tuyo.",
+    "applyCta": "Solicitar ser creador fundador",
+    "seeGallery": "Ver la galería",
+    "spotsLeft": "Quedan {n} de {limit} plazas de creador fundador",
+    "whatYouGet": "Lo que obtienes",
+    "valuePixelTitle": "Píxeles nítidos, a cualquier tamaño",
+    "valuePixelBody": "Sin recompresión ni suavizado. Quien haga zoom verá tus píxeles, no una mancha.",
+    "valueCreditTitle": "Crédito siempre",
+    "valueCreditBody": "Cada remix de tu obra muestra «Remix de» con tu nombre, y hay una línea de crédito lista para copiar.",
+    "valueYoursTitle": "Tuyo, con tus condiciones",
+    "valueYoursBody": "Todos los derechos reservados por defecto. Ábrela con CC BY o CC0 solo si quieres, obra por obra.",
+    "aiTitle": "Hecho por personas, y etiquetado cuando no",
+    "aiBody": "Las obras hechas con las herramientas de IA de SimplePixelArt siempre llevan la etiqueta IA, en la tarjeta y en su página, y editarlas no la quita. Tu trabajo dibujado a mano aparece con tu nombre y bajo la licencia que elegiste.",
+    "perksTitle": "Ventajas de creador fundador",
+    "perkBadgeTitle": "Una insignia de creador fundador",
+    "perkBadgeBody": "En tu perfil y junto a tu nombre en cada tarjeta, para siempre.",
+    "perkCreditsTitle": "{n} créditos para empezar",
+    "perkCreditsBody": "Úsalos en las herramientas de pago del sitio o guárdalos para lo que venga.",
+    "perkFeatureTitle": "Te destacamos",
+    "perkFeatureBody": "Compartimos obras de los creadores fundadores en nuestro X y Pinterest, siempre con tu nombre y un enlace a tu perfil.",
+    "perkChallengeTitle": "Elige un reto semanal",
+    "perkChallengeBody": "Propón el tema de uno de los retos semanales; tu nombre aparecerá en su página.",
+    "assetsTitle": "¿Haces recursos para juegos?",
+    "assetsBody": "Dibuja tiles, configura terrenos con auto-tile y exporta directamente a Godot, Tiled, Unity o Phaser. Publica el tileset y tendrá su propia página con tu nombre.",
+    "assetsCta": "Abrir el editor de tilesets",
+    "howTitle": "Cómo funciona",
+    "step1Title": "Solicítalo",
+    "step1Body": "Cuéntanos dónde publicas. Te llevará un minuto.",
+    "step2Title": "Publica algunas obras",
+    "step2Body": "Sube al menos tres, hechas por ti. Los borradores siguen siendo privados.",
+    "step3Title": "Recibe tu insignia",
+    "step3Body": "Revisamos cada solicitud a mano y luego añadimos la insignia y los créditos.",
+    "applyTitle": "Solicitud",
+    "linksLabel": "Dónde publicas (hasta tres enlaces)",
+    "linkPlaceholder": "Portafolio, ArtStation, itch.io…",
+    "noteLabel": "¿Algo que debamos saber? (opcional)",
+    "notePlaceholder": "Qué te gusta dibujar, qué te gustaría del sitio…",
+    "submit": "Enviar solicitud",
+    "signInToApply": "Inicia sesión para solicitarlo",
+    "appliedToast": "Solicitud enviada: la revisaremos pronto",
+    "errLinks": "Revisa tus enlaces",
+    "errAlready": "Ya enviaste una solicitud",
+    "errGeneric": "No se pudo enviar. Inténtalo de nuevo",
+    "stateApplied": "Tu solicitud ya está enviada. Revisamos cada una a mano; tu insignia aparecerá cuando se apruebe.",
+    "stateFounding": "Eres creador fundador. Gracias por llegar tan pronto.",
+    "stateFull": "Ya no quedan plazas de creador fundador. Sigue publicando: el programa volverá a abrirse.",
+    "stateDeclined": "Tu última solicitud no se aprobó. Puedes volver a solicitarlo cuando quieras.",
+    "docIntro": "Un grupo pequeño de artistas de pixel art que llegan pronto y ayudan a dar forma al sitio. Las plazas fundadoras son limitadas; una persona revisa cada solicitud.",
+    "faq0q": "¿De quién es el arte que publico?",
+    "faq0a": "Tuyo. Las obras tienen todos los derechos reservados por defecto; puedes elegir CC BY o CC0 en cada obra si quieres que otros la reutilicen.",
+    "faq1q": "¿Qué pasa cuando alguien remezcla mi obra?",
+    "faq1a": "El remix enlaza a tu original y te nombra. En la página de cada obra puedes ver cuántos remixes tiene.",
+    "faq2q": "¿Hay arte hecho con IA en el sitio?",
+    "faq2a": "El sitio tiene un generador con IA. Todo lo que se crea con él lleva la etiqueta IA en la tarjeta y en su página, y no se puede quitar editándolo.",
+    "faq3q": "¿Cuesta algo?",
+    "faq3a": "No. El programa es gratis, y los creadores fundadores reciben créditos iniciales para las herramientas de pago.",
+    "faq4q": "¿Puedo retirar mis obras?",
+    "faq4a": "Sí, cuando quieras. Despublica o elimina una obra desde Tus obras.",
+    "perkProTitle": "Funciones nuevas antes que nadie, Pro gratis en el móvil",
+    "perkProBody": "Prueba las herramientas nuevas antes que nadie y consigue Pro gratis en la app móvil cuando se lance."
   }
 }

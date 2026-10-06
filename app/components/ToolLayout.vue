@@ -7,7 +7,10 @@ withDefaults(defineProps<{
   agent?: boolean
   panelLabel?: string
   panelIcon?: string
-}>(), {titleTag: 'h2', agent: false})
+  /** Leave the rail's ad out, for pages that ask someone to join rather than
+   *  use a tool (the Creator Program). */
+  noAd?: boolean
+}>(), {titleTag: 'h2', agent: false, noAd: false})
 
 // 360 leaves the rail's ad unit 343px after the panel border and body padding,
 // enough for a 336x280 -- at 300 it was 283 and the responsive unit had no
@@ -88,7 +91,7 @@ function nudge(step: number) {
            then the page's own widgets, then the readme. A direct child of
            .tool-doc like ToolReadme, so the rail's own rules give it the same
            flat panel and divider. -->
-      <Widget v-if="$slots.doc" :title="$t('c_AdSlot.advertisement')">
+      <Widget v-if="$slots.doc && !noAd" :title="$t('c_AdSlot.advertisement')">
         <AdSlot slot="7838948172" bare/>
       </Widget>
       <slot name="aside"/>

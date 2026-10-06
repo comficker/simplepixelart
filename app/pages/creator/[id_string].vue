@@ -216,6 +216,9 @@ useCustomSeoMeta({
           </div>
           <div class="cp-name">
             <h1 class="cp-handle">@{{ username }}</h1>
+            <NuxtLinkLocale v-if="profile?.founding" to="/creator-program" class="cp-founding">
+              <span class="icon icon-trophy"/><span>{{ $t('common.foundingCreator') }}</span>
+            </NuxtLinkLocale>
             <p v-if="profile?.bio" class="cp-bio">{{ profile.bio }}</p>
             <ul v-if="profileLinks.length" class="cp-links">
               <li v-for="l in profileLinks" :key="l.key">
@@ -379,6 +382,24 @@ useCustomSeoMeta({
   flex: 1;
   min-width: 0;
   padding-bottom: var(--space-1);
+}
+
+.cp-founding {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  padding: 2px var(--space-2);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--warning);
+  border: 1px solid color-mix(in oklab, var(--warning) 55%, transparent);
+  border-radius: var(--radius-pill);
+}
+
+.cp-founding .icon {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .cp-handle {

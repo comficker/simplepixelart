@@ -252,7 +252,8 @@
     "remixed": "{who} made their own version of “{name}”",
     "someone": "Someone",
     "startedFollowing": "{who} started following you",
-    "yourArt": "your art"
+    "yourArt": "your art",
+    "founding": "You're a Founding Creator: your badge is on, and {n} credits are in your wallet."
   },
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "1× spritesheet + Aseprite-format JSON (durations, tags) for Phaser / Unity / Godot",
@@ -548,7 +549,8 @@
     "gameDev": "Game dev",
     "pixelArt": "Pixel art",
     "sidebar": "Sidebar",
-    "sourceOnGithub": "Source on GitHub"
+    "sourceOnGithub": "Source on GitHub",
+    "creatorProgram": "Creator Program"
   },
   "c_SocialAuth": {
     "followOnX": "Follow on X",
@@ -896,7 +898,8 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "ai": "AI",
-    "aiGenerated": "AI-generated"
+    "aiGenerated": "AI-generated",
+    "foundingCreator": "Founding Creator"
   },
   "crumb": {
     "byColor": "By color",
@@ -906,7 +909,8 @@
     "editor": "Editor",
     "missions": "Missions",
     "tilemaps": "Tilemaps",
-    "tilesets": "Tilesets"
+    "tilesets": "Tilesets",
+    "creatorProgram": "Creator Program"
   },
   "nav": {
     "challenges": "Challenges",
@@ -1169,7 +1173,8 @@
     "thisMonth": "This month",
     "thisQuarter": "This quarter",
     "thisWeek": "This week",
-    "today": "Today"
+    "today": "Today",
+    "joinProgram": "Join the Creator Program"
   },
   "p_creator_id_string": {
     "allWorkN": "All work ({n})",
@@ -2425,5 +2430,72 @@
   },
   "c_CollectionTile": {
     "collection": "Collection"
+  },
+  "p_creator_program": {
+    "title": "Creator Program",
+    "seoTitle": "Creator Program — A pixel-perfect home for your pixel art",
+    "seoDescription": "Join the SimplePixelArt Creator Program: your pixel art shown pixel-perfect, credited on every remix, under the license you choose. Founding spots are limited.",
+    "heroTitleMain": "Get your pixel art seen,",
+    "heroTitleAccent": "and credited every time.",
+    "heroTagline": "We're choosing the first 100 Founding Creators. We share their work on our X and Pinterest, put their name on every remix, and label every AI-made piece so hand-drawn work stands out. It's free, and your art stays yours.",
+    "applyCta": "Apply as a Founding Creator",
+    "seeGallery": "See the gallery",
+    "spotsLeft": "{n} of {limit} Founding Creator spots left",
+    "whatYouGet": "What you get",
+    "valuePixelTitle": "Pixel-perfect, at any size",
+    "valuePixelBody": "No recompression, no smoothing. Visitors zoom in and see your pixels, not mush.",
+    "valueCreditTitle": "Credited every time",
+    "valueCreditBody": "Every remix of your piece says “Remixed from” with your name, and there is a credit line ready to copy.",
+    "valueYoursTitle": "Yours, on your terms",
+    "valueYoursBody": "All rights reserved by default. Open it up with CC BY or CC0 only if you choose to, piece by piece.",
+    "aiTitle": "Made by people, labeled when it isn't",
+    "aiBody": "Art made with SimplePixelArt's AI tools always carries an AI label, on the card and on its page, and an edit can't take it off. Your hand-drawn work sits under your name, under the license you picked.",
+    "perksTitle": "Founding Creator perks",
+    "perkBadgeTitle": "A Founding Creator badge",
+    "perkBadgeBody": "On your profile and next to your name on every card, for good.",
+    "perkCreditsTitle": "{n} credits to start",
+    "perkCreditsBody": "Spend them on the site's paid tools, or keep them for what comes next.",
+    "perkFeatureTitle": "Featured by us",
+    "perkFeatureBody": "We share founding creators' work on our X and Pinterest, always with your name and a link back to you.",
+    "perkChallengeTitle": "Name a weekly challenge",
+    "perkChallengeBody": "Pick a theme for one of the weekly challenges; your name goes on its page.",
+    "assetsTitle": "Making game assets?",
+    "assetsBody": "Draw tiles, set up auto-tile terrains, and export straight to Godot, Tiled, Unity or Phaser. Publish the tileset and it gets a page of its own with your name on it.",
+    "assetsCta": "Open the tileset editor",
+    "howTitle": "How it works",
+    "step1Title": "Apply",
+    "step1Body": "Tell us where you post. It takes a minute.",
+    "step2Title": "Publish a few pieces",
+    "step2Body": "Upload at least three, your own work. Drafts stay private.",
+    "step3Title": "Get your badge",
+    "step3Body": "We review every application by hand, then add the badge and the credits.",
+    "applyTitle": "Apply",
+    "linksLabel": "Where you post (up to three links)",
+    "linkPlaceholder": "Portfolio, ArtStation, itch.io…",
+    "noteLabel": "Anything we should know? (optional)",
+    "notePlaceholder": "What you like to draw, what you'd want from the site…",
+    "submit": "Send application",
+    "signInToApply": "Sign in to apply",
+    "appliedToast": "Application sent — we'll review it soon",
+    "errLinks": "Check your links",
+    "errAlready": "You've already applied",
+    "errGeneric": "Could not send — try again",
+    "stateApplied": "Your application is in. We review each one by hand; your badge shows up once it's approved.",
+    "stateFounding": "You're a Founding Creator. Thank you for being here early.",
+    "stateFull": "All Founding Creator spots are taken. Keep publishing — the program will open again.",
+    "stateDeclined": "Your last application wasn't approved. You're welcome to apply again.",
+    "docIntro": "A small, early group of pixel artists who help shape the site. Founding spots are limited; every application is reviewed by a person.",
+    "faq0q": "Who owns the art I publish?",
+    "faq0a": "You do. Pieces are all rights reserved by default; you can choose CC BY or CC0 per piece if you want others to reuse it.",
+    "faq1q": "What happens when someone remixes my piece?",
+    "faq1a": "The remix links back to your original and names you. You can see how many remixes a piece has on its page.",
+    "faq2q": "Is there AI art on the site?",
+    "faq2a": "The site has an AI generator. Anything made with it is labeled AI on the card and on its page, and the label can't be removed by editing.",
+    "faq3q": "Does it cost anything?",
+    "faq3a": "No. The program is free, and Founding Creators get starter credits for the paid tools.",
+    "faq4q": "Can I take my work down?",
+    "faq4a": "Yes, any time. Unpublish or delete a piece from Your work.",
+    "perkProTitle": "New features first, Pro on mobile free",
+    "perkProBody": "Try new tools before anyone else, and get Pro on the mobile app free when it launches."
   }
 }

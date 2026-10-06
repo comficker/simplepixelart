@@ -18,6 +18,7 @@ const LABELS: Record<string, string> = {
   converter: 'nav.converter', generator: 'nav.generator',
   tilesets: 'crumb.tilesets', slicer: 'nav.slicer', tilemaps: 'crumb.tilemaps',
   palettes: 'nav.palettes', challenges: 'nav.challenges', creator: 'crumb.creators', settings: 'common.settings',
+  'creator-program': 'crumb.creatorProgram',
   collections: 'crumb.collections', missions: 'crumb.missions', tag: 'common.tags',
   'easy-pixel-art': 'crumb.easyPixelArt',
   'color-palette-from-image': 'nav.extract', 'color-palette-from-color': 'crumb.byColor',

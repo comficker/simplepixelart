@@ -238,7 +238,8 @@
     "remixed": "{who} 制作了“{name}”的自己的版本",
     "someone": "有人",
     "startedFollowing": "{who} 开始关注你",
-    "yourArt": "你的作品"
+    "yourArt": "你的作品",
+    "founding": "你已成为创始创作者：徽章已点亮，{n} 积分已存入你的钱包。"
   },
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "1× 精灵表 + Aseprite 格式 JSON（时长、标签），供 Phaser / Unity / Godot 使用",
@@ -530,7 +531,8 @@
     "gameDev": "游戏开发",
     "pixelArt": "像素画",
     "sidebar": "侧边栏",
-    "sourceOnGithub": "GitHub 源码"
+    "sourceOnGithub": "GitHub 源码",
+    "creatorProgram": "创作者计划"
   },
   "c_SocialAuth": {
     "followOnX": "在 X 上关注",
@@ -866,7 +868,8 @@
     "zoomIn": "放大",
     "zoomOut": "缩小",
     "ai": "AI",
-    "aiGenerated": "AI 生成"
+    "aiGenerated": "AI 生成",
+    "foundingCreator": "创始创作者"
   },
   "crumb": {
     "byColor": "按颜色",
@@ -876,7 +879,8 @@
     "editor": "编辑器",
     "missions": "任务",
     "tilemaps": "图块地图",
-    "tilesets": "图块集"
+    "tilesets": "图块集",
+    "creatorProgram": "创作者计划"
   },
   "nav": {
     "challenges": "挑战",
@@ -1139,7 +1143,8 @@
     "thisMonth": "本月",
     "thisQuarter": "本季度",
     "thisWeek": "本周",
-    "today": "今天"
+    "today": "今天",
+    "joinProgram": "加入创作者计划"
   },
   "p_creator_id_string": {
     "allWorkN": "全部作品（{n}）",
@@ -2406,5 +2411,72 @@
   },
   "c_WorkTile": {
     "pendingReview": "待审核"
+  },
+  "p_creator_program": {
+    "title": "创作者计划",
+    "seoTitle": "创作者计划 — 让像素画清晰呈现的地方",
+    "seoDescription": "加入 SimplePixelArt 创作者计划：你的像素画清晰呈现，每次二次创作都会为你署名，许可由你来选。创始名额有限。",
+    "heroTitleMain": "让更多人看见你的像素画，",
+    "heroTitleAccent": "每一次都署上你的名字。",
+    "heroTagline": "我们正在挑选首批 100 位创始创作者。我们会在 X 和 Pinterest 上分享他们的作品，在每次改编上署上他们的名字，并为每件 AI 作品加上标注，让手绘作品脱颖而出。完全免费，作品版权仍归你所有。",
+    "applyCta": "申请成为创始创作者",
+    "seeGallery": "浏览图库",
+    "spotsLeft": "创始创作者名额剩余 {n}/{limit}",
+    "whatYouGet": "你将获得",
+    "valuePixelTitle": "任意尺寸，像素清晰",
+    "valuePixelBody": "不再压缩，也不做平滑处理。放大后看到的是你的像素，而不是一团糊。",
+    "valueCreditTitle": "始终署名",
+    "valueCreditBody": "你作品的每一次二次创作都会标明“改编自”并附上你的名字，还有现成的署名信息可以复制。",
+    "valueYoursTitle": "你的作品，你说了算",
+    "valueYoursBody": "默认保留所有权利。只有在你愿意时，才逐个作品以 CC BY 或 CC0 开放。",
+    "aiTitle": "由人创作，否则一定标注",
+    "aiBody": "用 SimplePixelArt 的 AI 工具制作的作品，卡片和作品页上都会带有 AI 标签，编辑也无法去除。你亲手绘制的作品以你的名字发布，采用你选择的许可。",
+    "perksTitle": "创始创作者福利",
+    "perkBadgeTitle": "创始创作者徽章",
+    "perkBadgeBody": "永久显示在你的主页上，以及每张卡片中你的名字旁边。",
+    "perkCreditsTitle": "{n} 积分起步",
+    "perkCreditsBody": "可用于站内的付费工具，也可以留着以后再用。",
+    "perkFeatureTitle": "官方推荐",
+    "perkFeatureBody": "我们会在官方 X 和 Pinterest 上分享创始创作者的作品，并始终附上你的名字和链接。",
+    "perkChallengeTitle": "为每周挑战命题",
+    "perkChallengeBody": "为某一期每周挑战选定主题，挑战页面上会署上你的名字。",
+    "assetsTitle": "在做游戏素材？",
+    "assetsBody": "绘制图块，设置自动拼接地形，一键导出到 Godot、Tiled、Unity 或 Phaser。发布图块集后，它会拥有一个署有你名字的专属页面。",
+    "assetsCta": "打开图块集编辑器",
+    "howTitle": "参与方式",
+    "step1Title": "提交申请",
+    "step1Body": "告诉我们你平时在哪里发布作品，只需一分钟。",
+    "step2Title": "发布几件作品",
+    "step2Body": "上传至少三件你自己的作品。草稿始终保持私密。",
+    "step3Title": "获得徽章",
+    "step3Body": "每份申请都由我们人工审核，通过后发放徽章和积分。",
+    "applyTitle": "申请",
+    "linksLabel": "你发布作品的地方（最多三个链接）",
+    "linkPlaceholder": "作品集、ArtStation、itch.io…",
+    "noteLabel": "还有什么想告诉我们的？（选填）",
+    "notePlaceholder": "你喜欢画什么，希望网站提供什么…",
+    "submit": "提交申请",
+    "signInToApply": "登录后申请",
+    "appliedToast": "申请已提交，我们会尽快审核",
+    "errLinks": "请检查你的链接",
+    "errAlready": "你已经申请过了",
+    "errGeneric": "提交失败，请重试",
+    "stateApplied": "已收到你的申请。我们会逐一人工审核，通过后徽章就会显示。",
+    "stateFounding": "你是创始创作者。感谢你这么早就加入。",
+    "stateFull": "创始创作者名额已满。请继续发布作品，计划之后会再次开放。",
+    "stateDeclined": "你上次的申请未通过。欢迎再次申请。",
+    "docIntro": "一小群早期加入、帮助塑造网站的像素艺术家。创始名额有限，每份申请都由真人审核。",
+    "faq0q": "我发布的作品归谁所有？",
+    "faq0a": "归你所有。作品默认保留所有权利；如果你希望他人复用，可以为每件作品单独选择 CC BY 或 CC0。",
+    "faq1q": "别人二次创作我的作品时会怎样？",
+    "faq1a": "二次创作会链接回你的原作并署上你的名字。在作品页面上可以看到它被二次创作了多少次。",
+    "faq2q": "网站上有 AI 作品吗？",
+    "faq2a": "网站提供 AI 生成器。用它制作的内容在卡片和作品页上都会标注 AI，且无法通过编辑去除。",
+    "faq3q": "需要付费吗？",
+    "faq3a": "不需要。计划完全免费，创始创作者还会获得可用于付费工具的起步积分。",
+    "faq4q": "我可以下架自己的作品吗？",
+    "faq4a": "可以，随时都行。在“我的作品”中取消发布或删除即可。",
+    "perkProTitle": "抢先体验新功能，移动版 Pro 免费",
+    "perkProBody": "比任何人都早试用新工具，移动应用上线时免费获得 Pro。"
   }
 }
