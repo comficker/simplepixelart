@@ -40,3 +40,14 @@ export const DEFAULT_EDITOR_DATA: EditorData = {
         },
     },
 }
+// What others may do with a piece, chosen by its artist when publishing and
+// kept in meta.license. No value means all rights reserved.
+export const LICENSES = [
+  {value: '', key: 'allRightsReserved', url: ''},
+  {value: 'cc-by-4.0', key: 'ccBy', url: 'https://creativecommons.org/licenses/by/4.0/'},
+  {value: 'cc0', key: 'cc0', url: 'https://creativecommons.org/publicdomain/zero/1.0/'},
+] as const
+
+export function licenseOf(value: string | undefined | null) {
+  return LICENSES.find(l => l.value === (value || '')) || LICENSES[0]
+}
