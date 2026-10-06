@@ -462,7 +462,8 @@
     "synced": "Se sincronizó {count} obra con la nube | Se sincronizaron {count} obras con la nube",
     "tooManyAiRequests": "Demasiadas solicitudes a la IA; vuelve a intentarlo en {time}",
     "useOneOfYourArts": "Usa una de tus obras",
-    "yourArtIsLive": "Tu pixel art ya está publicado. ¡Compártelo!"
+    "yourArtIsLive": "Tu pixel art ya está publicado. ¡Compártelo!",
+    "aiLabelNote": "Parte de esta pieza la dibujó una IA, así que se etiqueta como generada con IA dondequiera que aparezca."
   },
   "c_Palette": {
     "colorNHex": "Color {n}: {hex}",
@@ -861,7 +862,9 @@
     "whatsNew": "Novedades",
     "world": "mundo",
     "zoomIn": "Acercar",
-    "zoomOut": "Alejar"
+    "zoomOut": "Alejar",
+    "ai": "IA",
+    "aiGenerated": "Generado con IA"
   },
   "crumb": {
     "byColor": "Por color",
@@ -960,14 +963,15 @@
     "frameCount": "1 fotograma | {count} fotogramas",
     "originalSize": "Original · {w}×{h}",
     "pixelCount": "1 píxel | {count} píxeles",
-    "pxACell": "{n}px por celda"
+    "pxACell": "{n}px por celda",
+    "madeWith": "Hecho con"
   },
   "p_arts": {
-    "browseThousandsOfFreePixelArt": "Explora miles de piezas de pixel art gratuitas: sprites, diseños de 8 y 16 bits, personajes e iconos. Remezcla cualquiera en el editor o descárgala para tu juego, tu colección NFT o tu proyecto.",
+    "browseThousandsOfFreePixelArt": "Explora pixel art gratuito hecho por la comunidad: sprites, personajes e iconos. Cada remezcla da crédito al artista original.",
     "pixelArtGallery": "Galería de Pixel Art"
   },
   "p_arts_id_string": {
-    "browseXPixelArtCreations": "Explora pixel art de {tag}: sprites, personajes e iconos en estilo de 8 y 16 bits. Remezcla cualquier pieza en el editor o descárgala para tu juego, tu colección NFT o tu proyecto.",
+    "browseXPixelArtCreations": "Explora pixel art de {tag} hecho por la comunidad: sprites, personajes e iconos. Cada remezcla da crédito al artista original.",
     "xPixelArt": "Pixel art de {x}"
   },
   "p_auth_callback": {
@@ -1367,15 +1371,14 @@
     "faq3q": "¿Simple Pixel Art es gratis?",
     "faq4a": "<p>No. Puedes dibujar, convertir y descargar sin cuenta. Entra con Google si quieres publicar tu trabajo y sincronizarlo entre dispositivos.</p>",
     "faq4q": "¿Necesito una cuenta?",
-    "faq5a": "<p>Sí. El pixel art que creas aquí es tuyo. Úsalo en tu juego, tu colección NFT, tu avatar, tu merchandising o donde quieras.</p>",
+    "faq5a": "<p>Sí. El pixel art que creas aquí es tuyo. Úsalo en tu juego, tu avatar, tu merchandising o donde quieras.</p>",
     "faq5q": "¿Puedo vender o usar lo que creo?",
     "faq6a": "<ul> <li><strong>Empieza pequeño.</strong> 16×16 o 32×32 es ideal para aprender. Lienzos mayores como 64×64 permiten más detalle.</li> <li><strong>Usa una paleta limitada.</strong> El buen pixel art suele tener menos de 16 colores. Las restricciones obligan a decidir y mantienen la pieza cohesionada.</li> <li><strong>Empieza por la silueta.</strong> Una silueta fuerte hace legible el pixel art a cualquier tamaño.</li> <li><strong>Sombrea con dithering.</strong> Alterna dos colores en damero para fingir degradados sin añadir colores.</li> <li><strong>Usa la herramienta espejo.</strong> En temas simétricos como personajes o iconos, activa el espejo horizontal y dibuja los dos lados a la vez.</li> <li><strong>Itera y aléjate.</strong> Mira el tamaño real a menudo: los detalles que lucen de cerca suelen desaparecer.</li> </ul>",
     "faq6q": "¿Cómo se dibuja buen pixel art?",
-    "faq7a": "<ul> <li><strong>Desarrollo de videojuegos</strong>: sprites, tilesets, interfaz y fondos para juegos indie.</li> <li><strong>NFT y coleccionables</strong>: el pixel art se ha vuelto un formato insignia de la propiedad digital.</li> <li><strong>Avatares y fotos de perfil</strong>: muy popular en Discord, redes sociales y comunidades online.</li> <li><strong>Animación</strong>: movimiento cuadro a cuadro para juegos, gráficos web y clips cortos.</li> <li><strong>Merchandising e impresión</strong>: su geometría limpia escala perfecto en ropa, pegatinas, pósters y chapas.</li> <li><strong>Educación</strong>: se enseña en escuelas y bootcamps para fundamentos de diseño, teoría del color y pensamiento creativo.</li> </ul>",
+    "faq7a": "<ul> <li><strong>Desarrollo de videojuegos</strong>: sprites, tilesets, interfaz y fondos para juegos indie.</li> <li><strong>Avatares y fotos de perfil</strong>: muy popular en Discord, redes sociales y comunidades online.</li> <li><strong>Animación</strong>: movimiento cuadro a cuadro para juegos, gráficos web y clips cortos.</li> <li><strong>Merchandising e impresión</strong>: su geometría limpia escala perfecto en ropa, pegatinas, pósters y chapas.</li> <li><strong>Educación</strong>: se enseña en escuelas y bootcamps para fundamentos de diseño, teoría del color y pensamiento creativo.</li> </ul>",
     "faq7q": "¿Para qué se usa el pixel art?",
     "findPixelArtYouLove": "Encuentra el pixel art que te guste,",
     "free": "gratis",
-    "freeNoSignupRunsInYour": "Gratis · Sin registro · Funciona en el navegador",
     "heroTagline": "Explora obras de la comunidad, crea tu propia versión de cualquiera y publica lo que dibujes — gratis, en tu navegador. ¿Haces un juego? Sprites, tilesets y tilemaps se exportan a Godot, Unity y Phaser.",
     "homeFacts": "Gratis · Crea, comparte y descubre pixel art",
     "joinChallenge": "Unirme",
@@ -1399,7 +1402,7 @@
     "strongConvertAPhotoStrongDrop": "<strong>Convierte una foto</strong> — suelta una imagen en el <a href=\"/converter\">conversor</a> y ajusta la resolución y la paleta hasta que quede bien.",
     "strongDrawFromScratchStrongOpen": "<strong>Dibuja desde cero</strong> — abre el <a href=\"/editor\">editor</a>, elige un lienzo de <code>8×8</code> a <code>64×64</code> y pinta píxel a píxel.",
     "strongDrawSpritesStrongInThe": "<strong>Dibuja sprites</strong> en el <a href=\"/editor\">editor</a>: capas, fotogramas de animación con etiquetas, modo espejo e isométrico.",
-    "strongExportAnywhereStrongCleanPng": "<strong>Exporta a donde sea</strong> — PNG limpios para juegos, NFT, avatares, impresión y más.",
+    "strongExportAnywhereStrongCleanPng": "<strong>Exporta a donde sea</strong> — PNG limpios para juegos, avatares, impresión y más.",
     "strongExportGameReadyStrongSprite": "<strong>Exporta listo para el juego</strong> — hojas de sprites con JSON en formato Aseprite para Phaser, Unity y Godot; tilesets <code>.tres</code> de Godot y <code>.tsx</code> de Tiled; y mapas completos en <code>.tmj</code> de Tiled que Phaser y Tiled cargan directamente.",
     "strongFullEditorStrongBrushEraser": "<strong>Editor completo</strong> — pincel, borrador, relleno, selecciones, capas y deshacer/rehacer sin límite.",
     "strongMirrorDrawingStrongDrawSymme": "<strong>Dibujo en espejo</strong> — dibuja personajes e iconos simétricos en la mitad de tiempo.",

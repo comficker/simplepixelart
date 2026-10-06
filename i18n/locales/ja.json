@@ -462,7 +462,8 @@
     "synced": "{count}件の作品をクラウドに同期しました",
     "tooManyAiRequests": "AIへのリクエストが多すぎます — {time}に再試行してください",
     "useOneOfYourArts": "自分の作品を使う",
-    "yourArtIsLive": "ピクセルアートが公開されました。シェアしましょう！"
+    "yourArtIsLive": "ピクセルアートが公開されました。シェアしましょう！",
+    "aiLabelNote": "この作品の一部は AI が描いたため、表示されるすべての場所で「AI生成」と表示されます。"
   },
   "c_Palette": {
     "colorNHex": "色 {n}: {hex}",
@@ -861,7 +862,9 @@
     "whatsNew": "新着",
     "world": "ワールド",
     "zoomIn": "拡大",
-    "zoomOut": "縮小"
+    "zoomOut": "縮小",
+    "ai": "AI",
+    "aiGenerated": "AI生成"
   },
   "crumb": {
     "byColor": "色から",
@@ -960,14 +963,15 @@
     "frameCount": "{count} フレーム",
     "originalSize": "原寸 · {w}×{h}",
     "pixelCount": "{count} ピクセル",
-    "pxACell": "1セル {n}px"
+    "pxACell": "1セル {n}px",
+    "madeWith": "制作方法"
   },
   "p_arts": {
-    "browseThousandsOfFreePixelArt": "何千点もの無料ドット絵を見てみましょう。スプライト、8ビット・16ビットのデザイン、キャラクター、アイコン。どれもエディタでリミックスできますし、ゲームやNFT、自分のプロジェクト用にダウンロードもできます。",
+    "browseThousandsOfFreePixelArt": "コミュニティが描いた無料のドット絵 — スプライト、キャラクター、アイコン。リミックスには必ず元の作者のクレジットが付きます。",
     "pixelArtGallery": "ドット絵ギャラリー"
   },
   "p_arts_id_string": {
-    "browseXPixelArtCreations": "{tag}のドット絵作品を見てみましょう。8ビット・16ビット調のスプライト、キャラクター、アイコン。どれもエディタでリミックスできますし、ゲームやNFT、自分のプロジェクト用にダウンロードもできます。",
+    "browseXPixelArtCreations": "コミュニティが描いた {tag} のドット絵 — スプライト、キャラクター、アイコン。リミックスには必ず元の作者のクレジットが付きます。",
     "xPixelArt": "{x}のドット絵"
   },
   "p_auth_callback": {
@@ -1367,15 +1371,14 @@
     "faq3q": "Simple Pixel Artは無料ですか？",
     "faq4a": "<p>いいえ。アカウントなしで描画・変換・ダウンロードができます。公開したり端末間で同期したい場合だけGoogleでログインしてください。</p>",
     "faq4q": "アカウントは必要ですか？",
-    "faq5a": "<p>はい。ここで作ったドット絵の権利はあなたのものです。ゲーム、NFTコレクション、プロフィールアイコン、グッズなど自由に使えます。</p>",
+    "faq5a": "<p>はい。ここで作ったドット絵の権利はあなたのものです。ゲーム、プロフィールアイコン、グッズなど自由に使えます。</p>",
     "faq5q": "作ったものを販売・利用できますか？",
     "faq6a": "<ul> <li><strong>小さく始める。</strong>学ぶなら16×16か32×32が最適。64×64など大きいキャンバスはより細かく描けます。</li> <li><strong>色数を絞る。</strong>優れたドット絵はたいてい16色未満。制約が判断を生み、まとまりを保ちます。</li> <li><strong>まずシルエットから。</strong>強いシルエットはどんなサイズでも読み取れます。</li> <li><strong>ディザで陰影を。</strong>2色を市松に交互置きすれば、色を増やさずグラデーションを擬似的に作れます。</li> <li><strong>ミラーツールを使う。</strong>キャラやアイコンなど左右対称のものは、左右ミラーで両側を同時に描けます。</li> <li><strong>こまめに引いて見る。</strong>等倍で頻繁に確認を。拡大時に映えるディテールはたいてい消えます。</li> </ul>",
     "faq6q": "上手なドット絵を描くコツは？",
-    "faq7a": "<ul> <li><strong>ゲーム開発</strong> — インディーゲームのスプライト、タイルセット、UI、背景。</li> <li><strong>NFT・コレクタブル</strong> — デジタル所有を象徴する定番フォーマットに。</li> <li><strong>アバター・アイコン</strong> — Discordやサブカル系SNS、各種コミュニティで人気。</li> <li><strong>アニメーション</strong> — ゲーム、Webグラフィック、短いクリップ向けのコマ撮り。</li> <li><strong>グッズ・印刷</strong> — 整った幾何なので衣類、ステッカー、ポスター、缶バッジに綺麗に載ります。</li> <li><strong>教育</strong> — デザインの基礎、色彩理論、発想力を学ぶ題材として学校やスクールで使われています。</li> </ul>",
+    "faq7a": "<ul> <li><strong>ゲーム開発</strong> — インディーゲームのスプライト、タイルセット、UI、背景。</li> <li><strong>アバター・アイコン</strong> — Discordやサブカル系SNS、各種コミュニティで人気。</li> <li><strong>アニメーション</strong> — ゲーム、Webグラフィック、短いクリップ向けのコマ撮り。</li> <li><strong>グッズ・印刷</strong> — 整った幾何なので衣類、ステッカー、ポスター、缶バッジに綺麗に載ります。</li> <li><strong>教育</strong> — デザインの基礎、色彩理論、発想力を学ぶ題材として学校やスクールで使われています。</li> </ul>",
     "faq7q": "ドット絵は何に使われる？",
     "findPixelArtYouLove": "好きなピクセルアートを見つけて、",
     "free": "無料",
-    "freeNoSignupRunsInYour": "無料 · 登録不要 · ブラウザで動作",
     "heroTagline": "コミュニティの作品を眺め、どれでも自分のバージョンを作り、描いたものを公開できます — 無料、ブラウザだけで。ゲーム制作なら、スプライト・タイルセット・タイルマップを Godot、Unity、Phaser へ書き出せます。",
     "homeFacts": "無料 · ピクセルアートを作って、共有して、見つける",
     "joinChallenge": "参加する",
@@ -1399,7 +1402,7 @@
     "strongConvertAPhotoStrongDrop": "<strong>写真を変換する</strong> — <a href=\"/converter\">コンバータ</a>に画像をドロップし、解像度とパレットを納得いくまで調整します。",
     "strongDrawFromScratchStrongOpen": "<strong>ゼロから描く</strong> — <a href=\"/editor\">エディタ</a>を開き、<code>8×8</code>〜<code>64×64</code>のキャンバスを選んで、1ピクセルずつ描いていきます。",
     "strongDrawSpritesStrongInThe": "<strong>スプライトを描く</strong> — <a href=\"/editor\">エディタ</a>で。レイヤー、タグ付きアニメーションフレーム、ミラー、アイソメトリックモード。",
-    "strongExportAnywhereStrongCleanPng": "<strong>どこへでも書き出し</strong> — ゲーム、NFT、アバター、印刷などに使えるきれいなPNG。",
+    "strongExportAnywhereStrongCleanPng": "<strong>どこへでも書き出し</strong> — ゲーム、アバター、印刷などに使えるきれいなPNG。",
     "strongExportGameReadyStrongSprite": "<strong>ゲームですぐ使える書き出し</strong> — Phaser、Unity、Godot向けのAsepriteフォーマットJSON付きスプライトシート、Godotの<code>.tres</code>とTiledの<code>.tsx</code>タイルセット、そしてPhaserとTiledがそのまま読めるTiled <code>.tmj</code>のマップ。",
     "strongFullEditorStrongBrushEraser": "<strong>本格エディタ</strong> — ブラシ、消しゴム、塗りつぶし、選択範囲、レイヤー、無制限の取り消し／やり直し。",
     "strongMirrorDrawingStrongDrawSymme": "<strong>ミラー描画</strong> — 左右対称のキャラクターやアイコンを半分の時間で。",

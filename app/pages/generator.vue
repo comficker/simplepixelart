@@ -417,6 +417,8 @@ async function sendToEditor() {
     layers: [{name: 'Layer 1', pixels, x: 0, y: 0}],
     updated: new Date().toISOString(),
   } as EditorData
+  // An image model drew it: the piece carries the AI label from here on.
+  data.meta = {...data.meta, ai: true}
   const ws = getStorageItem('workspaces')
   ws[id] = data
   localStorage.setItem('workspaces', JSON.stringify(ws))

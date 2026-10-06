@@ -462,7 +462,8 @@
     "synced": "已将 {count} 个作品同步到云端",
     "tooManyAiRequests": "AI 请求过多 — 请在{time}重试",
     "useOneOfYourArts": "使用你的作品",
-    "yourArtIsLive": "你的像素画已上线，快去分享吧！"
+    "yourArtIsLive": "你的像素画已上线，快去分享吧！",
+    "aiLabelNote": "这件作品有部分由 AI 绘制，因此在所有展示位置都会标注“AI 生成”。"
   },
   "c_Palette": {
     "colorNHex": "颜色 {n}：{hex}",
@@ -861,7 +862,9 @@
     "whatsNew": "最新作品",
     "world": "世界",
     "zoomIn": "放大",
-    "zoomOut": "缩小"
+    "zoomOut": "缩小",
+    "ai": "AI",
+    "aiGenerated": "AI 生成"
   },
   "crumb": {
     "byColor": "按颜色",
@@ -960,14 +963,15 @@
     "frameCount": "{count} 帧",
     "originalSize": "原始 · {w}×{h}",
     "pixelCount": "{count} 像素",
-    "pxACell": "每格 {n}px"
+    "pxACell": "每格 {n}px",
+    "madeWith": "创作方式"
   },
   "p_arts": {
-    "browseThousandsOfFreePixelArt": "浏览数千幅免费像素画——精灵、8 位与 16 位设计、角色和图标。任意一幅都能在编辑器里改编，也可以下载用于你的游戏、NFT 或项目。",
+    "browseThousandsOfFreePixelArt": "浏览社区创作的免费像素画——精灵图、角色和图标。每次改编都会署上原作者的名字。",
     "pixelArtGallery": "像素画图库"
   },
   "p_arts_id_string": {
-    "browseXPixelArtCreations": "浏览 {tag} 主题的像素画作品——8 位与 16 位风格的精灵、角色和图标。任意一幅都能在编辑器里改编，也可以下载用于你的游戏、NFT 或项目。",
+    "browseXPixelArtCreations": "浏览社区创作的 {tag} 像素画——精灵图、角色和图标。每次改编都会署上原作者的名字。",
     "xPixelArt": "{x} 像素画"
   },
   "p_auth_callback": {
@@ -1367,15 +1371,14 @@
     "faq3q": "Simple Pixel Art 免费吗？",
     "faq4a": "<p>不需要。不登录也能画图、转换和下载。只有当你想公开分享或跨设备同步时，才需要用 Google 登录。</p>",
     "faq4q": "需要账号吗？",
-    "faq5a": "<p>可以。你在这里创作的像素画归你所有。用在游戏、NFT 系列、头像、周边或任何地方都行。</p>",
+    "faq5a": "<p>可以。你在这里创作的像素画归你所有。用在游戏、头像、周边或任何地方都行。</p>",
     "faq5q": "我可以出售或使用做出来的作品吗？",
     "faq6a": "<ul> <li><strong>从小尺寸开始。</strong>16×16 或 32×32 最适合入门。64×64 这类更大的画布能容纳更多细节。</li> <li><strong>限制配色。</strong>出色的像素画常常只用不到 16 种颜色。约束逼出取舍，也让画面更统一。</li> <li><strong>先勾轮廓。</strong>清晰的剪影能让像素画在任何尺寸下都认得出来。</li> <li><strong>用抖动做明暗。</strong>把两种颜色棋盘式交错，不加新颜色也能模拟渐变。</li> <li><strong>用镜像工具。</strong>画角色、图标这类对称题材时，开启水平镜像可以两边同时画。</li> <li><strong>边画边缩小看。</strong>常看原始尺寸——放大时好看的细节通常会消失。</li> </ul>",
     "faq6q": "怎样才能画好像素画？",
-    "faq7a": "<ul> <li><strong>游戏开发</strong>——独立游戏的精灵、图块集、UI 和背景。</li> <li><strong>NFT 与数字藏品</strong>——像素画已成为数字所有权的标志性形式。</li> <li><strong>头像与个人图片</strong>——在 Discord、社交平台和各类社区中很流行。</li> <li><strong>动画</strong>——用于游戏、网页图形和短片的逐帧动效。</li> <li><strong>周边与印刷</strong>——干净的几何形状放大到服装、贴纸、海报和徽章上都很精准。</li> <li><strong>教育</strong>——学校和训练营用它来教设计基础、色彩理论和创意思维。</li> </ul>",
+    "faq7a": "<ul> <li><strong>游戏开发</strong>——独立游戏的精灵、图块集、UI 和背景。</li> <li><strong>头像与个人图片</strong>——在 Discord、社交平台和各类社区中很流行。</li> <li><strong>动画</strong>——用于游戏、网页图形和短片的逐帧动效。</li> <li><strong>周边与印刷</strong>——干净的几何形状放大到服装、贴纸、海报和徽章上都很精准。</li> <li><strong>教育</strong>——学校和训练营用它来教设计基础、色彩理论和创意思维。</li> </ul>",
     "faq7q": "像素画能用在哪些地方？",
     "findPixelArtYouLove": "找到你喜欢的像素画，",
     "free": "免费",
-    "freeNoSignupRunsInYour": "免费 · 无需注册 · 浏览器内运行",
     "heroTagline": "浏览社区作品，为任意一幅制作你自己的版本，并发布你画的作品 — 免费，在浏览器中完成。在做游戏？精灵、图块集和图块地图可导出到 Godot、Unity 和 Phaser。",
     "homeFacts": "免费 · 创作、分享和发现像素画",
     "joinChallenge": "参加",
@@ -1399,7 +1402,7 @@
     "strongConvertAPhotoStrongDrop": "<strong>转换照片</strong>——把图片拖进<a href=\"/converter\">转换器</a>，调节分辨率和配色直到满意。",
     "strongDrawFromScratchStrongOpen": "<strong>从零开始画</strong>——打开<a href=\"/editor\">编辑器</a>，选一个 <code>8×8</code> 到 <code>64×64</code> 的画布，一格一格地画。",
     "strongDrawSpritesStrongInThe": "<strong>绘制精灵</strong>——在<a href=\"/editor\">编辑器</a>里，支持图层、带标签的动画帧、镜像和等距模式。",
-    "strongExportAnywhereStrongCleanPng": "<strong>随处导出</strong>——干净的 PNG，可用于游戏、NFT、头像、印刷等。",
+    "strongExportAnywhereStrongCleanPng": "<strong>随处导出</strong>——干净的 PNG，可用于游戏、头像、印刷等。",
     "strongExportGameReadyStrongSprite": "<strong>导出即可用于游戏</strong>——附带 Aseprite 格式 JSON 的精灵表，供 Phaser、Unity 和 Godot 使用；Godot 的 <code>.tres</code> 和 Tiled 的 <code>.tsx</code> 图块集；以及 Phaser 和 Tiled 可直接加载的 Tiled <code>.tmj</code> 完整地图。",
     "strongFullEditorStrongBrushEraser": "<strong>完整编辑器</strong>——画笔、橡皮、填充、选区、图层，以及无限次撤销／重做。",
     "strongMirrorDrawingStrongDrawSymme": "<strong>镜像绘制</strong>——用一半的时间画出对称的角色和图标。",

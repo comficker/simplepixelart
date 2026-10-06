@@ -476,7 +476,8 @@
     "synced": "Synced {count} artwork to cloud | Synced {count} artworks to cloud",
     "tooManyAiRequests": "Too many AI requests — try again in {time}",
     "useOneOfYourArts": "Use one of your arts",
-    "yourArtIsLive": "Your pixel art is live. Share it!"
+    "yourArtIsLive": "Your pixel art is live. Share it!",
+    "aiLabelNote": "Part of this piece was drawn by AI, so it is labeled AI-generated wherever it appears."
   },
   "c_Paginator": {},
   "c_Palette": {
@@ -891,7 +892,9 @@
     "whatsNew": "What's new",
     "world": "world",
     "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out"
+    "zoomOut": "Zoom out",
+    "ai": "AI",
+    "aiGenerated": "AI-generated"
   },
   "crumb": {
     "byColor": "By color",
@@ -990,14 +993,15 @@
     "frameCount": "1 frame | {count} frames",
     "originalSize": "Original · {w}×{h}",
     "pixelCount": "1 pixel | {count} pixels",
-    "pxACell": "{n}px a cell"
+    "pxACell": "{n}px a cell",
+    "madeWith": "Made with"
   },
   "p_arts": {
-    "browseThousandsOfFreePixelArt": "Browse thousands of free pixel art creations — sprites, 8-bit and 16-bit designs, characters and icons. Remix any piece in the editor or download for your game, NFT, or project.",
+    "browseThousandsOfFreePixelArt": "Browse free pixel art made by the community — sprites, characters and icons. Every remix credits the original artist.",
     "pixelArtGallery": "Pixel Art Gallery"
   },
   "p_arts_id_string": {
-    "browseXPixelArtCreations": "Browse {tag} pixel art creations — sprites, characters and icons in 8-bit and 16-bit style. Remix any piece in the editor or download for your game, NFT, or project.",
+    "browseXPixelArtCreations": "Browse {tag} pixel art made by the community — sprites, characters and icons. Every remix credits the original artist.",
     "xPixelArt": "{x} Pixel Art"
   },
   "p_auth_callback": {
@@ -1397,15 +1401,14 @@
     "faq3q": "Is Simple Pixel Art free?",
     "faq4a": "<p>No. You can draw, convert, and download without an account. Log in with Google to share publicly and sync your work across devices.</p>",
     "faq4q": "Do I need an account?",
-    "faq5a": "<p>Yes. You own the pixel art you create here. Use it in your game, NFT collection, profile avatar, merchandise, or anywhere else.</p>",
+    "faq5a": "<p>Yes. You own the pixel art you create here. Use it in your game, profile avatar, merchandise, or anywhere else.</p>",
     "faq5q": "Can I sell or use what I create?",
     "faq6a": "<ul> <li><strong>Start small.</strong> 16×16 or 32×32 is ideal for learning. Larger canvases like 64×64 allow more detail.</li> <li><strong>Pick a limited palette.</strong> Great pixel art often uses fewer than 16 colors. Constraints force creative decisions and keep work cohesive.</li> <li><strong>Sketch the silhouette first.</strong> A strong silhouette makes pixel art readable at any size.</li> <li><strong>Add shading with dithering.</strong> Alternate two colors in a checkerboard pattern to fake gradients without extra colors.</li> <li><strong>Use the mirror tool.</strong> For symmetric subjects like characters or icons, enable horizontal mirroring to draw both sides at once.</li> <li><strong>Iterate and zoom out.</strong> Check actual size often — details that pop up close usually disappear.</li> </ul>",
     "faq6q": "How do I draw good pixel art?",
-    "faq7a": "<ul> <li><strong>Game development</strong> — sprites, tilesets, UI, and backgrounds for indie games.</li> <li><strong>NFTs and collectibles</strong> — pixel art has become a signature format for digital ownership.</li> <li><strong>Avatars and profile pictures</strong> — popular on Discord, social media, and online communities.</li> <li><strong>Animation</strong> — frame-by-frame motion for games, web graphics, and short clips.</li> <li><strong>Merchandise and print</strong> — clean geometry scales perfectly onto clothing, stickers, posters, and pins.</li> <li><strong>Education</strong> — taught in schools and bootcamps for design fundamentals, color theory, and creative thinking.</li> </ul>",
+    "faq7a": "<ul> <li><strong>Game development</strong> — sprites, tilesets, UI, and backgrounds for indie games.</li> <li><strong>Avatars and profile pictures</strong> — popular on Discord, social media, and online communities.</li> <li><strong>Animation</strong> — frame-by-frame motion for games, web graphics, and short clips.</li> <li><strong>Merchandise and print</strong> — clean geometry scales perfectly onto clothing, stickers, posters, and pins.</li> <li><strong>Education</strong> — taught in schools and bootcamps for design fundamentals, color theory, and creative thinking.</li> </ul>",
     "faq7q": "What is pixel art used for?",
     "findPixelArtYouLove": "Find pixel art you love,",
     "free": "free",
-    "freeNoSignupRunsInYour": "Free · No signup · Runs in your browser",
     "heroTagline": "Browse pieces from the community, make your own version of any of them, and publish what you draw — free, in your browser. Building a game? Sprites, tilesets and tilemaps export to Godot, Unity and Phaser.",
     "homeFacts": "Free · Make, share and discover pixel art",
     "joinChallenge": "Join",
@@ -1429,7 +1432,7 @@
     "strongConvertAPhotoStrongDrop": "<strong>Convert a photo</strong> — drop an image into the <a href=\"/converter\">converter</a> and tune the resolution and palette until it looks right.",
     "strongDrawFromScratchStrongOpen": "<strong>Draw from scratch</strong> — open the <a href=\"/editor\">editor</a>, pick a canvas from <code>8×8</code> to <code>64×64</code>, and paint pixel by pixel.",
     "strongDrawSpritesStrongInThe": "<strong>Draw sprites</strong> in the <a href=\"/editor\">editor</a> — layers, animation frames with tags, mirror and iso modes.",
-    "strongExportAnywhereStrongCleanPng": "<strong>Export anywhere</strong> — clean PNGs for games, NFTs, avatars, print, and more.",
+    "strongExportAnywhereStrongCleanPng": "<strong>Export anywhere</strong> — clean PNGs for games, avatars, print, and more.",
     "strongExportGameReadyStrongSprite": "<strong>Export game-ready</strong> — sprite sheets with Aseprite-format JSON for Phaser, Unity and Godot; Godot <code>.tres</code> and Tiled <code>.tsx</code> tilesets; and full maps as Tiled <code>.tmj</code> that Phaser and Tiled load directly.",
     "strongFullEditorStrongBrushEraser": "<strong>Full editor</strong> — brush, eraser, fill, selections, layers, and unlimited undo/redo.",
     "strongMirrorDrawingStrongDrawSymme": "<strong>Mirror drawing</strong> — draw symmetric characters and icons in half the time.",

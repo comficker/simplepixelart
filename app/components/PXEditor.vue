@@ -4133,6 +4133,9 @@ watch(
                 <option v-for="l in LICENSES" :key="l.value" :value="l.value">{{ $t(`p_upload.license_${l.key}`) }}</option>
               </select>
             </div>
+            <p v-if="publishStatus === 'public' && editorData.meta?.ai" class="text-2xs text-muted">
+              {{ $t('c_PXEditor.aiLabelNote') }}
+            </p>
             <div v-if="isAdmin && publishStatus === 'public'" class="publish-status-row">
               <label class="publish-label" for="publish-boost">{{ $t('c_PXEditor.publishAsABotCreator') }}</label>
               <input id="publish-boost" v-model="boostOnPublish" type="checkbox">

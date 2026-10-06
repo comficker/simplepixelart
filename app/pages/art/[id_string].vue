@@ -105,6 +105,8 @@ const imgSquare = computed(() =>
 
 const animation = computed(() => (data.value?.meta as any)?.animation || null)
 const isAnimatedArt = computed(() => (animation.value?.frames?.length || 0) > 1)
+// Drawn by an image model (generator, editor agent): labelled, never hidden.
+const isAi = computed(() => !!(data.value?.meta as any)?.ai)
 const gifUrl = computed(() =>
     data.value?.id_string ? `${config.public.api}/coloring/files/art-anim/${data.value.id_string}.gif` : ''
 )
@@ -464,9 +466,12 @@ const previewStyle = computed(() => {
             :width="data.width"
             :height="data.height"
         >
-        <div v-if="isAnimatedArt" class="art-anim-badge" :title="$t('common.animatedArtwork')">
-          <span class="art-anim-dot" aria-hidden="true"/>
-          <span>{{ $t('p_art_id_string.animatedBadge', {n: animation.frames.length}) }}</span>
+        <div v-if="isAnimatedArt || isAi" class="art-badges">
+          <span v-if="isAi" class="art-anim-badge" :title="$t('common.aiGenerated')">{{ $t('common.aiGenerated') }}</span>
+          <span v-if="isAnimatedArt" class="art-anim-badge" :title="$t('common.animatedArtwork')">
+            <span class="art-anim-dot" aria-hidden="true"/>
+            <span>{{ $t('p_art_id_string.animatedBadge', {n: animation.frames.length}) }}</span>
+          </span>
         </div>
         <NuxtLinkLocale
             v-if="data.template_info"
@@ -628,6 +633,10 @@ const previewStyle = computed(() => {
         <div v-if="data.user" class="art-meta-row">
           <dt>{{ $t('p_art_id_string.creator') }}</dt>
           <dd><NuxtLinkLocale :to="`/creator/${data.user.username}`" class="art-meta-link">@{{ data.user.username }}</NuxtLinkLocale></dd>
+        </div>
+        <div v-if="isAi" class="art-meta-row">
+          <dt>{{ $t('p_art_id_string.madeWith') }}</dt>
+          <dd>{{ $t('common.ai') }}</dd>
         </div>
         <div v-if="data.template_info" class="art-meta-row">
           <dt>{{ $t('p_art_id_string.remixedFrom') }}</dt>
@@ -823,10 +832,16 @@ const previewStyle = computed(() => {
   height: var(--icon-sm);
 }
 
-.art-anim-badge {
+/* Labels over the preview's corner: AI-drawn, animated. */
+.art-badges {
   position: absolute;
   top: var(--space-3);
   right: var(--space-3);
+  display: flex;
+  gap: var(--space-2);
+}
+
+.art-anim-badge {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);

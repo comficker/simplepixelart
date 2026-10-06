@@ -2121,6 +2121,15 @@ export const useEditor = defineStore('editor', () => {
      * On this board it replaces the active layer's pixels and the palette and
      * takes one history entry, so Ctrl+Z puts the old sprite back. As a new
      * board the old one stays untouched next to it. */
+    /** Art an image model drew carries the AI label (meta.ai). Set on the
+     *  board the art lands on; the server keeps it once saved. Edits by the
+     *  agent that draw nothing new -- recolour, outline, flip -- don't set it. */
+    function markAiDrawn(data: EditorData) {
+        // Mutated in place: the animation code holds references into meta.
+        if (!data.meta) data.meta = {}
+        data.meta.ai = true
+    }
+
     function applyAgentArt(
         colors: string[],
         pixels: { [key: string]: number },
@@ -2138,6 +2147,7 @@ export const useEditor = defineStore('editor', () => {
                 layers: [{name: 'Layer 1', pixels, x: 0, y: 0}],
                 updated: new Date().toISOString(),
             } as EditorData)
+            markAiDrawn(data)
             const id = addBoardWithData(data)
             setActiveBoard(id)
             return id
@@ -2162,6 +2172,7 @@ export const useEditor = defineStore('editor', () => {
         layer.pixels = markRaw(mapped)
         layer.x = 0
         layer.y = 0
+        markAiDrawn(editorData.value)
         markFullRedraw()
         drawTurn.value++
         saveState()
@@ -2209,6 +2220,7 @@ export const useEditor = defineStore('editor', () => {
             added++
         }
         if (!added) return 0
+        markAiDrawn(editorData.value)
         setActiveFrame(at + added)
         saveState()
         return added

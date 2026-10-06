@@ -59,6 +59,7 @@ export interface SharedPage {
     meta: any
     /** List rows only: annotated flags, so the grid can skip meta entirely. */
     is_anim?: boolean
+    is_ai?: boolean
     has_image?: boolean
     /** Detail only: whether /art/<slug> should be indexed. The backend owns the
      *  rule so sitemap-page.xml and the page agree. */
@@ -227,6 +228,9 @@ export interface EditorMeta {
     published_at?: string;
     // What others may do with the piece: '' / absent = all rights reserved.
     license?: string;
+    // Drawn by an image model (generator, editor agent). Shown as an "AI"
+    // label; the server never lets an edit take it off.
+    ai?: boolean;
 }
 
 export interface EditorData {
