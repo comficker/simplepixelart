@@ -1,5 +1,27 @@
 const adsEnabled = process.env.NUXT_PUBLIC_ADS_ENABLED !== 'false';
 
+// The six markets where pixel art, retro games and indie dev are strongest.
+// `language` is what goes in hreflang.
+const LOCALES = [
+    {code: 'en', language: 'en', name: 'English', file: 'en.json'},
+    {code: 'ja', language: 'ja', name: '日本語', file: 'ja.json'},
+    {code: 'zh', language: 'zh-Hans', name: '简体中文', file: 'zh.json'},
+    {code: 'ko', language: 'ko', name: '한국어', file: 'ko.json'},
+    {code: 'es', language: 'es', name: 'Español', file: 'es.json'},
+    {code: 'pt', language: 'pt-BR', name: 'Português', file: 'pt.json'},
+    {code: 'ru', language: 'ru', name: 'Русский', file: 'ru.json'},
+];
+
+// A 301 for the bare path and each locale prefix (English keeps bare paths).
+function localizedRedirects(from: string, to: string) {
+    const rules: Record<string, {redirect: {to: string, statusCode: 301}}> = {};
+    for (const {code} of LOCALES) {
+        const p = code === 'en' ? '' : `/${code}`;
+        rules[p + from] = {redirect: {to: p + to, statusCode: 301}};
+    }
+    return rules;
+}
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     compatibilityDate: '2025-07-15',
@@ -14,17 +36,7 @@ export default defineNuxtConfig({
         // Message fallback is a vue-i18n option, not a module one -- the
         // module's own fallbackLocale belongs to browser detection.
         vueI18n: './i18n.config.ts',
-        // The six markets where pixel art, retro games and indie dev are
-        // strongest. `language` is what goes in hreflang.
-        locales: [
-            {code: 'en', language: 'en', name: 'English', file: 'en.json'},
-            {code: 'ja', language: 'ja', name: '日本語', file: 'ja.json'},
-            {code: 'zh', language: 'zh-Hans', name: '简体中文', file: 'zh.json'},
-            {code: 'ko', language: 'ko', name: '한국어', file: 'ko.json'},
-            {code: 'es', language: 'es', name: 'Español', file: 'es.json'},
-            {code: 'pt', language: 'pt-BR', name: 'Português', file: 'pt.json'},
-            {code: 'ru', language: 'ru', name: 'Русский', file: 'ru.json'},
-        ],
+        locales: LOCALES,
         lazy: true,
         bundle: {optimizeTranslationDirective: false},
         // README/FAQ copy is prose with inline markup, rendered through v-html.
@@ -51,8 +63,8 @@ export default defineNuxtConfig({
             '/palettes/scheme': {redirect: {to: '/palettes/color-palette-from-color', statusCode: 301}},
             // Tools renamed after the thing they are, not the verb (301 so the
             // old URLs keep whatever they have earned).
-            '/generate': {redirect: {to: '/generator', statusCode: 301}},
-            '/convert': {redirect: {to: '/converter', statusCode: 301}},
+            ...localizedRedirects('/generate', '/generator'),
+            ...localizedRedirects('/convert', '/converter'),
         },
     },
     css: [

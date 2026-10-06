@@ -257,7 +257,7 @@ watch(() => auth.isLogged, () => loadSources())
   align-items: center;
   gap: var(--space-2);
   height: 2rem;
-  padding: 0 0.5rem;
+  padding: 0 var(--space-2);
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -353,6 +353,6 @@ watch(() => auth.isLogged, () => loadSources())
 .stp-empty {
   font-size: var(--text-2xs);
   color: var(--muted);
-  padding: 0.25rem 0;
+  padding: var(--space-1) 0;
 }
 </style>

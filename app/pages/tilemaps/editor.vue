@@ -3,7 +3,7 @@ const {t} = useI18n()
 import {ref, shallowRef, computed, reactive, watch, onMounted, onBeforeUnmount, nextTick} from 'vue'
 import {toast} from 'vue-sonner'
 import type {SharedPage} from '~/types'
-import {debounce, pruneStorageKeys} from '~/helper/utils'
+import {debounce, downloadBlob, pruneStorageKeys} from '~/helper/utils'
 import {
   type TilemapConfig, type TilemapLayer, type TilemapMode, type LayerKind, normalizeTilemap,
   CELL_PRESETS, MIN_CELL, MAX_CELL, ISO_RATIOS, MIN_DIM, MAX_DIM, MAX_LAYERS, makeLayer, placedIds,
@@ -24,6 +24,13 @@ const router = useRouter()
 const auth = useAuthStore()
 const apiBase = useRuntimeConfig().public.api as string
 const localTs = useLocalTilesets()
+const {confirm} = useConfirm()
+const confirmDiscard = (what = 'the current world') => confirm({
+  title: 'Discard unsaved changes?',
+  message: `Your edits to ${what} have not been saved.`,
+  confirmText: 'Discard',
+  danger: true,
+})
 
 useCustomSeoMeta({
   title: 'Tilemap Editor — Grid & Isometric',
@@ -882,15 +889,16 @@ async function fetchMyTilesets() {
 async function onSourceSelect(v: string, el: HTMLSelectElement) {
   if (v === '__manage__') {
     el.value = world.value?.tileset_id_string || ''
+    // Unsaved world edits are confirmed by the onBeforeRouteLeave guard below.
     router.push(localePath(world.value ? `/tilesets/editor?id=${world.value.tileset_id_string}` : '/tilesets/editor'))
     return
   }
-  if (!v) selectSource(null)
+  if (!v) await selectSource(null)
   else await selectTileset(v)
   el.value = world.value?.tileset_id_string || guestTileset.value?.id || ''
 }
 
-function selectSource(id: null) {
+async function selectSource(id: null) {
   if (guestTileset.value && !world.value) {
     guestTileset.value = null
     items.value = []
@@ -904,14 +912,14 @@ function selectSource(id: null) {
     return
   }
   if (!world.value) return
-  if (dirty.value && !confirm('Discard unsaved changes to the current world?')) return
+  if (dirty.value && !(await confirmDiscard())) return
   enterFreeStyle()
 }
 
 async function selectTileset(slug: string) {
   if (slug.startsWith('local:')) { loadLocalTilesetPalette(slug); return }
   if (world.value?.tileset_id_string === slug) return
-  if (dirty.value && !confirm('Discard unsaved changes to the current world?')) return
+  if (dirty.value && !(await confirmDiscard())) return
   const t = myTilesets.value.find(x => x.id_string === slug)
   const newest = t?.worlds?.[0]
   if (newest) {
@@ -1003,16 +1011,16 @@ function refreshTiles() {
   toast.success('Tiles refreshed')
 }
 
-function switchWorld(slug: string) {
+async function switchWorld(slug: string) {
   if (!slug || slug === world.value?.id_string) return
-  if (dirty.value && !confirm('Discard unsaved changes to the current world?')) return
+  if (dirty.value && !(await confirmDiscard())) return
   router.replace({query: {world: slug}})
   loadWorld(slug)
 }
 
 async function newWorld() {
   if (!world.value) return
-  if (dirty.value && !confirm('Discard unsaved changes to the current world?')) return
+  if (dirty.value && !(await confirmDiscard())) return
   try {
     const w = await useNativeFetch<any>('/coloring/worlds/', {
       method: 'POST',
@@ -1029,9 +1037,9 @@ async function newWorld() {
   }
 }
 
-function newMap() {
+async function newMap() {
   if (world.value) { newWorld(); return }
-  if (dirty.value && !confirm('Discard unsaved changes to this map?')) return
+  if (dirty.value && !(await confirmDiscard('this map'))) return
   enterFreeStyle({fresh: true})
 }
 
@@ -1079,14 +1087,6 @@ function pickTilemap(id: string) {
   onWorldSelect(id)
 }
 
-function downloadBlob(name: string, blob: Blob) {
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
-  a.download = name
-  a.click()
-  URL.revokeObjectURL(a.href)
-}
-
 function exportName() {
   return (world.value?.name || 'tilemap').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'tilemap'
 }
@@ -1103,7 +1103,7 @@ function exportPNG() {
     ctx.fillRect(0, 0, cv.width, cv.height)
   }
   drawPlacedTiles(ctx, config, g, tileImages, 1)
-  cv.toBlob(b => { if (b) downloadBlob(`${exportName()}.png`, b) })
+  cv.toBlob(b => { if (b) downloadBlob(b, `${exportName()}.png`) })
 }
 
 function exportJSON() {
@@ -1129,7 +1129,7 @@ function exportJSON() {
     })),
     tiles,
   }
-  downloadBlob(`${exportName()}.json`, new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}))
+  downloadBlob(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}), `${exportName()}.json`)
 }
 
 function tiledReadme(base: string): string {
@@ -1260,7 +1260,7 @@ async function exportTiled() {
     const files: { name: string; data: Uint8Array }[] = [{name: `${base}.tmj`, data: enc.encode(tmj)}]
     for (const im of images) files.push({name: im.name, data: await canvasBytes(im.canvas)})
     files.push({name: 'README.txt', data: enc.encode(tiledReadme(base))})
-    downloadBlob(`${base}_tiled.zip`, createZip(files))
+    downloadBlob(createZip(files), `${base}_tiled.zip`)
     if (missing) toast.warning(`${missing} tile image${missing > 1 ? 's' : ''} not loaded yet — those cells were left empty`)
     return
   }
@@ -1274,7 +1274,7 @@ async function exportTiled() {
       {name: `${base}_sprites.png`, data: await canvasBytes(x.sprites.canvas)},
       {name: 'README.txt', data: enc.encode(tiledReadme(base))},
     ]
-    downloadBlob(`${base}_tiled.zip`, createZip(files))
+    downloadBlob(createZip(files), `${base}_tiled.zip`)
     if (missing) toast.warning(`${missing} tile${missing > 1 ? 's' : ''} could not be exported`)
     else toast.success('Exported for Tiled — the map uses the tileset it was made with')
   } catch {
@@ -1303,7 +1303,7 @@ async function exportGodot() {
       {name: `${x.base}_sprites.png`, data: await canvasBytes(x.sprites.canvas)},
       {name: 'README.txt', data: enc.encode(godotReadme(x.base, x.tilesetBase))},
     ]
-    downloadBlob(`${x.base}_godot.zip`, createZip(files))
+    downloadBlob(createZip(files), `${x.base}_godot.zip`)
     if (missing) toast.warning(`${missing} tile${missing > 1 ? 's' : ''} could not be exported`)
     else toast.success('Exported a Godot 4 scene')
   } catch {
@@ -1470,6 +1470,17 @@ watch(paletteTab, (t) => {
 onBeforeUnmount(() => {
   if (typeof document !== 'undefined') document.removeEventListener('keydown', onHotkey)
   if (drawReq && typeof cancelAnimationFrame !== 'undefined') cancelAnimationFrame(drawReq)
+  if (sheetReq && typeof cancelAnimationFrame !== 'undefined') cancelAnimationFrame(sheetReq)
+})
+
+// Leaving the editor (in-app link or tab close) while the world has unsaved edits.
+function onBeforeUnload(e: BeforeUnloadEvent) {
+  if (dirty.value) e.preventDefault()
+}
+onMounted(() => window.addEventListener('beforeunload', onBeforeUnload))
+onBeforeUnmount(() => window.removeEventListener('beforeunload', onBeforeUnload))
+onBeforeRouteLeave(async () => {
+  if (dirty.value && !(await confirmDiscard())) return false
 })
 
 function key(col: number, row: number) { return `${col}_${row}` }
@@ -2417,6 +2428,7 @@ function deleteSelection() {
   draw()
 }
 
+const firstSaveTileset = ref<any>(null)
 async function save() {
   if (saving.value) return
   if (world.value) {
@@ -2439,14 +2451,24 @@ async function save() {
     saving.value = true
     try {
       const name = 'My world'
-      const tm = await useNativeFetch<any>('/coloring/tilesets/', {
-        method: 'POST',
-        body: {name, meta: {registry: buildRegistry()}},
-      })
+      // A retry after the world POST failed reuses the tileset it already made.
+      let tm = firstSaveTileset.value
+      if (tm) {
+        await useNativeFetch(`/coloring/tilesets/${tm.id_string}/`, {
+          method: 'PATCH',
+          body: {meta: {registry: buildRegistry()}},
+        })
+      } else {
+        tm = firstSaveTileset.value = await useNativeFetch<any>('/coloring/tilesets/', {
+          method: 'POST',
+          body: {name, meta: {registry: buildRegistry()}},
+        })
+      }
       const w = await useNativeFetch<any>('/coloring/worlds/', {
         method: 'POST',
         body: {tileset: tm.id_string, name, meta: {config: snapshot()}},
       })
+      firstSaveTileset.value = null
       world.value = {
         id: w.id, id_string: w.id_string, name: w.name || name,
         status: w.status, tileset_id_string: tm.id_string,
@@ -3212,7 +3234,7 @@ const faq = computed(() => [
 .tm-chips button.active { border-color: transparent; color: var(--primary); background: color-mix(in oklab, var(--primary) 14%, var(--surface)); }
 
 .tm-cell-input {
-  width: 100%; height: var(--tm-ctl); padding: 0 0.5rem; box-sizing: border-box;
+  width: 100%; height: var(--tm-ctl); padding: 0 var(--space-2); box-sizing: border-box;
   border: 1px solid var(--border); border-radius: var(--radius-sm);
   background: transparent; color: var(--foreground);
   font-size: var(--text-sm); font-weight: 700; text-align: center;
@@ -3234,7 +3256,7 @@ const faq = computed(() => [
   overflow: hidden; background: transparent;
 }
 .tm-num-ctl button {
-  height: 100%; border: 0; background: transparent; cursor: pointer; font-size: 1rem; color: var(--muted);
+  height: 100%; border: 0; background: transparent; cursor: pointer; font-size: var(--text-base); color: var(--muted);
   transition: background var(--transition), color var(--transition);
 }
 .tm-num-ctl button:hover { background: var(--surface-2); color: var(--foreground); }
@@ -3249,7 +3271,7 @@ const faq = computed(() => [
   background: repeating-conic-gradient(#cfcfd6 0% 25%, #ffffff 0% 50%) 0 0 / 10px 10px;
 }
 .tm-bg-opt {
-  display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: 0.4rem 0.5rem;
+  display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: 0.4rem var(--space-2);
   border: 1px solid var(--border); background: transparent; border-radius: var(--radius-sm);
   cursor: pointer; font-size: var(--text-xs); font-weight: 600; color: var(--foreground);
 }
@@ -3300,7 +3322,7 @@ const faq = computed(() => [
 .tm-layer.active .tm-layer-ysort:not(.tm-layer-ysort-on) { color: var(--muted); }
 .tm-layer-name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
 .tm-layer-input {
-  flex: 1; min-width: 0; height: 22px; padding: 0 4px;
+  flex: 1; min-width: 0; height: 22px; padding: 0 var(--space-1);
   border: 1px solid var(--primary); border-radius: var(--radius-sm); background: var(--surface);
   font-weight: 600; font-size: var(--text-xs); color: var(--foreground); outline: none;
 }
@@ -3456,7 +3478,7 @@ const faq = computed(() => [
   .tm-stage { width: 100%; }
   .tm-tile { padding: 2px; }
 
-  .tm-cell-input, .tm-search input, .tm-layer-input { font-size: 16px; }
+  .tm-cell-input, .tm-search input, .tm-layer-input { font-size: var(--text-base); }
 }
 .tm-board {
   flex: none; font-size: 0; overflow: hidden; border-radius: 3px;

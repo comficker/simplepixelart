@@ -647,7 +647,7 @@ async function apply(turn: AgentTurn, grid: AgentGrid | undefined, asNewBoard: b
   }
 
   .agent-composer textarea {
-    font-size: 16px; /* anything smaller and iOS zooms the page on focus */
+    font-size: var(--text-base); /* anything smaller and iOS zooms the page on focus */
   }
 }
 

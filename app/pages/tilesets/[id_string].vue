@@ -130,18 +130,22 @@ const formattedDate = computed(() => {
 })
 
 const cloning = ref(false)
+const loginModal = useLoginModal()
 async function cloneTileset() {
   if (!auth.isLogged) {
-    toast.error('Sign in to clone tilesets')
+    loginModal.show(cloneTileset)
     return
   }
+  if (cloning.value) return
   cloning.value = true
+  // Everything the editor reads, minus the preview world — worlds aren't cloned.
+  const {preview, ...cloneMeta} = meta.value
   try {
     const t = await useNativeFetch<any>('/coloring/tilesets/', {
       method: 'POST',
       body: {
         name: `${title.value} (copy)`,
-        meta: {registry: registry.value},
+        meta: cloneMeta,
       },
     })
     navigateTo(localePath(`/tilesets/editor?id=${t.id_string}`))

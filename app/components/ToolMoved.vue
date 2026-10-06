@@ -2,6 +2,7 @@
 const props = defineProps<{ to: string; name: string }>()
 const route = useRoute()
 const {t} = useI18n()
+const localePath = useLocalePath()
 
 useCustomSeoMeta({
   title: () => t('c_ToolMoved.xHasMoved', {name: props.name}),
@@ -11,7 +12,7 @@ useCustomSeoMeta({
 })
 
 onMounted(() => {
-  const timer = setTimeout(() => navigateTo({path: props.to, query: route.query}), 2500)
+  const timer = setTimeout(() => navigateTo(localePath({path: props.to, query: route.query})), 2500)
   onBeforeUnmount(() => clearTimeout(timer))
 })
 </script>
@@ -24,7 +25,7 @@ onMounted(() => {
       <p class="empty-state-body">
         {{ $t('c_ToolMoved.thisToolNowLivesAt') }} <code>{{ to }}</code>{{ $t('c_ToolMoved.takingYouThereNow') }} </p>
       <NuxtLinkLocale :to="{ path: to, query: route.query }" class="btn primary empty-state-action">
-        Go to {{ name }}
+        {{ $t('c_ToolMoved.goToX', {name}) }}
       </NuxtLinkLocale>
     </div>
   </div>
@@ -37,6 +38,6 @@ onMounted(() => {
 
 .tool-moved code {
   font-size: var(--text-sm);
-  padding: 0 4px;
+  padding: 0 var(--space-1);
 }
 </style>

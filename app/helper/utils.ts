@@ -150,3 +150,17 @@ export function daysLeftUntil(ends?: string | null): number {
     if (Number.isNaN(end)) return 0
     return Math.max(0, Math.ceil((end - Date.now()) / 86400000))
 }
+
+/**
+ * Save a Blob as a file. The object URL is revoked a second later rather than
+ * right after click(): some browsers start the download asynchronously and a
+ * synchronous revoke can cancel it.
+ */
+export function downloadBlob(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+}

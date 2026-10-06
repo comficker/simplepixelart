@@ -486,7 +486,7 @@ onUnmounted(() => { store.isPlaying = false })
   height: 34px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--primary);
+  background: var(--primary-fill);
   color: var(--primary-foreground, #fff);
   cursor: pointer;
 }
@@ -507,7 +507,7 @@ onUnmounted(() => { store.isPlaying = false })
 }
 
 .tl-counter {
-  font-size: 13px;
+  font-size: var(--text-xs);
   font-weight: 700;
   color: var(--foreground);
   font-variant-numeric: tabular-nums;
@@ -552,7 +552,7 @@ onUnmounted(() => { store.isPlaying = false })
 
 .tl-field input {
   width: 52px;
-  padding: 4px 4px;
+  padding: var(--space-1) var(--space-1);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--background);
@@ -619,7 +619,7 @@ onUnmounted(() => { store.isPlaying = false })
 
 .tl-tagname {
   width: 130px;
-  padding: 4px 6px;
+  padding: var(--space-1) 6px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--background);
@@ -633,7 +633,7 @@ onUnmounted(() => { store.isPlaying = false })
 .tl-tagrange {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   font-size: var(--text-2xs);
   font-weight: 700;
   color: var(--muted);
@@ -641,7 +641,7 @@ onUnmounted(() => { store.isPlaying = false })
 
 .tl-tagrange input {
   width: 48px;
-  padding: 4px 4px;
+  padding: var(--space-1) var(--space-1);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--background);
@@ -660,7 +660,7 @@ onUnmounted(() => { store.isPlaying = false })
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-xs);
   cursor: pointer;
 }
 
@@ -791,7 +791,7 @@ onUnmounted(() => { store.isPlaying = false })
 }
 
 .tl-colhead b {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -834,7 +834,7 @@ onUnmounted(() => { store.isPlaying = false })
   border: 1px solid var(--border);
   border-radius: 3px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   cursor: pointer;
   text-align: left;
   overflow: hidden;
@@ -868,7 +868,7 @@ onUnmounted(() => { store.isPlaying = false })
 
 .row-active .tl-rowname b {
   border-color: var(--primary);
-  background: var(--primary);
+  background: var(--primary-fill);
   color: var(--primary-foreground, #fff);
 }
 

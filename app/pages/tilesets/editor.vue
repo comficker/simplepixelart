@@ -9,7 +9,7 @@ import {type SheetSource, buildSheet, layoutGroup, sheetColumns, terrainGridNOf,
 import {buildGodotTileSet, buildTiledTileset} from '~/helper/engine-export'
 import {canvasBytes, packTileset} from '~/helper/tileset-pack'
 import {createZip} from '~/helper/zip'
-import {cloneDeep, debounce, generateUUID, pruneStorageKeys} from '~/helper/utils'
+import {cloneDeep, debounce, downloadBlob, generateUUID, pruneStorageKeys} from '~/helper/utils'
 import {layers2MapNumbers} from '~/helper/canvas'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
 
@@ -17,6 +17,7 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const apiBase = useRuntimeConfig().public.api as string
+const {confirm} = useConfirm()
 
 useCustomSeoMeta({
   title: 'Tileset Editor — Auto-Tile Terrains',
@@ -403,10 +404,19 @@ async function loadTileset(slug: string) {
 }
 
 async function onTilesetSelect(v: string) {
+  if (v === tileset.value?.id_string) return
+  // Guest tilesets autosave to this browser; only unsaved cloud edits can be lost.
+  if (dirty.value && auth.isLogged && !tileset.value?.localId
+      && !(await confirm({
+        title: 'Discard unsaved changes?',
+        message: 'Your edits to the current tileset have not been saved.',
+        confirmText: 'Discard',
+        danger: true,
+      }))) return
   if (v === '__new__') {
     await createTileset()
     showSettings.value = true
-  } else if (v && v !== tileset.value?.id_string) {
+  } else if (v) {
     loadTileset(v)
   }
 }
@@ -525,9 +535,11 @@ function openGuestTileset() {
   openBlank()
 }
 
-watch(() => (!auth.isLogged && tileset.value) ? JSON.stringify(tileset.value) : '', () => {
+// Deep watch, not a JSON.stringify of the whole tileset on every change.
+// Signed-in users get null here, so the tileset isn't walked for them at all.
+watch(() => auth.isLogged ? null : tileset.value, () => {
   if (!auth.isLogged && dirty.value) autosaveLocal()
-})
+}, {deep: true})
 
 async function createTileset() {
   if (!auth.isLogged) {
@@ -686,11 +698,6 @@ function contentBBox() {
   return {minX, minY, maxX, maxY}
 }
 
-function fitZoom() {
-  zoom.value = autoZoom(tileset.value?.cell.w || 32)
-  fitView()
-}
-
 /** Bring a group into view at a size you can work at. Picked from the list it
  * could be anywhere on a board of thirty-odd groups, and selecting it used to
  * only change its outline colour. Zoom stays on the editor's own steps
@@ -835,8 +842,6 @@ const cellPx = computed(() => ({
   h: (tileset.value?.cell.h || 32) * zoom.value,
 }))
 
-const slotPx = computed(() => Math.max(32, cellPx.value.w))
-
 const plainGroups = computed(() => tileset.value?.groups.filter(g => g.kind === 'group') ?? [])
 const terrainGroups = computed(() => tileset.value?.groups.filter(g => g.kind === 'terrain') ?? [])
 
@@ -914,14 +919,6 @@ const exportGroups = computed(() => {
 const exportSuffix = computed(() =>
     activeGroup.value ? `_${activeGroup.value.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || activeGroup.value.id}` : '',
 )
-
-function downloadBlob(blob: Blob, name: string) {
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(blob)
-  a.download = name
-  a.click()
-  URL.revokeObjectURL(a.href)
-}
 
 async function buildExport(groups: TileGroup[]) {
   const ts = tileset.value!
@@ -1194,6 +1191,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', onKeydown)
+  if (rafId) cancelAnimationFrame(rafId)
 })
 
 function removeTileById(id: number) {
@@ -3541,7 +3539,7 @@ const faq = computed(() => [
             </div>
             <div>
               <label class="publish-label">{{ $t('p_tilesets_editor.tileShape') }}</label>
-              <div class="h-center gap-2">
+              <div class="h-center gap-3">
                 <ui-switch
                     :model-value="tileset.iso"
                     @update:model-value="tileset.iso = $event; dirty = true"
@@ -3562,7 +3560,7 @@ const faq = computed(() => [
             </div>
             <div>
               <label class="publish-label">{{ $t('p_tilesets_editor.visibility') }}</label>
-              <div class="h-center gap-2">
+              <div class="h-center gap-3">
                 <ui-switch
                     :model-value="tileset.status === 'public'"
                     @update:model-value="tileset.status = $event ? 'public' : 'private'; dirty = true"
@@ -3574,7 +3572,7 @@ const faq = computed(() => [
           </div>
           <div class="publish-actions">
             <button class="btn block" @click="showSettings = false">{{ $t('common.close') }}</button>
-            <button class="btn primary block" :disabled="saving || !dirty" @click="save(); showSettings = false">
+            <button class="btn primary block" :disabled="saving || !dirty" @click="async () => { await save(); if (!dirty) showSettings = false }">
               {{ saving ? 'Saving…' : 'Save' }}
             </button>
           </div>
@@ -3585,7 +3583,7 @@ const faq = computed(() => [
           <div class="publish-form">
             <div>
               <label class="publish-label">{{ $t('p_tilesets_editor.priority') }}</label>
-              <div class="h-center gap-2">
+              <div class="h-center gap-3">
                 <ui-tooltip :text="$t('p_tilesets_editor.lowerPriority')">
                   <button class="btn tm-iconbtn" :disabled="groupPriority(activeGroup) <= 0" @click="bumpPriority(activeGroup, -1)">
                     <span class="icon icon-minus"/>
@@ -4240,7 +4238,7 @@ const faq = computed(() => [
   color: var(--primary, #6366f1);
   background: none;
   border: 0;
-  padding: 2px 4px;
+  padding: 2px var(--space-1);
   cursor: pointer;
 }
 
@@ -4312,7 +4310,7 @@ const faq = computed(() => [
 
 .tsx-build-hint {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--muted, #888);
   text-align: right;
 }

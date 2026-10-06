@@ -5,10 +5,10 @@ import {ref, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
 import {toast} from 'vue-sonner'
 import type {EditorData} from '~/types'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
-import {cloneDeep, generateUUID, debounce, getStorageItem} from '~/helper/utils'
+import {cloneDeep, downloadBlob, generateUUID, debounce, getStorageItem} from '~/helper/utils'
 import {layers2MapNumbers} from '~/helper/canvas'
 import {detectPixelScale, bestPhase, shiftCrop, modeDownscale, imageToCells} from '~/helper/pixel'
-import {saveWorkspaceFull, clearWorkspaceFull} from '~/helper/workspaceSnapshot'
+import {saveWorkspaceFull} from '~/helper/workspaceSnapshot'
 import {createZip} from '~/helper/zip'
 
 const auth = useAuthStore()
@@ -448,7 +448,9 @@ function clearImage() {
 }
 
 function onFileSelect(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
   if (file) loadFile(file)
 }
 
@@ -1449,7 +1451,6 @@ async function openInEditor() {
   ws[editorData.id] = editorData
   localStorage.setItem('workspaces', JSON.stringify(ws))
   localStorage.setItem('workspace_current', editorData.id)
-  await clearWorkspaceFull()
   navigateTo(localePath(`/editor?id=${editorData.id}`))
 }
 
@@ -1470,7 +1471,6 @@ async function openAllInEditor() {
 
   if (eds.length === 1) {
     localStorage.setItem('workspaces', JSON.stringify(ws))
-    await clearWorkspaceFull()
     navigateTo(localePath(`/editor?id=${eds[0]!.id}`))
     return
   }
@@ -1534,7 +1534,6 @@ async function openAsAnimation() {
   ws[ed.id] = ed
   localStorage.setItem('workspaces', JSON.stringify(ws))
   localStorage.setItem('workspace_current', ed.id)
-  await clearWorkspaceFull()
   navigateTo(localePath(`/editor?id=${ed.id}`))
 }
 
@@ -1696,10 +1695,7 @@ async function downloadAllZip() {
     }
     if (!files.length) { toast.error('Nothing to export — all tiles are empty'); return }
     const blob = createZip(files)
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = 'tiles.zip'; a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    downloadBlob(blob, 'tiles.zip')
     toast.success(skipped ? `Exported ${files.length} tiles · ${skipped} empty skipped` : `Exported ${files.length} tiles`)
   } finally {
     exporting.value = false
@@ -1769,10 +1765,8 @@ const faq = computed(() => [
             <template #menu>
               <div class="file-menu">
                 <button class="file-menu-item" @click="openFileDialog">
-                  <span class="icon icon-upload"/><span>{{ $t('p_tilesets_slicer.openImage') }}</span>
-                </button>
-                <button class="file-menu-item" @click="openFileDialog">
-                  <span class="icon icon-swap"/><span>{{ $t('p_tilesets_slicer.changeSheet') }}</span>
+                  <span class="icon" :class="hasImage ? 'icon-swap' : 'icon-upload'"/>
+                  <span>{{ hasImage ? $t('p_tilesets_slicer.changeSheet') : $t('p_tilesets_slicer.openImage') }}</span>
                 </button>
                 <div class="file-menu-sep"/>
                 <button class="file-menu-item" @click="clearImage">
@@ -1782,7 +1776,7 @@ const faq = computed(() => [
             </template>
           </ui-dropdown-menu>
           <ui-tooltip :text="$t('p_tilesets_slicer.sliceSettings')">
-            <button class="toolbar-btn" :class="{ active: showSettings }" :title="$t('p_tilesets_slicer.sliceSettings')" @click="showSettings = !showSettings"><span class="icon icon-cog"/></button>
+            <button class="toolbar-btn" :class="{ active: showSettings }" @click="showSettings = !showSettings"><span class="icon icon-cog"/></button>
           </ui-tooltip>
         </div>
         <div class="toolbar-main no-scrollbar">
@@ -1790,8 +1784,8 @@ const faq = computed(() => [
             <ui-tooltip :text="$t('p_tilesets_slicer.zoomOut')">
               <button class="toolbar-btn" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
             </ui-tooltip>
-            <ui-tooltip :text="$t('p_tilesets_slicer.resetToFit')">
-              <button class="toolbar-btn zoom-pct" :title="$t('p_tilesets_slicer.zoomLevelClickFor100')" @click="zoomTo100">{{ Math.round(zoom * 100) }}%</button>
+            <ui-tooltip :text="$t('p_tilesets_slicer.zoomLevelClickFor100')">
+              <button class="toolbar-btn zoom-pct" @click="zoomTo100">{{ Math.round(zoom * 100) }}%</button>
             </ui-tooltip>
             <ui-tooltip :text="$t('p_tilesets_slicer.zoomIn')">
               <button class="toolbar-btn" @click="zoomIn"><span class="icon icon-zoom-in"/></button>
@@ -2269,7 +2263,7 @@ const faq = computed(() => [
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-2) 0.75rem;
+  padding: var(--space-2) var(--space-3);
 }
 
 .ts-pick-new .btn {
@@ -2280,7 +2274,7 @@ const faq = computed(() => [
 .ts-pick-input {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.5rem 0.75rem;
+  padding: var(--space-2) var(--space-3);
   font-size: var(--text-xs);
   color: var(--foreground);
   background: var(--surface-2);
@@ -2426,10 +2420,10 @@ const faq = computed(() => [
   cursor: default;
 }
 
-.ts-sheetinfo { margin: 4px 0 0; }
+.ts-sheetinfo { margin: var(--space-1) 0 0; }
 
 .ts-set-toggle {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
 }
 
 .ts-bg-block {
@@ -2437,7 +2431,7 @@ const faq = computed(() => [
 }
 
 .ts-pickbtn {
-  padding: 4px 10px;
+  padding: var(--space-1) 10px;
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--foreground);
@@ -2449,7 +2443,7 @@ const faq = computed(() => [
 
 .ts-pickbtn.active {
   color: var(--primary-foreground);
-  background: var(--primary);
+  background: var(--primary-fill);
   border-color: var(--primary);
 }
 
@@ -2459,7 +2453,7 @@ const faq = computed(() => [
 
 .ts-pill {
   position: relative;
-  padding: 5px 12px;
+  padding: 5px var(--space-3);
   font-size: var(--text-xs);
   font-weight: 600;
   border: 1px solid var(--border);
@@ -2476,7 +2470,7 @@ const faq = computed(() => [
 }
 
 .ts-pill.active {
-  background: var(--primary);
+  background: var(--primary-fill);
   border-color: var(--primary);
   color: var(--primary-foreground);
 }
@@ -2519,7 +2513,7 @@ const faq = computed(() => [
 
 .ts-link.active {
   color: var(--primary-foreground);
-  background: var(--primary);
+  background: var(--primary-fill);
   border-color: var(--primary);
 }
 
@@ -2601,7 +2595,7 @@ const faq = computed(() => [
   font-size: 10px;
   font-weight: 700;
   color: var(--primary-foreground);
-  background: var(--primary);
+  background: var(--primary-fill);
   border-radius: 3px;
 }
 
@@ -2661,7 +2655,7 @@ const faq = computed(() => [
 
 .ts-sync.synced {
   color: var(--primary-foreground);
-  background: var(--primary);
+  background: var(--primary-fill);
   border-color: var(--primary);
 }
 
@@ -2700,6 +2694,6 @@ const faq = computed(() => [
 }
 
 .ts-empty {
-  padding: 0.5rem 0;
+  padding: var(--space-2) 0;
 }
 </style>

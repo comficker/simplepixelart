@@ -1,12 +1,12 @@
 <script setup lang="ts">
 const localePath = useLocalePath()
 const {t} = useI18n()
-import {ref, computed, watch, nextTick} from 'vue'
 import {toast} from 'vue-sonner'
 import type {EditorData} from '~/types'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
 import {cloneDeep, debounce, generateUUID, getStorageItem} from '~/helper/utils'
 import {cleanOrphanCells, convertImageToGrid} from '~/helper/pixel'
+import {hexToRgb, rgbToHex} from '~/helper/color'
 
 useCustomSeoMeta({
   title: () => t('seo.converter.title'),
@@ -135,6 +135,7 @@ const palette = ref<RGB[]>([])
 const selectedColorIndex = ref<number>(-1)
 
 const hasImage = computed(() => !!sourceImage.value)
+const dragging = ref(false)
 
 const sizeOptions: (number | 'auto')[] = ['auto', 8, 12, 16, 20, 24, 32, 48, 64]
 const colorOptions = [4, 8, 16, 32, 64]
@@ -144,7 +145,9 @@ function openFileDialog() {
 }
 
 function onFileSelect(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
   if (!file) return
   loadFile(file)
 }
@@ -167,7 +170,7 @@ function loadFile(file: File) {
 }
 
 function onDrop(e: DragEvent) {
-  e.preventDefault()
+  dragging.value = false
   const file = e.dataTransfer?.files?.[0]
   if (file && file.type.startsWith('image/')) loadFile(file)
 }
@@ -201,15 +204,6 @@ function cleanOrphans() {
   pixels.value = grid
   drawPreview()
   toast.success(`Cleaned ${changed} orphan pixel${changed !== 1 ? 's' : ''}`)
-}
-
-function rgbToHex(r: number, g: number, b: number): string {
-  return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase()
-}
-
-function hexToRgb(hex: string): RGB {
-  const h = hex.replace('#', '')
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]
 }
 
 function editColor(index: number, hex: string) {
@@ -269,7 +263,7 @@ function sendToEditor() {
     id,
     width: w,
     height: h,
-    colors: palette.value.map(p => rgbToHex(p[0]!, p[1]!, p[2]!)),
+    colors: palette.value.map(p => rgbToHex(p[0]!, p[1]!, p[2]!).toUpperCase()),
     layers: [{
       name: 'Layer 1',
       pixels: layerPixels,
@@ -310,14 +304,19 @@ const faq = computed(() => [
               <span>{{ $t('p_converter.changeImage') }}</span>
             </button>
           </template>
-          <div class="preview-wrapper">
+          <!-- Drops land anywhere on the stage, before or after an image is loaded. -->
+          <div
+              class="preview-wrapper"
+              :class="{'is-dragging': dragging}"
+              @dragover.prevent="dragging = true"
+              @dragleave.self="dragging = false"
+              @drop.prevent="onDrop"
+          >
             <canvas v-show="hasImage" ref="previewCanvas" class="pixel-preview" :class="{checker: bgCut}"/>
             <div
                 v-if="!hasImage"
                 class="dropzone"
                 @click="openFileDialog"
-                @drop="onDrop"
-                @dragover.prevent
             >
               <span class="icon icon-upload dropzone-icon"/>
               <p class="dropzone-title">{{ $t('p_converter.clickOrDropAnImageHere') }}</p>
@@ -327,7 +326,7 @@ const faq = computed(() => [
           </div>
         </Widget>
 
-        <div v-if="hasImage" class="convert-actions">
+        <div v-if="hasImage" class="tool-actions">
           <button class="btn primary block" @click="sendToEditor">
             <span class="icon icon-pen"/>
             <span>{{ $t('common.openInEditor2') }}</span>
@@ -396,15 +395,17 @@ const faq = computed(() => [
                 @click="selectedColorIndex = selectedColorIndex === i ? -1 : i"
             >
               <div class="swatch-color" :style="{background: `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`}"/>
-              <input
-                  type="color"
-                  :value="rgbToHex(rgb[0], rgb[1], rgb[2])"
-                  @input="(e) => editColor(i, (e.target as HTMLInputElement).value)"
-                  @click.stop
-              />
             </div>
           </div>
           <div v-if="selectedColorIndex >= 0" class="merge-hint">
+            <label class="edit-color text-xs">
+              <input
+                  type="color"
+                  :value="rgbToHex(palette[selectedColorIndex][0], palette[selectedColorIndex][1], palette[selectedColorIndex][2])"
+                  @input="(e) => editColor(selectedColorIndex, (e.target as HTMLInputElement).value)"
+              />
+              {{ $t('common.edit') }}
+            </label>
             <p class="text-xs">{{ $t('p_converter.mergeWithAnotherColor') }}</p>
             <div class="palette-grid mt-2">
               <div
@@ -496,6 +497,10 @@ const faq = computed(() => [
   background: var(--background);
 }
 
+.preview-wrapper.is-dragging {
+  box-shadow: inset 0 0 0 calc(var(--space-1) / 2) var(--primary);
+}
+
 .pixel-preview {
   image-rendering: pixelated;
   max-width: 100%;
@@ -504,12 +509,6 @@ const faq = computed(() => [
   border-radius: var(--radius-sm);
 }
 
-.convert-actions {
-  display: flex;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border-top: 1px solid var(--border);
-}
 
 
 .pixel-preview.checker {
@@ -543,13 +542,21 @@ const faq = computed(() => [
   inset: 0;
 }
 
-.palette-swatch input[type=color] {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
+.edit-color {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
   cursor: pointer;
-  width: 100%;
-  height: 100%;
+}
+
+.edit-color input[type=color] {
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
 }
 
 .palette-swatch.mergeable {
@@ -557,6 +564,6 @@ const faq = computed(() => [
 }
 
 .merge-hint {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
 }
 </style>
