@@ -6,7 +6,7 @@ const route = useRoute()
 const page = computed(() => route.query.page ? Number.parseInt(route.query.page.toString()) : 1)
 
 const hasFilterQuery = computed(() =>
-    !!(route.query.width || route.query.height || route.query.is_iso || route.query.search),
+    !!(route.query.width || route.query.height || route.query.is_iso || route.query.is_anim || route.query.license || route.query.sort || route.query.search),
 )
 
 // Same-key kick-off so the artwork list and the tag list travel together

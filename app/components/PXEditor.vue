@@ -7,6 +7,7 @@ import {onMounted, ref, toRaw} from "vue";
 import {buildIsoPath, compositeFrame, drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
 import {hexToRgb} from "~/helper/color";
 import {generateUUID, sharedPage2EditorData} from "~/helper/utils";
+import {LICENSES} from "~/helper/constants";
 import {saveWorkspaceFull} from "~/helper/workspaceSnapshot";
 import {toast} from "vue-sonner";
 
@@ -164,6 +165,7 @@ const PUBLISH_STATUSES = [
   {value: 'draft', label: t('c_PXEditor.privateDraftOnlyYouCanSee'), action: 'saveDraft'},
 ] as const
 const publishStatus = ref<'public' | 'draft'>('draft')
+const publishLicense = ref('')
 
 /* Staff only: publish the piece under one of the bot accounts instead of
    this one, so the creator board has something to rank before the site has
@@ -178,8 +180,11 @@ function openPublish() {
     showLoginPrompt.value = true
     return
   }
-  publishStatus.value = editorData.value.is_public ? 'public' : 'draft'
+  // The button that opens this says Publish, so that is what it does unless
+  // the piece was published before and later made private again.
+  publishStatus.value = editorData.value.is_public || !editorData.value.meta?.published_at ? 'public' : 'draft'
   boostOnPublish.value = false
+  publishLicense.value = (editorData.value.meta as any)?.license || ''
   publishStep.value = 'edit'
   showPublishModal.value = true
   loadEconomyForPublish()
@@ -285,6 +290,12 @@ async function boostArt() {
 
 async function saveArt() {
   editorData.value.is_public = publishStatus.value === 'public'
+  if (editorData.value.is_public) {
+    const meta: any = {...(editorData.value.meta || {})}
+    if (publishLicense.value) meta.license = publishLicense.value
+    else delete meta.license
+    editorData.value.meta = meta
+  }
   store.saveState(false)
   await store.saveNow()
   if (isAdmin.value && boostOnPublish.value && heldForReview.value) {
@@ -4121,6 +4132,12 @@ watch(
               <label class="publish-label" for="publish-status">{{ $t('common.status') }}</label>
               <select id="publish-status" v-model="publishStatus" class="publish-input">
                 <option v-for="s in PUBLISH_STATUSES" :key="s.value" :value="s.value">{{ s.label }}</option>
+              </select>
+            </div>
+            <div v-if="publishStatus === 'public'" class="publish-status-row">
+              <label class="publish-label" for="publish-license">{{ $t('p_upload.license') }}</label>
+              <select id="publish-license" v-model="publishLicense" class="publish-input">
+                <option v-for="l in LICENSES" :key="l.value" :value="l.value">{{ $t(`p_upload.license_${l.key}`) }}</option>
               </select>
             </div>
             <div v-if="isAdmin && publishStatus === 'public'" class="publish-status-row">

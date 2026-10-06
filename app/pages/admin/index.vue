@@ -12,10 +12,12 @@ useCustomSeoMeta({
 
 interface DayRow { date: string; users: number; arts: number; tokens_granted: number; tokens_spent: number }
 interface MonthRow { month: string; users: number; arts: number; tokens_granted: number; tokens_spent: number }
+interface CreatorWeek { week: string; drew: number; published: number; first_published: number; pieces: number }
 interface Stats {
   totals: Record<string, number>
   daily: DayRow[]
   monthly: MonthRow[]
+  creators?: { weeks: CreatorWeek[]; creators_total: number }
 }
 interface Mission {
   code: string; title: string; period: string; reward: number
@@ -288,6 +290,27 @@ watch(isStaff, (v) => { if (v) load() })
               <div class="adm-card-l">Tilesets + worlds</div>
             </div>
           </div>
+
+          <template v-if="stats.creators">
+            <h2 class="adm-section-title">Creators · {{ stats.creators.creators_total }} have published</h2>
+            <p class="adm-note">People only: staff, bots and throwaway accounts are left out. The gap between who drew and who published is what onboarding has to close.</p>
+            <div class="adm-table-wrap">
+              <table class="adm-table">
+                <thead>
+                <tr><th>Week of</th><th>Drew</th><th>Published</th><th>First time</th><th>Pieces</th></tr>
+                </thead>
+                <tbody>
+                <tr v-for="w in [...stats.creators.weeks].reverse()" :key="w.week">
+                  <td>{{ w.week }}</td>
+                  <td>{{ w.drew }}</td>
+                  <td>{{ w.published }}</td>
+                  <td>{{ w.first_published }}</td>
+                  <td>{{ w.pieces }}</td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </template>
 
           <h2 class="adm-section-title">Last 30 days</h2>
           <div class="adm-charts">
@@ -572,6 +595,12 @@ watch(isStaff, (v) => { if (v) load() })
   font-weight: 700;
   border-top: 1px solid var(--border);
   padding-top: var(--space-4);
+}
+
+.adm-note {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--muted);
 }
 
 .adm-cards {

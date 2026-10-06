@@ -3,17 +3,64 @@ const localePath = useLocalePath()
 import type {SharedPage} from "~/types";
 import {editorDataToJSON, editorDataToSVG} from "~/helper/canvas";
 import {sharedPage2EditorData} from "~/helper/utils";
+import {licenseOf} from "~/helper/constants";
+import {toast} from "vue-sonner";
 
 const route = useRoute();
 const router = useRouter();
 const config = useRuntimeConfig()
 const auth = useAuthStore()
+const {t} = useI18n()
 const {data, pending, error} = await useAuthFetch<SharedPage>(`/coloring/shared-pages/${route.params.id_string}/`)
 
 if (import.meta.server && !data.value) {
   setResponseStatus(useRequestEvent()!, 404)
 }
 
+const license = computed(() => licenseOf((data.value?.meta as any)?.license))
+
+// A like is also how a piece is kept: /arts?sort=liked lists them.
+const liked = ref(!!data.value?.is_liked)
+const likes = ref(data.value?.likes || 0)
+const liking = ref(false)
+const loginModal = useLoginModal()
+async function toggleLike() {
+  if (!auth.isLogged) {
+    loginModal.show(toggleLike)
+    return
+  }
+  if (liking.value || !data.value) return
+  liking.value = true
+  liked.value = !liked.value
+  likes.value += liked.value ? 1 : -1
+  try {
+    const res = await useNativeFetch<{liked: boolean; likes: number}>(
+        `/coloring/shared-pages/${data.value.id}/like/`, {method: 'POST'})
+    liked.value = res.liked
+    likes.value = res.likes
+  } catch {
+    liked.value = !liked.value
+    likes.value += liked.value ? 1 : -1
+  } finally {
+    liking.value = false
+  }
+}
+
+// The line someone using a CC piece is asked to carry.
+const creditLine = computed(() => {
+  const d = data.value
+  if (!d || !license.value.url) return ''
+  const by = d.user?.username ? ` by @${d.user.username}` : ''
+  return `“${d.name || 'Untitled'}”${by}, https://simplepixelart.com/art/${d.id_string}, ${t(`p_upload.license_${license.value.key}`).split(' — ')[0]}`
+})
+async function copyCredit() {
+  try {
+    await navigator.clipboard.writeText(creditLine.value)
+    toast.success(t('p_art_id_string.creditCopied'))
+  } catch {
+    toast.error(creditLine.value)
+  }
+}
 const isOwner = computed(() =>
     !!auth.logged?.id && !!data.value?.user?.id && auth.logged.id === data.value.user.id
 )
@@ -140,6 +187,7 @@ useCustomSeoMeta({
           height: 630,
           caption: meta.value.title,
           creditText: "SimplePixelArt.com",
+          ...(license.value.url ? {license: license.value.url} : {}),
           creator: {
             "@type": "Person",
             name: meta.value.author || "Anonymous",
@@ -350,6 +398,7 @@ const previewStyle = computed(() => {
              action on this artwork. In the #extra slot it became a direct child
              of the page grid and stretched into a full-width bar under the
              footer, which read as a piece of broken layout. -->
+        <div class="art-head-actions">
         <ClientOnly>
           <AdminArtPanel
               v-if="isAdmin"
@@ -358,7 +407,19 @@ const previewStyle = computed(() => {
               @deleted="onAdminDelete"
           />
         </ClientOnly>
+        <button
+            type="button"
+            class="btn secondary art-like"
+            :class="{'is-liked': liked}"
+            :aria-pressed="liked"
+            :title="liked ? $t('p_art_id_string.unlike') : $t('p_art_id_string.like')"
+            @click="toggleLike"
+        >
+          <span class="icon icon-heart"/>
+          <span>{{ likes }}</span>
+        </button>
         <SocialSharing :meta="shareBtnMeta" position="right" class="art-tb-share"/>
+        </div>
       </template>
 
     <div class="flat-editor art-editor">
@@ -406,7 +467,16 @@ const previewStyle = computed(() => {
           <span class="art-anim-dot" aria-hidden="true"/>
           <span>Animated · {{ animation.frames.length }}f</span>
         </div>
-        <div v-if="data.template" class="art-remix-badge" :title="$t('p_art_id_string.remixedFromAnotherArtwork')">
+        <NuxtLinkLocale
+            v-if="data.template_info"
+            :to="`/art/${data.template_info.id_string}`"
+            class="art-remix-badge"
+            :title="$t('p_art_id_string.remixedFromX', {x: data.template_info.name || ''})"
+        >
+          <span class="icon icon-pen"/>
+          <span>{{ $t('p_art_id_string.remix') }}</span>
+        </NuxtLinkLocale>
+        <div v-else-if="data.template" class="art-remix-badge" :title="$t('p_art_id_string.remixedFromAnotherArtwork')">
           <span class="icon icon-pen"/>
           <span>{{ $t('p_art_id_string.remix') }}</span>
         </div>
@@ -502,10 +572,11 @@ const previewStyle = computed(() => {
         <NuxtLinkLocale
             :to="`/editor?id=${route.params.id_string}`"
             class="btn"
-            :title="isOwner ? 'Edit this pixel art' : 'Open a copy of this pixel art to change'"
+            :class="{primary: !isOwner}"
+            :title="isOwner ? $t('p_art_id_string.editThisPixelArt') : $t('p_art_id_string.remixHint')"
         >
           <span class="icon icon-pen"/>
-          <span>{{ isOwner ? 'Edit' : 'Remix' }}</span>
+          <span>{{ isOwner ? $t('common.edit') : $t('p_art_id_string.makeYourOwnVersion') }}</span>
         </NuxtLinkLocale>
         <!-- Staff can change the piece itself, not a copy of it. Beside Remix
              rather than instead of it: a moderator fixing a stray pixel and a
@@ -557,6 +628,15 @@ const previewStyle = computed(() => {
           <dt>{{ $t('p_art_id_string.creator') }}</dt>
           <dd><NuxtLinkLocale :to="`/creator/${data.user.username}`" class="art-meta-link">@{{ data.user.username }}</NuxtLinkLocale></dd>
         </div>
+        <div v-if="data.template_info" class="art-meta-row">
+          <dt>{{ $t('p_art_id_string.remixedFrom') }}</dt>
+          <dd>
+            <NuxtLinkLocale :to="`/art/${data.template_info.id_string}`" class="art-meta-link">{{ data.template_info.name || $t('common.untitled') }}</NuxtLinkLocale>
+            <template v-if="data.template_info.username">
+              · <NuxtLinkLocale :to="`/creator/${data.template_info.username}`" class="art-meta-link">@{{ data.template_info.username }}</NuxtLinkLocale>
+            </template>
+          </dd>
+        </div>
         <div class="art-meta-row">
           <dt>{{ $t('common.size') }}</dt>
           <dd><NuxtLinkLocale :to="`/arts/size-${data.width}x${data.height}`" class="art-meta-link">{{ data.width }}×{{ data.height }}</NuxtLinkLocale></dd>
@@ -568,6 +648,21 @@ const previewStyle = computed(() => {
         <div v-if="data.colors?.length" class="art-meta-row">
           <dt>{{ $t('common.colors') }}</dt>
           <dd>{{ data.colors.length }}</dd>
+        </div>
+        <div class="art-meta-row">
+          <dt>{{ $t('p_upload.license') }}</dt>
+          <dd>
+            <a v-if="license.url" :href="license.url" target="_blank" rel="license noopener" class="art-meta-link">{{ $t(`p_upload.license_${license.key}`) }}</a>
+            <template v-else>{{ $t(`p_upload.license_${license.key}`) }}</template>
+          </dd>
+        </div>
+        <div v-if="creditLine" class="art-meta-row">
+          <dt>{{ $t('p_art_id_string.credit') }}</dt>
+          <dd><button type="button" class="art-meta-link art-credit-btn" @click="copyCredit">{{ $t('p_art_id_string.copyCredit') }}</button></dd>
+        </div>
+        <div v-if="data.remixes" class="art-meta-row">
+          <dt>{{ $t('p_art_id_string.remixes') }}</dt>
+          <dd>{{ data.remixes }}</dd>
         </div>
         <div v-if="formattedDate" class="art-meta-row">
           <dt>{{ $t('p_art_id_string.updated') }}</dt>
@@ -635,6 +730,29 @@ const previewStyle = computed(() => {
 </template>
 
 <style scoped>
+.art-head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.art-like {
+  font-variant-numeric: tabular-nums;
+}
+
+.art-like.is-liked {
+  color: var(--danger);
+  border-color: color-mix(in oklab, var(--danger) 45%, var(--border));
+}
+
+.art-credit-btn {
+  padding: 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
 
 .art-state {
   display: flex;

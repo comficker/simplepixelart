@@ -1858,6 +1858,9 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
 
 .browse-search {
     position: relative;
+    /* A <label>: inline unless told otherwise, and an inline box ignores the
+       height, which flattened the input wherever it was not a flex child. */
+    display: block;
     width: 100%;
     height: 36px;
 }
@@ -4409,31 +4412,11 @@ select.publish-input { height: var(--tm-ctl, 34px); cursor: pointer; }
     border-top: 1px solid var(--border);
 }
 
-/* Left aligned, so the first glyph sits on the row's padding rather than
-   16px plus whatever the number column reserves for two digits. */
-.rank-list.lg .rank-n {
-    width: 2em;
-}
-
 .rank-list.lg .rank-avatar,
 .rank-list.lg .rank-skeleton-avatar {
     width: calc(var(--space-6) * 1.5);
     height: calc(var(--space-6) * 1.5);
     font-size: var(--text-xs);
-}
-
-/* The podium is marked by colour alone. The three are derived from the amber
-   already in the palette rather than being new values. */
-.rank-list.lg .rank-row.top-1 .rank-n {
-    color: var(--warning);
-}
-
-.rank-list.lg .rank-row.top-2 .rank-n {
-    color: color-mix(in oklab, var(--warning) 70%, var(--muted));
-}
-
-.rank-list.lg .rank-row.top-3 .rank-n {
-    color: color-mix(in oklab, var(--warning) 45%, var(--muted));
 }
 
 @media (hover: hover) and (pointer: fine) {

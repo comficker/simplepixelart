@@ -4,6 +4,7 @@ const localePath = useLocalePath()
 const {t} = useI18n()
 import type {APIResponse, EditorData, SharedPage} from "~/types";
 import {daysLeftUntil, getStorageItem} from "~/helper/utils";
+import {tileImageUrl} from "~/helper/tilemap";
 
 type WorkItem = (SharedPage | EditorData) & {
   id: string | number
@@ -98,7 +99,7 @@ const CREATOR_ROWS = 3
 // Awaited together: these two are independent, and awaiting them one after
 // the other made the server wait out both round trips before the artwork list
 // (fetched by item-list further down) could even start.
-const [{data: aiEnabled}, {data: topCreators}, {data: homeChallenge}] = await Promise.all([
+const [{data: aiEnabled}, {data: topCreators}, {data: homeChallenge}, {data: newCreators}] = await Promise.all([
   useAuthFetch<boolean>('/coloring/economy/', {
     key: 'home-ai-image-enabled',
     transform: (s: any) => !!s?.ai_image_enabled,
@@ -122,7 +123,14 @@ const [{data: aiEnabled}, {data: topCreators}, {data: homeChallenge}] = await Pr
         : null,
     default: () => null,
   }),
+  useAuthFetch<any>('/coloring/creators/new/', {
+    key: 'home-new-creators',
+    query: {limit: CREATOR_ROWS},
+    transform: (s: any) => s?.results || [],
+    default: () => [],
+  }),
 ])
+const apiBase = useRuntimeConfig().public.api as string
 
 const creatorRows = computed(() => {
   const rows = topCreators.value || []
@@ -231,7 +239,7 @@ useCustomSeoMeta({
   <ToolLayout :title="$t('common.getStarted')">
     <template #head>
       <p class="home-facts text-xs text-muted">
-        {{ $t('p_index.spritesTilesMapsGodotUnityPhaser') }}
+        {{ $t('p_index.homeFacts') }}
       </p>
     </template>
 
@@ -240,10 +248,18 @@ useCustomSeoMeta({
         <div class="home-hero-main">
           <span class="home-hero-eyebrow">{{ $t('p_index.freeNoSignupRunsInYour') }}</span>
           <h1 class="home-hero-title">
-            <span class="home-hero-title-main">{{ $t('p_index.makePixelArt') }}</span>
-            <span class="home-hero-title-accent">{{ $t('p_index.inSeconds') }}</span>
+            <span class="home-hero-title-main">{{ $t('p_index.findPixelArtYouLove') }}</span>
+            <span class="home-hero-title-accent">{{ $t('p_index.thenMakeYourOwn') }}</span>
           </h1>
           <p class="home-hero-tagline">{{ $t('p_index.heroTagline') }}</p>
+          <div class="home-cta">
+            <NuxtLinkLocale to="/arts" class="btn primary">
+              <span class="icon icon-explore"/><span>{{ $t('p_index.browsePixelArt') }}</span>
+            </NuxtLinkLocale>
+            <NuxtLinkLocale to="/editor?new=true" class="btn">
+              <span class="icon icon-pen"/><span>{{ $t('p_index.startDrawing') }}</span>
+            </NuxtLinkLocale>
+          </div>
           <form v-if="aiEnabled" class="home-ai" @submit.prevent="goGenerate">
             <input
                 v-model="aiPrompt"
@@ -261,6 +277,26 @@ useCustomSeoMeta({
         </div>
 
         <div class="home-hero-aside">
+          <section class="home-aside-sec">
+            <div class="home-aside-cap">
+              <span>{{ $t('p_index.newCreators') }}</span>
+              <NuxtLinkLocale to="/creator" class="home-aside-more">{{ $t('p_index.viewAll') }}</NuxtLinkLocale>
+            </div>
+            <ol v-if="newCreators?.length" class="rank-list">
+              <li v-for="c in newCreators" :key="c.username">
+                <NuxtLinkLocale :to="`/creator/${c.username}`" class="rank-row" :title="`@${c.username}`">
+                  <span class="rank-avatar">
+                    <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
+                    <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
+                  </span>
+                  <span class="rank-name">{{ c.username }}</span>
+                  <img class="rank-art" :src="tileImageUrl(apiBase, c.art.id_string)" :alt="c.art.name" loading="lazy">
+                </NuxtLinkLocale>
+              </li>
+            </ol>
+            <p class="home-aside-hint">{{ $t('p_index.newCreatorsHint') }}</p>
+          </section>
+
           <section v-if="topCreators?.length" class="home-aside-sec">
             <div class="home-aside-cap">
               <span>{{ $t('p_index.topCreators') }}</span>
@@ -269,7 +305,6 @@ useCustomSeoMeta({
             <ol class="rank-list">
               <li v-for="(c, i) in creatorRows" :key="c ? c.username : `slot-${i}`">
                 <NuxtLinkLocale v-if="c" :to="`/creator/${c.username}`" class="rank-row">
-                  <span class="rank-n">{{ i + 1 }}</span>
                   <span class="rank-avatar">
                     <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
                     <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
@@ -279,7 +314,6 @@ useCustomSeoMeta({
                   <span class="rank-count">{{ c.arts }}</span>
                 </NuxtLinkLocale>
                 <span v-else class="rank-row" aria-hidden="true">
-                  <span class="rank-n">{{ i + 1 }}</span>
                   <span class="skeleton rank-skeleton-avatar"/>
                   <span class="skeleton skeleton-line-sm rank-skeleton-name"/>
                 </span>
@@ -296,7 +330,8 @@ useCustomSeoMeta({
               <span class="home-challenge-name">{{ homeChallenge.name }}</span>
               <span class="home-challenge-sub">
                 {{ challengeDaysLeft }} {{ challengeDaysLeft === 1 ? 'day' : 'days' }} left ·
-                {{ homeChallenge.entries }} {{ homeChallenge.entries === 1 ? 'entry' : 'entries' }} · {{ $t('p_index.joinChallenge') }} →
+                <template v-if="homeChallenge.entries">{{ homeChallenge.entries }} {{ homeChallenge.entries === 1 ? 'entry' : 'entries' }} · {{ $t('p_index.joinChallenge') }}</template>
+                <template v-else>{{ $t('p_index.beTheFirstToEnter') }}</template>
               </span>
             </NuxtLinkLocale>
           </section>
@@ -498,6 +533,13 @@ useCustomSeoMeta({
   max-width: 64ch;
 }
 
+.home-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
 .home-ai {
   margin-top: var(--space-5);
   display: flex;
@@ -537,6 +579,23 @@ useCustomSeoMeta({
 
 .home-aside-sec + .home-aside-sec {
   border-top: 1px solid var(--border);
+}
+
+/* The creator's latest piece, beside their name: a first piece is the
+   thing this list exists to show. */
+.home-hero .rank-art {
+  width: var(--space-6);
+  height: var(--space-6);
+  flex-shrink: 0;
+  object-fit: contain;
+  image-rendering: pixelated;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+
+.home-aside-hint {
+  font-size: var(--text-2xs);
+  color: var(--muted);
 }
 
 /* Same caption as a widget head, without the box: uppercase, muted, small. */

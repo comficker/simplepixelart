@@ -27,10 +27,13 @@ const period = computed(() => {
 })
 const currentPage = computed(() => route.query.page ? Number.parseInt(route.query.page.toString()) : 1)
 
+const q = computed(() => (route.query.q as string || '').trim())
+
 const params = computed(() => ({
   period: period.value || 'all',
   page: currentPage.value,
   page_size: 30,
+  q: q.value || undefined,
 }))
 
 const {data, pending} = await useAuthFetch<{
@@ -40,12 +43,19 @@ const {data, pending} = await useAuthFetch<{
   links: { next: string | null; previous: string | null }
 }>('/coloring/creators/ranking/', {
   query: params,
-  key: computed(() => `creator-ranking|${params.value.period}|${params.value.page}`),
+  key: computed(() => `creator-ranking|${params.value.period}|${params.value.page}|${q.value}`),
 })
 
 const results = computed(() => data.value?.results || [])
 const isLoading = computed(() => pending.value && !results.value.length)
 const isEmpty = computed(() => !pending.value && !!data.value && results.value.length === 0)
+
+function setSearch(v: string) {
+  const query: Record<string, any> = {...route.query, q: v.trim() || undefined}
+  delete query.page
+  Object.keys(query).forEach(k => { if (query[k] === undefined) delete query[k] })
+  router.push({query})
+}
 
 function setPeriod(key: string) {
   const q: Record<string, any> = {...route.query, period: key || undefined}
@@ -54,14 +64,9 @@ function setPeriod(key: string) {
   router.push({query: q})
 }
 
-/* The podium reads by colour alone; every row stays the same size. */
-function rankClass(rank: number) {
-  return rank <= 3 ? `top top-${rank}` : ''
-}
-
 const {page, prevTo, nextTo} = usePageLinks(data)
 
-const hasQuery = computed(() => !!period.value || currentPage.value > 1)
+const hasQuery = computed(() => !!period.value || !!q.value || currentPage.value > 1)
 
 const canonicalUrl = computed(() => {
   const base = 'https://simplepixelart.com/creator'
@@ -99,7 +104,15 @@ useCustomSeoMeta({
 
       <p class="rank-lead">{{ $t('p_creator.rankedByThePublicWorkThey') }}</p>
 
-      <nav class="rank-periods" :aria-label="$t('p_creator.ranking')">
+      <div class="rank-search">
+        <BrowseSearch
+            :model-value="q"
+            :placeholder="$t('p_creator.searchCreators')"
+            @update:model-value="setSearch"
+        />
+      </div>
+
+      <nav v-if="!q" class="rank-periods" :aria-label="$t('p_creator.ranking')">
         <button
             v-for="p in PERIODS"
             :key="p.key || 'all'"
@@ -115,8 +128,7 @@ useCustomSeoMeta({
 
       <ol v-if="isLoading" class="rank-list lg">
         <li v-for="i in 10" :key="`sk-${i}`">
-          <span class="rank-row" :class="rankClass(i)" aria-hidden="true">
-            <span class="rank-n">{{ i }}</span>
+          <span class="rank-row" aria-hidden="true">
             <span class="skeleton rank-skeleton-avatar"/>
             <span class="skeleton skeleton-line-sm rank-skeleton-name"/>
           </span>
@@ -135,8 +147,7 @@ useCustomSeoMeta({
 
       <ol v-else class="rank-list lg">
         <li v-for="c in results" :key="c.username">
-          <NuxtLinkLocale :to="`/creator/${c.username}`" class="rank-row" :class="rankClass(c.rank)">
-            <span class="rank-n">{{ c.rank }}</span>
+          <NuxtLinkLocale :to="`/creator/${c.username}`" class="rank-row">
             <span class="rank-avatar">
               <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
               <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
@@ -193,6 +204,11 @@ useCustomSeoMeta({
   padding: var(--space-3) var(--space-4) 0;
   color: var(--muted);
   font-size: var(--text-xs);
+}
+
+/* Same inset as the period buttons below, so the two rows line up. */
+.rank-search {
+  padding: var(--space-3) var(--space-4) 0;
 }
 
 .rank-periods {

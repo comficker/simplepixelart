@@ -46,17 +46,35 @@ export function useArtListFetch(opts: {
         route.query.is_iso === '1' || route.query.is_iso === 'true',
     )
 
+    // Pieces their artists let others use elsewhere (CC BY or CC0).
+    const openLicense = computed(() => route.query.license === 'open')
+    const animOnly = computed(() => route.query.is_anim === '1')
+    // The gallery's sorts. Popular is the default on /arts and its tag and
+    // size pages; Newest has its own path; the other two ride on ?sort=.
+    const isGallery = computed(() => path.value === '/arts' || (path.value.startsWith('/arts/') && !isNewView.value))
+    const sort = computed<'popular' | 'trending' | 'following' | 'liked' | 'new'>(() => {
+        if (isNewView.value) return 'new'
+        const q = route.query.sort
+        return q === 'trending' || q === 'following' || q === 'liked' ? q : 'popular'
+    })
+
     const params = computed(() => ({
         status: isNewView.value ? 'public,pending' : status,
         slug: isNewView.value ? '/arts' : path.value,
         page: route.query.page ? Number.parseInt(route.query.page.toString()) : 1,
         page_size: effectiveLimit.value,
         search: search.value,
-        ordering: ordering || (isNewView.value ? '-updated' : undefined),
+        ordering: ordering || (isNewView.value ? '-updated'
+            : isGallery.value && sort.value === 'popular' ? '-score,-id' : undefined),
+        trending: isGallery.value && sort.value === 'trending' ? 'true' : undefined,
+        following: isGallery.value && sort.value === 'following' ? 'true' : undefined,
+        liked: isGallery.value && sort.value === 'liked' ? 'true' : undefined,
+        is_anim: animOnly.value ? 'true' : undefined,
         related: relatedId.value,
         width: !sizeSlugMatch.value && route.query.width ? route.query.width : undefined,
         height: !sizeSlugMatch.value && route.query.height ? route.query.height : undefined,
         is_iso: isoActive.value ? '1' : undefined,
+        license: openLicense.value ? 'open' : undefined,
     }))
 
 
@@ -75,5 +93,5 @@ export function useArtListFetch(opts: {
         key: `item-list:${encodeURIComponent(route.fullPath)}:${ordering || 'default'}:${limit}`,
     })
 
-    return {fetch, isNewView, sizeSlugMatch, currentSize, isoActive, search, effectiveLimit}
+    return {fetch, isNewView, sizeSlugMatch, currentSize, isoActive, openLicense, animOnly, sort, search, effectiveLimit}
 }

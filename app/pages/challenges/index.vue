@@ -79,7 +79,8 @@ useCustomSeoMeta({
             <span class="icon icon-flag"/><span>{{ $t('common.logInToSubmit') }}</span>
           </button>
           <NuxtLinkLocale :to="`/challenges/${current.id_string}`" class="section-link chal-view">
-            {{ current.entries_count }} {{ current.entries_count === 1 ? 'entry' : 'entries' }} →
+            <template v-if="current.entries_count">{{ current.entries_count }} {{ current.entries_count === 1 ? 'entry' : 'entries' }} →</template>
+            <template v-else>{{ $t('common.beTheFirstToEnter') }}</template>
           </NuxtLinkLocale>
         </div>
         <div v-if="current.top?.length" class="chal-thumbs">
@@ -113,7 +114,7 @@ useCustomSeoMeta({
           </div>
           <div class="chal-past-meta">
             <div class="chal-past-name">{{ c.name }}</div>
-            <div class="chal-past-sub">{{ fmtRange(c) }} · {{ c.entries_count }} {{ c.entries_count === 1 ? 'entry' : 'entries' }}</div>
+            <div class="chal-past-sub">{{ fmtRange(c) }}<template v-if="c.entries_count"> · {{ c.entries_count }} {{ c.entries_count === 1 ? 'entry' : 'entries' }}</template></div>
           </div>
         </NuxtLinkLocale>
       </div>

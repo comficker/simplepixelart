@@ -18,7 +18,7 @@ const sizeFromSlug = computed(() => {
 const page = computed(() => route.query.page ? Number.parseInt(route.query.page.toString()) : 1)
 
 const hasFilterQuery = computed(() =>
-    !!(route.query.width || route.query.height || route.query.is_iso || route.query.search),
+    !!(route.query.width || route.query.height || route.query.is_iso || route.query.is_anim || route.query.license || route.query.sort || route.query.search),
 )
 
 const tagFetch = (isSizeSlug.value || isColorSlug.value || isNewSlug.value || !isValidSlug.value)

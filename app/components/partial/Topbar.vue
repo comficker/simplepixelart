@@ -155,6 +155,20 @@ useHead({
   padding: var(--space-1) var(--space-2);
 }
 
+/* The bar's own controls carry the large icon; the menus they open keep
+   theirs. Still inside the 48px bar: 24px plus the 4px padding above and
+   below. */
+.dash-top .dash-top-ctl :is(.hdr-link, .wallet-chip) > .icon {
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+}
+
+/* Active reads by colour and fill alone here; the outline made the current
+   page's icon look like a pressed button. */
+.dash-top-ctl .hdr-link.router-link-active {
+  box-shadow: none;
+}
+
 .dash-top-ctl .btn {
   padding: var(--space-1) var(--space-3);
 }

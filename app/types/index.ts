@@ -79,6 +79,12 @@ export interface SharedPage {
     is_vote?: boolean
 
     collections: Collection[]
+    // The piece this one was remixed from, while that piece is public.
+    template_info?: { id_string: string; name: string; username: string | null } | null;
+    likes?: number;
+    is_liked?: boolean;
+    // Public pieces made from this one.
+    remixes?: number;
 }
 
 export interface ResponseSharedPage {
@@ -217,6 +223,10 @@ export interface EditorMeta {
     };
     bg?: EditorBg;
     animation?: EditorAnimation;
+    // Set by the server the first time the piece goes public.
+    published_at?: string;
+    // What others may do with the piece: '' / absent = all rights reserved.
+    license?: string;
 }
 
 export interface EditorData {

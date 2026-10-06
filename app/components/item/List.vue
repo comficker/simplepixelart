@@ -44,7 +44,7 @@ const router = useRouter()
 const search = ref('')
 
 const {
-  fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive, effectiveLimit,
+  fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive, openLicense, animOnly, sort, effectiveLimit,
 } = useArtListFetch({limit, status, ordering, exact: exactLimit, search})
 
 const SIZE_PRESETS = [
@@ -57,7 +57,7 @@ const SIZE_PRESETS = [
 ] as const
 
 const hasActiveFilters = computed(() =>
-    !!currentSize.value || isoActive.value || !!search.value,
+    !!currentSize.value || isoActive.value || openLicense.value || animOnly.value || !!search.value,
 )
 
 const {data, pending} = await listFetch
@@ -89,15 +89,31 @@ function setSize(preset: {width: number, height: number} | null) {
   router.push({query: q})
 }
 
-function setIso(on: boolean) {
+function setLicense(open: boolean) {
   const q: Record<string, any> = {...route.query}
   delete q.page
-  if (on) q.is_iso = '1'
-  else delete q.is_iso
+  if (open) q.license = 'open'
+  else delete q.license
   router.push({query: q})
 }
 
-const sortLabel = computed(() => isNewView.value ? t('c_List.newest') : t('c_List.popular'))
+function setView(v: 'all' | 'iso' | 'anim') {
+  const q: Record<string, any> = {...route.query}
+  delete q.page
+  delete q.is_iso
+  delete q.is_anim
+  if (v === 'iso') q.is_iso = '1'
+  if (v === 'anim') q.is_anim = '1'
+  router.push({query: q})
+}
+
+const auth = useAuthStore()
+const SORT_LABEL = {
+  popular: 'c_List.popular', trending: 'c_List.trending', following: 'c_List.following',
+  liked: 'c_List.liked', new: 'c_List.newest',
+} as const
+const sortLabel = computed(() => t(SORT_LABEL[sort.value]))
+const viewLabel = computed(() => isoActive.value ? t('common.isometric') : animOnly.value ? t('c_List.animated') : t('common.all'))
 
 function clearFilters() {
   search.value = ''
@@ -110,6 +126,8 @@ function clearFilters() {
   delete q.width
   delete q.height
   delete q.is_iso
+  delete q.is_anim
+  delete q.license
   router.push({query: q})
 }
 
@@ -142,14 +160,23 @@ function isCurrentPreset(p: {width: number, height: number}): boolean {
         </BrowseOpt>
       </BrowseFilter>
 
-      <BrowseFilter :label="$t('common.view')" icon="icon-rhombus" :value="isoActive ? $t('common.isometric') : $t('common.all')" :active="isoActive">
-        <BrowseOpt :active="!isoActive" @click="setIso(false)">{{ $t('c_List.allViews') }}</BrowseOpt>
-        <BrowseOpt :active="isoActive" @click="setIso(true)">{{ $t('common.isometric') }}</BrowseOpt>
+      <BrowseFilter :label="$t('common.view')" icon="icon-rhombus" :value="viewLabel" :active="isoActive || animOnly">
+        <BrowseOpt :active="!isoActive && !animOnly" @click="setView('all')">{{ $t('c_List.allViews') }}</BrowseOpt>
+        <BrowseOpt :active="isoActive" @click="setView('iso')">{{ $t('common.isometric') }}</BrowseOpt>
+        <BrowseOpt :active="animOnly" @click="setView('anim')">{{ $t('c_List.animated') }}</BrowseOpt>
+      </BrowseFilter>
+
+      <BrowseFilter :label="$t('p_upload.license')" icon="icon-check" :value="openLicense ? $t('c_List.freeToUse') : $t('common.all')" :active="openLicense">
+        <BrowseOpt :active="!openLicense" @click="setLicense(false)">{{ $t('c_List.anyLicense') }}</BrowseOpt>
+        <BrowseOpt :active="openLicense" @click="setLicense(true)">{{ $t('c_List.freeToUse') }}</BrowseOpt>
       </BrowseFilter>
 
       <BrowseFilter :label="$t('common.sort')" icon="icon-rocket" :value="sortLabel">
-        <BrowseOpt to="/arts" :active="!isNewView">{{ $t('common.popular') }}</BrowseOpt>
-        <BrowseOpt to="/arts/new" :active="isNewView">{{ $t('c_List.newest') }}</BrowseOpt>
+        <BrowseOpt to="/arts" :active="sort === 'popular'">{{ $t('common.popular') }}</BrowseOpt>
+        <BrowseOpt to="/arts?sort=trending" :active="sort === 'trending'">{{ $t('c_List.trending') }}</BrowseOpt>
+        <BrowseOpt to="/arts/new" :active="sort === 'new'">{{ $t('c_List.newest') }}</BrowseOpt>
+        <BrowseOpt v-if="auth.isLogged" to="/arts?sort=following" :active="sort === 'following'">{{ $t('c_List.following') }}</BrowseOpt>
+        <BrowseOpt v-if="auth.isLogged" to="/arts?sort=liked" :active="sort === 'liked'">{{ $t('c_List.liked') }}</BrowseOpt>
       </BrowseFilter>
 
       <slot name="filters-extra"/>

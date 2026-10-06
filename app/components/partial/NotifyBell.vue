@@ -42,10 +42,19 @@ async function onOpen() {
   }
 }
 
+const KIND_ICON: Record<string, string> = {
+  follow: 'icon-user', comment: 'icon-chat', like: 'icon-heart', remix: 'icon-pen',
+  new_art: 'icon-image', challenge: 'icon-flag',
+}
+
 function textOf(n: Notif): string {
   const who = n.actor?.username ? `@${n.actor.username}` : 'Someone'
   if (n.kind === 'follow') return `${who} started following you`
   if (n.kind === 'comment') return `${who} commented on “${n.meta?.target_name || 'your art'}”`
+  if (n.kind === 'like') return `${who} liked “${n.meta?.target_name || 'your art'}”`
+  if (n.kind === 'new_art') return `${who} published “${n.meta?.target_name || 'a new piece'}”`
+  if (n.kind === 'challenge') return `Your piece placed #${n.meta?.place} in “${n.meta?.challenge_name}”`
+  if (n.kind === 'remix') return `${who} made their own version of “${n.meta?.original_name || 'your art'}”`
   return `${who} · ${n.kind}`
 }
 
@@ -85,7 +94,7 @@ watch(() => auth.isLogged, (v) => { if (v) fetchUnread() })
               class="file-menu-item notify-item"
               :class="{unread: !n.read}"
           >
-            <span class="icon" :class="n.kind === 'follow' ? 'icon-user' : 'icon-chat'"/>
+            <span class="icon" :class="KIND_ICON[n.kind] || 'icon-chat'"/>
             <span class="file-menu-label is-stacked">
               <span class="notify-text">{{ textOf(n) }}</span>
               <span class="notify-sub">
