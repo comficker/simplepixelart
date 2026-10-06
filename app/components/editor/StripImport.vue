@@ -164,7 +164,7 @@ watch(open, (v) => { if (v) reset() })
   align-items: center;
   gap: var(--space-2);
   width: 100%;
-  padding: 2rem 1rem;
+  padding: 2rem var(--space-4);
   background: transparent;
   border: 1px dashed var(--border);
   border-radius: var(--radius-sm);

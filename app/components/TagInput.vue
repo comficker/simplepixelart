@@ -86,7 +86,7 @@ function handleBlur() {
   gap: var(--space-2);
   width: 100%;
   min-height: 2.25rem;
-  padding: 5px 8px;
+  padding: 5px var(--space-2);
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -103,7 +103,7 @@ function handleBlur() {
   display: inline-flex;
   align-items: center;
   gap: 0.125rem;
-  padding: 0 0.125rem 0 0.5rem;
+  padding: 0 0.125rem 0 var(--space-2);
   height: 1.5rem;
   font-size: var(--text-xs);
   line-height: 1;

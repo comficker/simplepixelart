@@ -52,7 +52,7 @@ const overflow = computed(() => Math.max(0, value.colors.length - MAX_SWATCHES))
 }
 
 .pcard-head {
-  padding: 0.5rem 0.625rem;
+  padding: var(--space-2) 0.625rem;
   border-top: 1px solid var(--border);
 }
 

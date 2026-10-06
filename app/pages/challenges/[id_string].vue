@@ -26,6 +26,7 @@ interface ChallengeDetail {
 
 const route = useRoute()
 const auth = useAuthStore()
+const loginModal = useLoginModal()
 const slug = computed(() => route.params.id_string?.toString() || '')
 
 const {data: challenge, error} = await useAuthFetch<ChallengeDetail>(
@@ -76,7 +77,7 @@ useCustomSeoMeta({
   untranslated: true,
   title: () => challenge.value
       ? `${challenge.value.name} — Pixel Art Challenge`
-      : 'Pixel Art Challenge',
+      : 'Challenge not found',
   description: () => challenge.value
       ? `“${challenge.value.name}” pixel art challenge, ${challenge.value.starts} to ${challenge.value.ends}. ${challenge.value.desc || 'Draw your take and submit it for community votes.'}`.slice(0, 158)
       : 'Weekly pixel art challenge on SimplePixelArt.',
@@ -120,7 +121,7 @@ useCustomSeoMeta({
           <button v-if="auth.isLogged" class="btn" @click="showSubmit = true">
             <span class="icon icon-flag"/><span>{{ $t('common.submitAnArt') }}</span>
           </button>
-          <button v-else class="btn" @click="auth.authOAUTH()">
+          <button v-else class="btn" @click="loginModal.show(() => showSubmit = true)">
             <span class="icon icon-flag"/><span>{{ $t('common.logInToSubmit') }}</span>
           </button>
           <SocialSharing :meta="shareMeta" position="right"/>
@@ -137,7 +138,7 @@ useCustomSeoMeta({
               <span class="rank-n">{{ i + 1 }}</span>
               <img :src="thumb(e)" :alt="e.name" class="chal-leader-thumb" loading="lazy">
               <span class="rank-name">{{ e.name }}</span>
-              <span class="text-muted">@{{ e.username }}</span>
+              <span v-if="e.username" class="text-muted">@{{ e.username }}</span>
               <span class="rank-count">{{ e.votes }} <span class="icon icon-heart"/></span>
             </NuxtLinkLocale>
           </li>
@@ -155,7 +156,7 @@ useCustomSeoMeta({
             <span class="chal-medal">{{ medals[i] || '·' }}</span>
             <img :src="thumb(e)" :alt="e.name" loading="lazy" decoding="async">
             <span class="chal-winner-name">{{ e.name }}</span>
-            <span class="chal-winner-sub">@{{ e.username }} · {{ e.votes }} {{ e.votes === 1 ? 'vote' : 'votes' }}</span>
+            <span class="chal-winner-sub"><template v-if="e.username">@{{ e.username }} · </template>{{ e.votes }} {{ e.votes === 1 ? 'vote' : 'votes' }}</span>
           </NuxtLinkLocale>
         </div>
       </Widget>
@@ -177,20 +178,22 @@ useCustomSeoMeta({
       />
     </template>
 
-    <template v-else>
-      <div class="screen-head">
-        <div class="screen-head-text">
-          <h1 class="screen-title">{{ $t('p_challenges_id_string.challengeNotFound') }}</h1>
-          <p class="screen-desc">
-            {{ $t('p_challenges_id_string.itMayHaveBeenRemoved') }} <NuxtLinkLocale to="/challenges" class="section-link">{{ $t('p_challenges_id_string.seeAllChallenges') }}</NuxtLinkLocale>
-          </p>
-        </div>
-      </div>
-    </template>
+    <div v-else class="empty-state">
+      <span class="empty-state-icon icon icon-search" aria-hidden="true"/>
+      <h1 class="empty-state-title chal-not-found-title">{{ $t('p_challenges_id_string.challengeNotFound') }}</h1>
+      <p class="empty-state-body">{{ $t('p_challenges_id_string.itMayHaveBeenRemoved') }}</p>
+      <NuxtLinkLocale to="/challenges" class="btn primary empty-state-action">{{ $t('p_challenges_id_string.seeAllChallenges') }}</NuxtLinkLocale>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* An h1 for the outline, still drawn like every other empty-state title. */
+.chal-not-found-title {
+  font-family: inherit;
+  font-variation-settings: normal;
+}
+
 .chal-leader-thumb {
   width: var(--space-6);
   height: var(--space-6);

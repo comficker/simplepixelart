@@ -113,8 +113,8 @@ const meta = computed(() => {
   if (!data.value) {
     return {
       url: `${config.public.siteUrl}/art/${route.params.id_string}`,
-      title: 'Loading...',
-      desc: 'Loading pixel art...',
+      title: 'Artwork not found',
+      desc: 'This pixel art could not be found.',
       imgSrc: imgSocial.value,
     }
   }
@@ -267,7 +267,8 @@ const download = (type: string) => {
     a.target = '_blank';
     a.download = `[simplepixelart.com]${data.value!.id_string}.${ext}`;
     a.click();
-    URL.revokeObjectURL(url);
+    // Revoking right after click() can cancel the download in Firefox/Safari.
+    if (url.startsWith('blob:')) setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 }
 
@@ -383,7 +384,7 @@ const previewStyle = computed(() => {
 
   <div v-else-if="error || !data" class="page empty-state">
     <span class="empty-state-icon icon icon-search" aria-hidden="true"/>
-    <div class="empty-state-title">{{ $t('p_art_id_string.artworkNotFound') }}</div>
+    <h1 class="empty-state-title art-not-found-title">{{ $t('p_art_id_string.artworkNotFound') }}</h1>
     <p class="empty-state-body" v-html="$t('p_art_id_string.thisPixelArtCouldnTBe')"/>
     <NuxtLinkLocale to="/arts" class="btn primary empty-state-action">{{ $t('common.browseGallery') }}</NuxtLinkLocale>
   </div>
@@ -585,15 +586,15 @@ const previewStyle = computed(() => {
             v-if="isAdmin && !isOwner"
             :to="`/editor?id=${route.params.id_string}&edit=1`"
             class="btn art-act-mod"
-            title="Change this artwork itself — it stays the author's"
+            title="Edit this artwork itself — it stays the author's"
+            aria-label="Edit this artwork itself"
         >
           <span class="icon icon-pencil"/>
-          <span>Edit</span>
         </NuxtLinkLocale>
       </div>
     </Widget>
     <Widget :title="$t('common.download')">
-      <div class="download-menu art-dl-list">
+      <div class="art-dl-list">
         <button
             v-for="s in pngSizes"
             :key="s.scale"
@@ -730,6 +731,12 @@ const previewStyle = computed(() => {
 </template>
 
 <style scoped>
+/* An h1 for the outline, still drawn like every other empty-state title. */
+.art-not-found-title {
+  font-family: inherit;
+  font-variation-settings: normal;
+}
+
 .art-head-actions {
   display: flex;
   align-items: center;
@@ -759,7 +766,7 @@ const previewStyle = computed(() => {
   flex-direction: column;
   align-items: center;
   gap: var(--space-5);
-  padding: 3rem 1rem;
+  padding: 3rem var(--space-4);
 }
 
 .art-state-skeleton {
@@ -786,20 +793,28 @@ const previewStyle = computed(() => {
   color: var(--primary);
 }
 
+/* Icon only, so it takes its own width and leaves the row to the main
+   action beside it. */
+.art-actions .art-act-mod {
+  flex: 0 0 auto;
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+}
+
 .art-remix-badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: var(--space-3);
+  left: var(--space-3);
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 9px 4px 8px;
+  padding: var(--space-1) 9px var(--space-1) var(--space-2);
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--primary-foreground);
-  background: var(--primary);
+  background: var(--primary-fill);
   border-radius: var(--radius-pill);
 }
 
@@ -810,12 +825,12 @@ const previewStyle = computed(() => {
 
 .art-anim-badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: var(--space-3);
+  right: var(--space-3);
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 4px 9px;
+  padding: var(--space-1) 9px;
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
@@ -839,42 +854,39 @@ const previewStyle = computed(() => {
 }
 
 .art-desc {
+  margin-top: var(--space-3);
   color: var(--muted);
   font-size: var(--text-base);
   max-width: 56ch;
 }
 
-.download-menu {
+.art-dl-list {
   display: flex;
   flex-direction: column;
-  min-width: 220px;
+  min-width: 0;
 }
 
-.download-menu .drop-item {
-  padding: 10px 12px;
-  font-size: var(--text-sm);
+.art-dl-list .drop-item {
+  padding: 6px 0;
+  font-size: var(--text-xs);
   background: transparent;
   border: 0;
   text-align: left;
   cursor: pointer;
 }
 
-.download-menu .btn-split {
+.art-dl-list .btn-split {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-5);
+  gap: var(--space-2);
 }
 
-.download-menu .text-muted {
+.art-dl-list .text-muted {
   color: var(--muted);
   font-size: var(--text-2xs);
   font-variant-numeric: tabular-nums;
 }
-
-.art-dl-list { min-width: 0; }
-.art-dl-list .drop-item { padding: 6px 0; font-size: var(--text-xs); }
-.art-dl-list .btn-split { gap: var(--space-2); }
 
 @media (hover: hover) and (pointer: fine) {
   .art-dl-list .drop-item:not(:disabled):hover { color: var(--primary); }
@@ -929,11 +941,6 @@ const previewStyle = computed(() => {
   color: var(--muted);
 }
 
-.art-report p {
-  margin: 0;
-  flex: 1;
-}
-
 .art-report a {
   color: var(--foreground);
   border-bottom: 1px dotted color-mix(in oklab, var(--muted) 60%, transparent);
@@ -949,23 +956,15 @@ const previewStyle = computed(() => {
   }
 }
 
-
-
-
-
-
-
 .art-meta-row-tags { align-items: flex-start; }
 
 .art-meta-tags {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 3px 8px;
+  gap: 3px var(--space-2);
 }
 
 .art-meta-tags .art-meta-link { color: var(--primary); font-weight: 600; }
 
-
-.art-desc { margin-top: var(--space-3); }
 </style>

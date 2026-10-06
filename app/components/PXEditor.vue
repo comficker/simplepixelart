@@ -6,7 +6,7 @@ const artImage = useArtImage()
 import {onMounted, ref, toRaw} from "vue";
 import {buildIsoPath, compositeFrame, drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
 import {hexToRgb} from "~/helper/color";
-import {generateUUID, sharedPage2EditorData} from "~/helper/utils";
+import {downloadBlob, generateUUID, sharedPage2EditorData} from "~/helper/utils";
 import {LICENSES} from "~/helper/constants";
 import {saveWorkspaceFull} from "~/helper/workspaceSnapshot";
 import {toast} from "vue-sonner";
@@ -2996,7 +2996,7 @@ function exportFile(type: string) {
   a.href = url;
   a.download = `SimplePixelArt.${type}`;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
   toast.success(`Exported as ${type.toUpperCase()}`)
 }
 
@@ -3022,15 +3022,6 @@ function animationFrames() {
       ? store.frames
       : [{id: 'f0', layers: editorData.value.layers, duration: 100}];
   return toRaw(fr).map((f: any) => ({id: f.id, duration: f.duration, layers: toRaw(f.layers)}));
-}
-
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 async function exportGif() {
@@ -3188,7 +3179,7 @@ onMounted(async () => {
     await store.load(route.query.id?.toString(), route.query.edit === '1')
   }
   if (route.query.ai) {
-    navigateTo(localePath(`/generate?prompt=${encodeURIComponent(String(route.query.ai).slice(0, 300))}`))
+    navigateTo(localePath(`/generator?prompt=${encodeURIComponent(String(route.query.ai).slice(0, 300))}`))
     return
   }
   if (route.query.palette) {
@@ -3258,6 +3249,8 @@ onUnmounted(() => {
   if (camSaveTimer) clearTimeout(camSaveTimer);
   window.removeEventListener('mousemove', doResizeBoard);
   window.removeEventListener('mouseup', endResizeFromWindow);
+  window.removeEventListener('mousemove', doGuideDrag);
+  window.removeEventListener('mouseup', endGuideDrag);
   store.isPlaying = false
   store.resetEditorData()
   clearListeners()
@@ -4097,7 +4090,7 @@ watch(
                 <textarea
                     v-model="editorData.desc"
                     :placeholder="$t('c_PXEditor.aSentenceOrTwoAboutIt')"
-                    maxlength="300"
+                    maxlength="200"
                     rows="2"
                     class="publish-input publish-textarea"
                 />
@@ -4425,7 +4418,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   align-items: center;
   gap: var(--space-2);
   margin-right: auto; 
-  padding: 0 0.25rem;
+  padding: 0 var(--space-1);
   font-size: var(--text-xs);
   color: var(--foreground);
   font-variant-numeric: tabular-nums;
@@ -4517,7 +4510,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 }
 
 .png-dims-src {
-  margin-left: 0.25rem;
+  margin-left: var(--space-1);
   font-size: var(--text-xs);
 }
 
@@ -4621,7 +4614,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
   gap: var(--space-3);
   font-size: 12px;
   color: var(--muted);
-  padding: 0.5rem 0.625rem;
+  padding: var(--space-2) 0.625rem;
   background: var(--surface-2);
   border-left: 2px solid #f59e0b;
   border-radius: var(--radius-sm);
@@ -4737,14 +4730,14 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 }
 
 .bg-empty p {
-  font-size: 13px;
+  font-size: var(--text-xs);
   color: var(--muted);
   margin: 0;
 }
 
 .bg-empty {
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 2rem var(--space-4);
 }
 
 .bg-color-row {
@@ -4770,7 +4763,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 
 .bg-color-hex {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 13px;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--foreground);
   letter-spacing: 0.02em;

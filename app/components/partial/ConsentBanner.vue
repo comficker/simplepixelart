@@ -76,8 +76,9 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-
-  z-index: 45;
+  /* Under the mobile filter and agent sheets (40): opening one should cover
+     the banner, not have the banner cover the sheet's own controls. */
+  z-index: 35;
   padding: var(--space-4);
   display: flex;
   justify-content: center;
@@ -92,7 +93,7 @@ onMounted(() => {
   gap: var(--space-4);
   max-width: 880px;
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 0.875rem var(--space-4);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -128,7 +129,7 @@ onMounted(() => {
 }
 
 .consent-actions .btn {
-  padding: 0.5rem 0.875rem !important;
+  padding: var(--space-2) 0.875rem !important;
   font-size: var(--text-xs) !important;
 }
 

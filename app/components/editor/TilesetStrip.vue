@@ -369,7 +369,7 @@ defineExpose({removeItem, refresh, siblingId})
 .cstrip-new-input {
   width: 100%;
   height: 2.25rem;
-  padding: 0 0.5rem;
+  padding: 0 var(--space-2);
   font-size: var(--text-sm);
   color: var(--foreground);
   background: var(--surface-2);
@@ -456,6 +456,6 @@ defineExpose({removeItem, refresh, siblingId})
 .cstrip-empty {
   font-size: var(--text-2xs);
   color: var(--muted);
-  padding: 0.25rem 0;
+  padding: var(--space-1) 0;
 }
 </style>

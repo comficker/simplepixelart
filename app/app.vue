@@ -74,6 +74,7 @@ if (import.meta.client) {
     <LazyUiCommandPalette v-if="cmdk.loaded.value"/>
     <PartialLoginModal v-if="loginModal.open.value" @close="loginModal.hide()" @success="loginModal.done()"/>
     <PartialSyncPrompt/>
+    <UiConfirmHost/>
     <ClientOnly>
       <PartialConsentBanner/>
     </ClientOnly>

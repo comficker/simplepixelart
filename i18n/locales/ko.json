@@ -463,6 +463,7 @@
     "resizeTheDocumentationColumn": "설명 칸 너비 조절"
   },
   "c_ToolMoved": {
+    "goToX": "{name}(으)로 이동",
     "takingYouThereNow": ". 지금 이동합니다…",
     "theXHasMovedTo": "{name}의 주소가 {to} 로 바뀌었습니다.",
     "thisToolNowLivesAt": "이 도구는 이제 여기에 있습니다",
@@ -520,6 +521,7 @@
     "close": "닫기",
     "colors": "색상",
     "cols": "열",
+    "confirm": "확인",
     "copyHex": "색상 코드 복사",
     "copyX": "{x} 복사",
     "create": "만들기",
@@ -758,6 +760,8 @@
     "backHome": "홈으로"
   },
   "p_challenges": {
+    "noChallengesYet": "아직 챌린지가 없습니다",
+    "noChallengesYetBody": "첫 주간 테마가 곧 시작됩니다. 잠시 후 다시 확인하세요.",
     "oneThemeAWeekDrawIt": "매주 하나의 주제. 나만의 방식으로 그려 제출하면 커뮤니티 투표로 수상작이 정해집니다.",
     "pastChallenges": "지난 챌린지",
     "thisWeek": "이번 주"
@@ -869,8 +873,10 @@
   "p_creator": {
     "allTime": "전체 기간",
     "artCount": "{count}개 작품",
+    "clearSearch": "검색 지우기",
     "creatorCount": "{count}명의 크리에이터",
     "discoverArtistsFromTheSimplepixela": "SimplePixelArt.com 커뮤니티의 작가들을 만나 보세요. 포트폴리오를 둘러보며 그들의 픽셀 아트를 살펴보세요.",
+    "noCreatorMatchesQ": "“{q}”와 일치하는 크리에이터가 없습니다.",
     "noCreatorsYet": "크리에이터가 없습니다",
     "nobodyPublishedInThisPeriod": "이 기간에 공개한 사람이 없습니다.",
     "pixelArtCreators": "픽셀 아트 톱 크리에이터",
@@ -886,6 +892,7 @@
     "allWorkN": "전체 작품 ({n})",
     "bestWork": "대표 작품",
     "collections": "컬렉션",
+    "couldNotUpdateFollow": "팔로우를 업데이트할 수 없습니다. 다시 시도하세요.",
     "creatorStats": "크리에이터 통계",
     "follow": "팔로우",
     "following": "팔로잉",

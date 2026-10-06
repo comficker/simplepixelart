@@ -4,6 +4,7 @@ import type {ComponentPublicInstance} from 'vue'
 import {importFileGrid, type Cell} from '~/helper/pixel'
 import {gifToFrames} from '~/helper/pixel/gif'
 import {rgbToHex} from '~/helper/color'
+import {layers2MapNumbers} from '~/helper/canvas'
 import {LICENSES} from '~/helper/constants'
 
 const auth = useAuthStore()
@@ -271,6 +272,14 @@ async function refreshEdited() {
     p.height = d.height
     p.colors = d.colors || []
     p.pixels = d.map_numbers || {}
+    // Frames as the editor saved them, flattened like the GIF's were.
+    const anim = d.meta?.animation
+    p.frames = anim?.frames?.length > 1
+        ? anim.frames.map((f: any) => ({
+          pixels: layers2MapNumbers({width: d.width, height: d.height, layers: [...(anim.shared || []), ...(f.layers || [])]} as any),
+          duration: f.duration || Math.round(1000 / (anim.fps || 10)),
+        }))
+        : []
     p.tooBig = d.width > MAX_SIDE || d.height > MAX_SIDE
     p.rev++
   } catch { /* deleted in the editor: keep what we had */ }
@@ -417,7 +426,7 @@ useCustomSeoMeta({
                 v-model="desc"
                 class="publish-input up-desc"
                 rows="3"
-                maxlength="300"
+                maxlength="200"
                 :placeholder="$t('p_upload.descPlaceholder')"
                 :disabled="state === 'publishing'"
             />

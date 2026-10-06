@@ -43,11 +43,9 @@ export type ThemeId = typeof THEMES[number]['id']
 const DEFAULT_THEME: ThemeId = 'dark'
 
 export function useTheme() {
+  // No default written back: a Set-Cookie on every first visit would keep
+  // those responses out of the HTML cache, and `current` falls back anyway.
   const cookie = useStatefulCookie('theme')
-
-  if (!cookie.value) {
-    cookie.value = DEFAULT_THEME
-  }
 
   const current = computed<ThemeId>(() => {
     const v = cookie.value as ThemeId

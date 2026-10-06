@@ -120,6 +120,6 @@ button.drop-item {
 }
 
 .share-trigger.is-icon-only {
-  padding: 0.5rem;
+  padding: var(--space-2);
 }
 </style>

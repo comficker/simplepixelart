@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import TilemapShowcase from '~/components/tilemap/TilemapShowcase.vue'
 import {normalizeTilemap, computeGeometry, tileImageUrl, tileOf} from '~/helper/tilemap'
+import {downloadBlob} from '~/helper/utils'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -75,11 +76,7 @@ async function downloadPng(scale: number) {
   try {
     const blob = await showcase.value.toPng(scale)
     if (!blob) return
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `${data.value?.id_string || 'world'}${scale > 1 ? `@${scale}x` : ''}.png`
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+    downloadBlob(blob, `${data.value?.id_string || 'world'}${scale > 1 ? `@${scale}x` : ''}.png`)
   } finally {
     dlScale.value = null
   }

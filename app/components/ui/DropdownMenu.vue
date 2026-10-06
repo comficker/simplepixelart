@@ -9,11 +9,11 @@
     <div
         class="dropdown-trigger-wrap cursor-pointer"
         ref="triggerEl"
-        role="button"
-        tabindex="0"
-        :aria-label="label || undefined"
-        :aria-haspopup="true"
-        :aria-expanded="open"
+        :role="innerTrigger ? undefined : 'button'"
+        :tabindex="innerTrigger ? undefined : 0"
+        :aria-label="innerTrigger ? undefined : label || undefined"
+        :aria-haspopup="innerTrigger ? undefined : true"
+        :aria-expanded="innerTrigger ? undefined : open"
         @click="toggle"
         @keydown.enter.prevent="openMenu()"
         @keydown.space.prevent="openMenu()"
@@ -60,7 +60,12 @@ const props = defineProps({
   },
 })
 
+const emit = defineEmits(['open'])
+
 const attrs = useAttrs()
+// A trigger that is already a <button> keeps the focus and the ARIA itself;
+// wrapping it in a second role=button made two tab stops per control.
+const innerTrigger = ref(false)
 const open = ref(false)
 const mounted = ref(false)
 const root = ref(null)
@@ -168,6 +173,7 @@ async function openMenu(focusFirst = true) {
   if (open.value) return
   syncRect()
   open.value = true
+  emit('open')
   bindTracking(true)
   await nextTick()
   updatePlacement()
@@ -179,7 +185,7 @@ function close({restoreFocus = true} = {}) {
   if (!open.value) return
   open.value = false
   bindTracking(false)
-  if (restoreFocus) triggerEl.value?.focus()
+  if (restoreFocus) (innerButton() || triggerEl.value)?.focus()
 }
 
 function toggle() {
@@ -235,7 +241,20 @@ watch(open, async (val) => {
   }
 })
 
+function innerButton() {
+  return triggerEl.value?.querySelector('button, a[href]')
+}
+
+watch(open, v => innerButton()?.setAttribute('aria-expanded', String(v)))
+
 onMounted(() => {
+  const btn = innerButton()
+  if (btn) {
+    innerTrigger.value = true
+    btn.setAttribute('aria-haspopup', 'true')
+    btn.setAttribute('aria-expanded', 'false')
+    if (props.label && !btn.getAttribute('aria-label')) btn.setAttribute('aria-label', props.label)
+  }
   mounted.value = true
   syncRect()
   document.addEventListener('click', onClickOutside)
@@ -252,7 +271,7 @@ defineExpose({open: openMenu, close, toggle})
 <style scoped>
 .dropdown-trigger-wrap {
   display: inline-flex;
-  border-radius: var(--radius-sm, 4px);
+  border-radius: var(--radius-sm, var(--radius-sm));
 }
 
 .dropdown-trigger-wrap:focus-visible {

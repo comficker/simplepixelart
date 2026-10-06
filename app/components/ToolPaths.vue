@@ -87,7 +87,7 @@ const shown = computed(() => {
   .studio-path-icon {
     width: 36px;
     height: 36px;
-    font-size: 19px;
+    font-size: var(--text-lg);
     border-radius: 10px;
   }
 }

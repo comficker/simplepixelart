@@ -118,96 +118,91 @@ watch(open, (v) => {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="open" class="share-overlay" @click.self="open = false">
-      <div class="share-modal pp-modal" role="dialog" aria-modal="true" @keydown.escape="open = false">
-        <header class="pp-head">
-          <div class="pp-tabs">
-            <button class="pp-tab" :class="{active: tab === 'browse'}" @click="tab = 'browse'">{{ $t('c_PalettePicker.browse') }}</button>
-            <button class="pp-tab" :class="{active: tab === 'save'}" @click="tab = 'save'">{{ $t('c_PalettePicker.saveCurrent') }}</button>
-            <button class="pp-tab" :class="{active: tab === 'image'}" @click="tab = 'image'">{{ $t('common.fromImage') }}</button>
-          </div>
-          <button class="pp-close" :aria-label="$t('common.close')" @click="open = false">
-            <span class="icon icon-x"/>
-          </button>
-        </header>
+  <UiModal v-if="open" class="pp-modal" :aria-label="$t('nav.palettes')" @close="open = false">
+    <header class="pp-head">
+      <div class="pp-tabs">
+        <button class="pp-tab" :class="{active: tab === 'browse'}" @click="tab = 'browse'">{{ $t('c_PalettePicker.browse') }}</button>
+        <button class="pp-tab" :class="{active: tab === 'save'}" @click="tab = 'save'">{{ $t('c_PalettePicker.saveCurrent') }}</button>
+        <button class="pp-tab" :class="{active: tab === 'image'}" @click="tab = 'image'">{{ $t('common.fromImage') }}</button>
+      </div>
+    </header>
 
-        <div v-if="tab !== 'save'" class="pp-mode">
-          <span class="pp-mode-label">{{ $t('c_PalettePicker.applyAs') }}</span>
-          <div class="pp-seg">
-            <button class="pp-seg-btn" :class="{active: mode === 'replace'}" @click="mode = 'replace'" :title="$t('c_PalettePicker.recolorByIndex')">{{ $t('c_PalettePicker.replace') }}</button>
-            <button class="pp-seg-btn" :class="{active: mode === 'append'}" @click="mode = 'append'" :title="$t('c_PalettePicker.addToCurrentPalette')">{{ $t('common.add') }}</button>
-          </div>
-        </div>
-
-        <div v-if="tab === 'browse'" class="pp-body">
-          <div class="pp-toolbar">
-            <input type="text" class="pp-search" :placeholder="$t('common.searchPalettes')" @input="onSearch"/>
-            <div class="pp-sorts">
-              <button class="pp-chip" :class="{active: sort === '-score'}" @click="setSort('-score')">{{ $t('common.popular') }}</button>
-              <button class="pp-chip" :class="{active: sort === '-usage_count'}" @click="setSort('-usage_count')">{{ $t('c_PalettePicker.used') }}</button>
-              <button class="pp-chip" :class="{active: sort === '-created'}" @click="setSort('-created')">{{ $t('common.new') }}</button>
-            </div>
-          </div>
-          <div v-if="loadingList" class="pp-list-state">{{ $t('common.loading') }}</div>
-          <div v-else-if="!palettes.length" class="pp-list-state">{{ $t('c_PalettePicker.noPalettesFound') }}</div>
-          <div v-else class="pp-list">
-            <button v-for="p in palettes" :key="p.id" class="pp-item" @click="applyLibrary(p)" :title="`${p.name} — ${$t('common.nColors', {count: p.color_count})}`">
-              <span class="pp-item-strip">
-                <span v-for="(c, i) in p.colors.slice(0, 16)" :key="i" class="pp-item-sw" :style="{ backgroundColor: c }"/>
-              </span>
-              <span class="pp-item-name">{{ p.name }}</span>
-              <span class="pp-item-count">{{ p.color_count }}</span>
-            </button>
-          </div>
-        </div>
-
-        <div v-else-if="tab === 'save'" class="pp-body">
-          <p class="pp-hint">Save the current {{ store.editorData.colors.length }}-color palette to the library and link it to this artwork.</p>
-          <div class="pp-cur-strip">
-            <span v-for="(c, i) in store.editorData.colors" :key="i" class="pp-cur-sw" :style="{ backgroundColor: c }"/>
-          </div>
-          <input v-model="saveName" type="text" class="pp-search" :placeholder="$t('common.paletteName')" @keydown.enter="saveCurrent"/>
-          <p class="pp-themes-label">{{ $t('common.themes') }} <span>{{ $t('c_PalettePicker.optional') }}</span></p>
-          <div class="pp-themes">
-            <button
-                v-for="t in PALETTE_THEMES" :key="t"
-                type="button"
-                class="pp-theme" :class="{ active: saveTags.includes(t) }"
-                @click="toggleTag(t)"
-            >{{ t }}</button>
-          </div>
-          <button class="btn primary pp-action" :disabled="saving" @click="saveCurrent">
-            {{ saving ? 'Saving…' : 'Save palette' }}
-          </button>
-        </div>
-
-        <div v-else class="pp-body">
-          <label class="pp-drop">
-            <input type="file" accept="image/*" class="pp-file" @change="onFile"/>
-            <span class="icon icon-image"/>
-            <span>{{ lastFile ? lastFile.name : 'Choose an image' }}</span>
-          </label>
-          <div class="pp-count">
-            <label>{{ $t('c_PalettePicker.colors') }} <strong>{{ count }}</strong></label>
-            <input type="range" min="2" max="32" v-model.number="count"/>
-          </div>
-          <div v-if="detecting" class="pp-list-state">{{ $t('c_PalettePicker.detecting') }}</div>
-          <div v-else-if="detected.length" class="pp-cur-strip">
-            <span v-for="(c, i) in detected" :key="i" class="pp-cur-sw" :style="{ backgroundColor: c }"/>
-          </div>
-          <div class="pp-image-actions">
-            <button class="btn primary pp-action" :disabled="!detected.length" @click="applyImage">{{ $t('c_PalettePicker.applyToCanvas') }}</button>
-            <NuxtLinkLocale to="/palettes/color-palette-from-image" class="pp-publish-link">{{ $t('c_PalettePicker.publishAsPalette') }}</NuxtLinkLocale>
-          </div>
-        </div>
+    <div v-if="tab !== 'save'" class="pp-mode">
+      <span class="pp-mode-label">{{ $t('c_PalettePicker.applyAs') }}</span>
+      <div class="pp-seg">
+        <button class="pp-seg-btn" :class="{active: mode === 'replace'}" @click="mode = 'replace'" :title="$t('c_PalettePicker.recolorByIndex')">{{ $t('c_PalettePicker.replace') }}</button>
+        <button class="pp-seg-btn" :class="{active: mode === 'append'}" @click="mode = 'append'" :title="$t('c_PalettePicker.addToCurrentPalette')">{{ $t('common.add') }}</button>
       </div>
     </div>
-  </Teleport>
+
+    <div v-if="tab === 'browse'" class="pp-body">
+      <div class="pp-toolbar">
+        <input type="text" class="pp-search" :placeholder="$t('common.searchPalettes')" @input="onSearch"/>
+        <div class="pp-sorts">
+          <button class="pp-chip" :class="{active: sort === '-score'}" @click="setSort('-score')">{{ $t('common.popular') }}</button>
+          <button class="pp-chip" :class="{active: sort === '-usage_count'}" @click="setSort('-usage_count')">{{ $t('c_PalettePicker.used') }}</button>
+          <button class="pp-chip" :class="{active: sort === '-created'}" @click="setSort('-created')">{{ $t('common.new') }}</button>
+        </div>
+      </div>
+      <div v-if="loadingList" class="pp-list-state">{{ $t('common.loading') }}</div>
+      <div v-else-if="!palettes.length" class="pp-list-state">{{ $t('c_PalettePicker.noPalettesFound') }}</div>
+      <div v-else class="pp-list">
+        <button v-for="p in palettes" :key="p.id" class="pp-item" @click="applyLibrary(p)" :title="`${p.name} — ${$t('common.nColors', {count: p.color_count})}`">
+          <span class="pp-item-strip">
+            <span v-for="(c, i) in p.colors.slice(0, 16)" :key="i" class="pp-item-sw" :style="{ backgroundColor: c }"/>
+          </span>
+          <span class="pp-item-name">{{ p.name }}</span>
+          <span class="pp-item-count">{{ p.color_count }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div v-else-if="tab === 'save'" class="pp-body">
+      <p class="pp-hint">Save the current {{ store.editorData.colors.length }}-color palette to the library and link it to this artwork.</p>
+      <div class="pp-cur-strip">
+        <span v-for="(c, i) in store.editorData.colors" :key="i" class="pp-cur-sw" :style="{ backgroundColor: c }"/>
+      </div>
+      <input v-model="saveName" type="text" class="pp-search" :placeholder="$t('common.paletteName')" @keydown.enter="saveCurrent"/>
+      <p class="pp-themes-label">{{ $t('common.themes') }} <span>{{ $t('c_PalettePicker.optional') }}</span></p>
+      <div class="pp-themes">
+        <button
+            v-for="t in PALETTE_THEMES" :key="t"
+            type="button"
+            class="pp-theme" :class="{ active: saveTags.includes(t) }"
+            @click="toggleTag(t)"
+        >{{ t }}</button>
+      </div>
+      <button class="btn primary pp-action" :disabled="saving" @click="saveCurrent">
+        {{ saving ? 'Saving…' : 'Save palette' }}
+      </button>
+    </div>
+
+    <div v-else class="pp-body">
+      <label class="pp-drop">
+        <input type="file" accept="image/*" class="pp-file" @change="onFile"/>
+        <span class="icon icon-image"/>
+        <span>{{ lastFile ? lastFile.name : 'Choose an image' }}</span>
+      </label>
+      <div class="pp-count">
+        <label>{{ $t('c_PalettePicker.colors') }} <strong>{{ count }}</strong></label>
+        <input type="range" min="2" max="32" v-model.number="count"/>
+      </div>
+      <div v-if="detecting" class="pp-list-state">{{ $t('c_PalettePicker.detecting') }}</div>
+      <div v-else-if="detected.length" class="pp-cur-strip">
+        <span v-for="(c, i) in detected" :key="i" class="pp-cur-sw" :style="{ backgroundColor: c }"/>
+      </div>
+      <div class="pp-image-actions">
+        <button class="btn primary pp-action" :disabled="!detected.length" @click="applyImage">{{ $t('c_PalettePicker.applyToCanvas') }}</button>
+        <NuxtLinkLocale to="/palettes/color-palette-from-image" class="pp-publish-link">{{ $t('c_PalettePicker.publishAsPalette') }}</NuxtLinkLocale>
+      </div>
+    </div>
+  </UiModal>
 </template>
 
 <style scoped>
-.pp-modal {
+/* UiModal renders the dialog through a Teleport, so the scoped attribute
+   never reaches it; the frame is styled globally by its class. */
+:global(.share-modal.pp-modal) {
   max-width: 560px;
   width: 94%;
   padding: 0;
@@ -220,7 +215,8 @@ watch(open, (v) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+  /* Room on the right for UiModal's close button. */
+  padding: var(--space-2) calc(var(--space-6) + var(--space-5)) var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--border);
 }
 
@@ -239,20 +235,6 @@ watch(open, (v) => {
 
 .pp-tab.active { color: var(--primary); background: color-mix(in oklab, var(--primary) 12%, transparent); }
 
-.pp-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-}
-
-.pp-close:hover { color: var(--foreground); background: var(--surface-2); }
 
 .pp-mode {
   display: flex;

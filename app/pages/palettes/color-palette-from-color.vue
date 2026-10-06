@@ -190,7 +190,7 @@ useCustomSeoMeta({
         <PaletteComposer
             v-model:colors="colors"
             source="scheme"
-            name-:placeholder="$t('common.paletteName')"
+            :name-placeholder="$t('common.paletteName')"
             default-name="Color palette"
         />
       </div>
@@ -233,7 +233,7 @@ useCustomSeoMeta({
 .scheme-base {
   display: flex;
   gap: 0.875rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--space-5);
 }
 
 .scheme-swatch {
@@ -285,7 +285,7 @@ useCustomSeoMeta({
   gap: var(--space-2);
   width: 100%;
   height: 38px;
-  margin-top: 1.25rem;
+  margin-top: var(--space-5);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -296,8 +296,10 @@ useCustomSeoMeta({
   transition: border-color var(--transition), color var(--transition), background var(--transition);
 }
 
-.scheme-refresh:hover {
-  color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .scheme-refresh:hover {
+    color: var(--primary);
+  }
 }
 
 .scheme-refresh .icon {
@@ -325,7 +327,7 @@ useCustomSeoMeta({
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--primary);
 }
 
-.scheme-harm-cap { margin-top: 1.25rem; }
+.scheme-harm-cap { margin-top: var(--space-5); }
 
 .scheme-harm-grid {
   display: grid;
@@ -334,17 +336,17 @@ useCustomSeoMeta({
 }
 
 .scheme-count-row {
-  margin-top: 1.25rem;
+  margin-top: var(--space-5);
 }
 
 .scheme-count-cap {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
 }
 
 .scheme-count-cap strong {
   color: var(--foreground);
   font-size: var(--text-sm);
-  margin-left: 0.25rem;
+  margin-left: var(--space-1);
 }
 
 .scheme-range {

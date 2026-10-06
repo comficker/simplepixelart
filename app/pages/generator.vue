@@ -47,18 +47,18 @@ const loginModal = useLoginModal()
 
 const SIZES: (number | 'auto')[] = ['auto', 16, 32, 64, 128]
 const COLOR_COUNTS = [8, 16, 32]
-const STYLES = [
+const STYLES = computed(() => [
   {v: 'sprite', l: t('p_generator.sprite')},
   {v: 'icon', l: t('p_generator.icon')},
   {v: 'character', l: t('p_generator.character')},
   {v: 'scene', l: t('p_generator.scene')},
-]
-const VIEWS = [
+])
+const VIEWS = computed(() => [
   {v: 'auto', l: t('common.auto')},
   {v: 'front', l: t('p_generator.front')},
   {v: 'side', l: t('p_generator.side')},
   {v: 'isometric', l: t('p_generator.iso')},
-]
+])
 const BG_MODES = computed(() => [
   {v: 'cut', l: t('p_generator.bgCut'), t: t('p_generator.bgCutHint')},
   {v: 'keep', l: t('p_generator.bgKeep'), t: t('p_generator.bgKeepHint')},
@@ -174,6 +174,9 @@ function clearReference() {
 
 function onRefDrop(e: DragEvent) {
   e.preventDefault()
+  // Same gate as the attach button, which is disabled for guests and while busy.
+  if (!auth.isLogged) { loginModal.show(); return }
+  if (busy.value) return
   pickReference(e.dataTransfer?.files?.[0])
 }
 const grid = ref<number[][]>([])
@@ -203,6 +206,13 @@ onMounted(() => {
   if (typeof seed === 'string' && seed.trim()) prompt.value = seed.slice(0, 300)
   loadSummary()
   if (auth.isLogged) loadHistory()
+})
+
+// Signing in through the modal doesn't reload the page — refresh balance + history.
+watch(() => auth.isLogged, (v) => {
+  if (!v) return
+  loadSummary()
+  loadHistory()
 })
 
 async function claimDaily() {
@@ -271,8 +281,9 @@ function drawPreview() {
 async function generate() {
   if (busy.value || prompt.value.trim().length < 3) return
   busy.value = true
+  let res: { image: string; balance: number; history_id: number | null }
   try {
-    const res = await useNativeFetch<{ image: string; balance: number; history_id: number | null }>(
+    res = await useNativeFetch<{ image: string; balance: number; history_id: number | null }>(
         '/coloring/economy/gen-image/',
         {
           method: 'POST',
@@ -287,15 +298,6 @@ async function generate() {
           },
         },
     )
-    resultUrl.value = res.image
-    previewMode.value = 'pixel'
-    // Keep refining from what is on screen now, so a second change applies to
-    // the sprite the user just accepted rather than to an older one.
-    if (refining.value) reference.value = await toReference(res.image, false)
-    if (summary.value) summary.value.balance = res.balance
-    await convertResult()
-    historyId.value = res.history_id ?? null
-    loadHistory()
   } catch (e: any) {
     const s = e?.status ?? e?.response?.status
     const codes = e?.data ?? e?.response?._data
@@ -308,6 +310,22 @@ async function generate() {
       await loadSummary()
     } else if (s === 429) toast.error('Too many generations — take a short break')
     else toast.error('Generation failed — your credits were refunded')
+    busy.value = false
+    return
+  }
+  // The generation is paid for from here on — a failure below is ours, not a refund.
+  if (summary.value) summary.value.balance = res.balance
+  historyId.value = res.history_id ?? null
+  loadHistory()
+  try {
+    resultUrl.value = res.image
+    previewMode.value = 'pixel'
+    // Keep refining from what is on screen now, so a second change applies to
+    // the sprite the user just accepted rather than to an older one.
+    if (refining.value) reference.value = await toReference(res.image, false)
+    await convertResult()
+  } catch {
+    toast.error('Could not process the generated image — find it in your history')
   } finally {
     busy.value = false
   }
@@ -449,7 +467,7 @@ const faq = computed(() => [
 
         <p v-if="hasResult && previewMode === 'original'" class="gen-hint text-xs text-muted" v-html="$t('p_generator.theModelSOwnPictureThe')"/>
 
-        <div v-if="hasResult" class="gen-actions">
+        <div v-if="hasResult" class="tool-actions">
           <button
               class="btn primary block"
               :title="previewMode === 'original' ? 'Open the original picture in the editor' : 'Open the pixel art in the editor'"
@@ -485,7 +503,7 @@ const faq = computed(() => [
             <span class="icon icon-close"/>
           </button>
         </div>
-        <div class="gen-composer-box">
+        <div class="composer-box">
           <button
               class="gen-attach"
               :disabled="busy || !auth.isLogged"
@@ -501,7 +519,7 @@ const faq = computed(() => [
               ref="promptEl"
               v-model="prompt"
               type="text"
-              class="gen-input"
+              class="composer-input"
               maxlength="300"
               :placeholder="refining ? 'What to change — “make the hat red”…' : reference ? 'What to change…' : hasResult ? 'Describe another sprite…' : 'A sleeping orange cat curled up…'"
               :disabled="busy || !auth.isLogged"
@@ -723,7 +741,7 @@ const faq = computed(() => [
 }
 
 .gen-viewseg button {
-  padding: 0 0.5rem;
+  padding: 0 var(--space-2);
   font-size: var(--text-2xs);
   letter-spacing: 0.02em;
 }
@@ -828,37 +846,6 @@ const faq = computed(() => [
   padding: var(--space-3);
 }
 
-.gen-composer-box {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface-2);
-  padding: var(--space-2);
-  transition: border-color var(--transition);
-}
-
-.gen-composer-box:focus-within { border-color: var(--primary); }
-
-.gen-input {
-  flex: 1;
-  min-width: 0;
-  height: 2.375rem;               
-  border: 0;
-  background: transparent;
-  color: var(--foreground);
-  font-size: var(--text-sm);
-  padding: 0 var(--space-1);
-}
-
-.gen-input:focus,
-.gen-input:focus-visible {
-  outline: none;
-  box-shadow: none;
-  border-color: transparent;
-}
-
 .gen-send {
   flex: none;
   justify-content: center;
@@ -888,12 +875,6 @@ const faq = computed(() => [
   text-align: center;
 }
 
-.gen-actions {
-  display: flex;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border-top: 1px solid var(--border);
-}
 
 .gen-cost {
   display: inline-flex;

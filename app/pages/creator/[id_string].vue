@@ -1,8 +1,10 @@
 <script setup lang="ts">
-const artImage = useArtImage()
 import type {APIResponse, Collection, ResponseSharedPage, SharedPage} from "~/types";
 import {PROFILE_LINKS, linkHost} from '~/helper/profileLinks'
 import {tileImageUrl} from '~/helper/tilemap'
+import {toast} from 'vue-sonner'
+
+const {t} = useI18n()
 
 const route = useRoute()
 const username = computed(() => route.params.id_string?.toString() || '')
@@ -17,7 +19,7 @@ interface CreatorCollection extends Collection {
   items: SharedPage[] | number[]
 }
 
-const {data: collectionsRes} = await useAuthFetch<APIResponse<CreatorCollection>>(
+const collectionsFetch = useAuthFetch<APIResponse<CreatorCollection>>(
     '/coloring/collections/',
     {
       params: {
@@ -29,7 +31,7 @@ const {data: collectionsRes} = await useAuthFetch<APIResponse<CreatorCollection>
     },
 )
 
-const {data: worksCount} = await useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
+const worksCountFetch = useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
   params: {
     slug: `/creator/${username.value}`,
     status: 'public',
@@ -52,7 +54,7 @@ interface CreatorProfile {
   following: boolean
 }
 
-const {data: profile} = await useAuthFetch<CreatorProfile>(
+const profileFetch = useAuthFetch<CreatorProfile>(
     `/coloring/creators/${username.value}/`,
     {key: `creator-profile-${username.value}`},
 )
@@ -63,16 +65,24 @@ const apiBase = useRuntimeConfig().public.api as string
 // The creator's best-liked pieces: the first three shown large as the page's
 // centrepiece, and up to a dozen laid out as the cover, so every profile
 // looks like its owner's work without them uploading a banner.
-const {data: featuredRes} = await useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
+const featuredFetch = useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
   params: {user: username.value, status: 'public', is_tile: false, ordering: '-score,-id', page_size: 12},
   key: `creator-featured-${username.value}`,
 })
+
+// The four requests don't depend on each other: fire them together.
+await Promise.all([collectionsFetch, worksCountFetch, profileFetch, featuredFetch])
+const {data: collectionsRes} = collectionsFetch
+const {data: worksCount} = worksCountFetch
+const {data: profile, refresh: refreshProfile} = profileFetch
+const {data: featuredRes} = featuredFetch
 const coverPieces = computed(() => featuredRes.value?.results || [])
 const featured = computed(() => coverPieces.value.slice(0, 3))
 const followBusy = ref(false)
+const loginModal = useLoginModal()
 
 async function toggleFollow() {
-  if (!auth.isLogged) { auth.authOAUTH(); return }
+  if (!auth.isLogged) { loginModal.show(followAfterLogin); return }
   if (followBusy.value || !profile.value) return
   followBusy.value = true
   try {
@@ -80,9 +90,18 @@ async function toggleFollow() {
         '/activity/follow/', {method: 'POST', body: {username: username.value}},
     )
     profile.value = {...profile.value, following: res.following, followers: res.followers}
-  } catch {  } finally {
+  } catch {
+    toast.error(t('p_creator_id_string.couldNotUpdateFollow'))
+  } finally {
     followBusy.value = false
   }
+}
+
+// The profile was fetched as a guest, so it doesn't know whether the new
+// session already follows them; ask first, so "Follow" can't unfollow.
+async function followAfterLogin() {
+  await refreshProfile()
+  if (!profile.value?.following && !isSelf.value) await toggleFollow()
 }
 
 const isSelf = computed(() => auth.logged?.username === username.value)
@@ -128,44 +147,7 @@ const collections = computed(() => collectionsRes.value?.results || [])
 const totalWorks = computed(() => worksCount.value?.count || 0)
 const isEmptyCreator = computed(() => totalWorks.value === 0 && collections.value.length === 0)
 
-function itemCount(c: CreatorCollection): number {
-  return Array.isArray(c.items) ? c.items.length : 0
-}
-
-/** Cover image per collection, keyed by collection id.
- *
- *  The list endpoint sends `items` as bare row ids, so there is nothing here
- *  to build an image URL from -- the old code read `items[0].id_string` off a
- *  number and fell through to the placeholder every single time. The ids are
- *  resolved in one request for the whole page rather than one per card.
- */
-const covers = ref<Record<number, string>>({})
-const coverFailed = reactive<Record<number, boolean>>({})
-
-async function loadCovers() {
-  const wanted = collections.value
-      .map(c => (Array.isArray(c.items) ? c.items : [])
-          .find((i): i is number => typeof i === 'number'))
-      .filter((i): i is number => typeof i === 'number')
-  if (!wanted.length) return
-  try {
-    const ids = [...new Set(wanted)]
-    const res = await useNativeFetch<ResponseSharedPage>('/coloring/shared-pages/', {
-      params: {ids: ids.join(','), page_size: ids.length},
-    })
-    const byId = new Map((res.results || []).map(a => [a.id, a]))
-    const next: Record<number, string> = {}
-    for (const c of collections.value) {
-      const first = (Array.isArray(c.items) ? c.items : [])
-          .find((i): i is number => typeof i === 'number')
-      const art = first != null ? byId.get(first) : undefined
-      if (art) next[c.id as number] = artImage(art as any)
-    }
-    covers.value = next
-  } catch {
-    // A cover is decoration; the tile falls back to its placeholder.
-  }
-}
+const {covers, coverFailed, loadCovers} = useCollectionCovers(() => collections.value)
 
 onMounted(loadCovers)
 watch(collections, loadCovers)
@@ -178,7 +160,7 @@ const canonicalUrl = computed(() => {
 
 const seoTitle = computed(() =>
     page.value > 1
-        ? `Pixel art by @${username.value} — Page ${page.value} | SimplePixelArt`
+        ? `Pixel art by @${username.value} — Page ${page.value}`
         : `Pixel art by @${username.value} — Sprites, Designs & Creations`
 )
 
@@ -302,30 +284,14 @@ useCustomSeoMeta({
       <section v-if="collections.length" class="cp-sec creator-colls">
         <h2 class="cp-cap">{{ $t('p_creator_id_string.collections') }}</h2>
         <div class="results">
-          <div v-for="c in collections" :key="c.id" class="creator-coll">
-            <NuxtLinkLocale class="card" :to="`/collections/${c.id_string}`" :title="c.name || 'Untitled'">
-              <div class="square">
-                <div class="inside card-pad">
-                  <img
-                      v-if="covers[c.id as number] && !coverFailed[c.id as number]"
-                      :src="covers[c.id as number]"
-                      :alt="c.name || 'Collection'"
-                      class="size-full"
-                      loading="lazy"
-                      decoding="async"
-                      @error="coverFailed[c.id as number] = true"
-                  >
-                  <div v-else class="card-empty"><span class="icon icon-rhombus"/></div>
-                </div>
-              </div>
-            </NuxtLinkLocale>
-            <NuxtLinkLocale class="creator-coll-name" :to="`/collections/${c.id_string}`">
-              {{ c.name || 'Untitled' }}
-            </NuxtLinkLocale>
-            <span class="creator-coll-count">
-              {{ itemCount(c) }} {{ itemCount(c) === 1 ? 'piece' : 'pieces' }}
-            </span>
-          </div>
+          <ItemCollectionTile
+              v-for="c in collections"
+              :key="c.id"
+              :value="c"
+              :cover="covers[c.id as number]"
+              :failed="coverFailed[c.id as number]"
+              @error="coverFailed[c.id as number] = true"
+          />
         </div>
       </section>
 
@@ -392,7 +358,7 @@ useCustomSeoMeta({
   height: calc(var(--space-6) * 4);
   overflow: hidden;
   border-radius: var(--radius-sm);
-  background: var(--primary);
+  background: var(--primary-fill);
   color: var(--primary-foreground);
   font-family: var(--font-display);
   font-size: var(--text-4xl);
@@ -583,23 +549,6 @@ useCustomSeoMeta({
   margin-left: var(--space-2);
   font-weight: 600;
   color: var(--success);
-}
-
-/* ── collections ──────────────────────────────────────────────────── */
-.creator-coll-name {
-  display: block;
-  margin-top: var(--space-1);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.creator-coll-count {
-  display: block;
-  font-size: var(--text-2xs);
-  color: var(--muted);
 }
 
 /* ── phones ───────────────────────────────────────────────────────── */

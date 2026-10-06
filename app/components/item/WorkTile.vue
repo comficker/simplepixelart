@@ -181,7 +181,7 @@ function statusBadge(s?: string) {
   height: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 4px;
+  gap: var(--space-1);
   image-rendering: pixelated;
 }
 
@@ -204,7 +204,7 @@ function statusBadge(s?: string) {
   height: 100%;
   background: var(--surface-2);
   color: var(--muted);
-  font-size: 32px;
+  font-size: var(--text-3xl);
 }
 
 .work-status {
@@ -222,7 +222,7 @@ function statusBadge(s?: string) {
 }
 
 .work-status .icon { width: var(--icon-sm); height: var(--icon-sm); }
-.badge-public { background: var(--primary); color: var(--primary-foreground); }
+.badge-public { background: var(--primary-fill); color: var(--primary-foreground); }
 .badge-pending { background: var(--warning); color: var(--warning-foreground); }
 .badge-draft { background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); }
 

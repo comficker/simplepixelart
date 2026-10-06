@@ -463,6 +463,7 @@
     "resizeTheDocumentationColumn": "Cambiar el ancho de la columna de documentación"
   },
   "c_ToolMoved": {
+    "goToX": "Ir a {name}",
     "takingYouThereNow": ". Te llevamos ahí ahora…",
     "theXHasMovedTo": "{name} se ha mudado a {to}.",
     "thisToolNowLivesAt": "Esta herramienta ahora está en",
@@ -520,6 +521,7 @@
     "close": "Cerrar",
     "colors": "Colores",
     "cols": "Columnas",
+    "confirm": "Confirmar",
     "copyHex": "Copiar hex",
     "copyX": "Copiar {x}",
     "create": "Crear",
@@ -758,6 +760,8 @@
     "backHome": "Volver al inicio"
   },
   "p_challenges": {
+    "noChallengesYet": "Aún no hay retos",
+    "noChallengesYetBody": "El primer tema semanal está en camino. Vuelve pronto.",
     "oneThemeAWeekDrawIt": "Un tema por semana. Dibújalo a tu manera, envíalo y la comunidad vota a los ganadores.",
     "pastChallenges": "Retos anteriores",
     "thisWeek": "Esta semana"
@@ -869,8 +873,10 @@
   "p_creator": {
     "allTime": "Histórico",
     "artCount": "1 obra | {count} obras",
+    "clearSearch": "Borrar búsqueda",
     "creatorCount": "1 creador | {count} creadores",
     "discoverArtistsFromTheSimplepixela": "Descubre a los artistas de la comunidad de SimplePixelArt.com. Recorre sus portafolios y explora sus creaciones de pixel art.",
+    "noCreatorMatchesQ": "Ningún creador coincide con «{q}».",
     "noCreatorsYet": "No hay creadores aquí",
     "nobodyPublishedInThisPeriod": "Nadie publicó nada en este período.",
     "pixelArtCreators": "Mejores creadores de pixel art",
@@ -886,6 +892,7 @@
     "allWorkN": "Todas las obras ({n})",
     "bestWork": "Lo mejor",
     "collections": "Colecciones",
+    "couldNotUpdateFollow": "No se pudo actualizar el seguimiento. Inténtalo de nuevo.",
     "creatorStats": "Estadísticas del creador",
     "follow": "Seguir",
     "following": "Siguiendo",

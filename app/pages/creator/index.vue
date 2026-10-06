@@ -138,11 +138,17 @@ useCustomSeoMeta({
       <div v-else-if="isEmpty" class="empty-state rank-empty">
         <span class="empty-state-icon icon icon-trophy" aria-hidden="true"/>
         <div class="empty-state-title">{{ $t('p_creator.noCreatorsYet') }}</div>
-        <p class="empty-state-body">{{ $t('p_creator.nobodyPublishedInThisPeriod') }}</p>
-        <div class="empty-state-actions">
-          <button v-if="period" class="btn" @click="setPeriod('')">{{ $t('p_creator.allTime') }}</button>
-          <NuxtLinkLocale to="/editor?new=true" class="btn primary">{{ $t('common.new') }}</NuxtLinkLocale>
-        </div>
+        <template v-if="q">
+          <p class="empty-state-body">{{ $t('p_creator.noCreatorMatchesQ', {q}) }}</p>
+          <button class="btn empty-state-action" @click="setSearch('')">{{ $t('p_creator.clearSearch') }}</button>
+        </template>
+        <template v-else>
+          <p class="empty-state-body">{{ $t('p_creator.nobodyPublishedInThisPeriod') }}</p>
+          <div class="empty-state-actions">
+            <button v-if="period" class="btn" @click="setPeriod('')">{{ $t('p_creator.allTime') }}</button>
+            <NuxtLinkLocale to="/editor?new=true" class="btn primary">{{ $t('common.new') }}</NuxtLinkLocale>
+          </div>
+        </template>
       </div>
 
       <ol v-else class="rank-list lg">

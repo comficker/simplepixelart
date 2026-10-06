@@ -479,6 +479,7 @@
     "resizeTheDocumentationColumn": "Resize the documentation column"
   },
   "c_ToolMoved": {
+    "goToX": "Go to {name}",
     "takingYouThereNow": ". Taking you there now…",
     "theXHasMovedTo": "The {name} has moved to {to}.",
     "thisToolNowLivesAt": "This tool now lives at",
@@ -541,6 +542,7 @@
     "close": "Close",
     "colors": "Colors",
     "cols": "Cols",
+    "confirm": "Confirm",
     "copyHex": "Copy hex",
     "copyX": "Copy {x}",
     "create": "Create",
@@ -779,6 +781,8 @@
     "backHome": "Back home"
   },
   "p_challenges": {
+    "noChallengesYet": "No challenges yet",
+    "noChallengesYetBody": "The first weekly theme is on its way. Check back soon.",
     "oneThemeAWeekDrawIt": "One theme a week. Draw it your way, submit, and the community votes the winners.",
     "pastChallenges": "Past challenges",
     "thisWeek": "This week"
@@ -890,8 +894,10 @@
   "p_creator": {
     "allTime": "All time",
     "artCount": "1 artwork | {count} artworks",
+    "clearSearch": "Clear search",
     "creatorCount": "1 creator | {count} creators",
     "discoverArtistsFromTheSimplepixela": "Discover artists from the SimplePixelArt.com community. Browse their portfolios and explore their pixel art creations.",
+    "noCreatorMatchesQ": "No creator matches “{q}”.",
     "noCreatorsYet": "No creators here",
     "nobodyPublishedInThisPeriod": "Nobody published anything in this period.",
     "pixelArtCreators": "Top Pixel Art Creators",
@@ -907,6 +913,7 @@
     "allWorkN": "All work ({n})",
     "bestWork": "Best work",
     "collections": "Collections",
+    "couldNotUpdateFollow": "Could not update follow. Try again.",
     "creatorStats": "Creator stats",
     "follow": "Follow",
     "following": "Following",

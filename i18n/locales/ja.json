@@ -463,6 +463,7 @@
     "resizeTheDocumentationColumn": "解説欄の幅を変える"
   },
   "c_ToolMoved": {
+    "goToX": "{name}へ移動",
     "takingYouThereNow": "。すぐに移動します…",
     "theXHasMovedTo": "{name}は {to} に移転しました。",
     "thisToolNowLivesAt": "このツールの移動先は",
@@ -520,6 +521,7 @@
     "close": "閉じる",
     "colors": "色",
     "cols": "列",
+    "confirm": "確認",
     "copyHex": "カラーコードをコピー",
     "copyX": "{x}をコピー",
     "create": "作成",
@@ -758,6 +760,8 @@
     "backHome": "ホームへ戻る"
   },
   "p_challenges": {
+    "noChallengesYet": "チャレンジはまだありません",
+    "noChallengesYetBody": "最初の週間テーマを準備中です。またチェックしてください。",
     "oneThemeAWeekDrawIt": "毎週ひとつのテーマ。自分なりに描いて投稿すれば、コミュニティの投票で優秀作が決まります。",
     "pastChallenges": "過去のチャレンジ",
     "thisWeek": "今週"
@@ -869,8 +873,10 @@
   "p_creator": {
     "allTime": "全期間",
     "artCount": "{count} 作品",
+    "clearSearch": "検索をクリア",
     "creatorCount": "{count} 人のクリエイター",
     "discoverArtistsFromTheSimplepixela": "SimplePixelArt.comのコミュニティで活動する作家を見つけましょう。ポートフォリオを巡って、それぞれのドット絵作品に触れてみてください。",
+    "noCreatorMatchesQ": "「{q}」に一致するクリエイターはいません。",
     "noCreatorsYet": "クリエイターがいません",
     "nobodyPublishedInThisPeriod": "この期間に公開した人はいません。",
     "pixelArtCreators": "ピクセルアートのトップクリエイター",
@@ -886,6 +892,7 @@
     "allWorkN": "すべての作品（{n}）",
     "bestWork": "ベスト作品",
     "collections": "コレクション",
+    "couldNotUpdateFollow": "フォローを更新できませんでした。もう一度お試しください。",
     "creatorStats": "クリエイターの統計",
     "follow": "フォロー",
     "following": "フォロー中",

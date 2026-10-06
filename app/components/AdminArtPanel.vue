@@ -201,7 +201,7 @@ async function destroy() {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 0.4rem 0.75rem 0.4rem 0.4rem;
+  padding: 0.4rem var(--space-3) 0.4rem 0.4rem;
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--foreground);
@@ -229,7 +229,7 @@ async function destroy() {
   font-weight: 800;
   letter-spacing: 0.1em;
   color: var(--primary-foreground, #fff);
-  background: var(--primary);
+  background: var(--primary-fill);
   border-radius: calc(var(--radius-sm) - 1px);
 }
 
@@ -257,7 +257,7 @@ async function destroy() {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: 0.875rem 1rem;
+  padding: 0.875rem var(--space-4);
   background: color-mix(in oklab, var(--primary) 7%, var(--surface));
   border-bottom: 1px solid var(--border);
 }
@@ -353,7 +353,7 @@ async function destroy() {
   background: var(--surface-2);
 }
 
-.admin-seg-btn.seg-public.active { color: var(--primary-foreground, #fff); background: var(--primary); }
+.admin-seg-btn.seg-public.active { color: var(--primary-foreground, #fff); background: var(--primary-fill); }
 .admin-seg-btn.seg-pending.active { color: #fff; background: #c47b00; }
 .admin-seg-btn.seg-draft.active { color: #fff; background: #6b7280; }
 .admin-seg-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -418,7 +418,7 @@ async function destroy() {
 
 .admin-input {
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border);
   background: var(--surface-2);
   border-radius: var(--radius-sm);
@@ -443,7 +443,7 @@ async function destroy() {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: 0.875rem 1rem;
+  padding: 0.875rem var(--space-4);
   border-top: 1px solid var(--border);
   background: var(--surface);
 }

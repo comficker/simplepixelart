@@ -169,11 +169,18 @@ useCustomSeoMeta({
           <span class="icon icon-pen"/>
           <span>{{ $t('common.openInEditor') }}</span>
         </NuxtLinkLocale>
-        <button class="btn pd-like" :class="{ liked }" :disabled="liking || liked" @click="toggleLike" :title="liked ? 'You hearted this today' : 'Heart this palette'">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-            <path d="M12 21s-7.5-4.9-10-9.3C.5 8.6 2 5 5.5 5c2 0 3.4 1.1 4.5 2.6C11.1 6.1 12.5 5 14.5 5 18 5 19.5 8.6 22 11.7 19.5 16.1 12 21 12 21z"
-                  :fill="liked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.6"/>
-          </svg>
+        <!-- One like per visitor per day and not reversible, so a liked palette
+             just shows the liked state; toggleLike ignores further clicks. -->
+        <button
+            type="button"
+            class="btn secondary pd-like"
+            :class="{'is-liked': liked}"
+            :aria-pressed="liked"
+            :disabled="liking"
+            :title="liked ? 'You hearted this today' : 'Heart this palette'"
+            @click="toggleLike"
+        >
+          <span class="icon icon-heart"/>
           <span>{{ likeCount }}</span>
         </button>
         <ui-dropdown-menu>
@@ -182,11 +189,11 @@ useCustomSeoMeta({
             <span>{{ $t('common.download') }}</span>
           </button>
           <template #menu>
-            <div class="pd-dl-menu">
-              <a v-for="f in DL_FORMATS" :key="f.ext" class="drop-item" :href="dl(f.ext)" target="_blank" rel="noopener">
+            <div class="file-menu">
+              <a v-for="f in DL_FORMATS" :key="f.ext" class="file-menu-item" :href="dl(f.ext)" target="_blank" rel="noopener">
                 <span>{{ f.label }}</span>
               </a>
-              <button class="drop-item" @click="copyAll">
+              <button class="file-menu-item" @click="copyAll">
                 <span>{{ $t('common.copyHex') }}</span>
               </button>
             </div>
@@ -262,7 +269,7 @@ useCustomSeoMeta({
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 
 .pd-title {
@@ -275,7 +282,7 @@ useCustomSeoMeta({
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
   color: var(--muted);
   font-size: var(--text-sm);
   font-weight: 600;
@@ -284,7 +291,9 @@ useCustomSeoMeta({
 .pd-dot { opacity: 0.6; }
 
 .pd-creator { color: var(--primary); font-weight: 700; }
-.pd-creator:hover { text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) {
+  .pd-creator:hover { text-decoration: underline; }
+}
 
 .pd-actions {
   display: flex;
@@ -297,46 +306,23 @@ useCustomSeoMeta({
   gap: var(--space-2);
 }
 
-.pd-like.liked {
-  color: #e0245e;
-  border-color: color-mix(in oklab, #e0245e 40%, var(--border));
+.pd-like {
+  font-variant-numeric: tabular-nums;
 }
 
-.pd-dl-menu {
-  display: flex;
-  flex-direction: column;
-  min-width: 160px;
-  padding: var(--space-1);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-hover);
-}
-
-.pd-dl-menu .drop-item {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 0.375rem 0.625rem;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--foreground);
-  border-radius: var(--radius-sm);
-}
-
-.pd-dl-menu .drop-item:hover {
-  background: var(--surface-2);
-  color: var(--primary);
+.pd-like.is-liked {
+  color: var(--danger);
+  border-color: color-mix(in oklab, var(--danger) 45%, var(--border));
 }
 
 .pd-swatches {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .pd-swatches { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 .pd-sw {
@@ -378,21 +364,21 @@ useCustomSeoMeta({
 }
 
 .pd-insights {
-  margin-top: 1.25rem;
+  margin-top: var(--space-5);
 }
 
 .pd-insights-title {
   font-size: var(--text-lg);
   font-weight: 700;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
 }
 
 .pd-insights-panel {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1.25rem;
-  padding: 0.875rem 1rem;
+  gap: var(--space-5);
+  padding: 0.875rem var(--space-4);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -449,7 +435,7 @@ useCustomSeoMeta({
 .pd-pill {
   font-size: 12px;
   font-weight: 700;
-  padding: 0.25rem 0.7rem;
+  padding: var(--space-1) 0.7rem;
   border-radius: var(--radius-pill);
   background: var(--surface-2);
   color: var(--foreground);
@@ -475,7 +461,7 @@ useCustomSeoMeta({
 }
 
 .pd-tags {
-  margin-top: 0.75rem;
+  margin-top: var(--space-3);
 }
 
 .pd-used { margin-top: 2rem; }
@@ -483,7 +469,7 @@ useCustomSeoMeta({
 .pd-used-title {
   font-size: var(--text-lg);
   font-weight: 700;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
 }
 
 .pd-used-grid {
@@ -499,7 +485,7 @@ useCustomSeoMeta({
 .pd-related-title {
   font-size: var(--text-lg);
   font-weight: 700;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
 }
 
 .pd-related-grid {

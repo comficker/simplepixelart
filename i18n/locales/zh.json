@@ -463,6 +463,7 @@
     "resizeTheDocumentationColumn": "调整文档栏宽度"
   },
   "c_ToolMoved": {
+    "goToX": "前往{name}",
     "takingYouThereNow": "。正在带你过去…",
     "theXHasMovedTo": "{name} 已迁移至 {to}。",
     "thisToolNowLivesAt": "这个工具已移至",
@@ -520,6 +521,7 @@
     "close": "关闭",
     "colors": "颜色",
     "cols": "列",
+    "confirm": "确认",
     "copyHex": "复制色值",
     "copyX": "复制 {x}",
     "create": "创建",
@@ -758,6 +760,8 @@
     "backHome": "返回首页"
   },
   "p_challenges": {
+    "noChallengesYet": "暂无挑战",
+    "noChallengesYetBody": "第一个每周主题即将上线，请稍后再来。",
     "oneThemeAWeekDrawIt": "每周一个主题。用你的方式画出来、提交，再由社区投票选出优胜。",
     "pastChallenges": "往期挑战",
     "thisWeek": "本周"
@@ -869,8 +873,10 @@
   "p_creator": {
     "allTime": "全部时间",
     "artCount": "{count} 件作品",
+    "clearSearch": "清除搜索",
     "creatorCount": "{count} 位创作者",
     "discoverArtistsFromTheSimplepixela": "发现 SimplePixelArt.com 社区里的创作者。浏览他们的作品集，看看各自的像素画创作。",
+    "noCreatorMatchesQ": "没有与“{q}”匹配的创作者。",
     "noCreatorsYet": "这里还没有创作者",
     "nobodyPublishedInThisPeriod": "这个时间段没有人发布作品。",
     "pixelArtCreators": "顶尖像素画创作者",
@@ -886,6 +892,7 @@
     "allWorkN": "全部作品（{n}）",
     "bestWork": "代表作",
     "collections": "合集",
+    "couldNotUpdateFollow": "无法更新关注，请重试。",
     "creatorStats": "创作者数据",
     "follow": "关注",
     "following": "已关注",
