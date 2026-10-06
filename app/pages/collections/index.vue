@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type {APIResponse, ResponseSharedPage, SharedPage} from '~/types'
+import type {APIResponse} from '~/types'
 
 const {t} = useI18n()
 const route = useRoute()
-const artImage = useArtImage()
 
 interface CollectionRow {
   id: number
@@ -22,39 +21,7 @@ const {data} = await useAuthFetch<APIResponse<CollectionRow>>('/coloring/collect
 
 const collections = computed(() => data.value?.results || [])
 
-/* Covers, the way the creator page does it: the list sends `items` as bare
-   row ids, so the first one is resolved into an image in a single request
-   for the whole page rather than one per tile. */
-const covers = ref<Record<number, string>>({})
-const coverFailed = reactive<Record<number, boolean>>({})
-
-function firstItem(c: CollectionRow) {
-  return (Array.isArray(c.items) ? c.items : []).find((i): i is number => typeof i === 'number')
-}
-
-async function loadCovers() {
-  // Reset alongside the covers: a one-off 404 used to pin a tile to its
-  // placeholder for the rest of the session.
-  for (const k of Object.keys(coverFailed)) delete coverFailed[k as unknown as number]
-  const wanted = collections.value.map(firstItem).filter((i): i is number => typeof i === 'number')
-  if (!wanted.length) return
-  try {
-    const ids = [...new Set(wanted)]
-    const res = await useNativeFetch<ResponseSharedPage>('/coloring/shared-pages/', {
-      params: {ids: ids.join(','), page_size: ids.length},
-    })
-    const byId = new Map((res.results || []).map(a => [a.id, a]))
-    const next: Record<number, string> = {}
-    for (const c of collections.value) {
-      const first = firstItem(c)
-      const art = first != null ? byId.get(first) : undefined
-      if (art) next[c.id] = artImage(art as SharedPage)
-    }
-    covers.value = next
-  } catch {
-    // A cover is decoration; the tile falls back to its placeholder.
-  }
-}
+const {covers, coverFailed, loadCovers} = useCollectionCovers(() => collections.value)
 
 /* Immediate rather than onMounted as well: on a client-side navigation the
    fetch can resolve after mount, and both would have fired. */
@@ -85,30 +52,14 @@ useCustomSeoMeta({
         :desc="$t('p_collections.setsOfPixelArtPutTogether')"
     >
       <div v-if="collections.length" class="results">
-        <div v-for="c in collections" :key="c.id" class="cl-tile">
-          <NuxtLinkLocale class="card" :to="`/collections/${c.id_string}`" :title="c.name || $t('common.untitled')">
-            <div class="square">
-              <div class="inside card-pad">
-                <img
-                    v-if="covers[c.id] && !coverFailed[c.id]"
-                    :src="covers[c.id]"
-                    :alt="c.name || 'Collection'"
-                    class="size-full"
-                    loading="lazy"
-                    decoding="async"
-                    @error="coverFailed[c.id] = true"
-                >
-                <div v-else class="card-empty"><span class="icon icon-rhombus"/></div>
-              </div>
-            </div>
-          </NuxtLinkLocale>
-          <NuxtLinkLocale class="cl-tile-name" :to="`/collections/${c.id_string}`">
-            {{ c.name || $t('common.untitled') }}
-          </NuxtLinkLocale>
-          <span class="cl-tile-n">
-            {{ $t('p_collections.pieceCount', (c.items || []).length, {count: (c.items || []).length}) }}
-          </span>
-        </div>
+        <ItemCollectionTile
+            v-for="c in collections"
+            :key="c.id"
+            :value="c"
+            :cover="covers[c.id]"
+            :failed="coverFailed[c.id]"
+            @error="coverFailed[c.id] = true"
+        />
       </div>
 
       <div v-else class="empty-state">
@@ -136,31 +87,3 @@ useCustomSeoMeta({
     </BrowseLayout>
   </div>
 </template>
-
-<style scoped>
-.cl-tile {
-  min-width: 0;
-}
-
-.cl-tile-name {
-  display: block;
-  margin-top: var(--space-1);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cl-tile-n {
-  display: block;
-  font-size: var(--text-2xs);
-  color: var(--muted);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .cl-tile-name:hover {
-    color: var(--primary);
-  }
-}
-</style>

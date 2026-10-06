@@ -20,13 +20,26 @@ async function detect() {
   }
 }
 
-function onFile(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (!file) return
+const fileInput = ref<HTMLInputElement | null>(null)
+const dragging = ref(false)
+
+function setFile(file?: File | null) {
+  if (!file || !file.type.startsWith('image/')) return
   lastFile = file
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
   previewUrl.value = URL.createObjectURL(file)
   detect()
+}
+
+function onFile(e: Event) {
+  const input = e.target as HTMLInputElement
+  setFile(input.files?.[0])
+  input.value = ''
+}
+
+function onDrop(e: DragEvent) {
+  dragging.value = false
+  setFile(e.dataTransfer?.files?.[0])
 }
 
 let t: any = null
@@ -112,15 +125,25 @@ useCustomSeoMeta({
     <div class="tool-card ext-stack">
       <div class="tool-pane">
         <span class="tool-pane-cap">{{ $t('p_palettes_color-palette-from-image.sourceImage') }}</span>
-        <label class="dropzone" :class="{ filled: !!previewUrl }">
-          <input type="file" accept="image/*" class="ext-file" @change="onFile"/>
+        <!-- A button, not a label around a hidden input, so the picker is
+             reachable from the keyboard; it also takes a dropped image. -->
+        <input ref="fileInput" type="file" accept="image/*" class="ext-file" @change="onFile"/>
+        <button
+            type="button"
+            class="dropzone"
+            :class="{ filled: !!previewUrl, 'is-dragging': dragging }"
+            @click="fileInput?.click()"
+            @dragover.prevent="dragging = true"
+            @dragleave.self="dragging = false"
+            @drop.prevent="onDrop"
+        >
           <img v-if="previewUrl" :src="previewUrl" :alt="$t('p_palettes_color-palette-from-image.sourcePreview')" class="ext-preview"/>
           <template v-else>
             <span class="icon icon-image dropzone-icon"/>
             <span class="dropzone-title">{{ $t('p_palettes_color-palette-from-image.chooseAnImage') }}</span>
             <span class="dropzone-hint">{{ $t('p_palettes_color-palette-from-image.pngJpgWebpOrGif') }}</span>
           </template>
-        </label>
+        </button>
         <div class="ext-count">
           <label>{{ $t('common.colors') }} <strong>{{ count }}</strong></label>
           <input type="range" min="2" max="32" v-model.number="count"/>
@@ -136,7 +159,7 @@ useCustomSeoMeta({
             v-else-if="colors.length"
             v-model:colors="colors"
             source="image"
-            name-:placeholder="$t('common.paletteName')"
+            :name-placeholder="$t('common.paletteName')"
             default-name="Extracted palette"
         />
         <div v-else class="ext-ph">
@@ -216,6 +239,7 @@ useCustomSeoMeta({
 }
 
 .ext-file { display: none; }
+.dropzone.is-dragging { box-shadow: inset 0 0 0 calc(var(--space-1) / 2) var(--primary); }
 .ext-preview { width: 100%; height: 100%; max-height: 320px; object-fit: contain; image-rendering: pixelated; }
 
 .ext-count { display: flex; align-items: center; gap: 0.625rem; margin-top: 0.875rem; font-size: var(--text-sm); }

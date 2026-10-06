@@ -29,7 +29,6 @@ interface CollectionItem extends Collection {
 }
 
 const auth = useAuthStore()
-const config = useRuntimeConfig()
 const route = useRoute()
 const router = useRouter()
 
@@ -177,7 +176,7 @@ async function bulkDelete() {
 }
 
 useCustomSeoMeta({
-  title: "Your Work - Simple Pixel Art",
+  title: "Your Work",
   description: "Manage your pixel art drafts, published works, and collections.",
   canonical: "https://simplepixelart.com/work",
   robots: 'noindex, follow',
@@ -216,6 +215,7 @@ const {pageSize} = useResultsCols()
 const PAGE_SIZE = computed(() => pageSize(30))
 const workPage = ref(1)
 const workNumPages = ref(1)
+const workCount = ref(0)
 
 async function fetchWorks() {
   loadingWorks.value = true
@@ -237,6 +237,7 @@ async function fetchWorks() {
       })
       workspaces.value = res.results as WorkItem[]
       workNumPages.value = res.num_pages || 1
+      workCount.value = res.count || 0
     } else {
       localTs.reload()
       const tiles = localTs.list.value.flatMap(ts =>
@@ -272,7 +273,6 @@ function isCloud(item: WorkItem): boolean {
 }
 
 const failedThumb = reactive<Record<string | number, boolean>>({})
-const failedCover = reactive<Record<string | number, boolean>>({})
 
 function artUrl(idString: string): string {
   return artImage(idString)
@@ -405,6 +405,7 @@ async function fetchCollections() {
       params: {mine: 1, page_size: 100, ordering: '-updated'},
     })
     collections.value = res.results
+    loadCovers()
   } catch {
     toast.error('Could not load collections')
   } finally {
@@ -441,18 +442,10 @@ async function destroyColl(c: CollectionItem) {
   }
 }
 
-function itemCount(c: CollectionItem): number {
-  return Array.isArray(c.items) ? c.items.length : 0
-}
+const {covers, coverFailed: failedCover, loadCovers} = useCollectionCovers(() => collections.value)
 
 function coverUrl(c: CollectionItem): string | null {
-  if (Array.isArray(c.items) && c.items.length > 0) {
-    const first = c.items[0]
-    if (typeof first === 'object' && first?.id_string) {
-      return artImage(first)
-    }
-  }
-  return null
+  return covers.value[c.id!] || null
 }
 
 const filteredColls = computed(() => {
@@ -642,7 +635,8 @@ const curNumPages = computed(() => tab.value === 'artworks' ? workNumPagesShown.
     : tab.value === 'collections' ? collNumPages.value
         : tab.value === 'worlds' ? worldNumPages.value : tilesetNumPages.value)
 
-const curCount = computed(() => tab.value === 'artworks' ? filteredWorks.value.length
+const curCount = computed(() => tab.value === 'artworks'
+    ? (auth.logged?.id ? workCount.value : localFilteredWorks.value.length)
     : tab.value === 'collections' ? filteredColls.value.length
         : tab.value === 'worlds' ? filteredWorlds.value.length : filteredTilesets.value.length)
 
@@ -744,7 +738,7 @@ onMounted(() => {
         <div v-for="i in 10" :key="i" class="skeleton skeleton-square"/>
       </div>
 
-      <div v-else-if="!workspaces.length && workFilter === 'all'" class="empty-state">
+      <div v-else-if="!workspaces.length && workFilter === 'all' && workTileFilter === 'all'" class="empty-state">
         <span class="empty-state-icon icon icon-pen" aria-hidden="true"/>
         <h2 class="empty-state-title">{{ $t('p_work.noArtworksYet') }}</h2>
         <p class="empty-state-body">{{ $t('p_work.createSomethingItTakesSeconds') }}</p>
@@ -827,7 +821,7 @@ onMounted(() => {
       </TransitionGroup>
 
       <div v-else class="empty-state">
-        <p class="empty-state-body">No {{ workFilter }} artworks.</p>
+        <p class="empty-state-body">No {{ workFilter === 'all' ? 'matching' : workFilter }} artworks.</p>
       </div>
     </template>
 
@@ -871,7 +865,7 @@ onMounted(() => {
                 <img
                     v-if="coverUrl(c) && !failedCover[c.id]"
                     :src="coverUrl(c)!"
-                    :alt="c.title"
+                    :alt="c.name"
                     class="size-full"
                     loading="lazy"
                     decoding="async"
@@ -887,7 +881,7 @@ onMounted(() => {
             <span class="icon" :class="statusIcon(c.status)"/>
           </span>
           <div class="work-meta">
-            <div class="work-name" :title="c.title">{{ c.title || 'Untitled' }}</div>
+            <div class="work-name" :title="c.name">{{ c.name || 'Untitled' }}</div>
             <ui-dropdown-menu position="right">
               <button class="work-more-btn" :title="$t('p_work.more')" :aria-label="$t('p_work.collectionActions')">
                 <span class="icon icon-dots"/>
@@ -895,7 +889,7 @@ onMounted(() => {
               <template #menu>
                 <div class="file-menu">
                   <button class="file-menu-item" disabled>
-                    <span>{{ c.title || 'Untitled' }}</span>
+                    <span>{{ c.name || 'Untitled' }}</span>
                   </button>
                   <div class="file-menu-sep"/>
                   <NuxtLinkLocale class="file-menu-item" :to="`/collections/${c.id_string}`">
@@ -934,7 +928,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <TransitionGroup v-else tag="div" class="results" :class="{selecting: selectMode}" name="work-item">
+      <TransitionGroup v-else-if="filteredWorlds.length" tag="div" class="results" :class="{selecting: selectMode}" name="work-item">
         <div v-for="w in pagedWorlds" :key="w.id" class="work-card work-card-folder">
           <button
               v-if="selectMode"
@@ -986,6 +980,10 @@ onMounted(() => {
           </div>
         </div>
       </TransitionGroup>
+
+      <div v-else class="empty-state">
+        <p class="empty-state-body">No {{ worldFilter }} worlds.</p>
+      </div>
     </template>
 
     <template v-else>
@@ -1005,7 +1003,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <TransitionGroup v-else tag="div" class="results" :class="{selecting: selectMode}" name="work-item">
+      <TransitionGroup v-else-if="filteredTilesets.length" tag="div" class="results" :class="{selecting: selectMode}" name="work-item">
         <div v-for="t in pagedTilesets" :key="t.id" class="work-card work-card-folder">
           <button
               v-if="selectMode"
@@ -1057,6 +1055,10 @@ onMounted(() => {
           </div>
         </div>
       </TransitionGroup>
+
+      <div v-else class="empty-state">
+        <p class="empty-state-body">No {{ tilesetFilter }} tilesets.</p>
+      </div>
     </template>
 
     <template #foot>
@@ -1136,8 +1138,8 @@ onMounted(() => {
 
 .work-select-dot {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
+  bottom: var(--space-2);
+  right: var(--space-2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1151,7 +1153,7 @@ onMounted(() => {
 }
 
 .work-select-hit.on .work-select-dot {
-  background: var(--primary);
+  background: var(--primary-fill);
   border-color: var(--primary);
   color: var(--primary-foreground);
 }
@@ -1164,7 +1166,7 @@ onMounted(() => {
 .work-ic-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   padding: 0.375rem;
   border: 0;
   background: transparent;
@@ -1384,7 +1386,7 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   color: var(--muted);
-  font-size: 32px;
+  font-size: var(--text-3xl);
 }
 
 .work-meta {
@@ -1408,7 +1410,7 @@ onMounted(() => {
 }
 
 .badge-public {
-  background: var(--primary);
+  background: var(--primary-fill);
   color: var(--primary-foreground);
 }
 
@@ -1470,8 +1472,8 @@ onMounted(() => {
   height: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 4px;
-  padding: 1.25rem;
+  gap: var(--space-1);
+  padding: var(--space-5);
   image-rendering: pixelated;
 }
 

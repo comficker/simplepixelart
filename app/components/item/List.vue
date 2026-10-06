@@ -41,7 +41,10 @@ const {limit, showFilter, status, exactLimit, ordering, hidePaginator, title, de
 const route = useRoute()
 const router = useRouter()
 
-const search = ref('')
+// Seeded from ?search= so /arts?search=x (the sitelinks search box) arrives
+// filtered, and followed when a link changes it.
+const search = ref(route.query.search?.toString() || '')
+watch(() => route.query.search, v => { search.value = v?.toString() || '' })
 
 const {
   fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive, openLicense, animOnly, sort, effectiveLimit,
@@ -128,7 +131,23 @@ function clearFilters() {
   delete q.is_iso
   delete q.is_anim
   delete q.license
+  delete q.search
   router.push({query: q})
+}
+
+// Sort links stay on the page they are on (a tag or size) with its other
+// filters; only Newest has a path of its own. BrowseOpt adds the locale.
+const pathNoLocale = useRoutePathNoLocale()
+function sortTo(s?: 'trending' | 'following' | 'liked') {
+  const q = new URLSearchParams()
+  for (const [k, v] of Object.entries(route.query)) {
+    if (k === 'page' || k === 'sort' || v == null) continue
+    q.set(k, v.toString())
+  }
+  if (s) q.set('sort', s)
+  const base = isNewView.value ? '/arts' : pathNoLocale.value
+  const qs = q.toString()
+  return qs ? `${base}?${qs}` : base
 }
 
 const sizeLabel = computed(() => {
@@ -172,11 +191,11 @@ function isCurrentPreset(p: {width: number, height: number}): boolean {
       </BrowseFilter>
 
       <BrowseFilter :label="$t('common.sort')" icon="icon-rocket" :value="sortLabel">
-        <BrowseOpt to="/arts" :active="sort === 'popular'">{{ $t('common.popular') }}</BrowseOpt>
-        <BrowseOpt to="/arts?sort=trending" :active="sort === 'trending'">{{ $t('c_List.trending') }}</BrowseOpt>
+        <BrowseOpt :to="sortTo()" :active="sort === 'popular'">{{ $t('common.popular') }}</BrowseOpt>
+        <BrowseOpt :to="sortTo('trending')" :active="sort === 'trending'">{{ $t('c_List.trending') }}</BrowseOpt>
         <BrowseOpt to="/arts/new" :active="sort === 'new'">{{ $t('c_List.newest') }}</BrowseOpt>
-        <BrowseOpt v-if="auth.isLogged" to="/arts?sort=following" :active="sort === 'following'">{{ $t('c_List.following') }}</BrowseOpt>
-        <BrowseOpt v-if="auth.isLogged" to="/arts?sort=liked" :active="sort === 'liked'">{{ $t('c_List.liked') }}</BrowseOpt>
+        <BrowseOpt v-if="auth.isLogged" :to="sortTo('following')" :active="sort === 'following'">{{ $t('c_List.following') }}</BrowseOpt>
+        <BrowseOpt v-if="auth.isLogged" :to="sortTo('liked')" :active="sort === 'liked'">{{ $t('c_List.liked') }}</BrowseOpt>
       </BrowseFilter>
 
       <slot name="filters-extra"/>

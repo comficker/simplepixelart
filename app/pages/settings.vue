@@ -8,7 +8,7 @@ const loginModal = useLoginModal()
 const {current: resultsCols, options: resultsColOptions, setResultsCols} = useResultsCols()
 
 useCustomSeoMeta({
-  title: 'Settings - Simple Pixel Art',
+  title: 'Settings',
   description: 'Manage your account, appearance and app data.',
   canonical: 'https://simplepixelart.com/settings',
   robots: 'noindex, follow',
@@ -86,7 +86,9 @@ async function savePassword() {
 }
 
 onMounted(fillForm)
-watch(() => auth.logged, fillForm)
+// Refill only when the signed-in account changes: savePassword refetches the
+// session (for has_password), which must not wipe unsaved profile edits.
+watch(() => auth.logged?.id, fillForm)
 </script>
 
 <template>
@@ -337,7 +339,7 @@ watch(() => auth.logged, fillForm)
 }
 
 .set-input {
-  padding: 8px 10px;
+  padding: var(--space-2) 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface-2);

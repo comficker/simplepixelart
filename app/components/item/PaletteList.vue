@@ -28,6 +28,8 @@ const tagLabel = computed(() => tag.value
     : String(browseTags.value.length))
 
 const search = ref((route.query.q as string) || '')
+// Back/forward changes the query without going through setSearch.
+watch(() => route.query.q, q => { search.value = (q as string) || '' })
 
 const SORTS = [
   {key: '-score', label: t('c_PaletteList.popular')},
@@ -82,7 +84,7 @@ function setSearch(value: string) {
 
 function setSort(key: string) { pushQuery({sort: key === '-score' ? undefined : key}) }
 function setCount(key: string) { pushQuery({size: key || undefined}) }
-function clearFilters() { search.value = ''; router.push({query: {}}) }
+function clearFilters() { search.value = ''; pushQuery({q: undefined, size: undefined}) }
 
 const {page: currentPage, prevTo, nextTo} = usePageLinks(data)
 </script>

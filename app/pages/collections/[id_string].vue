@@ -60,7 +60,7 @@ const formattedDate = computed(() => {
 
 useCustomSeoMeta({
   untranslated: true,
-  title: `${title.value} — Pixel Art Collection`,
+  title: error.value ? 'Collection not found' : `${title.value} — Pixel Art Collection`,
   description: desc.value
       ? `${desc.value} Browse ${itemCount.value} pixel art ${itemCount.value === 1 ? 'piece' : 'pieces'} curated on SimplePixelArt.`
       : `A pixel art collection on SimplePixelArt featuring ${itemCount.value} ${itemCount.value === 1 ? 'piece' : 'pieces'}. Browse, remix or download any piece.`,
@@ -158,18 +158,26 @@ async function saveManage() {
   }
   savingManage.value = true
   try {
-    await Promise.all([
-      ...added.map(i => useNativeFetch(`/coloring/collections/${data.value!.id}/add-item/`, {
+    const [addRes, removeRes] = await Promise.all([
+      Promise.allSettled(added.map(i => useNativeFetch(`/coloring/collections/${data.value!.id}/add-item/`, {
         method: 'POST', body: {page_id: i.id},
-      })),
-      ...removed.map(i => useNativeFetch(`/coloring/collections/${data.value!.id}/remove-item/`, {
+      }))),
+      Promise.allSettled(removed.map(i => useNativeFetch(`/coloring/collections/${data.value!.id}/remove-item/`, {
         method: 'POST', body: {page_id: i.id},
-      })),
+      }))),
     ])
-    toast.success('Collection updated')
-    managing.value = false
-  } catch {
-    toast.error('Could not save changes')
+    // The server state is what actually went through: the original set, minus
+    // the removals that succeeded, plus the additions that succeeded.
+    const removedOk = new Set(removed.filter((_, k) => removeRes[k].status === 'fulfilled').map(i => i.id))
+    const addedOk = added.filter((_, k) => addRes[k].status === 'fulfilled')
+    originalItems = [...originalItems.filter(i => !removedOk.has(i.id)), ...addedOk]
+    const failed = added.length + removed.length - addedOk.length - removedOk.size
+    if (failed) {
+      toast.error(`Could not save ${failed} ${failed === 1 ? 'change' : 'changes'}`)
+    } else {
+      toast.success('Collection updated')
+      managing.value = false
+    }
   } finally {
     savingManage.value = false
   }
@@ -199,10 +207,11 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
 
 <template>
   <div class="page">
-    <div v-if="error" class="cl-detail-error">
-      <h1 class="page-title">{{ $t('p_collections_id_string.collectionNotFound') }}</h1>
-      <p class="text-xs text-muted" v-html="$t('p_collections_id_string.thisCollectionMayBePrivateOr')"/>
-      <NuxtLinkLocale to="/arts" class="btn primary">{{ $t('p_collections_id_string.browsePublicPixelArt') }}</NuxtLinkLocale>
+    <div v-if="error" class="empty-state">
+      <span class="empty-state-icon icon icon-search" aria-hidden="true"/>
+      <h1 class="empty-state-title cl-not-found-title">{{ $t('p_collections_id_string.collectionNotFound') }}</h1>
+      <p class="empty-state-body" v-html="$t('p_collections_id_string.thisCollectionMayBePrivateOr')"/>
+      <NuxtLinkLocale to="/arts" class="btn primary empty-state-action">{{ $t('p_collections_id_string.browsePublicPixelArt') }}</NuxtLinkLocale>
     </div>
 
     <template v-else-if="data">
@@ -354,12 +363,11 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
 
 .cl-detail-actions .btn {
   display: inline-flex;
-  align-items: center;
   gap: var(--space-2);
 }
 
 .cl-icon-btn {
-  padding: 0.5rem;
+  padding: var(--space-2);
 }
 
 .cl-manage-cell {
@@ -455,7 +463,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
   width: 18px;
   height: 18px;
   border-radius: var(--radius-pill);
-  background: var(--primary);
+  background: var(--primary-fill);
   color: var(--primary-foreground);
 }
 
@@ -464,14 +472,9 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
   height: var(--icon-sm);
 }
 
-.cl-detail-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: var(--space-4);
-  padding-top: 4rem;
-  padding-bottom: 4rem;
+/* An h1 for the outline, still drawn like every other empty-state title. */
+.cl-not-found-title {
+  font-family: inherit;
+  font-variation-settings: normal;
 }
 </style>

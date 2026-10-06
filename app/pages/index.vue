@@ -18,14 +18,11 @@ type WorkItem = (SharedPage | EditorData) & {
 const auth = useAuthStore()
 
 const userWorks = ref<WorkItem[]>([])
-const loadingWorks = ref(false)
 
 const {hasWork, workCount, setWorkCount} = useHasWork()
 const {rowSize} = useResultsCols()
 
 const studioLimit = computed(() => rowSize(5, 1))
-
-const mounted = ref(false)
 
 const hasWorks = computed(() => userWorks.value.length > 0)
 const studioWorks = computed(() => userWorks.value.slice(0, studioLimit.value))
@@ -45,7 +42,6 @@ function workThumbUrl(item: WorkItem): string {
 }
 
 async function loadUserWorks() {
-  loadingWorks.value = true
   try {
     if (auth.logged?.id) {
       const res = await useNativeFetch<APIResponse<SharedPage>>('/coloring/shared-pages/', {
@@ -65,9 +61,6 @@ async function loadUserWorks() {
           .slice(0, studioLimit.value)) as WorkItem[]
     }
   } finally {
-    loadingWorks.value = false
-
-
     setWorkCount(userWorks.value.length)
   }
 }
@@ -91,15 +84,15 @@ const faq = computed(() => [
 // client-side navigation each round trip costs about a second of latency.
 useArtListFetch({limit: 32, ordering: '-updated'})
 
-/* A fixed number of rows so the hero keeps its height while the site is
-   young and only a couple of creators qualify: the short list is padded with
-   placeholders rather than leaving a gap. */
+/* Up to this many rows. Placeholders pad the list only while it loads; once
+   loaded, a short list shows just its real rows -- a permanent skeleton reads
+   as something still loading. */
 const CREATOR_ROWS = 3
 
 // Awaited together: these two are independent, and awaiting them one after
 // the other made the server wait out both round trips before the artwork list
 // (fetched by item-list further down) could even start.
-const [{data: aiEnabled}, {data: topCreators}, {data: homeChallenge}, {data: newCreators}] = await Promise.all([
+const [{data: aiEnabled}, {data: topCreators, pending: topCreatorsPending}, {data: homeChallenge}, {data: newCreators}] = await Promise.all([
   useAuthFetch<boolean>('/coloring/economy/', {
     key: 'home-ai-image-enabled',
     transform: (s: any) => !!s?.ai_image_enabled,
@@ -134,6 +127,7 @@ const apiBase = useRuntimeConfig().public.api as string
 
 const creatorRows = computed(() => {
   const rows = topCreators.value || []
+  if (!topCreatorsPending.value) return rows
   return Array.from({length: CREATOR_ROWS}, (_, i) => rows[i] || null)
 })
 
@@ -143,12 +137,10 @@ const aiPrompt = ref('')
 function goGenerate() {
   const p = aiPrompt.value.trim()
   if (p.length < 3) return
-  navigateTo(localePath(`/generate?prompt=${encodeURIComponent(p.slice(0, 300))}`))
+  navigateTo(localePath(`/generator?prompt=${encodeURIComponent(p.slice(0, 300))}`))
 }
 
 onMounted(() => {
-  mounted.value = true
-
   if (hasWork.value) loadUserWorks()
 })
 
@@ -261,23 +253,25 @@ useCustomSeoMeta({
             </NuxtLinkLocale>
           </div>
           <form v-if="aiEnabled" class="home-ai" @submit.prevent="goGenerate">
-            <input
-                v-model="aiPrompt"
-                class="home-ai-input"
-                type="text"
-                maxlength="300"
-                :placeholder="$t('p_index.describeASpriteASleepingOrange')"
-                :aria-label="$t('p_index.describeThePixelArtToGenerate')"
-            >
-            <button
-                type="submit"
-                class="btn primary home-ai-btn"
-                :disabled="aiPrompt.trim().length < 3"
-                :title="$t('common.generate')"
-                :aria-label="$t('common.generate')"
-            >
-              <span class="icon icon-auto-fix"/>
-            </button>
+            <div class="composer-box">
+              <input
+                  v-model="aiPrompt"
+                  type="text"
+                  class="composer-input"
+                  maxlength="300"
+                  :placeholder="$t('p_index.describeASpriteASleepingOrange')"
+                  :aria-label="$t('p_index.describeThePixelArtToGenerate')"
+              >
+              <button
+                  type="submit"
+                  class="btn primary composer-icon-btn"
+                  :disabled="aiPrompt.trim().length < 3"
+                  :title="$t('common.generate')"
+                  :aria-label="$t('common.generate')"
+              >
+                <span class="icon icon-auto-fix"/>
+              </button>
+            </div>
           </form>
           <div class="home-tools"><ToolPaths/></div>
         </div>
@@ -410,7 +404,7 @@ useCustomSeoMeta({
             <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
           </NuxtLinkLocale>
         </template>
-        <item-list :limit="32" hide-ip hide-paginator ordering="-updated"/>
+        <item-list :limit="32" hide-paginator ordering="-updated"/>
       </Widget>
     </div>
 
@@ -560,12 +554,11 @@ useCustomSeoMeta({
 }
 
 .home-ai {
-  margin-top: var(--space-5);
-  display: flex;
-  gap: var(--space-2);
+  /* Pinned to the foot of the hero's column, level with the bottom of the
+     aside beside it; the padding keeps the gap above when there is no slack. */
+  margin-top: auto;
+  padding-top: var(--space-5);
   width: 100%;
-  /* Matches the tagline measure so the hero keeps one right-hand edge. */
-  max-width: 560px;
 }
 
 .home-hero-main {
@@ -674,29 +667,6 @@ useCustomSeoMeta({
   margin-top: var(--space-4);
 }
 
-.home-ai-input {
-  flex: 1;
-  min-width: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--foreground);
-  font-size: var(--text-sm);
-}
-
-.home-ai-input:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: -1px;
-}
-
-.home-ai-btn {
-  /* Icon only: a square as tall as the prompt beside it. */
-  flex: 0 0 auto;
-  width: calc(var(--space-6) * 1.75);
-  padding: 0;
-  justify-content: center;
-}
 
 .home-challenge-link {
   display: flex;
@@ -766,7 +736,6 @@ useCustomSeoMeta({
 @media (min-width: 768px) {
   .studio-grid {
     grid-template-columns: repeat(var(--results-cols, 6), minmax(0, 1fr));
-    gap: var(--space-4);
   }
 }
 

@@ -33,7 +33,7 @@
               class="publish-input"
           />
         </div>
-        <div class="h-center gap-2">
+        <div class="h-center gap-3">
           <ui-switch :model-value="form.status === 'public'" @update:model-value="form.status = $event ? 'public' : 'private'"/>
           <span class="text-xs">{{ $t('common.public') }}</span>
           <span class="text-xs text-muted">{{ form.status === 'public' ? '— anyone with the link' : '— only you' }}</span>

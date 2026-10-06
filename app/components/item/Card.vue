@@ -37,8 +37,8 @@
 <script setup lang="ts">
 import type {SharedPage} from "~/types";
 
-const {value, isDraw, isRemix, priority, isAdding, added, showVote} = defineProps<{
-  value: SharedPage, isDraw?: boolean, isRemix?: boolean, priority?: boolean, isAdding?: boolean, added?: boolean, showVote?: boolean
+const {value, isDraw, isRemix, priority} = defineProps<{
+  value: SharedPage, isDraw?: boolean, isRemix?: boolean, priority?: boolean
 }>()
 const artImage = useArtImage()
 
@@ -102,11 +102,6 @@ const isAnim = computed(() => value.is_anim
 
 .card .size-full {
   transition: transform 320ms cubic-bezier(.22,.61,.36,1);
-}
-
-.card.selected {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 35%, transparent), var(--shadow);
 }
 
 .card-pad {

@@ -30,7 +30,7 @@ interface Summary {
 }
 
 useCustomSeoMeta({
-  title: 'Missions - Simple Pixel Art',
+  title: 'Missions',
   description: 'Earn credits by creating and sharing pixel art.',
   canonical: 'https://simplepixelart.com/missions',
   robots: 'noindex, follow',
@@ -62,9 +62,15 @@ async function claimDaily() {
       sum.value.daily_claimed = true
     }
     toast.success(`+${res.granted} credits`)
-  } catch {
-    toast.error('Already claimed today')
-    if (sum.value) sum.value.daily_claimed = true
+  } catch (e: any) {
+    // Only the backend's own "already claimed" marks it done; a network or
+    // throttle failure leaves the button for another try.
+    if ((e?.response?._data?.[0] || e?.data?.[0]) === 'DAILY_ALREADY_CLAIMED') {
+      toast.error('Already claimed today')
+      if (sum.value) sum.value.daily_claimed = true
+    } else {
+      toast.error('Could not claim — try again')
+    }
   } finally {
     claiming.value = ''
   }
@@ -373,7 +379,7 @@ watch(() => auth.isLogged, (v) => {
 
 .msn-soon {
   position: absolute;
-  top: 8px;
+  top: var(--space-2);
   right: -24px;
   width: 84px;
   transform: rotate(45deg);
@@ -384,7 +390,7 @@ watch(() => auth.isLogged, (v) => {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--primary-foreground);
-  background: var(--primary);
+  background: var(--primary-fill);
   pointer-events: none;
 }
 
@@ -441,14 +447,14 @@ watch(() => auth.isLogged, (v) => {
   color: var(--muted);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  padding: 2px 8px;
+  padding: 2px var(--space-2);
   flex-shrink: 0;
 }
 
 .msn-reward {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--primary);
@@ -476,7 +482,7 @@ watch(() => auth.isLogged, (v) => {
   align-items: center;
   text-align: center;
   gap: var(--space-3);
-  padding: 3rem 1rem;
+  padding: 3rem var(--space-4);
 }
 
 .msn-empty .empty-icon {

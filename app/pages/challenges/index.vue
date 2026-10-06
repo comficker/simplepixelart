@@ -23,6 +23,7 @@ interface ChallengeItem {
 }
 
 const auth = useAuthStore()
+const loginModal = useLoginModal()
 
 const {data, refresh} = await useAuthFetch<{ current: ChallengeItem | null; past: ChallengeItem[] }>(
     '/coloring/challenges/', {key: 'challenges-list'},
@@ -75,7 +76,7 @@ useCustomSeoMeta({
           <button v-if="auth.isLogged" class="btn" @click="showSubmit = true">
             <span class="icon icon-flag"/><span>{{ $t('common.submitAnArt') }}</span>
           </button>
-          <button v-else class="btn" @click="auth.authOAUTH()">
+          <button v-else class="btn" @click="loginModal.show(() => showSubmit = true)">
             <span class="icon icon-flag"/><span>{{ $t('common.logInToSubmit') }}</span>
           </button>
           <NuxtLinkLocale :to="`/challenges/${current.id_string}`" class="section-link chal-view">
@@ -119,6 +120,13 @@ useCustomSeoMeta({
         </NuxtLinkLocale>
       </div>
     </Widget>
+
+    <div v-if="!current && !past.length" class="empty-state">
+      <span class="empty-state-icon icon icon-trophy" aria-hidden="true"/>
+      <div class="empty-state-title">{{ $t('p_challenges.noChallengesYet') }}</div>
+      <p class="empty-state-body">{{ $t('p_challenges.noChallengesYetBody') }}</p>
+      <NuxtLinkLocale to="/arts" class="btn empty-state-action">{{ $t('common.browseGallery') }}</NuxtLinkLocale>
+    </div>
 
     <ChallengeSubmitModal
         v-if="showSubmit && current"
@@ -234,7 +242,7 @@ useCustomSeoMeta({
 }
 
 .chal-past-meta {
-  padding: 0.375rem 0.5rem;
+  padding: 0.375rem var(--space-2);
   border-top: 1px solid var(--border);
 }
 
