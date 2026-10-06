@@ -27,9 +27,9 @@ const SOCIAL = [
 ]
 
 const PRIMARY = [
-  {to: '/', icon: 'icon-home', key: 'nav.home'},
-  {to: '/challenges', icon: 'icon-flag', key: 'nav.challenges'},
-  {to: '/work', icon: 'icon-workspace', key: 'nav.yourWork'},
+  {to: '/', icon: 'icon-home', key: 'nav.home', c1: '#94a3b8', c2: '#475569'},
+  {to: '/challenges', icon: 'icon-flag', key: 'nav.challenges', c1: '#f87171', c2: '#dc2626'},
+  {to: '/work', icon: 'icon-workspace', key: 'nav.yourWork', c1: '#60a5fa', c2: '#1d4ed8'},
 ]
 
 // Grouped by what you are doing rather than "page vs tool": browsing and
@@ -75,8 +75,15 @@ const SECTIONS = [
     </div>
 
     <nav class="dash-nav" :aria-label="$t('common.primary')">
-      <NuxtLinkLocale v-for="l in PRIMARY" :key="l.to" :to="l.to" class="hdr-link dash-link" :title="$t(l.key)">
-        <span class="icon" :class="l.icon"/>
+      <NuxtLinkLocale
+          v-for="l in PRIMARY"
+          :key="l.to"
+          :to="l.to"
+          class="hdr-link dash-link"
+          :style="{'--ic-1': l.c1, '--ic-2': l.c2}"
+          :title="$t(l.key)"
+      >
+        <span class="dash-tool-ic"><span class="icon" :class="l.icon"/></span>
         <span class="dash-label">{{ $t(l.key) }}</span>
       </NuxtLinkLocale>
     </nav>
@@ -109,7 +116,7 @@ const SECTIONS = [
           class="hdr-link dash-link"
           :title="$t(l.key)"
       >
-        <span class="icon" :class="l.icon"/>
+        <span class="dash-tool-ic dash-tool-ic-plain"><span class="icon" :class="l.icon"/></span>
         <span class="dash-label">{{ $t(l.key) }}</span>
       </a>
     </nav>
@@ -228,10 +235,6 @@ const SECTIONS = [
   box-shadow: none;
 }
 
-.dash-side .dash-link.router-link-active > .icon {
-  color: var(--foreground);
-}
-
 .dash-side .dash-link.router-link-active .dash-tool-ic .icon {
   color: #fff;
 }
@@ -264,14 +267,34 @@ const SECTIONS = [
   color: #fff;
 }
 
+/* Off-site links: same slot, no colour, so they don't read as tools. */
+.dash-tool-ic-plain {
+  background: var(--surface-2);
+}
+
+.dash-side .dash-tool-ic-plain .icon {
+  color: var(--foreground);
+}
+
 .dash-foot {
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  min-height: var(--bar-h);
+  min-height: var(--foot-h);
   margin-top: auto;
   padding: 0 var(--space-3);
   border-top: 1px solid var(--border);
+  /* The rail hides its scrollbar; pinning the foot keeps ⌘K in reach when
+     the list runs past a short screen. */
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+}
+
+.dash-link .dash-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dash-side.is-collapsed .dash-label,

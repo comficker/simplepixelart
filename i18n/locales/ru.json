@@ -463,6 +463,7 @@
     "resizeTheDocumentationColumn": "Изменить ширину колонки с документацией"
   },
   "c_ToolMoved": {
+    "goToX": "Перейти: {name}",
     "takingYouThereNow": ". Переносим вас туда…",
     "theXHasMovedTo": "{name} переехал на {to}.",
     "thisToolNowLivesAt": "Этот инструмент теперь здесь",
@@ -520,6 +521,7 @@
     "close": "Закрыть",
     "colors": "Цвета",
     "cols": "Столбцы",
+    "confirm": "Подтвердить",
     "copyHex": "Копировать HEX",
     "copyX": "Копировать {x}",
     "create": "Создать",
@@ -758,6 +760,8 @@
     "backHome": "На главную"
   },
   "p_challenges": {
+    "noChallengesYet": "Челленджей пока нет",
+    "noChallengesYetBody": "Первая тема недели уже на подходе. Загляните позже.",
     "oneThemeAWeekDrawIt": "Одна тема в неделю. Нарисуйте по-своему, отправьте — победителей выбирает сообщество.",
     "pastChallenges": "Прошлые челленджи",
     "thisWeek": "На этой неделе"
@@ -869,8 +873,10 @@
   "p_creator": {
     "allTime": "За всё время",
     "artCount": "1 работа | {count} работы | {count} работ",
+    "clearSearch": "Очистить поиск",
     "creatorCount": "1 автор | {count} автора | {count} авторов",
     "discoverArtistsFromTheSimplepixela": "Знакомьтесь с авторами сообщества SimplePixelArt.com. Листайте их портфолио и смотрите работы в пиксель-арте.",
+    "noCreatorMatchesQ": "Нет авторов по запросу «{q}».",
     "noCreatorsYet": "Здесь нет авторов",
     "nobodyPublishedInThisPeriod": "За этот период никто ничего не опубликовал.",
     "pixelArtCreators": "Лучшие авторы пиксель-арта",
@@ -886,6 +892,7 @@
     "allWorkN": "Все работы ({n})",
     "bestWork": "Лучшие работы",
     "collections": "Коллекции",
+    "couldNotUpdateFollow": "Не удалось обновить подписку. Попробуйте ещё раз.",
     "creatorStats": "Статистика автора",
     "follow": "Подписаться",
     "following": "Вы подписаны",

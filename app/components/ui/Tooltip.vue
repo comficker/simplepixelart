@@ -5,9 +5,8 @@
       @mouseenter="onEnter"
       @mouseleave="show = false"
       @mousedown="show = false"
-      @focus="onFocus"
-      @blur="show = false"
-      tabindex="0"
+      @focusin="onFocus"
+      @focusout="show = false"
   >
     <slot />
     <Teleport to="body">
@@ -25,7 +24,7 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
 
 const props = defineProps({
   position: {
@@ -54,10 +53,23 @@ const tipStyle = computed(() => ({
   '--tip-shift': `${shift.value}px`,
 }))
 
-function onFocus() {
-  if (wrap.value && !wrap.value.matches(':focus-visible')) return
+function onFocus(e) {
+  if (!e.target?.matches?.(':focus-visible')) return
   onEnter()
 }
+
+// The wrapped control is what takes focus, so the wrapper is no extra tab
+// stop; an icon-only control gets the tip as its name. Only a wrapper around
+// plain content becomes focusable itself, so its tip is still reachable.
+const FOCUSABLE = 'button, a[href], input, select, textarea, [tabindex]'
+onMounted(() => {
+  const el = wrap.value?.querySelector(FOCUSABLE)
+  if (!el) {
+    wrap.value?.setAttribute('tabindex', '0')
+    return
+  }
+  if (props.text && !el.getAttribute('aria-label') && !el.textContent.trim()) el.setAttribute('aria-label', props.text)
+})
 
 function place(p) {
   const r = wrap.value?.getBoundingClientRect()
@@ -122,7 +134,7 @@ function onEnter() {
   position: fixed;
   background: var(--foreground);
   color: var(--background);
-  border-radius: var(--radius-sm, 4px);
+  border-radius: var(--radius-sm, var(--radius-sm));
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.12),
     0 6px 16px -4px rgba(0, 0, 0, 0.18);

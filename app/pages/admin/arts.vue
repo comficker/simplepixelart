@@ -4,7 +4,7 @@ import {toast} from 'vue-sonner'
 const auth = useAuthStore()
 
 useCustomSeoMeta({
-  title: 'Arts - Admin - Simple Pixel Art',
+  title: 'Arts - Admin',
   description: 'Staff artwork manager.',
   canonical: 'https://simplepixelart.com/admin/arts',
   robots: 'noindex, nofollow',
@@ -168,15 +168,15 @@ watch(isStaff, (v) => { if (v) load() })
           <div class="art-filters">
             <div class="art-search">
               <span class="icon icon-search"/>
-              <input v-model="q" class="adm-input" placeholder="Search name or slug…">
+              <input v-model="q" type="search" class="adm-input" placeholder="Search name or slug…" aria-label="Search arts">
             </div>
-            <select v-model="statusFilter" class="adm-input art-select">
+            <select v-model="statusFilter" class="adm-input art-select" aria-label="Status">
               <option value="">Any status</option>
               <option value="public">Public</option>
               <option value="pending">Pending</option>
               <option value="draft">Draft</option>
             </select>
-            <select v-model="socialFilter" class="adm-input art-select" :disabled="noChannels">
+            <select v-model="socialFilter" class="adm-input art-select" :disabled="noChannels" aria-label="Syndication">
               <option value="">Any channel state</option>
               <option value="done">On every channel</option>
               <option value="pending">Not everywhere yet</option>
@@ -347,7 +347,7 @@ watch(isStaff, (v) => { if (v) load() })
 
 .adm-table th {
   text-align: left;
-  padding: 6px 8px;
+  padding: 6px var(--space-2);
   border-bottom: 1px solid var(--border);
   color: var(--muted);
   font-weight: 600;
@@ -355,19 +355,9 @@ watch(isStaff, (v) => { if (v) load() })
 }
 
 .adm-table td {
-  padding: 6px 8px;
+  padding: 6px var(--space-2);
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
-}
-
-.adm-input {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--background);
-  color: var(--foreground);
-  font-size: var(--text-xs);
 }
 
 .art-filters {
@@ -385,7 +375,7 @@ watch(isStaff, (v) => { if (v) load() })
 
 .art-search .icon {
   position: absolute;
-  left: 8px;
+  left: var(--space-2);
   top: 50%;
   transform: translateY(-50%);
   color: var(--muted);

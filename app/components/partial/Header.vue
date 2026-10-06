@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const cmdk = useCommandPalette()
+const desktop = useIsDesktop()
 const isMac = ref(true)
 onMounted(() => {
   isMac.value = /Mac|iPhone|iPad/.test(navigator.platform)
@@ -34,8 +35,10 @@ function openCommandPalette() {
           <span class="hdr-link-label">{{ $t('nav.yourWork') }}</span>
         </NuxtLinkLocale>
         <span class="hdr-divider" aria-hidden="true"/>
-        <PartialNotifyBell/>
-        <WalletMenu/>
+        <template v-if="desktop === false">
+          <PartialNotifyBell/>
+          <WalletMenu/>
+        </template>
         <button
             type="button"
             class="cmdk-trigger"
@@ -72,7 +75,7 @@ header .hdr {
 .hdr-divider {
   width: 1px;
   align-self: stretch;
-  margin: 4px 2px;
+  margin: var(--space-1) 2px;
   background: var(--border);
 }
 
@@ -81,7 +84,7 @@ header .brand {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 4px 6px;
+  padding: var(--space-1) 6px;
   border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
@@ -109,7 +112,7 @@ header .brand-name {
 
 header .brand-name-stamp {
   display: inline-block;
-  padding: 3px 7px 3px 8px;
+  padding: 3px 7px 3px var(--space-2);
   transform: rotate(-2deg);
   font-size: 8px;
   font-weight: 800;
@@ -117,13 +120,13 @@ header .brand-name-stamp {
   text-transform: uppercase;
   letter-spacing: 0.18em;
   color: var(--primary-foreground);
-  background: var(--primary);
+  background: var(--primary-fill);
   border-radius: 3px;
 }
 
 header .brand-name-main {
   display: block;
-  font-size: 1rem;
+  font-size: var(--text-base);
   font-weight: 800;
   font-variation-settings: "wght" 800;
   letter-spacing: -0.04em;
@@ -134,8 +137,8 @@ header .brand-name-main {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 7px 12px;
-  border-radius: 6px;
+  padding: 7px var(--space-3);
+  border-radius: var(--radius);
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--muted);
@@ -176,7 +179,7 @@ header .brand-name-main {
   margin-right: -10px;
   background: transparent;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: var(--muted);
   font-size: var(--text-sm);
   cursor: pointer;

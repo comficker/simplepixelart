@@ -65,7 +65,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   min-height: calc(100dvh - 6rem);
-  padding: 2rem 1rem;
+  padding: 2rem var(--space-4);
 }
 .callback__card {
   display: flex;
@@ -78,8 +78,8 @@ onMounted(async () => {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: var(--radius-pill);
-  border: 3px solid var(--ui-border, rgba(0, 0, 0, 0.1));
-  border-top-color: var(--ui-primary, #4ec0e8);
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
   animation: cb-spin 800ms linear infinite;
 }
 @keyframes cb-spin { to { transform: rotate(360deg); } }
@@ -88,7 +88,7 @@ onMounted(async () => {
   font-weight: 700;
 }
 .callback__msg {
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   opacity: 0.7;
 }
 </style>

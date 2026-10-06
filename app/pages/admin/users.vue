@@ -4,7 +4,7 @@ import {toast} from 'vue-sonner'
 const auth = useAuthStore()
 
 useCustomSeoMeta({
-  title: 'Users - Admin - Simple Pixel Art',
+  title: 'Users - Admin',
   description: 'Staff user manager.',
   canonical: 'https://simplepixelart.com/admin/users',
   robots: 'noindex, nofollow',
@@ -103,7 +103,7 @@ watch(isStaff, (v) => { if (v) load() })
         <template v-else>
           <div class="usr-search">
             <span class="icon icon-search"/>
-            <input v-model="q" class="adm-input" placeholder="Search username or email…">
+            <input v-model="q" type="search" class="adm-input" placeholder="Search username or email…" aria-label="Search users">
           </div>
 
           <div v-if="data" class="adm-table-wrap">
@@ -164,7 +164,7 @@ watch(isStaff, (v) => { if (v) load() })
       <form class="usr-give-form" @submit.prevent="sendGive">
         <label class="usr-give-field">
           <span>Amount</span>
-          <input v-model.number="giveAmount" type="number" min="1" max="100000" class="adm-input" autofocus>
+          <input v-model.number="giveAmount" type="number" min="1" max="100000" class="adm-input" aria-label="Credits to give" autofocus>
         </label>
         <button type="submit" class="btn primary usr-give-send" :disabled="sending">
           <span class="icon icon-gift"/>
@@ -227,25 +227,15 @@ watch(isStaff, (v) => { if (v) load() })
   text-align: left;
   font-weight: 600;
   color: var(--muted);
-  padding: 6px 8px;
+  padding: 6px var(--space-2);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
 .adm-table td {
-  padding: 6px 8px;
+  padding: 6px var(--space-2);
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
-}
-
-.adm-input {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--foreground);
-  font-size: var(--text-xs);
 }
 
 .usr-search {
@@ -255,7 +245,7 @@ watch(isStaff, (v) => { if (v) load() })
 
 .usr-search .icon {
   position: absolute;
-  left: 8px;
+  left: var(--space-2);
   top: 50%;
   translate: 0 -50%;
   width: var(--icon-sm);
@@ -282,7 +272,7 @@ watch(isStaff, (v) => { if (v) load() })
   color: var(--primary);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 0 4px;
+  padding: 0 var(--space-1);
 }
 
 .usr-mail {
@@ -293,7 +283,7 @@ watch(isStaff, (v) => { if (v) load() })
 .usr-balance { font-weight: 700; white-space: nowrap; }
 
 .usr-give {
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
   font-size: var(--text-2xs);
   white-space: nowrap;
 }

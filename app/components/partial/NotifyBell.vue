@@ -77,8 +77,8 @@ watch(() => auth.isLogged, (v) => { if (v) fetchUnread() })
 </script>
 
 <template>
-  <ui-dropdown-menu v-if="auth.isLogged" position="right" :label="$t('common.notifications')">
-    <button type="button" class="hdr-link notify-btn" :title="$t('c_NotifyBell.notifications')" @click="onOpen">
+  <ui-dropdown-menu v-if="auth.isLogged" position="right" :label="$t('common.notifications')" @open="onOpen">
+    <button type="button" class="hdr-link notify-btn" :title="$t('c_NotifyBell.notifications')">
       <span class="icon icon-bell"/>
       <span v-if="unread > 0" class="notify-badge">{{ unread > 9 ? '9+' : unread }}</span>
     </button>
@@ -131,8 +131,8 @@ watch(() => auth.isLogged, (v) => { if (v) fetchUnread() })
   font-weight: 800;
   line-height: 1;
   color: var(--primary-foreground);
-  background: var(--primary);
-  border-radius: 999px;
+  background: var(--primary-fill);
+  border-radius: var(--radius-pill);
 }
 
 .notify-menu {

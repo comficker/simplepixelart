@@ -43,7 +43,7 @@ withDefaults(defineProps<{
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--space-1);
 }
 
 .section-title {

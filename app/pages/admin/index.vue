@@ -4,7 +4,7 @@ import {toast} from 'vue-sonner'
 const auth = useAuthStore()
 
 useCustomSeoMeta({
-  title: 'Admin - Simple Pixel Art',
+  title: 'Admin',
   description: 'Staff dashboard.',
   canonical: 'https://simplepixelart.com/admin',
   robots: 'noindex, nofollow',
@@ -625,7 +625,7 @@ watch(isStaff, (v) => { if (v) load() })
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--muted);
-  margin-left: 4px;
+  margin-left: var(--space-1);
 }
 
 .adm-card-l {
@@ -664,7 +664,7 @@ watch(isStaff, (v) => { if (v) load() })
 .adm-bar {
   flex: 1;
   min-width: 0;
-  background: var(--primary);
+  background: var(--primary-fill);
   opacity: 0.75;
   border-radius: 1px;
 }
@@ -682,13 +682,13 @@ watch(isStaff, (v) => { if (v) load() })
   text-align: left;
   font-weight: 600;
   color: var(--muted);
-  padding: 6px 8px;
+  padding: 6px var(--space-2);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
 .adm-table td {
-  padding: 6px 8px;
+  padding: 6px var(--space-2);
   border-bottom: 1px solid var(--border);
 }
 
@@ -707,22 +707,12 @@ watch(isStaff, (v) => { if (v) load() })
   color: var(--muted);
 }
 
-.adm-input {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  color: var(--foreground);
-  font-size: var(--text-xs);
-}
-
 .adm-input-n { max-width: 72px; }
 
 .adm-knob-check input {
   width: 16px;
   height: 16px;
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 .adm-missions td { padding: 4px 4px; }

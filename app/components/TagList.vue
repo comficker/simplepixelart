@@ -35,7 +35,7 @@ defineProps<{ items: TagItem[] }>()
   align-items: center;
   gap: 6px;
   margin-left: 9px;
-  padding: 3px 16px 3px 20px;
+  padding: 3px var(--space-4) 3px var(--space-5);
   white-space: nowrap;
   background: var(--surface-2);
   color: var(--foreground);
@@ -77,7 +77,7 @@ defineProps<{ items: TagItem[] }>()
 
 @media (hover: hover) and (pointer: fine) {
   .tag-list-item:hover {
-    background: var(--primary);
+    background: var(--primary-fill);
     color: var(--primary-foreground);
   }
 

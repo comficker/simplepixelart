@@ -68,7 +68,7 @@ watch(() => auth.isLogged, (v) => {
 </script>
 
 <template>
-  <ui-dropdown-menu v-if="auth.isLogged && sum" ref="dd" class="wallet" :label="$t('c_WalletMenu.creditsWallet')" @click="load">
+  <ui-dropdown-menu v-if="auth.isLogged && sum" ref="dd" class="wallet" :label="$t('c_WalletMenu.creditsWallet')" @open="load">
     <button type="button" class="wallet-chip" :title="$t('c_WalletMenu.creditsDailyBonusMissions')">
       <span class="icon icon-coin"/>
       <span class="wallet-n">{{ sharedBalance ?? sum.balance ?? 0 }}</span>
@@ -113,7 +113,7 @@ watch(() => auth.isLogged, (v) => {
   padding: 7px 10px;
   background: transparent;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: var(--muted);
   font-size: var(--text-sm);
   font-weight: 700;
@@ -201,7 +201,7 @@ watch(() => auth.isLogged, (v) => {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-pill);
-  background: var(--primary);
+  background: var(--primary-fill);
   color: var(--primary-foreground);
   font-size: var(--text-2xs);
   font-weight: 700;

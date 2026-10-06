@@ -65,8 +65,8 @@ const loginModal = useLoginModal()
         </button>
       </template>
       <template v-else>
-        <span class="social-auth-link" @click="loginModal.show()">{{ $t('c_SocialAuth.login') }}</span>
-        <span class="social-auth-link" @click="loginModal.show(undefined, 'register')">{{ $t('c_LoginModal.createAccount') }}</span>
+        <button type="button" class="social-auth-link" @click="loginModal.show()">{{ $t('c_SocialAuth.login') }}</button>
+        <button type="button" class="social-auth-link" @click="loginModal.show(undefined, 'register')">{{ $t('c_LoginModal.createAccount') }}</button>
       </template>
     </template>
   </div>
@@ -84,8 +84,8 @@ const loginModal = useLoginModal()
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: calc(var(--space-6) + var(--space-2));
+  height: calc(var(--space-6) + var(--space-2));
   color: var(--muted);
   transition: color var(--transition);
 }
@@ -104,6 +104,10 @@ const loginModal = useLoginModal()
 .social-auth-link {
   display: inline-flex;
   align-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
   font-weight: 600;
   color: var(--foreground);
   cursor: pointer;

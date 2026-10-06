@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const desktop = useIsDesktop()
 const route = useRoute()
 const routePaths = new Set(useRouter().getRoutes().map(r => r.path))
 
@@ -22,6 +23,7 @@ const LABELS: Record<string, string> = {
   'color-palette-from-image': 'nav.extract', 'color-palette-from-color': 'crumb.byColor',
 }
 
+const localePath = useLocalePath()
 const config = useRuntimeConfig()
 const siteUrl = (config.public.siteUrl as string) || 'https://simplepixelart.com'
 
@@ -47,13 +49,13 @@ useHead({
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        {'@type': 'ListItem', position: 1, name: 'Home', item: siteUrl},
-        ...crumbs.value.map((c, i) => ({
-          '@type': 'ListItem',
-          position: i + 2,
-          name: c.label,
-          item: `${siteUrl}${c.to}`,
-        })),
+        {'@type': 'ListItem', position: 1, name: t('common.home'), item: `${siteUrl}${localePath('/')}`},
+        // A crumb with no page of its own (/tilesets, /palettes/tag) gets no
+        // URL; the last one is this page, under its locale prefix.
+        ...crumbs.value.map((c, i, all) => {
+          const item = i === all.length - 1 ? `${siteUrl}${route.path}` : c.linked ? `${siteUrl}${localePath(c.to)}` : undefined
+          return {'@type': 'ListItem', position: i + 2, name: c.label, ...(item ? {item} : {})}
+        }),
       ],
     })),
   }],
@@ -75,8 +77,10 @@ useHead({
       <PartialSocialAuth compact/>
       <!-- Balance and notifications only exist once signed in, so they sit
            last and the bar does not reflow when they appear. -->
-      <PartialNotifyBell/>
-      <WalletMenu/>
+      <template v-if="desktop !== false">
+        <PartialNotifyBell/>
+        <WalletMenu/>
+      </template>
     </div>
   </div>
 </template>

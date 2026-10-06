@@ -294,6 +294,8 @@ function onKey(e: KeyboardEvent) {
   // palette opens. The shortcut has to close from in here.
   if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
     e.preventDefault()
+    // Or the window listener in app.vue toggles it straight back open.
+    e.stopPropagation()
     closePalette()
   }
   else if (e.key === 'Escape') {
@@ -422,7 +424,7 @@ onMounted(() => { if (open.value) openPalette() })
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 12vh 1rem 1rem;
+  padding: 12vh var(--space-4) var(--space-4);
 }
 
 .cmdk {
@@ -477,7 +479,7 @@ onMounted(() => { if (open.value) openPalette() })
   align-items: center;
   gap: var(--space-2);
   width: 100%;
-  padding: 0.5rem 0.75rem;
+  padding: var(--space-2) var(--space-3);
   border: none;
   border-bottom: 1px solid var(--border);
   background: transparent;
@@ -520,7 +522,7 @@ onMounted(() => { if (open.value) openPalette() })
   background: transparent;
   border-radius: var(--radius-sm);
   text-align: left;
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--foreground);
   cursor: pointer;
@@ -568,7 +570,7 @@ onMounted(() => { if (open.value) openPalette() })
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  padding: 2px 10px 8px;
+  padding: 2px 10px var(--space-2);
 }
 
 .cmdk-theme-swatch {
@@ -607,9 +609,9 @@ onMounted(() => { if (open.value) openPalette() })
   flex-direction: column;
   align-items: center;
   gap: var(--space-3);
-  padding: 36px 12px;
+  padding: 36px var(--space-3);
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-xs);
 }
 
 .cmdk-empty .icon {
@@ -621,7 +623,7 @@ onMounted(() => { if (open.value) openPalette() })
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 7px 12px;
+  padding: 7px var(--space-3);
   border-top: 1px solid var(--border);
   font-size: var(--text-2xs);
   color: var(--muted);
@@ -641,14 +643,14 @@ onMounted(() => { if (open.value) openPalette() })
   flex: 1;
   min-width: 40px;
   height: 5px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: color-mix(in oklab, var(--muted) 24%, transparent);
   overflow: hidden;
 }
 .cmdk-stat-fill {
   display: block;
   height: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--stat-accent);
   transition: width 200ms ease;
 }
@@ -677,7 +679,7 @@ onMounted(() => { if (open.value) openPalette() })
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   border-top: 1px solid var(--border);
   background: color-mix(in oklab, var(--surface-2) 50%, transparent);
   font-size: var(--text-2xs);

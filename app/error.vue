@@ -6,6 +6,10 @@ const props = defineProps<{
   }
 }>()
 
+// error.vue replaces app.vue, so nothing else sets the theme here; without
+// this the page fell back to :root, which is the Game Boy palette.
+useTheme()
+
 const is404 = computed(() => props.error.statusCode === 404)
 const heading = computed(() => is404.value ? 'Pixel out of bounds' : 'Something glitched')
 const sub = computed(() =>
@@ -19,11 +23,6 @@ useHead({
   meta: [
     {name: 'robots', content: 'noindex, follow'},
   ],
-})
-
-const isMacUA = ref(false)
-onMounted(() => {
-  isMacUA.value = /Mac|iPhone|iPad/.test(navigator.platform)
 })
 
 const handleError = () => clearError({ redirect: '/' })
@@ -50,8 +49,6 @@ const handleError = () => clearError({ redirect: '/' })
           <span>{{ $t('common.browseGallery') }}</span>
         </NuxtLinkLocale>
       </div>
-      <p class="err-hint">
-        {{ $t('c_error.orPress') }} <kbd class="kbd">{{ isMacUA ? '⌘' : 'Ctrl' }}</kbd><kbd class="kbd">K</kbd> {{ $t('c_error.toSearch') }} </p>
     </section>
   </div>
 </template>
@@ -62,7 +59,7 @@ const handleError = () => clearError({ redirect: '/' })
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem 1rem;
+  padding: 3rem var(--space-4);
 }
 
 .err-card {
@@ -79,7 +76,7 @@ const handleError = () => clearError({ redirect: '/' })
   position: relative;
   width: 168px;
   height: 168px;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
   border: 1px dashed var(--border);
   border-radius: var(--radius-sm);
   background:
@@ -90,7 +87,7 @@ const handleError = () => clearError({ redirect: '/' })
 
 .err-grid {
   position: absolute;
-  inset: 8px;
+  inset: var(--space-2);
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   grid-template-rows: repeat(6, 1fr);
@@ -151,15 +148,9 @@ const handleError = () => clearError({ redirect: '/' })
 .err-actions {
   display: flex;
   gap: 0.625rem;
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
   flex-wrap: wrap;
   justify-content: center;
-}
-
-.err-hint {
-  margin-top: 0.5rem;
-  font-size: 12px;
-  color: var(--muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

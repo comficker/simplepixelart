@@ -2,7 +2,9 @@
   <Teleport to="body">
     <div class="share-overlay" @click.self="$emit('close')">
       <div
+          ref="dialog"
           class="share-modal ui-modal"
+          tabindex="-1"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="title ? headingId : undefined"
@@ -29,22 +31,51 @@ const emit = defineEmits<{ close: [] }>()
 const headingId = useId()
 
 const stackId = Symbol('ui-modal')
+const dialog = ref<HTMLElement | null>(null)
+// Focus moves into the dialog on open, Tab stays inside it, and goes back to
+// whatever opened it on close — otherwise keyboard users land on <body>.
+let opener: HTMLElement | null = null
+const FOCUSABLE = 'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+function focusables() {
+  return [...(dialog.value?.querySelectorAll<HTMLElement>(FOCUSABLE) || [])].filter(el => el.offsetParent)
+}
 
 function onKey(e: KeyboardEvent) {
-  if (e.key === 'Escape' && modalStack[modalStack.length - 1] === stackId) {
+  if (modalStack[modalStack.length - 1] !== stackId) return
+  if (e.key === 'Escape') {
     e.stopPropagation()
     emit('close')
+  } else if (e.key === 'Tab') {
+    const els = focusables()
+    if (!els.length) return
+    const first = els[0], last = els[els.length - 1]
+    const at = document.activeElement
+    if (e.shiftKey && (at === first || !dialog.value?.contains(at))) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && (at === last || !dialog.value?.contains(at))) {
+      e.preventDefault()
+      first.focus()
+    }
   }
 }
 
 onMounted(() => {
   modalStack.push(stackId)
   document.addEventListener('keydown', onKey)
+  opener = document.activeElement as HTMLElement | null
+  nextTick(() => {
+    if (dialog.value?.contains(document.activeElement)) return
+    const field = dialog.value?.querySelector<HTMLElement>('input:not([disabled]):not([type=hidden]), textarea:not([disabled]), select:not([disabled])')
+    ;(field || dialog.value)?.focus({preventScroll: true})
+  })
 })
 onBeforeUnmount(() => {
   const i = modalStack.indexOf(stackId)
   if (i !== -1) modalStack.splice(i, 1)
   document.removeEventListener('keydown', onKey)
+  if (opener?.isConnected) opener.focus({preventScroll: true})
 })
 </script>
 
@@ -58,20 +89,24 @@ const modalStack: symbol[] = []
   position: relative;
 }
 
+.ui-modal:focus {
+  outline: none;
+}
+
 .ui-modal .publish-heading {
-  padding-right: 2rem;
+  padding-right: calc(var(--space-6) + var(--space-3));
 }
 
 .ui-modal-x {
   position: absolute;
-  top: 0.875rem;
-  right: 0.875rem;
+  top: var(--space-3);
+  right: var(--space-3);
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: calc(var(--space-6) + var(--space-2));
+  height: calc(var(--space-6) + var(--space-2));
   border: 0;
   border-radius: var(--radius-pill);
   background: transparent;
