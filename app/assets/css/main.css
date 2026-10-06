@@ -217,7 +217,7 @@ a {
     --secondary: rgba(255, 255, 255, 0.8);
     --secondary-foreground: #111111;
 
-    --muted: #737373;
+    --muted: rgb(255 255 255 / 0.8);
     --surface: #1a1a1a;
     --surface-2: #262626;
 }
