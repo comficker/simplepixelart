@@ -113,8 +113,9 @@ if (import.meta.client) {
 
 <style>
 /* The rebuild veil uses the editor's boot chrome, plus room for a line of
-   text under the loader. */
-.rebuild-veil {
+   text under the loader -- and the (new) theme's background, which the boot
+   veil's fixed colour below would otherwise win over. */
+.editor-boot-veil.rebuild-veil {
   flex-direction: column;
   gap: var(--space-4);
   background: var(--background);

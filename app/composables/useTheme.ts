@@ -60,6 +60,11 @@ export function useTheme() {
 
   function setTheme(id: ThemeId) {
     cookie.value = id
+    // useHead writes the attribute on its next flush, a frame or more later;
+    // the rebuild veil opens now and would paint the old theme's background
+    // first. Set it straight away so the veil is the new theme from its
+    // first frame.
+    if (import.meta.client) document.documentElement.setAttribute('data-theme', id)
   }
 
   return {
