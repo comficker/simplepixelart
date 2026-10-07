@@ -1,4 +1,5 @@
 import {promises as fs} from 'fs'
+import {createHash} from 'crypto'
 // @ts-ignore
 import path from 'path'
 import type {Plugin} from 'vite'
@@ -62,8 +63,12 @@ export default function iconStylesOptimized(options: {
     const rules: string[] = []
     for (const cls of iconNames) {
       try {
-        await fs.access(path.join(root, 'public/icons', `${cls}.svg`))
-        rules.push(`.icon-${cls} {mask-image: url("/icons/${cls}.svg");}`)
+        // The file's own hash in the URL: /icons/*.svg is cached for a week
+        // by Cloudflare and browsers, so a redrawn icon under the same URL
+        // kept showing the old one. A changed file is a new URL.
+        const svg = await fs.readFile(path.join(root, 'public/icons', `${cls}.svg`))
+        const v = createHash('md5').update(svg).digest('hex').slice(0, 8)
+        rules.push(`.icon-${cls} {mask-image: url("/icons/${cls}.svg?v=${v}");}`)
       } catch {}
     }
     await fs.mkdir(path.dirname(output), {recursive: true})
