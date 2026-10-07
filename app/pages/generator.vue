@@ -445,11 +445,11 @@ const faq = computed(() => [
 </script>
 
 <template>
-  <ToolLayout :title="$t('p_generator.generator')">
+  <ToolLayout>
     <div class="gen-grid flat-editor">
 
       <div class="canvas-col">
-        <Widget :title="$t('common.preview')">
+        <Widget :title="$t('p_generator.pixelArtGenerator')">
           <div class="preview-wrapper">
 
             <div v-if="hasResult" class="tm-seg gen-viewseg">

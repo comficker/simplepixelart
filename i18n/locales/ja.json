@@ -1081,7 +1081,6 @@
     "cleanOrphans": "孤立ピクセルを除去",
     "clickOrDropAnImageHere": "画像をクリックまたはドロップ",
     "contrast": "コントラスト",
-    "converter": "コンバーター",
     "cutAUniformBackdropToTransparency": "均一な背景を透過に切り抜きます — スプライトは何も背後にない状態でエディタに届きます",
     "dithering": "ディザリング",
     "faq0a": "<p>はい。変換はすべてブラウザ内で行われます。アカウントも透かしも不要で、サーバーへのアップロードもありません。</p>",
@@ -1105,7 +1104,6 @@
     "noImageYetDropOneTo": "画像がありません — ドロップして変換",
     "orderedBayerDitheringFakesGradient": "順序（ベイヤー）ディザ — 少ない色数では表せないグラデーションを擬似的に作ります。写真に最適です",
     "ourFreeImageToPixelArt": "無料の画像→ドット絵コンバータは、すべてブラウザ上で動きます。PNG、JPG、WebPをアップロードし、出力サイズを選ぶと、画像を再サンプリングして<strong>メディアンカット量子化アルゴリズム</strong>でパレットを減らします。レトロゲームのツールでも使われてきた、最も代表的な色を選ぶ手法です。変更するたびにプレビューが即座に更新されます。",
-    "pixelPreview": "ピクセルプレビュー",
     "saturation": "彩度",
     "screenshot": "スクリーンショット",
     "strongAutoSizeStrongPixelArt": "<strong>自動サイズ</strong> — 8倍で書き出されたドット絵やグリッド線付きのスクリーンショットを、やみくもに再サンプリングせず、1セルずつ本来の解像度で読み戻します。",
@@ -1125,7 +1123,8 @@
     "cleanedOrphans": "孤立ピクセルを{count}個除去しました",
     "colorsMerged": "色を統合しました",
     "autoResult": "自動 → {w}×{h}",
-    "nativeGridDetected": " — 元のグリッドを検出"
+    "nativeGridDetected": " — 元のグリッドを検出",
+    "imageToPixelConverter": "画像をドット絵に変換"
   },
   "p_creator": {
     "allTime": "全期間",
@@ -1210,7 +1209,6 @@
   "p_editor": {
     "browser": "ブラウザ",
     "canvas": "キャンバス",
-    "draw": "描く",
     "drawOnAnEmptyPartOf": "キャンバスの空いている場所に描くと新しいボードが生まれます。ラベルをドラッグして作業スペースを並べ替えられます。",
     "easyPixelArt": "かんたんドット絵",
     "export": "書き出し",
@@ -1246,7 +1244,8 @@
     "strongMirrorDrawingStrongHorizonta": "<strong>ミラー描画</strong> — 左右または上下のミラーで、対称なスプライトを2倍の速さで描けます。",
     "strongMultipleLayersStrongSketchOn": "<strong>複数レイヤー</strong> — 1枚に下描き、別の1枚に着色、その上にディテールを重ねられます。",
     "strongPickACanvasSizeStrong": "<strong>キャンバスサイズを選ぶ</strong> — エディタを開き、<code>8×8</code>から<code>64×64</code>ピクセルの中からキャンバスを選びます。",
-    "strongUndoRedoStrongFullHistory": "<strong>元に戻す／やり直す</strong> — 履歴はすべて残ります。思い切り試して、どの変更にも戻れます。"
+    "strongUndoRedoStrongFullHistory": "<strong>元に戻す／やり直す</strong> — 履歴はすべて残ります。思い切り試して、どの変更にも戻れます。",
+    "pixelArtEditor": "ドット絵エディター"
   },
   "p_generator": {
     "aPhotoHoldsUpBetterAt": "写真は64以上のほうが綺麗です",
@@ -1287,7 +1286,6 @@
     "generating": "生成中…",
     "generationIsOffline": "生成は現在オフラインです",
     "generationIsOfflineRightNowCheck": "現在、生成は停止中です。しばらくしてからお試しください。",
-    "generator": "ジェネレーター",
     "history": "履歴",
     "icon": "アイコン",
     "idle": "待機中",
@@ -1356,7 +1354,8 @@
     "needCredits": "🪙{n} が必要",
     "claiming": "受け取り中…",
     "statusLine": "{style} · {view}ビュー · {size} · {colors}色 · 背景 {backdrop}",
-    "autoSize": "自動サイズ"
+    "autoSize": "自動サイズ",
+    "pixelArtGenerator": "ドット絵ジェネレーター"
   },
   "p_index": {
     "aFresh": "——毎週新しい",

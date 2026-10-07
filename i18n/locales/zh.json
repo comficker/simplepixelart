@@ -1081,7 +1081,6 @@
     "cleanOrphans": "清除孤立像素",
     "clickOrDropAnImageHere": "点击或拖入一张图片",
     "contrast": "对比度",
-    "converter": "转换器",
     "cutAUniformBackdropToTransparency": "把单色背景抠成透明——精灵进入编辑器时身后空无一物",
     "dithering": "抖动",
     "faq0a": "<p>是的。整个转换过程都在你的浏览器里完成。不需要账号，没有水印，也不会上传到任何服务器。</p>",
@@ -1105,7 +1104,6 @@
     "noImageYetDropOneTo": "还没有图片 — 拖入一张来转换",
     "orderedBayerDitheringFakesGradient": "有序（Bayer）抖动——模拟小配色装不下的渐变，用在照片上效果最好",
     "ourFreeImageToPixelArt": "我们免费的图片转像素画工具完全在你的浏览器中运行。上传任意 PNG、JPG 或 WebP，选好输出尺寸，工具会重新采样图像，并用<strong>中位切分量化算法</strong>削减配色——这正是复古游戏工具挑选代表色时用的方法。每一次改动都会实时更新预览。",
-    "pixelPreview": "像素预览",
     "saturation": "饱和度",
     "screenshot": "截图",
     "strongAutoSizeStrongPixelArt": "<strong>自动尺寸</strong>——以 8 倍导出或带网格线截图的像素画，会按真实分辨率逐格读回，而不是盲目重采样。",
@@ -1125,7 +1123,8 @@
     "cleanedOrphans": "已清理 {count} 个孤立像素",
     "colorsMerged": "颜色已合并",
     "autoResult": "自动 → {w}×{h}",
-    "nativeGridDetected": " — 已检测到原生网格"
+    "nativeGridDetected": " — 已检测到原生网格",
+    "imageToPixelConverter": "图片转像素画"
   },
   "p_creator": {
     "allTime": "全部时间",
@@ -1210,7 +1209,6 @@
   "p_editor": {
     "browser": "浏览器",
     "canvas": "画布",
-    "draw": "绘制",
     "drawOnAnEmptyPartOf": "在画布的空白处落笔就会生成一块新画板，拖动它的标签即可整理你的工作区。",
     "easyPixelArt": "简单像素画",
     "export": "导出",
@@ -1246,7 +1244,8 @@
     "strongMirrorDrawingStrongHorizonta": "<strong>镜像绘制</strong>——水平或垂直镜像，画对称角色的速度快一倍。",
     "strongMultipleLayersStrongSketchOn": "<strong>多图层</strong>——一层打草稿，一层上色，再把细节叠在上面。",
     "strongPickACanvasSizeStrong": "<strong>选择画布尺寸</strong>——打开编辑器，选一个 <code>8×8</code> 到 <code>64×64</code> 像素的画布。",
-    "strongUndoRedoStrongFullHistory": "<strong>撤销／重做</strong>——完整历史记录；放心尝试，随时退回任何一步。"
+    "strongUndoRedoStrongFullHistory": "<strong>撤销／重做</strong>——完整历史记录；放心尝试，随时退回任何一步。",
+    "pixelArtEditor": "像素画编辑器"
   },
   "p_generator": {
     "aPhotoHoldsUpBetterAt": "照片在 64 以上效果更好",
@@ -1287,7 +1286,6 @@
     "generating": "生成中…",
     "generationIsOffline": "生成功能暂时离线",
     "generationIsOfflineRightNowCheck": "生成功能暂时离线，请稍后再来。",
-    "generator": "生成器",
     "history": "历史记录",
     "icon": "图标",
     "idle": "空闲",
@@ -1356,7 +1354,8 @@
     "needCredits": "需要 🪙{n}",
     "claiming": "领取中…",
     "statusLine": "{style} · {view}视角 · {size} · {colors} 种颜色 · 背景 {backdrop}",
-    "autoSize": "自动尺寸"
+    "autoSize": "自动尺寸",
+    "pixelArtGenerator": "像素画生成器"
   },
   "p_index": {
     "aFresh": "——每周一个全新的",

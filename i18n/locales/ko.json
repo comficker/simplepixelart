@@ -1081,7 +1081,6 @@
     "cleanOrphans": "외톨이 픽셀 정리",
     "clickOrDropAnImageHere": "이미지를 클릭하거나 끌어다 놓으세요",
     "contrast": "대비",
-    "converter": "변환기",
     "cutAUniformBackdropToTransparency": "균일한 배경을 진짜 투명으로 도려냅니다 — 스프라이트는 뒤에 아무것도 없는 상태로 편집기에 도착합니다",
     "dithering": "디더링",
     "faq0a": "<p>네. 변환 전체가 브라우저 안에서 이뤄집니다. 계정도 워터마크도 없고, 서버로 업로드하지도 않습니다.</p>",
@@ -1105,7 +1104,6 @@
     "noImageYetDropOneTo": "이미지가 없습니다 — 끌어다 놓으면 변환됩니다",
     "orderedBayerDitheringFakesGradient": "정렬（베이어） 디더링 — 적은 팔레트로는 담을 수 없는 그러데이션을 흉내 냅니다. 사진에 가장 잘 맞습니다",
     "ourFreeImageToPixelArt": "무료 이미지→픽셀 아트 변환기는 전부 브라우저에서 동작합니다. PNG, JPG, WebP를 올리고 출력 크기를 고르면 이미지를 다시 샘플링하고 <strong>미디언 컷 양자화 알고리즘</strong>으로 팔레트를 줄입니다. 레트로 게임 도구들이 가장 대표적인 색을 고를 때 쓰던 바로 그 기법이죠. 값을 바꿀 때마다 미리보기가 즉시 갱신됩니다.",
-    "pixelPreview": "픽셀 미리보기",
     "saturation": "채도",
     "screenshot": "스크린샷",
     "strongAutoSizeStrongPixelArt": "<strong>자동 크기</strong> — 8배로 내보냈거나 격자선과 함께 캡처된 픽셀 아트를 무작정 다시 샘플링하지 않고 칸 단위로 원래 해상도에 맞춰 읽어 옵니다.",
@@ -1125,7 +1123,8 @@
     "cleanedOrphans": "고립 픽셀 {count}개를 정리했습니다",
     "colorsMerged": "색상을 병합했습니다",
     "autoResult": "자동 → {w}×{h}",
-    "nativeGridDetected": " — 원본 격자 감지됨"
+    "nativeGridDetected": " — 원본 격자 감지됨",
+    "imageToPixelConverter": "이미지 픽셀 아트 변환기"
   },
   "p_creator": {
     "allTime": "전체 기간",
@@ -1210,7 +1209,6 @@
   "p_editor": {
     "browser": "브라우저",
     "canvas": "캔버스",
-    "draw": "그리기",
     "drawOnAnEmptyPartOf": "캔버스의 빈 곳에 그리면 새 보드가 생깁니다. 라벨을 끌어 작업 공간을 정리하세요.",
     "easyPixelArt": "쉬운 픽셀 아트",
     "export": "내보내기",
@@ -1246,7 +1244,8 @@
     "strongMirrorDrawingStrongHorizonta": "<strong>미러 드로잉</strong> — 좌우 또는 상하 미러로 대칭 스프라이트를 두 배 빠르게 그립니다.",
     "strongMultipleLayersStrongSketchOn": "<strong>여러 레이어</strong> — 하나에 스케치, 다른 하나에 채색, 그 위에 디테일을 쌓으세요.",
     "strongPickACanvasSizeStrong": "<strong>캔버스 크기 고르기</strong> — 편집기를 열고 <code>8×8</code>부터 <code>64×64</code> 픽셀까지 원하는 캔버스를 고르세요.",
-    "strongUndoRedoStrongFullHistory": "<strong>실행 취소 / 다시 실행</strong> — 기록이 모두 남습니다. 마음껏 시도하고 어떤 변경이든 되돌리세요."
+    "strongUndoRedoStrongFullHistory": "<strong>실행 취소 / 다시 실행</strong> — 기록이 모두 남습니다. 마음껏 시도하고 어떤 변경이든 되돌리세요.",
+    "pixelArtEditor": "픽셀 아트 에디터"
   },
   "p_generator": {
     "aPhotoHoldsUpBetterAt": "사진은 64 이상에서 더 잘 나옵니다",
@@ -1287,7 +1286,6 @@
     "generating": "생성 중…",
     "generationIsOffline": "생성 기능이 오프라인입니다",
     "generationIsOfflineRightNowCheck": "지금은 생성 기능이 꺼져 있습니다. 잠시 뒤에 다시 확인해 주세요.",
-    "generator": "생성기",
     "history": "기록",
     "icon": "아이콘",
     "idle": "대기 중",
@@ -1356,7 +1354,8 @@
     "needCredits": "🪙{n} 필요",
     "claiming": "받는 중…",
     "statusLine": "{style} · {view} 시점 · {size} · {colors}색 · 배경 {backdrop}",
-    "autoSize": "자동 크기"
+    "autoSize": "자동 크기",
+    "pixelArtGenerator": "픽셀 아트 생성기"
   },
   "p_index": {
     "aFresh": "— 매주 새로운",

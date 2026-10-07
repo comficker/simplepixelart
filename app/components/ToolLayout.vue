@@ -2,7 +2,8 @@
 import useStatefulCookie from '~/composables/useStatefulCookie'
 
 withDefaults(defineProps<{
-  title: string
+  /** Left out, the tool frame has no head row at all (the converter). */
+  title?: string
   titleTag?: 'h1' | 'h2'
   agent?: boolean
   panelLabel?: string
@@ -60,8 +61,8 @@ function nudge(step: number) {
 <template>
   <div ref="pageEl" class="page" :style="{'--doc-w': `${docPx}px`}">
     <div class="tool-main">
-      <div class="widget-head">
-        <component :is="titleTag" class="title">{{ title }}</component>
+      <div v-if="title || $slots.head" class="widget-head">
+        <component :is="titleTag" v-if="title" class="title">{{ title }}</component>
         <slot name="head"/>
       </div>
       <slot/>

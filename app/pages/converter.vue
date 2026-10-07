@@ -292,12 +292,12 @@ const faq = computed(() => [
 </script>
 
 <template>
-  <ToolLayout :title="$t('p_converter.converter')">
+  <ToolLayout>
 
     <div class="editor-body flat-editor">
 
       <div class="canvas-col">
-        <Widget :title="$t('p_converter.pixelPreview')">
+        <Widget :title="$t('p_converter.imageToPixelConverter')">
           <template #ctl>
             <button v-if="hasImage" class="widget-ctl-btn" @click="openFileDialog">
               <span class="icon icon-image"/>

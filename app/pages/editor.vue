@@ -80,7 +80,7 @@ const faq = computed(() => [
 </script>
 
 <template>
-  <ToolLayout :title="$t('p_editor.draw')" agent>
+  <ToolLayout :title="$t('p_editor.pixelArtEditor')" agent>
     <PXEditor/>
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">

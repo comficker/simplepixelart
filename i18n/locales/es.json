@@ -1081,7 +1081,6 @@
     "cleanOrphans": "Limpiar píxeles huérfanos",
     "clickOrDropAnImageHere": "Haz clic o suelta una imagen aquí",
     "contrast": "Contraste",
-    "converter": "Conversor",
     "cutAUniformBackdropToTransparency": "Recorta un fondo uniforme a transparencia: el sprite llega al editor sin nada detrás",
     "dithering": "Tramado",
     "faq0a": "<p>Sí. Todo el conversor funciona en tu navegador. Sin cuenta, sin marca de agua y sin subir nada a ningún servidor.</p>",
@@ -1105,7 +1104,6 @@
     "noImageYetDropOneTo": "Aún no hay imagen — suelta una para convertir",
     "orderedBayerDitheringFakesGradient": "Tramado ordenado (Bayer): finge los degradados que una paleta pequeña no puede sostener; mejor en fotos",
     "ourFreeImageToPixelArt": "Nuestro conversor gratuito de imagen a pixel art funciona por entero en tu navegador. Sube cualquier PNG, JPG o WebP, elige un tamaño de salida y la herramienta remuestrea la imagen y reduce su paleta con un <strong>algoritmo de cuantización por corte mediano</strong>, la misma técnica que usaban las herramientas de juegos retro para escoger los colores más representativos. Cada cambio actualiza la vista previa al instante.",
-    "pixelPreview": "Vista previa de píxeles",
     "saturation": "Saturación",
     "screenshot": "Captura",
     "strongAutoSizeStrongPixelArt": "<strong>Tamaño automático</strong> — el pixel art exportado a 8× o capturado con líneas de rejilla se lee de vuelta a su resolución real, celda por celda, en vez de remuestrearse a ciegas.",
@@ -1125,7 +1123,8 @@
     "cleanedOrphans": "Se limpió 1 píxel huérfano | Se limpiaron {count} píxeles huérfanos",
     "colorsMerged": "Colores combinados",
     "autoResult": "Auto → {w}×{h}",
-    "nativeGridDetected": " — cuadrícula nativa detectada"
+    "nativeGridDetected": " — cuadrícula nativa detectada",
+    "imageToPixelConverter": "Conversor de imagen a píxeles"
   },
   "p_creator": {
     "allTime": "Histórico",
@@ -1210,7 +1209,6 @@
   "p_editor": {
     "browser": "navegador",
     "canvas": "lienzo",
-    "draw": "Dibujar",
     "drawOnAnEmptyPartOf": "Dibuja en una zona vacía del lienzo para crear otro tablero y arrastra su etiqueta para ordenar tu espacio de trabajo.",
     "easyPixelArt": "pixel art fácil",
     "export": "exportar",
@@ -1246,7 +1244,8 @@
     "strongMirrorDrawingStrongHorizonta": "<strong>Dibujo en espejo</strong> — espejo horizontal o vertical para dibujar sprites simétricos el doble de rápido.",
     "strongMultipleLayersStrongSketchOn": "<strong>Varias capas</strong> — boceta en una, colorea en otra y apila los detalles encima.",
     "strongPickACanvasSizeStrong": "<strong>Elige el tamaño del lienzo</strong> — abre el editor y escoge un lienzo de <code>8×8</code> hasta <code>64×64</code> píxeles.",
-    "strongUndoRedoStrongFullHistory": "<strong>Deshacer / rehacer</strong> — historial completo; experimenta sin miedo y vuelve atrás en cualquier cambio."
+    "strongUndoRedoStrongFullHistory": "<strong>Deshacer / rehacer</strong> — historial completo; experimenta sin miedo y vuelve atrás en cualquier cambio.",
+    "pixelArtEditor": "Editor de pixel art"
   },
   "p_generator": {
     "aPhotoHoldsUpBetterAt": "Una foto aguanta mejor a 64+",
@@ -1287,7 +1286,6 @@
     "generating": "Generando…",
     "generationIsOffline": "La generación está fuera de servicio",
     "generationIsOfflineRightNowCheck": "La generación está fuera de servicio ahora mismo; vuelve en un rato.",
-    "generator": "Generador",
     "history": "Historial",
     "icon": "Icono",
     "idle": "En espera",
@@ -1356,7 +1354,8 @@
     "needCredits": "Necesitas 🪙{n}",
     "claiming": "Reclamando…",
     "statusLine": "{style} · vista {view} · {size} · {colors} colores · fondo {backdrop}",
-    "autoSize": "tamaño automático"
+    "autoSize": "tamaño automático",
+    "pixelArtGenerator": "Generador de pixel art"
   },
   "p_index": {
     "aFresh": "— un nuevo",

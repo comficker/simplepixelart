@@ -1111,7 +1111,6 @@
     "cleanOrphans": "Clean Orphans",
     "clickOrDropAnImageHere": "Click or drop an image here",
     "contrast": "Contrast",
-    "converter": "Converter",
     "cutAUniformBackdropToTransparency": "Cut a uniform backdrop to transparency — the sprite lands in the editor with nothing behind it",
     "dithering": "Dithering",
     "faq0a": "<p>Yes. The entire converter runs in your browser. No account, no watermark, no upload to any server.</p>",
@@ -1135,7 +1134,6 @@
     "noImageYetDropOneTo": "No image yet — drop one to convert",
     "orderedBayerDitheringFakesGradient": "Ordered (Bayer) dithering — fakes gradients a small palette can't hold; best on photos",
     "ourFreeImageToPixelArt": "Our free image to pixel art converter runs entirely in your browser. Upload any PNG, JPG, or WebP, pick an output size, and the tool resamples your image and reduces its palette using a <strong>median-cut quantization algorithm</strong> — the same technique used in retro game tools to pick the most representative colors. Every change updates the preview live.",
-    "pixelPreview": "Pixel Preview",
     "saturation": "Saturation",
     "screenshot": "Screenshot",
     "strongAutoSizeStrongPixelArt": "<strong>Auto size</strong> — pixel art that was exported at 8× or screenshotted with grid lines is read back at its true resolution, cell for cell, instead of being blindly resampled.",
@@ -1155,7 +1153,8 @@
     "cleanedOrphans": "Cleaned 1 orphan pixel | Cleaned {count} orphan pixels",
     "colorsMerged": "Colors merged",
     "autoResult": "Auto → {w}×{h}",
-    "nativeGridDetected": " — native grid detected"
+    "nativeGridDetected": " — native grid detected",
+    "imageToPixelConverter": "Image to Pixel Converter"
   },
   "p_creator": {
     "allTime": "All time",
@@ -1240,7 +1239,6 @@
   "p_editor": {
     "browser": "browser",
     "canvas": "canvas",
-    "draw": "Draw",
     "drawOnAnEmptyPartOf": "Draw on an empty part of the canvas to spawn a new board, then drag its label to arrange your workspace.",
     "easyPixelArt": "easy pixel art",
     "export": "export",
@@ -1276,7 +1274,8 @@
     "strongMirrorDrawingStrongHorizonta": "<strong>Mirror drawing</strong> — horizontal or vertical mirroring to draw symmetric sprites twice as fast.",
     "strongMultipleLayersStrongSketchOn": "<strong>Multiple layers</strong> — sketch on one, color on another, stack details on top.",
     "strongPickACanvasSizeStrong": "<strong>Pick a canvas size</strong> — open the editor and choose a canvas from <code>8×8</code> up to <code>64×64</code> pixels.",
-    "strongUndoRedoStrongFullHistory": "<strong>Undo / redo</strong> — full history; experiment freely and step back through any change."
+    "strongUndoRedoStrongFullHistory": "<strong>Undo / redo</strong> — full history; experiment freely and step back through any change.",
+    "pixelArtEditor": "Pixel Art Editor"
   },
   "p_generator": {
     "aPhotoHoldsUpBetterAt": "A photo holds up better at 64+",
@@ -1317,7 +1316,6 @@
     "generating": "Generating…",
     "generationIsOffline": "Generation is offline",
     "generationIsOfflineRightNowCheck": "Generation is offline right now — check back soon.",
-    "generator": "Generator",
     "history": "History",
     "icon": "Icon",
     "idle": "Idle",
@@ -1386,7 +1384,8 @@
     "needCredits": "Need 🪙{n}",
     "claiming": "Claiming…",
     "statusLine": "{style} · {view} view · {size} · {colors} colors · backdrop {backdrop}",
-    "autoSize": "auto size"
+    "autoSize": "auto size",
+    "pixelArtGenerator": "Pixel Art Generator"
   },
   "p_index": {
     "aFresh": "— a fresh",
