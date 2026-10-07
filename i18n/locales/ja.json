@@ -205,12 +205,10 @@
     "alreadyHaveAnAccount": "すでにアカウントをお持ちの方はログイン",
     "couldNotSignIn": "ログインできませんでした。もう一度お試しください。",
     "createAccount": "アカウント作成",
-    "createAnAccount": "アカウントを作成",
     "emailInvalid": "メールアドレスの形式が正しくありません",
     "emailOptional": "メールアドレス（任意）",
     "emailTaken": "このメールアドレスは既に使用されています",
     "hidePassword": "パスワードを隠す",
-    "loginToShare": "ログインして共有",
     "noAccountCreateOne": "アカウントをお持ちでない方はこちら",
     "passwordTooShort": "パスワードは8文字以上にしてください",
     "passwordsDoNotMatch": "パスワードが一致しません",
@@ -221,7 +219,10 @@
     "usernameInvalid": "3文字以上、英数字・ドット・ハイフンが使えます",
     "usernameOrEmail": "ユーザー名またはメールアドレス",
     "usernameTaken": "そのユーザー名は使用されています",
-    "wrongUsernameOrPassword": "ユーザー名またはパスワードが違います"
+    "wrongUsernameOrPassword": "ユーザー名またはパスワードが違います",
+    "titleLogin": "おかえりなさい",
+    "titleRegister": "SimplePixelArtに参加",
+    "subRegister": "無料です。これまでに描いた作品もそのまま引き継がれます。"
   },
   "c_NotifyBell": {
     "nothingYetPublishArtAnd": "まだ何もありません。作品を公開したり、作家をフォローしてみてください。",
@@ -374,7 +375,6 @@
     "settings": "設定",
     "showBoardLabels": "ボード名を表示",
     "showReference": "参照画像を表示",
-    "signInToPublishAndShare": "ログインするとドット絵を公開・共有できます。この端末の作品はクラウドへ同期されます。",
     "solid": "実線",
     "square": "四角",
     "tapAPixel": "ピクセルをタップ…",

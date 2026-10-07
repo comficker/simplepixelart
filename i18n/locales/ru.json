@@ -205,12 +205,10 @@
     "alreadyHaveAnAccount": "Уже есть аккаунт? Войдите",
     "couldNotSignIn": "Не удалось войти. Попробуйте ещё раз.",
     "createAccount": "Создать аккаунт",
-    "createAnAccount": "Создать аккаунт",
     "emailInvalid": "Это не похоже на адрес эл. почты",
     "emailOptional": "Эл. почта (необязательно)",
     "emailTaken": "Эта почта уже используется",
     "hidePassword": "Скрыть пароль",
-    "loginToShare": "Войдите, чтобы поделиться",
     "noAccountCreateOne": "Нет аккаунта? Создайте",
     "passwordTooShort": "Пароль должен содержать не менее 8 символов",
     "passwordsDoNotMatch": "Пароли не совпадают",
@@ -221,7 +219,10 @@
     "usernameInvalid": "Не менее 3 символов: буквы, цифры, точки или дефисы",
     "usernameOrEmail": "Имя пользователя или почта",
     "usernameTaken": "Это имя пользователя занято",
-    "wrongUsernameOrPassword": "Неверное имя пользователя или пароль"
+    "wrongUsernameOrPassword": "Неверное имя пользователя или пароль",
+    "titleLogin": "С возвращением",
+    "titleRegister": "Присоединяйтесь к SimplePixelArt",
+    "subRegister": "Бесплатно, и всё, что вы уже нарисовали, сохранится."
   },
   "c_NotifyBell": {
     "nothingYetPublishArtAnd": "Пока пусто — публикуйте работы и подписывайтесь на авторов.",
@@ -374,7 +375,6 @@
     "settings": "Настройки",
     "showBoardLabels": "Показать названия полотен",
     "showReference": "Показать референс",
-    "signInToPublishAndShare": "Войдите, чтобы публиковать и делиться пиксель-артом. Работа с этого устройства синхронизируется с облаком.",
     "solid": "Сплошная",
     "square": "Квадрат",
     "tapAPixel": "Коснитесь пикселя…",

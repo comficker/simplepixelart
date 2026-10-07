@@ -63,8 +63,8 @@ async function submit() {
 
 <template>
   <UiModal
-      :title="isRegister ? $t('c_LoginModal.createAnAccount') : $t('c_LoginModal.loginToShare')"
-      :sub="$t('c_PXEditor.signInToPublishAndShare')"
+      :title="isRegister ? $t('c_LoginModal.titleRegister') : $t('c_LoginModal.titleLogin')"
+      :sub="isRegister ? $t('c_LoginModal.subRegister') : undefined"
       @close="emit('close')"
   >
     <div class="share-stack login-stack">

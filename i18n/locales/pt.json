@@ -205,12 +205,10 @@
     "alreadyHaveAnAccount": "Já tem conta? Entre",
     "couldNotSignIn": "Não foi possível entrar. Tente novamente.",
     "createAccount": "Criar conta",
-    "createAnAccount": "Criar uma conta",
     "emailInvalid": "Isso não parece um e-mail",
     "emailOptional": "E-mail (opcional)",
     "emailTaken": "Esse e-mail já está em uso",
     "hidePassword": "Ocultar senha",
-    "loginToShare": "Entre para compartilhar",
     "noAccountCreateOne": "Não tem conta? Crie uma",
     "passwordTooShort": "A senha precisa ter pelo menos 8 caracteres",
     "passwordsDoNotMatch": "As duas senhas não coincidem",
@@ -221,7 +219,10 @@
     "usernameInvalid": "Mínimo de 3 caracteres: letras, números, pontos ou hífens",
     "usernameOrEmail": "Usuário ou e-mail",
     "usernameTaken": "Esse nome de usuário já está em uso",
-    "wrongUsernameOrPassword": "Usuário ou senha incorretos"
+    "wrongUsernameOrPassword": "Usuário ou senha incorretos",
+    "titleLogin": "Bem-vindo de volta",
+    "titleRegister": "Entre para o SimplePixelArt",
+    "subRegister": "É grátis, e o que você já desenhou vem junto."
   },
   "c_NotifyBell": {
     "nothingYetPublishArtAnd": "Nada por enquanto — publique artes e siga criadores.",
@@ -374,7 +375,6 @@
     "settings": "Ajustes",
     "showBoardLabels": "Mostrar os nomes das pranchetas",
     "showReference": "Mostrar referência",
-    "signInToPublishAndShare": "Entre para publicar e compartilhar seu pixel art. Seu trabalho local será sincronizado com a nuvem.",
     "solid": "Contínua",
     "square": "Quadrado",
     "tapAPixel": "Toque num pixel…",

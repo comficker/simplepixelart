@@ -216,12 +216,10 @@
     "alreadyHaveAnAccount": "Already have an account? Sign in",
     "couldNotSignIn": "Could not sign in. Please try again.",
     "createAccount": "Create account",
-    "createAnAccount": "Create an account",
     "emailInvalid": "That does not look like an email address",
     "emailOptional": "Email (optional)",
     "emailTaken": "That email is already in use",
     "hidePassword": "Hide password",
-    "loginToShare": "Login to share",
     "noAccountCreateOne": "No account? Create one",
     "passwordTooShort": "Password must be at least 8 characters",
     "passwordsDoNotMatch": "The two passwords do not match",
@@ -232,7 +230,10 @@
     "usernameInvalid": "At least 3 characters — letters, numbers, dots or dashes",
     "usernameOrEmail": "Username or email",
     "usernameTaken": "That username is taken",
-    "wrongUsernameOrPassword": "Wrong username or password"
+    "wrongUsernameOrPassword": "Wrong username or password",
+    "titleLogin": "Welcome back",
+    "titleRegister": "Join SimplePixelArt",
+    "subRegister": "Free, and anything you've drawn so far comes with you."
   },
   "c_Modal": {
     "dialog": "Dialog"
@@ -388,7 +389,6 @@
     "settings": "Settings",
     "showBoardLabels": "Show board labels",
     "showReference": "Show reference",
-    "signInToPublishAndShare": "Sign in to publish and share your pixel art. Your local work will be synced to the cloud.",
     "solid": "Solid",
     "square": "Square",
     "tapAPixel": "Tap a pixel…",
