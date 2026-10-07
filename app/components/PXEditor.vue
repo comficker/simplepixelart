@@ -166,6 +166,21 @@ const PUBLISH_STATUSES = computed(() => [
 ] as const)
 const publishStatus = ref<'public' | 'draft'>('draft')
 const publishLicense = ref('')
+// The publish form starts from what was picked last time: status, license
+// and, for staff, publishing as a bot. Saved when the visitor changes one.
+const PUBLISH_PREFS_KEY = 'publish_prefs'
+function readPublishPrefs(): {status?: 'public' | 'draft', license?: string, boost?: boolean} {
+  try { return JSON.parse(localStorage.getItem(PUBLISH_PREFS_KEY) || '{}') || {} } catch { return {} }
+}
+function rememberPublishPrefs() {
+  try {
+    localStorage.setItem(PUBLISH_PREFS_KEY, JSON.stringify({
+      status: publishStatus.value, license: publishLicense.value,
+      // Only staff see the bot toggle; nobody else may clear their choice.
+      boost: isAdmin.value ? boostOnPublish.value : readPublishPrefs().boost,
+    }))
+  } catch {  }
+}
 
 /* Staff only: publish the piece under one of the bot accounts instead of
    this one, so the creator board has something to rank before the site has
@@ -182,9 +197,13 @@ function openPublish() {
   }
   // The button that opens this says Publish, so that is what it does unless
   // the piece was published before and later made private again.
-  publishStatus.value = editorData.value.is_public || !editorData.value.meta?.published_at ? 'public' : 'draft'
-  boostOnPublish.value = false
-  publishLicense.value = (editorData.value.meta as any)?.license || ''
+  // A piece published before keeps its own status and license (no license
+  // means all rights reserved); a first publish starts from the last choices.
+  const meta = editorData.value.meta as any
+  const prefs = meta?.published_at ? {} : readPublishPrefs()
+  publishStatus.value = editorData.value.is_public || !meta?.published_at ? (prefs.status || 'public') : 'draft'
+  boostOnPublish.value = isAdmin.value && !!readPublishPrefs().boost
+  publishLicense.value = meta?.license || prefs.license || ''
   publishStep.value = 'edit'
   showPublishModal.value = true
   loadEconomyForPublish()
@@ -4130,13 +4149,13 @@ watch(
             </div>
             <div class="publish-status-row">
               <label class="publish-label" for="publish-status">{{ $t('common.status') }}</label>
-              <select id="publish-status" v-model="publishStatus" class="publish-input">
+              <select id="publish-status" v-model="publishStatus" class="publish-input" @change="rememberPublishPrefs">
                 <option v-for="s in PUBLISH_STATUSES" :key="s.value" :value="s.value">{{ s.label }}</option>
               </select>
             </div>
             <div v-if="publishStatus === 'public'" class="publish-status-row">
               <label class="publish-label" for="publish-license">{{ $t('p_upload.license') }}</label>
-              <select id="publish-license" v-model="publishLicense" class="publish-input">
+              <select id="publish-license" v-model="publishLicense" class="publish-input" @change="rememberPublishPrefs">
                 <option v-for="l in LICENSES" :key="l.value" :value="l.value">{{ $t(`p_upload.license_${l.key}`) }}</option>
               </select>
             </div>
@@ -4145,7 +4164,7 @@ watch(
             </p>
             <div v-if="isAdmin && publishStatus === 'public'" class="publish-status-row">
               <label class="publish-label" for="publish-boost">{{ $t('c_PXEditor.publishAsABotCreator') }}</label>
-              <input id="publish-boost" v-model="boostOnPublish" type="checkbox">
+              <input id="publish-boost" v-model="boostOnPublish" type="checkbox" @change="rememberPublishPrefs">
             </div>
             <div class="publish-actions">
               <button class="btn primary block" @click="saveArt">
