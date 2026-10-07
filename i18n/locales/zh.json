@@ -466,7 +466,11 @@
     "tooManyAiRequests": "AI 请求过多 — 请在{time}重试",
     "useOneOfYourArts": "使用你的作品",
     "yourArtIsLive": "你的像素画已上线，快去分享吧！",
-    "aiLabelNote": "这件作品有部分由 AI 绘制，因此在所有展示位置都会标注“AI 生成”。"
+    "aiLabelNote": "这件作品有部分由 AI 绘制，因此在所有展示位置都会标注“AI 生成”。",
+    "selectionToBoard": "将选区转为新画板",
+    "selectionToBoardTip": "把选区复制到同尺寸的新画板，保留图层",
+    "selectionIsEmpty": "选区内没有可复制的内容",
+    "selectionNowBoard": "已用选区创建 {w}×{h} 的新画板"
   },
   "c_Palette": {
     "colorNHex": "颜色 {n}：{hex}",

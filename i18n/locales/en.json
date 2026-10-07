@@ -480,7 +480,11 @@
     "tooManyAiRequests": "Too many AI requests — try again in {time}",
     "useOneOfYourArts": "Use one of your arts",
     "yourArtIsLive": "Your pixel art is live. Share it!",
-    "aiLabelNote": "Part of this piece was drawn by AI, so it is labeled AI-generated wherever it appears."
+    "aiLabelNote": "Part of this piece was drawn by AI, so it is labeled AI-generated wherever it appears.",
+    "selectionToBoard": "Selection to new board",
+    "selectionToBoardTip": "Copy the selection into a new board of its own size, layers kept",
+    "selectionIsEmpty": "Nothing in the selection to copy",
+    "selectionNowBoard": "New {w}×{h} board from the selection"
   },
   "c_Paginator": {},
   "c_Palette": {

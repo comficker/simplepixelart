@@ -466,7 +466,11 @@
     "tooManyAiRequests": "Muitas solicitações de IA — tente novamente em {time}",
     "useOneOfYourArts": "Use uma das suas artes",
     "yourArtIsLive": "Sua pixel art está no ar. Compartilhe!",
-    "aiLabelNote": "Parte desta peça foi desenhada por IA, então ela é marcada como gerada por IA onde aparecer."
+    "aiLabelNote": "Parte desta peça foi desenhada por IA, então ela é marcada como gerada por IA onde aparecer.",
+    "selectionToBoard": "Seleção para nova prancha",
+    "selectionToBoardTip": "Copia a seleção para uma nova prancha do mesmo tamanho, mantendo as camadas",
+    "selectionIsEmpty": "Não há nada na seleção para copiar",
+    "selectionNowBoard": "Nova prancha {w}×{h} a partir da seleção"
   },
   "c_Palette": {
     "colorNHex": "Cor {n}: {hex}",

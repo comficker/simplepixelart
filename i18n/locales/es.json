@@ -466,7 +466,11 @@
     "tooManyAiRequests": "Demasiadas solicitudes a la IA; vuelve a intentarlo en {time}",
     "useOneOfYourArts": "Usa una de tus obras",
     "yourArtIsLive": "Tu pixel art ya está publicado. ¡Compártelo!",
-    "aiLabelNote": "Parte de esta pieza la dibujó una IA, así que se etiqueta como generada con IA dondequiera que aparezca."
+    "aiLabelNote": "Parte de esta pieza la dibujó una IA, así que se etiqueta como generada con IA dondequiera que aparezca.",
+    "selectionToBoard": "Selección a tablero nuevo",
+    "selectionToBoardTip": "Copia la selección en un tablero nuevo de su mismo tamaño, con sus capas",
+    "selectionIsEmpty": "No hay nada en la selección para copiar",
+    "selectionNowBoard": "Nuevo tablero de {w}×{h} a partir de la selección"
   },
   "c_Palette": {
     "colorNHex": "Color {n}: {hex}",

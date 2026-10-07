@@ -1892,6 +1892,44 @@ export const useEditor = defineStore('editor', () => {
         return {removed, boards: boardsTouched}
     }
 
+    /* Copies the selected area into a new board of its own size, every layer
+       clipped to it and kept as a layer, same palette. The source board is
+       left untouched. Returns the new board's id, or null when the area holds
+       nothing. */
+    function selectionToBoard(): string | null {
+        const b = selectionState.value.bounds
+        if (!b.active) return null
+        const src = editorData.value
+        const minX = Math.max(0, b.minX), minY = Math.max(0, b.minY)
+        const maxX = Math.min(src.width - 1, b.maxX), maxY = Math.min(src.height - 1, b.maxY)
+        if (maxX < minX || maxY < minY) return null
+        const layers: Layer[] = []
+        for (const layer of src.layers) {
+            const lx = layer.x || 0, ly = layer.y || 0
+            const pixels: { [key: string]: number } = {}
+            for (const key of Object.keys(layer.pixels)) {
+                const {x, y} = key2Point(key)
+                const ax = x + lx, ay = y + ly
+                if (ax < minX || ax > maxX || ay < minY || ay > maxY) continue
+                pixels[`${ax - minX}_${ay - minY}`] = layer.pixels[key]!
+            }
+            if (Object.keys(pixels).length) layers.push({name: layer.name, pixels, x: 0, y: 0})
+        }
+        if (!layers.length) return null
+        const data = markRawPixels({
+            ...cloneDeep(DEFAULT_EDITOR_DATA),
+            id: generateUUID(),
+            name: `${src.name || 'Board'} crop`,
+            width: maxX - minX + 1,
+            height: maxY - minY + 1,
+            colors: [...src.colors],
+            palette: src.palette ?? null,
+            layers,
+            updated: new Date().toISOString(),
+        } as EditorData)
+        return addBoardWithData(data)
+    }
+
     function mergeSelectedBlock(): { w: number; h: number } | null {
         const b = selectionState.value.bounds
         if (!b.active) return null
@@ -2558,6 +2596,7 @@ export const useEditor = defineStore('editor', () => {
         mergeColorGroups,
         trimHiddenPixels,
         mergeSelectedBlock,
+        selectionToBoard,
         clipboard,
         copyActiveScope,
         pasteClipboard,

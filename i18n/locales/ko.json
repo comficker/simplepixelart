@@ -466,7 +466,11 @@
     "tooManyAiRequests": "AI 요청이 너무 많습니다 — {time} 다시 시도하세요",
     "useOneOfYourArts": "내 작품 중 하나 사용",
     "yourArtIsLive": "픽셀 아트가 게시되었습니다. 공유해 보세요!",
-    "aiLabelNote": "이 작품의 일부는 AI가 그렸기 때문에, 표시되는 모든 곳에 AI 생성 라벨이 붙습니다."
+    "aiLabelNote": "이 작품의 일부는 AI가 그렸기 때문에, 표시되는 모든 곳에 AI 생성 라벨이 붙습니다.",
+    "selectionToBoard": "선택 영역을 새 보드로",
+    "selectionToBoardTip": "선택 영역을 같은 크기의 새 보드로 복사합니다(레이어 유지)",
+    "selectionIsEmpty": "선택 영역에 복사할 내용이 없습니다",
+    "selectionNowBoard": "선택 영역으로 {w}×{h} 새 보드를 만들었습니다"
   },
   "c_Palette": {
     "colorNHex": "색 {n}: {hex}",

@@ -466,7 +466,11 @@
     "tooManyAiRequests": "AIへのリクエストが多すぎます — {time}に再試行してください",
     "useOneOfYourArts": "自分の作品を使う",
     "yourArtIsLive": "ピクセルアートが公開されました。シェアしましょう！",
-    "aiLabelNote": "この作品の一部は AI が描いたため、表示されるすべての場所で「AI生成」と表示されます。"
+    "aiLabelNote": "この作品の一部は AI が描いたため、表示されるすべての場所で「AI生成」と表示されます。",
+    "selectionToBoard": "選択範囲を新しいボードに",
+    "selectionToBoardTip": "選択範囲を同じサイズの新しいボードにコピーします（レイヤーはそのまま）",
+    "selectionIsEmpty": "選択範囲にコピーするものがありません",
+    "selectionNowBoard": "選択範囲から{w}×{h}の新しいボードを作成しました"
   },
   "c_Palette": {
     "colorNHex": "色 {n}: {hex}",

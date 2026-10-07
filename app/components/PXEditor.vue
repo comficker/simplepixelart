@@ -2922,6 +2922,11 @@ function onMergeBlock() {
   toast.success(t('c_PXEditor.mergedCanvasNow', {w: res.w, h: res.h}))
 }
 
+function onSelectionToBoard() {
+  if (!store.selectionToBoard()) { toast.info(t('c_PXEditor.selectionIsEmpty')); return }
+  toast.success(t('c_PXEditor.selectionNowBoard', {w: editorData.value.width, h: editorData.value.height}))
+}
+
 const multiSelectLayers = ref(false)
 // The agent takes over the right-hand rail; the button lives here, the panel
 // is rendered by the page, so the state is shared.
@@ -3906,6 +3911,11 @@ watch(
           <ui-tooltip v-if="store.selectionState.bounds.active" :text="$t('c_PXEditor.mergePixelsTheSelectionBecomes1')">
             <Square :aria-label="$t('c_PXEditor.mergePixelsBySelectionBlock')" @click="onMergeBlock">
               <span class="icon icon-arrow-collapse-all"/>
+            </Square>
+          </ui-tooltip>
+          <ui-tooltip v-if="store.selectionState.bounds.active" :text="$t('c_PXEditor.selectionToBoardTip')">
+            <Square :aria-label="$t('c_PXEditor.selectionToBoard')" @click="onSelectionToBoard">
+              <span class="icon icon-crop"/>
             </Square>
           </ui-tooltip>
           <ui-tooltip v-if="selectedLayers.size >= 2" :text="$t('c_PXEditor.mergeNSelectedLayers', {count: selectedLayers.size})">
