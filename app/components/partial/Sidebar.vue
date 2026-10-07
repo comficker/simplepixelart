@@ -58,9 +58,11 @@ const SECTIONS = [
 <template>
   <aside class="dash-side" :class="{'is-collapsed': collapsed}" :aria-label="$t('c_Sidebar.sidebar')">
     <div class="dash-brand-row">
-      <NuxtLinkLocale v-if="!collapsed" to="/" class="dash-brand" :title="$t('common.home')">
+      <!-- Collapsed, the row is just the logo; the expand button sits over it
+           and shows on hover or focus. -->
+      <NuxtLinkLocale to="/" class="dash-brand" :title="$t('common.home')">
         <img src="/logo.svg" :alt="$t('common.simplePixelArt')" width="32" height="32" class="dash-brand-logo">
-        <span class="dash-brand-name"><span>{{ $t('common.simple') }}</span>{{ $t('common.pixelart') }}</span>
+        <span v-if="!collapsed" class="dash-brand-name"><span>{{ $t('common.simple') }}</span>{{ $t('common.pixelart') }}</span>
       </NuxtLinkLocale>
       <button
           type="button"
@@ -70,7 +72,7 @@ const SECTIONS = [
           :aria-expanded="!collapsed"
           @click="toggleCollapsed"
       >
-        <span class="icon" :class="collapsed ? 'icon-angle-right' : 'icon-angle-left'"/>
+        <span class="icon" :class="collapsed ? 'icon-chevron-double-right' : 'icon-chevron-double-left'"/>
       </button>
     </div>
 
@@ -308,12 +310,29 @@ const SECTIONS = [
 }
 
 .dash-side.is-collapsed .dash-brand-row {
+  position: relative;
   justify-content: center;
   padding: 0;
 }
 
+/* Over the logo, the same size, hidden until the row is hovered or the
+   button is focused. */
 .dash-side.is-collapsed .dash-collapse {
-  margin-left: 0;
+  position: absolute;
+  inset: 0;
+  width: calc(var(--space-6) + var(--space-2));
+  height: calc(var(--space-6) + var(--space-2));
+  margin: auto;
+  justify-content: center;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.dash-side.is-collapsed .dash-brand-row:hover .dash-collapse,
+.dash-side.is-collapsed .dash-collapse:focus-visible {
+  opacity: 1;
 }
 
 .dash-side.is-collapsed .dash-nav {
@@ -330,8 +349,9 @@ const SECTIONS = [
   padding: var(--space-2) 0 0;
 }
 
+/* Same height as the status bar beside it; the search button just centres. */
 .dash-side.is-collapsed .dash-foot {
-  flex-direction: column;
-  padding: var(--space-2) var(--space-1) var(--space-2);
+  justify-content: center;
+  padding: 0 var(--space-1);
 }
 </style>
