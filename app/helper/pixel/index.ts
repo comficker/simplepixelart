@@ -6,9 +6,7 @@ import {
     reconstructCells as reconstructCellsFn,
 } from './reconstruct'
 
-export {
-    aiImageToGrid, bestPhase, detectPixelScale, imageToCells, modeDownscale, shiftCrop,
-} from './reconstruct'
+export {aiImageToGrid} from './reconstruct'
 
 export type Cell = [number, number, number] | null
 
@@ -21,12 +19,15 @@ export function shouldIgnoreColor(hex: string, ignoreColor: number[] | null): bo
     return hex === '#ffffff' || isSameColor('ffffff', hex.replace('#', ''))
 }
 
-export async function importFileGrid(dataUrl: string): Promise<Cell[][] | null> {
+// `keepBackground`: leave the backdrop colour in instead of turning it
+// transparent (the tileset slicer's "Keep background").
+export async function importFileGrid(dataUrl: string, opts?: { keepBackground?: boolean }): Promise<Cell[][] | null> {
     const {rgbSamplesGrid, colorThatRepresentsTransparent} = await dataUrlToSamplesGrid(dataUrl)
     if (!rgbSamplesGrid?.length) return null
     const ig = colorThatRepresentsTransparent
     return rgbSamplesGrid.map(row => row.map(cell => {
         if (!cell) return null
+        if (opts?.keepBackground) return cell as Cell
         return shouldIgnoreColor(rgbToHex(cell[0]!, cell[1]!, cell[2]!), ig) ? null : cell as Cell
     }))
 }

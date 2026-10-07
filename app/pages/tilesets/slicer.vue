@@ -7,7 +7,7 @@ import type {EditorData} from '~/types'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
 import {cloneDeep, downloadBlob, generateUUID, debounce, getStorageItem} from '~/helper/utils'
 import {layers2MapNumbers} from '~/helper/canvas'
-import {detectPixelScale, bestPhase, shiftCrop, modeDownscale, imageToCells} from '~/helper/pixel'
+import {importFileGrid} from '~/helper/pixel'
 import {saveWorkspaceFull} from '~/helper/workspaceSnapshot'
 import {createZip} from '~/helper/zip'
 
@@ -96,7 +96,19 @@ const spacing = ref(0)
 const offsetX = ref(0)
 const offsetY = ref(0)
 const linkSize = ref(true)
-const sizePresets = [8, 16, 24, 32, 48, 64]
+const sizePresets = [16, 32, 64]
+// Grid mode: dragging the canvas moves the grid (its offset) only while this
+// is on, so a click meant to pick a tile can't nudge it by accident.
+const gridMove = ref(false)
+// Custom shows the W/H inputs. It is also on whenever the size is not one of
+// the presets (a non-square tile, or 24 from an older session).
+const customSize = ref(false)
+const isCustomSize = computed(() => customSize.value || tileW.value !== tileH.value || !sizePresets.includes(tileW.value))
+function pickSize(n: number) {
+  customSize.value = false
+  tileW.value = n
+  tileH.value = n
+}
 
 const cols = computed(() => {
   const img = sourceImage.value
@@ -130,22 +142,22 @@ const movingRegion = ref(-1)
 const hoverRegion = ref(-1)
 let moveGrab = {dx: 0, dy: 0}
 
-const crispFactor = ref<'auto' | number>(1)
-const mergeTol = ref(0)
 const cleanInfo = ref('')
-const crispOptions = computed<{ v: 'auto' | number; l: string }[]>(() => [
-  {v: 'auto', l: t('common.auto')}, {v: 1, l: '1×'}, {v: 2, l: '2×'}, {v: 3, l: '3×'}, {v: 4, l: '4×'},
-])
-const removeBg = ref(false)
-const removeBgTol = ref(30)
-const picking = ref(false)
-const despeckle = ref(false)
-const median = ref(false)
-const quantize = ref(0)
-const quantOptions = computed<{ v: number; l: string }[]>(() => [
-  {v: 0, l: t('common.off')}, {v: 4, l: '4'}, {v: 8, l: '8'}, {v: 16, l: '16'}, {v: 32, l: '32'},
-])
 const showSettings = ref(false)
+const CUT_METHODS = computed(() => [
+  {value: 'select', label: t('common.select')},
+  {value: 'auto', label: t('common.auto')},
+  {value: 'grid', label: t('common.grid')},
+] as const)
+const SHAPES = computed(() => [
+  {value: 'free', icon: 'icon-select', label: t('p_tilesets_slicer.rectangle')},
+  {value: 'square', icon: 'icon-crop-square', label: t('common.square')},
+  {value: 'fixed', icon: 'icon-ruler', label: t('p_tilesets_slicer.fixed')},
+] as const)
+const modeHint = computed(() => mode.value === 'grid' ? t('p_tilesets_slicer.modeHintGrid')
+    : mode.value === 'auto' ? t('p_tilesets_slicer.modeHintAuto') : '')
+// On a phone the settings would stack above the sheet, so the cog opens
+// them; from tablet width up they are a sidebar that is always there.
 
 type Ts = { id: number | string; id_string: string; title: string; local?: boolean }
 const localTs = useLocalTilesets()
@@ -164,22 +176,22 @@ const syncingKey = ref<string | null>(null)
 const sheetCanvas = ref<HTMLCanvasElement | null>(null)
 const tilePreview = ref<HTMLCanvasElement | null>(null)
 const wrapEl = ref<HTMLElement | null>(null)
-const wrapSize = ref(0)
 const zoom = ref(1)
 
 useSettledResize(wrapEl, measureWrap)
 
 function measureWrap() {
-  if (wrapEl.value) {
-    wrapSize.value = wrapEl.value.offsetWidth
-    drawSheet()
-  }
+  if (wrapEl.value) drawSheet()
 }
 
+// The largest scale at which the whole sheet fits the view, in both
+// directions. Width alone against the longest side under-zoomed a tall sheet
+// in a tall view (2x where 3x fits).
 function fitScale(): number {
   const img = sourceImage.value
-  if (!img || !wrapSize.value) return 1
-  return wrapSize.value / Math.max(img.width, img.height)
+  const wrap = wrapEl.value
+  if (!img || !wrap || !wrap.clientWidth || !wrap.clientHeight) return 1
+  return Math.min(wrap.clientWidth / img.width, wrap.clientHeight / img.height)
 }
 
 function snapDown(s: number): number {
@@ -193,7 +205,12 @@ function clampScale(s: number): number {
 }
 
 function setZoom(s: number) { zoom.value = clampScale(s) }
-function zoomFit() { setZoom(snapDown(fitScale())) }
+function zoomFit() {
+  setZoom(snapDown(fitScale()))
+  // Back to the sheet too: after zooming in and scrolling, a fit that
+  // only changed the scale could leave the view where it was.
+  nextTick(() => wrapEl.value?.scrollTo(0, 0))
+}
 function zoomTo100() { setZoomAt(1) }
 
 function nextZoomIn(s: number): number {
@@ -311,7 +328,7 @@ const activeBox = computed<Box | null>(() => {
 const previewInfo = computed(() => {
   const b = activeBox.value
   if (!b) return ''
-  return `${b.w}×${b.h}px${cleanInfo.value ? ` → ${cleanInfo.value}` : ''}`
+  return `${b.w}×${b.h}px${cleanInfo.value ? ` · ${cleanInfo.value}` : ''}`
 })
 
 const STORAGE_KEY = 'tileset_state_v1'
@@ -328,7 +345,7 @@ function snapshotState() {
     regions: regions.value,
     shape: {kind: selectShape.value, w: fixedW.value, h: fixedH.value, link: fixedLink.value},
     sel: {region: selectedRegion.value, cell: selectedCell.value, box: selectedBox.value},
-    clean: {crispFactor: crispFactor.value, mergeTol: mergeTol.value, removeBg: removeBg.value, removeBgTol: removeBgTol.value, despeckle: despeckle.value, median: median.value, quantize: quantize.value, sheetKeepBg: sheetKeepBg.value},
+    clean: {sheetKeepBg: sheetKeepBg.value},
     zoom: zoom.value,
     tilesetId: selectedTilesetId.value,
     synced: syncedTiles.value,
@@ -383,15 +400,7 @@ async function restoreState() {
     fixedW.value = s.shape.w ?? 16; fixedH.value = s.shape.h ?? 16; fixedLink.value = s.shape.link ?? true
   }
   if (s.sel) { selectedRegion.value = s.sel.region ?? -1; selectedCell.value = s.sel.cell ?? null; selectedBox.value = s.sel.box ?? -1 }
-  if (s.clean) {
-    crispFactor.value = s.clean.crispFactor; mergeTol.value = s.clean.mergeTol
-    sheetKeepBg.value = !!s.clean.sheetKeepBg
-    removeBg.value = s.clean.removeBg; removeBgTol.value = s.clean.removeBgTol
-    despeckle.value = s.clean.despeckle; median.value = s.clean.median; quantize.value = s.clean.quantize
-    if (s.clean.crispFactor === 'auto' && s.clean.mergeTol === 16) {
-      crispFactor.value = 1; mergeTol.value = 0
-    }
-  }
+  if (s.clean) sheetKeepBg.value = !!s.clean.sheetKeepBg
   if (s.tilesetId != null) selectedTilesetId.value = s.tilesetId
   if (s.synced) syncedTiles.value = s.synced
   let display = rawSrc || legacySrc
@@ -420,7 +429,6 @@ watch(
     [
       mode, tileW, tileH, spacing, offsetX, offsetY, linkSize,
       tolerance, minSize, mergeGap, selectedRegion, selectedBox,
-      crispFactor, mergeTol, removeBg, removeBgTol, despeckle, median, quantize,
       zoom, imageData, editorProcess, selectedTilesetId, selectShape, fixedW, fixedH, fixedLink,
       () => bg.value.join(','),
       () => JSON.stringify(regions.value),
@@ -497,10 +505,13 @@ function gridToDataUrl(grid: RGB[][], transparent: RGB | null): string {
 async function cleanSheet(raw: string): Promise<string> {
   processing.value = true
   try {
-    const res = await imageToCells(raw, {knockoutBg: !sheetKeepBg.value})
-    if (!res) { sheetInfo.value = ''; return '' }
-    sheetInfo.value = `${res.scale > 1 ? `${res.scale}× → ` : ''}${res.cells[0]!.length}×${res.cells.length}px`
-    return gridToDataUrl(res.cells, null)
+    // The editor's own import (the reference pipeline). The reconstruction
+    // used here before misjudged the pixel scale of resampled sheets -- a
+    // screenshot at ~5.3x came out at 7x, smearing every detail.
+    const cells = await importFileGrid(raw, {keepBackground: sheetKeepBg.value})
+    if (!cells?.length) { sheetInfo.value = ''; return '' }
+    sheetInfo.value = `${cells[0]!.length}×${cells.length}px`
+    return gridToDataUrl(cells, null)
   } catch (err) {
     console.error('Tileset: editor import failed', err)
     sheetInfo.value = ''
@@ -930,7 +941,6 @@ let dragMoved = false
 function onDown(e: MouseEvent) {
   if (spacePressed.value || e.button === 1) { startPan(e); return }
   if (e.button !== 0) return
-  if (picking.value) return
   const p = eventToSource(e)
   if (!p) return
   if (mode.value === 'select') {
@@ -1000,9 +1010,11 @@ function onMove(e: MouseEvent) {
       const img = sourceImage.value!
       const dx = p.x - dragStart.value.x, dy = p.y - dragStart.value.y
       if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragMoved = true
-      offsetX.value = Math.max(0, Math.min(img.width, Math.round(gridStartOffset.x + dx)))
-      offsetY.value = Math.max(0, Math.min(img.height, Math.round(gridStartOffset.y + dy)))
-      drawSheet()
+      if (gridMove.value) {
+        offsetX.value = Math.max(0, Math.min(img.width, Math.round(gridStartOffset.x + dx)))
+        offsetY.value = Math.max(0, Math.min(img.height, Math.round(gridStartOffset.y + dy)))
+        drawSheet()
+      }
     } else {
       const c = cellAt(p.x, p.y)
       if ((c?.c !== hoverCell.value?.c) || (c?.r !== hoverCell.value?.r)) { hoverCell.value = c; drawSheet() }
@@ -1016,14 +1028,6 @@ function onMove(e: MouseEvent) {
 function onUp(e: MouseEvent) {
   const p = eventToSource(e)
   if (!p) return
-  if (picking.value) {
-    pickBgAt(clampPt(p))
-    picking.value = false
-    drawSheet()
-    if (mode.value === 'auto') detect()
-    else if (activeBox.value) nextTick(drawTilePreview)
-    return
-  }
   if (mode.value === 'grid') {
     dragging.value = false
     if (!dragMoved) {
@@ -1176,220 +1180,6 @@ function cropActive(): HTMLCanvasElement | null {
   return activeBox.value ? cropBox(activeBox.value) : null
 }
 
-function mergeSimilar(data: Uint8ClampedArray, w: number, h: number, tol: number): Uint8ClampedArray {
-  const t2 = tol * tol
-  const N = w * h
-  const freq = new Map<number, number>()
-  for (let i = 0; i < N; i++) {
-    const o = i * 4
-    if (data[o + 3]! < 16) continue
-    const k = (data[o]! << 16) | (data[o + 1]! << 8) | data[o + 2]!
-    freq.set(k, (freq.get(k) || 0) + 1)
-  }
-  const colors = [...freq.keys()].sort((a, b) => freq.get(b)! - freq.get(a)!)
-  const reps: number[] = []
-  const map = new Map<number, number>()
-  for (const c of colors) {
-    const r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255
-    let rep = -1
-    for (const rk of reps) {
-      const dr = r - ((rk >> 16) & 255), dg = g - ((rk >> 8) & 255), db = b - (rk & 255)
-      if (dr * dr + dg * dg + db * db <= t2) { rep = rk; break }
-    }
-    if (rep < 0) { reps.push(c); map.set(c, c) } else map.set(c, rep)
-  }
-  const out = new Uint8ClampedArray(data.length)
-  for (let i = 0; i < N; i++) {
-    const o = i * 4
-    if (data[o + 3]! < 16) { out[o + 3] = 0; continue }
-    const rk = map.get((data[o]! << 16) | (data[o + 1]! << 8) | data[o + 2]!)!
-    out[o] = (rk >> 16) & 255; out[o + 1] = (rk >> 8) & 255; out[o + 2] = rk & 255; out[o + 3] = 255
-  }
-  return out
-}
-
-function despeckleImg(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
-  const out = new Uint8ClampedArray(data)
-  const key = (o: number) => (data[o]! << 16) | (data[o + 1]! << 8) | data[o + 2]!
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const o = (y * w + x) * 4
-      if (data[o + 3]! < 16) continue
-      const k = key(o)
-      const counts = new Map<number, number>()
-      let same = 0, total = 0
-      const look = (nx: number, ny: number) => {
-        if (nx < 0 || ny < 0 || nx >= w || ny >= h) return
-        const no = (ny * w + nx) * 4
-        if (data[no + 3]! < 16) return
-        total++
-        const nk = key(no)
-        counts.set(nk, (counts.get(nk) || 0) + 1)
-        if (nk === k) same++
-      }
-      look(x - 1, y); look(x + 1, y); look(x, y - 1); look(x, y + 1)
-      if (same === 0 && total > 0) {
-        let best = k, bestN = 0
-        counts.forEach((v, nk) => { if (v > bestN) { bestN = v; best = nk } })
-        out[o] = (best >> 16) & 255; out[o + 1] = (best >> 8) & 255; out[o + 2] = best & 255
-      }
-    }
-  }
-  return out
-}
-
-function knockoutBg(data: Uint8ClampedArray, w: number, h: number, c: RGB, tol: number) {
-  const t2 = (tol * 2) ** 2
-  const N = w * h
-  const bgLike = new Uint8Array(N)
-  for (let i = 0; i < N; i++) {
-    const o = i * 4
-    if (data[o + 3]! < 16) { bgLike[i] = 1; continue }
-    const dr = data[o]! - c[0], dg = data[o + 1]! - c[1], db = data[o + 2]! - c[2]
-    if (dr * dr + dg * dg + db * db <= t2) bgLike[i] = 1
-  }
-  const visited = new Uint8Array(N)
-  const stack = new Int32Array(N)
-  let sp = 0
-  const seed = (i: number) => { if (bgLike[i] && !visited[i]) { visited[i] = 1; stack[sp++] = i } }
-  for (let x = 0; x < w; x++) { seed(x); seed((h - 1) * w + x) }
-  for (let y = 0; y < h; y++) { seed(y * w); seed(y * w + w - 1) }
-  while (sp > 0) {
-    const i = stack[--sp]!
-    data[i * 4 + 3] = 0
-    const x = i % w, y = (i / w) | 0
-    if (x > 0) seed(i - 1)
-    if (x < w - 1) seed(i + 1)
-    if (y > 0) seed(i - w)
-    if (y < h - 1) seed(i + w)
-  }
-}
-
-function pickBgAt(p: Pt) {
-  const img = sourceImage.value
-  if (!img) return
-  const cv = document.createElement('canvas')
-  cv.width = 1; cv.height = 1
-  const ctx = cv.getContext('2d', {willReadFrequently: true})!
-  ctx.drawImage(img, Math.floor(p.x), Math.floor(p.y), 1, 1, 0, 0, 1, 1)
-  const d = ctx.getImageData(0, 0, 1, 1).data
-  bg.value = [d[0]!, d[1]!, d[2]!]
-}
-
-function medianFilter(data: Uint8ClampedArray, w: number, h: number): Uint8ClampedArray {
-  const out = new Uint8ClampedArray(data)
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const o = (y * w + x) * 4
-      if (data[o + 3]! < 16) continue
-      const cols: number[][] = []
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          const nx = x + dx, ny = y + dy
-          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue
-          const no = (ny * w + nx) * 4
-          if (data[no + 3]! < 16) continue
-          cols.push([data[no]!, data[no + 1]!, data[no + 2]!])
-        }
-      }
-      if (cols.length < 3) continue
-      let best = 0, bestSum = Infinity
-      for (let i = 0; i < cols.length; i++) {
-        let s = 0
-        for (let j = 0; j < cols.length; j++) {
-          if (i === j) continue
-          const dr = cols[i]![0]! - cols[j]![0]!, dg = cols[i]![1]! - cols[j]![1]!, db = cols[i]![2]! - cols[j]![2]!
-          s += dr * dr + dg * dg + db * db
-        }
-        if (s < bestSum) { bestSum = s; best = i }
-      }
-      const c = cols[best]!
-      out[o] = c[0]!; out[o + 1] = c[1]!; out[o + 2] = c[2]!
-    }
-  }
-  return out
-}
-
-function quantizeColors(data: Uint8ClampedArray, w: number, h: number, k: number): Uint8ClampedArray {
-  const pts: number[][] = []
-  for (let i = 0; i < w * h; i++) {
-    const o = i * 4
-    if (data[o + 3]! < 16) continue
-    pts.push([data[o]!, data[o + 1]!, data[o + 2]!])
-  }
-  if (!pts.length) return new Uint8ClampedArray(data)
-
-  const cut = (bucket: number[][], d: number): number[][] => {
-    if (d === 0 || bucket.length === 0) {
-      if (!bucket.length) return []
-      let r = 0, g = 0, b = 0
-      for (const p of bucket) { r += p[0]!; g += p[1]!; b += p[2]! }
-      return [[Math.round(r / bucket.length), Math.round(g / bucket.length), Math.round(b / bucket.length)]]
-    }
-    let rMin = 255, rMax = 0, gMin = 255, gMax = 0, bMin = 255, bMax = 0
-    for (const p of bucket) {
-      if (p[0]! < rMin) rMin = p[0]!; if (p[0]! > rMax) rMax = p[0]!
-      if (p[1]! < gMin) gMin = p[1]!; if (p[1]! > gMax) gMax = p[1]!
-      if (p[2]! < bMin) bMin = p[2]!; if (p[2]! > bMax) bMax = p[2]!
-    }
-    const rR = rMax - rMin, gR = gMax - gMin, bR = bMax - bMin
-    const ch = rR >= gR && rR >= bR ? 0 : (gR >= bR ? 1 : 2)
-    bucket.sort((a, b) => a[ch]! - b[ch]!)
-    const mid = bucket.length >> 1
-    return [...cut(bucket.slice(0, mid), d - 1), ...cut(bucket.slice(mid), d - 1)]
-  }
-
-  const palette = cut(pts, Math.ceil(Math.log2(k))).slice(0, k)
-  if (!palette.length) return new Uint8ClampedArray(data)
-
-  const out = new Uint8ClampedArray(data)
-  for (let i = 0; i < w * h; i++) {
-    const o = i * 4
-    if (data[o + 3]! < 16) continue
-    let best = 0, bestD = Infinity
-    for (let p = 0; p < palette.length; p++) {
-      const c = palette[p]!
-      const dr = data[o]! - c[0]!, dg = data[o + 1]! - c[1]!, db = data[o + 2]! - c[2]!
-      const dd = dr * dr + dg * dg + db * db
-      if (dd < bestD) { bestD = dd; best = p }
-    }
-    const c = palette[best]!
-    out[o] = c[0]!; out[o + 1] = c[1]!; out[o + 2] = c[2]!
-  }
-  return out
-}
-
-function processCanvas(src: HTMLCanvasElement): HTMLCanvasElement {
-  const idata = src.getContext('2d', {willReadFrequently: true})!.getImageData(0, 0, src.width, src.height)
-  let dat: Uint8ClampedArray = idata.data
-  let w = idata.width, h = idata.height
-  if (removeBg.value) knockoutBg(dat, w, h, bg.value, removeBgTol.value)
-  const det = crispFactor.value === 'auto'
-      ? detectPixelScale(dat, w, h)
-      : bestPhase(dat, w, h, crispFactor.value as number)
-  if (det.f > 1) {
-    if (det.ox || det.oy) {
-      const s = shiftCrop(dat, w, h, det.ox, det.oy)
-      dat = s.data; w = s.w; h = s.h
-    }
-    const d = modeDownscale(dat, w, h, det.f)
-    dat = d.data; w = d.w; h = d.h
-  }
-  if (median.value) dat = medianFilter(dat, w, h)
-  if (mergeTol.value > 0) dat = mergeSimilar(dat, w, h, mergeTol.value)
-  if (quantize.value > 0) dat = quantizeColors(dat, w, h, quantize.value)
-  if (despeckle.value) dat = despeckleImg(dat, w, h)
-  const cv = document.createElement('canvas')
-  cv.width = w; cv.height = h
-  cv.getContext('2d')!.putImageData(new ImageData(dat, w, h), 0, 0)
-  return cv
-}
-
-function processActive(): HTMLCanvasElement | null {
-  const raw = cropActive()
-  return raw ? processCanvas(raw) : null
-}
-
 function countColors(cv: HTMLCanvasElement): number {
   const d = cv.getContext('2d', {willReadFrequently: true})!.getImageData(0, 0, cv.width, cv.height).data
   const set = new Set<number>()
@@ -1402,15 +1192,15 @@ function countColors(cv: HTMLCanvasElement): number {
 
 function drawTilePreview() {
   const cv = tilePreview.value
-  const proc = processActive()
-  if (!cv || !proc) { cleanInfo.value = ''; return }
-  cleanInfo.value = `${proc.width}×${proc.height} · ${t('common.nColors', {count: countColors(proc)})}`
-  const scale = Math.max(1, Math.floor(Math.min(256 / proc.width, 256 / proc.height)))
-  cv.width = proc.width * scale; cv.height = proc.height * scale
+  const tile = cropActive()
+  if (!cv || !tile) { cleanInfo.value = ''; return }
+  cleanInfo.value = t('common.nColors', {count: countColors(tile)})
+  const scale = Math.max(1, Math.floor(Math.min(256 / tile.width, 256 / tile.height)))
+  cv.width = tile.width * scale; cv.height = tile.height * scale
   const ctx = cv.getContext('2d')!
   ctx.imageSmoothingEnabled = false
   ctx.clearRect(0, 0, cv.width, cv.height)
-  ctx.drawImage(proc, 0, 0, cv.width, cv.height)
+  ctx.drawImage(tile, 0, 0, cv.width, cv.height)
 }
 
 function rgbToHex(r: number, g: number, b: number): string {
@@ -1443,7 +1233,7 @@ function canvasToEditorData(crop: HTMLCanvasElement, name = 'Tile'): EditorData 
 }
 
 async function openInEditor() {
-  const crop = processActive()
+  const crop = cropActive()
   if (!crop) return
   const editorData = canvasToEditorData(crop)
   if (!editorData) { toast.error(t('p_tilesets_slicer.selectionEmpty')); return }
@@ -1461,7 +1251,7 @@ async function openAllInEditor() {
   boxes.forEach((b, i) => {
     const raw = cropBox(b)
     if (!raw) return
-    const ed = canvasToEditorData(processCanvas(raw), `Tile ${i + 1}`)
+    const ed = canvasToEditorData(raw, `Tile ${i + 1}`)
     if (ed) eds.push(ed)
   })
   if (!eds.length) { toast.error(t('p_tilesets_slicer.tilesEmpty')); return }
@@ -1502,7 +1292,7 @@ async function openAsAnimation() {
     if (frames.length >= MAX_ANIM_FRAMES) break
     const raw = cropBox(b)
     if (!raw) continue
-    const cv = processCanvas(raw)
+    const cv = raw
     const {data} = cv.getContext('2d')!.getImageData(0, 0, cv.width, cv.height)
     const pixels: { [key: string]: number } = {}
     for (let y = 0; y < cv.height; y++) {
@@ -1594,7 +1384,7 @@ async function syncTile(box: Box, index: number) {
   if (syncedTiles.value[key] || syncingKey.value) return
   const raw = cropBox(box)
   if (!raw) return
-  const canvas = processCanvas(raw)
+  const canvas = raw
   const ed = canvasToEditorData(canvas, `Tile ${index + 1}`)
   if (!ed) { toast.error(t('p_tilesets_slicer.tileEmpty')); return }
   const sel = selectedTs.value
@@ -1650,7 +1440,7 @@ async function syncTile(box: Box, index: number) {
 }
 
 function downloadTile() {
-  const crop = processActive()
+  const crop = cropActive()
   const b = activeBox.value
   if (!crop || !b) return
   const a = document.createElement('a')
@@ -1688,7 +1478,7 @@ async function downloadAllZip() {
     for (const b of boxes) {
       const raw = cropBox(b)
       if (!raw) { skipped++; continue }
-      const cv = processCanvas(raw)
+      const cv = raw
       if (!canvasHasPixels(cv)) { skipped++; continue }
       const data = await canvasToPngBytes(cv)
       if (data) files.push({name: `tile_${files.length + 1}.png`, data})
@@ -1735,9 +1525,6 @@ watch([tolerance, minSize, mergeGap], () => {
   if (sourceImage.value && mode.value === 'auto') debouncedDetect()
 })
 
-watch([crispFactor, mergeTol, removeBg, removeBgTol, despeckle, median, quantize], () => {
-  if (activeBox.value) nextTick(drawTilePreview)
-})
 
 watch(zoom, () => { if (sourceImage.value) drawSheet() })
 
@@ -1775,11 +1562,61 @@ const faq = computed(() => [
               </div>
             </template>
           </ui-dropdown-menu>
-          <ui-tooltip :text="$t('p_tilesets_slicer.sliceSettings')">
+          <ui-tooltip :text="$t('p_tilesets_slicer.sliceSettings')" class="ts-settings-toggle">
             <button class="toolbar-btn" :class="{ active: showSettings }" @click="showSettings = !showSettings"><span class="icon icon-cog"/></button>
           </ui-tooltip>
         </div>
         <div class="toolbar-main no-scrollbar">
+          <!-- Cut method, then (Select only) the shape of the box drawn. -->
+          <div class="toolbar-group" role="group" :aria-label="$t('p_tilesets_slicer.cutMethod')">
+            <button
+                v-for="cm in CUT_METHODS"
+                :key="cm.value"
+                class="toolbar-btn ts-cut-btn"
+                :class="{active: mode === cm.value}"
+                :aria-pressed="mode === cm.value"
+                @click="mode = cm.value"
+            ><span class="fit-label">{{ cm.label }}</span></button>
+          </div>
+          <div class="toolbar-sep"/>
+          <!-- Grid only: drag the canvas to line the grid up with the sheet. -->
+          <template v-if="mode === 'grid'">
+            <div class="toolbar-group">
+              <ui-tooltip :text="$t('p_tilesets_slicer.moveGrid')">
+                <button
+                    class="toolbar-btn"
+                    :class="{active: gridMove}"
+                    :aria-label="$t('p_tilesets_slicer.moveGrid')"
+                    :aria-pressed="gridMove"
+                    @click="gridMove = !gridMove"
+                ><span class="icon icon-move"/></button>
+              </ui-tooltip>
+              <ui-tooltip :text="$t('p_tilesets_slicer.resetGridPosition')">
+                <button
+                    class="toolbar-btn"
+                    :disabled="!offsetX && !offsetY"
+                    :aria-label="$t('p_tilesets_slicer.resetGridPosition')"
+                    @click="offsetX = 0; offsetY = 0"
+                ><span class="icon icon-refresh"/></button>
+              </ui-tooltip>
+            </div>
+            <div class="toolbar-sep"/>
+          </template>
+          <!-- Selection shape: only Select draws boxes by hand. -->
+          <template v-if="mode === 'select'">
+            <div class="toolbar-group" role="group" :aria-label="$t('p_tilesets_slicer.selectionShape')">
+              <ui-tooltip v-for="sh in SHAPES" :key="sh.value" :text="sh.label">
+                <button
+                    class="toolbar-btn"
+                    :class="{active: selectShape === sh.value}"
+                    :aria-label="sh.label"
+                    :aria-pressed="selectShape === sh.value"
+                    @click="selectShape = sh.value"
+                ><span class="icon" :class="sh.icon"/></button>
+              </ui-tooltip>
+            </div>
+            <div class="toolbar-sep"/>
+          </template>
           <div class="toolbar-group">
             <ui-tooltip :text="$t('p_tilesets_slicer.zoomOut')">
               <button class="toolbar-btn" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
@@ -1806,148 +1643,92 @@ const faq = computed(() => [
         </div>
       </div>
 
-      <div v-if="showSettings" class="ts-settings-bar">
-        <button class="ts-settings-x" :aria-label="$t('p_tilesets_slicer.closeSettings')" @click="showSettings = false">
-          <span class="icon icon-close"/>
-        </button>
-<div class="ts-set">
-        <div class="ts-set-col">
-          <label class="ts-set-label">{{ $t('p_tilesets_slicer.cutMethod') }}</label>
-          <div class="tm-seg">
-            <button :class="{active: mode === 'select'}" @click="mode = 'select'">{{ $t('common.select') }}</button>
-            <button :class="{active: mode === 'auto'}" @click="mode = 'auto'">{{ $t('common.auto') }}</button>
-            <button :class="{active: mode === 'grid'}" @click="mode = 'grid'">{{ $t('common.grid') }}</button>
-          </div>
-
-          <div class="ts-params">
-
-            <template v-if="mode === 'grid'">
-              <label class="ts-sub">{{ $t('p_tilesets_slicer.tileSize') }}</label>
-              <div class="settings-row">
-                <label v-for="s in sizePresets" :key="s" class="ts-pill" :class="{active: tileW === s && tileH === s}">
-                  <input type="radio" :value="s" :checked="tileW === s && tileH === s" @change="() => { tileW = s; tileH = s }">
-                  <span>{{ s }}</span>
-                </label>
-              </div>
-              <div class="ts-dims">
-                <label class="ts-field"><span>W</span><input type="number" min="1" v-model.number="tileW"></label>
-                <button class="ts-link" :class="{active: linkSize}" @click="linkSize = !linkSize" :title="$t('p_tilesets_slicer.linkWidthHeight')"><span class="icon icon-link"/></button>
-                <label class="ts-field"><span>H</span><input type="number" min="1" v-model.number="tileH" :disabled="linkSize"></label>
-              </div>
-              <label class="ts-sub">{{ $t('p_tilesets_slicer.spacingAmpOffset') }}</label>
-              <div class="slider-row">
-                <label>{{ $t('p_tilesets_slicer.spacing') }} <span>{{ spacing }}px</span></label>
-                <input type="range" v-model.number="spacing" min="0" max="16" step="1">
-              </div>
-              <div class="ts-dims">
-                <label class="ts-field"><span>X</span><input type="number" min="0" v-model.number="offsetX"></label>
-                <label class="ts-field"><span>Y</span><input type="number" min="0" v-model.number="offsetY"></label>
-              </div>
-            </template>
-
-            <template v-else-if="mode === 'auto'">
-              <div class="ts-bg-row">
-                <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
-                <span class="text-xs text-muted">{{ $t('common.background') }}</span>
-                <button class="ts-inline-btn" @click="detect" :disabled="detecting">{{ detecting ? '…' : $t('p_tilesets_slicer.reDetect') }}</button>
-              </div>
-              <div class="slider-row">
-                <label>{{ $t('p_tilesets_slicer.tolerance') }} <span>{{ tolerance }}</span></label>
-                <input type="range" v-model.number="tolerance" min="0" max="100" step="2">
-              </div>
-              <div class="slider-row">
-                <label>{{ $t('p_tilesets_slicer.minSpriteSize') }} <span>{{ minSize }}px</span></label>
-                <input type="range" v-model.number="minSize" min="4" max="64" step="1">
-              </div>
-              <div class="slider-row">
-                <label>{{ $t('p_tilesets_slicer.mergeGap') }} <span>{{ mergeGap }}px</span></label>
-                <input type="range" v-model.number="mergeGap" min="0" max="6" step="1">
-              </div>
-            </template>
-
-            <template v-else>
-              <label class="ts-sub">{{ $t('p_tilesets_slicer.selectionShape') }}</label>
-              <div class="tm-seg">
-                <button :class="{active: selectShape === 'free'}" @click="selectShape = 'free'">{{ $t('p_tilesets_slicer.rectangle') }}</button>
-                <button :class="{active: selectShape === 'square'}" @click="selectShape = 'square'">{{ $t('common.square') }}</button>
-                <button :class="{active: selectShape === 'fixed'}" @click="selectShape = 'fixed'">{{ $t('p_tilesets_slicer.fixed') }}</button>
-              </div>
-              <div v-if="selectShape === 'fixed'" class="ts-dims">
-                <label class="ts-field"><span>W</span><input type="number" min="1" v-model.number="fixedW"></label>
-                <button class="ts-link" :class="{active: fixedLink}" @click="fixedLink = !fixedLink" :title="$t('p_tilesets_slicer.linkWidthHeight')"><span class="icon icon-link"/></button>
-                <label class="ts-field"><span>H</span><input type="number" min="1" v-model.number="fixedH" :disabled="fixedLink"></label>
-              </div>
-            </template>
-          </div>
-        </div>
-
-        <div class="ts-set-col">
-          <label class="ts-set-label">{{ $t('p_tilesets_slicer.cleanup') }}</label>
-          <ui-switch
-              v-model="editorProcess"
-              :disabled="processing"
-              size="sm"
-              :title="$t('p_tilesets_slicer.runsTheSharedImportPipelineThe')"
-          >
-            <span class="text-xs">{{ processing ? $t('p_tilesets_slicer.processing') : $t('p_tilesets_slicer.cleanSheetOnLoad') }}</span>
-          </ui-switch>
-          <template v-if="editorProcess">
-            <ui-switch
-                v-model="sheetKeepBg"
-                :disabled="processing"
-                size="sm"
-                class="ts-set-toggle"
-                :title="$t('p_tilesets_slicer.keepTheSheetSBackdropInstead')"
-            >
-              <span class="text-xs">{{ $t('p_tilesets_slicer.keepBackground') }}</span>
-            </ui-switch>
-            <p v-if="sheetInfo" class="text-2xs text-muted ts-sheetinfo">{{ $t('p_tilesets_slicer.detectedX', {x: sheetInfo}) }}</p>
-          </template>
-          <ui-switch v-model="removeBg" size="sm" class="ts-set-toggle"><span class="text-xs">{{ $t('p_tilesets_slicer.removeBackground') }}</span></ui-switch>
-          <div v-if="removeBg" class="ts-bg-block">
-            <div class="ts-bg-row">
-              <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
-              <button class="ts-pickbtn" :class="{active: picking}" @click="picking = !picking">
-                {{ picking ? $t('p_tilesets_slicer.clickAPixel') : $t('p_tilesets_slicer.pickColor') }}
-              </button>
-            </div>
-            <div class="slider-row" style="margin-top: 0.5rem">
-              <label>{{ $t('p_tilesets_slicer.bgTolerance') }} <span>{{ removeBgTol }}</span></label>
-              <input type="range" v-model.number="removeBgTol" min="0" max="100" step="2">
-            </div>
-          </div>
-
-          <label class="ts-sub">{{ $t('p_tilesets_slicer.roundPixels') }}</label>
-          <div class="settings-row">
-            <button
-                v-for="opt in crispOptions"
-                :key="opt.l"
-                class="ts-pill"
-                :class="{active: crispFactor === opt.v}"
-                @click="crispFactor = opt.v"
-            >{{ opt.l }}</button>
-          </div>
-          <ui-switch v-model="median" size="sm" class="ts-set-toggle"><span class="text-xs">{{ $t('p_tilesets_slicer.smooth') }}</span></ui-switch>
-          <div class="slider-row" style="margin-top: 0.75rem">
-            <label>{{ $t('p_tilesets_slicer.mergeSimilarColors') }} <span>{{ mergeTol }}</span></label>
-            <input type="range" v-model.number="mergeTol" min="0" max="60" step="2">
-          </div>
-          <label class="ts-sub">{{ $t('p_tilesets_slicer.reduceToColors') }}</label>
-          <div class="settings-row">
-            <button
-                v-for="opt in quantOptions"
-                :key="opt.l"
-                class="ts-pill"
-                :class="{active: quantize === opt.v}"
-                @click="quantize = opt.v"
-            >{{ opt.l }}</button>
-          </div>
-          <ui-switch v-model="despeckle" size="sm" class="ts-set-toggle"><span class="text-xs">{{ $t('p_tilesets_slicer.despeckle') }}</span></ui-switch>
-        </div>
-      </div>
-      </div>
 
       <div class="editor-body">
+      <!-- Slice settings: a sidebar on the left, the tiles on the right. -->
+      <div class="editor-sidebar ts-settings-side no-scrollbar" :class="{'is-open': showSettings}">
+        <!-- Input: how the sheet is cut, and how it is prepared first. -->
+        <Widget :title="$t('p_tilesets_slicer.inputSettings')">
+          <div class="ts-sec">
+            <p v-if="modeHint" class="ts-hint">{{ modeHint }}</p>
+          <template v-if="mode === 'grid'">
+            <label class="ts-sub">{{ $t('p_tilesets_slicer.tileSize') }}</label>
+            <div class="settings-row">
+              <button
+                  v-for="n in sizePresets"
+                  :key="n"
+                  type="button"
+                  class="ts-pill"
+                  :class="{active: !isCustomSize && tileW === n}"
+                  @click="pickSize(n)"
+              >{{ n }}</button>
+              <button type="button" class="ts-pill" :class="{active: isCustomSize}" @click="customSize = true">{{ $t('c_PXEditor.custom') }}</button>
+            </div>
+            <div v-if="isCustomSize" class="ts-dims">
+              <label class="ts-field"><span>W</span><input type="number" min="1" v-model.number="tileW"></label>
+              <button class="ts-link" :class="{active: linkSize}" @click="linkSize = !linkSize" :title="$t('p_tilesets_slicer.linkWidthHeight')"><span class="icon icon-link"/></button>
+              <label class="ts-field"><span>H</span><input type="number" min="1" v-model.number="tileH" :disabled="linkSize"></label>
+            </div>
+            <div class="slider-row">
+              <label>{{ $t('p_tilesets_slicer.spacing') }} <span>{{ spacing }}px</span></label>
+              <input type="range" v-model.number="spacing" min="0" max="16" step="1">
+            </div>
+          </template>
+
+          <template v-else-if="mode === 'auto'">
+            <div class="ts-bg-row">
+              <span class="ts-bg-swatch" :style="{background: `rgb(${bg[0]},${bg[1]},${bg[2]})`}"/>
+              <span class="text-xs text-muted">{{ $t('common.background') }}</span>
+              <button class="ts-inline-btn" @click="detect" :disabled="detecting">{{ detecting ? '…' : $t('p_tilesets_slicer.reDetect') }}</button>
+            </div>
+            <div class="slider-row">
+              <label>{{ $t('p_tilesets_slicer.tolerance') }} <span>{{ tolerance }}</span></label>
+              <input type="range" v-model.number="tolerance" min="0" max="100" step="2">
+            </div>
+            <div class="slider-row">
+              <label>{{ $t('p_tilesets_slicer.minSpriteSize') }} <span>{{ minSize }}px</span></label>
+              <input type="range" v-model.number="minSize" min="4" max="64" step="1">
+            </div>
+            <div class="slider-row">
+              <label>{{ $t('p_tilesets_slicer.mergeGap') }} <span>{{ mergeGap }}px</span></label>
+              <input type="range" v-model.number="mergeGap" min="0" max="6" step="1">
+            </div>
+          </template>
+
+          <template v-else>
+            <label v-if="selectShape === 'fixed'" class="ts-sub">{{ $t('p_tilesets_slicer.fixed') }}</label>
+            <div v-if="selectShape === 'fixed'" class="ts-dims">
+              <label class="ts-field"><span>W</span><input type="number" min="1" v-model.number="fixedW"></label>
+              <button class="ts-link" :class="{active: fixedLink}" @click="fixedLink = !fixedLink" :title="$t('p_tilesets_slicer.linkWidthHeight')"><span class="icon icon-link"/></button>
+              <label class="ts-field"><span>H</span><input type="number" min="1" v-model.number="fixedH" :disabled="fixedLink"></label>
+            </div>
+          </template>
+            <div class="ts-group">
+              <span class="ts-sub">{{ $t('p_tilesets_slicer.prepareSheet') }}</span>
+              <ui-switch
+                  v-model="editorProcess"
+                  :disabled="processing"
+                  size="sm"
+                  :title="$t('p_tilesets_slicer.runsTheSharedImportPipelineThe')"
+              >
+                <span class="text-xs">{{ processing ? $t('p_tilesets_slicer.processing') : $t('p_tilesets_slicer.cleanSheetOnLoad') }}</span>
+              </ui-switch>
+              <template v-if="editorProcess">
+                <ui-switch
+                    v-model="sheetKeepBg"
+                    :disabled="processing"
+                    size="sm"
+                    :title="$t('p_tilesets_slicer.keepTheSheetSBackdropInstead')"
+                >
+                  <span class="text-xs">{{ $t('p_tilesets_slicer.keepBackground') }}</span>
+                </ui-switch>
+                <p v-if="sheetInfo" class="ts-hint">{{ $t('p_tilesets_slicer.detectedX', {x: sheetInfo}) }}</p>
+              </template>
+            </div>
+          </div>
+        </Widget>
+      </div>
+
 
       <div class="canvas-col ts-stage">
         <Widget>
@@ -1956,7 +1737,7 @@ const faq = computed(() => [
               <canvas
                   ref="sheetCanvas"
                   class="ts-canvas pixelated"
-                  :class="{drawing: mode === 'select', moving: mode === 'select' && !picking && (movingRegion >= 0 || hoverRegion >= 0), grabbable: mode === 'grid' || spacePressed, grabbing: (mode === 'grid' && dragging) || panning, picking}"
+                  :class="{drawing: mode === 'select', moving: mode === 'select' && (movingRegion >= 0 || hoverRegion >= 0), grabbable: (mode === 'grid' && gridMove) || spacePressed, grabbing: (mode === 'grid' && gridMove && dragging) || panning}"
                   :style="hoverHandle || resizingRegion ? {cursor: HANDLE_CURSOR[(resizingRegion?.mode || hoverHandle) as any]} : (spacePressed ? {cursor: panning ? 'grabbing' : 'grab'} : undefined)"
                   @mousedown="onDown"
                   @mousemove="onMove"
@@ -2291,84 +2072,92 @@ const faq = computed(() => [
   display: block;
 }
 
-.ts-set {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-4);
+/* Slice settings, a left sidebar: one widget per step (how to cut, then
+   how to clean), and inside the cleanup one group per thing it changes. */
+.ts-sec {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
-@media (min-width: 560px) {
-  .ts-set {
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-  }
-
-  .ts-set-col + .ts-set-col {
-    padding-left: var(--space-5);
-    border-left: 1px solid var(--border);
-  }
-
-  .ts-set-col:first-child {
-    padding-right: var(--space-5);
-  }
+/* A label sits closer to its own control than to the block above. */
+.ts-sec .ts-sub {
+  margin: 0 0 calc(var(--space-1) * -1);
 }
 
-.ts-set-label {
-  display: block;
-  margin-bottom: var(--space-3);
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.ts-sec .slider-row + .slider-row {
+  margin-top: 0;
+}
+
+.ts-hint {
+  font-size: var(--text-xs);
   color: var(--muted);
+  line-height: 1.5;
 }
 
-.ts-settings-bar {
-  position: relative;
-  padding: 0;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+.ts-sec > .ts-group:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
-.ts-settings-bar .ts-set-col {
-  padding: var(--space-2);
+.ts-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
 }
 
-.ts-settings-bar .ts-set {
-  max-width: 56rem;
+/* The settings fill the column and scroll inside it. Phones stack them at
+   full height. */
+@media (min-width: 768px) {
+  .ts-settings-side > :deep(.widget) {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  .ts-settings-side > :deep(.widget) > .widget-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .ts-settings-side > :deep(.widget) > .widget-body::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-.ts-settings-bar :deep(.ui-switch-wrapper) {
+.ts-settings-side :deep(.ui-switch-wrapper) {
   display: flex;
   width: fit-content;
 }
 
-.ts-settings-x {
-  position: absolute;
-  top: var(--space-2);
-  right: var(--space-2);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
+/* Cut method in the toolbar: words, not icons, so the buttons fit them. */
+.ts-cut-btn {
+  width: auto;
+  min-width: 0;
+  padding-inline: var(--space-2);
 }
 
-.ts-settings-x .icon { width: var(--icon-sm); height: var(--icon-sm); }
-
-.ts-settings-x:hover {
-  background: var(--surface-2);
-  color: var(--foreground);
+.ts-settings-side:not(.is-open) {
+  display: none;
 }
 
-.ts-set-col .ts-params {
-  margin-top: var(--space-3);
+@media (min-width: 768px) {
+  .ts-settings-toggle {
+    display: none;
+  }
+
+  .ts-settings-side,
+  .ts-settings-side:not(.is-open) {
+    display: flex;
+    width: 250px;
+    flex: 0 0 250px;
+    border-right: 1px solid var(--border);
+  }
 }
 
 .ts-stage-inner {
@@ -2403,10 +2192,6 @@ const faq = computed(() => [
   color: var(--muted);
 }
 
-.ts-params > .ts-sub:first-child {
-  margin-top: 0;
-}
-
 .ts-inline-btn {
   margin-left: auto;
   font-size: var(--text-xs);
@@ -2418,37 +2203,6 @@ const faq = computed(() => [
 .ts-inline-btn:disabled {
   opacity: 0.5;
   cursor: default;
-}
-
-.ts-sheetinfo { margin: var(--space-1) 0 0; }
-
-.ts-set-toggle {
-  margin-top: var(--space-3);
-}
-
-.ts-bg-block {
-  margin-top: 0.625rem;
-}
-
-.ts-pickbtn {
-  padding: var(--space-1) 10px;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--foreground);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  transition: color var(--transition), background var(--transition), border-color var(--transition);
-}
-
-.ts-pickbtn.active {
-  color: var(--primary-foreground);
-  background: var(--primary-fill);
-  border-color: var(--primary);
-}
-
-.ts-canvas.picking {
-  cursor: crosshair;
 }
 
 .ts-pill {
@@ -2475,11 +2229,12 @@ const faq = computed(() => [
   color: var(--primary-foreground);
 }
 
+/* W / link / H: one height for the inputs and the button between them. */
 .ts-dims {
+  --ts-ctl-h: calc(var(--space-6) + var(--space-2));
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  margin-top: 0.625rem;
+  gap: var(--space-2);
 }
 
 .ts-field {
@@ -2494,6 +2249,8 @@ const faq = computed(() => [
 
 .ts-field input {
   width: 100%;
+  height: var(--ts-ctl-h);
+  padding-block: 0;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
@@ -2502,13 +2259,18 @@ const faq = computed(() => [
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: var(--ts-ctl-h);
+  height: var(--ts-ctl-h);
   flex-shrink: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--muted);
   transition: color var(--transition), border-color var(--transition), background var(--transition);
+}
+
+.ts-link .icon {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .ts-link.active {
@@ -2521,7 +2283,6 @@ const faq = computed(() => [
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: 0.625rem;
 }
 
 .ts-bg-swatch {
