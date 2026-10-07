@@ -11,6 +11,11 @@ const router = useRouter();
 const config = useRuntimeConfig()
 const auth = useAuthStore()
 const {t, locale} = useI18n()
+// The "more like this" row further down (item-list) fetches with this same key
+// and joins the request already in flight, instead of starting its own only
+// once the piece below has loaded.
+useArtListFetch({limit: 6, exact: true})
+
 // `lite`: without the pixel grids. Whatever is fetched here is embedded in the
 // HTML, and the grids (every pixel twice, 400KB on a 200x80 scene) are only
 // needed by the bead and coordinate views, which load them on demand below.

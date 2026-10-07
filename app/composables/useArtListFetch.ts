@@ -91,6 +91,16 @@ export function useArtListFetch(opts: {
     const fetch = useAuthFetch<ResponseSharedPage>(`/coloring/shared-pages/`, {
         query: params,
         key: `item-list:${encodeURIComponent(route.fullPath)}:${ordering || 'default'}:${limit}`,
+        // A page may start this list early and render item-list after (home,
+        // art page). By default Nuxt's second call aborts the first request and
+        // sends its own, and on the server it never reuses one that has
+        // landed: every such page fetched its list twice. On the server, join
+        // the one in flight or take what it brought. The browser keeps the
+        // defaults, where a filter change must win over a request in flight.
+        ...(import.meta.server ? {
+            dedupe: 'defer' as const,
+            getCachedData: (key: string, nuxtApp: any) => nuxtApp.payload.data[key],
+        } : {}),
     })
 
     return {fetch, isNewView, sizeSlugMatch, currentSize, isoActive, openLicense, animOnly, sort, search, effectiveLimit}
