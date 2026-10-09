@@ -470,7 +470,8 @@
     "selectionToBoard": "선택 영역을 새 보드로",
     "selectionToBoardTip": "선택 영역을 같은 크기의 새 보드로 복사합니다(레이어 유지)",
     "selectionIsEmpty": "선택 영역에 복사할 내용이 없습니다",
-    "selectionNowBoard": "선택 영역으로 {w}×{h} 새 보드를 만들었습니다"
+    "selectionNowBoard": "선택 영역으로 {w}×{h} 새 보드를 만들었습니다",
+    "drawBeforePublishing": "게시하기 전에 무언가를 그려 주세요"
   },
   "c_Palette": {
     "colorNHex": "색 {n}: {hex}",

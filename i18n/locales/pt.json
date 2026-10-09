@@ -470,7 +470,8 @@
     "selectionToBoard": "Seleção para nova prancha",
     "selectionToBoardTip": "Copia a seleção para uma nova prancha do mesmo tamanho, mantendo as camadas",
     "selectionIsEmpty": "Não há nada na seleção para copiar",
-    "selectionNowBoard": "Nova prancha {w}×{h} a partir da seleção"
+    "selectionNowBoard": "Nova prancha {w}×{h} a partir da seleção",
+    "drawBeforePublishing": "Desenhe algo antes de publicar"
   },
   "c_Palette": {
     "colorNHex": "Cor {n}: {hex}",

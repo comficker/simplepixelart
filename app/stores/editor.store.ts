@@ -470,6 +470,14 @@ export const useEditor = defineStore('editor', () => {
         forEachLayerOf(editorData.value, fn)
     }
 
+    // Nothing drawn on any layer of any frame. The server refuses to
+    // publish such a piece (ART_EMPTY): it renders to nothing.
+    function isBlank(): boolean {
+        let drawn = false
+        forEachLayer(layer => { if (!drawn && Object.keys(layer.pixels || {}).length) drawn = true })
+        return !drawn
+    }
+
     /* The boards a housekeeping op should act on. With nothing selected the
        canvas as a whole is the subject, so these run over every board
        instead of only the one being edited. */
@@ -2597,6 +2605,7 @@ export const useEditor = defineStore('editor', () => {
         trimHiddenPixels,
         mergeSelectedBlock,
         selectionToBoard,
+        isBlank,
         clipboard,
         copyActiveScope,
         pasteClipboard,

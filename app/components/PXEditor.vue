@@ -308,6 +308,10 @@ async function boostArt() {
 }
 
 async function saveArt() {
+  if (publishStatus.value === 'public' && store.isBlank()) {
+    toast.error(t('c_PXEditor.drawBeforePublishing'))
+    return
+  }
   editorData.value.is_public = publishStatus.value === 'public'
   if (editorData.value.is_public) {
     const meta: any = {...(editorData.value.meta || {})}

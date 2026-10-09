@@ -470,7 +470,8 @@
     "selectionToBoard": "選択範囲を新しいボードに",
     "selectionToBoardTip": "選択範囲を同じサイズの新しいボードにコピーします（レイヤーはそのまま）",
     "selectionIsEmpty": "選択範囲にコピーするものがありません",
-    "selectionNowBoard": "選択範囲から{w}×{h}の新しいボードを作成しました"
+    "selectionNowBoard": "選択範囲から{w}×{h}の新しいボードを作成しました",
+    "drawBeforePublishing": "公開する前に何か描いてください"
   },
   "c_Palette": {
     "colorNHex": "色 {n}: {hex}",

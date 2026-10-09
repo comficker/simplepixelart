@@ -470,7 +470,8 @@
     "selectionToBoard": "将选区转为新画板",
     "selectionToBoardTip": "把选区复制到同尺寸的新画板，保留图层",
     "selectionIsEmpty": "选区内没有可复制的内容",
-    "selectionNowBoard": "已用选区创建 {w}×{h} 的新画板"
+    "selectionNowBoard": "已用选区创建 {w}×{h} 的新画板",
+    "drawBeforePublishing": "请先画点什么再发布"
   },
   "c_Palette": {
     "colorNHex": "颜色 {n}：{hex}",

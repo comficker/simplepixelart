@@ -470,7 +470,8 @@
     "selectionToBoard": "Selección a tablero nuevo",
     "selectionToBoardTip": "Copia la selección en un tablero nuevo de su mismo tamaño, con sus capas",
     "selectionIsEmpty": "No hay nada en la selección para copiar",
-    "selectionNowBoard": "Nuevo tablero de {w}×{h} a partir de la selección"
+    "selectionNowBoard": "Nuevo tablero de {w}×{h} a partir de la selección",
+    "drawBeforePublishing": "Dibuja algo antes de publicar"
   },
   "c_Palette": {
     "colorNHex": "Color {n}: {hex}",

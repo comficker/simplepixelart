@@ -484,7 +484,8 @@
     "selectionToBoard": "Selection to new board",
     "selectionToBoardTip": "Copy the selection into a new board of its own size, layers kept",
     "selectionIsEmpty": "Nothing in the selection to copy",
-    "selectionNowBoard": "New {w}×{h} board from the selection"
+    "selectionNowBoard": "New {w}×{h} board from the selection",
+    "drawBeforePublishing": "Draw something before publishing"
   },
   "c_Paginator": {},
   "c_Palette": {
