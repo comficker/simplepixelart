@@ -51,12 +51,13 @@ useHead({
       '@type': 'BreadcrumbList',
       itemListElement: [
         {'@type': 'ListItem', position: 1, name: t('common.home'), item: `${siteUrl}${localePath('/')}`},
-        // A crumb with no page of its own (/tilesets, /palettes/tag) gets no
-        // URL; the last one is this page, under its locale prefix.
-        ...crumbs.value.map((c, i, all) => {
-          const item = i === all.length - 1 ? `${siteUrl}${route.path}` : c.linked ? `${siteUrl}${localePath(c.to)}` : undefined
-          return {'@type': 'ListItem', position: i + 2, name: c.label, ...(item ? {item} : {})}
-        }),
+        // Google wants an `item` URL on every crumb, so one with no page of
+        // its own (/tilesets, /palettes/tag) is left out of the trail; the
+        // last one is this page, under its locale prefix.
+        ...crumbs.value
+            .map((c, i, all) => ({name: c.label, item: i === all.length - 1 ? `${siteUrl}${route.path}` : c.linked ? `${siteUrl}${localePath(c.to)}` : ''}))
+            .filter(c => c.item)
+            .map((c, i) => ({'@type': 'ListItem', position: i + 2, ...c})),
       ],
     })),
   }],
