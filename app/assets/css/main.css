@@ -2744,8 +2744,10 @@ canvas.iso-line { cursor: crosshair; }
     transition: background 140ms ease;
 }
 
+/* The tinted cell already marks the choice; a blue dot on it was too faint
+   at size 1 and read as an empty slot. */
 .brush-size.active .brush-size-dot {
-    background: var(--primary-fill);
+    background: var(--foreground);
 }
 
 .move-all-label {

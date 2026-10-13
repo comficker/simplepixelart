@@ -3872,7 +3872,7 @@ watch(
             >
               <span
                   class="brush-size-dot"
-                  :style="{ width: `${Math.min(14, 2 + n * 2)}px`, height: `${Math.min(14, 2 + n * 2)}px` }"
+                  :style="{ width: `${4 + n * 2}px`, height: `${4 + n * 2}px` }"
               />
             </button>
           </div>
