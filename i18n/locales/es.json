@@ -240,7 +240,9 @@
     "someone": "Alguien",
     "startedFollowing": "{who} empezó a seguirte",
     "yourArt": "tu obra",
-    "founding": "Ya eres creador fundador: tu insignia está activa y tienes {n} créditos en tu cartera."
+    "founding": "Ya eres creador fundador: tu insignia está activa y tienes {n} créditos en tu cartera.",
+    "tipped": "{who} te envió {n} créditos",
+    "tippedFor": "{who} te envió {n} créditos por {name}"
   },
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "Hoja de sprites a 1× + JSON en formato Aseprite (duraciones, etiquetas) para Phaser / Unity / Godot",
@@ -1158,7 +1160,7 @@
     "creatorStats": "Estadísticas del creador",
     "follow": "Seguir",
     "following": "Siguiendo",
-    "joined": "se unió",
+    "joined": "Se unió",
     "stat_artworks": "Obras",
     "stat_followers": "Seguidores",
     "stat_likes": "Me gusta",
@@ -2471,5 +2473,25 @@
     "faq4a": "Sí, cuando quieras. Despublica o elimina una obra desde Tus obras.",
     "perkProTitle": "Funciones nuevas antes que nadie, Pro gratis en el móvil",
     "perkProBody": "Prueba las herramientas nuevas antes que nadie y consigue Pro gratis en la app móvil cuando se lance."
+  },
+  "c_TipButton": {
+    "tip": "Propina",
+    "tipTitle": "Propina para {who}",
+    "sub": "Envía parte de tus créditos como agradecimiento. Van directo al artista.",
+    "amount": "Cantidad",
+    "youHave": "Tienes {n} créditos",
+    "send": "Enviar {n} créditos",
+    "sent": "Enviaste {n} créditos a {who}",
+    "notEnough": "No tienes suficientes créditos",
+    "dailyLimit": "Puedes dar hasta 100 créditos al día",
+    "couldNotSend": "No se pudo enviar la propina"
+  },
+  "c_CreatorBadges": {
+    "pro": "Pro",
+    "proHint": "Apoya SimplePixelArt con Pro",
+    "verified": "Verificado",
+    "verifiedHint": "Verificado por el equipo de SimplePixelArt",
+    "artist": "Artista",
+    "artistHint": "Miembro del Creator Program"
   }
 }

@@ -240,7 +240,9 @@
     "someone": "有人",
     "startedFollowing": "{who} 开始关注你",
     "yourArt": "你的作品",
-    "founding": "你已成为创始创作者：徽章已点亮，{n} 积分已存入你的钱包。"
+    "founding": "你已成为创始创作者：徽章已点亮，{n} 积分已存入你的钱包。",
+    "tipped": "{who} 送了你 {n} 积分",
+    "tippedFor": "{who} 为 {name} 送了你 {n} 积分"
   },
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "1× 精灵表 + Aseprite 格式 JSON（时长、标签），供 Phaser / Unity / Godot 使用",
@@ -2471,5 +2473,25 @@
     "faq4a": "可以，随时都行。在“我的作品”中取消发布或删除即可。",
     "perkProTitle": "抢先体验新功能，移动版 Pro 免费",
     "perkProBody": "比任何人都早试用新工具，移动应用上线时免费获得 Pro。"
+  },
+  "c_TipButton": {
+    "tip": "打赏",
+    "tipTitle": "打赏 {who}",
+    "sub": "送出一些积分表示感谢，积分会直接给到作者。",
+    "amount": "数量",
+    "youHave": "你有 {n} 积分",
+    "send": "送出 {n} 积分",
+    "sent": "已向 {who} 送出 {n} 积分",
+    "notEnough": "积分不足",
+    "dailyLimit": "每天最多可送出 100 积分",
+    "couldNotSend": "打赏失败"
+  },
+  "c_CreatorBadges": {
+    "pro": "Pro",
+    "proHint": "通过 Pro 支持 SimplePixelArt",
+    "verified": "已认证",
+    "verifiedHint": "已由 SimplePixelArt 团队认证",
+    "artist": "艺术家",
+    "artistHint": "Creator Program 成员"
   }
 }

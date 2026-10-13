@@ -254,7 +254,9 @@
     "someone": "Someone",
     "startedFollowing": "{who} started following you",
     "yourArt": "your art",
-    "founding": "You're a Founding Creator: your badge is on, and {n} credits are in your wallet."
+    "founding": "You're a Founding Creator: your badge is on, and {n} credits are in your wallet.",
+    "tipped": "{who} sent you {n} credits",
+    "tippedFor": "{who} sent you {n} credits for {name}"
   },
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "1× spritesheet + Aseprite-format JSON (durations, tags) for Phaser / Unity / Godot",
@@ -1188,7 +1190,7 @@
     "creatorStats": "Creator stats",
     "follow": "Follow",
     "following": "Following",
-    "joined": "joined",
+    "joined": "Joined",
     "stat_artworks": "Artworks",
     "stat_followers": "Followers",
     "stat_likes": "Likes",
@@ -2490,5 +2492,25 @@
     "faq4a": "Yes, any time. Unpublish or delete a piece from Your work.",
     "perkProTitle": "New features first, Pro on mobile free",
     "perkProBody": "Try new tools before anyone else, and get Pro on the mobile app free when it launches."
+  },
+  "c_TipButton": {
+    "tip": "Tip",
+    "tipTitle": "Tip {who}",
+    "sub": "Send some of your credits as a thank-you. They go straight to the artist.",
+    "amount": "Amount",
+    "youHave": "You have {n} credits",
+    "send": "Send {n} credits",
+    "sent": "Sent {n} credits to {who}",
+    "notEnough": "Not enough credits",
+    "dailyLimit": "You can give up to 100 credits a day",
+    "couldNotSend": "Could not send the tip"
+  },
+  "c_CreatorBadges": {
+    "pro": "Pro",
+    "proHint": "Supports SimplePixelArt with Pro",
+    "verified": "Verified",
+    "verifiedHint": "Verified by the SimplePixelArt team",
+    "artist": "Artist",
+    "artistHint": "Member of the Creator Program"
   }
 }

@@ -45,7 +45,7 @@ async function onOpen() {
 
 const KIND_ICON: Record<string, string> = {
   follow: 'icon-user', comment: 'icon-chat', like: 'icon-heart', remix: 'icon-pen',
-  new_art: 'icon-image', challenge: 'icon-flag', founding: 'icon-trophy',
+  new_art: 'icon-image', challenge: 'icon-flag', founding: 'icon-trophy', tip: 'icon-gift',
 }
 
 function textOf(n: Notif): string {
@@ -58,6 +58,9 @@ function textOf(n: Notif): string {
   if (n.kind === 'challenge') return t('c_NotifyBell.challengePlaced', {place: n.meta?.place, name: n.meta?.challenge_name})
   if (n.kind === 'remix') return t('c_NotifyBell.remixed', {who, name: n.meta?.original_name || yourArt})
   if (n.kind === 'founding') return t('c_NotifyBell.founding', {n: n.meta?.credits ?? 0})
+  if (n.kind === 'tip') return n.meta?.target_name
+      ? t('c_NotifyBell.tippedFor', {who, n: n.meta?.amount ?? 0, name: n.meta.target_name})
+      : t('c_NotifyBell.tipped', {who, n: n.meta?.amount ?? 0})
   return `${who} · ${n.kind}`
 }
 
@@ -66,6 +69,7 @@ function linkOf(n: Notif): string {
   // Their own page, where the new badge shows.
   if (n.kind === 'founding' && auth.logged?.username) return `/creator/${auth.logged.username}`
   if (n.meta?.target_type === 'sharedpage' && n.meta?.target_id) return `/art/${n.meta.target_id}`
+  if (n.kind === 'tip' && n.actor?.username) return `/creator/${n.actor.username}`
   return '/work'
 }
 

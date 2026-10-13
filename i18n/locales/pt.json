@@ -240,7 +240,9 @@
     "someone": "Alguém",
     "startedFollowing": "{who} começou a seguir você",
     "yourArt": "sua arte",
-    "founding": "Você agora é criador fundador: seu selo está ativo e {n} créditos estão na sua carteira."
+    "founding": "Você agora é criador fundador: seu selo está ativo e {n} créditos estão na sua carteira.",
+    "tipped": "{who} enviou {n} créditos para você",
+    "tippedFor": "{who} enviou {n} créditos por {name}"
   },
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "Spritesheet em 1× + JSON no formato Aseprite (durações, tags) para Phaser / Unity / Godot",
@@ -1158,7 +1160,7 @@
     "creatorStats": "Estatísticas do criador",
     "follow": "Seguir",
     "following": "Seguindo",
-    "joined": "entrou em",
+    "joined": "Entrou em",
     "stat_artworks": "Obras",
     "stat_followers": "Seguidores",
     "stat_likes": "Curtidas",
@@ -2471,5 +2473,25 @@
     "faq4a": "Sim, a qualquer momento. Despublique ou exclua uma obra em Seus trabalhos.",
     "perkProTitle": "Recursos novos antes de todos, Pro grátis no celular",
     "perkProBody": "Teste ferramentas novas antes de todo mundo e ganhe o Pro grátis no app móvel quando ele for lançado."
+  },
+  "c_TipButton": {
+    "tip": "Gorjeta",
+    "tipTitle": "Gorjeta para {who}",
+    "sub": "Envie alguns dos seus créditos como agradecimento. Eles vão direto para o artista.",
+    "amount": "Quantia",
+    "youHave": "Você tem {n} créditos",
+    "send": "Enviar {n} créditos",
+    "sent": "Você enviou {n} créditos para {who}",
+    "notEnough": "Créditos insuficientes",
+    "dailyLimit": "Você pode dar até 100 créditos por dia",
+    "couldNotSend": "Não foi possível enviar a gorjeta"
+  },
+  "c_CreatorBadges": {
+    "pro": "Pro",
+    "proHint": "Apoia o SimplePixelArt com o Pro",
+    "verified": "Verificado",
+    "verifiedHint": "Verificado pela equipe do SimplePixelArt",
+    "artist": "Artista",
+    "artistHint": "Membro do Creator Program"
   }
 }

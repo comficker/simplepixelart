@@ -45,6 +45,8 @@ export interface Tax {
 
 export interface SharedPage {
     next: string
+    // Labels beside the creator's name: 'pro' | 'verified' | 'artist'.
+    creator_badges?: string[]
     id: number
     width: number
     height: number

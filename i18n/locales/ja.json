@@ -240,7 +240,9 @@
     "someone": "誰か",
     "startedFollowing": "{who} さんがあなたをフォローしました",
     "yourArt": "あなたの作品",
-    "founding": "ファウンディングクリエイターになりました。バッジが付き、{n} クレジットがウォレットに入りました。"
+    "founding": "ファウンディングクリエイターになりました。バッジが付き、{n} クレジットがウォレットに入りました。",
+    "tipped": "{who} から {n} クレジットが届きました",
+    "tippedFor": "{who} から「{name}」に {n} クレジットが届きました"
   },
   "c_PXEditor": {
     "1SpritesheetAsepriteFormatJsonDura": "1倍のスプライトシート + Asepriteフォーマットのjson（再生時間、タグ）。Phaser / Unity / Godot向け",
@@ -2471,5 +2473,25 @@
     "faq4a": "はい、いつでも。マイ作品から作品を非公開にするか削除できます。",
     "perkProTitle": "新機能をいち早く、モバイル版 Pro は無料",
     "perkProBody": "新しいツールを誰よりも先に試せて、モバイルアプリのリリース時には Pro が無料。"
+  },
+  "c_TipButton": {
+    "tip": "チップ",
+    "tipTitle": "{who} にチップを送る",
+    "sub": "お礼としてクレジットを送れます。アーティストに直接届きます。",
+    "amount": "金額",
+    "youHave": "所持クレジット: {n}",
+    "send": "{n} クレジットを送る",
+    "sent": "{who} に {n} クレジットを送りました",
+    "notEnough": "クレジットが足りません",
+    "dailyLimit": "1日に送れるのは100クレジットまでです",
+    "couldNotSend": "チップを送れませんでした"
+  },
+  "c_CreatorBadges": {
+    "pro": "Pro",
+    "proHint": "Pro で SimplePixelArt を応援しています",
+    "verified": "認証済み",
+    "verifiedHint": "SimplePixelArt チームが認証しました",
+    "artist": "アーティスト",
+    "artistHint": "Creator Program のメンバー"
   }
 }

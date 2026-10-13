@@ -52,6 +52,8 @@ interface CreatorProfile {
   remixes?: number
   following_count: number
   following: boolean
+  badges?: string[]
+  is_bot?: boolean
 }
 
 const profileFetch = useAuthFetch<CreatorProfile>(
@@ -216,9 +218,7 @@ useCustomSeoMeta({
           </div>
           <div class="cp-name">
             <h1 class="cp-handle">@{{ username }}</h1>
-            <NuxtLinkLocale v-if="profile?.founding" to="/creator-program" class="cp-founding">
-              <span class="icon icon-trophy"/><span>{{ $t('common.foundingCreator') }}</span>
-            </NuxtLinkLocale>
+            <CreatorBadges :badges="profile?.badges"/>
             <p v-if="profile?.bio" class="cp-bio">{{ profile.bio }}</p>
             <ul v-if="profileLinks.length" class="cp-links">
               <li v-for="l in profileLinks" :key="l.key">
@@ -244,6 +244,7 @@ useCustomSeoMeta({
             <NuxtLinkLocale v-else to="/upload" class="btn primary">
               <span class="icon icon-upload"/><span>{{ $t('p_upload.uploadPixelArt') }}</span>
             </NuxtLinkLocale>
+            <TipButton v-if="!isSelf && !profile.is_bot" :username="username"/>
             <SocialSharing :meta="shareMeta" position="right"/>
           </div>
         </div>
@@ -343,9 +344,12 @@ useCustomSeoMeta({
   background: linear-gradient(to bottom, transparent 30%, var(--surface));
 }
 
+/* Positioned so it paints over the cover: the cover is positioned too, and
+   would otherwise hide the handle where the two overlap. */
 .cp-id {
+  position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: var(--space-5);
   margin-top: calc(var(--space-6) * -2);
   padding: 0 var(--space-5);
@@ -375,32 +379,18 @@ useCustomSeoMeta({
   object-fit: cover;
 }
 
+/* Only the avatar overlaps the cover. The name starts just under it, so the
+   block can grow downwards (labels, bio, links) without climbing into the
+   art. */
 .cp-name {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   flex: 1;
   min-width: 0;
-  padding-bottom: var(--space-1);
+  margin-top: calc(var(--space-6) * 2 + var(--space-3));
 }
 
-.cp-founding {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  margin-top: var(--space-1);
-  padding: 2px var(--space-2);
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  color: var(--warning);
-  border: 1px solid color-mix(in oklab, var(--warning) 55%, transparent);
-  border-radius: var(--radius-pill);
-}
-
-.cp-founding .icon {
-  width: var(--icon-sm);
-  height: var(--icon-sm);
-}
 
 .cp-handle {
   margin: 0;
@@ -448,7 +438,7 @@ useCustomSeoMeta({
   display: flex;
   gap: var(--space-2);
   flex: none;
-  padding-bottom: var(--space-1);
+  margin-top: calc(var(--space-6) * 2 + var(--space-3));
 }
 
 /* Numbers first, labels under them: the figures are what is being shown. */
@@ -584,6 +574,9 @@ useCustomSeoMeta({
     padding: 0 var(--space-4);
   }
 
+  .cp-name,
+  .cp-actions { margin-top: 0; }
+
   .cp-avatar {
     width: calc(var(--space-6) * 3);
     height: calc(var(--space-6) * 3);
@@ -600,19 +593,24 @@ useCustomSeoMeta({
   .cp-stats > div:nth-child(4) { border-left: 0; }
   .cp-stats > div:nth-child(n + 4) { border-top: 1px solid var(--border); }
 
+  /* One row of equal squares: the lead at full width took a whole screen
+     before the rest of the page. */
   .cp-featured,
   .cp-featured.n-1,
   .cp-featured.n-2 {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     grid-template-rows: auto;
   }
 
-  .cp-feat { aspect-ratio: 1; }
-
-  .cp-featured:not(.n-1):not(.n-2) .cp-feat.is-lead {
-    grid-column: span 2;
-    grid-row: auto;
+  .cp-feat {
+    aspect-ratio: 1;
+    padding: var(--space-2);
   }
+
+  .cp-featured:not(.n-1):not(.n-2) .cp-feat.is-lead { grid-row: auto; }
+
+  /* Too small to caption without covering the piece. */
+  .cp-feat-name { display: none; }
 
 }
 </style>

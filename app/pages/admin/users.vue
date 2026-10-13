@@ -12,7 +12,7 @@ useCustomSeoMeta({
 
 interface Row {
   id: number; username: string; email: string; date_joined: string
-  is_staff: boolean; arts: number; invited: number; balance: number
+  is_staff: boolean; arts: number; invited: number; balance: number; verified: boolean
 }
 interface Page { count: number; page: number; page_size: number; results: Row[] }
 
@@ -52,6 +52,19 @@ function go(p: number) {
 const giving = ref<Row | null>(null)
 const giveAmount = ref(1)
 const sending = ref(false)
+
+async function toggleVerified(u: Row) {
+  try {
+    const res = await useNativeFetch<{ id: number; verified: boolean }>(
+        '/coloring/admin/users/verify/',
+        {method: 'POST', body: {user_id: u.id, verified: !u.verified}},
+    )
+    u.verified = res.verified
+    toast.success(res.verified ? `@${u.username} is verified` : `Removed Verified from @${u.username}`)
+  } catch {
+    toast.error('Could not change Verified')
+  }
+}
 
 function openGive(u: Row) {
   giving.value = u
@@ -126,9 +139,20 @@ watch(isStaff, (v) => { if (v) load() })
                 <td>{{ u.invited }}</td>
                 <td class="usr-balance">🪙{{ u.balance }}</td>
                 <td>
-                  <button class="btn usr-give" title="Give tokens" @click="openGive(u)">
-                    <span class="icon icon-gift"/><span>Give</span>
-                  </button>
+                  <div class="usr-acts">
+                    <button
+                        class="btn usr-give"
+                        :class="{primary: u.verified}"
+                        :aria-pressed="u.verified"
+                        :title="u.verified ? 'Remove the Verified label' : 'Give the Verified label'"
+                        @click="toggleVerified(u)"
+                    >
+                      <span class="icon icon-check-decagram"/><span>{{ u.verified ? 'Verified' : 'Verify' }}</span>
+                    </button>
+                    <button class="btn usr-give" title="Give tokens" @click="openGive(u)">
+                      <span class="icon icon-gift"/><span>Give</span>
+                    </button>
+                  </div>
                 </td>
               </tr>
               <tr v-if="!data.results.length">
@@ -282,6 +306,7 @@ watch(isStaff, (v) => { if (v) load() })
 }
 
 .usr-balance { font-weight: 700; white-space: nowrap; }
+.usr-acts { display: flex; gap: var(--space-1); justify-content: flex-end; }
 
 .usr-give {
   padding: var(--space-1) var(--space-2);

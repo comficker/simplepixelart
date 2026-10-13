@@ -459,6 +459,11 @@ const previewStyle = computed(() => {
           <span class="icon icon-heart"/>
           <span>{{ likes }}</span>
         </button>
+        <TipButton
+            v-if="data.user?.username && !isOwner && !data.user?.meta?.is_bot"
+            :username="data.user.username"
+            :page="data.id_string"
+        />
         <SocialSharing :meta="shareBtnMeta" position="right" class="art-tb-share"/>
         </div>
       </template>
@@ -670,7 +675,10 @@ const previewStyle = computed(() => {
       <dl class="art-meta-side">
         <div v-if="data.user" class="art-meta-row">
           <dt>{{ $t('p_art_id_string.creator') }}</dt>
-          <dd><NuxtLinkLocale :to="`/creator/${data.user.username}`" class="art-meta-link">@{{ data.user.username }}</NuxtLinkLocale></dd>
+          <dd class="art-meta-creator">
+            <NuxtLinkLocale :to="`/creator/${data.user.username}`" class="art-meta-link">@{{ data.user.username }}</NuxtLinkLocale>
+            <CreatorBadges :badges="data.creator_badges"/>
+          </dd>
         </div>
         <div v-if="isAi" class="art-meta-row">
           <dt>{{ $t('p_art_id_string.madeWith') }}</dt>
@@ -1024,4 +1032,13 @@ const previewStyle = computed(() => {
 
 .art-meta-tags .art-meta-link { color: var(--primary); font-weight: 600; }
 
+
+/* Labels wrap under a long handle rather than squeezing it. */
+.art-meta-creator {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-1);
+}
 </style>
