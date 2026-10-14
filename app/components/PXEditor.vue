@@ -3126,12 +3126,22 @@ async function exportGame() {
   }
 }
 
+// The URL names the board on screen, and nothing when that board has not been
+// saved yet: a stale ?id= made a reload open some other piece. Off while a
+// new canvas is being set up, which loads the last piece only to save it.
+let followIdInUrl = true
 watch(
     () => editorData.value.id,
     () => {
+      if (!followIdInUrl) return
       const idStr = editorData.value.id_string
       if (idStr && route.query.id !== idStr) {
         router.replace({query: {id: idStr}}).catch(() => {})
+      } else if (!idStr) {
+        // Even when the URL has no id yet: a replace towards the previous
+        // board may still be in flight, and a newer navigation cancels it.
+        const q = {...route.query}; delete q.id
+        router.replace({query: q}).catch(() => {})
       }
     },
 )
@@ -3186,23 +3196,27 @@ onMounted(async () => {
   if (route.query.tileset) {
     await loadTilesetBoards(String(route.query.tileset))
   } else if (isNewCanvas) {
+    // A new canvas is one more board beside the ones already open, not a
+    // replacement for the workspace: the other boards used to vanish from
+    // the canvas, saved but out of sight. An empty board already on screen
+    // is the new canvas, so pressing New twice does not stack blanks.
+    followIdInUrl = false
     await store.load(undefined)
-    const hasContent = editorData.value.layers?.some(l => Object.keys(l.pixels || {}).length > 0)
-    if (hasContent) {
+    if (!store.isBlank()) {
       try {
         await store.saveNow()
       } catch (e) {
-        console.warn('Failed to save current work before reset:', e)
+        console.warn('Failed to save current work before adding a board:', e)
       }
+      store.addBoard()
     }
-    store.resetEditorData()
-    localStorage.setItem('workspace_current', '')
     // new=true is a one-shot command, like palette and colors below — drop it
-    // once acted on. Left in the URL a reload runs it again, opening a fresh
-    // canvas over whatever the session has built since: boards the agent
-    // opened, art pasted in, a board drawn on the canvas.
-    const q = {...route.query}; delete q.new
-    router.replace({query: q}).catch(() => {})
+    // once acted on. Left in the URL every reload would add another empty
+    // board. The URL follows the board again only after this lands, or its
+    // replace (still carrying new=true) would cancel this one.
+    const q = {...route.query}; delete q.new; delete q.id
+    await router.replace({query: q}).catch(() => {})
+    followIdInUrl = true
   } else {
     await store.load(route.query.id?.toString(), route.query.edit === '1')
   }

@@ -118,20 +118,18 @@ export const useAgentPanel = () => {
 
     // A board changes id the first time it is saved to the cloud, which would
     // otherwise strand the conversation under the old key — the chat appeared
-    // to vanish the moment a change was applied. Carry it across instead.
+    // to vanish the moment a change was applied. The store says exactly when
+    // that happens; guessing it from "the old id is gone" also fired on
+    // opening another piece or a new canvas, and handed one board's chat to
+    // another.
     if (import.meta.client) {
-        watch(boardKey, (next, prev) => {
-            if (!prev || !next || next === prev) return
-            // Only when the old id is gone: that is the same board being
-            // renumbered. If it still exists the user simply switched boards,
-            // and each board keeps its own conversation.
-            const renumbered = !store.boards?.some(b => String(b.id) === prev)
-            if (!renumbered) return
-            const carried = sessions.value[prev]
-            if (!carried?.length || sessions.value[next]?.length) return
-            const {[prev]: _dropped, ...rest} = sessions.value
-            sessions.value = {...rest, [next]: carried}
-            write({...rest, [next]: persistable(carried)})
+        watch(() => store.boardRenumbered, (r) => {
+            if (!r) return
+            const carried = sessions.value[r.from]
+            if (!carried?.length || sessions.value[r.to]?.length) return
+            const {[r.from]: _dropped, ...rest} = sessions.value
+            sessions.value = {...rest, [r.to]: carried}
+            write({...rest, [r.to]: persistable(carried)})
         })
     }
 

@@ -78,6 +78,12 @@ export const useEditor = defineStore('editor', () => {
     const boards = ref<Board[]>([])
     const activeBoardId = ref('')
     const boardsRev = ref(0)
+    // Set when a board's local id is replaced by its cloud id on first save:
+    // the same board under a new key. Anything keyed by board id (the agent's
+    // conversations) follows it from here, and only from here -- a board id
+    // disappearing for any other reason (opening another piece, a new canvas,
+    // leaving the editor) is a different board, not this one renamed.
+    const boardRenumbered = shallowRef<{ from: string; to: string } | null>(null)
 
     function stashActiveBoard() {
         const cur = boards.value.find(b => b.id === activeBoardId.value)
@@ -1143,8 +1149,13 @@ export const useEditor = defineStore('editor', () => {
     const savedTags = new Map<string, string>()
 
     async function performSave() {
+        // The board this save is for. The requests below take a while, and
+        // the user can open another board meanwhile; writing the answer to
+        // whatever is open by then gave that board this one's id and slug.
+        const target = editorData.value
+
         async function save2Cloud() {
-            const ed = toRaw(editorData.value)
+            const ed = toRaw(target)
             const anim = ed.meta?.animation
             const primaryLayers = anim?.frames?.length ? anim.frames[0]!.layers : ed.layers
             const tagsKey = JSON.stringify(ed.tags || [])
@@ -1165,23 +1176,24 @@ export const useEditor = defineStore('editor', () => {
                 meta: ed.meta ?? {},
             }
             async function createCloud() {
-                const oldLocalKey = editorData.value.id.toString()
+                const oldLocalKey = target.id.toString()
                 const result = await useNativeFetch<SharedPage>(`/coloring/shared-pages/`, {
                     method: 'POST',
                     query: {lite: 1},
                     body: {...payload, tags: ed.tags || [], id_string: ''}
                 })
                 savedTags.set(String(result.id), tagsKey)
-                editorData.value.id = result.id
-                editorData.value.id_string = result.id_string
-                editorData.value.status = result.status
-                history.value.forEach(item => {
+                target.id = result.id
+                target.id_string = result.id_string
+                target.status = result.status
+                target.updated = result.updated
+                const promoted = boards.value.find(b => b.id === oldLocalKey)
+                ;(editorData.value === target ? history.value : promoted?.history ?? []).forEach(item => {
                     item.id = result.id
                 })
-                editorData.value.updated = result.updated
-                const promoted = boards.value.find(b => b.id === oldLocalKey)
                 if (promoted) {
                     promoted.id = result.id.toString()
+                    boardRenumbered.value = {from: oldLocalKey, to: promoted.id}
                     if (activeBoardId.value === oldLocalKey) activeBoardId.value = promoted.id
                     boardsRev.value++
                     saveWorkspaceLayout()
@@ -1196,7 +1208,7 @@ export const useEditor = defineStore('editor', () => {
                 }
             }
 
-            const existsOnServer = typeof editorData.value.id === 'number' && !!editorData.value.id_string
+            const existsOnServer = typeof target.id === 'number' && !!target.id_string
             if (!existsOnServer) {
                 const frames = anim?.frames?.length ? anim.frames : [{layers: ed.layers}]
                 const hasPixels = frames.some(f =>
@@ -1206,16 +1218,16 @@ export const useEditor = defineStore('editor', () => {
                 return
             }
             try {
-                const id = String(editorData.value.id)
+                const id = String(target.id)
                 const result = await useNativeFetch<SharedPage>(`/coloring/shared-pages/${id}/`, {
                     method: 'PUT',
                     query: {lite: 1},
                     body: savedTags.get(id) === tagsKey ? payload : {...payload, tags: ed.tags || []},
                 })
                 savedTags.set(id, tagsKey)
-                editorData.value.updated = result.updated
-                editorData.value.id_string = result.id_string
-                editorData.value.status = result.status
+                target.updated = result.updated
+                target.id_string = result.id_string
+                target.status = result.status
             } catch (e: any) {
                 const code = e?.statusCode ?? e?.response?.status
                 if (code !== 404) throw e
@@ -1225,10 +1237,10 @@ export const useEditor = defineStore('editor', () => {
         }
 
         function save2Local(forcePrivate = true) {
-            if (forcePrivate) editorData.value.is_public = false
-            const snapshot = cloneDeep(toRaw(editorData.value))
+            if (forcePrivate) target.is_public = false
+            const snapshot = cloneDeep(toRaw(target))
             if (forcePrivate) snapshot.is_public = false
-            localWS.value[editorData.value.id.toString()] = snapshot
+            localWS.value[target.id.toString()] = snapshot
             try {
                 localStorage.setItem('workspaces', JSON.stringify(localWS.value))
             } catch (e) {
@@ -1254,11 +1266,11 @@ export const useEditor = defineStore('editor', () => {
             save2Local()
         }
         markHasWork()
-        try { localTs.syncEditedArt(toRaw(editorData.value)) } catch (e) {  }
-        const wsId = editorData.value.id.toString()
+        try { localTs.syncEditedArt(toRaw(target)) } catch (e) {  }
+        const wsId = target.id.toString()
         localStorage.setItem('workspace_current', wsId)
         saveWorkspaceLayout()
-        persistHistories(wsId)
+        if (editorData.value === target) persistHistories(wsId)
     }
 
     const HISTORY_BUDGET = 3 * 1024 * 1024
@@ -2605,6 +2617,7 @@ export const useEditor = defineStore('editor', () => {
         trimHiddenPixels,
         mergeSelectedBlock,
         selectionToBoard,
+        boardRenumbered,
         isBlank,
         clipboard,
         copyActiveScope,
