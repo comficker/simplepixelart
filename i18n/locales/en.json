@@ -2320,7 +2320,15 @@
     "pixelArtAlt": "Pixel art",
     "someDeletesFailed": "Some deletes failed",
     "seoTitle": "Your Work",
-    "seoDescription": "Manage your pixel art drafts, published works, and collections."
+    "seoDescription": "Manage your pixel art drafts, published works, and collections.",
+    "tile": "Tile",
+    "looseTiles": "Loose tiles",
+    "noLooseTiles": "No loose tiles. Every tile is in a tileset.",
+    "inTileset": "In tileset: {name}",
+    "inOtherTilesets": "In someone else's tileset | In {count} other people's tilesets",
+    "notInAnyTileset": "Not in any tileset",
+    "confirmDeleteInTilesets": "Confirm, and remove from 1 tileset | Confirm, and remove from {count} tilesets",
+    "selectedInTilesets": "1 selected piece is used in a tileset and will be removed from it. | {count} selected pieces are used in tilesets and will be removed from them."
   },
   "p_worlds_id_string": {
     "buildYourOwnWorld": "Build your own world",

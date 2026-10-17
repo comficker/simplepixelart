@@ -19,6 +19,9 @@ type WorkItem = (SharedPage | EditorData) & {
   updated?: string
   has_image?: boolean
   is_tile?: boolean
+  // Where the piece is used as a tile (your sets by name, others counted).
+  in_tilesets?: { id_string: string; name: string }[]
+  other_tilesets?: number
 }
 
 interface CollectionItem extends Collection {
@@ -121,6 +124,10 @@ async function bulkDelete() {
     confirmingBulk.value = true
     if (bulkConfirmTimer) clearTimeout(bulkConfirmTimer)
     bulkConfirmTimer = setTimeout(() => { confirmingBulk.value = false }, 3000)
+    if (tab.value === 'artworks') {
+      const used = filteredWorks.value.filter(w => selectedIds.value.has(w.id) && usesOf(w)).length
+      if (used) toast.warning(t('p_work.selectedInTilesets', used, {count: used}))
+    }
     return
   }
   if (bulkConfirmTimer) clearTimeout(bulkConfirmTimer)
@@ -207,7 +214,11 @@ function sortItems<T extends { name?: string; title?: string; updated?: string }
 const workspaces = ref<WorkItem[]>([])
 const loadingWorks = ref(false)
 const workFilter = ref<'all' | 'public' | 'private'>('all')
-const workTileFilter = ref<'all' | 'art' | 'tiles'>('all')
+// Art first: a slicer run puts hundreds of fresh tiles on top of the list.
+// 'loose' = tiles no tileset uses any more, to clear out.
+type TileFilter = 'all' | 'art' | 'tiles' | 'loose'
+const TILE_FILTERS: TileFilter[] = ['art', 'tiles', 'loose', 'all']
+const workTileFilter = ref<TileFilter>('art')
 const confirmingWorkId = ref<string | number | null>(null)
 let workConfirmTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -232,7 +243,8 @@ async function fetchWorks() {
           ordering: SORT_META[sortBy.value].ordering,
           ...(status ? {status} : {}),
           ...(workTileFilter.value === 'tiles' ? {is_tile: true}
-              : workTileFilter.value === 'art' ? {is_tile: false} : {}),
+              : workTileFilter.value === 'loose' ? {is_tile: true, loose: 1}
+                  : workTileFilter.value === 'art' ? {is_tile: false} : {}),
         },
       })
       workspaces.value = res.results as WorkItem[]
@@ -240,9 +252,17 @@ async function fetchWorks() {
       workCount.value = res.count || 0
     } else {
       localTs.reload()
-      const tiles = localTs.list.value.flatMap(ts =>
-          ts.tiles.map(t => ({...t.ed, is_tile: true} as WorkItem)))
-      const tileIds = new Set(tiles.map(t => String(t.id)))
+      const byId = new Map<string, WorkItem>()
+      for (const ts of localTs.list.value) {
+        for (const tile of ts.tiles) {
+          const key = String(tile.ed.id)
+          const item = byId.get(key) || {...tile.ed, is_tile: true, in_tilesets: [], other_tilesets: 0} as WorkItem
+          item.in_tilesets!.push({id_string: String(ts.id), name: ts.name})
+          byId.set(key, item)
+        }
+      }
+      const tiles = [...byId.values()]
+      const tileIds = new Set(byId.keys())
       const boards = (Object.values(getStorageItem('workspaces')) as WorkItem[])
           .filter(b => !tileIds.has(String(b.id)))
           .map(b => ({...b, is_tile: false}))
@@ -363,6 +383,16 @@ function isPublic(w: WorkItem): boolean {
   return w.status === 'public'
 }
 
+function tileFilterLabel(f: TileFilter): string {
+  return f === 'all' ? t('p_work.allTypes') : f === 'art' ? t('p_work.art')
+      : f === 'tiles' ? t('common.tiles') : t('p_work.looseTiles')
+}
+
+// How many tilesets lose this piece if it is deleted.
+function usesOf(w: WorkItem): number {
+  return (w.in_tilesets?.length || 0) + (w.other_tilesets || 0)
+}
+
 function statusClass(w: {status?: string}): string {
   if (w.status === 'public') return 'badge-public'
   if (w.status === 'pending') return 'badge-pending'
@@ -373,6 +403,7 @@ const localFilteredWorks = computed(() => {
   let list = workspaces.value
   if (workTileFilter.value === 'art') list = list.filter(w => !w.is_tile)
   else if (workTileFilter.value === 'tiles') list = list.filter(w => w.is_tile)
+  else if (workTileFilter.value === 'loose') list = list.filter(w => w.is_tile && !usesOf(w))
   if (workFilter.value !== 'all') {
     const wantPublic = workFilter.value === 'public'
     list = list.filter(w => isPublic(w) === wantPublic)
@@ -713,16 +744,16 @@ onMounted(() => {
           v-if="tab === 'artworks'"
           :label="$t('common.type')"
           icon="icon-grid"
-          :value="workTileFilter === 'all' ? $t('common.all') : workTileFilter === 'art' ? $t('common.art') : $t('common.tiles')"
-          :active="workTileFilter !== 'all'"
+          :value="tileFilterLabel(workTileFilter)"
+          :active="workTileFilter !== 'art'"
       >
         <BrowseOpt
-            v-for="t in (['all', 'art', 'tiles'] as const)"
+            v-for="t in TILE_FILTERS"
             :key="t"
             :active="workTileFilter === t"
             @click="workTileFilter = t"
         >
-          {{ t === 'all' ? $t('p_work.allTypes') : t === 'art' ? $t('p_work.art') : $t('common.tiles') }}
+          {{ tileFilterLabel(t) }}
         </BrowseOpt>
       </BrowseFilter>
 
@@ -738,7 +769,7 @@ onMounted(() => {
         <div v-for="i in 10" :key="i" class="skeleton skeleton-square"/>
       </div>
 
-      <div v-else-if="!workspaces.length && workFilter === 'all' && workTileFilter === 'all'" class="empty-state">
+      <div v-else-if="!workspaces.length && workFilter === 'all' && (workTileFilter === 'art' || workTileFilter === 'all')" class="empty-state">
         <span class="empty-state-icon icon icon-pen" aria-hidden="true"/>
         <h2 class="empty-state-title">{{ $t('p_work.noArtworksYet') }}</h2>
         <p class="empty-state-body">{{ $t('p_work.createSomethingItTakesSeconds') }}</p>
@@ -793,6 +824,9 @@ onMounted(() => {
           <span class="work-status badge-ic" :class="statusClass(item)" :title="statusTitle(item.status)">
             <span class="icon" :class="statusIcon(item.status)"/>
           </span>
+          <span v-if="item.is_tile" class="work-status work-kind badge-ic badge-draft" :title="$t('p_work.tile')">
+            <span class="icon icon-apps"/>
+          </span>
           <ui-dropdown-menu class="work-more-tl">
             <button class="work-more-btn" :title="$t('p_work.more')" :aria-label="$t('p_work.artworkActions')">
               <span class="icon icon-dots"/>
@@ -809,10 +843,29 @@ onMounted(() => {
                   <NuxtLinkLocale v-if="item.id_string" class="file-menu-item" :to="`/art/${item.id_string}`">
                     <span class="icon icon-link"/><span>{{ $t('p_work.openPage') }}</span>
                   </NuxtLinkLocale>
+                  <template v-if="item.in_tilesets && (item.is_tile || usesOf(item))">
+                    <div class="file-menu-sep"/>
+                    <NuxtLinkLocale
+                        v-for="ts in item.in_tilesets"
+                        :key="ts.id_string"
+                        class="file-menu-item"
+                        :to="`/tilesets/editor?id=${ts.id_string}`"
+                    >
+                      <span class="icon icon-apps"/><span>{{ $t('p_work.inTileset', {name: ts.name || $t('common.untitled')}) }}</span>
+                    </NuxtLinkLocale>
+                    <button v-if="item.other_tilesets" class="file-menu-item" disabled>
+                      <span class="icon icon-user"/><span>{{ $t('p_work.inOtherTilesets', item.other_tilesets, {count: item.other_tilesets}) }}</span>
+                    </button>
+                    <button v-if="!usesOf(item)" class="file-menu-item" disabled>
+                      <span class="icon icon-apps"/><span>{{ $t('p_work.notInAnyTileset') }}</span>
+                    </button>
+                  </template>
 
                   <button class="file-menu-item" data-keep-open @click="destroyWork(item)">
                     <span class="icon" :class="confirmingWorkId === item.id ? 'icon-check' : 'icon-trash'"/>
-                    <span>{{ confirmingWorkId === item.id ? $t('p_work.confirmDelete') : $t('p_work.delete') }}</span>
+                    <span>{{ confirmingWorkId !== item.id ? $t('p_work.delete')
+                        : usesOf(item) ? $t('p_work.confirmDeleteInTilesets', usesOf(item), {count: usesOf(item)})
+                            : $t('p_work.confirmDelete') }}</span>
                   </button>
                 </div>
             </template>
@@ -821,7 +874,7 @@ onMounted(() => {
       </TransitionGroup>
 
       <div v-else class="empty-state">
-        <p class="empty-state-body">{{ $t(`p_work.emptyArtworks_${workFilter}`) }}</p>
+        <p class="empty-state-body">{{ workTileFilter === 'loose' ? $t('p_work.noLooseTiles') : $t(`p_work.emptyArtworks_${workFilter}`) }}</p>
       </div>
     </template>
 
@@ -1448,6 +1501,11 @@ onMounted(() => {
 .work-status.badge-ic .icon {
   width: var(--icon-sm);
   height: var(--icon-sm);
+}
+
+.work-status.work-kind {
+  top: auto;
+  bottom: calc(var(--space-2) - var(--space-1) / 2);
 }
 
 .work-more-tl {

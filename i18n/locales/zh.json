@@ -2288,7 +2288,15 @@
     "pixelArtAlt": "像素画",
     "someDeletesFailed": "部分删除失败",
     "seoTitle": "你的作品",
-    "seoDescription": "管理你的像素画草稿、已发布作品和收藏集。"
+    "seoDescription": "管理你的像素画草稿、已发布作品和收藏集。",
+    "tile": "图块",
+    "looseTiles": "未使用的图块",
+    "noLooseTiles": "没有未使用的图块，所有图块都在图块集中。",
+    "inTileset": "所在图块集：{name}",
+    "inOtherTilesets": "被他人的 {count} 个图块集使用",
+    "notInAnyTileset": "不在任何图块集中",
+    "confirmDeleteInTilesets": "确认（也会从 {count} 个图块集中移除）",
+    "selectedInTilesets": "所选的 {count} 项正被图块集使用，也会从中移除。"
   },
   "p_worlds_id_string": {
     "buildYourOwnWorld": "创建你自己的世界",

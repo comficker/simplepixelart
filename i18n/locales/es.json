@@ -2288,7 +2288,15 @@
     "pixelArtAlt": "Pixel art",
     "someDeletesFailed": "Algunas eliminaciones fallaron",
     "seoTitle": "Tu trabajo",
-    "seoDescription": "Gestiona tus borradores de pixel art, obras publicadas y colecciones."
+    "seoDescription": "Gestiona tus borradores de pixel art, obras publicadas y colecciones.",
+    "tile": "Tile",
+    "looseTiles": "Tiles sueltos",
+    "noLooseTiles": "No hay tiles sueltos. Todos están en un tileset.",
+    "inTileset": "En el tileset: {name}",
+    "inOtherTilesets": "En el tileset de otra persona | En {count} tilesets de otras personas",
+    "notInAnyTileset": "No está en ningún tileset",
+    "confirmDeleteInTilesets": "Confirmar y quitar de 1 tileset | Confirmar y quitar de {count} tilesets",
+    "selectedInTilesets": "1 pieza seleccionada está en un tileset y se quitará de él. | {count} piezas seleccionadas están en tilesets y se quitarán de ellos."
   },
   "p_worlds_id_string": {
     "buildYourOwnWorld": "Crea tu propio mundo",

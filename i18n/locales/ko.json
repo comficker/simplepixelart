@@ -2288,7 +2288,15 @@
     "pixelArtAlt": "픽셀 아트",
     "someDeletesFailed": "일부 항목을 삭제하지 못했습니다",
     "seoTitle": "내 작업",
-    "seoDescription": "픽셀 아트 초안, 게시한 작품, 컬렉션을 관리하세요."
+    "seoDescription": "픽셀 아트 초안, 게시한 작품, 컬렉션을 관리하세요.",
+    "tile": "타일",
+    "looseTiles": "사용되지 않는 타일",
+    "noLooseTiles": "사용되지 않는 타일이 없습니다. 모든 타일이 타일셋에 있습니다.",
+    "inTileset": "타일셋: {name}",
+    "inOtherTilesets": "다른 사람의 타일셋 {count}개에서 사용 중",
+    "notInAnyTileset": "어느 타일셋에도 없음",
+    "confirmDeleteInTilesets": "확인 (타일셋 {count}개에서도 빠집니다)",
+    "selectedInTilesets": "선택한 항목 {count}개가 타일셋에서 사용 중이며 거기서도 빠집니다."
   },
   "p_worlds_id_string": {
     "buildYourOwnWorld": "나만의 월드 만들기",

@@ -2288,7 +2288,15 @@
     "pixelArtAlt": "ピクセルアート",
     "someDeletesFailed": "一部の削除に失敗しました",
     "seoTitle": "あなたの作品",
-    "seoDescription": "ピクセルアートの下書き、公開作品、コレクションを管理します。"
+    "seoDescription": "ピクセルアートの下書き、公開作品、コレクションを管理します。",
+    "tile": "タイル",
+    "looseTiles": "未使用のタイル",
+    "noLooseTiles": "未使用のタイルはありません。すべてタイルセットに入っています。",
+    "inTileset": "タイルセット: {name}",
+    "inOtherTilesets": "他の人の{count}個のタイルセットで使用中",
+    "notInAnyTileset": "どのタイルセットにも入っていません",
+    "confirmDeleteInTilesets": "確認（{count}個のタイルセットからも外れます）",
+    "selectedInTilesets": "選択した{count}件はタイルセットで使われており、そこからも外れます。"
   },
   "p_worlds_id_string": {
     "buildYourOwnWorld": "自分のワールドを作る",
