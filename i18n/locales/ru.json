@@ -592,7 +592,9 @@
     "tilesetEmpty": "В этом тайлсете пока нет тайлов.",
     "couldNotLoadTileset": "Не удалось загрузить тайлсет.",
     "nTiles": "{count} тайл | {count} тайла | {count} тайлов",
-    "byX": "от {x}"
+    "byX": "от {x}",
+    "choose": "Выбрать",
+    "pickABrush": "Рисуйте работой или тайлсетом. Выберите выше."
   },
   "c_StripImport": {
     "chooseAnImage": "Выберите изображение…",

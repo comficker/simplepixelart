@@ -592,7 +592,9 @@
     "tilesetEmpty": "이 타일셋에는 아직 타일이 없어요.",
     "couldNotLoadTileset": "타일셋을 불러오지 못했어요.",
     "nTiles": "타일 {count}개",
-    "byX": "{x}"
+    "byX": "{x}",
+    "choose": "선택",
+    "pickABrush": "작품이나 타일셋으로 그립니다. 위에서 고르세요."
   },
   "c_StripImport": {
     "chooseAnImage": "이미지 선택…",

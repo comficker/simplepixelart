@@ -592,7 +592,9 @@
     "tilesetEmpty": "这个图块集还没有图块。",
     "couldNotLoadTileset": "无法加载这个图块集。",
     "nTiles": "{count} 个图块",
-    "byX": "作者 {x}"
+    "byX": "作者 {x}",
+    "choose": "选择",
+    "pickABrush": "用一件作品或一个图块集来画。在上方选择。"
   },
   "c_StripImport": {
     "chooseAnImage": "选择图片…",

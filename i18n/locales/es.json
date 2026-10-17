@@ -592,7 +592,9 @@
     "tilesetEmpty": "Este tileset aún no tiene tiles.",
     "couldNotLoadTileset": "No se pudo cargar este tileset.",
     "nTiles": "{count} tile | {count} tiles",
-    "byX": "de {x}"
+    "byX": "de {x}",
+    "choose": "Elegir",
+    "pickABrush": "Pinta con una obra o un tileset. Elige uno arriba."
   },
   "c_StripImport": {
     "chooseAnImage": "Elige una imagen…",

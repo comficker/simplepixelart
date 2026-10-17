@@ -386,7 +386,25 @@ function addFrom(kind: 'art' | 'tileset') {
 
 <template>
   <Widget class="stp" :title="$t('c_StampPicker.artBrush')">
-    <template v-if="set" #ctl>
+    <template v-if="!set" #ctl>
+      <ui-dropdown-menu>
+        <button type="button" class="widget-ctl-btn" :title="$t('c_StampPicker.choose')" :aria-label="$t('c_StampPicker.choose')">
+          <span class="icon icon-apps"/>
+          <span class="icon icon-chevron-down"/>
+        </button>
+        <template #menu>
+          <div class="file-menu">
+            <button class="file-menu-item" @click="openArt">
+              <span class="icon icon-image"/><span>{{ $t('c_StampPicker.oneArtwork') }}</span>
+            </button>
+            <button class="file-menu-item" @click="openSets">
+              <span class="icon icon-grid"/><span>{{ $t('c_StampPicker.aTileset') }}</span>
+            </button>
+          </div>
+        </template>
+      </ui-dropdown-menu>
+    </template>
+    <template v-else #ctl>
       <span class="stp-ctl">
       <button type="button" class="widget-ctl-btn" :title="$t('c_StampPicker.browseTiles')" :aria-label="$t('c_StampPicker.browseTiles')" @click="openBrowse">
         <span class="icon icon-apps"/>
@@ -452,16 +470,7 @@ function addFrom(kind: 'art' | 'tileset') {
     </template>
 
     <div class="stp-body" :aria-busy="busy">
-      <div v-if="!set" class="file-menu stp-start">
-        <button class="file-menu-item" @click="openArt">
-          <span class="icon icon-image"/>
-          <span class="stp-opt"><span>{{ $t('c_StampPicker.oneArtwork') }}</span></span>
-        </button>
-        <button class="file-menu-item" @click="openSets">
-          <span class="icon icon-grid"/>
-          <span class="stp-opt"><span>{{ $t('c_StampPicker.aTileset') }}</span></span>
-        </button>
-      </div>
+      <p v-if="!set" class="stp-hint">{{ $t('c_StampPicker.pickABrush') }}</p>
 
       <div v-else class="stp-thumbs no-scrollbar">
         <button
@@ -616,7 +625,11 @@ function addFrom(kind: 'art' | 'tileset') {
   gap: var(--space-2);
 }
 
-.stp-start { padding: 0; }
+.stp-hint {
+  font-size: var(--text-2xs);
+  color: var(--muted);
+  padding: var(--space-1) 0;
+}
 
 /* The three controls stay together, beside the title. */
 .stp-ctl {
