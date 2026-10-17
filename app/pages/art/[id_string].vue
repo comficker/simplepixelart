@@ -616,7 +616,7 @@ const previewStyle = computed(() => {
     </template>
 
     <template #aside>
-    <Widget>
+    <Widget class="art-actions-w">
       <div class="art-actions">
         <NuxtLinkLocale
             :to="`/editor?id=${route.params.id_string}`"
@@ -820,8 +820,57 @@ const previewStyle = computed(() => {
 
 .art-head-actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
   gap: var(--space-2);
+  margin-left: auto;
+}
+
+/* A long title takes a line of its own rather than being squeezed into a
+   column beside the buttons. */
+:deep(.tool-main > .widget-head) {
+  flex-wrap: wrap;
+  row-gap: var(--space-2);
+}
+
+:deep(.tool-main > .widget-head > .title) {
+  flex: 1 1 calc(var(--space-6) * 8);
+  min-width: 0;
+}
+
+/* With the rail beside it, the title bar and the rail's first box (Edit)
+   are one band: both exactly the top bar's height, so their bottom edges
+   meet in one line. */
+@media (min-width: 1280px) {
+  :deep(.tool-main > .widget-head) {
+    flex-wrap: nowrap;
+    height: var(--bar-h);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  :deep(.tool-main > .widget-head > .title) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .art-head-actions {
+    flex-wrap: nowrap;
+  }
+
+  .art-actions-w :deep(.widget-body) {
+    display: flex;
+    align-items: center;
+    height: calc(var(--bar-h) - 1px);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .art-actions-w .art-actions {
+    flex: 1;
+  }
 }
 
 .art-like {
