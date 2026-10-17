@@ -3799,11 +3799,11 @@ watch(
       </div>
       <div class="toolbar-sep"/>
       <div class="toolbar-group">
-        <ui-tooltip :text="`${$t('common.zoomIn')} (${modK}=)`">
-          <button class="toolbar-btn" :aria-label="$t('common.zoomIn')" @click="zoomIn"><span class="icon icon-zoom-in"/></button>
-        </ui-tooltip>
         <ui-tooltip :text="`${$t('common.zoomOut')} (${modK}-)`">
           <button class="toolbar-btn" :aria-label="$t('common.zoomOut')" @click="zoomOut"><span class="icon icon-zoom-out"/></button>
+        </ui-tooltip>
+        <ui-tooltip :text="`${$t('common.zoomIn')} (${modK}=)`">
+          <button class="toolbar-btn" :aria-label="$t('common.zoomIn')" @click="zoomIn"><span class="icon icon-zoom-in"/></button>
         </ui-tooltip>
         <ui-tooltip :text="$t('c_PXEditor.fitAllBoardsInView')">
           <button class="toolbar-btn" @click="fitAllBoards"><span class="fit-label">{{ $t('common.fit') }}</span></button>

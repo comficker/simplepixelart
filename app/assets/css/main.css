@@ -2272,6 +2272,42 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     -webkit-overflow-scrolling: touch;
 }
 
+/* A strip that scrolls sideways shades the edge that has more past it, so
+   the tools cut off on a phone read as "scroll", not as missing. Pure CSS:
+   the surface-coloured covers ride with the content (local) and hide the
+   shades (fixed to the edges) whenever that end is already in view. The
+   shade is the text colour, so it shows on the light and the dark theme. */
+.toolbar-main,
+.tools-rail {
+    --scroll-shade: color-mix(in oklab, var(--foreground) 18%, transparent);
+}
+
+.toolbar-main {
+    background-image:
+        linear-gradient(to right, var(--surface), var(--surface)),
+        linear-gradient(to left, var(--surface), var(--surface)),
+        linear-gradient(to right, var(--scroll-shade), transparent),
+        linear-gradient(to left, var(--scroll-shade), transparent);
+    background-position: left center, right center, left center, right center;
+    background-size: var(--space-6) 100%, var(--space-6) 100%, var(--space-3) 100%, var(--space-3) 100%;
+    background-repeat: no-repeat;
+    background-attachment: local, local, scroll, scroll;
+}
+
+@media (max-width: 767px) {
+    .tools-rail {
+        background-image:
+            linear-gradient(to right, var(--surface), var(--surface)),
+            linear-gradient(to left, var(--surface), var(--surface)),
+            linear-gradient(to right, var(--scroll-shade), transparent),
+            linear-gradient(to left, var(--scroll-shade), transparent);
+        background-position: left center, right center, left center, right center;
+        background-size: var(--space-6) 100%, var(--space-6) 100%, var(--space-3) 100%, var(--space-3) 100%;
+        background-repeat: no-repeat;
+        background-attachment: local, local, scroll, scroll;
+    }
+}
+
 @media (min-width: 768px) {
     .toolbar-main {
         gap: var(--space-1);
@@ -2920,15 +2956,6 @@ canvas.iso-line { cursor: crosshair; }
         overflow-x: auto;
         font-size: var(--text-2xl);
 
-        background-image:
-            linear-gradient(to right, var(--surface), var(--surface)),
-            linear-gradient(to left, var(--surface), var(--surface)),
-            linear-gradient(to right, rgba(17, 24, 39, 0.14), transparent),
-            linear-gradient(to left, rgba(17, 24, 39, 0.14), transparent);
-        background-position: left center, right center, left center, right center;
-        background-size: 28px 100%, 28px 100%, 12px 100%, 12px 100%;
-        background-repeat: no-repeat;
-        background-attachment: local, local, scroll, scroll;
     }
     .tools-sep {
         width: 1px;
