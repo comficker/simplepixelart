@@ -6,10 +6,6 @@ import useStatefulCookie from '~/composables/useStatefulCookie'
 const sideState = useStatefulCookie('dash_side')
 const collapsed = computed(() => sideState.value === 'collapsed')
 
-function toggleCollapsed() {
-  sideState.value = collapsed.value ? 'open' : 'collapsed'
-}
-
 const isMac = ref(true)
 onMounted(() => {
   isMac.value = /Mac|iPhone|iPad/.test(navigator.platform)
@@ -58,22 +54,12 @@ const SECTIONS = [
 <template>
   <aside class="dash-side" :class="{'is-collapsed': collapsed}" :aria-label="$t('c_Sidebar.sidebar')">
     <div class="dash-brand-row">
-      <!-- Collapsed, the row is just the logo; the expand button sits over it
-           and shows on hover or focus. -->
+      <!-- Just the way home: the collapse toggle sits in the top bar, so a tap
+           on the logo can never land on it. -->
       <NuxtLinkLocale to="/" class="dash-brand" :title="$t('common.home')">
         <img src="/logo.svg" :alt="$t('common.simplePixelArt')" width="32" height="32" class="dash-brand-logo">
         <span v-if="!collapsed" class="dash-brand-name"><span>{{ $t('common.simple') }}</span>{{ $t('common.pixelart') }}</span>
       </NuxtLinkLocale>
-      <button
-          type="button"
-          class="widget-ctl-btn dash-collapse"
-          :title="collapsed ? $t('c_Sidebar.expandSidebar') : $t('c_Sidebar.collapseSidebar')"
-          :aria-label="collapsed ? $t('c_Sidebar.expandSidebar') : $t('c_Sidebar.collapseSidebar')"
-          :aria-expanded="!collapsed"
-          @click="toggleCollapsed"
-      >
-        <span class="icon" :class="collapsed ? 'icon-chevron-double-right' : 'icon-chevron-double-left'"/>
-      </button>
     </div>
 
     <nav class="dash-nav" :aria-label="$t('common.primary')">
@@ -181,15 +167,6 @@ const SECTIONS = [
   height: calc(var(--bar-h) - 1px);
   min-width: 0;
   color: var(--foreground);
-}
-
-.dash-collapse {
-  margin-left: auto;
-}
-
-.dash-collapse .icon {
-  width: var(--icon-md);
-  height: var(--icon-md);
 }
 
 .dash-brand-logo {
@@ -313,26 +290,6 @@ const SECTIONS = [
   position: relative;
   justify-content: center;
   padding: 0;
-}
-
-/* Over the logo, the same size, hidden until the row is hovered or the
-   button is focused. */
-.dash-side.is-collapsed .dash-collapse {
-  position: absolute;
-  inset: 0;
-  width: calc(var(--space-6) + var(--space-2));
-  height: calc(var(--space-6) + var(--space-2));
-  margin: auto;
-  justify-content: center;
-  background: var(--surface-2);
-  border-radius: var(--radius-sm);
-  opacity: 0;
-  transition: opacity var(--transition);
-}
-
-.dash-side.is-collapsed .dash-brand-row:hover .dash-collapse,
-.dash-side.is-collapsed .dash-collapse:focus-visible {
-  opacity: 1;
 }
 
 .dash-side.is-collapsed .dash-nav {

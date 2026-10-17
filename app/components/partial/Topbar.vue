@@ -1,5 +1,12 @@
 <script setup lang="ts">
+import useStatefulCookie from '~/composables/useStatefulCookie'
+
 const desktop = useIsDesktop()
+const sideState = useStatefulCookie('dash_side')
+const sideCollapsed = computed(() => sideState.value === 'collapsed')
+function toggleSide() {
+  sideState.value = sideCollapsed.value ? 'open' : 'collapsed'
+}
 const route = useRoute()
 const routePaths = new Set(useRouter().getRoutes().map(r => r.path))
 
@@ -66,6 +73,16 @@ useHead({
 
 <template>
   <div class="dash-top">
+    <button
+        type="button"
+        class="widget-ctl-btn dash-collapse"
+        :title="sideCollapsed ? $t('c_Sidebar.expandSidebar') : $t('c_Sidebar.collapseSidebar')"
+        :aria-label="sideCollapsed ? $t('c_Sidebar.expandSidebar') : $t('c_Sidebar.collapseSidebar')"
+        :aria-expanded="!sideCollapsed"
+        @click="toggleSide"
+    >
+      <span class="icon" :class="sideCollapsed ? 'icon-chevron-double-right' : 'icon-chevron-double-left'"/>
+    </button>
     <nav class="dash-crumbs" :aria-label="$t('c_Topbar.breadcrumb')">
       <NuxtLinkLocale to="/" class="dash-crumb">{{ $t('common.home') }}</NuxtLinkLocale>
       <template v-for="(c, i) in crumbs" :key="c.to">
@@ -103,6 +120,17 @@ useHead({
     border-bottom: 1px solid var(--border);
     background: var(--surface);
   }
+}
+
+/* Flush with the edge the sidebar meets: the toggle is about that edge. */
+.dash-collapse {
+  flex-shrink: 0;
+  margin-left: calc(var(--space-1) - var(--space-4));
+}
+
+.dash-collapse .icon {
+  width: var(--icon-md);
+  height: var(--icon-md);
 }
 
 .dash-crumbs {
