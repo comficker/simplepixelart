@@ -224,6 +224,7 @@ async function createTileset() {
         method: 'POST',
         body: {name: title, meta: {registry: {}, groups: [{id: 'g0', name: 'Tiles', kind: 'group', tiles: []}]}},
       })
+      track('tileset_create', {source: 'editor'})
       tilesets.value.unshift({id: c.id, id_string: c.id_string, title: c.name || title})
       selectedId.value = c.id
     } else {

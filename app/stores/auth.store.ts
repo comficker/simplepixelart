@@ -77,6 +77,7 @@ export const useAuthStore = defineStore('auth', () => {
         )
         authToken.value = res.access
         authTokenRefresh.value = res.refresh
+        track(mode === 'register' ? 'sign_up' : 'login', {method: 'password'})
         await fetchInfo()
     }
 

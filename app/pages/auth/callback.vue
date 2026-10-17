@@ -38,6 +38,7 @@ onMounted(async () => {
   }
 
   if (auth.isLogged) {
+    track('login', {method: 'google'})
     await attachPendingReferral()
     // Offered on the page we land on, not here -- this view unmounts the
     // moment the redirect below runs.

@@ -260,7 +260,12 @@ const artSlug = computed(() =>
     (data.value?.name || data.value?.id_string || 'pixel-art')
         .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'pixel-art')
 
+function onRemixClick() {
+  if (!isOwner.value) track('art_remix', {source: 'art'})
+}
+
 const download = (type: string) => {
+  track('export', {format: type, source: 'art'})
   let url: string | undefined = ''
   let ext: string = 'png'
   if (type === 'pdf') {
@@ -325,6 +330,7 @@ const dlScale = ref<number | null>(null)
 
 async function downloadPngSize(size: PngSize) {
   if (dlScale.value !== null || !imgOriginal.value) return
+  track('export', {format: 'png', size: size.w, source: 'art'})
   dlScale.value = size.scale
   try {
     const srcUrl = URL.createObjectURL(await (await fetch(imgOriginal.value)).blob())
@@ -623,6 +629,7 @@ const previewStyle = computed(() => {
             class="btn"
             :class="{primary: !isOwner}"
             :title="isOwner ? $t('p_art_id_string.editThisPixelArt') : $t('p_art_id_string.remixHint')"
+            @click="onRemixClick"
         >
           <span class="icon icon-pen"/>
           <span>{{ isOwner ? $t('common.edit') : $t('p_art_id_string.makeYourOwnVersion') }}</span>

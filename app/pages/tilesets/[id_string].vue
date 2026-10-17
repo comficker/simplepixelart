@@ -149,6 +149,7 @@ async function cloneTileset() {
         meta: cloneMeta,
       },
     })
+    track('tileset_clone')
     navigateTo(localePath(`/tilesets/editor?id=${created.id_string}`))
   } catch {
     toast.error(t('p_tilesets_id_string.couldNotClone'))

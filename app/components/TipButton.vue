@@ -39,6 +39,7 @@ async function send() {
         {method: 'POST', body: {amount: amount.value, page: props.page}},
     )
     setBalance(res.balance)
+    track('tip_sent', {amount: res.sent})
     open.value = false
     toast.success(t('c_TipButton.sent', {n: res.sent, who: `@${props.username}`}))
   } catch (e: any) {

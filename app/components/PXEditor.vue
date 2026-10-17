@@ -313,6 +313,7 @@ async function saveArt() {
     toast.error(t('c_PXEditor.drawBeforePublishing'))
     return
   }
+  const wasPublic = !!editorData.value.is_public
   editorData.value.is_public = publishStatus.value === 'public'
   if (editorData.value.is_public) {
     const meta: any = {...(editorData.value.meta || {})}
@@ -322,6 +323,9 @@ async function saveArt() {
   }
   store.saveState(false)
   await store.saveNow()
+  if (editorData.value.is_public && !wasPublic) {
+    track('publish', {width: editorData.value.width, height: editorData.value.height})
+  }
   if (isAdmin.value && boostOnPublish.value && heldForReview.value) {
     toast.error(BOOST_ERRORS.PAGE_NOT_PUBLIC)
   } else if (isAdmin.value && boostOnPublish.value && editorData.value.is_public) {
@@ -1356,6 +1360,7 @@ function fitAllBoards() {
 
 function onAddBoard(size: number) {
   store.addBoard(size, size);
+  track('new_canvas', {width: size, height: size, source: 'menu'});
   fitAllBoards();
 }
 
@@ -1773,6 +1778,7 @@ function stopDraw() {
     const h = Math.abs(marqueeCur.value.y - marqueeStart.value.y);
     if (w >= MARQUEE_MIN && h >= MARQUEE_MIN) {
       store.addBoard(Math.round(w), Math.round(h), {x: Math.round(x0), y: Math.round(y0)});
+      track('new_canvas', {width: Math.round(w), height: Math.round(h), source: 'draw'});
     } else {
       store.selectNothing();
     }
@@ -3087,6 +3093,7 @@ function exportFile(type: string) {
   a.href = url;
   a.download = `SimplePixelArt.${type}`;
   a.click();
+  track('export', {format: type, source: 'editor'});
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   toast.success(t('c_PXEditor.exportedAs', {type: type.toUpperCase()}))
 }
@@ -3096,6 +3103,7 @@ function openPngExport() {
 }
 
 function exportPng(scale: number) {
+  track('export', {format: 'png', scale, source: 'editor'});
   const tmp = document.createElement('canvas')
   tmp.width = editorData.value.width * scale
   tmp.height = editorData.value.height * scale
@@ -3116,6 +3124,7 @@ function animationFrames() {
 }
 
 async function exportGif() {
+  track('export', {format: 'gif', source: 'editor'});
   try {
     const {framesToGif} = await import('~/helper/anim-export');
     const cfg = store.bgConfig;
@@ -3136,6 +3145,7 @@ async function exportGif() {
 }
 
 async function exportSpritesheet() {
+  track('export', {format: 'spritesheet', source: 'editor'});
   try {
     const {framesToSpritesheet} = await import('~/helper/anim-export');
     const sheet = framesToSpritesheet(
@@ -3157,6 +3167,7 @@ async function exportSpritesheet() {
 }
 
 async function exportGame() {
+  track('export', {format: 'game', source: 'editor'});
   try {
     const {framesToSpritesheet, framesToAsepriteJSON} = await import('~/helper/anim-export');
     const name = editorData.value.name || 'SimplePixelArt';

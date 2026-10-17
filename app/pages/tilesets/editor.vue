@@ -552,6 +552,7 @@ async function createTileset() {
       method: 'POST',
       body: {name: t('p_tilesets_editor.myTileset'), meta: {registry: {}, groups: [{id: 'g0', name: t('common.tiles'), kind: 'group', tiles: []}]}},
     })
+    track('tileset_create', {source: 'tileset_editor'})
     await loadTileset(row.id_string)
     fetchMyTilesets()
   } catch {
@@ -616,6 +617,7 @@ async function save() {
         method: 'POST',
         body: {name: tileset.value.name, meta: {registry: {}, groups: []}},
       })
+      track('tileset_create', {source: 'tileset_editor'})
       tileset.value.id = t.id
       tileset.value.id_string = t.id_string
       router.replace({query: {id: t.id_string}})
