@@ -820,6 +820,61 @@ function setZoomAnchored(nz: number, ax: number, ay: number) {
   zoom.value = nz
 }
 
+// Two fingers on the desk pinch to zoom and drag to pan, the way the tilemap
+// does; one finger keeps its jobs (pan the desk, drag a tile or a group).
+// Seen in the capture phase so a press the board already started is
+// dropped the moment the second finger lands.
+const touches = new Map<number, { x: number; y: number }>()
+let pinch: { dist: number; zoom: number; wx: number; wy: number; mx: number; my: number } | null = null
+
+function touchMid() {
+  const [a, b] = [...touches.values()]
+  return {x: (a!.x + b!.x) / 2, y: (a!.y + b!.y) / 2, dist: Math.hypot(a!.x - b!.x, a!.y - b!.y)}
+}
+
+function stageLocal(x: number, y: number) {
+  const r = stageEl.value!.getBoundingClientRect()
+  return {x: x - r.left, y: y - r.top}
+}
+
+function pinchDown(e: PointerEvent) {
+  if (e.pointerType !== 'touch' || !stageEl.value) return
+  touches.set(e.pointerId, {x: e.clientX, y: e.clientY})
+  if (touches.size !== 2) return
+  const m = touchMid()
+  const p = stageLocal(m.x, m.y)
+  pinch = {dist: m.dist || 1, zoom: zoom.value, wx: (p.x - cam.value.x) / zoom.value, wy: (p.y - cam.value.y) / zoom.value, mx: p.x, my: p.y}
+  pan = null
+  press = null
+  boardDrag.value = null
+  panned.value = true
+  e.stopPropagation()
+}
+
+function pinchMove(e: PointerEvent) {
+  if (!touches.has(e.pointerId)) return
+  touches.set(e.pointerId, {x: e.clientX, y: e.clientY})
+  if (!pinch || touches.size < 2) return
+  e.stopPropagation()
+  const m = touchMid()
+  const p = stageLocal(m.x, m.y)
+  const nz = Math.max(ZMIN, Math.min(ZMAX, pinch.zoom * (m.dist / pinch.dist)))
+  zoom.value = nz
+  cam.value = {x: p.x - pinch.wx * nz, y: p.y - pinch.wy * nz}
+  pinch.mx = p.x
+  pinch.my = p.y
+}
+
+function pinchUp(e: PointerEvent) {
+  if (!touches.delete(e.pointerId) || !pinch || touches.size >= 2) return
+  // Land on a step the zoom buttons use, so pixels stay whole -- about
+  // where the fingers were, so the snap does not jump.
+  const z = zoom.value
+  setZoomAnchored(z >= 1 ? Math.round(z) : 1 / Math.round(1 / z), pinch.mx, pinch.my)
+  pinch = null
+  e.stopPropagation()
+}
+
 let wheelAcc = 0
 function onStageWheel(e: WheelEvent) {
   const el = stageEl.value
@@ -3161,6 +3216,22 @@ const faq = computed(() => [
                 <span class="icon icon-image"/><span>{{ importingPng ? $t('p_tilesets_editor.importing') : $t('p_tilesets_editor.loadPngFiles') }}</span>
               </button>
               <div class="file-menu-sep"/>
+              <!-- Here rather than on the toolbar: occasional, and on a phone
+                   they pushed Fit and Arrange off the bar. -->
+              <a
+                  v-if="tileset.id_string"
+                  :href="localePath(`/editor?tileset=${tileset.id_string}`)"
+                  target="_blank"
+                  rel="noopener"
+                  class="file-menu-item"
+                  :title="$t('p_tilesets_editor.editTilesInThePixelEditor2')"
+              >
+                <span class="icon icon-pen"/><span>{{ $t('p_tilesets_editor.editTilesInThePixelEditor') }}</span>
+              </a>
+              <button class="file-menu-item" :disabled="!tiles.length" :title="$t('p_tilesets_editor.refreshTilesReloadArtAfterEditing')" @click="refreshArt">
+                <span class="icon icon-sync"/><span>{{ $t('p_tilesets_editor.refreshTiles') }}</span>
+              </button>
+              <div class="file-menu-sep"/>
               <button class="file-menu-item" :disabled="!tiles.length || exporting" @click="exportPNG">
                 <span class="icon icon-image"/><span>{{ $t('common.downloadPng') }}</span>
               </button>
@@ -3286,20 +3357,6 @@ const faq = computed(() => [
         </template>
       </div>
       <div class="toolbar-end">
-        <ui-tooltip :text="$t('p_tilesets_editor.editTilesInThePixelEditor2')">
-          <a
-              v-if="tileset.id_string"
-              :href="localePath(`/editor?tileset=${tileset.id_string}`)"
-              target="_blank"
-              rel="noopener"
-              class="toolbar-btn"
-              :aria-label="$t('p_tilesets_editor.editTilesInThePixelEditor')"
-          ><span class="icon icon-pen"/></a>
-          <button v-else class="toolbar-btn" disabled :aria-label="$t('p_tilesets_editor.editTilesInThePixelEditor')"><span class="icon icon-pen"/></button>
-        </ui-tooltip>
-        <ui-tooltip :text="$t('p_tilesets_editor.refreshTilesReloadArtAfterEditing')">
-          <button class="toolbar-btn" :disabled="!tiles.length" @click="refreshArt"><span class="icon icon-sync"/></button>
-        </ui-tooltip>
         <ui-tooltip :text="saving ? $t('common.saving') : $t('common.save')">
           <button class="publish-toolbar-btn tm-save" :class="{dirty}" :disabled="saving || !dirty" :aria-label="saving ? $t('common.saving') : $t('common.save')" @click="save">
             <span class="icon icon-save"/>
@@ -3317,6 +3374,10 @@ const faq = computed(() => [
             ref="stageEl"
             class="tm-stage no-scrollbar tsx-desk"
             :class="{panning: panned}"
+            @pointerdown.capture="pinchDown"
+            @pointermove.capture="pinchMove"
+            @pointerup.capture="pinchUp"
+            @pointercancel.capture="pinchUp"
             @pointerdown="stageDown"
             @pointermove="stageMove"
             @pointerup="stageUp"
@@ -3369,7 +3430,9 @@ const faq = computed(() => [
           </Transition>
         </div>
 
-        <div v-if="tileset.id_string" class="tm-stage-fab">
+        <!-- A guest's tileset lives in this browser only (local:…): it has no
+             public page to open. -->
+        <div v-if="tileset.id_string && !tileset.id_string.startsWith('local:')" class="tm-stage-fab">
           <ui-tooltip :text="$t('p_tilesets_editor.openPublicPage')" position="left">
             <NuxtLinkLocale :to="`/tilesets/${tileset.id_string}`" class="tm-stage-fab-btn" :aria-label="$t('common.openPublicPage')">
               <span class="icon icon-link"/>
@@ -3417,6 +3480,12 @@ const faq = computed(() => [
             <input v-model="g.name" type="text" class="tsx-terrain-name" @input="dirty = true">
             <em class="tsx-group-count">{{ g.kind === 'terrain' ? Object.keys(g.map || {}).length : g.tiles.length }}</em>
           </div>
+          <!-- Adding tiles was only on the empty board and inside the cog
+               menu; once there were tiles it was easy to lose. -->
+          <button v-if="tiles.length" class="btn tsx-add-tiles" @click="openAdd">
+            <span class="icon icon-plus"/>
+            <span>{{ $t('p_tilesets_editor.addTiles') }}</span>
+          </button>
         </section>
       </aside>
     </div>
@@ -3873,6 +3942,12 @@ const faq = computed(() => [
 </template>
 
 <style scoped>
+.tsx-add-tiles {
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--space-2);
+}
+
 
 .tsx-page {
   --ctl: 34px;
