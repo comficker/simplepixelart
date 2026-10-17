@@ -7,6 +7,7 @@ import {onMounted, ref, toRaw} from "vue";
 import {buildIsoPath, compositeFrame, drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
 import {hexToRgb} from "~/helper/color";
 import {downloadBlob, generateUUID, sharedPage2EditorData} from "~/helper/utils";
+import {cellsBetween} from "~/helper/tileBrush";
 import {LICENSES} from "~/helper/constants";
 import {saveWorkspaceFull} from "~/helper/workspaceSnapshot";
 import {toast} from "vue-sonner";
@@ -1585,8 +1586,14 @@ function startDraw(e: any) {
       if (!store.stampData) return;
       isDrawing.value = true;
       if (!isPanning.value) {
-        store.stampAt({x, y});
-        lastStamp = {x, y};
+        const cell = store.brushCellAt(x, y);
+        if (cell) {
+          store.placeTile(cell.c, cell.r);
+          lastTile = cell;
+        } else {
+          store.stampAt({x, y});
+          lastStamp = {x, y};
+        }
       }
       break;
     case "iso-line":
@@ -1690,7 +1697,10 @@ function draw(e: any) {
     );
   } else if (isDrawing.value) {
     if (!isPanning.value) {
-      if (store.currentTool === 'stamp') dragStamp(pos);
+      if (store.currentTool === 'stamp') {
+        if (store.brushGrid) dragTile(pos);
+        else dragStamp(pos);
+      }
       else if (store.currentTool !== 'bucket') store.paint(pos);
     }
   }
@@ -1698,6 +1708,16 @@ function draw(e: any) {
 }
 
 let lastStamp = {x: 0, y: 0};
+let lastTile: { c: number; r: number } | null = null;
+
+// On a grid, a drag lays every cell it crosses, so a quick swipe leaves no
+// holes; the whole stroke is one undo (saved on pointer up).
+function dragTile(pos: { x: number; y: number }) {
+  const cell = store.brushCellAt(pos.x, pos.y);
+  if (!cell || !lastTile || (cell.c === lastTile.c && cell.r === lastTile.r)) return;
+  for (const t of cellsBetween(lastTile.c, lastTile.r, cell.c, cell.r).slice(1)) store.placeTile(t.c, t.r);
+  lastTile = cell;
+}
 
 function dragStamp(pos: { x: number; y: number }) {
   const s = store.stampData;
@@ -2582,20 +2602,34 @@ function drawStampPreview(): void {
   const z = zoom.value;
   const w = editorData.value.width;
   const h = editorData.value.height;
-  const px = artOffset.value.x + (hoverPos.value.x - Math.floor((s.w - 1) / 2)) * z;
-  const py = artOffset.value.y + (hoverPos.value.y - Math.floor((s.h - 1) / 2)) * z;
+  // Free: centred on the pointer. On a grid: where the tile will land, and
+  // erasing on the square grid, the whole cell that will empty.
+  const g = store.brushGrid;
+  const cell = g ? store.brushCellAt(hoverPos.value.x, hoverPos.value.y) : null;
+  const o = cell ? store.brushOrigin(cell.c, cell.r) : null;
+  const left = o ? o.x : hoverPos.value.x - Math.floor((s.w - 1) / 2);
+  const top = o ? o.y : hoverPos.value.y - Math.floor((s.h - 1) / 2);
+  const px = artOffset.value.x + left * z;
+  const py = artOffset.value.y + top * z;
+  const erase = store.brushErase;
+  const box = erase && g && !g.iso && cell
+      ? {x: artOffset.value.x + cell.c * g.w * z, y: artOffset.value.y + cell.r * g.h * z, w: g.w * z, h: g.h * z}
+      : {x: px, y: py, w: s.w * z, h: s.h * z};
 
   ctx.save();
   ctx.beginPath();
   ctx.rect(artOffset.value.x, artOffset.value.y, w * z, h * z);
   ctx.clip();
-  ctx.globalAlpha = 0.55;
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(stampGhostCanvas(s), 0, 0, s.w, s.h, px, py, s.w * z, s.h * z);
-  ctx.globalAlpha = 1;
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(px + 0.5, py + 0.5, s.w * z - 1, s.h * z - 1);
+  if (!erase) {
+    ctx.globalAlpha = 0.55;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(stampGhostCanvas(s), 0, 0, s.w, s.h, px, py, s.w * z, s.h * z);
+    ctx.globalAlpha = 1;
+  }
+  // Erasing shows only an outline, in the danger colour.
+  ctx.strokeStyle = erase ? 'rgba(220, 38, 38, 0.95)' : 'rgba(0, 0, 0, 0.7)';
+  ctx.lineWidth = erase ? 2 : 1.5;
+  ctx.strokeRect(box.x + 0.5, box.y + 0.5, box.w - 1, box.h - 1);
   ctx.restore();
 }
 

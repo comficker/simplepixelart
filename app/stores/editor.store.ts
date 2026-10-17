@@ -9,6 +9,7 @@ import {layers2MapNumbers} from "~/helper/canvas";
 import {hexColorDelta, isSameColor, rgbToHex} from "~/helper/color";
 import {importFileGrid, importOriginalGrid, shouldIgnoreColor} from "~/helper/pixel";
 import {loadWorkspaceFull, saveWorkspaceFull, clearWorkspaceFull} from "~/helper/workspaceSnapshot";
+import {autoErase, autoPaint, autoReflow, cellOf, gridOf, originOf, type AutoLayer, type BrushGrid, type BrushSet} from "~/helper/tileBrush";
 import {toast} from "vue-sonner";
 
 export const useEditor = defineStore('editor', () => {
@@ -299,13 +300,14 @@ export const useEditor = defineStore('editor', () => {
 
     function setStamp(s: typeof stampData.value) {
         stampData.value = s
+        if (!s) tileBrush.value = null
     }
 
-    function stampAt({x, y}: { x: number; y: number }) {
-        const s = stampData.value
-        if (!s) return
-        const ox = Math.floor((s.w - 1) / 2)
-        const oy = Math.floor((s.h - 1) / 2)
+    type StampCells = NonNullable<typeof stampData.value>
+
+    /** Lays `s` down with its top-left pixel at (left, top), clipped to the
+     *  canvas and any selection -- or, erasing, empties what it covers. */
+    function paintCells(s: StampCells, left: number, top: number, erase = false) {
         const colors = editorData.value.colors
         const indexOf: Record<string, number> = {}
         for (let sy = 0; sy < s.h; sy++) {
@@ -314,13 +316,167 @@ export const useEditor = defineStore('editor', () => {
             for (let sx = 0; sx < s.w; sx++) {
                 const hex = row[sx]
                 if (!hex) continue
-                const px = x - ox + sx
-                const py = y - oy + sy
+                const px = left + sx
+                const py = top + sy
                 if (px < 0 || px >= editorData.value.width || py < 0 || py >= editorData.value.height) continue
                 if (selectionState.value.bounds.active && !checkKeyInSelection(`${px}_${py}`)) continue
-                const ci = indexOf[hex] ?? (indexOf[hex] = findOrCreateColor(hex, colors))
-                setPixelByIndex(px, py, ci)
+                if (erase) setPixelByIndex(px, py, -1)
+                else setPixelByIndex(px, py, indexOf[hex] ?? (indexOf[hex] = findOrCreateColor(hex, colors)))
             }
+        }
+    }
+
+    /** The art brush, free: centred on (x, y). */
+    function stampAt({x, y}: { x: number; y: number }) {
+        const s = stampData.value
+        if (!s) return
+        paintCells(s, x - Math.floor((s.w - 1) / 2), y - Math.floor((s.h - 1) / 2), brushErase.value)
+        drawTurn.value++
+    }
+
+    // ── The art brush on a tileset's grid ────────────────────────────────
+    // What a tileset puts in the brush (see helper/tileBrush): the set, the
+    // tile it shows (`stampData`, flipped as it will land), and for a random
+    // group the tiles it scatters, for a terrain every piece it may lay.
+    // How it lands -- free or snapped, square or iso, flipped, erasing -- is
+    // the user's and outlives a change of brush.
+    const tileBrush = shallowRef<{
+        set: BrushSet
+        tileId: number
+        randomId: string | null
+        terrainId: string | null
+        variants: StampCells[]
+        pieces: Map<number, StampCells>
+    } | null>(null)
+    const brushSnap = ref(false)
+    const brushIso = ref(false)
+    const brushFlipH = ref(false)
+    const brushFlipV = ref(false)
+    const brushErase = ref(false)
+    const brushRecents = ref<number[]>([])
+
+    const brushGrid = computed<BrushGrid | null>(() =>
+        tileBrush.value ? gridOf(tileBrush.value.set, brushSnap.value, brushIso.value) : null)
+
+    /** The terrain the brush paints: when it holds one and the grid is square. */
+    const activeTerrain = computed(() => {
+        const tb = tileBrush.value, g = brushGrid.value
+        if (!tb?.terrainId || !g || g.iso) return null
+        return tb.set.terrains.find(t => t.id === tb.terrainId) || null
+    })
+
+    function setTileBrush(next: typeof tileBrush.value, shown: StampCells | null) {
+        tileBrush.value = next
+        stampData.value = shown
+    }
+
+    function brushCellAt(x: number, y: number) {
+        const g = brushGrid.value
+        return g ? cellOf(g, x, y) : null
+    }
+
+    /** Where the shown tile lands for grid cell (c, r). */
+    function brushOrigin(c: number, r: number) {
+        const g = brushGrid.value, s = stampData.value
+        return g && s ? originOf(g, c, r, s.w, s.h) : null
+    }
+
+    function gridBounds(g: BrushGrid) {
+        return {cols: Math.ceil(editorData.value.width / g.w), rows: Math.ceil(editorData.value.height / g.h)}
+    }
+
+    /** Empties grid cell (c, r) of the active layer, inside any selection. */
+    function clearCell(c: number, r: number, g: BrushGrid) {
+        const {width, height} = editorData.value
+        for (let y = Math.max(0, r * g.h); y < Math.min(height, (r + 1) * g.h); y++) {
+            for (let x = Math.max(0, c * g.w); x < Math.min(width, (c + 1) * g.w); x++) {
+                if (selectionState.value.bounds.active && !checkKeyInSelection(`${x}_${y}`)) continue
+                setPixelByIndex(x, y, -1)
+            }
+        }
+    }
+
+    // `meta.autotile.layers[<layer name>]`: the terrain painted per cell and
+    // the piece it resolved to, so a later stroke -- here or on mobile --
+    // picks edges that fit what is already there. A layer last auto-tiled
+    // with another tileset or grid starts afresh.
+    function autoLayerOf(set: BrushSet, g: BrushGrid): AutoLayer {
+        const name = editorData.value.layers[currentLayerIndex.value]?.name || ''
+        const j = (editorData.value.meta as any)?.autotile?.layers?.[name]
+        if (!j || j.tileset !== set.id_string || j.w !== g.w || j.h !== g.h) return {terrain: {}, cells: {}}
+        return {terrain: {...(j.terrain || {})}, cells: {...(j.cells || {})}}
+    }
+
+    function storeAutoLayer(set: BrushSet, g: BrushGrid, l: AutoLayer) {
+        const name = editorData.value.layers[currentLayerIndex.value]?.name || ''
+        const meta: any = editorData.value.meta || (editorData.value.meta = {} as any)
+        const layers = {...(meta.autotile?.layers || {})}
+        if (!Object.keys(l.terrain).length && !Object.keys(l.cells).length) delete layers[name]
+        else layers[name] = {tileset: set.id_string, w: g.w, h: g.h, terrain: l.terrain, cells: l.cells}
+        if (Object.keys(layers).length) meta.autotile = {...(meta.autotile || {}), layers}
+        else delete meta.autotile
+    }
+
+    /** Redraws the cells whose terrain piece changed. A cell is its piece's
+     *  alone: what was there goes first, so an edge piece with transparent
+     *  corners does not show the full piece under it. */
+    function repaintTerrain(l: AutoLayer, changed: Set<string>, g: BrushGrid, pieces: Map<number, StampCells>) {
+        for (const k of changed) {
+            const [c, r] = k.split('_').map(Number) as [number, number]
+            clearCell(c, r, g)
+            const piece = pieces.get(l.cells[k] as number)
+            if (piece) paintCells(piece, c * g.w, r * g.h)
+        }
+    }
+
+    /** A tile laid by hand takes its cell from the terrain painted there, as
+     *  in the tilemap editor: the mark goes, the neighbours re-pick their
+     *  edges. Left, the mark made the next stroke think the cell painted. */
+    function yieldTerrain(c: number, r: number, g: BrushGrid) {
+        const tb = tileBrush.value!
+        if (!tb.set.terrains.length) return
+        const l = autoLayerOf(tb.set, g)
+        const k = `${c}_${r}`
+        if (!(k in l.terrain) && !(k in l.cells)) return
+        delete l.terrain[k]
+        delete l.cells[k]
+        const changed = autoReflow(l, tb.set.terrains, c, r, gridBounds(g))
+        // A corner terrain next door spills in again: the hand-laid tile stays.
+        delete l.cells[k]
+        changed.delete(k)
+        repaintTerrain(l, changed, g, tb.pieces)
+        storeAutoLayer(tb.set, g, l)
+    }
+
+    /** Lays one grid cell down: a tile (a random group's pick), or a cell of
+     *  the terrain, which repaints whichever neighbours it changes. Erasing,
+     *  takes it away instead. */
+    function placeTile(c: number, r: number) {
+        const tb = tileBrush.value, g = brushGrid.value, shown = stampData.value
+        if (!tb || !g || !shown) return
+        if (brushErase.value) {
+            if (g.iso) {
+                // Tiles overlap on the iso grid: only what the brush covers.
+                const o = originOf(g, c, r, shown.w, shown.h)
+                paintCells(shown, o.x, o.y, true)
+            } else {
+                const l = autoLayerOf(tb.set, g)
+                const changed = autoErase(l, tb.set.terrains, c, r, gridBounds(g))
+                clearCell(c, r, g)
+                changed.delete(`${c}_${r}`)
+                repaintTerrain(l, changed, g, tb.pieces)
+                storeAutoLayer(tb.set, g, l)
+            }
+        } else if (activeTerrain.value) {
+            const l = autoLayerOf(tb.set, g)
+            const changed = autoPaint(l, tb.set.terrains, activeTerrain.value.id, c, r, gridBounds(g))
+            repaintTerrain(l, changed, g, tb.pieces)
+            storeAutoLayer(tb.set, g, l)
+        } else {
+            const v = tb.variants.length ? tb.variants[Math.floor(Math.random() * tb.variants.length)]! : shown
+            if (!g.iso) yieldTerrain(c, r, g)
+            const o = originOf(g, c, r, v.w, v.h)
+            paintCells(v, o.x, o.y)
         }
         drawTurn.value++
     }
@@ -2559,6 +2715,19 @@ export const useEditor = defineStore('editor', () => {
         stampData,
         setStamp,
         stampAt,
+        tileBrush,
+        brushSnap,
+        brushIso,
+        brushFlipH,
+        brushFlipV,
+        brushErase,
+        brushRecents,
+        brushGrid,
+        activeTerrain,
+        setTileBrush,
+        brushCellAt,
+        brushOrigin,
+        placeTile,
         bgConfig,
         setBg,
         setArtTileset,
