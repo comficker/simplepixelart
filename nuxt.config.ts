@@ -197,11 +197,23 @@ export default defineNuxtConfig({
                     tagPosition: 'head',
                 },
                 ...(adsEnabled ? [
-                // Consent Mode v2 default — denied until user accepts.
+                // Consent Mode v2 defaults: denied until the visitor accepts in
+                // the EEA, the UK and Switzerland, where consent comes first;
+                // granted elsewhere. Denied everywhere hid ~65% of visits from
+                // GA after 2026-09-26 (Search Console clicks rose meanwhile).
+                // ConsentBanner asks in the same regions.
                 {
                     innerHTML: `
                       window.dataLayer = window.dataLayer || [];
                       function gtag(){dataLayer.push(arguments);}
+                      gtag('consent', 'default', {
+                        'ad_storage': 'granted',
+                        'ad_user_data': 'granted',
+                        'ad_personalization': 'granted',
+                        'analytics_storage': 'granted',
+                        'functionality_storage': 'granted',
+                        'security_storage': 'granted'
+                      });
                       gtag('consent', 'default', {
                         'ad_storage': 'denied',
                         'ad_user_data': 'denied',
@@ -209,7 +221,8 @@ export default defineNuxtConfig({
                         'analytics_storage': 'denied',
                         'functionality_storage': 'granted',
                         'security_storage': 'granted',
-                        'wait_for_update': 500
+                        'wait_for_update': 500,
+                        'region': ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH']
                       });
                     `,
                     type: 'text/javascript',

@@ -14,6 +14,10 @@ concurrency:
 env:
   HOST: 45.76.181.237
   DIR: /home/frontend/simplepixelart
+  # Read at build time (nuxt.config). Ads, the consent banner and consent
+  # mode all hang on it. The VPS .env said false, but the build moved here
+  # on 2026-09-26 and never read that file, so state it here.
+  NUXT_PUBLIC_ADS_ENABLED: 'true'
 
 jobs:
   deploy:

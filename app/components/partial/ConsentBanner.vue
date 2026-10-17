@@ -5,6 +5,18 @@ const adsEnabled = config.public.adsEnabled !== false
 
 const visible = ref(false)
 
+// Where the banner asks: the regions consent mode defaults to denied in
+// (nuxt.config). The browser's time zone stands in for the country -- the
+// page has no geo lookup -- and Europe/* covers the EEA, UK and Switzerland.
+function asksForConsent(): boolean {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+    return tz.startsWith('Europe/') || /^Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)$/.test(tz)
+  } catch {
+    return true
+  }
+}
+
 function applyConsent(granted: boolean) {
   const w = window as any
   if (typeof w.gtag !== 'function') {
@@ -48,7 +60,7 @@ onMounted(() => {
       return
     }
   } catch {}
-  visible.value = true
+  visible.value = asksForConsent()
 })
 </script>
 

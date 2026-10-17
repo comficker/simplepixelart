@@ -7,9 +7,10 @@ export default defineNuxtPlugin(() => {
     try {
       const {initializeApp, getApps, getApp} = await import('firebase/app')
       const app = getApps().length ? getApp() : initializeApp(config)
-      const {getAnalytics, isSupported} = await import('firebase/analytics')
+      const {getAnalytics, isSupported, logEvent} = await import('firebase/analytics')
       if (await isSupported()) {
-        getAnalytics(app)
+        const analytics = getAnalytics(app)
+        setTracker((name, params) => logEvent(analytics, name, params))
       }
     } catch (e) {
       console.warn('[firebase] init failed', e)
@@ -17,8 +18,10 @@ export default defineNuxtPlugin(() => {
   }
 
   if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(init, {timeout: 5000})
+    // A visitor gone before analytics starts is never counted, and the old
+    // 5s wait lost every quick bounce.
+    (window as any).requestIdleCallback(init, {timeout: 1500})
   } else {
-    setTimeout(init, 3000)
+    setTimeout(init, 1000)
   }
 })
