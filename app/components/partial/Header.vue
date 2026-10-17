@@ -213,4 +213,10 @@ header .brand-name-main {
   .cmdk-trigger { padding: 7px; margin-right: -7px; border-radius: var(--radius-sm); }
 }
 
+/* Signed in, the bell and the balance join the row, and on a 360px phone it
+   ran 8px past the screen, so the whole page scrolled sideways. */
+@media (max-width: 380px) {
+  .hdr-link { padding-left: calc(var(--space-1) * 1.5); padding-right: calc(var(--space-1) * 1.5); }
+}
+
 </style>
