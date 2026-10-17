@@ -1857,7 +1857,8 @@
     "tileWidth": "Tile width",
     "width": "Width",
     "random": "random",
-    "none": "None"
+    "none": "None",
+    "fitMapInView": "Fit the map in view"
   },
   "p_tileset": {},
   "p_tilesets_editor": {
@@ -2085,7 +2086,8 @@
     "more": "More",
     "allNTiles": "All {count} tiles",
     "willBeRemoved": "Will be removed — click to keep",
-    "clickToRemoveFromTileset": "Click to remove from tileset"
+    "clickToRemoveFromTileset": "Click to remove from tileset",
+    "refreshTiles": "Refresh tiles"
   },
   "p_tilesets_id_string": {
     "buildYourOwn": "Build your own",

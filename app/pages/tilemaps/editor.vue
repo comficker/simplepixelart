@@ -145,9 +145,14 @@ function orientBrush(op: 'h' | 'v' | 'right' | 'left') {
 }
 let prevBrush: typeof brush.value | null = null
 watch(brush, (_, old) => { if (old !== 'erase') prevBrush = old })
+// Set when the user takes the eraser themselves. Until then a map opens
+// with a tile in hand: starting on the eraser lit it beside the pencil, and a
+// first stroke that painted nothing read as a broken editor.
+let eraserChosen = false
 function toggleEraser() {
   if (brush.value !== 'erase') {
     brush.value = 'erase'
+    eraserChosen = true
   } else if (prevBrush != null && brushStillValid(prevBrush)) {
     brush.value = prevBrush
   } else if (items.value.length) {
@@ -287,7 +292,26 @@ function fitZoom() {
   zoom.value = Math.max(ZMIN, Math.min(ZMAX, fit >= 1 ? Math.floor(fit) : 1 / Math.ceil(1 / fit)))
 }
 
+// On a phone the tile picker sits far below the map, past the ad; the
+// sheet brings it up over the bottom of the screen with the map still in
+// reach above it. The picker itself is pinned there by CSS rather than
+// moved or rebuilt, so its page, scroll and sheet canvas carry over. (A
+// Teleport toggled after hydration lost its anchor and threw.)
+const tilesSheet = ref(false)
+let phoneQuery: MediaQueryList | null = null
+const closeSheetOffPhone = () => { if (!phoneQuery?.matches) tilesSheet.value = false }
+onMounted(() => {
+  phoneQuery = window.matchMedia('(max-width: 767px)')
+  phoneQuery.addEventListener('change', closeSheetOffPhone)
+})
+onBeforeUnmount(() => phoneQuery?.removeEventListener('change', closeSheetOffPhone))
+
+// Open beside the map on a desk, folded on a phone, where the open list sat
+// across a third of the map. A saved view state wins either way.
 const layersOpen = ref(true)
+onMounted(() => {
+  if (window.matchMedia('(max-width: 767px)').matches) layersOpen.value = false
+})
 
 const viewKey = () => `tm_view:${world.value?.id_string || 'freestyle'}`
 function saveViewState() {
@@ -576,6 +600,7 @@ function onSheetCancel() {
 
 function pickBrush(b: typeof brush.value) {
   brush.value = b
+  eraserChosen = false
 }
 
 /** The terrain's solid middle tile — the one it fills an area with. */
@@ -907,6 +932,7 @@ async function selectSource(id: null) {
     setTileGroups([])
     paletteTab.value = 'search'
     brush.value = 'erase'
+    eraserChosen = false
     touch()
     runSearch(1)
     return
@@ -1380,13 +1406,17 @@ function enterFreeStyle(opts?: {fresh?: boolean}) {
     savedTs = restoreFreeStyle()
   }
   brush.value = 'erase'
+  eraserChosen = false
   dirty.value = false
   searchQuery.value = ''
   router.replace({query: {}})
   if (savedTs && !auth.isLogged && localTs.get(savedTs)) {
     loadLocalTilesetPalette(savedTs)
   } else {
-    paletteTab.value = hasSeg.value ? 'tiles' : 'search'
+    // Free style has no tileset to show, and the Tiles tab with none picked
+    // was an empty panel asking for one; Search shows art to paint with at
+    // once. The Tiles tab is still there to pick a tileset.
+    paletteTab.value = 'search'
     runSearch(1)
   }
   loadImages()
@@ -1420,6 +1450,7 @@ function onHotkey(e: KeyboardEvent) {
     orientBrush(e.shiftKey ? 'left' : 'right')
   } else if (kk === 'e') {
     brush.value = 'erase'
+    eraserChosen = true
   } else if (kk === 'p' || kk === 'b') {
     tool.value = 'paint'
   } else if (kk === 'g') {
@@ -1463,6 +1494,12 @@ onMounted(async () => {
   enterFreeStyle({fresh: route.query.new != null})
 })
 watch(() => auth.isLogged, () => { fetchMyTilesets() })
+// Down here, after everything paletteItems reads is declared: a watch reads
+// its source at once.
+watch(paletteItems, (list) => {
+  const first = list[0]?.id
+  if (brush.value === 'erase' && !eraserChosen && typeof first === 'number') brush.value = first
+})
 watch(paletteTab, (t) => {
   palettePage.value = 1
   if (t === 'search' && !searchResults.value.length) runSearch(1)
@@ -2578,14 +2615,19 @@ const faq = computed(() => [
             </div>
             <div class="toolbar-sep"/>
             <div class="toolbar-group">
-              <ui-tooltip :text="$t('p_tilemaps_editor.zoomOut')">
+              <ui-tooltip class="tm-zoom-step" :text="$t('p_tilemaps_editor.zoomOut')">
                 <button class="toolbar-btn" :disabled="zoom <= ZMIN" :aria-label="$t('common.zoomOut')" @click="zoomOut">
                   <span class="icon icon-zoom-out"/>
                 </button>
               </ui-tooltip>
-              <ui-tooltip :text="$t('p_tilemaps_editor.zoomIn')">
+              <ui-tooltip class="tm-zoom-step" :text="$t('p_tilemaps_editor.zoomIn')">
                 <button class="toolbar-btn" :disabled="zoom >= ZMAX" :aria-label="$t('common.zoomIn')" @click="zoomIn">
                   <span class="icon icon-zoom-in"/>
+                </button>
+              </ui-tooltip>
+              <ui-tooltip :text="$t('p_tilemaps_editor.fitMapInView')">
+                <button class="toolbar-btn" :aria-label="$t('p_tilemaps_editor.fitMapInView')" @click="fitZoom">
+                  <span class="fit-label">{{ $t('common.fit') }}</span>
                 </button>
               </ui-tooltip>
               <template v-if="typeof brush === 'number'">
@@ -2646,6 +2688,18 @@ const faq = computed(() => [
 
           <Widget class="tool-rail">
             <div class="tools tools-rail no-scrollbar">
+              <!-- Phones: the tile in hand, first on the rail; it opens the
+                   tile sheet. On a desk the picker is always in the side rail. -->
+              <Square
+                  class="tm-tiles-tool"
+                  :class="{active: tilesSheet}"
+                  :aria-label="$t('common.tiles')"
+                  :aria-expanded="tilesSheet"
+                  @click="tilesSheet = !tilesSheet"
+              >
+                <img v-if="currentBrush.src" :src="currentBrush.src" alt="" class="tm-tiles-tool-img">
+                <span v-else class="icon" :class="currentBrush.icon || 'icon-grid'"/>
+              </Square>
               <ui-tooltip :text="$t('p_tilemaps_editor.paintPAltClickPicksA')" position="right">
                 <Square :class="{active: tool === 'paint'}" @click="tool = 'paint'">
                   <span class="icon icon-pen"/>
@@ -2689,7 +2743,7 @@ const faq = computed(() => [
                   >
                     <span
                         class="brush-size-dot"
-                        :style="{width: `${Math.min(14, 2 + n * 2)}px`, height: `${Math.min(14, 2 + n * 2)}px`}"
+                        :style="{width: `${4 + n * 2}px`, height: `${4 + n * 2}px`}"
                     />
                   </button>
                 </ui-tooltip>
@@ -2843,7 +2897,13 @@ const faq = computed(() => [
     </template>
 
     <template #panel>
-      <div class="tm-tilesbar" :style="{'--tm-tile': `${tileBtnPx}px`}">
+      <div class="tm-tilesbar" :class="{'is-sheet': tilesSheet}" :style="{'--tm-tile': `${tileBtnPx}px`}">
+        <div v-if="tilesSheet" class="tm-sheet-head">
+          <span class="tm-label">{{ $t('common.tiles') }}</span>
+          <button type="button" class="widget-ctl-btn" :aria-label="$t('common.close')" :title="$t('common.close')" @click="tilesSheet = false">
+            <span class="icon icon-close"/>
+          </button>
+        </div>
         <div class="tm-tp-head">
           <div v-if="hasSeg" class="tm-seg tm-palette-seg">
             <button :class="{active: paletteTab === 'tiles'}" @click="paletteTab = 'tiles'">
@@ -3195,6 +3255,43 @@ const faq = computed(() => [
 
 .tm-stage { aspect-ratio: 4 / 3; }
 
+/* Phones only: the picker's opener on the rail, and the picker as a sheet
+   over the bottom of the screen. No scrim -- the map above stays in use. */
+.tm-tiles-tool { display: none; }
+@media (max-width: 767px) {
+  .tm-tiles-tool { display: block; }
+  /* Framed: it opens the picker, it is not a tool like the ones beside it. */
+  .tm-tiles-tool :deep(.inside) { box-shadow: inset 0 0 0 1px var(--border); }
+  .tm-tiles-tool-img { width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated; }
+
+  /* Shown even when the rail is on its README tab: the sheet is the picker. */
+  .tm-page :deep(.readme-panel:has(.tm-tilesbar.is-sheet)) { display: block !important; }
+  .tm-tilesbar.is-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    max-height: 50dvh; overflow-y: auto;
+    padding: 0 var(--space-3) calc(var(--space-3) + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    box-shadow: var(--shadow-modal);
+  }
+  /* The head sits under the sheet's own title row, not pulled up into it. */
+  .tm-tilesbar.is-sheet .tm-tp-head { margin-top: 0; padding-top: 0; }
+  /* One scroll inside the sheet, not a scroll inside a scroll. */
+  .tm-tilesbar.is-sheet :is(.tm-sheet-wrap, .tm-tiles-grid) { max-height: none; overflow-y: visible; }
+  .tm-sheet-head {
+    position: sticky; top: 0; z-index: 1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--space-2) 0; background: var(--surface);
+  }
+}
+
+/* A phone pinches to zoom; the steps gave their room to Fit and to flipping
+   the tile in hand, which ran off the bar. */
+@media (max-width: 767px) and (pointer: coarse) {
+  .tm-zoom-step { display: none; }
+}
+
 .tm-island {
   position: absolute; top: 0.75rem; left: 0.75rem; z-index: 6;
   max-width: calc(100% - 1.5rem);
@@ -3205,7 +3302,9 @@ const faq = computed(() => [
   -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
-.tm-island.open { width: 232px; }
+/* As wide as its header (title, Layer, Objects, caret), which overflowed a
+   fixed 232px. */
+.tm-island.open { width: max-content; min-width: 232px; }
 
 @media (pointer: coarse) and (max-width: 1023px) {
   .tm-island.open { width: calc(100% - 1.5rem); }

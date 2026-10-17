@@ -1826,7 +1826,8 @@
     "tileWidth": "图块宽度",
     "width": "宽度",
     "random": "随机",
-    "none": "无"
+    "none": "无",
+    "fitMapInView": "适应视图显示整张地图"
   },
   "p_tilesets_editor": {
     "addAnotherTerrainToThisTileset": "再给这个图块集添加一个地形，才能定义彼此的关系。",
@@ -2053,7 +2054,8 @@
     "more": "更多",
     "allNTiles": "全部 {count} 个图块",
     "willBeRemoved": "将被移除 — 点击保留",
-    "clickToRemoveFromTileset": "点击从图块集中移除"
+    "clickToRemoveFromTileset": "点击从图块集中移除",
+    "refreshTiles": "刷新图块"
   },
   "p_tilesets_id_string": {
     "buildYourOwn": "创建自己的",

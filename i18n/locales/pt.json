@@ -1826,7 +1826,8 @@
     "tileWidth": "Largura do tile",
     "width": "Largura",
     "random": "aleatório",
-    "none": "Nenhum"
+    "none": "Nenhum",
+    "fitMapInView": "Ajustar o mapa à tela"
   },
   "p_tilesets_editor": {
     "addAnotherTerrainToThisTileset": "Adicione outro terreno a este tileset para definir relações.",
@@ -2053,7 +2054,8 @@
     "more": "Mais",
     "allNTiles": "Todos os {count} tiles",
     "willBeRemoved": "Será removido — clique para manter",
-    "clickToRemoveFromTileset": "Clique para remover do tileset"
+    "clickToRemoveFromTileset": "Clique para remover do tileset",
+    "refreshTiles": "Recarregar tiles"
   },
   "p_tilesets_id_string": {
     "buildYourOwn": "Crie o seu",

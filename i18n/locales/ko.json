@@ -1826,7 +1826,8 @@
     "tileWidth": "타일 너비",
     "width": "너비",
     "random": "무작위",
-    "none": "없음"
+    "none": "없음",
+    "fitMapInView": "맵 전체 보기"
   },
   "p_tilesets_editor": {
     "addAnotherTerrainToThisTileset": "관계를 정의하려면 이 타일셋에 지형을 하나 더 추가하세요.",
@@ -2053,7 +2054,8 @@
     "more": "더 보기",
     "allNTiles": "전체 타일 {count}개",
     "willBeRemoved": "삭제될 예정 — 클릭하면 유지",
-    "clickToRemoveFromTileset": "클릭하면 타일셋에서 제거"
+    "clickToRemoveFromTileset": "클릭하면 타일셋에서 제거",
+    "refreshTiles": "타일 새로고침"
   },
   "p_tilesets_id_string": {
     "buildYourOwn": "직접 만들기",

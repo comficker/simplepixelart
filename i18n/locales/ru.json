@@ -1826,7 +1826,8 @@
     "tileWidth": "Ширина тайла",
     "width": "Ширина",
     "random": "случайно",
-    "none": "Нет"
+    "none": "Нет",
+    "fitMapInView": "Вписать карту в экран"
   },
   "p_tilesets_editor": {
     "addAnotherTerrainToThisTileset": "Добавьте в этот тайлсет ещё один терраин, чтобы задать связи.",
@@ -2053,7 +2054,8 @@
     "more": "Больше",
     "allNTiles": "Все {count} тайлов",
     "willBeRemoved": "Будет удалён — нажмите, чтобы оставить",
-    "clickToRemoveFromTileset": "Нажмите, чтобы убрать из тайлсета"
+    "clickToRemoveFromTileset": "Нажмите, чтобы убрать из тайлсета",
+    "refreshTiles": "Обновить тайлы"
   },
   "p_tilesets_id_string": {
     "buildYourOwn": "Соберите свой",

@@ -14,7 +14,9 @@ const props = withDefaults(defineProps<{
 })
 
 const hasPanel = !!useSlots().panel
-const panelOpen = ref(false)
+// A tool's own panel is what the page is used with (the tilemap's tiles), so
+// it is the tab that opens. The readme stays in the page underneath it.
+const panelOpen = ref(hasPanel)
 
 // Shared with the editor's toolbar button: either can open the tab. Asked for
 // only when the page wants the tab — the panel reaches into the editor store,
@@ -118,7 +120,9 @@ function goTo(id: string) {
       <slot name="panel"/>
     </div>
     <EditorAgentChat v-if="agent && agentOpen"/>
-    <div v-else-if="!panelOpen" class="readme-body prose">
+    <!-- v-show, not v-if: the readme is the page's text for search engines,
+         and it has to be in the page when another tab is the one open. -->
+    <div v-show="!(agent && agentOpen) && !panelOpen" class="readme-body prose">
       <slot/>
     </div>
 

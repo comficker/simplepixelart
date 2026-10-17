@@ -1826,7 +1826,8 @@
     "tileWidth": "タイル幅",
     "width": "幅",
     "random": "ランダム",
-    "none": "なし"
+    "none": "なし",
+    "fitMapInView": "マップ全体を表示"
   },
   "p_tilesets_editor": {
     "addAnotherTerrainToThisTileset": "関係を定義するには、このタイルセットにもう1つ地形を追加してください。",
@@ -2053,7 +2054,8 @@
     "more": "詳細",
     "allNTiles": "全 {count} タイル",
     "willBeRemoved": "削除予定 — クリックで残す",
-    "clickToRemoveFromTileset": "クリックでタイルセットから削除"
+    "clickToRemoveFromTileset": "クリックでタイルセットから削除",
+    "refreshTiles": "タイルを再読み込み"
   },
   "p_tilesets_id_string": {
     "buildYourOwn": "自分で作る",
