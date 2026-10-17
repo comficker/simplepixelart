@@ -88,12 +88,14 @@ useArtListFetch({limit: 32, ordering: '-updated'})
    as something still loading. */
 const CREATOR_ROWS = 3
 
-// Awaited together: these three are independent, and awaiting them one after
-// the other made the server wait out both round trips before the artwork list
-// (fetched by item-list further down) could even start.
-const [{data: topCreators, pending: topCreatorsPending}, {data: homeChallenges}, {data: newCreators}] = await Promise.all([
+// Lazy: these three fill the side widgets, so a client-side visit to Home
+// shows the page at once instead of waiting on the slowest of them (one
+// stalled behind a backend restart held navigation for 25s). The server
+// render still waits for them, so a direct load arrives complete.
+const [{data: topCreators, pending: topCreatorsPending}, {data: homeChallenges}, {data: newCreators}] = [
   useAuthFetch<any>('/coloring/creators/top/', {
     key: 'home-top-creators',
+    lazy: true,
     query: {limit: CREATOR_ROWS},
     transform: (s: any) => s?.results || [],
     default: () => [],
@@ -102,6 +104,7 @@ const [{data: topCreators, pending: topCreatorsPending}, {data: homeChallenges},
   // piece so far (top entry while live, winner once ended).
   useAuthFetch<any>('/coloring/challenges/', {
     key: 'home-challenges',
+    lazy: true,
     transform: (s: any) => [s?.current, ...(s?.past || [])].filter(Boolean).slice(0, 3).map((c: any) => ({
       id_string: c.id_string,
       name: c.name,
@@ -115,11 +118,12 @@ const [{data: topCreators, pending: topCreatorsPending}, {data: homeChallenges},
   }),
   useAuthFetch<any>('/coloring/creators/new/', {
     key: 'home-new-creators',
+    lazy: true,
     query: {limit: CREATOR_ROWS},
     transform: (s: any) => s?.results || [],
     default: () => [],
   }),
-])
+]
 const apiBase = useRuntimeConfig().public.api as string
 
 const creatorRows = computed(() => {
@@ -323,7 +327,7 @@ useCustomSeoMeta({
             </li>
           </ol>
         </Widget>
-        <Widget v-if="topCreators?.length" :title="$t('p_index.topCreators')">
+        <Widget v-if="topCreatorsPending || topCreators?.length" :title="$t('p_index.topCreators')">
           <template #ctl>
             <NuxtLinkLocale to="/creator" class="widget-ctl-btn">
               <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
