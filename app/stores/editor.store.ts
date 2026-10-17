@@ -1662,17 +1662,6 @@ export const useEditor = defineStore('editor', () => {
         return -1
     }
 
-    function applyIsoToAllBoards() {
-        const src = editorData.value.meta!.iso!;
-        for (const b of boards.value) {
-            if (b.id === activeBoardId.value) continue;
-            const meta = b.data.meta || (b.data.meta = {});
-            meta.iso = { mode: src.mode, cell: { width: src.cell.width, height: src.cell.height } };
-        }
-        boardsRev.value++;
-        saveWorkspaceLayout();
-    }
-
     function cycleGridMode() {
         ensureIsoMeta();
         const order: Array<'square' | 'iso' | 'off'> = ['square', 'iso', 'off'];
@@ -1680,7 +1669,6 @@ export const useEditor = defineStore('editor', () => {
         const next = order[(order.indexOf(current) + 1) % order.length]!;
         editorData.value.meta!.iso!.mode = next;
         saveState();
-        applyIsoToAllBoards();
     }
 
     function setGridMode(mode: 'square' | 'iso' | 'off') {
@@ -1688,7 +1676,6 @@ export const useEditor = defineStore('editor', () => {
         if (editorData.value.meta!.iso!.mode === mode) return;
         editorData.value.meta!.iso!.mode = mode;
         saveState();
-        applyIsoToAllBoards();
     }
 
     function setGridCell(width: number | string, height: number | string) {
@@ -1697,7 +1684,6 @@ export const useEditor = defineStore('editor', () => {
         const h = Math.min(32, Math.max(1, Math.floor(Number(height) || 1)));
         editorData.value.meta!.iso!.cell = { width: w, height: h };
         saveState();
-        applyIsoToAllBoards();
     }
 
     function paint({x, y}: { x: number; y: number }) {

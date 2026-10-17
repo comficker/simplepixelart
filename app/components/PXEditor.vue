@@ -394,10 +394,38 @@ function deskIsLight(): boolean {
   const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
   return (0.299 * r + 0.587 * g + 0.114 * b) > 140;
 }
-const checkerSize = ref(1);
-const checkerA = ref('');
-const checkerB = ref('');
-const guideColor = ref('');
+// A board's look -- checker size and colours, guide colour -- is its own
+// (meta.board), like its grid mode and guides. A board that never set one
+// shows the look chosen before it became per board.
+const boardLookFallback = {size: 1, a: '', b: '', guide: ''};
+type BoardLook = typeof boardLookFallback;
+
+function lookOf(data: any): BoardLook {
+  const l = data?.meta?.board || {};
+  return {
+    size: Number.isFinite(l.checker?.size) ? l.checker.size : boardLookFallback.size,
+    a: l.checker?.a ?? boardLookFallback.a,
+    b: l.checker?.b ?? boardLookFallback.b,
+    guide: l.guideColor ?? boardLookFallback.guide,
+  };
+}
+
+let lookSaveTimer: ReturnType<typeof setTimeout> | null = null;
+function setLook(patch: Partial<BoardLook>) {
+  const meta: any = editorData.value.meta || (editorData.value.meta = {} as any);
+  const next = {...lookOf(editorData.value), ...patch};
+  meta.board = {checker: {size: next.size, a: next.a, b: next.b}, guideColor: next.guide};
+  boardBuffers.delete(String(store.activeBoardId));
+  scheduleDraw();
+  // A colour input fires on every step of a drag: one history entry for it.
+  if (lookSaveTimer) clearTimeout(lookSaveTimer);
+  lookSaveTimer = setTimeout(() => store.saveState(), 400);
+}
+
+const checkerSize = computed({get: () => lookOf(editorData.value).size, set: (v: number) => setLook({size: v})});
+const checkerA = computed({get: () => lookOf(editorData.value).a, set: (v: string) => setLook({a: v})});
+const checkerB = computed({get: () => lookOf(editorData.value).b, set: (v: string) => setLook({b: v})});
+const guideColor = computed({get: () => lookOf(editorData.value).guide, set: (v: string) => setLook({guide: v})});
 
 function setCheckerSize(v: string | number) {
   checkerSize.value = Math.max(1, Math.min(64, Math.round(Number(v) || 1)));
@@ -2221,9 +2249,10 @@ function boardComposite(b: any): HTMLCanvasElement | null {
   } else if (bg?.type === 'transparent') {
 
   } else if (mode === 'square') {
-    const cs = Math.max(1, checkerSize.value);
-    const ca = checkerA.value || EDITOR_CELL_A;
-    const cb = checkerB.value || EDITOR_CELL_B;
+    const look = lookOf(data);
+    const cs = Math.max(1, look.size);
+    const ca = look.a || EDITOR_CELL_A;
+    const cb = look.b || EDITOR_CELL_B;
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
         cx.fillStyle = (Math.floor(x / cs) + Math.floor(y / cs)) % 2 === 0 ? ca : cb;
@@ -3218,12 +3247,14 @@ onMounted(async () => {
         };
       }
       const hexOk = (v: any) => typeof v === 'string' && (v === '' || /^#[0-9a-fA-F]{6}$/.test(v));
+      // Saved here before the look moved onto each board: now the fallback
+      // for boards that have none.
       if (d.checker) {
-        if (Number.isFinite(d.checker.size)) checkerSize.value = Math.max(1, Math.min(64, Math.round(d.checker.size)));
-        if (hexOk(d.checker.a)) checkerA.value = d.checker.a;
-        if (hexOk(d.checker.b)) checkerB.value = d.checker.b;
+        if (Number.isFinite(d.checker.size)) boardLookFallback.size = Math.max(1, Math.min(64, Math.round(d.checker.size)));
+        if (hexOk(d.checker.a)) boardLookFallback.a = d.checker.a;
+        if (hexOk(d.checker.b)) boardLookFallback.b = d.checker.b;
       }
-      if (d.guides && hexOk(d.guides.color)) guideColor.value = d.guides.color;
+      if (d.guides && hexOk(d.guides.color)) boardLookFallback.guide = d.guides.color;
     }
   } catch {  }
   initCanvas()
@@ -3354,15 +3385,14 @@ watch(() => store.boardsRev, () => {
   scheduleMiniMap()
 })
 
-watch([deskBg, deskGrid, deskGridStyle, deskGridShape, deskGridColor, deskGridCell,
-  checkerSize, checkerA, checkerB, guideColor], () => {
+watch([deskBg, deskGrid, deskGridStyle, deskGridShape, deskGridColor, deskGridCell], () => {
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem('workspace_desk', JSON.stringify({
         bg: deskBg.value, grid: deskGrid.value, style: deskGridStyle.value,
         shape: deskGridShape.value, color: deskGridColor.value, cell: deskGridCell.value,
-        checker: {size: checkerSize.value, a: checkerA.value, b: checkerB.value},
-        guides: {color: guideColor.value},
+        checker: {size: boardLookFallback.size, a: boardLookFallback.a, b: boardLookFallback.b},
+        guides: {color: boardLookFallback.guide},
       }));
     } catch {  }
   }
