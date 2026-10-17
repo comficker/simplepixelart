@@ -819,24 +819,62 @@ const previewStyle = computed(() => {
 }
 
 .art-head-actions {
+  --art-ctl-h: calc(var(--space-6) + var(--space-3));
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
   align-items: center;
   gap: var(--space-2);
   margin-left: auto;
 }
 
-/* A long title takes a line of its own rather than being squeezed into a
-   column beside the buttons. */
-:deep(.tool-main > .widget-head) {
-  flex-wrap: wrap;
-  row-gap: var(--space-2);
+/* Admin, Like, Tip and Share are one row of controls: one height, whatever
+   padding each brings from its own component. */
+.art-head-actions :deep(.admin-trigger),
+.art-head-actions :deep(.btn) {
+  height: var(--art-ctl-h);
+  padding-top: 0;
+  padding-bottom: 0;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 :deep(.tool-main > .widget-head > .title) {
-  flex: 1 1 calc(var(--space-6) * 8);
+  flex: 1 1 auto;
   min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A phone has no room for both on one line: the title takes the first, and
+   the controls fill the second edge to edge, lined up with the title's
+   left edge, rather than huddling on the right. */
+@media (max-width: 639px) {
+  :deep(.tool-main > .widget-head) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .art-head-actions {
+    margin-left: 0;
+  }
+
+  .art-head-actions > :deep(*) {
+    flex: 1 1 auto;
+  }
+
+  .art-head-actions :deep(.art-tb-share .dropdown-trigger-wrap),
+  .art-head-actions :deep(.share-trigger) {
+    width: 100%;
+  }
+
+  /* Four labelled controls are wider than a phone: the two whose icon says
+     enough drop their words (the button keeps its aria-label). */
+  .art-head-actions :deep(.admin-trigger > span:last-child),
+  .art-head-actions :deep(.share-trigger > span:not(.icon)) {
+    display: none;
+  }
 }
 
 /* With the rail beside it, the title bar and the rail's first box (Edit)
@@ -848,16 +886,6 @@ const previewStyle = computed(() => {
     height: var(--bar-h);
     padding-top: 0;
     padding-bottom: 0;
-  }
-
-  :deep(.tool-main > .widget-head > .title) {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .art-head-actions {
-    flex-wrap: nowrap;
   }
 
   .art-actions-w :deep(.widget-body) {
