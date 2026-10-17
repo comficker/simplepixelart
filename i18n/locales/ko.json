@@ -1003,7 +1003,9 @@
     "pixelCount": "{count}픽셀",
     "pxACell": "셀당 {n}px",
     "madeWith": "제작 방식",
-    "views": "조회수"
+    "views": "조회수",
+    "collections": "컬렉션",
+    "tilesets": "타일셋"
   },
   "p_arts": {
     "browseThousandsOfFreePixelArt": "커뮤니티가 만든 무료 픽셀 아트 — 스프라이트, 캐릭터, 아이콘. 모든 리믹스에는 원작자 크레딧이 붙습니다.",

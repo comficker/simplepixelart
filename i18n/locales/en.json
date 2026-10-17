@@ -1033,7 +1033,9 @@
     "pixelCount": "1 pixel | {count} pixels",
     "pxACell": "{n}px a cell",
     "madeWith": "Made with",
-    "views": "Views"
+    "views": "Views",
+    "collections": "Collections",
+    "tilesets": "Tilesets"
   },
   "p_arts": {
     "browseThousandsOfFreePixelArt": "Browse free pixel art made by the community — sprites, characters and icons. Every remix credits the original artist.",

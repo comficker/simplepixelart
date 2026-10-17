@@ -86,6 +86,9 @@ export interface SharedPage {
     is_vote?: boolean
 
     collections: Collection[]
+    // Art page (`?lite=1`) only: the public tilesets the piece is in, and
+    // the viewer's own. There, collections come as just id_string + name.
+    tilesets?: { id_string: string; name: string }[]
     // The piece this one was remixed from, while that piece is public.
     template_info?: { id_string: string; name: string; username: string | null } | null;
     likes?: number;

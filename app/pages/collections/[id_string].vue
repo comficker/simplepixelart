@@ -25,7 +25,8 @@ if (error.value && import.meta.server) {
   setResponseStatus(useRequestEvent()!, 404)
 }
 
-const title = computed(() => data.value?.title || data.value?.name || t('p_collections_id_string.untitledCollection'))
+// `name` is what every client renames; `title` can still read "untitled".
+const title = computed(() => data.value?.name || data.value?.title || t('p_collections_id_string.untitledCollection'))
 const desc = computed(() => data.value?.desc || '')
 const items = computed<SharedPage[]>(() => Array.isArray(data.value?.items) ? data.value!.items : [])
 const itemCount = computed(() => items.value.length)

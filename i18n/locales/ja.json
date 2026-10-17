@@ -1003,7 +1003,9 @@
     "pixelCount": "{count} ピクセル",
     "pxACell": "1セル {n}px",
     "madeWith": "制作方法",
-    "views": "表示回数"
+    "views": "表示回数",
+    "collections": "コレクション",
+    "tilesets": "タイルセット"
   },
   "p_arts": {
     "browseThousandsOfFreePixelArt": "コミュニティが描いた無料のドット絵 — スプライト、キャラクター、アイコン。リミックスには必ず元の作者のクレジットが付きます。",

@@ -1003,7 +1003,9 @@
     "pixelCount": "{count} 像素",
     "pxACell": "每格 {n}px",
     "madeWith": "创作方式",
-    "views": "浏览量"
+    "views": "浏览量",
+    "collections": "合集",
+    "tilesets": "图块集"
   },
   "p_arts": {
     "browseThousandsOfFreePixelArt": "浏览社区创作的免费像素画——精灵图、角色和图标。每次改编都会署上原作者的名字。",

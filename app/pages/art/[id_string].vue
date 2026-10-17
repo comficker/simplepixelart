@@ -739,6 +739,28 @@ const previewStyle = computed(() => {
             >{{ t.title }}</NuxtLinkLocale>
           </dd>
         </div>
+        <div v-if="data.collections?.length" class="art-meta-row art-meta-row-tags">
+          <dt>{{ $t('p_art_id_string.collections') }}</dt>
+          <dd class="art-meta-tags">
+            <NuxtLinkLocale
+                v-for="c in data.collections"
+                :key="c.id_string"
+                :to="`/collections/${c.id_string}`"
+                class="art-meta-link"
+            >{{ c.name || $t('common.untitled') }}</NuxtLinkLocale>
+          </dd>
+        </div>
+        <div v-if="data.tilesets?.length" class="art-meta-row art-meta-row-tags">
+          <dt>{{ $t('p_art_id_string.tilesets') }}</dt>
+          <dd class="art-meta-tags">
+            <NuxtLinkLocale
+                v-for="ts in data.tilesets"
+                :key="ts.id_string"
+                :to="`/tilesets/${ts.id_string}`"
+                class="art-meta-link"
+            >{{ ts.name || $t('common.untitled') }}</NuxtLinkLocale>
+          </dd>
+        </div>
       </dl>
     </Widget>
     <Widget :title="$t('common.palette')">
