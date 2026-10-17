@@ -210,7 +210,7 @@ function toggleErase() {
 
 // ── One artwork ──────────────────────────────────────────────────────
 
-interface ArtRow { id: number; slug: string; name: string; w: number; h: number }
+interface ArtRow { id: number; slug: string; name: string; w: number; h: number; updated?: string }
 
 const showArt = ref(false)
 const artSource = ref<'mine' | 'explore'>('explore')
@@ -218,21 +218,31 @@ const artQuery = ref('')
 const arts = ref<ArtRow[]>([])
 const artsLoading = ref(false)
 let artRun = 0
+// Reopening the picker, or flipping back to a tab, shows what it had at
+// once and refreshes behind it.
+const artCache = new Map<string, ArtRow[]>()
+const artImage = useArtImage()
 
 async function loadArts() {
   const run = ++artRun
-  artsLoading.value = true
+  const mine = artSource.value === 'mine'
+  const q = artQuery.value.trim()
+  const key = `${artSource.value}|${q}`
+  const hit = artCache.get(key)
+  if (hit) arts.value = hit
+  artsLoading.value = !hit
   try {
-    const mine = artSource.value === 'mine'
     const res = await useNativeFetch<{ results: any[] }>('/coloring/shared-pages/', {
       params: mine
-          ? {user: auth.logged?.username, page_size: 48, ordering: '-updated', search: artQuery.value.trim() || undefined}
-          : {status: 'public', has_pages: 1, page_size: 48, search: artQuery.value.trim() || undefined},
+          ? {user: auth.logged?.username, is_tile: false, page_size: 48, ordering: '-updated', search: q || undefined}
+          : {status: 'public', page_size: 48, search: q || undefined},
     })
     if (run !== artRun) return
     arts.value = (res.results || []).filter(r => r?.id && r?.id_string).map(r => ({
       id: Number(r.id), slug: r.id_string, name: r.name || r.id_string, w: Number(r.width) || 0, h: Number(r.height) || 0,
+      updated: r.updated,
     }))
+    artCache.set(key, arts.value)
   } catch {
     if (run === artRun) arts.value = []
   } finally {
@@ -445,11 +455,11 @@ function addFrom(kind: 'art' | 'tileset') {
       <div v-if="!set" class="file-menu stp-start">
         <button class="file-menu-item" @click="openArt">
           <span class="icon icon-image"/>
-          <span class="stp-opt"><span>{{ $t('c_StampPicker.oneArtwork') }}</span><span class="stp-dim">{{ $t('c_StampPicker.oneArtworkNote') }}</span></span>
+          <span class="stp-opt"><span>{{ $t('c_StampPicker.oneArtwork') }}</span></span>
         </button>
         <button class="file-menu-item" @click="openSets">
           <span class="icon icon-grid"/>
-          <span class="stp-opt"><span>{{ $t('c_StampPicker.aTileset') }}</span><span class="stp-dim">{{ $t('c_StampPicker.aTilesetNote') }}</span></span>
+          <span class="stp-opt"><span>{{ $t('c_StampPicker.aTileset') }}</span></span>
         </button>
       </div>
 
@@ -506,7 +516,7 @@ function addFrom(kind: 'art' | 'tileset') {
       </div>
       <div v-else-if="arts.length" class="stp-grid">
         <button v-for="a in arts" :key="a.id" type="button" class="stp-thumb" :title="a.name" @click="addArt(a)">
-          <img :src="tileImageUrl(apiBase, a.slug)" alt="" loading="lazy" decoding="async">
+          <img :src="artImage({id_string: a.slug, updated: a.updated})" alt="" loading="lazy" decoding="async">
         </button>
       </div>
       <p v-else class="stp-empty">{{ artQuery ? $t('common.nothingMatchesQ', {q: artQuery}) : $t('common.nothingHereYet') }}</p>
@@ -741,6 +751,13 @@ function addFrom(kind: 'art' | 'tileset') {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+}
+
+.stp-row .tm-seg { flex-shrink: 0; }
+
+.stp-row .tm-seg button {
+  padding: 0 var(--space-3);
+  white-space: nowrap;
 }
 
 .stp-search {
