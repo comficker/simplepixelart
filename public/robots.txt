@@ -7,22 +7,22 @@ Disallow: /admin/
 Disallow: /*.json$
 Disallow: /*.php$
 
-# Allow specific bots
-User-agent: Googlebot
-Allow: /
+# Colour pages (/arts/color-<hex>, every locale) are a crawl trap: each art
+# links ~16 hex swatches, so the space is near-endless. On 2026-10-18 they
+# took >50% of all crawling (Claude-SearchBot ~40k/day, Googlebot ~20k/day)
+# for 7 search clicks in 90 days, and kept the SSR process restarting.
+# Disallowed for every crawler (no separate Googlebot/Bingbot groups: a named
+# group makes that bot ignore these rules), so crawl goes to real art pages.
+Disallow: /arts/color-
+Disallow: /*/arts/color-
+Disallow: /*?sort=
+Disallow: /*&sort=
 
-User-agent: Bingbot
-Allow: /
-
-# Bulk AI scrapers. Measured 2026-09-30: these five were 6,898 of 13,361
-# external requests in one hour against a 1 vCPU origin shared by every site
-# here, while Googlebot was 147. Each hit costs a full SSR render plus two or
-# three API calls, and none of them send a reader back.
-# Also enforced in nginx and Cloudflare, since robots.txt is advisory —
-# this is the polite half, so a well-behaved crawler stops asking instead of
-# collecting 403s.
-# Not listed on purpose: Applebot, OAI-SearchBot and ClaudeBot power search
-# answers that do cite and link back.
+# AI-training bulk crawlers, plus PetalBot (heavy crawl, ~no traffic back).
+# Search engines (Googlebot, Bingbot, Applebot) and AI search / citation bots
+# (OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-SearchBot, PerplexityBot)
+# are welcome.
+# Also enforced in nginx and Cloudflare, since robots.txt is advisory.
 User-agent: meta-externalagent
 Disallow: /
 

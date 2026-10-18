@@ -96,6 +96,9 @@ const isUnknownTag = computed(() => {
 
 const robotsValue = computed(() => {
   if (isUnknownTag.value) return 'noindex, follow'
+  // Colour slugs are a crawl trap (one per hex swatch, disallowed in robots.txt)
+  // with ~no search traffic; keep them out of the index, still crawlable to arts.
+  if (isColorSlug.value) return 'noindex, follow'
   if (isNewSlug.value) return 'noindex, follow'
   if (hasFilterQuery.value) return 'noindex, follow'
   if (page.value > 1) return 'noindex, follow'

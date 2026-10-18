@@ -776,6 +776,7 @@ const previewStyle = computed(() => {
             v-for="item in data.colors" :key="item"
             class="art-swatch"
             :to="`/arts/color-${item.toUpperCase().replace('#', '')}`"
+            rel="nofollow"
             :style="{'--swatch': item}"
             :title="$t('p_art_id_string.colorXFindSimilar', {x: item.toUpperCase()})"
         >
