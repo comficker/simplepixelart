@@ -69,7 +69,7 @@ async function submit() {
   >
     <div class="share-stack login-stack">
       <a :href="googleAuthUrl" class="btn secondary wide">
-        <span class="icon icon-social"/>
+        <img src="/images/google-g.svg" alt="" class="google-g" width="20" height="20">
         <span>{{ $t('c_PXEditor.loginWithGoogle') }}</span>
       </a>
 
@@ -155,6 +155,14 @@ async function submit() {
 </template>
 
 <style scoped>
+/* Google's own multicolour G: a mask icon would flatten it to one colour.
+   Same box as .icon so the button keeps its height. */
+.google-g {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
 /* One rhythm for the whole modal: a label sits tight to its own field, the
    fields sit a step apart, and everything that is not a field -- the
    description above, Google, the submit, the mode switch -- gets the wider
