@@ -147,7 +147,7 @@ a {
 [data-theme="gameboy"] {
     --background: #0f380f;
     --foreground: #9bbc0f;
-    --border: color-mix(in oklab, #306230 50%, transparent);
+    --border: color-mix(in oklab, #306230 30%, transparent);
     --primary: #9bbc0f;
     --primary-foreground: #0f380f;
     --secondary: #8bac0f;
@@ -161,7 +161,7 @@ a {
 [data-theme="arcade"] {
     --background: #1a1033;
     --foreground: #f5e6a8;
-    --border: color-mix(in oklab, #4a2a7a 50%, transparent);
+    --border: color-mix(in oklab, #4a2a7a 30%, transparent);
     --primary: #ffb800;
     --primary-foreground: #1a1033;
     --secondary: #ff3d7f;
@@ -175,7 +175,7 @@ a {
 [data-theme="nes"] {
     --background: #000000;
     --foreground: #fcfcfc;
-    --border: color-mix(in oklab, #383838 50%, transparent);
+    --border: color-mix(in oklab, #383838 30%, transparent);
     --primary: #e40058;
     --primary-foreground: #fcfcfc;
     --secondary: #0078f8;
@@ -189,7 +189,7 @@ a {
 [data-theme="synthwave"] {
     --background: #1a0033;
     --foreground: #f0f0ff;
-    --border: color-mix(in oklab, #8833ff 50%, transparent);
+    --border: color-mix(in oklab, #8833ff 30%, transparent);
     --primary: #00f5ff;
     --primary-foreground: #1a0033;
     --secondary: #ff006e;
@@ -211,7 +211,7 @@ a {
     --foreground: #1c1a17;
     /* Was 55%, the strongest of any theme: on a near-white surface that read
        as ruled lines rather than edges. */
-    --border: color-mix(in oklab, #b5ae9f 32%, transparent);
+    --border: color-mix(in oklab, #b5ae9f 30%, transparent);
     --primary: #2550cf;
     --primary-foreground: #ffffff;
     --secondary: #3c3833;
@@ -238,9 +238,8 @@ a {
     --card: #1c1d21;
     --surface-2: #232428;
     --card-ground: var(--surface);
-    /* Solid: the old #333 at 50% alpha came out near #232323, so edges
-       barely showed. */
-    --border: #303235;
+    /* Every theme's border is its edge colour at 30% (2026-10-22). */
+    --border: color-mix(in oklab, #303235 30%, transparent);
     --foreground: #e6e8eb;
     /* Kept bright on purpose (was white at 80%): secondary text has to stay
        easy to read on these panels. 9.6:1 on --surface. */
@@ -256,7 +255,7 @@ a {
 [data-theme="cozy"] {
     --background: #f5e6d3;
     --foreground: #4a3a2a;
-    --border: color-mix(in oklab, #d4c4a8 50%, transparent);
+    --border: color-mix(in oklab, #d4c4a8 30%, transparent);
     --primary: #d4854a;
     --primary-foreground: #4a3a2a;
     --secondary: #a8b89a;
