@@ -422,6 +422,12 @@ onMounted(() => { if (open.value) openPalette() })
                 @click="closePalette(); loginModal.show()"
             >{{ $t('c_CommandPalette.signInToBackUp') }}</button>
             <span v-else-if="storage.boards" class="cmdk-stat-meta">{{ $t('c_CommandPalette.boardCount', storage.boards, {count: storage.boards}) }}</span>
+            <button
+                v-if="auth.isLogged && storage.pct > 0"
+                class="cmdk-stat-cta"
+                :title="$t('c_CommandPalette.clearLocalTitle')"
+                @click="clearLocalWork($t('c_CommandPalette.clearLocalConfirm'))"
+            >{{ $t('c_CommandPalette.clearLocal') }}</button>
           </div>
           <div class="cmdk-foot">
             <span class="cmdk-foot-grp"><kbd class="kbd">↑</kbd><kbd class="kbd">↓</kbd> {{ $t('c_CommandPalette.navigate') }}</span>

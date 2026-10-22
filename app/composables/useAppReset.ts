@@ -1,3 +1,5 @@
+import {useEditor} from '~/stores/editor.store'
+
 export async function resetAppData() {
   if (typeof window === 'undefined') return
   const ok = window.confirm(
@@ -20,5 +22,23 @@ export async function resetAppData() {
       await Promise.all((dbs || []).map((d: any) => d?.name && indexedDB.deleteDatabase(d.name)))
     }
   } catch {  }
+  location.reload()
+}
+
+// Local copies of work only -- the boards, their history and the workspace
+// snapshot. Sign-in (cookies), theme, consent and other settings stay, so a
+// signed-in user frees space without being logged out; their pieces come
+// back from the cloud on the next load.
+const LOCAL_WORK_KEYS = /^(workspaces|workspace_|histories$|spa_tileset_draft)/
+
+export async function clearLocalWork(confirmText: string) {
+  if (typeof window === 'undefined' || !window.confirm(confirmText)) return
+  // Whatever is still waiting to save goes up first.
+  try { await useEditor().flush() } catch {  }
+  try {
+    const keys = Array.from({length: localStorage.length}, (_, i) => localStorage.key(i))
+    for (const k of keys) if (k && LOCAL_WORK_KEYS.test(k)) localStorage.removeItem(k)
+  } catch {  }
+  try { indexedDB.deleteDatabase('simplepixelart') } catch {  }
   location.reload()
 }
