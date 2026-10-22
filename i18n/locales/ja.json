@@ -169,6 +169,18 @@
     "simplepixelartUsesCookiesForAnalyt": "SimplePixelArtは分析とパーソナライズ広告のためにCookieを使用します。すべて受け入れるか、必須以外を拒否できます。詳しくは",
     "weUseCookies": "クッキーを使用しています"
   },
+  "c_Feedback": {
+    "title": "フィードバック",
+    "afterExport": "作るのは簡単でしたか？",
+    "general": "SimplePixelArt の使い心地はいかがですか？",
+    "easy": "簡単",
+    "ok": "ふつう",
+    "hard": "難しい",
+    "notePlaceholder": "困ったことがあれば教えてください（任意）",
+    "send": "送信",
+    "thanks": "ありがとうございます。すべて読んでいます。",
+    "sendFailed": "送信できませんでした。少し待ってからもう一度お試しください。"
+  },
   "c_FooterBar": {
     "contact": "お問い合わせ",
     "footer": "フッター",
@@ -421,6 +433,7 @@
     "filledByAi": "AIが入力しました · −{count}クレジット",
     "fromSize": "（元 {w}×{h}）",
     "gameExportFailed": "ゲーム用書き出しに失敗しました",
+    "exportFailed": "書き出しに失敗しました。サイズを小さくするか、別の形式をお試しください。",
     "gifExportFailed": "GIFの書き出しに失敗しました",
     "hidBoard": "「{name}」を非表示にしました — ファイル → アートを読み込む から再度開けます",
     "importBoardHint": "ファイルは他のボードの横に新しいボードとして追加されます。",

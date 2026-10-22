@@ -169,6 +169,18 @@
     "simplepixelartUsesCookiesForAnalyt": "O SimplePixelArt usa cookies para análise e anúncios personalizados. Você pode aceitar todos ou recusar os não essenciais. Veja nossa",
     "weUseCookies": "Usamos cookies"
   },
+  "c_Feedback": {
+    "title": "Feedback",
+    "afterExport": "Foi fácil criar isto?",
+    "general": "Como o SimplePixelArt está funcionando para você?",
+    "easy": "Fácil",
+    "ok": "Ok",
+    "hard": "Difícil",
+    "notePlaceholder": "Algo atrapalhou? (opcional)",
+    "send": "Enviar",
+    "thanks": "Obrigado — lemos todos.",
+    "sendFailed": "Não foi possível enviar seu feedback. Tente de novo em instantes."
+  },
   "c_FooterBar": {
     "contact": "Contato",
     "footer": "Rodapé",
@@ -421,6 +433,7 @@
     "filledByAi": "Preenchido pela IA · −{count} crédito | Preenchido pela IA · −{count} créditos",
     "fromSize": "(de {w}×{h})",
     "gameExportFailed": "Falha na exportação para jogos",
+    "exportFailed": "A exportação falhou. Tente um tamanho menor ou outro formato.",
     "gifExportFailed": "Falha ao exportar GIF",
     "hidBoard": "“{name}” oculto — reabra em Arquivo → Carregar arte",
     "importBoardHint": "O arquivo vira um novo quadro ao lado dos outros.",

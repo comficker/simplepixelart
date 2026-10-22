@@ -169,6 +169,18 @@
     "simplepixelartUsesCookiesForAnalyt": "SimplePixelArt는 분석과 맞춤형 광고를 위해 쿠키를 사용합니다. 전부 수락하거나 필수가 아닌 쿠키는 거부할 수 있습니다. 자세한 내용은",
     "weUseCookies": "쿠키를 사용합니다"
   },
+  "c_Feedback": {
+    "title": "피드백",
+    "afterExport": "만들기 얼마나 쉬웠나요?",
+    "general": "SimplePixelArt 사용은 어떠세요?",
+    "easy": "쉬움",
+    "ok": "보통",
+    "hard": "어려움",
+    "notePlaceholder": "불편했던 점이 있나요? (선택)",
+    "send": "보내기",
+    "thanks": "감사합니다. 모두 꼼꼼히 읽고 있어요.",
+    "sendFailed": "피드백을 보내지 못했어요. 잠시 후 다시 시도해 주세요."
+  },
   "c_FooterBar": {
     "contact": "문의",
     "footer": "푸터",
@@ -421,6 +433,7 @@
     "filledByAi": "AI가 채웠습니다 · −{count} 크레딧",
     "fromSize": "({w}×{h}에서)",
     "gameExportFailed": "게임용 내보내기에 실패했습니다",
+    "exportFailed": "내보내기에 실패했어요. 더 작은 크기나 다른 형식으로 시도해 보세요.",
     "gifExportFailed": "GIF 내보내기에 실패했습니다",
     "hidBoard": "“{name}” 숨김 — 파일 → 아트 불러오기에서 다시 열 수 있습니다",
     "importBoardHint": "파일이 다른 보드 옆에 새 보드로 추가됩니다.",

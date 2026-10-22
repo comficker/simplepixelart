@@ -352,7 +352,9 @@ async function downloadPngSize(size: PngSize) {
     a.download = `${artSlug.value}-${size.w}x${size.h}.png`
     a.click()
     URL.revokeObjectURL(outUrl)
-  } catch {
+  } catch (e) {
+    // Falls back to opening the original, but the sized file never came.
+    track('export_failed', {format: 'png', source: 'art', reason: failReason(e)})
     window.open(imgOriginal.value, '_blank')
   } finally {
     dlScale.value = null

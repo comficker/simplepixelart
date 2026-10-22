@@ -180,6 +180,18 @@
   "c_DropdownMenu": {},
   "c_EditableText": {},
   "c_Footer": {},
+  "c_Feedback": {
+    "title": "Feedback",
+    "afterExport": "How easy was it to make this?",
+    "general": "How is SimplePixelArt working for you?",
+    "easy": "Easy",
+    "ok": "OK",
+    "hard": "Hard",
+    "notePlaceholder": "Anything that got in your way? (optional)",
+    "send": "Send",
+    "thanks": "Thanks — we read every one.",
+    "sendFailed": "Couldn't send your feedback. Try again in a moment."
+  },
   "c_FooterBar": {
     "contact": "Contact",
     "footer": "Footer",
@@ -435,6 +447,7 @@
     "filledByAi": "Filled by AI · −{count} credit | Filled by AI · −{count} credits",
     "fromSize": "(from {w}×{h})",
     "gameExportFailed": "Game export failed",
+    "exportFailed": "Export failed. Try a smaller size or another format.",
     "gifExportFailed": "GIF export failed",
     "hidBoard": "Hid “{name}” — reopen it from File → Load art",
     "importBoardHint": "The file becomes a new board beside the others.",

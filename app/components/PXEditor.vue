@@ -311,6 +311,7 @@ async function boostArt() {
 async function saveArt() {
   if (publishStatus.value === 'public' && store.isBlank()) {
     toast.error(t('c_PXEditor.drawBeforePublishing'))
+    track('publish_failed', {reason: 'ART_EMPTY'})
     return
   }
   const wasPublic = !!editorData.value.is_public
@@ -323,6 +324,12 @@ async function saveArt() {
   }
   store.saveState(false)
   await store.saveNow()
+  // The store already said so in a toast; stay on the form instead of
+  // showing "published" for a save that never reached the server.
+  if (store.saveError) {
+    if (editorData.value.is_public) track('publish_failed', {reason: store.saveError})
+    return
+  }
   if (editorData.value.is_public && !wasPublic) {
     track('publish', {width: editorData.value.width, height: editorData.value.height})
   }
@@ -1391,7 +1398,15 @@ async function confirmImport() {
   importBusy.value = true;
   try {
     const dest = importDest.value;
-    const res = await store.importFiles(importPicked.value, {process: importProcess.value, dest});
+    let res: {added: number; skipped: number};
+    try {
+      res = await store.importFiles(importPicked.value, {process: importProcess.value, dest});
+    } catch (e) {
+      console.error(e);
+      track('import_failed', {dest, files: importPicked.value.length, reason: failReason(e)});
+      toast.error(t('c_PXEditor.nothingImported'));
+      return;
+    }
     showImportModal.value = false;
     importPicked.value = [];
     if (res.added) {
@@ -1403,6 +1418,7 @@ async function confirmImport() {
           ? t('c_PXEditor.importedWithSkipped', {imported, count: res.skipped})
           : imported);
     } else {
+      track('import_failed', {dest, files: res.skipped, reason: res.skipped ? 'unreadable' : 'empty'});
       toast.error(res.skipped ? t('c_PXEditor.nothingImportedSkipped', {count: res.skipped}, res.skipped) : t('c_PXEditor.nothingImported'));
     }
   } finally {
@@ -3088,18 +3104,54 @@ function exportFile(type: string) {
     openPngExport()
     return
   }
+  let url: string
+  try {
+    url = type === 'svg' ? editorDataToSVG(editorData.value) : editorDataToJSON(editorData.value)
+  } catch (e) {
+    console.error(e)
+    exportFailed(type, e)
+    return
+  }
   const a = document.createElement('a');
-  const url = type === 'svg' ? editorDataToSVG(editorData.value) : editorDataToJSON(editorData.value)
   a.href = url;
   a.download = `SimplePixelArt.${type}`;
   a.click();
   track('export', {format: type, source: 'editor'});
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   toast.success(t('c_PXEditor.exportedAs', {type: type.toUpperCase()}))
+  afterExport()
 }
 
 function openPngExport() {
   showPngModal.value = true
+}
+
+const feedbackOpen = ref(false)
+const feedbackTrigger = ref<'export' | 'menu'>('menu')
+
+// Asks once, after the first export that worked: by then there is something
+// to rate. Remembered in localStorage, so a cleared browser may ask again.
+function afterExport() {
+  try {
+    if (localStorage.getItem('feedback_asked')) return
+    localStorage.setItem('feedback_asked', '1')
+  } catch {
+    return
+  }
+  setTimeout(() => {
+    feedbackTrigger.value = 'export'
+    feedbackOpen.value = true
+  }, 2500)
+}
+
+function openFeedback() {
+  feedbackTrigger.value = 'menu'
+  feedbackOpen.value = true
+}
+
+function exportFailed(format: string, e: unknown) {
+  track('export_failed', {format, reason: failReason(e)})
+  toast.error(t('c_PXEditor.exportFailed'))
 }
 
 function exportPng(scale: number) {
@@ -3107,13 +3159,28 @@ function exportPng(scale: number) {
   const tmp = document.createElement('canvas')
   tmp.width = editorData.value.width * scale
   tmp.height = editorData.value.height * scale
-  drawThumbnail(tmp, editorData.value, scale)
+  let href: string
+  try {
+    drawThumbnail(tmp, editorData.value, scale)
+    href = tmp.toDataURL()
+  } catch (e) {
+    // Big scales on phones run past the browser's canvas size limit.
+    console.error(e)
+    exportFailed('png', e)
+    return
+  }
+  // An over-limit canvas can also come back blank instead of throwing.
+  if (href === 'data:,') {
+    exportFailed('png', {name: 'canvas_too_large'})
+    return
+  }
   const a = document.createElement('a')
-  a.href = tmp.toDataURL()
+  a.href = href
   a.download = `${editorData.value.name || 'SimplePixelArt'}.png`
   a.click()
   showPngModal.value = false
   toast.success(t('c_PXEditor.exportedPng', {w: tmp.width, h: tmp.height}))
+  afterExport()
 }
 
 function animationFrames() {
@@ -3138,8 +3205,10 @@ async function exportGif() {
     );
     downloadBlob(new Blob([bytes], {type: 'image/gif'}), `${editorData.value.name || 'SimplePixelArt'}.gif`);
     toast.success(t('c_PXEditor.exportedGif'));
+    afterExport();
   } catch (e) {
     console.error(e);
+    track('export_failed', {format: 'gif', reason: failReason(e)});
     toast.error(t('c_PXEditor.gifExportFailed'));
   }
 }
@@ -3160,8 +3229,10 @@ async function exportSpritesheet() {
       if (blob) downloadBlob(blob, `${editorData.value.name || 'SimplePixelArt'}-spritesheet.png`);
     });
     toast.success(t('c_PXEditor.exportedSpritesheet'));
+    afterExport();
   } catch (e) {
     console.error(e);
+    track('export_failed', {format: 'spritesheet', reason: failReason(e)});
     toast.error(t('c_PXEditor.spritesheetExportFailed'));
   }
 }
@@ -3194,8 +3265,10 @@ async function exportGame() {
       }, 300);
     });
     toast.success(t('c_PXEditor.exportedGame'));
+    afterExport();
   } catch (e) {
     console.error(e);
+    track('export_failed', {format: 'game', reason: failReason(e)});
     toast.error(t('c_PXEditor.gameExportFailed'));
   }
 }
@@ -3909,6 +3982,11 @@ watch(
       </div>
       </div>
       <div class="toolbar-end">
+        <ui-tooltip :text="$t('c_Feedback.title')">
+          <button class="toolbar-btn" :aria-label="$t('c_Feedback.title')" @click="openFeedback">
+            <span class="icon icon-chat"/>
+          </button>
+        </ui-tooltip>
         <ui-tooltip :text="$t('c_PXEditor.publishShareYourWorkAutosavesAs')">
           <button class="publish-toolbar-btn tm-publish" :aria-label="$t('c_PXEditor.publishAndShare')" @click="openPublish">
             <span class="icon icon-earth"/>
@@ -4522,6 +4600,8 @@ watch(
         @close="showLoginPrompt = false"
         @success="openPublish"
     />
+
+    <PartialFeedbackCard v-model="feedbackOpen" :trigger="feedbackTrigger"/>
   </div>
 </template>
 

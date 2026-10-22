@@ -2,6 +2,7 @@ import {defineStore} from 'pinia'
 import type {AnimationTag, EditorData, Layer, SharedPage} from "~/types";
 import {useNativeFetch} from "~/composables/useCustomFetch";
 import {useHasWork} from "~/composables/useHasWork";
+import {failReason, track} from "~/composables/useTrack";
 import {cloneDeep, generateUUID, getStorageItem, key2Point, sharedPage2EditorData} from "~/helper/utils";
 import {DEFAULT_EDITOR_DATA} from "~/helper/constants";
 import {markRaw, ref, shallowRef, toRaw} from "vue";
@@ -1304,6 +1305,18 @@ export const useEditor = defineStore('editor', () => {
     // tag rows server-side, so a save only carries them when they changed.
     const savedTags = new Map<string, string>()
 
+    // Why the last save did not reach the server ('' when it did), so a
+    // caller such as publish can tell a failed save from a finished one.
+    const saveError = ref('')
+    // Autosave retries every few seconds; one event per kind of failure.
+    const reportedSaveFailures = new Set<string>()
+    function reportSaveFailure(target: 'cloud' | 'local', reason: string) {
+        const key = `${target}:${reason}`
+        if (reportedSaveFailures.has(key)) return
+        reportedSaveFailures.add(key)
+        track('save_failed', {target, reason})
+    }
+
     async function performSave() {
         // The board this save is for. The requests below take a while, and
         // the user can open another board meanwhile; writing the answer to
@@ -1406,16 +1419,20 @@ export const useEditor = defineStore('editor', () => {
                     localStorage.setItem('workspaces', JSON.stringify(localWS.value))
                 } catch (e2) {
                     console.warn('workspaces save still failing, skipping:', e2)
+                    reportSaveFailure('local', failReason(e2))
                 }
             }
         }
 
+        saveError.value = ''
         if (auth.isLogged) {
             try {
                 await save2Cloud();
             } catch (e) {
                 console.error('Failed to save to cloud, keeping local copy:', e);
                 toast.error($i18n.t('c_PXEditor.cloudSaveFailed'))
+                saveError.value = failReason(e)
+                reportSaveFailure('cloud', saveError.value)
             }
             save2Local(false)
         } else {
@@ -2781,6 +2798,7 @@ export const useEditor = defineStore('editor', () => {
         applyPalette,
         save,
         saveNow,
+        saveError,
         flush,
         syncLocalToCloud,
         importFiles,
