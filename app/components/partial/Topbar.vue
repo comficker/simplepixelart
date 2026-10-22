@@ -179,6 +179,13 @@ useHead({
   margin-left: auto;
 }
 
+/* The theme and language menus wrap their button in an inline-flex box that
+   sits on the text baseline, which left those two icons a pixel above
+   Feedback, Settings and Login. */
+.dash-top-ctl .dropdown-trigger-wrap {
+  display: flex;
+}
+
 /* SocialAuth brings its own gap for the footer; in the bar the padding does
    the spacing there too. */
 .dash-top-ctl .social-auth {
