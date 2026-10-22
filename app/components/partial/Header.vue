@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const cmdk = useCommandPalette()
 const desktop = useIsDesktop()
+const {openFeedback} = useFeedback()
 const isMac = ref(true)
 onMounted(() => {
   isMac.value = /Mac|iPhone|iPad/.test(navigator.platform)
@@ -34,6 +35,10 @@ function openCommandPalette() {
           <span class="icon icon-workspace"/>
           <span class="hdr-link-label">{{ $t('nav.yourWork') }}</span>
         </NuxtLinkLocale>
+        <button type="button" class="hdr-link" :title="$t('c_Feedback.title')" @click="openFeedback('header')">
+          <span class="icon icon-chat"/>
+          <span class="hdr-link-label">{{ $t('c_Feedback.title') }}</span>
+        </button>
         <span class="hdr-divider" aria-hidden="true"/>
         <template v-if="desktop === false">
           <PartialNotifyBell/>

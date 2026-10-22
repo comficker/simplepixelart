@@ -55,6 +55,7 @@ const loginModal = useLoginModal()
 // component the first time the palette is wanted, so the open flag has to
 // outlive the component rather than be a local ref.
 const cmdk = useCommandPalette()
+const {openFeedback} = useFeedback()
 const open = cmdk.open
 const query = ref('')
 const selected = ref(0)
@@ -113,6 +114,7 @@ const baseCommands = computed<Cmd[]>(() => [
   { id: 'help:terms', label: t('c_CommandPalette.termsOfService'), icon: 'icon-file', group: 'Help', keywords: 'terms tos legal', run: () => router.push(localePath('/terms')) },
   { id: 'help:dmca', label: t('c_CommandPalette.dmca'), icon: 'icon-flag', group: 'Help', keywords: 'copyright takedown report', run: () => router.push(localePath('/dmca')) },
   { id: 'help:github', label: t('c_CommandPalette.githubRepository'), icon: 'icon-link', hint: t('c_CommandPalette.openSource'), group: 'Help', keywords: 'github source code open source star contribute repo', run: () => window.open('https://github.com/comficker/simplepixelart', '_blank', 'noopener') },
+  { id: 'help:feedback', label: t('c_Feedback.title'), icon: 'icon-chat', group: 'Help', keywords: 'feedback suggestion idea problem hard easy rate opinion', run: () => openFeedback('command') },
   { id: 'help:issues', label: t('c_CommandPalette.reportAnIssue'), icon: 'icon-flag', hint: t('c_CommandPalette.githubIssues'), group: 'Help', keywords: 'bug report feature request issue github feedback', run: () => window.open('https://github.com/comficker/simplepixelart/issues', '_blank', 'noopener') },
   { id: 'system:reset', label: t('c_CommandPalette.resetAppData'), hint: t('c_CommandPalette.clearCacheStorage'), icon: 'icon-broom', group: 'System', keywords: 'reset clear cache storage wipe localstorage indexeddb hard refresh fix stuck broken', run: resetAppData },
 ])

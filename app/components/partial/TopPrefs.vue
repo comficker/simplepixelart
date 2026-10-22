@@ -5,6 +5,7 @@ const switchLocalePath = useSwitchLocalePath()
 const router = useRouter()
 const veil = useRebuildVeil()
 const {t} = useI18n()
+const {openFeedback} = useFeedback()
 
 function pickTheme(id: string, name: string) {
   setTheme(id)
@@ -23,6 +24,10 @@ const currentLocale = computed(() =>
 </script>
 
 <template>
+  <button type="button" class="hdr-link" :title="$t('c_Feedback.title')" :aria-label="$t('c_Feedback.title')" @click="openFeedback('header')">
+    <span class="icon icon-chat"/>
+  </button>
+
   <ui-dropdown-menu position="right" :label="$t('c_TopPrefs.theme')">
     <button type="button" class="hdr-link" :title="$t('c_TopPrefs.theme')">
       <span class="icon icon-palette"/>

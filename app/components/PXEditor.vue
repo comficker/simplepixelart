@@ -3126,8 +3126,7 @@ function openPngExport() {
   showPngModal.value = true
 }
 
-const feedbackOpen = ref(false)
-const feedbackTrigger = ref<'export' | 'menu'>('menu')
+const {openFeedback} = useFeedback()
 
 // Asks once, after the first export that worked: by then there is something
 // to rate. Remembered in localStorage, so a cleared browser may ask again.
@@ -3138,15 +3137,7 @@ function afterExport() {
   } catch {
     return
   }
-  setTimeout(() => {
-    feedbackTrigger.value = 'export'
-    feedbackOpen.value = true
-  }, 2500)
-}
-
-function openFeedback() {
-  feedbackTrigger.value = 'menu'
-  feedbackOpen.value = true
+  setTimeout(() => openFeedback('export'), 2500)
 }
 
 function exportFailed(format: string, e: unknown) {
@@ -3982,11 +3973,6 @@ watch(
       </div>
       </div>
       <div class="toolbar-end">
-        <ui-tooltip :text="$t('c_Feedback.title')">
-          <button class="toolbar-btn" :aria-label="$t('c_Feedback.title')" @click="openFeedback">
-            <span class="icon icon-chat"/>
-          </button>
-        </ui-tooltip>
         <ui-tooltip :text="$t('c_PXEditor.publishShareYourWorkAutosavesAs')">
           <button class="publish-toolbar-btn tm-publish" :aria-label="$t('c_PXEditor.publishAndShare')" @click="openPublish">
             <span class="icon icon-earth"/>
@@ -4600,8 +4586,6 @@ watch(
         @close="showLoginPrompt = false"
         @success="openPublish"
     />
-
-    <PartialFeedbackCard v-model="feedbackOpen" :trigger="feedbackTrigger"/>
   </div>
 </template>
 
