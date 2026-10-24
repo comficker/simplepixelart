@@ -4,7 +4,12 @@ Allow: /
 # Block unnecessary directories
 Disallow: /api/
 Disallow: /admin/
-Disallow: /*.json$
+# No blanket /*.json$ here: Google renders pages with robots.txt applied to
+# every request, and the app needs /_i18n/.../messages.json and
+# /_nuxt/builds/meta/*.json to start. Without them every art page rendered
+# as the error page (noindex) -- Search Console marked new arts "Excluded by
+# 'noindex' tag" from 2026-10-19, when the Googlebot `Allow: /` group that
+# used to bypass this line was removed.
 Disallow: /*.php$
 
 # Colour pages (/arts/color-<hex>, every locale) are a crawl trap: each art
