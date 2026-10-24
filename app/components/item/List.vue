@@ -3,7 +3,7 @@ const {t} = useI18n()
 const localePath = useLocalePath()
 import BrowseLayout from "~/components/BrowseLayout.vue";
 
-const {limit, showFilter, status, exactLimit, ordering, hidePaginator, title, desc} = defineProps({
+const {limit, showFilter, status, exactLimit, ordering, hidePaginator, title, desc, originalsOnly} = defineProps({
   title: {
     type: String,
     default: ''
@@ -35,6 +35,11 @@ const {limit, showFilter, status, exactLimit, ordering, hidePaginator, title, de
   ordering: {
     type: String,
     default: ''
+  },
+  // Leave remixes out (Home): they repeat a piece already on the page.
+  originalsOnly: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -48,7 +53,7 @@ watch(() => route.query.search, v => { search.value = v?.toString() || '' })
 
 const {
   fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive, openLicense, animOnly, sort, effectiveLimit,
-} = useArtListFetch({limit, status, ordering, exact: exactLimit, search})
+} = useArtListFetch({limit, status, ordering, exact: exactLimit, search, originalsOnly})
 
 const SIZE_PRESETS = [
   {width: 8, height: 8},

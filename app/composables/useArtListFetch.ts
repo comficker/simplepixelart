@@ -6,6 +6,7 @@ export function useArtListFetch(opts: {
     ordering?: string
     exact?: boolean
     search?: Ref<string>
+    originalsOnly?: boolean
 } = {}) {
     const route = useRoute()
     // Route identity, not URL building: on /ja/arts/size-16x16 the raw
@@ -75,6 +76,7 @@ export function useArtListFetch(opts: {
         height: !sizeSlugMatch.value && route.query.height ? route.query.height : undefined,
         is_iso: isoActive.value ? '1' : undefined,
         license: openLicense.value ? 'open' : undefined,
+        template__isnull: opts.originalsOnly ? 'true' : undefined,
     }))
 
 
@@ -90,7 +92,7 @@ export function useArtListFetch(opts: {
 
     const fetch = useAuthFetch<ResponseSharedPage>(`/coloring/shared-pages/`, {
         query: params,
-        key: `item-list:${encodeURIComponent(route.fullPath)}:${ordering || 'default'}:${limit}`,
+        key: `item-list:${encodeURIComponent(route.fullPath)}:${ordering || 'default'}:${limit}${opts.originalsOnly ? ':orig' : ''}`,
         // A page may start this list early and render item-list after (home,
         // art page). By default Nuxt's second call aborts the first request and
         // sends its own, and on the server it never reuses one that has
