@@ -1234,13 +1234,18 @@ export const useEditor = defineStore('editor', () => {
                 let template: number | null = res.template ?? null
                 let tempId: string | number = res.id
                 let idString = res.id_string
-                if (!asOwner && auth.logged?.id !== res?.user?.id) {
+                const remix = !asOwner && auth.logged?.id !== res?.user?.id
+                if (remix) {
                     template = res.id
                     tempId = generateUUID()
                     idString = ''
                 }
+                // A remix starts without the source's description: published
+                // with it, the page is a duplicate the backend keeps out of
+                // the index (SharedPage.is_indexable) until it says its own.
                 return sharedPage2EditorData(res, {
-                    id: tempId, id_string: idString, template
+                    id: tempId, id_string: idString, template,
+                    ...(remix ? {desc: ''} : {}),
                 })
             } catch (e: any) {
                 const code = e?.statusCode ?? e?.response?.status
