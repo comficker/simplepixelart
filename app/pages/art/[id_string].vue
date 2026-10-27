@@ -328,6 +328,21 @@ const pngSizes = computed<PngSize[]>(() => {
 
 const dlScale = ref<number | null>(null)
 
+// The export studio frames the piece for sharing; it gets the original PNG at
+// 1x (fetched as a blob, so the canvas stays exportable).
+const showStudio = ref(false)
+async function artCanvas(): Promise<HTMLCanvasElement> {
+  const w = data.value?.width || 1, h = data.value?.height || 1
+  const bitmap = await createImageBitmap(await (await fetch(imgOriginal.value!)).blob())
+  const c = document.createElement('canvas')
+  c.width = w
+  c.height = h
+  const ctx = c.getContext('2d')!
+  ctx.imageSmoothingEnabled = false
+  ctx.drawImage(bitmap, 0, 0, w, h)
+  return c
+}
+
 async function downloadPngSize(size: PngSize) {
   if (dlScale.value !== null || !imgOriginal.value) return
   track('export', {format: 'png', size: size.w, source: 'art'})
@@ -662,6 +677,9 @@ const previewStyle = computed(() => {
           <span>PNG · {{ s.label }}</span>
           <span class="text-muted">{{ dlScale === s.scale ? '…' : `${s.w}×${s.h}` }}</span>
         </button>
+        <button class="drop-item btn-split" :disabled="!imgOriginal" @click="showStudio = true">
+          <span>PNG · {{ $t('c_ExportStudio.custom') }}</span><span class="text-muted">{{ $t('c_ExportStudio.designHint') }}</span>
+        </button>
         <div class="file-menu-sep"/>
         <button class="drop-item btn-split" @click="download('square')">
           <span>{{ $t('p_art_id_string.pngSquare') }}</span><span class="text-muted">1080×1080 · {{ $t('p_art_id_string.dlSocial') }}</span>
@@ -680,6 +698,18 @@ const previewStyle = computed(() => {
         </button>
       </div>
     </Widget>
+    <ExportStudio
+        v-if="showStudio && data"
+        source="art"
+        :get-art="artCanvas"
+        :width="data.width"
+        :height="data.height"
+        :colors="data.colors || []"
+        :title="data.name"
+        :author="data.user?.username"
+        :slug="artSlug"
+        @close="showStudio = false"
+    />
     <Widget :title="$t('p_art_id_string.meta')">
       <dl class="art-meta-side">
         <div v-if="data.user" class="art-meta-row">

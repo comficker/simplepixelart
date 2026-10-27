@@ -28,8 +28,6 @@ const showPublishModal = ref(false)
 const publishStep = ref<'edit' | 'done'>('edit')
 
 const showPngModal = ref(false)
-const PNG_SCALES = [1, 2, 4, 8, 16, 32]
-const pngScale = ref(8)
 
 const showDeleteConfirm = ref(false)
 const deleting = ref(false)
@@ -3145,34 +3143,19 @@ function exportFailed(format: string, e: unknown) {
   toast.error(t('c_PXEditor.exportFailed'))
 }
 
-function exportPng(scale: number) {
-  track('export', {format: 'png', scale, source: 'editor'});
-  const tmp = document.createElement('canvas')
-  tmp.width = editorData.value.width * scale
-  tmp.height = editorData.value.height * scale
-  let href: string
-  try {
-    drawThumbnail(tmp, editorData.value, scale)
-    href = tmp.toDataURL()
-  } catch (e) {
-    // Big scales on phones run past the browser's canvas size limit.
-    console.error(e)
-    exportFailed('png', e)
-    return
-  }
-  // An over-limit canvas can also come back blank instead of throwing.
-  if (href === 'data:,') {
-    exportFailed('png', {name: 'canvas_too_large'})
-    return
-  }
-  const a = document.createElement('a')
-  a.href = href
-  a.download = `${editorData.value.name || 'SimplePixelArt'}.png`
-  a.click()
-  showPngModal.value = false
-  toast.success(t('c_PXEditor.exportedPng', {w: tmp.width, h: tmp.height}))
-  afterExport()
+// The art at 1x for the export studio, which frames and scales it.
+function editorArtCanvas(): Promise<HTMLCanvasElement> {
+  const c = document.createElement('canvas')
+  c.width = editorData.value.width
+  c.height = editorData.value.height
+  drawThumbnail(c, editorData.value, 1)
+  return Promise.resolve(c)
 }
+
+const exportSlug = computed(() =>
+    editorData.value.id_string
+    || (editorData.value.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    || 'simplepixelart')
 
 function animationFrames() {
   const fr = store.frames.length
@@ -4458,35 +4441,19 @@ watch(
       </div>
     </UiModal>
 
-    <UiModal v-if="showPngModal" class="png-modal" @close="showPngModal = false">
-          <h3 class="publish-heading">{{ $t('common.downloadPng') }}</h3>
-          <p class="publish-sub" v-html="$t('c_PXEditor.pickAnExportScaleBiggerScale')"/>
-
-          <div class="onb-field">
-            <label class="onb-label">{{ $t('c_PXEditor.scale') }}</label>
-            <div class="onb-chips">
-              <button
-                  v-for="s in PNG_SCALES"
-                  :key="s"
-                  class="onb-chip"
-                  :class="{ active: pngScale === s }"
-                  @click="pngScale = s"
-              >{{ s }}×</button>
-            </div>
-          </div>
-
-          <p class="png-dims">
-            {{ $t('c_PXEditor.output') }}
-            <strong>{{ editorData.width * pngScale }}×{{ editorData.height * pngScale }}px</strong>
-            <span class="png-dims-src">{{ $t('c_PXEditor.fromSize', {w: editorData.width, h: editorData.height}) }}</span>
-          </p>
-
-          <button class="btn primary wide" @click="exportPng(pngScale)">
-            <span class="icon icon-download"/>
-            <span>{{ $t('common.downloadPng') }}</span>
-          </button>
-          <button class="share-dismiss" @click="showPngModal = false">{{ $t('common.cancel') }}</button>
-      </UiModal>
+    <ExportStudio
+        v-if="showPngModal"
+        source="editor"
+        :get-art="editorArtCanvas"
+        :width="editorData.width"
+        :height="editorData.height"
+        :colors="editorData.colors"
+        :title="editorData.name"
+        :author="auth.logged?.username"
+        :slug="exportSlug"
+        @exported="afterExport"
+        @close="showPngModal = false"
+    />
 
     <UiModal v-if="showImportModal" class="png-modal" @close="showImportModal = false">
       <h3 class="publish-heading">{{ $t('c_PXEditor.importNFiles', {count: importPicked.length}, importPicked.length) }}</h3>
