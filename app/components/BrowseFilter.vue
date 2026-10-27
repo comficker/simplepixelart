@@ -11,20 +11,21 @@ const open = ref(props.open)
 </script>
 
 <template>
-  <section class="browse-filter" :class="{open}">
+  <!-- The editor's widget chrome (.widget / .widget-head / .title /
+       .widget-body), flattened by .browse-filters. -->
+  <section class="widget browse-filter" :class="{open}">
     <button
         type="button"
-        class="browse-filter-btn"
+        class="widget-head browse-filter-head"
         :class="{active}"
         :aria-expanded="open"
         @click="open = !open"
     >
-      <span v-if="icon" class="icon" :class="icon"/>
-      <span class="browse-filter-name">{{ label }}</span>
+      <span class="title">{{ label }}</span>
       <span class="browse-filter-val">{{ value }}</span>
       <span class="icon icon-chevron-down browse-filter-caret"/>
     </button>
-    <div v-if="open" class="browse-filter-body">
+    <div v-if="open" class="widget-body browse-filter-body">
       <slot/>
     </div>
   </section>

@@ -1230,18 +1230,6 @@ body::-webkit-scrollbar,
     gap: var(--space-3);
 }
 
-@media (min-width: 768px) {
-    .skeleton-grid {
-        grid-template-columns: repeat(var(--results-cols, 6), minmax(0, 1fr));
-    }
-}
-
-@media (min-width: 1024px) {
-    .skeleton-grid {
-        grid-template-columns: repeat(var(--results-cols, 8), minmax(0, 1fr));
-    }
-}
-
 .empty-state {
     display: flex;
     flex-direction: column;
@@ -1390,14 +1378,28 @@ body::-webkit-scrollbar,
     gap: var(--space-3);
 }
 
-@media (min-width: 768px) {
-    .results {
+/* Columns follow the width the grid actually gets, not the window: beside
+   the sidebar and the filter panel a 1280px screen left 8 columns ~110px
+   wide. Steps of 3/4/6/8 keep a 24-piece page in full rows, each piece
+   ~135-180px. A count picked in settings (--results-cols) still wins. */
+:is(*):has(> :is(.results, .skeleton-grid)) {
+    container-type: inline-size;
+}
+
+@container (min-width: 600px) {
+    :is(.results, .skeleton-grid) {
+        grid-template-columns: repeat(var(--results-cols, 4), minmax(0, 1fr));
+    }
+}
+
+@container (min-width: 860px) {
+    :is(.results, .skeleton-grid) {
         grid-template-columns: repeat(var(--results-cols, 6), minmax(0, 1fr));
     }
 }
 
-@media (min-width: 1024px) {
-    .results {
+@container (min-width: 1180px) {
+    :is(.results, .skeleton-grid) {
         grid-template-columns: repeat(var(--results-cols, 8), minmax(0, 1fr));
     }
 }
@@ -1809,14 +1811,41 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
 .browse-filters {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
     min-width: 0;
-    padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--border);
 }
 
+/* Flush to the panel edges, one 1px divider between sections (same flat
+   frame as the editor's widgets). */
 .browse-filters > * {
     flex: 0 0 auto;
+}
+
+.browse-filters > * + * {
+    border-top: 1px solid var(--border);
+}
+
+.browse-filters .browse-search input {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.browse-filters .browse-search .icon {
+    left: var(--space-4);
+}
+
+.browse-filters .browse-search input {
+    padding-left: calc(var(--space-4) + var(--icon-sm) + var(--space-2)) !important;
+}
+
+/* Inside a filter's body the box lines up with the options' text. */
+.browse-filter-body .browse-search .icon {
+    left: var(--space-2);
+}
+
+.browse-filter-body .browse-search input {
+    padding-left: calc(var(--space-2) + var(--icon-sm) + var(--space-2)) !important;
 }
 
 .browse-results {
@@ -1872,84 +1901,63 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     min-width: 0;
 }
 
-.browse-filter-btn {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
+/* A filter is a widget (Widget.vue chrome) laid flat in the panel, like the
+   widgets in a .screen: no frame, head padded to the panel's edge. */
+.browse-filters > .widget {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+}
+
+/* The panel's one divider between sections; named .widget so the zeroed
+   border above does not win. */
+.browse-filters > * + .widget {
+    border-top: 1px solid var(--border);
+}
+
+.browse-filters > .widget > .widget-head.browse-filter-head {
     width: 100%;
-    height: 36px;
-    padding: 0 var(--space-3);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    min-height: 36px;
+    padding: var(--space-1) var(--space-4);
+    background: transparent;
+    border: 0;
     color: var(--foreground);
-    font-size: var(--text-xs);
-    line-height: 1;
-    font-weight: 600;
     text-align: left;
     cursor: pointer;
-    transition: border-color var(--transition), color var(--transition), background var(--transition);
 }
 
-.browse-filter-btn > .icon {
-    flex-shrink: 0;
-    width: var(--icon-sm);
-    height: var(--icon-sm);
-    color: var(--muted);
+.browse-filter.open > .widget-head.browse-filter-head {
+    border-bottom: 1px solid var(--border);
 }
 
-.browse-filter-btn .browse-filter-name {
+.browse-filter-head .title {
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: var(--muted);
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    font-size: var(--text-2xs);
 }
 
-.browse-filter-btn .browse-filter-val {
+.browse-filter-val {
     flex-shrink: 0;
     max-width: 60%;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    font-size: var(--text-xs);
+    font-weight: 600;
 }
 
-.browse-filter-btn .icon-chevron-down {
+.browse-filter-head.active .browse-filter-val {
+    color: var(--primary);
+}
+
+.browse-filter-caret {
     flex-shrink: 0;
     width: var(--icon-sm);
     height: var(--icon-sm);
     color: var(--muted);
-}
-
-@media (hover: hover) and (pointer: fine) {
-    .browse-filter-btn:hover {
-        color: var(--primary);
-        border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
-    }
-}
-
-.browse-filter-btn.active {
-    background: color-mix(in oklab, var(--primary) 10%, var(--surface));
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.browse-filter {
-    display: flex;
-    flex-direction: column;
-}
-
-.browse-filter.open > .browse-filter-btn {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-}
-
-.browse-filter-caret {
     transition: transform var(--transition);
 }
 
@@ -1957,14 +1965,18 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     transform: rotate(180deg);
 }
 
+@media (hover: hover) and (pointer: fine) {
+    .browse-filter-head:hover .browse-filter-val,
+    .browse-filter-head:hover .browse-filter-caret {
+        color: var(--primary);
+    }
+}
+
 .browse-filter-body {
     display: flex;
     flex-direction: column;
-    padding: var(--space-1);
-    border: 1px solid var(--border);
-    border-top: 0;
-    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-    background: var(--surface);
+    padding: var(--space-2);
+    background: transparent;
 }
 
 .browse-opt {
@@ -2082,6 +2094,8 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
+    min-height: 36px;
+    padding: var(--space-1) var(--space-2) var(--space-1) var(--space-4);
 }
 
 .browse-scrim {
@@ -2156,6 +2170,12 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     .browse-filters-open,
     .browse-scrim {
         display: none;
+    }
+
+    /* The sheet head is hidden here, so whatever follows it is the panel's
+       first row: no rule on top, .screen-head already draws one. */
+    .browse-filters > .browse-filters-head + * {
+        border-top: 0;
     }
 
     .browse-results {

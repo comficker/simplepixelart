@@ -81,7 +81,7 @@ const faq = computed(() => [
 // item-list further down calls useArtListFetch with the same key, so it joins
 // this in-flight request instead of opening a second round trip — on a
 // client-side navigation each round trip costs about a second of latency.
-useArtListFetch({limit: 32, ordering: '-updated', originalsOnly: true})
+useArtListFetch({limit: 24, ordering: '-updated', originalsOnly: true})
 
 /* Up to this many rows. Placeholders pad the list only while it loads; once
    loaded, a short list shows just its real rows -- a permanent skeleton reads
@@ -377,7 +377,7 @@ useCustomSeoMeta({
             <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
           </NuxtLinkLocale>
         </template>
-        <item-list :limit="32" hide-paginator ordering="-updated" originals-only/>
+        <item-list :limit="24" hide-paginator ordering="-updated" originals-only/>
       </Widget>
 
       <!-- SPA_728_90 where the main column clears 728px (measured 736px at
