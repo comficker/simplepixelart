@@ -1378,29 +1378,11 @@ body::-webkit-scrollbar,
     gap: var(--space-3);
 }
 
-/* Columns follow the width the grid actually gets, not the window: beside
-   the sidebar and the filter panel a 1280px screen left 8 columns ~110px
-   wide. Steps of 3/4/6/8 keep a 24-piece page in full rows, each piece
-   ~135-180px. A count picked in settings (--results-cols) still wins. */
-:is(*):has(> :is(.results, .skeleton-grid)) {
-    container-type: inline-size;
-}
-
-@container (min-width: 600px) {
-    :is(.results, .skeleton-grid) {
-        grid-template-columns: repeat(var(--results-cols, 4), minmax(0, 1fr));
-    }
-}
-
-@container (min-width: 860px) {
+/* Three to a row on phones, six from tablets up: a 24-piece page is four
+   full rows. A count picked in settings (--results-cols) applies from 768px. */
+@media (min-width: 768px) {
     :is(.results, .skeleton-grid) {
         grid-template-columns: repeat(var(--results-cols, 6), minmax(0, 1fr));
-    }
-}
-
-@container (min-width: 1180px) {
-    :is(.results, .skeleton-grid) {
-        grid-template-columns: repeat(var(--results-cols, 8), minmax(0, 1fr));
     }
 }
 
