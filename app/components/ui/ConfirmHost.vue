@@ -4,10 +4,12 @@ const {options, settle} = useConfirm()
 
 <template>
   <UiModal v-if="options" :title="options.title" :sub="options.message" @close="settle(false)">
-    <button class="btn wide" :class="options.danger ? 'confirm-danger' : 'primary'" @click="settle(true)">
-      {{ options.confirmText || $t('common.confirm') }}
-    </button>
-    <button class="share-dismiss" @click="settle(false)">{{ $t('common.cancel') }}</button>
+    <div class="publish-actions">
+      <button class="btn block" @click="settle(false)">{{ $t('common.cancel') }}</button>
+      <button class="btn block" :class="options.danger ? 'confirm-danger' : 'primary'" @click="settle(true)">
+        {{ options.confirmText || $t('common.confirm') }}
+      </button>
+    </div>
   </UiModal>
 </template>
 

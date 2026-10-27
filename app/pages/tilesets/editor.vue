@@ -3518,9 +3518,8 @@ const faq = computed(() => [
     </template>
     <template #extra>
 
-    <UiModal v-if="showCanvasModal" class="canvas-modal" @close="showCanvasModal = false">
-      <h3 class="publish-heading">{{ $t('common.canvas') }}</h3>
-      <p class="publish-sub" v-html="$t('p_tilesets_editor.backgroundAmpGridOfTheBoard')"/>
+    <UiModal v-if="showCanvasModal" class="canvas-modal" :title="$t('common.canvas')" @close="showCanvasModal = false">
+      <template #sub><p class="publish-sub" v-html="$t('p_tilesets_editor.backgroundAmpGridOfTheBoard')"/></template>
 
       <div class="cv-fields">
         <div class="cv-field">
@@ -3587,8 +3586,7 @@ const faq = computed(() => [
       <button class="btn primary wide" @click="showCanvasModal = false">{{ $t('common.done') }}</button>
     </UiModal>
 
-    <UiModal v-if="showSettings && tileset" @close="showSettings = false">
-          <h3 class="publish-heading">{{ $t('p_tilesets_editor.tilesetSettings') }}</h3>
+    <UiModal v-if="showSettings && tileset" :title="$t('p_tilesets_editor.tilesetSettings')" @close="showSettings = false">
           <div class="publish-form">
             <div>
               <label class="publish-label">{{ $t('common.name') }}</label>
@@ -3653,8 +3651,7 @@ const faq = computed(() => [
           </div>
       </UiModal>
 
-    <UiModal v-if="showRelations && activeGroup?.kind === 'terrain'" @close="showRelations = false">
-          <h3 class="publish-heading">{{ $t('p_tilesets_editor.relationsTitle', {name: activeGroup.name}) }}</h3>
+    <UiModal v-if="showRelations && activeGroup?.kind === 'terrain'" :title="$t('p_tilesets_editor.relationsTitle', {name: activeGroup.name})" @close="showRelations = false">
           <div class="publish-form">
             <div>
               <label class="publish-label">{{ $t('p_tilesets_editor.priority') }}</label>
@@ -3692,8 +3689,7 @@ const faq = computed(() => [
           </div>
       </UiModal>
 
-    <UiModal v-if="showBuild && activeGroup?.kind === 'terrain'" class="tsx-build-modal" @close="showBuild = false">
-          <h3 class="publish-heading">{{ $t('p_tilesets_editor.buildBordersTitle', {name: activeGroup.name}) }}</h3>
+    <UiModal v-if="showBuild && activeGroup?.kind === 'terrain'" class="tsx-build-modal" :title="$t('p_tilesets_editor.buildBordersTitle', {name: activeGroup.name})" @close="showBuild = false">
           <div class="tsx-build-cols">
             <div class="tsx-build-left">
 
@@ -3861,8 +3857,7 @@ const faq = computed(() => [
           </div>
       </UiModal>
 
-    <UiModal v-if="showAdd && tileset" class="tsx-add-modal" @close="showAdd = false">
-          <h3 class="publish-heading">{{ $t('p_tilesets_editor.manageTiles') }}</h3>
+    <UiModal v-if="showAdd && tileset" class="tsx-add-modal" :title="$t('p_tilesets_editor.manageTiles')" @close="showAdd = false">
           <div class="tsx-add-src">
             <div class="tm-search tm-grow">
               <span class="icon icon-search"/>
@@ -4595,15 +4590,9 @@ const faq = computed(() => [
 .tsx-add-modal {
   max-width: 520px;
   width: calc(100vw - 2rem);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
 }
 .tsx-build-modal {
   max-width: 680px;
   width: calc(100vw - 2rem);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
 }
 </style>

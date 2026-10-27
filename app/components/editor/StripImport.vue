@@ -95,9 +95,8 @@ watch(open, (v) => { if (v) reset() })
 </script>
 
 <template>
-  <UiModal v-if="open" class="si-modal" @close="close">
-        <h3 class="publish-heading">{{ $t('common.importSpriteStrip') }}</h3>
-        <p class="si-sub" v-html="$t('c_StripImport.sliceASpritesheetPngIntoAnimation')"/>
+  <UiModal v-if="open" class="si-modal" :title="$t('common.importSpriteStrip')" @close="close">
+        <template #sub><p class="publish-sub" v-html="$t('c_StripImport.sliceASpritesheetPngIntoAnimation')"/></template>
 
         <button v-if="!dataUrl" type="button" class="si-drop" @click="pickFile">
           <span class="icon icon-upload"/>
@@ -152,12 +151,6 @@ watch(open, (v) => { if (v) reset() })
 
 <style scoped>
 
-.si-sub {
-  font-size: var(--text-xs);
-  color: var(--muted);
-  margin: -0.25rem 0 var(--space-4);
-}
-
 .si-drop {
   display: flex;
   flex-direction: column;
@@ -173,7 +166,6 @@ watch(open, (v) => { if (v) reset() })
   font-weight: 600;
   cursor: pointer;
   transition: border-color var(--transition), color var(--transition);
-  margin-bottom: var(--space-4);
 }
 
 .si-drop:hover {
@@ -195,7 +187,6 @@ watch(open, (v) => { if (v) reset() })
       0 0 / 16px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  margin-bottom: var(--space-3);
   overflow: hidden;
 }
 
@@ -225,7 +216,6 @@ watch(open, (v) => { if (v) reset() })
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
 }
 
 .si-field {
@@ -268,7 +258,7 @@ watch(open, (v) => { if (v) reset() })
   font-size: var(--text-2xs);
   font-style: italic;
   color: var(--muted);
-  margin: 0 0 var(--space-3);
+  margin: 0;
 }
 </style>
 

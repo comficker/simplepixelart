@@ -15,8 +15,11 @@
         <button class="ui-modal-x" :aria-label="$t('common.close')" :title="$t('common.close')" @click="$emit('close')">
           <span class="icon icon-x"/>
         </button>
-        <h3 v-if="title" :id="headingId" class="publish-heading">{{ title }}</h3>
-        <p v-if="sub" class="publish-sub">{{ sub }}</p>
+        <div v-if="title || sub || $slots.sub" class="ui-modal-head">
+          <h3 v-if="title" :id="headingId" class="publish-heading">{{ title }}</h3>
+          <p v-if="sub" class="publish-sub">{{ sub }}</p>
+          <slot name="sub"/>
+        </div>
         <slot/>
       </div>
     </div>
@@ -85,15 +88,52 @@ const modalStack: symbol[] = []
 
 <style>
 
+/* One rhythm for every dialog: head, then each block a step apart. Blocks
+   keep no outer margins of their own, so no dialog drifts from the others. */
 .ui-modal {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.share-modal.ui-modal > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.ui-modal-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.ui-modal-head > * {
+  margin: 0;
 }
 
 .ui-modal:focus {
   outline: none;
 }
 
-.ui-modal .publish-heading {
+/* Field labels read the same in every dialog, whichever panel's label class
+   the form borrowed. */
+.share-modal.ui-modal .tm-label,
+.share-modal.ui-modal .cv-label,
+.share-modal.ui-modal .si-label {
+  font-size: var(--text-xs);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.share-modal.ui-modal .tm-num-cap,
+.share-modal.ui-modal .pp-mode-label,
+.share-modal.ui-modal .pp-themes-label {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.ui-modal-head .publish-heading {
   padding-right: calc(var(--space-6) + var(--space-3));
 }
 

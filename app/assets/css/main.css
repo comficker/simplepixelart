@@ -2833,14 +2833,10 @@ canvas.iso-line { cursor: crosshair; }
     max-width: 360px;
     text-align: left;
 }
-.canvas-modal .publish-sub {
-    margin-bottom: 0;
-}
 .cv-fields {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-    margin: var(--space-4) 0 var(--space-5);
 }
 .cv-field {
     display: flex;
@@ -3325,7 +3321,7 @@ html.editor-fullscreen .consent {
 }
 
 .share-modal {
-    padding: var(--space-5);
+    padding: var(--space-4);
     background: var(--surface);
     border: 1px solid var(--border);
     box-shadow: var(--shadow-modal);

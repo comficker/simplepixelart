@@ -40,11 +40,11 @@
         </div>
       </div>
     <div class="publish-actions">
-      <button class="btn primary block" @click="save" :disabled="saving || !form.title.trim()">
-        {{ saving ? $t('c_CollectionEditModal.saving') : (isEdit ? $t('common.save') : $t('common.create')) }}
-      </button>
       <button class="btn block" @click="$emit('close')" :disabled="saving">
         {{ $t('common.cancel') }}
+      </button>
+      <button class="btn primary block" @click="save" :disabled="saving || !form.title.trim()">
+        {{ saving ? $t('c_CollectionEditModal.saving') : (isEdit ? $t('common.save') : $t('common.create')) }}
       </button>
     </div>
   </ui-modal>

@@ -168,11 +168,7 @@ async function submit() {
    description above, Google, the submit, the mode switch -- gets the wider
    step, so the form reads as one block. */
 .login-stack {
-  /* UiModal's description ends on margin-bottom:0 (the publish modal it was
-     written for supplies its own leading), so without this the text sits
-     flush on the button below it. */
-  margin-top: var(--space-5);
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
 .login-form {
@@ -182,7 +178,7 @@ async function submit() {
 /* The submit is not another field, so it takes the wider step -- the form's
    own gap already covers part of the distance. */
 .login-submit {
-  margin-top: calc(var(--space-5) - var(--space-3));
+  margin-top: calc(var(--space-4) - var(--space-3));
 }
 
 /* The stack gap already spaces it; its own margin only made this one step

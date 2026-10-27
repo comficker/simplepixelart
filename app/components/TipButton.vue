@@ -83,14 +83,9 @@ async function send() {
 </template>
 
 <style scoped>
-.tip-wallet {
-  margin: var(--space-3) 0 0;
-}
-
 .tip-send {
   width: 100%;
   justify-content: center;
-  margin-top: var(--space-4);
 }
 
 .onb-chip:disabled {

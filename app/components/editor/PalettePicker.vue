@@ -209,6 +209,7 @@ watch(open, (v) => {
   padding: 0;
   display: flex;
   flex-direction: column;
+  gap: 0;
   max-height: 80vh;
 }
 

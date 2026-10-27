@@ -3087,8 +3087,7 @@ const faq = computed(() => [
     </template>
     <template #extra>
 
-    <UiModal v-if="sizeOpen" class="tm-settings-modal" @close="sizeOpen = false">
-          <h3 class="publish-heading">{{ $t('p_tilemaps_editor.mapSettings') }}</h3>
+    <UiModal v-if="sizeOpen" class="tm-settings-modal" :title="$t('p_tilemaps_editor.mapSettings')" @close="sizeOpen = false">
           <div class="tm-settings-body">
             <div class="tm-group">
               <span class="tm-label">{{ $t('common.gridType') }}</span>

@@ -4455,9 +4455,8 @@ watch(
         @close="showPngModal = false"
     />
 
-    <UiModal v-if="showImportModal" class="png-modal" @close="showImportModal = false">
-      <h3 class="publish-heading">{{ $t('c_PXEditor.importNFiles', {count: importPicked.length}, importPicked.length) }}</h3>
-      <p class="publish-sub" v-html="$t('c_PXEditor.chooseHowToReadThePixels')"/>
+    <UiModal v-if="showImportModal" class="png-modal" :title="$t('c_PXEditor.importNFiles', {count: importPicked.length}, importPicked.length)" @close="showImportModal = false">
+      <template #sub><p class="publish-sub" v-html="$t('c_PXEditor.chooseHowToReadThePixels')"/></template>
 
       <div class="onb-field">
         <label class="onb-label">{{ $t('common.pixels') }}</label>
@@ -4498,21 +4497,24 @@ watch(
         </p>
       </div>
 
-      <button class="btn primary wide" :disabled="importBusy" @click="confirmImport">
-        <span class="icon icon-upload"/>
-        <span>{{ importBusy ? $t('c_StripImport.importing') : $t('c_StripImport.import') }}</span>
-      </button>
-      <button class="share-dismiss" @click="showImportModal = false">{{ $t('common.cancel') }}</button>
+      <div class="publish-actions">
+        <button class="btn block" @click="showImportModal = false">{{ $t('common.cancel') }}</button>
+        <button class="btn primary block" :disabled="importBusy" @click="confirmImport">
+          <span class="icon icon-upload"/>
+          <span>{{ importBusy ? $t('c_StripImport.importing') : $t('c_StripImport.import') }}</span>
+        </button>
+      </div>
     </UiModal>
 
-    <UiModal v-if="showDeleteConfirm" class="del-modal" @close="showDeleteConfirm = false">
-          <h3 class="publish-heading">{{ $t('c_PXEditor.deleteThisArt2') }}</h3>
-          <p class="publish-sub" v-html="$t('c_PXEditor.thisArtworkWillBeRemovedIf')"/>
-          <button class="btn block del-confirm-btn" :disabled="deleting" @click="destroyCurrent">
-            <span class="icon icon-trash"/>
-            <span>{{ deleting ? $t('c_PXEditor.deleting') : $t('c_PXEditor.delete') }}</span>
-          </button>
-          <button class="share-dismiss" @click="showDeleteConfirm = false">{{ $t('common.cancel') }}</button>
+    <UiModal v-if="showDeleteConfirm" class="del-modal" :title="$t('c_PXEditor.deleteThisArt2')" @close="showDeleteConfirm = false">
+          <template #sub><p class="publish-sub" v-html="$t('c_PXEditor.thisArtworkWillBeRemovedIf')"/></template>
+          <div class="publish-actions">
+            <button class="btn block" @click="showDeleteConfirm = false">{{ $t('common.cancel') }}</button>
+            <button class="btn block del-confirm-btn" :disabled="deleting" @click="destroyCurrent">
+              <span class="icon icon-trash"/>
+              <span>{{ deleting ? $t('c_PXEditor.deleting') : $t('c_PXEditor.delete') }}</span>
+            </button>
+          </div>
       </UiModal>
 
     <EditorLoadBrowser
@@ -4654,14 +4656,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 }
 
 
-.png-modal .publish-heading {
-  margin-bottom: 0;
-}
-
-.png-modal .publish-sub {
-  margin-top: 0;
-}
-
 .png-dims {
   font-size: var(--text-sm);
   color: var(--muted);
@@ -4675,14 +4669,6 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 .png-dims-src {
   margin-left: var(--space-1);
   font-size: var(--text-xs);
-}
-
-.del-modal .publish-heading {
-  margin-bottom: 0;
-}
-
-.del-modal .publish-sub {
-  margin-top: 0;
 }
 
 .del-confirm-btn {
@@ -5006,14 +4992,5 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 
 .png-modal {
   max-width: 360px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-.del-modal {
-  max-width: 340px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
 }
 </style>

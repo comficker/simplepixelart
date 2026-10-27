@@ -46,8 +46,7 @@ const shown = computed(() => {
 </script>
 
 <template>
-  <UiModal class="lb-modal" width="680px" @close="emit('close')">
-    <h3 class="publish-heading">{{ title }}</h3>
+  <UiModal class="lb-modal" width="680px" :title="title" @close="emit('close')">
 
     <div class="lb-bar">
       <label class="lb-search">
@@ -120,7 +119,6 @@ const shown = computed(() => {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-bottom: var(--space-3);
 }
 
 .lb-search {

@@ -86,11 +86,11 @@ async function send() {
         </div>
       </div>
       <div class="publish-actions">
-        <button class="btn primary block" :disabled="sending || (!rating && !text.trim())" @click="send">
-          {{ $t('c_Feedback.send') }}
-        </button>
         <button class="btn block" :disabled="sending" @click="open = false">
           {{ $t('common.cancel') }}
+        </button>
+        <button class="btn primary block" :disabled="sending || (!rating && !text.trim())" @click="send">
+          {{ $t('c_Feedback.send') }}
         </button>
       </div>
     </template>
