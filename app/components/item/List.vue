@@ -50,10 +50,19 @@ const router = useRouter()
 // filtered, and followed when a link changes it.
 const search = ref(route.query.search?.toString() || '')
 watch(() => route.query.search, v => { search.value = v?.toString() || '' })
+// The box writes ?search= (page 1), which is what the list fetches by.
+watch(search, v => {
+  if ((route.query.search?.toString() || '') === v) return
+  const q: Record<string, any> = {...route.query}
+  delete q.page
+  if (v) q.search = v
+  else delete q.search
+  router.replace({query: q})
+})
 
 const {
   fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive, openLicense, animOnly, sort, effectiveLimit,
-} = useArtListFetch({limit, status, ordering, exact: exactLimit, search, originalsOnly})
+} = useArtListFetch({limit, status, ordering, exact: exactLimit, originalsOnly})
 
 const SIZE_PRESETS = [
   {width: 8, height: 8},

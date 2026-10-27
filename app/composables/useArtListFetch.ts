@@ -5,7 +5,6 @@ export function useArtListFetch(opts: {
     status?: string
     ordering?: string
     exact?: boolean
-    search?: Ref<string>
     originalsOnly?: boolean
 } = {}) {
     const route = useRoute()
@@ -17,7 +16,9 @@ export function useArtListFetch(opts: {
     const status = opts.status ?? 'public'
     const ordering = opts.ordering ?? ''
     const exact = opts.exact ?? false
-    const search = opts.search ?? ref('')
+    // From the URL like every other filter: the page and its item-list share
+    // this request's key, so a value only one of them held never reached it.
+    const search = computed(() => route.query.search?.toString() || undefined)
 
     const {pageSize} = useResultsCols()
 
