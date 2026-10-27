@@ -1027,6 +1027,8 @@
     "tilesets": "타일셋"
   },
   "p_arts": {
+    "searchTags": "태그 검색",
+    "noTagsMatch": "“{q}”와 일치하는 태그가 없어요",
     "browseThousandsOfFreePixelArt": "커뮤니티가 만든 무료 픽셀 아트 — 스프라이트, 캐릭터, 아이콘. 모든 리믹스에는 원작자 크레딧이 붙습니다.",
     "pixelArtGallery": "픽셀 아트 갤러리"
   },

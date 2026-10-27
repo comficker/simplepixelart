@@ -1057,6 +1057,8 @@
     "tilesets": "Tilesets"
   },
   "p_arts": {
+    "searchTags": "Search tags",
+    "noTagsMatch": "No tags match “{q}”",
     "browseThousandsOfFreePixelArt": "Browse free pixel art made by the community — sprites, characters and icons. Every remix credits the original artist.",
     "pixelArtGallery": "Pixel Art Gallery"
   },

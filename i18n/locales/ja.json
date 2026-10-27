@@ -1027,6 +1027,8 @@
     "tilesets": "タイルセット"
   },
   "p_arts": {
+    "searchTags": "タグを検索",
+    "noTagsMatch": "「{q}」に一致するタグはありません",
     "browseThousandsOfFreePixelArt": "コミュニティが描いた無料のドット絵 — スプライト、キャラクター、アイコン。リミックスには必ず元の作者のクレジットが付きます。",
     "pixelArtGallery": "ドット絵ギャラリー"
   },

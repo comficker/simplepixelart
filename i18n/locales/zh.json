@@ -1027,6 +1027,8 @@
     "tilesets": "图块集"
   },
   "p_arts": {
+    "searchTags": "搜索标签",
+    "noTagsMatch": "没有与“{q}”匹配的标签",
     "browseThousandsOfFreePixelArt": "浏览社区创作的免费像素画——精灵图、角色和图标。每次改编都会署上原作者的名字。",
     "pixelArtGallery": "像素画图库"
   },

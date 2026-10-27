@@ -13,8 +13,12 @@ const hasFilterQuery = computed(() =>
 // instead of the grid waiting a whole round trip for the tags.
 useArtListFetch({limit: 24})
 
+// The five tags with the most artworks; typing in the widget narrows them in
+// the same order (?popular=1 ranks by public art count).
+const TAG_LIMIT = 5
+const tagQuery = ref('')
 const {data: tagsRes} = await useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {
-  params: {page_size: 30, has_pages: 1},
+  query: computed(() => ({page_size: TAG_LIMIT, popular: 1, search: tagQuery.value || undefined})),
   key: `arts-tags-${locale.value}`,
 })
 
@@ -67,11 +71,13 @@ useCustomSeoMeta({
         :title="$t('p_arts.pixelArtGallery')"
         :desc="$t('p_arts.browseThousandsOfFreePixelArt')"
     >
-      <template v-if="tags.length" #filters-extra>
+      <template #filters-extra>
         <BrowseFilter :label="$t('common.tags')" icon="icon-flag" :value="String(tagsRes?.count || tags.length)">
+          <BrowseSearch v-model="tagQuery" :placeholder="$t('p_arts.searchTags')" :delay="300"/>
           <BrowseOpt v-for="t in tags" :key="t.id_string" :to="`/arts/${t.id_string}`">
             {{ t.title || t.name }}
           </BrowseOpt>
+          <span v-if="!tags.length && tagQuery" class="text-xs text-muted">{{ $t('p_arts.noTagsMatch', {q: tagQuery}) }}</span>
         </BrowseFilter>
       </template>
     </item-list>
