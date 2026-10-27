@@ -153,7 +153,7 @@ a {
     --secondary: #8bac0f;
     --secondary-foreground: #0f380f;
 
-    --muted: #8bac0f;
+    --muted: color-mix(in oklab, #8bac0f 75%, transparent);
     --surface: #1c4a1c;
     --surface-2: #306230;
 }
@@ -167,7 +167,7 @@ a {
     --secondary: #ff3d7f;
     --secondary-foreground: #1a1033;
 
-    --muted: #a89cc9;
+    --muted: color-mix(in oklab, #a89cc9 75%, transparent);
     --surface: #2a1a4a;
     --surface-2: #3a2560;
 }
@@ -181,7 +181,7 @@ a {
     --secondary: #0078f8;
     --secondary-foreground: #fcfcfc;
 
-    --muted: #bcbcbc;
+    --muted: color-mix(in oklab, #bcbcbc 75%, transparent);
     --surface: #1c1c1c;
     --surface-2: #383838;
 }
@@ -195,7 +195,7 @@ a {
     --secondary: #ff006e;
     --secondary-foreground: #1a0033;
 
-    --muted: #b19cd9;
+    --muted: color-mix(in oklab, #b19cd9 75%, transparent);
     --surface: #2a0d4d;
     --surface-2: #3d1a66;
 }
@@ -217,7 +217,7 @@ a {
     --secondary: #3c3833;
     --secondary-foreground: #fdfcfa;
 
-    --muted: #6a655b;
+    --muted: color-mix(in oklab, #6a655b 75%, transparent);
     --surface: #fdfcfa;
     --surface-2: #eae7e0;
 
@@ -243,7 +243,7 @@ a {
     --foreground: #e6e8eb;
     /* Kept bright on purpose (was white at 80%): secondary text has to stay
        easy to read on these panels. 9.6:1 on --surface. */
-    --muted: #ccced0;
+    --muted: color-mix(in oklab, #ccced0 75%, transparent);
     --primary: #3b82f6;
     /* White on #3b82f6 is 3.7:1; this shade passes AA (5.2:1). */
     --primary-fill: #2563eb;
@@ -261,7 +261,7 @@ a {
     --secondary: #a8b89a;
     --secondary-foreground: #4a3a2a;
 
-    --muted: #8a7a5e;
+    --muted: color-mix(in oklab, #8a7a5e 75%, transparent);
     --surface: #ede0c8;
     --surface-2: #e0d2b8;
 }
