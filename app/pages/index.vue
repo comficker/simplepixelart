@@ -141,6 +141,18 @@ onMounted(() => {
   if (hasWork.value) loadUserWorks()
 })
 
+// FAQPage data is the FAQ on the page, in the page's language: structured
+// data has to match what visitors can read, and the old hard-coded English
+// set did not.
+const faqLd = {
+  "@type": "FAQPage",
+  mainEntity: faq.value.map(item => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: {"@type": "Answer", text: item.a.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()},
+  })),
+}
+
 useCustomSeoMeta({
   // The maker wording belongs to /editor, which already carries it. Leaving it
   // here too had the two pages competing for the same query while the terms the
@@ -188,35 +200,7 @@ useCustomSeoMeta({
               priceCurrency: "USD"
             }
           },
-          {
-            "@type": "FAQPage",
-            mainEntity: [
-              {
-                "@type": "Question",
-                name: "What is Simple Pixel Art?",
-                acceptedAnswer: {
-                  "@type": "Answer",
-                  text: "Simple Pixel Art is a free online pixel art maker. You can draw from scratch, convert any photo to pixel art, remix community templates, and share your work — all in your browser with no signup."
-                }
-              },
-              {
-                "@type": "Question",
-                name: "Is Simple Pixel Art free?",
-                acceptedAnswer: {
-                  "@type": "Answer",
-                  text: "Yes, Simple Pixel Art is completely free. No account, no watermark, no downloads required. Everything runs in the browser."
-                }
-              },
-              {
-                "@type": "Question",
-                name: "Do I need any design skill to use Simple Pixel Art?",
-                acceptedAnswer: {
-                  "@type": "Answer",
-                  text: "No. Pick a template and remix it, or convert a photo into pixel art with one click. You can publish your first pixel art in under a minute."
-                }
-              }
-            ]
-          }
+          faqLd,
         ]
       })
     }
@@ -405,38 +389,9 @@ useCustomSeoMeta({
 
       <p v-html="$t('p_index.strongSimplePixelArtStrongIs')"/>
 
-      <blockquote class="gh-alert gh-tip">
-        <p class="gh-alert-title"><span class="icon icon-rocket"/>{{ $t('common.tip') }}</p>
-        <p v-html="$t('p_index.newHereOpenAnyArtworkFrom')"/>
-      </blockquote>
-
-      <h2>{{ $t('p_index.threeWaysToStart') }}</h2>
-      <ol>
-        <li v-html="localHtml($t('p_index.strongDrawFromScratchStrongOpen'))"/>
-        <li v-html="localHtml($t('p_index.strongConvertAPhotoStrongDrop'))"/>
-        <li v-html="localHtml($t('p_index.strongRemixATemplateStrongBrowse'))"/>
-        <li v-html="localHtml($t('p_index.strongStartFromAPaletteStrong'))"/>
-      </ol>
-
-      <h2>{{ $t('p_index.builtForGameDevelopers') }}</h2>
-      <p v-html="$t('p_index.theWholeGameAssetPipelineLives')"/>
-      <ol>
-        <li v-html="localHtml($t('p_index.strongDrawSpritesStrongInThe'))"/>
-        <li v-html="localHtml($t('p_index.strongBuildTilesetsStrongAHref'))"/>
-        <li v-html="localHtml($t('p_index.strongPaintTilemapsStrongGridOr'))"/>
-        <li v-html="$t('p_index.strongExportGameReadyStrongSprite')"/>
-      </ol>
-
-      <h2>{{ $t('p_index.whatSInside') }}</h2>
+      <h2>{{ $t('p_index.whatYouCanDo') }}</h2>
       <ul>
-        <li v-html="$t('p_index.strongFullEditorStrongBrushEraser')"/>
-        <li v-html="$t('p_index.strongAnimationStrongFrameByFrame')"/>
-        <li v-html="$t('p_index.strongMirrorDrawingStrongDrawSymme')"/>
-        <li v-html="localHtml($t('p_index.strongPaletteManagerStrongBuildSav'))"/>
-        <li v-html="$t('p_index.strongPhotoToPixelArtStrong')"/>
-        <li v-html="$t('p_index.strongTilesetsTilemapsStrongAutoti')"/>
-        <li><strong>{{ $t('common.weeklyChallenges') }}</strong> {{ $t('p_index.aFresh') }} <NuxtLinkLocale to="/challenges">{{ $t('p_index.themeEveryWeek') }}</NuxtLinkLocale>{{ $t('p_index.communityVotedWinners') }}</li>
-        <li v-html="$t('p_index.strongExportAnywhereStrongCleanPng')"/>
+        <li v-for="n in 6" :key="n" v-html="localHtml($t(`p_index.can${n}`))"/>
       </ul>
 
       <h2>{{ $t('p_index.popularCanvasSizes') }}</h2>
@@ -446,8 +401,7 @@ useCustomSeoMeta({
       </p>
 
       <h2>{{ $t('p_index.newToPixelArt') }}</h2>
-      <p>
-        {{ $t('p_index.startWith') }} <NuxtLinkLocale to="/easy-pixel-art">{{ $t('p_index.easyPixelArt') }}</NuxtLinkLocale> {{ $t('p_index.smallGridsThreeColorsAndA') }} <NuxtLinkLocale to="/editor">{{ $t('p_index.pixelArtEditor') }}</NuxtLinkLocale> {{ $t('p_index.toMakePixelArtOnlineFor') }} </p>
+      <p v-html="localHtml($t('p_index.newToPixelArtLine'))"/>
 
       <QnA :title="$t('common.questionsAmpAnswers')" :items="faq"/>
     </template>
