@@ -31,7 +31,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .footer-bar {
     flex-direction: column;
     align-items: center;

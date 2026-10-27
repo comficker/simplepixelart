@@ -198,7 +198,7 @@ useCustomSeoMeta({
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 
-@media (max-width: 520px) {
+@media (max-width: 479px) {
   .chal-grid {
     grid-template-columns: repeat(2, 1fr);
   }

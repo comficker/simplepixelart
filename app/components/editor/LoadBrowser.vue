@@ -186,7 +186,7 @@ const shown = computed(() => {
   align-content: start;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 479px) {
   .lb-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

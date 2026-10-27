@@ -200,7 +200,7 @@ onBeforeUnmount(() => clearInterval(timer))
   image-rendering: pixelated;
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 1024px) {
   .hero-show {
     --hero-art-h: 100%;
   }

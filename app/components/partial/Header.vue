@@ -220,7 +220,7 @@ header .brand-name-main {
 
 /* Signed in, the bell and the balance join the row, and on a 360px phone it
    ran 8px past the screen, so the whole page scrolled sideways. */
-@media (max-width: 380px) {
+@media (max-width: 479px) {
   .hdr-link { padding-left: calc(var(--space-1) * 1.5); padding-right: calc(var(--space-1) * 1.5); }
 }
 

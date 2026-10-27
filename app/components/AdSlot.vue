@@ -227,7 +227,7 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .ad-slot-small { min-height: 180px; }
   .ad-slot-medium { min-height: 250px; }
   .ad-slot-large { min-height: 280px; }

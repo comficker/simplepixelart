@@ -31,7 +31,7 @@ const shown = computed(() => {
   gap: var(--space-2);
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1024px) {
 
   .studio-paths { grid-template-columns: repeat(var(--tp-cols, 7), minmax(0, 1fr)); }
 }
@@ -78,7 +78,7 @@ const shown = computed(() => {
 
 /* The tool grid is secondary navigation; below 900px it was eating 227px of the
    first viewport and pushing the gallery out of sight. */
-@media (max-width: 899px) {
+@media (max-width: 1023px) {
   .studio-path {
     gap: var(--space-2);
     padding: var(--space-3) var(--space-2);

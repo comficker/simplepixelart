@@ -336,7 +336,7 @@ useCustomSeoMeta({
   gap: var(--space-3);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .pd-swatches { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
@@ -509,7 +509,7 @@ useCustomSeoMeta({
   gap: var(--space-4);
 }
 
-@media (max-width: 520px) {
+@media (max-width: 479px) {
   .pd-related-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 }
 </style>

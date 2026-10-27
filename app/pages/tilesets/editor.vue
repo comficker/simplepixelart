@@ -4255,7 +4255,7 @@ const faq = computed(() => [
   align-items: start;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .tsx-build-cols { grid-template-columns: 1fr; }
 }
 

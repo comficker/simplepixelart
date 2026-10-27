@@ -45,7 +45,7 @@ const year = new Date().getFullYear()
 
 /* The bar centres itself at this width, but these are flex rows of their own
    and stayed hard left under a centred row of social links. */
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .footer-left,
   .footer-links {
     justify-content: center;

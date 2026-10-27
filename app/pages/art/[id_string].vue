@@ -858,7 +858,7 @@ const previewStyle = computed(() => {
 /* A phone has no room for both on one line: the title takes the first, and
    the controls fill the second edge to edge, lined up with the title's
    left edge, rather than huddling on the right. */
-@media (max-width: 639px) {
+@media (max-width: 767px) {
   :deep(.tool-main > .widget-head) {
     flex-direction: column;
     align-items: stretch;

@@ -404,7 +404,7 @@ watch(() => auth.isLogged, (v) => {
   margin-bottom: var(--space-1);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .msn-uses {
     grid-template-columns: 1fr;
   }
@@ -571,7 +571,7 @@ watch(() => auth.isLogged, (v) => {
   color: var(--primary);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .msn-row {
     flex-wrap: wrap;
   }

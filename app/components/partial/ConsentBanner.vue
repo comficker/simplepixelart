@@ -145,7 +145,7 @@ onMounted(() => {
   font-size: var(--text-xs) !important;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 479px) {
   .consent {
     padding: var(--space-2);
   }

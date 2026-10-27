@@ -753,7 +753,7 @@ onMounted(() => { if (open.value) openPalette() })
   transform: translateY(-4px) scale(0.98);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 767px) {
   .cmdk-overlay { padding-top: 6vh; }
   .cmdk { height: min(80dvh, 560px); border-radius: var(--radius-sm); }
   .cmdk-foot { display: none; }

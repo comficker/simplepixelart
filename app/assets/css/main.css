@@ -752,7 +752,7 @@ input[type=number] {
     }
 }
 
-@media (max-width: 899px) {
+@media (max-width: 1023px) {
     .page-hero .home-tools > .studio-paths {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -778,7 +778,7 @@ input[type=number] {
     }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
     .prose .section-head .section-hint {
         display: none;
     }
@@ -879,7 +879,7 @@ footer {
         var(--surface);
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 1024px) {
     .page-hero {
         --hero-wash: linear-gradient(to bottom right, var(--surface) 0%, var(--surface) 34%, color-mix(in oklab, var(--surface) 82%, transparent) 44%, color-mix(in oklab, var(--surface) 55%, transparent) 54%, color-mix(in oklab, var(--surface) 28%, transparent) 64%, color-mix(in oklab, var(--surface) 10%, transparent) 74%, color-mix(in oklab, var(--surface) 0%, transparent) 84%);
         grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
@@ -1360,7 +1360,7 @@ body::-webkit-scrollbar,
     border-radius: var(--radius-sm);
 }
 
-@media (max-width: 520px) {
+@media (max-width: 479px) {
     .pal-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
@@ -2120,7 +2120,10 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     }
 }
 
-@media (min-width: 1024px) {
+/* The filter panel becomes a fixed column only where the grid still gets
+   room beside it and the sidebar: from 1024px it left ~550px for results.
+   Below this the panel is the sheet behind the Filters button. */
+@media (min-width: 1280px) {
     .main-wrapper.dash:has(.browse) .dash-main {
         height: 100vh;
     }
@@ -3893,7 +3896,7 @@ html.editor-fullscreen .consent {
     border-left: 1px solid var(--border);
 }
 
-@media (max-width: 720px) {
+@media (max-width: 767px) {
     .tool-card {
         grid-template-columns: 1fr;
     }

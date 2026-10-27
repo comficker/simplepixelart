@@ -421,7 +421,7 @@ watch(() => auth.logged?.id, fillForm)
   border-color: color-mix(in oklab, var(--danger, #dc2626) 40%, var(--border));
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .set-row,
   .set-themes {
     grid-template-columns: 1fr;
