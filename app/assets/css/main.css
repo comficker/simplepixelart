@@ -4562,7 +4562,20 @@ select.publish-input { height: var(--tm-ctl, 34px); cursor: pointer; }
 .art-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .art-actions .btn { flex: 1 1 6rem; justify-content: center; }
 
-.art-stage { min-height: 0; }
+.art-stage { min-height: 0; --art-pill-h: 30px; }
+
+/* Fit to view sizes the art to the whole stage, which put its foot under the
+   floating preview pills. Keep their strip clear instead: one row of pills
+   from 768px, two stacked below that. */
+.art-stage.is-fit {
+  padding-bottom: calc(var(--space-3) * 2 + var(--art-pill-h) * 2 + var(--space-2));
+}
+
+@media (min-width: 768px) {
+  .art-stage.is-fit {
+    padding-bottom: calc(var(--space-3) * 2 + var(--art-pill-h));
+  }
+}
 
 @media (max-width: 1279px) {
   .art-stage { max-height: 60vh; }
@@ -4600,7 +4613,7 @@ select.publish-input { height: var(--tm-ctl, 34px); cursor: pointer; }
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  height: 30px;
+  height: var(--art-pill-h, 30px);
   padding: 0 0.6rem;
   border-radius: var(--radius-pill);
   background: color-mix(in oklab, var(--surface) 92%, transparent);

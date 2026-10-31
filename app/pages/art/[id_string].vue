@@ -492,7 +492,7 @@ const previewStyle = computed(() => {
       </template>
 
     <div class="flat-editor art-editor">
-      <div class="tm-stage art-stage">
+      <div class="tm-stage art-stage" :class="{'is-fit': previewSize === 'full' && !pixelView}">
         <ClientOnly v-if="pixelView && mapNumbers">
           <ArtPixelCanvas
               :width="data.width"
