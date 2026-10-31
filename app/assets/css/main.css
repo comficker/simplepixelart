@@ -555,6 +555,13 @@ input[type=number] {
         overflow-y: auto;
     }
 
+    /* The head row and the status foot keep their height. The body grows
+       from its content size, so a tall one (an artwork in Fit to view) used
+       to squeeze the title row from 48px to 29px instead of shrinking itself. */
+    .main-wrapper.dash .tool-main > :is(.widget-head, .editor-foot) {
+        flex-shrink: 0;
+    }
+
     .main-wrapper.dash .tool-main > .editor-foot {
         position: sticky;
         bottom: 0;
