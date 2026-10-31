@@ -25,6 +25,9 @@
     "@firebase/util",
     "@parcel/watcher",
   ],
+  "patchedDependencies": {
+    "vue-sonner@2.0.9": "patches/vue-sonner@2.0.9.patch",
+  },
   "overrides": {
     "vue": "latest",
   },

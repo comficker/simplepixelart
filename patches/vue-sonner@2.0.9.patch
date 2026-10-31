@@ -1,0 +1,12 @@
+diff --git a/lib/index.js b/lib/index.js
+index cd01bb1f1563571946c1470dfdea9d009655d9cd..aa39b99b0045063a0927d0bc331ca82a224faf69 100644
+--- a/lib/index.js
++++ b/lib/index.js
+@@ -500,6 +500,7 @@ var Toast_vue_vue_type_script_setup_true_lang_default = /* @__PURE__ */ defineCo
+ 			if (!mounted.value || !toastRef.value) return;
+ 			await nextTick();
+ 			const toastNode = toastRef.value;
++			if (!toastNode) return;
+ 			const originalHeight = toastNode.style.height;
+ 			toastNode.style.height = "auto";
+ 			const newHeight = toastNode.getBoundingClientRect().height;

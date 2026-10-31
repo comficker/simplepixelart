@@ -33,5 +33,8 @@
     "@firebase/util",
     "@parcel/watcher",
     "protobufjs"
-  ]
+  ],
+  "patchedDependencies": {
+    "vue-sonner@2.0.9": "patches/vue-sonner@2.0.9.patch"
+  }
 }
