@@ -1706,6 +1706,12 @@ html.editor-fullscreen .editor .canvas-col > .widget:not(:first-child) {
     flex-direction: column;
 }
 
+/* A screen scrolls; its sections never shrink to fit it. The hero used to
+   be squeezed below its content, which overflow:hidden then cut off. */
+.screen > * {
+    flex-shrink: 0;
+}
+
 .screen > :is(.readme, .widget),
 .screen > .screen-row > .widget {
     border: 0;
