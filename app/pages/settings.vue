@@ -288,7 +288,7 @@ watch(() => auth.logged?.id, fillForm)
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: var(--space-5, var(--space-4));
+  gap: var(--space-5, 0.8125rem));
 }
 
 .set-section {

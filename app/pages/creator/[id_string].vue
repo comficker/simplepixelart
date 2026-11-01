@@ -570,7 +570,7 @@ useCustomSeoMeta({
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-3);
-    margin-top: calc(var(--space-6) * -1.5);
+    margin-top: calc(var(--space-4) * -2);
     padding: 0 var(--space-4);
   }
 

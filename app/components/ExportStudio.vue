@@ -310,7 +310,7 @@ async function share() {
 </script>
 
 <template>
-  <UiModal class="export-studio" width="calc(var(--space-6, 1.5rem) * 20)" :title="$t('common.downloadPng')" @close="emit('close')">
+  <UiModal class="export-studio" width="calc(var(--space-6, 0.9375rem) * 20)" :title="$t('common.downloadPng')" @close="emit('close')">
     <figure class="export-figure">
       <div class="export-preview">
         <canvas ref="preview" :aria-label="$t('c_ExportStudio.preview')"/>
@@ -393,7 +393,7 @@ async function share() {
 }
 
 .export-studio {
-  max-height: calc(100dvh - var(--space-6, 1.5rem));
+  max-height: calc(100dvh - var(--space-6, 0.9375rem));
   overflow-y: auto;
 }
 
@@ -404,9 +404,9 @@ async function share() {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: var(--space-2, 0.5rem);
+  padding: var(--space-2, 0.3125rem);
   border-radius: var(--radius-sm, 4px);
-  background: repeating-conic-gradient(var(--surface-2, #eae7e0) 0% 25%, transparent 0% 50%) 0 0 / var(--space-4, 1rem) var(--space-4, 1rem);
+  background: repeating-conic-gradient(var(--surface-2, #eae7e0) 0% 25%, transparent 0% 50%) 0 0 / var(--space-4, 0.625rem) var(--space-4, 0.625rem);
 }
 
 .export-preview canvas {
@@ -419,9 +419,9 @@ async function share() {
 /* The actions stay in reach while the settings scroll under them. */
 .share-modal.export-studio .publish-actions {
   position: sticky;
-  bottom: calc(var(--space-4, 1rem) * -1);
-  margin-bottom: calc(var(--space-4, 1rem) * -1);
-  padding: var(--space-3, 0.75rem) 0 var(--space-4, 1rem);
+  bottom: calc(var(--space-4, 0.625rem) * -1);
+  margin-bottom: calc(var(--space-4, 0.625rem) * -1);
+  padding: var(--space-3, 0.5rem) 0 var(--space-4, 0.625rem);
   background: var(--surface, #fff);
   border-top: 1px solid var(--border, rgba(0, 0, 0, .12));
 }
@@ -446,14 +446,14 @@ async function share() {
 }
 
 .export-studio .onb-field {
-  gap: var(--space-2, 0.5rem);
+  gap: var(--space-2, 0.3125rem);
 }
 
 .export-figure {
   flex: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2, 0.5rem);
+  gap: var(--space-2, 0.3125rem);
 }
 
 .export-dims {
@@ -470,6 +470,6 @@ async function share() {
 .export-swatch-chip {
   display: inline-flex;
   align-items: center;
-  padding: var(--space-1, 0.25rem) var(--space-2, 0.5rem);
+  padding: var(--space-1, 0.1875rem) var(--space-2, 0.3125rem);
 }
 </style>

@@ -450,7 +450,7 @@ useCustomSeoMeta({
 .pd-pill {
   font-size: var(--text-xs);
   font-weight: 700;
-  padding: var(--space-1) 0.7rem;
+  padding: var(--space-1) var(--space-4);
   border-radius: var(--radius-pill);
   background: var(--surface-2);
   color: var(--foreground);

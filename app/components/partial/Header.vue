@@ -85,7 +85,7 @@ header .hdr {
 }
 
 header .brand {
-  margin-left: -0.3rem;
+  margin-left: calc(var(--space-2) * -1);
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
@@ -210,7 +210,7 @@ header .brand-name-main {
 
 @media (max-width: 767px) {
   header .hdr { gap: var(--space-3); min-height: 56px; }
-  header .brand { gap: 0.45rem; padding: var(--space-1); }
+  header .brand { gap: var(--space-3); padding: var(--space-1); }
   header .brand-logo { width: 36px; height: 36px; padding: 2px; border-radius: var(--radius-sm); }
   header .brand-name { font-size: var(--text-lg); }
   .hdr-nav { gap: 0; }
@@ -221,7 +221,7 @@ header .brand-name-main {
 /* Signed in, the bell and the balance join the row, and on a 360px phone it
    ran 8px past the screen, so the whole page scrolled sideways. */
 @media (max-width: 479px) {
-  .hdr-link { padding-left: calc(var(--space-1) * 1.5); padding-right: calc(var(--space-1) * 1.5); }
+  .hdr-link { padding-left: var(--space-2); padding-right: var(--space-2); }
 }
 
 </style>

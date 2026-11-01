@@ -199,8 +199,8 @@ useHead({
 /* The bar's own controls carry the base 20px icon; the menus they open keep
    theirs. */
 .dash-top .dash-top-ctl :is(.hdr-link, .wallet-chip) > .icon {
-  width: var(--space-5);
-  height: var(--space-5);
+  width: calc(var(--space-4) * 2);
+  height: calc(var(--space-4) * 2);
 }
 
 /* Active reads by colour and fill alone here; the outline made the current

@@ -109,7 +109,7 @@ const shown = computed(() => {
   }
 
   .studio-path {
-    flex: 0 0 calc(var(--space-6) * 2.5);
+    flex: 0 0 calc(var(--space-4) * 4);
     gap: var(--space-1);
     padding: var(--space-1) 0;
     background: transparent;

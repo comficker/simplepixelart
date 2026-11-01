@@ -3294,8 +3294,8 @@ const faq = computed(() => [
 .tm-island {
   position: absolute; top: 0.75rem; left: 0.75rem; z-index: 6;
   max-width: calc(100% - 1.5rem);
-  display: flex; flex-direction: column; gap: 0.4rem;
-  padding: 0.4rem;
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-2);
   border: 1px solid var(--border); border-radius: var(--radius-sm);
   background: color-mix(in oklab, var(--surface) 94%, transparent);
   -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
@@ -3310,7 +3310,7 @@ const faq = computed(() => [
 }
 .tm-island-head {
   display: flex; align-items: center; gap: var(--space-2);
-  padding: 0.1rem 0.2rem; cursor: pointer; user-select: none;
+  padding: calc(var(--space-1) - 1px) var(--space-1); cursor: pointer; user-select: none;
   font-size: var(--text-2xs); font-weight: 700; letter-spacing: 0.06em;
   text-transform: uppercase; color: var(--muted);
 }
@@ -3346,7 +3346,7 @@ const faq = computed(() => [
 .tm-dims-one { grid-template-columns: 1fr; }
 .tm-iso-ratio .tm-num-cap em { font-style: normal; text-transform: none; opacity: 0.7; }
 .tm-chips-ratio { grid-template-columns: repeat(3, 1fr); }
-.tm-num { display: flex; flex-direction: column; gap: 0.3rem; }
+.tm-num { display: flex; flex-direction: column; gap: var(--space-2); }
 .tm-num-cap { font-size: var(--text-2xs); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .tm-num-ctl {
   display: grid; grid-template-columns: var(--tm-ctl) 1fr var(--tm-ctl); align-items: center;
@@ -3369,7 +3369,7 @@ const faq = computed(() => [
   background: repeating-conic-gradient(#cfcfd6 0% 25%, #ffffff 0% 50%) 0 0 / 10px 10px;
 }
 .tm-bg-opt {
-  display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: 0.4rem var(--space-2);
+  display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-2) var(--space-2);
   border: 1px solid var(--border); background: transparent; border-radius: var(--radius-sm);
   cursor: pointer; font-size: var(--text-xs); font-weight: 600; color: var(--foreground);
 }
@@ -3395,8 +3395,8 @@ const faq = computed(() => [
 .tm-objects .tm-layer-input { flex: 1; min-width: 0; }
 .tm-objects-empty { margin: 0; padding: var(--space-1) var(--space-2); }
 .tm-layer {
-  display: flex; align-items: center; gap: 0.4rem;
-  padding: 0.3rem 0.4rem; border-radius: calc(var(--radius-sm) - 2px);
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-2); border-radius: calc(var(--radius-sm) - 2px);
   cursor: pointer; font-size: var(--text-xs); color: var(--foreground);
 }
 .tm-layer:hover { background: var(--surface-2); }
@@ -3427,7 +3427,7 @@ const faq = computed(() => [
 .tm-layer-count { font-size: var(--text-2xs); color: var(--muted); flex: none; }
 
 .tm-layer-add {
-  display: inline-flex; align-items: center; gap: 0.2rem; height: 22px; padding: 0 0.55rem;
+  display: inline-flex; align-items: center; gap: var(--space-1); height: 22px; padding: 0 var(--space-3);
   border: 1px solid var(--border); background: transparent; border-radius: var(--radius-pill);
   cursor: pointer; font-size: var(--text-2xs); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
   color: var(--foreground);
@@ -3593,8 +3593,8 @@ const faq = computed(() => [
 
 .tm-rendering {
   position: absolute; top: 0.75rem; right: 0.75rem;
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  padding: 0.3rem 0.65rem; border-radius: var(--radius-pill);
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill);
   background: color-mix(in oklab, var(--surface) 90%, transparent);
   -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
   border: 1px solid var(--border);

@@ -257,12 +257,12 @@ async function publish() {
 .composer-themes {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: var(--space-2);
   margin-bottom: 1rem;
 }
 
 .composer-theme {
-  padding: 0.3rem 0.7rem;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: var(--surface);

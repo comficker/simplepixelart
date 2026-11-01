@@ -347,7 +347,7 @@ watch(() => auth.isLogged, (v) => {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
-  margin-bottom: var(--space-5, var(--space-4));
+  margin-bottom: var(--space-5, 0.8125rem));
 }
 
 .msn-use {

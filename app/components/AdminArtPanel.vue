@@ -201,7 +201,7 @@ async function destroy() {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
-  padding: 0.4rem var(--space-3) 0.4rem 0.4rem;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--foreground);
@@ -314,7 +314,7 @@ async function destroy() {
 .admin-group {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .admin-group-label {
@@ -457,7 +457,7 @@ async function destroy() {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 0.4rem 0.625rem;
+  padding: var(--space-2) 0.625rem;
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--danger);

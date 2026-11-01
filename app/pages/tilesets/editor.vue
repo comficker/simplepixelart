@@ -4288,7 +4288,7 @@ const faq = computed(() => [
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted, #888);
-  margin-top: var(--space-2, 8px);
+  margin-top: var(--space-2, 0.3125rem);
 }
 
 .tsx-build-sec:first-child { margin-top: 0; }
@@ -4327,7 +4327,7 @@ const faq = computed(() => [
 .tsx-build-slotgrid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--space-2, 8px);
+  gap: var(--space-2, 0.3125rem);
 }
 
 .tsx-build-slot {
@@ -4335,7 +4335,7 @@ const faq = computed(() => [
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  padding: var(--space-2, 8px) 2px var(--space-1, 4px);
+  padding: var(--space-2, 0.3125rem) 2px var(--space-1, 0.1875rem);
   border: 1px solid var(--border, #ddd);
   border-radius: var(--radius-sm, 6px);
   background: var(--surface, #fff);
@@ -4491,8 +4491,8 @@ const faq = computed(() => [
 .tsx-rel-row {
   display: flex;
   align-items: center;
-  gap: var(--space-2, 8px);
-  padding: var(--space-1, 4px) 0;
+  gap: var(--space-2, 0.3125rem);
+  padding: var(--space-1, 0.1875rem) 0;
 }
 
 .tsx-rel-name {
@@ -4506,7 +4506,7 @@ const faq = computed(() => [
 }
 
 .tsx-rel-help {
-  margin-top: var(--space-2, 8px);
+  margin-top: var(--space-2, 0.3125rem);
 }
 
 .tsx-tb-type {

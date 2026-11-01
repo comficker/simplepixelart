@@ -237,8 +237,10 @@ const SECTIONS = [
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--space-5);
-  height: var(--space-5);
+  /* Two base steps: its own size, not a gap, so it does not follow the
+     spacing scale down. */
+  width: calc(var(--space-4) * 2);
+  height: calc(var(--space-4) * 2);
   flex-shrink: 0;
   border-radius: var(--space-1);
   background: linear-gradient(135deg, var(--ic-1), var(--ic-2));

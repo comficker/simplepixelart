@@ -1505,7 +1505,7 @@ onMounted(() => {
 
 .work-status.work-kind {
   top: auto;
-  bottom: calc(var(--space-2) - var(--space-1) / 2);
+  bottom: var(--space-1);
 }
 
 .work-more-tl {
