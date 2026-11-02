@@ -294,6 +294,41 @@ function isCloud(item: WorkItem): boolean {
 
 const failedThumb = reactive<Record<string | number, boolean>>({})
 
+// Animated pieces: a GIF badge on the card, and the animation plays while the
+// pointer rests on it. List rows carry `is_anim` but not the frames, so a
+// cloud piece's frames are fetched the first time it is hovered, then kept.
+type AnimData = {frames: any[], shared?: any[], fps?: number, loop?: boolean, width: number, height: number, colors: string[]}
+const animCache = shallowReactive<Record<string, AnimData | null>>({})
+const hoveredAnim = ref<string | number | null>(null)
+
+function isAnim(item: WorkItem): boolean {
+  return (item as any).is_anim ?? (((item.meta as any)?.animation?.frames?.length || 0) > 1)
+}
+
+function animFrom(page: any): AnimData | null {
+  const a = page?.meta?.animation
+  if (!a?.frames?.length) return null
+  // Always loops here: a one-shot would play once and sit still under the pointer.
+  return {frames: a.frames, shared: a.shared, fps: a.fps, loop: true, width: page.width, height: page.height, colors: page.colors}
+}
+
+async function playAnim(item: WorkItem) {
+  if (!isAnim(item)) return
+  hoveredAnim.value = item.id
+  const key = String(item.id)
+  if (key in animCache) return
+  if (!isCloud(item)) {
+    animCache[key] = animFrom(item)
+    return
+  }
+  animCache[key] = null
+  try {
+    animCache[key] = animFrom(await useNativeFetch(`/coloring/shared-pages/${item.id}/`))
+  } catch {
+    delete animCache[key]
+  }
+}
+
 function artUrl(idString: string): string {
   return artImage(idString)
 }
@@ -792,7 +827,13 @@ onMounted(() => {
           :class="{selecting: selectMode}"
           name="work-item"
       >
-        <div v-for="item in filteredWorks" :key="item.id as any" class="work-card">
+        <div
+            v-for="item in filteredWorks"
+            :key="item.id as any"
+            class="work-card"
+            @mouseenter="playAnim(item)"
+            @mouseleave="hoveredAnim = null"
+        >
           <button
               v-if="selectMode"
               class="work-select-hit"
@@ -818,11 +859,20 @@ onMounted(() => {
                   <span class="icon icon-image"/>
                 </div>
                 <Thumb v-else :data="item as EditorData"/>
+                <AnimatedArt
+                    v-if="hoveredAnim === item.id && animCache[String(item.id)]"
+                    v-bind="animCache[String(item.id)]!"
+                    class="size-full work-anim-play"
+                />
               </div>
             </div>
           </NuxtLinkLocale>
           <span class="work-status badge-ic" :class="statusClass(item)" :title="statusTitle(item.status)">
             <span class="icon" :class="statusIcon(item.status)"/>
+          </span>
+          <span v-if="isAnim(item)" class="work-anim-badge" :title="$t('common.animatedArtwork')">
+            <svg viewBox="0 0 24 24" width="10" height="10" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            <span>{{ $t('c_Card.gif') }}</span>
           </span>
           <span v-if="item.is_tile" class="work-status work-kind badge-ic badge-draft" :title="$t('p_work.tile')">
             <span class="icon icon-apps"/>
@@ -1501,6 +1551,41 @@ onMounted(() => {
 .work-status.badge-ic .icon {
   width: var(--icon-sm);
   height: var(--icon-sm);
+}
+
+/* Same pill as the gallery card's GIF badge, in the corner the status and
+   menu leave free. */
+.work-anim-badge {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.62);
+  border-radius: var(--radius-pill);
+  pointer-events: none;
+}
+
+/* The playing animation lies over the still thumbnail, same box, same fit. */
+.work-anim-play {
+  position: absolute;
+  inset: var(--space-3);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.square .inside.art-cover > .work-anim-play {
+  inset: 0;
+  object-fit: cover;
 }
 
 .work-status.work-kind {
