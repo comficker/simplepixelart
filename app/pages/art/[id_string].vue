@@ -28,6 +28,12 @@ if (import.meta.server && !data.value) {
 }
 
 const license = computed(() => licenseOf((data.value?.meta as any)?.license))
+// Where a piece came from when it was brought in from elsewhere (an open-source
+// pack, say): meta.source = {name, url}. Only http(s) links are shown.
+const source = computed(() => {
+  const s = (data.value?.meta as any)?.source
+  return s?.url && /^https?:\/\//.test(s.url) ? {name: String(s.name || s.url), url: String(s.url)} : null
+})
 
 // A like is also how a piece is kept: /arts?sort=liked lists them.
 const liked = ref(!!data.value?.is_liked)
@@ -750,6 +756,10 @@ const previewStyle = computed(() => {
             <a v-if="license.url" :href="license.url" target="_blank" rel="license noopener" class="art-meta-link">{{ $t(`p_upload.license_${license.key}`) }}</a>
             <template v-else>{{ $t(`p_upload.license_${license.key}`) }}</template>
           </dd>
+        </div>
+        <div v-if="source" class="art-meta-row">
+          <dt>{{ $t('p_art_id_string.source') }}</dt>
+          <dd><a :href="source.url" target="_blank" rel="noopener" class="art-meta-link">{{ source.name }} ↗</a></dd>
         </div>
         <div v-if="creditLine" class="art-meta-row">
           <dt>{{ $t('p_art_id_string.credit') }}</dt>

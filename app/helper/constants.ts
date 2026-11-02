@@ -46,6 +46,8 @@ export const LICENSES = [
   {value: '', key: 'allRightsReserved', url: ''},
   {value: 'cc-by-4.0', key: 'ccBy', url: 'https://creativecommons.org/licenses/by/4.0/'},
   {value: 'cc0', key: 'cc0', url: 'https://creativecommons.org/publicdomain/zero/1.0/'},
+  // Art that comes from open-source code (generated effects, game repos).
+  {value: 'mit', key: 'mit', url: 'https://opensource.org/license/mit'},
 ] as const
 
 export function licenseOf(value: string | undefined | null) {
