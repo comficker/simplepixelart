@@ -123,6 +123,9 @@ onMounted(draw)
 .art-pixel-canvas {
   display: block;
   flex: none;
+  /* The global canvas max-width squeezed a wide board's width but not its
+     height, turning beads into ovals. The stage scrolls instead. */
+  max-width: none;
   image-rendering: pixelated;
 }
 </style>
