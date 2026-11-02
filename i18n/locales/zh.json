@@ -949,6 +949,7 @@
     "foundingCreator": "创始创作者"
   },
   "crumb": {
+    "ideas": "灵感",
     "byColor": "按颜色",
     "collections": "合集",
     "creators": "创作者",
@@ -1256,6 +1257,7 @@
     "shareTitle": "SimplePixelArt 上的 {user}"
   },
   "p_easy-pixel-art": {
+    "graphPaper": "<strong>更喜欢纸笔？</strong>打印免费的<a href=\"https://freegraphpaper.net/graph-paper/1-4-inch\">像素画方格纸</a>，先手绘构思。",
     "beginnerGuide": "新手指南",
     "biggerGridsOnceTheseFeelSmall": "觉得太小了就换更大的网格:",
     "browseTheGallery": "浏览图库",
@@ -1448,6 +1450,30 @@
     "statusLine": "{style} · {view}视角 · {size} · {colors} 种颜色 · 背景 {backdrop}",
     "autoSize": "自动尺寸",
     "pixelArtGenerator": "像素画生成器"
+  },
+  "p_ideas": {
+    "howToPick": "如何挑选创意",
+    "intro": "不知道画什么？每一行是一个主题，都是可以临摹、填色或改编的小作品。点击即可在编辑器中打开。",
+    "pixelArtIdeas": "像素画灵感",
+    "seoDescription": "按主题整理的简单可爱像素画灵感：动物、食物、自然、万圣节、角色等。任选一个，在免费在线编辑器中打开并画出你自己的版本。",
+    "seoTitle": "像素画灵感：{count}+ 个简单可爱的创意",
+    "startDrawing": "开始画",
+    "themeIdeas": "{theme}像素画灵感",
+    "tip1": "<strong>从小处开始。</strong>猫、水果或表情 16×16 就够了，参见<a href=\"/easy-pixel-art\">简单像素画</a>。",
+    "tip2": "<strong>先临摹，再改一处。</strong>换个颜色或姿势，就是你的作品。",
+    "tip3": "<strong>选今天能画完的主题。</strong>可爱动物和食物用三四种颜色就很清楚。",
+    "theme_cute": "可爱",
+    "theme_kawaii": "卡哇伊",
+    "theme_animal": "动物",
+    "theme_cat": "猫",
+    "theme_bird": "鸟",
+    "theme_food": "食物",
+    "theme_fruit": "水果",
+    "theme_nature": "自然",
+    "theme_halloween": "万圣节",
+    "theme_character": "角色",
+    "theme_fantasy": "奇幻",
+    "theme_emoji": "表情"
   },
   "p_index": {
     "browsePixelArt": "浏览像素画",
@@ -2352,6 +2378,9 @@
     "tileCount": "{count} 个图块"
   },
   "seo": {
+    "size": {
+      "description": "{count} 个 {size} 像素画图案，可临摹或填色——适合新手的 {size} 网格模板，可在免费在线编辑器中打开并改编。"
+    },
     "arts": {
       "description": "数千幅免费像素画作品：精灵图、8 位与 16 位设计、角色与图标。任意作品都可二次创作或下载使用。",
       "keywords": "像素画图库, 免费像素画, 像素素材, 8位画, 16位画, 像素画下载",

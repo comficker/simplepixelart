@@ -949,6 +949,7 @@
     "foundingCreator": "Creador fundador"
   },
   "crumb": {
+    "ideas": "Ideas",
     "byColor": "Por color",
     "collections": "Colecciones",
     "creators": "Creadores",
@@ -1256,6 +1257,7 @@
     "shareTitle": "{user} en SimplePixelArt"
   },
   "p_easy-pixel-art": {
+    "graphPaper": "<strong>¿Prefieres papel?</strong> Imprime <a href=\"https://freegraphpaper.net/graph-paper/1-4-inch\">papel cuadriculado para pixel art</a> gratis y planea tu dibujo a mano.",
     "beginnerGuide": "Guía para principiantes",
     "biggerGridsOnceTheseFeelSmall": "Cuadrículas mayores cuando estas se te queden pequeñas:",
     "browseTheGallery": "Ver la galería",
@@ -1448,6 +1450,30 @@
     "statusLine": "{style} · vista {view} · {size} · {colors} colores · fondo {backdrop}",
     "autoSize": "tamaño automático",
     "pixelArtGenerator": "Generador de pixel art"
+  },
+  "p_ideas": {
+    "howToPick": "Cómo elegir una idea",
+    "intro": "¿No sabes qué dibujar? Cada fila es un tema con piezas pequeñas y terminadas que puedes copiar, colorear o remezclar. Toca una para abrirla en el editor.",
+    "pixelArtIdeas": "Ideas de pixel art",
+    "seoDescription": "Ideas de pixel art fáciles y bonitas por tema: animales, comida, naturaleza, Halloween, personajes y más. Abre cualquiera en el editor online gratis.",
+    "seoTitle": "Ideas de pixel art: más de {count} ideas fáciles y bonitas",
+    "startDrawing": "Empezar a dibujar",
+    "themeIdeas": "Ideas de pixel art: {theme}",
+    "tip1": "<strong>Empieza en pequeño.</strong> Una cuadrícula de 16×16 basta para un gato, una fruta o un emoji: mira <a href=\"/easy-pixel-art\">pixel art fácil</a>.",
+    "tip2": "<strong>Copia y cambia una cosa.</strong> Abre una idea, cambia los colores o la pose, y ya es tuya.",
+    "tip3": "<strong>Elige un tema que puedas terminar hoy.</strong> Los animales y la comida se leen bien con tres o cuatro colores.",
+    "theme_cute": "bonito",
+    "theme_kawaii": "kawaii",
+    "theme_animal": "animales",
+    "theme_cat": "gatos",
+    "theme_bird": "pájaros",
+    "theme_food": "comida",
+    "theme_fruit": "fruta",
+    "theme_nature": "naturaleza",
+    "theme_halloween": "Halloween",
+    "theme_character": "personajes",
+    "theme_fantasy": "fantasía",
+    "theme_emoji": "emoji"
   },
   "p_index": {
     "browsePixelArt": "Explorar pixel art",
@@ -2352,6 +2378,9 @@
     "tileCount": "1 tile | {count} tiles"
   },
   "seo": {
+    "size": {
+      "description": "{count} diseños de pixel art {size} para copiar o colorear: plantillas de cuadrícula {size} fáciles para principiantes. Ábrelos en el editor online gratis."
+    },
     "arts": {
       "description": "Miles de creaciones de pixel art gratuitas: sprites, diseños de 8 y 16 bits, personajes e iconos. Remezcla o descarga cualquier pieza para tu proyecto.",
       "keywords": "galería pixel art, pixel art gratis, sprites pixel art, arte 8 bits, arte 16 bits, descargar pixel art",

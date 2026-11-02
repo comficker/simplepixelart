@@ -1,5 +1,6 @@
 <script setup lang="ts">
-const {t, locale, defaultLocale} = useI18n()
+const {t, te, locale, defaultLocale} = useI18n()
+const localHtml = useLocalHtml()
 import type {APIResponse, ResponseSharedPage, SharedPage, TagSchema} from "~/types";
 
 const route = useRoute()
@@ -111,6 +112,10 @@ const robotsValue = computed(() => {
   return 'index, follow'
 })
 
+// An unknown slug's list request ignores the slug and counts every public
+// art, which put "Browse 1087 ..." in the title of a 404.
+const shownCount = computed(() => isUnknownTag.value ? 0 : totalCount.value)
+
 if (isUnknownTag.value && import.meta.server) {
   setResponseStatus(useRequestEvent()!, 404)
 }
@@ -122,28 +127,46 @@ const ogImage = computed(() => {
   return 'https://simplepixelart.com/og-image.png'
 })
 
+// A few tags carry a whole search cluster ("pixel art animation", "pixel art
+// character") that the generic "<Tag> Pixel Art — Free Sprites" misses. They
+// get their own title, description and intro, written in English only.
+const pageCopy = computed(() => {
+  const key = `seo.tagPage.${idString.value}`
+  if (locale.value !== defaultLocale || page.value > 1 || hasFilterQuery.value) return null
+  return te(`${key}.title`, defaultLocale) ? key : null
+})
+
 const seoTitle = computed(() => {
+  if (pageCopy.value) return t(`${pageCopy.value}.title`)
   if (page.value > 1) return t('seo.tag.titlePage', {tag: tagTitle.value, page: page.value})
   // Only past one: "32x32 Pixel Art - 1 Sprites" reads as a bug, and the
   // plain title already says everything at that point.
-  if (isSizeSlug.value && totalCount.value > 1) {
-    return t('seo.tag.titleCount', {tag: tagTitle.value, count: totalCount.value})
+  if (isSizeSlug.value && shownCount.value > 1) {
+    return t('seo.tag.titleCount', {tag: tagTitle.value, count: shownCount.value})
   }
   return t('seo.tag.title', {tag: tagTitle.value})
 })
 
 const seoDesc = computed(() => {
+  if (pageCopy.value) return t(`${pageCopy.value}.description`, {count: shownCount.value})
   // `desc` is already a meta description, written to 140-160 characters by
   // rewrite_tag_desc. Appending the template to it made 300+, which Google
   // cuts in half, so it stands alone where it exists.
   if (localDesc.value) return localDesc.value
-  const args = {tag: tagTitle.value.toLowerCase(), count: totalCount.value}
+  const n = shownCount.value
+  const args = {tag: tagTitle.value.toLowerCase(), count: n}
+  // A size page gets its own wording: the generic "8-bit and 16-bit sprites"
+  // read oddly on a 10x10 grid, and searchers also type "10 by 10".
+  if (isSizeSlug.value && n > 1) {
+    const [w, h] = sizeFromSlug.value!.split('×')
+    return t('seo.size.description', {size: sizeFromSlug.value, by: `${w} by ${h}`, count: n})
+  }
   // Three forms rather than one template with a number in it: every locale
   // here agrees the noun with the count, so "1 creations" and its Spanish and
   // Russian equivalents are all wrong, and vue-i18n's default plural rule only
   // knows two forms (which Russian needs three of).
-  return totalCount.value > 1 ? t('seo.tag.description', args)
-      : totalCount.value === 1 ? t('seo.tag.descriptionOne', args)
+  return n > 1 ? t('seo.tag.description', args)
+      : n === 1 ? t('seo.tag.descriptionOne', args)
           : t('seo.tag.descriptionEmpty', args)
 })
 
@@ -216,6 +239,10 @@ useCustomSeoMeta({
 <template>
   <div class="page">
     <item-list :limit="24" show-filter :title="$t('p_arts_id_string.xPixelArt', {x: tagTitle})" :desc="localDesc || fallbackDesc">
+      <template v-if="pageCopy" #head>
+        <h1 class="screen-title">{{ $t(`${pageCopy}.h1`) }}</h1>
+        <p class="screen-desc" v-html="localHtml($t(`${pageCopy}.intro`))"/>
+      </template>
       <template v-if="filteredRelated.length" #filters-extra>
         <BrowseFilter :label="$t('common.tags')" icon="icon-flag" :value="String(filteredRelated.length)">
           <BrowseOpt v-for="t in filteredRelated" :key="t.id_string" :to="`/arts/${t.id_string}`">

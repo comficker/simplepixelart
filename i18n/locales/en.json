@@ -979,6 +979,7 @@
     "foundingCreator": "Founding Creator"
   },
   "crumb": {
+    "ideas": "Ideas",
     "byColor": "By color",
     "collections": "Collections",
     "creators": "Creators",
@@ -1216,7 +1217,7 @@
     "faq4a": "<p>If your image is pixel art that was upscaled, screenshotted, JPEG-compressed, or captured with grid lines, Auto detects the original cell size and reads the art back cell for cell — no detail lost, no blur. For photos it estimates a sensible output size instead.</p>",
     "faq4q": "What does the Auto size do?",
     "howThisConverterWorks": "How this converter works",
-    "imageToPixelArtConverter": "Image to Pixel Art Converter",
+    "imageToPixelArtConverter": "Picture & Image to Pixel Art Converter",
     "imageToPixelArtConverterInterface": "Image to Pixel Art Converter interface showing live preview, size and color palette controls, brightness contrast saturation sliders, and generated pixel art output",
     "imageToPixelArtConverterLive": "Image to Pixel Art Converter — live preview with palette and adjustment controls",
     "livePreviewPaletteControlAnd": "Live preview, palette control, and image adjustments in one view.",
@@ -1241,7 +1242,7 @@
     "strongTransparentBackgroundStrongC": "<strong>Transparent background</strong> — cut a uniform backdrop to real transparency; the sprite lands in the editor with nothing behind it.",
     "strongUploadAnImageStrongDrag": "<strong>Upload an image</strong> — drag and drop a PNG, JPG or WebP, or click to browse. Nothing is uploaded — it all runs in your browser.",
     "transparentBackground": "Transparent background",
-    "turnAnyPhotoIntoPixelArt": "Turn any photo into pixel art in seconds — free, no signup, and everything runs in your browser.",
+    "turnAnyPhotoIntoPixelArt": "Turn any photo, picture or image into pixel art in seconds — free, no signup, and everything runs in your browser.",
     "cleanedOrphans": "Cleaned 1 orphan pixel | Cleaned {count} orphan pixels",
     "colorsMerged": "Colors merged",
     "autoResult": "Auto → {w}×{h}",
@@ -1286,6 +1287,7 @@
     "shareTitle": "{user} on SimplePixelArt"
   },
   "p_easy-pixel-art": {
+    "graphPaper": "<strong>Prefer paper?</strong> Print free <a href=\"https://freegraphpaper.net/graph-paper/1-4-inch\">pixel art graph paper</a> and plan a piece by hand first.",
     "beginnerGuide": "Beginner guide",
     "biggerGridsOnceTheseFeelSmall": "Bigger grids once these feel small:",
     "browseTheGallery": "Browse the gallery",
@@ -1479,6 +1481,30 @@
     "autoSize": "auto size",
     "pixelArtGenerator": "Pixel Art Generator"
   },
+  "p_ideas": {
+    "howToPick": "How to pick an idea",
+    "intro": "Stuck on what to draw? Every row here is a theme with small, finished pieces you can copy, color or remix. Tap one to open it in the editor.",
+    "pixelArtIdeas": "Pixel Art Ideas",
+    "seoDescription": "Easy and cute pixel art ideas sorted by theme — animals, food, nature, Halloween, characters and more. Open any idea in the free online editor and draw your own.",
+    "seoTitle": "Pixel Art Ideas: {count}+ Easy & Cute Ideas to Draw",
+    "startDrawing": "Start drawing",
+    "themeIdeas": "{theme} pixel art ideas",
+    "tip1": "<strong>Start small.</strong> A 16×16 grid is enough for a cat, a fruit or an emoji — see <a href=\"/easy-pixel-art\">easy pixel art</a>.",
+    "tip2": "<strong>Copy, then change one thing.</strong> Open an idea, swap the colors or the pose, and it is yours.",
+    "tip3": "<strong>Pick a theme you can finish today.</strong> Cute animals and food read well with three or four colors.",
+    "theme_cute": "Cute",
+    "theme_kawaii": "Kawaii",
+    "theme_animal": "Animal",
+    "theme_cat": "Cat",
+    "theme_bird": "Bird",
+    "theme_food": "Food",
+    "theme_fruit": "Fruit",
+    "theme_nature": "Nature",
+    "theme_halloween": "Halloween",
+    "theme_character": "Character",
+    "theme_fantasy": "Fantasy",
+    "theme_emoji": "Emoji"
+  },
   "p_index": {
     "browsePixelArt": "Browse pixel art",
     "browser": "browser",
@@ -1504,12 +1530,12 @@
     "heroTagline": "Browse, remix and draw pixel art — free, in your browser. Sprites, tilesets and tilemaps export to Godot, Unity and Phaser.",
     "whatYouCanDo": "What you can do",
     "can1": "<strong>Draw from scratch</strong> in the <a href=\"/editor\">pixel art editor</a>, from 8×8 to 64×64.",
-    "can2": "<strong>Convert a photo</strong> to pixel art with the <a href=\"/converter\">converter</a>.",
+    "can2": "<strong>Convert a picture</strong> to pixel art with the <a href=\"/converter\">image to pixel art converter</a>.",
     "can3": "<strong>Remix any piece</strong> from the <a href=\"/arts\">gallery</a>, or start from a <a href=\"/palettes\">color palette</a>.",
     "can4": "<strong>Animate</strong> frame by frame and export GIFs or sprite sheets.",
     "can5": "<strong>Build game assets</strong> — <a href=\"/tilesets/editor\">tilesets</a> and <a href=\"/tilemaps/editor\">tilemaps</a> for Godot, Unity and Phaser.",
     "can6": "<strong>Join the <a href=\"/challenges\">weekly challenge</a></strong> and share what you make.",
-    "newToPixelArtLine": "Start with <a href=\"/easy-pixel-art\">easy pixel art</a> — small grids, three colors — or open the <a href=\"/editor\">pixel art editor</a> and make pixel art online for free.",
+    "newToPixelArtLine": "Start with <a href=\"/easy-pixel-art\">easy pixel art</a> — small grids, three colors — pick one of the <a href=\"/ideas\">pixel art ideas</a>, or open the <a href=\"/editor\">pixel art editor</a> and make pixel art online for free.",
     "homeFacts": "Free · Make, share and discover pixel art",
     "newBlankCanvas": "New blank canvas",
     "newCreators": "New creators",
@@ -1578,7 +1604,7 @@
   },
   "p_palettes": {
     "browseFilterAndApplyReadyMade": "Browse, filter, and apply ready-made palettes — or create your own.",
-    "colorPalettes": "Color Palettes"
+    "colorPalettes": "Pixel Art Color Palettes"
   },
   "p_palettes_color-palette-from-color": {
     "analogous": "Analogous",
@@ -2066,8 +2092,8 @@
     "withTheTerrainSetsAlreadyWired": "with the terrain sets already wired up, a",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
-    "seoTitle": "Tileset Editor — Auto-Tile Terrains",
-    "seoDescription": "Free online tileset builder: group tiles, auto-generate Wang 16 and blob 47 terrains from one base tile, then export Godot 4, Tiled or PNG + JSON.",
+    "seoTitle": "Tileset Maker — Free Online Tileset Editor with Auto-Tiles",
+    "seoDescription": "Free online tileset maker for pixel art and RPG games: auto-generate Wang 16 and blob 47 terrains from one base tile, then export to Godot 4, Tiled or PNG + JSON.",
     "terrainName": "Terrain",
     "presetCharcoal": "Charcoal",
     "presetSlate": "Slate",
@@ -2384,6 +2410,23 @@
     "tileCount": "1 tile | {count} tiles"
   },
   "seo": {
+    "tagPage": {
+      "animation": {
+        "h1": "Pixel Art Animation",
+        "title": "Pixel Art Animation — Animated Sprites & GIFs",
+        "description": "Browse {count} animated pixel art pieces — looping GIFs, effects and sprite animations. Play any frame by frame, then make your own pixel animation.",
+        "intro": "Animated pixel art you can play frame by frame. Make your own in the <a href=\"/editor\">pixel art animation editor</a>, then export a GIF or a sprite sheet for your game."
+      },
+      "character": {
+        "h1": "Pixel Art Characters",
+        "title": "Pixel Art Characters — Game Sprites & 16×16 Characters",
+        "description": "Browse {count} pixel art characters — game sprites, chibi heroes and 16×16 pixel characters. Open any in the free editor to recolor, animate or remix.",
+        "intro": "Pixel characters for games and fan art. Small ones start at <a href=\"/arts/size-16x16\">16×16</a>; for big heads and small bodies see <a href=\"/arts/chibi\">chibi pixel art</a>, or draw your own in the <a href=\"/editor\">editor</a>."
+      }
+    },
+    "size": {
+      "description": "{size} pixel art: {count} designs to copy or color — {by} grid templates that are easy for beginners. Open any of them in the free online editor and remix it."
+    },
     "arts": {
       "description": "Browse thousands of free pixel art creations — sprites, 8-bit and 16-bit designs, characters and icons. Remix or download any piece for your project.",
       "keywords": "pixel art gallery, free pixel art, pixel art sprites, 8-bit art, 16-bit art, pixel art download",
@@ -2395,9 +2438,9 @@
       "title": "Pixel Art Collections"
     },
     "converter": {
-      "description": "Convert any photo into pixel art in seconds. Free online tool with palette control (4–64 colors), pixel cleaner, color swap and live preview.",
+      "description": "Turn any picture or image into pixel art in seconds. Free online converter with 4–64 color palettes, pixel cleaner, color swap and live preview.",
       "keywords": "image to pixel art, photo to pixel art, pixel art converter, pixelate image, picture to pixel art",
-      "title": "Image to Pixel Art Converter"
+      "title": "Picture to Pixel Art Converter — Free Image to Pixel Art"
     },
     "creators": {
       "description": "The pixel art creators publishing the most on SimplePixelArt.com, ranked by day, week, month and quarter.",
@@ -2419,7 +2462,7 @@
       "title": "Pixel Art — Free Online Maker & Easy Ideas"
     },
     "palettes": {
-      "description": "Browse a library of pixel art color palettes. Filter by size, sort by popularity, and apply any palette to your art in one click.",
+      "description": "Pixel art color palettes for every style — retro 8-bit, pastel, Game Boy and more. Filter by size, sort by popularity and apply any palette to your art in one click.",
       "keywords": "pixel art palette, color palette, retro palette, 8-bit colors, game art palette",
       "title": "Pixel Art Color Palettes"
     },

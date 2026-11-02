@@ -118,6 +118,7 @@ useCustomSeoMeta({
         <NuxtLinkLocale to="/converter"><strong>{{ $t('common.photoToPixelArt') }}</strong></NuxtLinkLocale> {{ $t('p_easy-pixel-art.convertAnImageThenCleanIt') }} </li>
       <li>
         <NuxtLinkLocale to="/arts"><strong>{{ $t('p_easy-pixel-art.browseTheGallery') }}</strong></NuxtLinkLocale> {{ $t('p_easy-pixel-art.everyPieceOpensInTheEditor') }} </li>
+      <li v-html="$t('p_easy-pixel-art.graphPaper')"/>
     </ul>
     
 

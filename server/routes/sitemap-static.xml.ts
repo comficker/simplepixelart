@@ -3,6 +3,7 @@ const domain = "simplepixelart.com"
 const staticPages = [
     {loc: '/', changefreq: 'daily', priority: '1.0'},
     {loc: '/easy-pixel-art', changefreq: 'monthly', priority: '0.9'},
+    {loc: '/ideas', changefreq: 'weekly', priority: '0.9'},
     {loc: '/palettes', changefreq: 'daily', priority: '0.8'},
     {loc: '/arts', changefreq: 'daily', priority: '0.8'},
     {loc: '/creator', changefreq: 'daily', priority: '0.7'},
@@ -19,7 +20,7 @@ const staticPages = [
 // Submitting /ja/privacy while it still reads in English would be asking Google
 // to index a page that does not deliver what the URL promises.
 const LOCALES = ['ja', 'zh', 'ko', 'es', 'pt', 'ru']
-const TRANSLATED = new Set(['/', '/arts', '/palettes', '/easy-pixel-art', '/creator', '/collections', '/about', '/contact'])
+const TRANSLATED = new Set(['/', '/arts', '/palettes', '/easy-pixel-art', '/ideas', '/creator', '/collections', '/about', '/contact'])
 
 const localise = (loc: string, code: string) =>
     `https://${domain}/${code}${loc === '/' ? '' : loc}`

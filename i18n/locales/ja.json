@@ -949,6 +949,7 @@
     "foundingCreator": "ファウンディングクリエイター"
   },
   "crumb": {
+    "ideas": "アイデア",
     "byColor": "色から",
     "collections": "コレクション",
     "creators": "クリエイター",
@@ -1256,6 +1257,7 @@
     "shareTitle": "SimplePixelArt の {user}"
   },
   "p_easy-pixel-art": {
+    "graphPaper": "<strong>紙で描きたいなら。</strong>無料の<a href=\"https://freegraphpaper.net/graph-paper/1-4-inch\">ドット絵用方眼紙</a>を印刷して、まず手で下書きできます。",
     "beginnerGuide": "初心者ガイド",
     "biggerGridsOnceTheseFeelSmall": "小さく感じたら大きいグリッドへ:",
     "browseTheGallery": "ギャラリーを見る",
@@ -1448,6 +1450,30 @@
     "statusLine": "{style} · {view}ビュー · {size} · {colors}色 · 背景 {backdrop}",
     "autoSize": "自動サイズ",
     "pixelArtGenerator": "ドット絵ジェネレーター"
+  },
+  "p_ideas": {
+    "howToPick": "アイデアの選び方",
+    "intro": "何を描くか迷ったら。テーマごとに、そのまま真似したり色を変えたりできる小さな作品を並べました。タップするとエディタで開きます。",
+    "pixelArtIdeas": "ドット絵のアイデア",
+    "seoDescription": "簡単でかわいいドット絵のアイデアをテーマ別に。動物、食べ物、自然、ハロウィン、キャラクターなど。気に入ったものは無料のオンラインエディタで開いて描けます。",
+    "seoTitle": "ドット絵のアイデア集：簡単でかわいい{count}点以上",
+    "startDrawing": "描き始める",
+    "themeIdeas": "{theme}のドット絵アイデア",
+    "tip1": "<strong>小さく始める。</strong>猫や果物、絵文字なら16×16で十分です。<a href=\"/easy-pixel-art\">かんたんピクセルアート</a>も参考に。",
+    "tip2": "<strong>真似して一か所だけ変える。</strong>色やポーズを変えれば自分の作品になります。",
+    "tip3": "<strong>今日描き終えられるテーマを選ぶ。</strong>動物や食べ物は3〜4色でも伝わります。",
+    "theme_cute": "かわいい",
+    "theme_kawaii": "カワイイ",
+    "theme_animal": "動物",
+    "theme_cat": "猫",
+    "theme_bird": "鳥",
+    "theme_food": "食べ物",
+    "theme_fruit": "果物",
+    "theme_nature": "自然",
+    "theme_halloween": "ハロウィン",
+    "theme_character": "キャラクター",
+    "theme_fantasy": "ファンタジー",
+    "theme_emoji": "絵文字"
   },
   "p_index": {
     "browsePixelArt": "ピクセルアートを見る",
@@ -2352,6 +2378,9 @@
     "tileCount": "{count} タイル"
   },
   "seo": {
+    "size": {
+      "description": "{size}のドット絵{count}点。初心者でも描きやすい{size}グリッドの見本を、無料のオンラインエディタで開いてそのままアレンジできます。"
+    },
     "arts": {
       "description": "数千点の無料ドット絵作品。スプライト、8ビット・16ビットのデザイン、キャラクターやアイコンを閲覧し、リミックスやダウンロードができます。",
       "keywords": "ドット絵 ギャラリー, 無料 ドット絵, ドット絵 素材, 8ビット, 16ビット, ドット絵 ダウンロード",

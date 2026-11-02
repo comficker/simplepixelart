@@ -949,6 +949,7 @@
     "foundingCreator": "창립 크리에이터"
   },
   "crumb": {
+    "ideas": "아이디어",
     "byColor": "색으로",
     "collections": "컬렉션",
     "creators": "크리에이터",
@@ -1256,6 +1257,7 @@
     "shareTitle": "SimplePixelArt의 {user}"
   },
   "p_easy-pixel-art": {
+    "graphPaper": "<strong>종이가 좋다면.</strong> 무료 <a href=\"https://freegraphpaper.net/graph-paper/1-4-inch\">픽셀아트 모눈종이</a>를 인쇄해 손으로 먼저 구상해 보세요.",
     "beginnerGuide": "입문 가이드",
     "biggerGridsOnceTheseFeelSmall": "작게 느껴지면 더 큰 그리드로:",
     "browseTheGallery": "갤러리 둘러보기",
@@ -1448,6 +1450,30 @@
     "statusLine": "{style} · {view} 시점 · {size} · {colors}색 · 배경 {backdrop}",
     "autoSize": "자동 크기",
     "pixelArtGenerator": "픽셀 아트 생성기"
+  },
+  "p_ideas": {
+    "howToPick": "아이디어 고르는 법",
+    "intro": "뭘 그릴지 고민될 때. 주제별로 따라 그리거나 색을 바꿔 볼 수 있는 작은 작품을 모았습니다. 누르면 편집기에서 열립니다.",
+    "pixelArtIdeas": "픽셀아트 아이디어",
+    "seoDescription": "쉽고 귀여운 픽셀아트 아이디어를 주제별로 모았어요. 동물, 음식, 자연, 할로윈, 캐릭터 등. 무료 온라인 편집기에서 바로 열어 그려 보세요.",
+    "seoTitle": "픽셀아트 아이디어: 쉽고 귀여운 도안 {count}개 이상",
+    "startDrawing": "그리기 시작",
+    "themeIdeas": "{theme} 픽셀아트 아이디어",
+    "tip1": "<strong>작게 시작하세요.</strong> 고양이, 과일, 이모지는 16×16이면 충분합니다. <a href=\"/easy-pixel-art\">쉬운 픽셀 아트</a>도 참고하세요.",
+    "tip2": "<strong>따라 그리고 한 가지만 바꾸세요.</strong> 색이나 자세를 바꾸면 내 작품이 됩니다.",
+    "tip3": "<strong>오늘 끝낼 수 있는 주제를 고르세요.</strong> 동물과 음식은 서너 가지 색으로도 잘 보입니다.",
+    "theme_cute": "귀여운",
+    "theme_kawaii": "카와이",
+    "theme_animal": "동물",
+    "theme_cat": "고양이",
+    "theme_bird": "새",
+    "theme_food": "음식",
+    "theme_fruit": "과일",
+    "theme_nature": "자연",
+    "theme_halloween": "할로윈",
+    "theme_character": "캐릭터",
+    "theme_fantasy": "판타지",
+    "theme_emoji": "이모지"
   },
   "p_index": {
     "browsePixelArt": "픽셀 아트 둘러보기",
@@ -2352,6 +2378,9 @@
     "tileCount": "타일 {count}개"
   },
   "seo": {
+    "size": {
+      "description": "{size} 픽셀아트 도안 {count}개. 초보자도 따라 하기 쉬운 {size} 격자 도안을 무료 온라인 편집기에서 바로 열고 수정해 보세요."
+    },
     "arts": {
       "description": "수천 개의 무료 픽셀 아트 작품. 스프라이트, 8비트·16비트 디자인, 캐릭터와 아이콘을 둘러보고 리믹스하거나 내려받을 수 있습니다.",
       "keywords": "픽셀 아트 갤러리, 무료 픽셀 아트, 도트 소재, 8비트, 16비트, 픽셀 아트 다운로드",
@@ -2382,9 +2411,9 @@
       "title": "AI 픽셀 아트 생성기"
     },
     "home": {
-      "description": "가입 없이 브라우저에서 무료로 픽셀 아트를 만드세요. 따라 그리기 쉬운 도안 수천 개를 보고, 사진을 도트로 바꾸고, 나만의 작품을 그려 보세요.",
-      "keywords": "픽셀 아트, 도트 그래픽, 픽셀 아트 만들기, 무료 픽셀 아트, 온라인 픽셀 아트, 도트 찍기, 8비트",
-      "title": "픽셀 아트 — 무료 온라인 메이커 & 쉬운 도안"
+      "description": "가입 없이 브라우저에서 무료로 픽셀아트(픽셀 아트)를 만드세요. 따라 그리기 쉬운 도안 수천 개를 보고, 사진을 도트로 바꾸고, 나만의 작품을 그려 보세요.",
+      "keywords": "픽셀아트, 픽셀 아트, 도트 그래픽, 픽셀아트 만들기, 무료 픽셀아트, 온라인 픽셀아트, 도트 찍기, 8비트",
+      "title": "픽셀아트 — 무료 온라인 메이커 & 쉬운 도안"
     },
     "palettes": {
       "description": "픽셀 아트용 색상 팔레트 모음. 색상 수로 거르고 인기순으로 정렬해, 클릭 한 번으로 작품에 적용할 수 있습니다.",
