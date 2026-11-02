@@ -90,7 +90,9 @@
     "editCollection": "Edit collection",
     "newCollection": "New collection",
     "saveFailed": "Save failed",
-    "titleIsRequired": "Title is required"
+    "titleIsRequired": "Title is required",
+    "projectLink": "Project link",
+    "linkMustStartWithHttp": "Must start with http:// or https://"
   },
   "c_CommandPalette": {
     "aboutSimplepixelart": "About SimplePixelArt",
@@ -1154,7 +1156,8 @@
     "couldNotSaveNChanges": "Could not save 1 change | Could not save {count} changes",
     "noCloudArtworksYet": "You have no cloud artworks yet.",
     "pixelArtAlt": "Pixel art",
-    "untitledCollection": "Untitled collection"
+    "untitledCollection": "Untitled collection",
+    "visitProject": "Visit the project"
   },
   "p_contact": {
     "about": "About",

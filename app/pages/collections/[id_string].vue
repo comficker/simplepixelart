@@ -28,8 +28,38 @@ if (error.value && import.meta.server) {
 // `name` is what every client renames; `title` can still read "untitled".
 const title = computed(() => data.value?.name || data.value?.title || t('p_collections_id_string.untitledCollection'))
 const desc = computed(() => data.value?.desc || '')
+// The author's own project, repo or site, if they gave one (http(s) only).
+const projectLink = computed(() => {
+  const url = String((data.value as any)?.link || '')
+  if (!/^https?:\/\//.test(url)) return null
+  let label = url
+  try {
+    const u = new URL(url)
+    label = (u.host.replace(/^www\./, '') + u.pathname).replace(/\/$/, '')
+  } catch {}
+  return {url, label, github: /(^|\.)github\.com$/.test((() => { try { return new URL(url).host } catch { return '' } })())}
+})
 const items = computed<SharedPage[]>(() => Array.isArray(data.value?.items) ? data.value!.items : [])
 const itemCount = computed(() => items.value.length)
+
+// The detail answers with every item, but drawing them all made a large
+// collection (207 pieces) take seconds to render. Show a page at a time, by
+// ?page= links like the gallery; editing still sees the whole list.
+const PAGE_SIZE = 24
+const page = computed(() => Math.max(1, Number.parseInt(String(route.query.page || 1)) || 1))
+const pages = computed(() => Math.max(1, Math.ceil(itemCount.value / PAGE_SIZE)))
+const shownItems = computed(() => managing.value
+    ? items.value
+    : items.value.slice((page.value - 1) * PAGE_SIZE, page.value * PAGE_SIZE))
+function pageHref(p: number) {
+  const q = new URLSearchParams()
+  for (const [k, v] of Object.entries(route.query)) if (k !== 'page' && v != null) q.set(k, String(v))
+  if (p > 1) q.set('page', String(p))
+  const qs = q.toString()
+  return qs ? `${route.path}?${qs}` : route.path
+}
+const prevTo = computed(() => page.value > 1 ? pageHref(page.value - 1) : null)
+const nextTo = computed(() => page.value < pages.value ? pageHref(page.value + 1) : null)
 
 const isOwner = computed(() => {
   if (!auth.logged?.id || !data.value?.owners) return false
@@ -37,7 +67,7 @@ const isOwner = computed(() => {
 })
 
 const canonicalUrl = computed(() =>
-    `${config.public.siteUrl}/collections/${route.params.id_string}`,
+    `${config.public.siteUrl}/collections/${route.params.id_string}${page.value > 1 ? `?page=${page.value}` : ''}`,
 )
 
 const isPublic = computed(() => data.value?.status === 'public')
@@ -230,6 +260,17 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
 
       <template #actions>
           <template v-if="!managing">
+            <a
+                v-if="projectLink"
+                :href="projectLink.url"
+                target="_blank"
+                rel="noopener nofollow ugc"
+                class="btn cl-project-link"
+                :title="$t('p_collections_id_string.visitProject')"
+            >
+              <span class="icon" :class="projectLink.github ? 'icon-github' : 'icon-link'"/>
+              <span class="cl-project-label">{{ projectLink.label }}</span>
+            </a>
             <SocialSharing :meta="shareMeta" position="right" icon-only/>
             <button
                 v-if="isOwner"
@@ -485,5 +526,15 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
 .cl-not-found-title {
   font-family: inherit;
   font-variation-settings: normal;
+}
+.cl-project-link {
+  max-width: calc(var(--space-4) * 26);
+}
+
+.cl-project-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

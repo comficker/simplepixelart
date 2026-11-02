@@ -83,7 +83,9 @@
     "editCollection": "编辑收藏集",
     "newCollection": "新建收藏集",
     "saveFailed": "保存失败",
-    "titleIsRequired": "标题为必填项"
+    "titleIsRequired": "标题为必填项",
+    "projectLink": "项目链接",
+    "linkMustStartWithHttp": "必须以 http:// 或 https:// 开头"
   },
   "c_CommandPalette": {
     "aboutSimplepixelart": "关于 SimplePixelArt",
@@ -1124,7 +1126,8 @@
     "couldNotSaveNChanges": "有 {count} 项更改未能保存",
     "noCloudArtworksYet": "你还没有云端作品。",
     "pixelArtAlt": "像素画",
-    "untitledCollection": "未命名收藏集"
+    "untitledCollection": "未命名收藏集",
+    "visitProject": "查看项目"
   },
   "p_contact": {
     "about": "关于",

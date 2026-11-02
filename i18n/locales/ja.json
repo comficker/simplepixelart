@@ -83,7 +83,9 @@
     "editCollection": "コレクションを編集",
     "newCollection": "新しいコレクション",
     "saveFailed": "保存に失敗しました",
-    "titleIsRequired": "タイトルは必須です"
+    "titleIsRequired": "タイトルは必須です",
+    "projectLink": "プロジェクトのリンク",
+    "linkMustStartWithHttp": "http:// か https:// で始めてください"
   },
   "c_CommandPalette": {
     "aboutSimplepixelart": "SimplePixelArtについて",
@@ -1124,7 +1126,8 @@
     "couldNotSaveNChanges": "{count}件の変更を保存できませんでした",
     "noCloudArtworksYet": "クラウドに保存された作品はまだありません。",
     "pixelArtAlt": "ピクセルアート",
-    "untitledCollection": "無題のコレクション"
+    "untitledCollection": "無題のコレクション",
+    "visitProject": "プロジェクトを見る"
   },
   "p_contact": {
     "about": "概要",

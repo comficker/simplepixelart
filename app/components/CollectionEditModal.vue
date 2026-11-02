@@ -22,6 +22,17 @@
               class="publish-input"
           />
         </div>
+        <div>
+          <label class="publish-label">{{ $t('c_CollectionEditModal.projectLink') }}</label>
+          <input
+              type="url"
+              v-model="form.link"
+              placeholder="https://github.com/you/your-project"
+              maxlength="300"
+              spellcheck="false"
+              class="publish-input"
+          />
+        </div>
         <div v-if="isEdit">
           <label class="publish-label">{{ $t('common.slug') }}</label>
           <input
@@ -62,6 +73,7 @@ type CollectionLike = {
   desc?: string
   status?: string
   id_string?: string
+  link?: string
 }
 
 const props = defineProps<{ collection?: CollectionLike }>()
@@ -74,6 +86,7 @@ const form = ref({
   desc: props.collection?.desc || '',
   status: (props.collection?.status === 'private' ? 'private' : 'public') as 'public' | 'private',
   id_string: props.collection?.id_string || '',
+  link: props.collection?.link || '',
 })
 const saving = ref(false)
 
@@ -81,6 +94,11 @@ async function save() {
   const title = form.value.title.trim()
   if (!title) {
     toast.error(t('c_CollectionEditModal.titleIsRequired'))
+    return
+  }
+  const link = form.value.link.trim()
+  if (link && !/^https?:\/\//.test(link)) {
+    toast.error(t('c_CollectionEditModal.linkMustStartWithHttp'))
     return
   }
   saving.value = true
@@ -96,6 +114,7 @@ async function save() {
               desc: form.value.desc,
               status: form.value.status,
               name: title,
+              link,
               ...(slug ? {id_string: slug} : {}),
             },
           },
@@ -111,6 +130,7 @@ async function save() {
           status: form.value.status,
           name: title,
           type: 'saved',
+          ...(link ? {link} : {}),
         },
       })
       toast.success(t('c_CollectionEditModal.collectionCreated'))

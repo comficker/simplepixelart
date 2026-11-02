@@ -83,7 +83,9 @@
     "editCollection": "Редактировать коллекцию",
     "newCollection": "Новая коллекция",
     "saveFailed": "Не удалось сохранить",
-    "titleIsRequired": "Укажите название"
+    "titleIsRequired": "Укажите название",
+    "projectLink": "Ссылка на проект",
+    "linkMustStartWithHttp": "Ссылка должна начинаться с http:// или https://"
   },
   "c_CommandPalette": {
     "aboutSimplepixelart": "О SimplePixelArt",
@@ -1124,7 +1126,8 @@
     "couldNotSaveNChanges": "Не удалось сохранить {count} изменение | Не удалось сохранить {count} изменения | Не удалось сохранить {count} изменений",
     "noCloudArtworksYet": "У вас пока нет работ в облаке.",
     "pixelArtAlt": "Пиксель-арт",
-    "untitledCollection": "Коллекция без названия"
+    "untitledCollection": "Коллекция без названия",
+    "visitProject": "Открыть проект"
   },
   "p_contact": {
     "about": "О проекте",

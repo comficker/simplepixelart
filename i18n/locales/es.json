@@ -83,7 +83,9 @@
     "editCollection": "Editar colección",
     "newCollection": "Nueva colección",
     "saveFailed": "No se pudo guardar",
-    "titleIsRequired": "El título es obligatorio"
+    "titleIsRequired": "El título es obligatorio",
+    "projectLink": "Enlace del proyecto",
+    "linkMustStartWithHttp": "Debe empezar por http:// o https://"
   },
   "c_CommandPalette": {
     "aboutSimplepixelart": "Acerca de SimplePixelArt",
@@ -1124,7 +1126,8 @@
     "couldNotSaveNChanges": "No se pudo guardar 1 cambio | No se pudieron guardar {count} cambios",
     "noCloudArtworksYet": "Aún no tienes obras en la nube.",
     "pixelArtAlt": "Pixel art",
-    "untitledCollection": "Colección sin título"
+    "untitledCollection": "Colección sin título",
+    "visitProject": "Visitar el proyecto"
   },
   "p_contact": {
     "about": "Acerca de",
