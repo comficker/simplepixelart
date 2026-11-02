@@ -10,6 +10,9 @@ const props = defineProps<{
   shared?: any[];
   fps?: number;
   loop?: boolean;
+  /** The big play badge over a paused piece. Off where a playback bar
+   *  already shows the state. */
+  overlay?: boolean;
 }>()
 
 const canvas = ref<HTMLCanvasElement | null>(null)
@@ -139,7 +142,7 @@ onUnmounted(stop)
 <template>
   <div class="anim-art" @click="toggle" :title="playing ? $t('c_AnimatedArt.pause') : $t('c_AnimatedArt.play')">
     <canvas ref="canvas" class="anim-art-canvas"/>
-    <span v-if="!playing" class="anim-art-play" aria-hidden="true">
+    <span v-if="!playing && overlay !== false" class="anim-art-play" aria-hidden="true">
       <svg viewBox="0 0 24 24" width="40" height="40"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
     </span>
   </div>

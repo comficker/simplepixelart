@@ -538,15 +538,19 @@ onUnmounted(() => window.removeEventListener('keydown', onAnimKey))
           />
         </ClientOnly>
         <ClientOnly v-else-if="isAnimatedArt">
+          <!-- Preview loops even a one-shot: most effects end on an empty
+               frame, which left the stage looking broken. The bar's loop
+               toggle plays it once. -->
           <AnimatedArt
               ref="player"
+              :overlay="false"
               :frames="animation.frames"
               :shared="animation.shared"
               :width="data.width"
               :height="data.height"
               :colors="data.colors"
               :fps="animation.fps"
-              :loop="animation.loop"
+              :loop="true"
               class="art-img"
               :style="previewStyle"
           />
