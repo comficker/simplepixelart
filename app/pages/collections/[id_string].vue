@@ -272,7 +272,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
       </template>
 
       <div v-if="items.length" class="results">
-          <div v-for="(item, i) in items" :key="item.id" class="cl-manage-cell">
+          <div v-for="(item, i) in shownItems" :key="item.id" class="cl-manage-cell">
             <ItemCard :value="item" :priority="i < 4"/>
             <button
                 v-if="managing"
@@ -294,6 +294,13 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
           <NuxtLinkLocale to="/arts" class="btn">{{ $t('common.browseGallery') }}</NuxtLinkLocale>
         </div>
       </div>
+      <Paginator
+          v-if="!managing && pages > 1"
+          :page="page"
+          :pages="pages"
+          :prev-to="prevTo"
+          :next-to="nextTo"
+      />
 
       <section v-if="managing && isOwner" class="cl-manage-add">
         <header class="section-head">
