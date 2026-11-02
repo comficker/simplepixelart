@@ -400,7 +400,9 @@ const previewSizeShort = computed(() =>
  *  and both are sized by how big one cell is rather than by the whole image. */
 const beadView = ref(false)
 const coordView = ref(false)
-const pixelView = computed(() => beadView.value || coordView.value)
+// Animations are drawn frame by frame; the bead/coordinate views only know
+// the flattened grid, so they stay off for them.
+const pixelView = computed(() => !isAnimatedArt.value && (beadView.value || coordView.value))
 
 const pixelCount = computed(() => (data.value as any)?.pixel_count
     ?? Object.keys(data.value?.map_numbers || {}).length)
@@ -424,7 +426,8 @@ const COORD_MIN_CELL = 24
 const cellSize = ref(16)
 
 const viewLabel = computed(() =>
-    beadView.value && coordView.value ? t('p_art_id_string.beadsXy')
+    !pixelView.value ? t('common.pixels')
+        : beadView.value && coordView.value ? t('p_art_id_string.beadsXy')
         : beadView.value ? t('p_art_id_string.beads')
             : coordView.value ? t('p_art_id_string.coords')
                 : t('common.pixels'))
@@ -656,6 +659,7 @@ onUnmounted(() => window.removeEventListener('keydown', onAnimKey))
             </button>
             <template #menu>
               <div class="file-menu">
+                <template v-if="!isAnimatedArt">
                 <button class="file-menu-item" @click="beadView = !beadView">
                   <span class="file-menu-label">
                     <span>{{ $t('p_art_id_string.beads') }}</span>
@@ -669,6 +673,7 @@ onUnmounted(() => window.removeEventListener('keydown', onAnimKey))
                   </span>
                 </button>
                 <div class="file-menu-sep"/>
+                </template>
                 <button v-for="bg in STAGE_BGS" :key="bg" class="file-menu-item" @click="stageBg = bg">
                   <span class="file-menu-label">
                     <span>{{ $t(`p_art_id_string.bg_${bg}`) }}</span>
