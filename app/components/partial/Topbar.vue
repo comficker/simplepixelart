@@ -27,7 +27,7 @@ const LABELS: Record<string, string> = {
   palettes: 'nav.palettes', challenges: 'nav.challenges', creator: 'crumb.creators', settings: 'common.settings',
   'creator-program': 'crumb.creatorProgram',
   collections: 'crumb.collections', missions: 'crumb.missions', tag: 'common.tags',
-  'easy-pixel-art': 'crumb.easyPixelArt', ideas: 'crumb.ideas',
+  'easy-pixel-art': 'crumb.easyPixelArt', ideas: 'crumb.ideas', learn: 'crumb.learn', 'how-to-make-pixel-art': 'crumb.howToMakePixelArt',
   'color-palette-from-image': 'nav.extract', 'color-palette-from-color': 'crumb.byColor',
 }
 
