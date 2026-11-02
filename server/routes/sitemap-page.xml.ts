@@ -17,17 +17,25 @@ export default defineEventHandler(async (event) => {
     ).catch(() => null)
 
     const lastmod = new Date().toISOString()
+    // Each art URL carries its image -- the same versioned ~512px upscale the
+    // page shows -- so Google Images finds it without rendering the page.
+    const image = (r: Row) => {
+        const v = Date.parse(r.updated)
+        const q = Number.isFinite(v) ? `?v=${v}` : ''
+        return `https://touch.ninosaur.com/coloring/files/art-large/${r.id_string}.png${q}`
+    }
     const urls = (rows || []).map(r =>
         '<url>' +
         `<loc>https://${domain}/art/${r.id_string}</loc>` +
         `<lastmod>${r.updated || lastmod}</lastmod>` +
         '<changefreq>weekly</changefreq>' +
         '<priority>0.8</priority>' +
+        `<image:image><image:loc>${image(r)}</image:loc></image:image>` +
         '</url>',
     ).join('')
 
     defaultContentType(event, "text/xml")
     setHeader(event, 'cache-control', 'public, max-age=3600, stale-while-revalidate=86400')
     return '<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="/sitemap-template.xsl"?>' +
-        `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`
+        `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">${urls}</urlset>`
 })

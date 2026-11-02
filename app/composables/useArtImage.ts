@@ -19,3 +19,19 @@ export const useArtImage = () => {
         return `${config.public.api}/coloring/files/${size}/${slug}.png${query}`
     }
 }
+
+/** Alt text for an art image: its name read as words, plus "pixel art", so
+ *  Google Images gets "Moonstone Axe pixel art" instead of the slug
+ *  "moonstone_axe". Unnamed art keeps the caller's fallback. */
+export const useArtAlt = () => {
+    const {t} = useI18n()
+
+    return (name: string | null | undefined, fallback = '') => {
+        const words = (name || '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim()
+        if (!words) return fallback
+        // A lowercase slug-ish name reads better title-cased; a name the
+        // author capitalised is left the way they wrote it.
+        const label = /[A-Z]/.test(words) ? words : words.replace(/\b\p{L}/gu, c => c.toUpperCase())
+        return /pixel art/i.test(label) ? label : t('common.artAlt', {name: label})
+    }
+}

@@ -779,6 +779,7 @@
     "titleError": "エラー"
   },
   "common": {
+    "artAlt": "{name}のピクセルアート",
     "add": "追加",
     "addX": "{x}を追加",
     "agent": "エージェント",

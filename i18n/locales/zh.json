@@ -779,6 +779,7 @@
     "titleError": "错误"
   },
   "common": {
+    "artAlt": "{name}像素画",
     "add": "添加",
     "addX": "添加 {x}",
     "agent": "助手",

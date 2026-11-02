@@ -809,6 +809,7 @@
     "titleError": "Error"
   },
   "common": {
+    "artAlt": "{name} pixel art",
     "add": "Add",
     "addX": "Add {x}",
     "agent": "Agent",

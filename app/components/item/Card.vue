@@ -5,7 +5,7 @@
         <img
             v-if="!isDraw && !imgError"
             :src="src"
-            :alt="value.name || $t('c_Card.pixelArtArtwork')"
+            :alt="artAlt(value.name, $t('c_Card.pixelArtArtwork'))"
             class="size-full"
             width="200"
             height="200"
@@ -68,6 +68,7 @@ const {value, isDraw, isRemix, priority} = defineProps<{
   value: SharedPage, isDraw?: boolean, isRemix?: boolean, priority?: boolean
 }>()
 const artImage = useArtImage()
+const artAlt = useArtAlt()
 
 const imgError = ref(false)
 

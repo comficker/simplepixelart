@@ -779,6 +779,7 @@
     "titleError": "오류"
   },
   "common": {
+    "artAlt": "{name} 픽셀 아트",
     "add": "추가",
     "addX": "{x} 추가",
     "agent": "에이전트",

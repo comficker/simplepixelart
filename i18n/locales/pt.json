@@ -779,6 +779,7 @@
     "titleError": "Erro"
   },
   "common": {
+    "artAlt": "Pixel art de {name}",
     "add": "Adicionar",
     "addX": "Adicionar {x}",
     "agent": "Assistente",

@@ -124,6 +124,13 @@ const imgPreview = computed(() =>
 const imgOriginal = computed(() =>
     data.value?.id_string ? artImg('original', data.value.id_string) : ''
 )
+// What the page shows: an integer upscale (~512px) rather than the 8x8
+// original, which Google Images all but ignores. Versioned so it caches.
+const artImage = useArtImage()
+const imgLarge = computed(() => data.value ? artImage(data.value, 'art-large') : '')
+const artAlt = useArtAlt()
+const mainAlt = computed(() =>
+    artAlt(data.value?.name, t('p_art_id_string.whPixelArt', {w: data.value?.width, h: data.value?.height})))
 const imgCard = computed(() =>
     data.value?.id_string ? artImg('card', data.value.id_string) : ''
 )
@@ -558,14 +565,14 @@ onUnmounted(() => window.removeEventListener('keydown', onAnimKey))
               :style="previewStyle"
           />
           <template #fallback>
-            <img :src="imgOriginal" :alt="data.name" class="art-img" :style="previewStyle" :width="data.width" :height="data.height">
+            <img :src="imgLarge" :alt="mainAlt" class="art-img" :style="previewStyle" :width="data.width" :height="data.height">
           </template>
         </ClientOnly>
         <img
             v-else
             id="mainImg"
-            :src="imgOriginal"
-            :alt="data.name || $t('p_art_id_string.whPixelArt', {w: data.width, h: data.height})"
+            :src="imgLarge"
+            :alt="mainAlt"
             class="art-img"
             :style="previewStyle"
             loading="eager"
