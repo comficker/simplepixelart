@@ -200,13 +200,15 @@ async function destroy() {
 .admin-trigger {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--foreground);
   background: var(--surface);
-  border: 1px solid color-mix(in oklab, var(--primary) 35%, var(--border));
+  /* Same frame as the Like/Tip/Share buttons beside it; the tag alone says
+     this one is staff-only. */
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: border-color 140ms ease, background 140ms ease;
@@ -214,6 +216,11 @@ async function destroy() {
 
 .admin-trigger:hover {
   background: color-mix(in oklab, var(--primary) 6%, var(--surface));
+}
+
+/* Text matches .btn, which steps up a size at the same width. */
+@media (min-width: 768px) {
+  .admin-trigger { font-size: var(--text-sm); }
 }
 
 .admin-trigger .icon {
@@ -224,10 +231,10 @@ async function destroy() {
 .admin-trigger-tag {
   display: inline-flex;
   align-items: center;
-  padding: 3px 7px;
+  padding: var(--space-1) var(--space-2);
   font-size: var(--text-2xs);
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   color: var(--primary-foreground, #fff);
   background: var(--primary-fill);
   border-radius: calc(var(--radius-sm) - 1px);

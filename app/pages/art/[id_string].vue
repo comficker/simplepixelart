@@ -961,7 +961,8 @@ onUnmounted(() => window.removeEventListener('keydown', onAnimKey))
 }
 
 .art-head-actions {
-  --art-ctl-h: calc(var(--space-6) + var(--space-3));
+  /* The rail's "Make your own version" height, so both bands read as one. */
+  --art-ctl-h: calc(var(--space-4) * 3.2);
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -977,6 +978,19 @@ onUnmounted(() => window.removeEventListener('keydown', onAnimKey))
   padding-bottom: 0;
   justify-content: center;
   white-space: nowrap;
+}
+
+/* Share sits inside a dropdown wrapper whose inline box added a few pixels
+   and pushed the button off the row's line. */
+.art-head-actions :deep(.art-tb-share),
+.art-head-actions :deep(.art-tb-share .dropdown-trigger-wrap) {
+  display: flex;
+}
+
+.art-head-actions :deep(.btn .icon),
+.art-head-actions :deep(.admin-trigger .icon) {
+  width: var(--icon-md);
+  height: var(--icon-md);
 }
 
 :deep(.tool-main > .widget-head > .title) {
