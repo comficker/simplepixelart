@@ -1050,7 +1050,16 @@
     "madeWith": "제작 방식",
     "views": "조회수",
     "collections": "컬렉션",
-    "tilesets": "타일셋"
+    "tilesets": "타일셋",
+    "replay": "다시 재생",
+    "prevFrame": "이전 프레임",
+    "nextFrame": "다음 프레임",
+    "frame": "프레임",
+    "speed": "속도",
+    "loop": "반복",
+    "bg_dots": "배경: 격자",
+    "bg_light": "배경: 밝게",
+    "bg_dark": "배경: 어둡게"
   },
   "p_arts": {
     "searchTags": "태그 검색",

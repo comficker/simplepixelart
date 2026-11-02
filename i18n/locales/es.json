@@ -1050,7 +1050,16 @@
     "madeWith": "Hecho con",
     "views": "Visitas",
     "collections": "Colecciones",
-    "tilesets": "Tilesets"
+    "tilesets": "Tilesets",
+    "replay": "Repetir",
+    "prevFrame": "Fotograma anterior",
+    "nextFrame": "Fotograma siguiente",
+    "frame": "Fotograma",
+    "speed": "Velocidad",
+    "loop": "Bucle",
+    "bg_dots": "Fondo: cuadrícula",
+    "bg_light": "Fondo: claro",
+    "bg_dark": "Fondo: oscuro"
   },
   "p_arts": {
     "searchTags": "Buscar etiquetas",

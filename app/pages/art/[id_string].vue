@@ -443,6 +443,30 @@ const previewStyle = computed(() => {
   const scale = (s as number) / Math.max(w, h)
   return {width: `${Math.round(w * scale)}px`, height: `${Math.round(h * scale)}px`}
 })
+
+/** Playback controls under an animation: the player exposes its state. */
+const player = ref<any>(null)
+const ANIM_SPEEDS = [0.25, 0.5, 1, 2] as const
+const showAnimCtl = computed(() => isAnimatedArt.value && !pixelView.value)
+
+/** What sits behind the art. Effects on transparency read very differently on
+ *  light and dark game scenes, so let the viewer check both. */
+const STAGE_BGS = ['dots', 'light', 'dark'] as const
+const stageBg = ref<typeof STAGE_BGS[number]>('dots')
+
+function onAnimKey(e: KeyboardEvent) {
+  if (!showAnimCtl.value || !player.value) return
+  const el = e.target instanceof HTMLElement ? e.target : null
+  if (el?.closest('input, textarea, select, [contenteditable="true"]')) return
+  if (e.key === ' ' && !el?.closest('button, a')) player.value.toggle()
+  else if (e.key === 'ArrowLeft') player.value.step(-1)
+  else if (e.key === 'ArrowRight') player.value.step(1)
+  else return
+  e.preventDefault()
+}
+
+onMounted(() => window.addEventListener('keydown', onAnimKey))
+onUnmounted(() => window.removeEventListener('keydown', onAnimKey))
 </script>
 
 <template>
@@ -498,7 +522,10 @@ const previewStyle = computed(() => {
       </template>
 
     <div class="flat-editor art-editor">
-      <div class="tm-stage art-stage" :class="{'is-fit': previewSize === 'full' && !pixelView}">
+      <div
+          class="tm-stage art-stage"
+          :class="[`bg-${stageBg}`, {'is-fit': previewSize === 'full' && !pixelView, 'has-anim': showAnimCtl}]"
+      >
         <ClientOnly v-if="pixelView && mapNumbers">
           <ArtPixelCanvas
               :width="data.width"
@@ -512,6 +539,7 @@ const previewStyle = computed(() => {
         </ClientOnly>
         <ClientOnly v-else-if="isAnimatedArt">
           <AnimatedArt
+              ref="player"
               :frames="animation.frames"
               :shared="animation.shared"
               :width="data.width"
@@ -559,7 +587,63 @@ const previewStyle = computed(() => {
           <span>{{ $t('p_art_id_string.remix') }}</span>
         </div>
 
-        <div class="art-preview-ctl">
+        <div class="art-preview-ctl" :class="{'has-anim': showAnimCtl}">
+          <div v-if="showAnimCtl && player" class="art-size-pill art-anim-ctl">
+            <button type="button" class="art-anim-btn" :title="$t('p_art_id_string.replay')" @click="player.restart()">
+              <span class="icon icon-replay"/>
+            </button>
+            <button type="button" class="art-anim-btn" :title="$t('p_art_id_string.prevFrame')" @click="player.step(-1)">
+              <span class="icon icon-skip-previous"/>
+            </button>
+            <button
+                type="button"
+                class="art-anim-btn"
+                :title="player.playing ? $t('c_AnimatedArt.pause') : $t('c_AnimatedArt.play')"
+                @click="player.toggle()"
+            >
+              <span class="icon" :class="player.playing ? 'icon-pause' : 'icon-play'"/>
+            </button>
+            <button type="button" class="art-anim-btn" :title="$t('p_art_id_string.nextFrame')" @click="player.step(1)">
+              <span class="icon icon-skip-next"/>
+            </button>
+            <input
+                type="range"
+                class="art-anim-scrub"
+                min="0"
+                :max="animation.frames.length - 1"
+                :value="player.idx"
+                :aria-label="$t('p_art_id_string.frame')"
+                @input="player.pause(); player.seek(Number(($event.target as HTMLInputElement).value))"
+            >
+            <span class="art-anim-count">{{ player.idx + 1 }}/{{ animation.frames.length }}</span>
+            <ui-dropdown-menu position="right">
+              <button type="button" class="art-anim-btn art-anim-speed" :title="$t('p_art_id_string.speed')">
+                {{ player.speed }}×
+              </button>
+              <template #menu>
+                <div class="file-menu">
+                  <button v-for="v in ANIM_SPEEDS" :key="v" class="file-menu-item" @click="player.setSpeed(v)">
+                    <span class="file-menu-label">
+                      <span>{{ v }}×</span>
+                      <span v-if="player.speed === v" class="icon icon-check"/>
+                    </span>
+                  </button>
+                </div>
+              </template>
+            </ui-dropdown-menu>
+            <button
+                type="button"
+                class="art-anim-btn"
+                :class="{'is-on': player.looping}"
+                :aria-pressed="player.looping"
+                :title="$t('p_art_id_string.loop')"
+                @click="player.setLooping(!player.looping)"
+            >
+              <span class="icon icon-repeat"/>
+            </button>
+          </div>
+
+          <div class="art-preview-pills">
           <ui-dropdown-menu position="right">
             <button class="art-size-pill" :title="$t('p_art_id_string.view')">
               <span class="icon icon-grid"/>
@@ -578,6 +662,13 @@ const previewStyle = computed(() => {
                   <span class="file-menu-label">
                     <span>{{ $t('p_art_id_string.coordinates') }}</span>
                     <span v-if="coordView" class="icon icon-check"/>
+                  </span>
+                </button>
+                <div class="file-menu-sep"/>
+                <button v-for="bg in STAGE_BGS" :key="bg" class="file-menu-item" @click="stageBg = bg">
+                  <span class="file-menu-label">
+                    <span>{{ $t(`p_art_id_string.bg_${bg}`) }}</span>
+                    <span v-if="stageBg === bg" class="icon icon-check"/>
                   </span>
                 </button>
               </div>
@@ -631,6 +722,7 @@ const previewStyle = computed(() => {
               </div>
             </template>
           </ui-dropdown-menu>
+          </div>
         </div>
       </div>
     </div>

@@ -1050,7 +1050,16 @@
     "madeWith": "制作方法",
     "views": "表示回数",
     "collections": "コレクション",
-    "tilesets": "タイルセット"
+    "tilesets": "タイルセット",
+    "replay": "もう一度再生",
+    "prevFrame": "前のフレーム",
+    "nextFrame": "次のフレーム",
+    "frame": "フレーム",
+    "speed": "速度",
+    "loop": "ループ",
+    "bg_dots": "背景：グリッド",
+    "bg_light": "背景：明るい",
+    "bg_dark": "背景：暗い"
   },
   "p_arts": {
     "searchTags": "タグを検索",

@@ -1080,7 +1080,16 @@
     "madeWith": "Made with",
     "views": "Views",
     "collections": "Collections",
-    "tilesets": "Tilesets"
+    "tilesets": "Tilesets",
+    "replay": "Replay",
+    "prevFrame": "Previous frame",
+    "nextFrame": "Next frame",
+    "frame": "Frame",
+    "speed": "Speed",
+    "loop": "Loop",
+    "bg_dots": "Background: grid",
+    "bg_light": "Background: light",
+    "bg_dark": "Background: dark"
   },
   "p_arts": {
     "searchTags": "Search tags",

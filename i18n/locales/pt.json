@@ -1050,7 +1050,16 @@
     "madeWith": "Feito com",
     "views": "Visualizações",
     "collections": "Coleções",
-    "tilesets": "Tilesets"
+    "tilesets": "Tilesets",
+    "replay": "Repetir",
+    "prevFrame": "Quadro anterior",
+    "nextFrame": "Próximo quadro",
+    "frame": "Quadro",
+    "speed": "Velocidade",
+    "loop": "Repetir em loop",
+    "bg_dots": "Fundo: grade",
+    "bg_light": "Fundo: claro",
+    "bg_dark": "Fundo: escuro"
   },
   "p_arts": {
     "searchTags": "Buscar tags",

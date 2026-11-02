@@ -1050,7 +1050,16 @@
     "madeWith": "创作方式",
     "views": "浏览量",
     "collections": "合集",
-    "tilesets": "图块集"
+    "tilesets": "图块集",
+    "replay": "重新播放",
+    "prevFrame": "上一帧",
+    "nextFrame": "下一帧",
+    "frame": "帧",
+    "speed": "速度",
+    "loop": "循环",
+    "bg_dots": "背景：网格",
+    "bg_light": "背景：浅色",
+    "bg_dark": "背景：深色"
   },
   "p_arts": {
     "searchTags": "搜索标签",

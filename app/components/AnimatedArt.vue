@@ -15,9 +15,13 @@ const props = defineProps<{
 const canvas = ref<HTMLCanvasElement | null>(null)
 let ctx: CanvasRenderingContext2D | null = null
 let frameCanvases: HTMLCanvasElement[] = []
-let idx = 0
 let timer: ReturnType<typeof setTimeout> | null = null
+const idx = ref(0)
 const playing = ref(true)
+/** Playback rate; 1 plays at the artwork's own timing. */
+const speed = ref(1)
+/** Starts as the artwork's own setting; the viewer may override it. */
+const looping = ref(props.loop !== false)
 
 function buildFrames() {
   const shared = props.shared || []
@@ -34,43 +38,85 @@ function drawFrame(i: number) {
   ctx.drawImage(frameCanvases[i]!, 0, 0)
 }
 
-function tick() {
-  const f = props.frames[idx]
-  const dur = f?.duration ?? Math.round(1000 / (props.fps || 10))
-  timer = setTimeout(() => {
-    if (!playing.value) return
-    let next = idx + 1
-    if (next >= props.frames.length) {
-      if (props.loop === false) {
-        playing.value = false
-        return
-      }
-      next = 0
-    }
-    idx = next
-    drawFrame(idx)
-    tick()
-  }, dur)
-}
-
-function start() {
-  stop()
-  idx = 0
-  playing.value = true
-  drawFrame(0)
-  if (props.frames.length > 1) tick()
-}
-
 function stop() {
   if (timer) clearTimeout(timer)
   timer = null
 }
 
-function toggle() {
-  playing.value = !playing.value
-  if (playing.value) tick()
-  else stop()
+function tick() {
+  stop()
+  const f = props.frames[idx.value]
+  const dur = (f?.duration ?? Math.round(1000 / (props.fps || 10))) / speed.value
+  timer = setTimeout(() => {
+    if (!playing.value) return
+    let next = idx.value + 1
+    if (next >= props.frames.length) {
+      if (!looping.value) {
+        playing.value = false
+        return
+      }
+      next = 0
+    }
+    seek(next)
+    tick()
+  }, dur)
 }
+
+function seek(i: number) {
+  const n = props.frames.length
+  idx.value = ((i % n) + n) % n
+  drawFrame(idx.value)
+}
+
+function play() {
+  if (props.frames.length < 2) return
+  // A one-shot that already ran to its end would stop again on the very next
+  // tick, which read as a dead play button. Start it over instead.
+  if (!looping.value && idx.value >= props.frames.length - 1) seek(0)
+  playing.value = true
+  tick()
+}
+
+function pause() {
+  playing.value = false
+  stop()
+}
+
+function toggle() {
+  if (playing.value) pause()
+  else play()
+}
+
+function restart() {
+  seek(0)
+  playing.value = false
+  play()
+}
+
+/** Steps pause playback: a frame-by-frame look is the point of stepping. */
+function step(d: number) {
+  pause()
+  seek(idx.value + d)
+}
+
+function setSpeed(v: number) {
+  speed.value = v
+  if (playing.value) tick()
+}
+
+function setLooping(v: boolean) {
+  looping.value = v
+}
+
+function start() {
+  stop()
+  looping.value = props.loop !== false
+  seek(0)
+  playing.value = props.frames.length > 1
+  if (playing.value) tick()
+}
+
+defineExpose({idx, playing, speed, looping, play, pause, toggle, restart, step, seek, setSpeed, setLooping})
 
 onMounted(() => {
   if (!canvas.value) return
