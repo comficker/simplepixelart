@@ -1585,7 +1585,6 @@ onMounted(() => {
 
 .square .inside.art-cover > .work-anim-play {
   inset: 0;
-  object-fit: cover;
 }
 
 .work-status.work-kind {

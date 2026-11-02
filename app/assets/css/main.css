@@ -1009,14 +1009,15 @@ footer {
     padding: var(--space-3);
 }
 
-/* A piece that is not square fills its tile edge to edge (cropped to the
-   centre) instead of floating as a strip inside the padding. */
+/* A piece that is not square uses the whole tile, without the padding, and
+   is shown whole: cropping it to the centre cut off the edges of wide and
+   tall pieces (an effect's sparks, a character's feet). */
 .square .inside.art-cover {
     padding: 0;
 }
 
 .square .inside.art-cover > img {
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .icon {

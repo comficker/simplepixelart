@@ -72,7 +72,7 @@ const artImage = useArtImage()
 const imgError = ref(false)
 
 const src = computed(() => artImage(value))
-// Not square: fill the card edge to edge (.art-cover in main.css).
+// Not square: use the whole card, shown whole (.art-cover in main.css).
 const cover = computed(() => !!value.width && !!value.height && value.width !== value.height)
 watch(src, () => { imgError.value = false })
 const to = computed(() => {
