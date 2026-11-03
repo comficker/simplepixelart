@@ -69,6 +69,7 @@ useCustomSeoMeta({
           v-for="(th, i) in themes"
           :key="th.tag"
           :title="$t('p_ideas.themeIdeas', {theme: $t(`p_ideas.theme_${th.tag}`)})"
+          :to="`/arts/${th.tag}`"
       >
         <template #ctl>
           <NuxtLinkLocale :to="`/arts/${th.tag}`" class="widget-ctl-btn">
