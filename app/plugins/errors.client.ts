@@ -18,7 +18,17 @@ export default defineNuxtPlugin((nuxtApp) => {
     if (seen.has(message) || sent >= MAX_PER_VISIT) return
     seen.add(message)
     sent++
-    track('app_exception', {message, source, route, fatal})
+    track('app_exception', {message, source, route, fatal, frame: topFrame(err, file)})
+  }
+
+  // Where it was thrown, as "/_nuxt/<chunk>.js:<line>:<col>" -- the message
+  // alone did not say which of a dozen null-guarded call sites it was.
+  function topFrame(err: unknown, file: string) {
+    // Chrome's stack starts with the message, which can hold a path too;
+    // Firefox and Safari start straight at the first frame.
+    const stack = String((err as any)?.stack ?? '').replace(String((err as any)?.message ?? ''), '')
+    const m = stack.match(/(?:https?:\/\/[^/\s)]+)?(\/[^\s)]*:\d+:\d+)/) || stack.match(/<anonymous>|\(native\)/)
+    return (m?.[1] || m?.[0] || file || '(none)').slice(0, 100)
   }
 
   // Nuxt owns vueApp.config.errorHandler (it drives the error page); its
