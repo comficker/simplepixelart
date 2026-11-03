@@ -64,20 +64,22 @@ useCustomSeoMeta({
 
 <template>
   <ToolLayout :title="$t('p_ideas.pixelArtIdeas')" title-tag="h1">
-    <Widget
-        v-for="(th, i) in themes"
-        :key="th.tag"
-        :title="$t('p_ideas.themeIdeas', {theme: $t(`p_ideas.theme_${th.tag}`)})"
-    >
-      <template #ctl>
-        <NuxtLinkLocale :to="`/arts/${th.tag}`" class="widget-ctl-btn">
-          <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
-        </NuxtLinkLocale>
-      </template>
-      <div class="results">
-        <ItemCard v-for="(item, j) in th.items" :key="item.id" :value="item" :priority="i === 0 && j < 3"/>
-      </div>
-    </Widget>
+    <div class="screen">
+      <Widget
+          v-for="(th, i) in themes"
+          :key="th.tag"
+          :title="$t('p_ideas.themeIdeas', {theme: $t(`p_ideas.theme_${th.tag}`)})"
+      >
+        <template #ctl>
+          <NuxtLinkLocale :to="`/arts/${th.tag}`" class="widget-ctl-btn">
+            <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
+          </NuxtLinkLocale>
+        </template>
+        <div class="results">
+          <ItemCard v-for="(item, j) in th.items" :key="item.id" :value="item" :priority="i === 0 && j < 3"/>
+        </div>
+      </Widget>
+    </div>
 
     <template #status>
       <PartialFooterBar/>
