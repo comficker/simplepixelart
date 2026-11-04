@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {CBN_COLLECTIONS} from '~/helper/cbn-collections'
+import {CBN_COLLECTIONS, cbnHeading} from '~/helper/cbn-collections'
 
 const route = useRoute()
 const {locale, defaultLocale} = useI18n()
@@ -88,11 +88,18 @@ useCustomSeoMeta({
       <h2>Free color by number app for Chrome</h2>
       <p>Hundreds more pictures, offline, one click away.</p>
       <p><a :href="STORE_URL" class="btn primary" target="_blank" rel="noopener">Add to Chrome — it's free</a></p>
-      <h2>Seasonal pictures</h2>
+      <h2>Color by number collections</h2>
       <ul>
         <li v-for="c in CBN_COLLECTIONS" :key="c.slug">
-          <NuxtLink :to="`/color-by-number/${c.slug}`">{{ c.name }} color by number</NuxtLink>
+          <NuxtLink :to="`/color-by-number/${c.slug}`">{{ cbnHeading(c) }}</NuxtLink>
         </li>
+      </ul>
+      <h2>Make your own pixel art</h2>
+      <ul>
+        <li><NuxtLink to="/converter">Turn a photo into pixel art</NuxtLink></li>
+        <li><NuxtLink to="/editor">Draw pixel art online</NuxtLink></li>
+        <li><NuxtLink to="/easy-pixel-art">Easy pixel art to start with</NuxtLink></li>
+        <li><NuxtLink to="/palettes">Color palettes for pixel art</NuxtLink></li>
       </ul>
       <h2>Color by number FAQ</h2>
       <dl class="cbn-faq">

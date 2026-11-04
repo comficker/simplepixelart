@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {CBN_COLLECTIONS, CBN_MIN_PICTURES} from '~/helper/cbn-collections'
+import {CBN_COLLECTIONS, CBN_MIN_PICTURES, cbnPlayable, cbnHeading, type CbnCollection} from '~/helper/cbn-collections'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -10,19 +10,31 @@ if (!col) throw createError({statusCode: 404, statusMessage: 'Not found', fatal:
 
 const PAGE_URL = `https://simplepixelart.com/color-by-number/${col.slug}`
 
-// One request per tag, merged in order without repeats.
-const {data: picks} = await useAsyncData(`cbn-col-${col.slug}`, async () => {
-  const lists = await Promise.all(col.tags.map(tag => useNativeFetch<any>('/coloring/shared-pages/', {
-    params: {
-      slug: `/arts/${tag}`, status: 'public', is_template: 'true', is_anim: 'false',
-      width__lt: 49, height__lt: 49, page_size: 40,
-    },
+// One request per source, merged in order without repeats; pictures of the
+// collections it excludes are fetched the same way and left out.
+const BASE = {status: 'public', is_template: 'true', is_anim: 'false', width__lt: 49, height__lt: 49}
+const sourcesOf = (c: CbnCollection) => c.queries || c.tags.map(tag => ({slug: `/arts/${tag}`, page_size: 40}))
+async function collect(c: CbnCollection) {
+  const lists = await Promise.all(sourcesOf(c).map(q => useNativeFetch<any>('/coloring/shared-pages/', {
+    params: {...BASE, page_size: 100, ...q},
   }).catch(() => null)))
   const out: string[] = []
+  // Copies of one picture differ only by a number on the end of the slug.
+  const seen = new Set<string>()
   for (const l of lists) for (const it of l?.results || []) {
-    if (!out.includes(it.id_string)) out.push(it.id_string)
+    const base = it.id_string.replace(/-\d+$/, '')
+    if (seen.has(base) || !cbnPlayable(it)) continue
+    if (c.minSide && Math.min(it.width, it.height) < c.minSide) continue
+    seen.add(base)
+    out.push(it.id_string)
   }
   return out
+}
+
+const {data: picks} = await useAsyncData(`cbn-col-${col.slug}`, async () => {
+  const [mine, ...others] = await Promise.all([col, ...CBN_COLLECTIONS.filter(c => col.exclude?.includes(c.slug))].map(collect))
+  const skip = new Set(others.flat().map(s => s.replace(/-\d+$/, '')))
+  return mine.filter(s => !skip.has(s.replace(/-\d+$/, ''))).slice(0, 40)
 }, {default: () => [] as string[]})
 
 const others = CBN_COLLECTIONS.filter(c => c.slug !== col.slug)
@@ -46,7 +58,7 @@ useCustomSeoMeta({
     innerHTML: JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: `${col.name} Color by Number`,
+      name: cbnHeading(col),
       url: PAGE_URL,
       description: col.description,
       isPartOf: {'@type': 'WebPage', url: 'https://simplepixelart.com/color-by-number'},
@@ -68,8 +80,8 @@ useCustomSeoMeta({
 </script>
 
 <template>
-  <ToolLayout :title="`${col!.name} Color by Number`" title-tag="h1">
-    <CbnPlay v-if="picks.length" :picks="picks" :more-to="`/arts/${col!.tags[0]}`"/>
+  <ToolLayout :title="cbnHeading(col!)" title-tag="h1">
+    <CbnPlay v-if="picks.length" :picks="picks" :more-to="col!.moreTo || `/arts/${col!.tags[0]}`"/>
 
     <template #status>
       <PartialFooterBar/>
@@ -86,9 +98,16 @@ useCustomSeoMeta({
       <h2>More color by number</h2>
       <ul>
         <li v-for="c in others" :key="c.slug">
-          <NuxtLink :to="`/color-by-number/${c.slug}`">{{ c.name }} color by number</NuxtLink>
+          <NuxtLink :to="`/color-by-number/${c.slug}`">{{ cbnHeading(c) }}</NuxtLink>
         </li>
         <li><NuxtLink to="/color-by-number">All color by number pictures</NuxtLink></li>
+      </ul>
+      <h2>Make your own pixel art</h2>
+      <ul>
+        <li><NuxtLink to="/converter">Turn a photo into pixel art</NuxtLink></li>
+        <li><NuxtLink to="/editor">Draw pixel art online</NuxtLink></li>
+        <li><NuxtLink to="/easy-pixel-art">Easy pixel art to start with</NuxtLink></li>
+        <li><NuxtLink to="/palettes">Color palettes for pixel art</NuxtLink></li>
       </ul>
     </template>
   </ToolLayout>
