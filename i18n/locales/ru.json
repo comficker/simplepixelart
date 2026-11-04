@@ -219,7 +219,8 @@
     "contact": "Связаться",
     "footer": "Подвал",
     "privacy": "Приватность",
-    "terms": "Условия"
+    "terms": "Условия",
+    "moreFreeTools": "Другие бесплатные инструменты"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Открыть палитру команд (темы, навигация и другое)"
@@ -1069,7 +1070,8 @@
     "loop": "Повтор",
     "bg_dots": "Фон: сетка",
     "bg_light": "Фон: светлый",
-    "bg_dark": "Фон: тёмный"
+    "bg_dark": "Фон: тёмный",
+    "otherSizes": "Другие размеры"
   },
   "p_arts": {
     "searchTags": "Поиск тегов",
@@ -1079,7 +1081,8 @@
   },
   "p_arts_id_string": {
     "browseXPixelArtCreations": "Пиксель-арт {tag} от сообщества — спрайты, персонажи и иконки. Каждый ремикс указывает автора оригинала.",
-    "xPixelArt": "Пиксель-арт: {x}"
+    "xPixelArt": "Пиксель-арт: {x}",
+    "drawOnXCanvas": "Рисовать на холсте {x}"
   },
   "p_auth_callback": {
     "backHome": "На главную",
@@ -1722,7 +1725,8 @@
     "grayscale": "Оттенки серого",
     "vivid": "Яркая",
     "pastel": "Пастельная",
-    "muted": "Приглушённая"
+    "muted": "Приглушённая",
+    "moreTools": "Другие инструменты для палитр"
   },
   "p_palettes_tag_tag": {
     "labelPalettes": "Палитры: {label}",

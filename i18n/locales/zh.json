@@ -219,7 +219,8 @@
     "contact": "联系我们",
     "footer": "页脚",
     "privacy": "隐私",
-    "terms": "条款"
+    "terms": "条款",
+    "moreFreeTools": "更多免费工具"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "打开命令面板（主题、导航等）"
@@ -1069,7 +1070,8 @@
     "loop": "循环",
     "bg_dots": "背景：网格",
     "bg_light": "背景：浅色",
-    "bg_dark": "背景：深色"
+    "bg_dark": "背景：深色",
+    "otherSizes": "其他尺寸"
   },
   "p_arts": {
     "searchTags": "搜索标签",
@@ -1079,7 +1081,8 @@
   },
   "p_arts_id_string": {
     "browseXPixelArtCreations": "浏览社区创作的 {tag} 像素画——精灵图、角色和图标。每次改编都会署上原作者的名字。",
-    "xPixelArt": "{x} 像素画"
+    "xPixelArt": "{x} 像素画",
+    "drawOnXCanvas": "在 {x} 画布上绘制"
   },
   "p_auth_callback": {
     "backHome": "返回首页",
@@ -1722,7 +1725,8 @@
     "grayscale": "灰度",
     "vivid": "鲜艳",
     "pastel": "粉彩",
-    "muted": "柔和"
+    "muted": "柔和",
+    "moreTools": "更多调色板工具"
   },
   "p_palettes_tag_tag": {
     "labelPalettes": "{label} 配色",

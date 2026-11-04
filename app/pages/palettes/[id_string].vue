@@ -162,6 +162,13 @@ useCustomSeoMeta({
     }),
   }] : []),
 })
+
+const moreTools = computed(() => [
+  {label: t('p_palettes_color-palette-from-image.seoTitle'), to: '/palettes/color-palette-from-image'},
+  {label: t('p_palettes_color-palette-from-color.seoTitle'), to: '/palettes/color-palette-from-color'},
+  {label: t('p_converter.imageToPixelConverter'), to: '/converter'},
+  {label: t('p_art_id_string.browseColorPalettes'), to: '/palettes'},
+])
 </script>
 
 <template>
@@ -273,6 +280,11 @@ useCustomSeoMeta({
       <div class="pd-related-grid">
         <ItemPaletteCard v-for="p in relatedList" :key="p.id" :value="p"/>
       </div>
+    </section>
+
+    <section class="pd-related">
+      <h2 class="pd-related-title">{{ $t('p_palettes_id_string.moreTools') }}</h2>
+      <TagList :items="moreTools"/>
     </section>
   </div>
 </template>

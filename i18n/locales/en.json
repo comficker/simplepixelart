@@ -230,7 +230,8 @@
     "contact": "Contact",
     "footer": "Footer",
     "privacy": "Privacy",
-    "terms": "Terms"
+    "terms": "Terms",
+    "moreFreeTools": "More free tools"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Open command palette (themes, navigation, more)"
@@ -1099,7 +1100,8 @@
     "loop": "Loop",
     "bg_dots": "Background: grid",
     "bg_light": "Background: light",
-    "bg_dark": "Background: dark"
+    "bg_dark": "Background: dark",
+    "otherSizes": "Other sizes"
   },
   "p_arts": {
     "searchTags": "Search tags",
@@ -1109,7 +1111,8 @@
   },
   "p_arts_id_string": {
     "browseXPixelArtCreations": "Browse {tag} pixel art made by the community — sprites, characters and icons. Every remix credits the original artist.",
-    "xPixelArt": "{x} Pixel Art"
+    "xPixelArt": "{x} Pixel Art",
+    "drawOnXCanvas": "Draw on a {x} canvas"
   },
   "p_auth_callback": {
     "backHome": "Back home",
@@ -1752,7 +1755,8 @@
     "grayscale": "Grayscale",
     "vivid": "Vivid",
     "pastel": "Pastel",
-    "muted": "Muted"
+    "muted": "Muted",
+    "moreTools": "More palette tools"
   },
   "p_palettes_tag_tag": {
     "labelPalettes": "{label} palettes",

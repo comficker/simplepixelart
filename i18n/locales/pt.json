@@ -219,7 +219,8 @@
     "contact": "Contato",
     "footer": "Rodapé",
     "privacy": "Privacidade",
-    "terms": "Termos"
+    "terms": "Termos",
+    "moreFreeTools": "Mais ferramentas grátis"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Abrir a paleta de comandos (temas, navegação e mais)"
@@ -1069,7 +1070,8 @@
     "loop": "Repetir em loop",
     "bg_dots": "Fundo: grade",
     "bg_light": "Fundo: claro",
-    "bg_dark": "Fundo: escuro"
+    "bg_dark": "Fundo: escuro",
+    "otherSizes": "Outros tamanhos"
   },
   "p_arts": {
     "searchTags": "Buscar tags",
@@ -1079,7 +1081,8 @@
   },
   "p_arts_id_string": {
     "browseXPixelArtCreations": "Explore pixel art de {tag} feita pela comunidade — sprites, personagens e ícones. Todo remix dá crédito ao artista original.",
-    "xPixelArt": "Pixel art de {x}"
+    "xPixelArt": "Pixel art de {x}",
+    "drawOnXCanvas": "Desenhar em uma tela {x}"
   },
   "p_auth_callback": {
     "backHome": "Voltar ao início",
@@ -1722,7 +1725,8 @@
     "grayscale": "Escala de cinza",
     "vivid": "Vívida",
     "pastel": "Pastel",
-    "muted": "Suave"
+    "muted": "Suave",
+    "moreTools": "Mais ferramentas de paleta"
   },
   "p_palettes_tag_tag": {
     "labelPalettes": "Paletas de {label}",

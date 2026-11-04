@@ -477,6 +477,10 @@ function onAnimKey(e: KeyboardEvent) {
 
 onMounted(() => window.addEventListener('keydown', onAnimKey))
 onUnmounted(() => window.removeEventListener('keydown', onAnimKey))
+
+// The common grid sizes, so every artwork links on to the size galleries.
+const OTHER_SIZES = ['8x8', '16x16', '24x24', '32x32', '64x64']
+const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?.width}x${data.value?.height}`))
 </script>
 
 <template>
@@ -849,6 +853,17 @@ onUnmounted(() => window.removeEventListener('keydown', onAnimKey))
         <div class="art-meta-row">
           <dt>{{ $t('common.size') }}</dt>
           <dd><NuxtLinkLocale :to="`/arts/size-${data.width}x${data.height}`" class="art-meta-link">{{ data.width }}×{{ data.height }}</NuxtLinkLocale></dd>
+        </div>
+        <div class="art-meta-row art-meta-row-tags">
+          <dt>{{ $t('p_art_id_string.otherSizes') }}</dt>
+          <dd class="art-meta-tags">
+            <NuxtLinkLocale
+                v-for="sz in otherSizes"
+                :key="sz"
+                :to="`/arts/size-${sz}`"
+                class="art-meta-link"
+            >{{ sz.replace('x', '×') }}</NuxtLinkLocale>
+          </dd>
         </div>
         <div class="art-meta-row">
           <dt>{{ $t('common.pixels') }}</dt>

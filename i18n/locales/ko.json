@@ -219,7 +219,8 @@
     "contact": "문의",
     "footer": "푸터",
     "privacy": "개인정보",
-    "terms": "약관"
+    "terms": "약관",
+    "moreFreeTools": "더 많은 무료 도구"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "명령 팔레트 열기(테마, 이동 등)"
@@ -1069,7 +1070,8 @@
     "loop": "반복",
     "bg_dots": "배경: 격자",
     "bg_light": "배경: 밝게",
-    "bg_dark": "배경: 어둡게"
+    "bg_dark": "배경: 어둡게",
+    "otherSizes": "다른 크기"
   },
   "p_arts": {
     "searchTags": "태그 검색",
@@ -1079,7 +1081,8 @@
   },
   "p_arts_id_string": {
     "browseXPixelArtCreations": "커뮤니티가 만든 {tag} 픽셀 아트 — 스프라이트, 캐릭터, 아이콘. 모든 리믹스에는 원작자 크레딧이 붙습니다.",
-    "xPixelArt": "{x} 픽셀 아트"
+    "xPixelArt": "{x} 픽셀 아트",
+    "drawOnXCanvas": "{x} 캔버스에 그리기"
   },
   "p_auth_callback": {
     "backHome": "홈으로",
@@ -1722,7 +1725,8 @@
     "grayscale": "회색조",
     "vivid": "선명함",
     "pastel": "파스텔",
-    "muted": "차분함"
+    "muted": "차분함",
+    "moreTools": "더 많은 팔레트 도구"
   },
   "p_palettes_tag_tag": {
     "labelPalettes": "{label} 팔레트",

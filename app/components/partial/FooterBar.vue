@@ -1,5 +1,13 @@
 <script setup lang="ts">
 const year = new Date().getFullYear()
+
+// Our other grid-based tools. Plain followed links: they are sister sites of
+// one owner, the way such networks usually link each other.
+const FAMILY = [
+  {href: 'https://easybeadpattern.com/', name: 'EasyBeadPattern'},
+  {href: 'https://squarecoloring.com/', name: 'SquareColoring'},
+  {href: 'https://freegraphpaper.net/', name: 'FreeGraphPaper'},
+]
 </script>
 
 <template>
@@ -10,6 +18,10 @@ const year = new Date().getFullYear()
       <NuxtLinkLocale to="/guidelines">{{ $t('common.guidelines') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/privacy">{{ $t('c_FooterBar.privacy') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/terms">{{ $t('c_FooterBar.terms') }}</NuxtLinkLocale>
+    </nav>
+    <nav class="footer-links" :aria-label="$t('c_FooterBar.moreFreeTools')">
+      <span class="footer-copy">{{ $t('c_FooterBar.moreFreeTools') }}:</span>
+      <a v-for="l in FAMILY" :key="l.href" :href="l.href" target="_blank" rel="noopener">{{ l.name }}</a>
     </nav>
   </div>
 </template>

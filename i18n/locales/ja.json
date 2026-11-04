@@ -219,7 +219,8 @@
     "contact": "お問い合わせ",
     "footer": "フッター",
     "privacy": "プライバシー",
-    "terms": "利用規約"
+    "terms": "利用規約",
+    "moreFreeTools": "その他の無料ツール"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "コマンドパレットを開く（テーマ、移動など）"
@@ -1069,7 +1070,8 @@
     "loop": "ループ",
     "bg_dots": "背景：グリッド",
     "bg_light": "背景：明るい",
-    "bg_dark": "背景：暗い"
+    "bg_dark": "背景：暗い",
+    "otherSizes": "他のサイズ"
   },
   "p_arts": {
     "searchTags": "タグを検索",
@@ -1079,7 +1081,8 @@
   },
   "p_arts_id_string": {
     "browseXPixelArtCreations": "コミュニティが描いた {tag} のドット絵 — スプライト、キャラクター、アイコン。リミックスには必ず元の作者のクレジットが付きます。",
-    "xPixelArt": "{x}のドット絵"
+    "xPixelArt": "{x}のドット絵",
+    "drawOnXCanvas": "{x}のキャンバスで描く"
   },
   "p_auth_callback": {
     "backHome": "ホームへ戻る",
@@ -1722,7 +1725,8 @@
     "grayscale": "グレースケール",
     "vivid": "鮮やか",
     "pastel": "パステル",
-    "muted": "くすみ"
+    "muted": "くすみ",
+    "moreTools": "その他のパレットツール"
   },
   "p_palettes_tag_tag": {
     "labelPalettes": "{label}のパレット",
