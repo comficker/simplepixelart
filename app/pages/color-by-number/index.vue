@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import {CBN_COLLECTIONS} from '~/helper/cbn-collections'
+
 const route = useRoute()
-const config = useRuntimeConfig()
 const {locale, defaultLocale} = useI18n()
 
 const PAGE_URL = 'https://simplepixelart.com/color-by-number'
@@ -15,19 +16,6 @@ const PICKS = [
   'morning-tea-cup', 'chubby-blue-cat', 'cat-under-a-sprout', 'little-ghost', 'fresh-carrot', 'brass-key',
 ]
 
-const slug = computed(() => {
-  const q = String(route.query.art || '')
-  return /^[a-z0-9-]+$/.test(q) ? q : PICKS[0]
-})
-
-const {data: art} = await useAuthFetch<any>(() => `/coloring/shared-pages/${slug.value}/`, {
-  key: 'cbn-art',
-  watch: [slug],
-})
-const playable = computed(() => art.value?.map_numbers && art.value?.colors ? art.value : null)
-
-const thumb = (s: string) => `${config.public.api}/coloring/files/art-thumb/${s}.png`
-
 const steps = [
   {name: 'Pick a picture', text: 'from the row below.'},
   {name: 'Choose a number', text: 'and its squares light up.'},
@@ -35,7 +23,9 @@ const steps = [
 ]
 
 const faq = [
-  {q: 'Is it free?', a: 'Yes. No ads, no account, nothing to buy.'},
+  {q: 'Is this color by number free?', a: 'Yes. A free game with no ads, no sign-up and nothing to buy.'},
+  {q: 'Is it color by number for adults too?', a: 'Yes. Zoom in, pick a bigger picture and color at your own pace. Many players are grown-ups unwinding after work.'},
+  {q: 'Is it the same as paint by number?', a: 'Same idea: every square has a number, every number a color. Here you paint by number online, one pixel at a time.'},
   {q: 'Is my progress saved?', a: 'Yes, in this browser. Come back to any picture and carry on.'},
   {q: 'Can I color offline?', a: 'The Chrome extension keeps the pictures you started and works offline.'},
 ]
@@ -83,47 +73,28 @@ useCustomSeoMeta({
 
 <template>
   <ToolLayout title="Pixel Art Color by Number" title-tag="h1">
-    <div class="flat-editor cbn-page">
-      <ClientOnly>
-        <ColorByNumber :art="playable"/>
-        <template #fallback>
-          <div class="cbn-fallback">
-            <img :src="`${IMG}/demo.webp`" alt="A penguin being colored by number" width="480" height="480">
-          </div>
-        </template>
-      </ClientOnly>
-      <nav class="cbn-picks" aria-label="Pictures to color">
-        <NuxtLink
-            v-for="s in PICKS"
-            :key="s"
-            :to="{query: {art: s}}"
-            replace
-            class="cbn-pick"
-            :class="{on: s === slug}"
-            :title="s.replace(/-/g, ' ')"
-        >
-          <img :src="thumb(s)" :alt="`${s.replace(/-/g, ' ')} pixel art to color`" loading="lazy" width="56" height="56">
-        </NuxtLink>
-        <NuxtLinkLocale to="/arts/new" class="cbn-pick cbn-more" title="More pixel art">
-          <span class="icon icon-angle-right"/>
-        </NuxtLinkLocale>
-      </nav>
-    </div>
+    <CbnPlay :picks="PICKS"/>
 
     <template #status>
       <PartialFooterBar/>
     </template>
 
     <template #doc>
-      <h2>How to play</h2>
+      <h2>How to play this color by number game</h2>
       <ol>
         <li v-for="s in steps" :key="s.name"><strong>{{ s.name }}</strong> {{ s.text }}</li>
       </ol>
       <p class="text-xs text-muted">Scroll to zoom · hold Space and drag to move</p>
-      <h2>Chrome extension</h2>
+      <h2>Free color by number app for Chrome</h2>
       <p>Hundreds more pictures, offline, one click away.</p>
       <p><a :href="STORE_URL" class="btn primary" target="_blank" rel="noopener">Add to Chrome — it's free</a></p>
-      <h2>Questions</h2>
+      <h2>Seasonal pictures</h2>
+      <ul>
+        <li v-for="c in CBN_COLLECTIONS" :key="c.slug">
+          <NuxtLink :to="`/color-by-number/${c.slug}`">{{ c.name }} color by number</NuxtLink>
+        </li>
+      </ul>
+      <h2>Color by number FAQ</h2>
       <dl class="cbn-faq">
         <template v-for="f in faq" :key="f.q">
           <dt>{{ f.q }}</dt>
@@ -135,73 +106,6 @@ useCustomSeoMeta({
 </template>
 
 <style scoped>
-.cbn-page {
-  flex: 1;
-  min-height: 0;
-}
-
-.cbn-page > :first-child {
-  flex: 1;
-  min-height: 0;
-}
-
-.cbn-fallback {
-  flex: 1;
-  display: grid;
-  place-items: center;
-  padding: var(--space-6);
-}
-
-.cbn-fallback img {
-  width: min(100%, 320px);
-  height: auto;
-  image-rendering: pixelated;
-}
-
-.cbn-picks {
-  flex-shrink: 0;
-  display: flex;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  overflow-x: auto;
-  border-top: 1px solid var(--border);
-}
-
-.cbn-pick {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: calc(var(--space-6) * 4);
-  height: calc(var(--space-6) * 4);
-  padding: var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  transition: border-color var(--transition);
-}
-
-.cbn-pick img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  image-rendering: pixelated;
-}
-
-.cbn-pick.on {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .cbn-pick:hover {
-    border-color: var(--primary);
-  }
-}
-
-.cbn-more {
-  color: var(--muted);
-}
-
 .cbn-faq dt {
   font-weight: 600;
   margin-top: var(--space-4);

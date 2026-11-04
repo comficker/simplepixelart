@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {CBN_COLLECTIONS} from '~/helper/cbn-collections'
 const {t, te, locale, defaultLocale} = useI18n()
 const localHtml = useLocalHtml()
 import type {APIResponse, ResponseSharedPage, SharedPage, TagSchema} from "~/types";
@@ -6,6 +7,11 @@ import type {APIResponse, ResponseSharedPage, SharedPage, TagSchema} from "~/typ
 const route = useRoute()
 const config = useRuntimeConfig()
 const idString = computed(() => route.params.id_string?.toString() || '')
+// A tag with its own color by number collection links straight to it.
+const cbnLink = computed(() => {
+  const c = CBN_COLLECTIONS.find(x => x.tags.includes(idString.value))
+  return c ? `/color-by-number/${c.slug}` : '/color-by-number'
+})
 
 const isSizeSlug = computed(() => /^size-\d+x\d+$/i.test(idString.value))
 const isColorSlug = computed(() => /^color-[0-9a-f]{3,8}$/i.test(idString.value))
@@ -244,7 +250,7 @@ useCustomSeoMeta({
         <p class="screen-desc" v-html="localHtml($t(`${pageCopy}.intro`))"/>
       </template>
       <template v-if="locale === defaultLocale" #actions>
-        <NuxtLink to="/color-by-number" class="btn">Color pictures like this</NuxtLink>
+        <NuxtLink :to="cbnLink" class="btn">Color pictures like this</NuxtLink>
       </template>
       <template v-if="filteredRelated.length" #filters-extra>
         <BrowseFilter :label="$t('common.tags')" icon="icon-flag" :value="String(filteredRelated.length)">
