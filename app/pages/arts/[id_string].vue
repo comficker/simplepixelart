@@ -243,6 +243,9 @@ useCustomSeoMeta({
         <h1 class="screen-title">{{ $t(`${pageCopy}.h1`) }}</h1>
         <p class="screen-desc" v-html="localHtml($t(`${pageCopy}.intro`))"/>
       </template>
+      <template v-if="locale === defaultLocale" #actions>
+        <NuxtLink to="/color-by-number" class="btn">Color pictures like this</NuxtLink>
+      </template>
       <template v-if="filteredRelated.length" #filters-extra>
         <BrowseFilter :label="$t('common.tags')" icon="icon-flag" :value="String(filteredRelated.length)">
           <BrowseOpt v-for="t in filteredRelated" :key="t.id_string" :to="`/arts/${t.id_string}`">

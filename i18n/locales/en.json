@@ -980,6 +980,7 @@
   },
   "crumb": {
     "howToMakePixelArt": "How to make pixel art",
+    "colorByNumber": "Color by number",
     "learn": "Learn",
     "ideas": "Ideas",
     "byColor": "By color",
@@ -1537,7 +1538,7 @@
     "can4": "<strong>Animate</strong> frame by frame and export GIFs or sprite sheets.",
     "can5": "<strong>Build game assets</strong> — <a href=\"/tilesets/editor\">tilesets</a> and <a href=\"/tilemaps/editor\">tilemaps</a> for Godot, Unity and Phaser.",
     "can6": "<strong>Join the <a href=\"/challenges\">weekly challenge</a></strong> and share what you make.",
-    "newToPixelArtLine": "Start with <a href=\"/easy-pixel-art\">easy pixel art</a> — small grids, three colors — pick one of the <a href=\"/ideas\">pixel art ideas</a>, or open the <a href=\"/editor\">pixel art editor</a> and make pixel art online for free.",
+    "newToPixelArtLine": "Start with <a href=\"/easy-pixel-art\">easy pixel art</a> — small grids, three colors — pick one of the <a href=\"/ideas\">pixel art ideas</a>, open the <a href=\"/editor\">pixel art editor</a> and make pixel art online for free, or unwind with <a href=\"/color-by-number\">pixel art color by number</a>.",
     "homeFacts": "Free · Make, share and discover pixel art",
     "newBlankCanvas": "New blank canvas",
     "newCreators": "New creators",

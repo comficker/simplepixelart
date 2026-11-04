@@ -5,6 +5,7 @@ const staticPages = [
     {loc: '/easy-pixel-art', changefreq: 'monthly', priority: '0.9'},
     {loc: '/ideas', changefreq: 'weekly', priority: '0.9'},
     {loc: '/learn/how-to-make-pixel-art', changefreq: 'monthly', priority: '0.8'},
+    {loc: '/color-by-number', changefreq: 'monthly', priority: '0.8'},
     {loc: '/palettes', changefreq: 'daily', priority: '0.8'},
     {loc: '/arts', changefreq: 'daily', priority: '0.8'},
     {loc: '/creator', changefreq: 'daily', priority: '0.7'},
