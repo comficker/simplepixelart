@@ -22,6 +22,14 @@ const sizeFromSlug = computed(() => {
   return m ? `${m[1]}×${m[2]}` : null
 })
 
+// A size gallery opens an empty canvas of that size in the editor, for
+// people who searched "16x16 pixel art generator" and want to start drawing.
+const sizeCanvas = computed(() => {
+  const m = idString.value.match(/^size-(\d+)x(\d+)$/i)
+  if (!m || +m[1] > 128 || +m[2] > 128) return null
+  return {to: `/editor?new=true&w=${+m[1]}&h=${+m[2]}`, label: `${+m[1]}×${+m[2]}`}
+})
+
 const page = computed(() => route.query.page ? Number.parseInt(route.query.page.toString()) : 1)
 
 const hasFilterQuery = computed(() =>
@@ -249,8 +257,12 @@ useCustomSeoMeta({
         <h1 class="screen-title">{{ $t(`${pageCopy}.h1`) }}</h1>
         <p class="screen-desc" v-html="localHtml($t(`${pageCopy}.intro`))"/>
       </template>
-      <template v-if="locale === defaultLocale" #actions>
-        <NuxtLink :to="cbnLink" class="btn">Color pictures like this</NuxtLink>
+      <template v-if="sizeCanvas || locale === defaultLocale" #actions>
+        <NuxtLinkLocale v-if="sizeCanvas" :to="sizeCanvas.to" rel="nofollow" class="btn primary">
+          <span class="icon icon-pen"/>
+          <span>{{ $t('p_arts_id_string.drawOnXCanvas', {x: sizeCanvas.label}) }}</span>
+        </NuxtLinkLocale>
+        <NuxtLink v-if="locale === defaultLocale" :to="cbnLink" class="btn">Color pictures like this</NuxtLink>
       </template>
       <template v-if="filteredRelated.length" #filters-extra>
         <BrowseFilter :label="$t('common.tags')" icon="icon-flag" :value="String(filteredRelated.length)">

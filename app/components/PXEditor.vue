@@ -3333,11 +3333,17 @@ onMounted(async () => {
       }
       store.addBoard()
     }
+    // ?w=&h= sizes the new canvas, so a link such as "open a 16×16 canvas"
+    // lands on that grid instead of the default one.
+    const w = Number(route.query.w), h = Number(route.query.h)
+    if (Number.isInteger(w) && Number.isInteger(h) && w > 0 && h > 0) {
+      store.resize({width: clampDim(w), height: clampDim(h)})
+    }
     // new=true is a one-shot command, like palette and colors below — drop it
     // once acted on. Left in the URL every reload would add another empty
     // board. The URL follows the board again only after this lands, or its
     // replace (still carrying new=true) would cancel this one.
-    const q = {...route.query}; delete q.new; delete q.id
+    const q = {...route.query}; delete q.new; delete q.id; delete q.w; delete q.h
     await router.replace({query: q}).catch(() => {})
     followIdInUrl = true
   } else {
