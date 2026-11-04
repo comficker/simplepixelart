@@ -1,52 +1,55 @@
 <script setup lang="ts">
-import type {ResponseSharedPage} from '~/types'
-
+const route = useRoute()
+const config = useRuntimeConfig()
 const {locale, defaultLocale} = useI18n()
 
 const PAGE_URL = 'https://simplepixelart.com/color-by-number'
 const STORE_URL = 'https://chromewebstore.google.com/detail/pixel-art-color-by-number/hellpcacohmobfpileciocbpbojljpec'
 const IMG = '/images/color-by-number'
-const TITLE = 'Pixel Art Color by Number – Free Chrome Extension'
-const DESC = 'Relaxing pixel art color by number in your browser: pick a picture, choose a number, fill the squares. Free, no ads, no sign-up, works offline.'
+const TITLE = 'Pixel Art Color by Number – Free Online & Chrome Extension'
+const DESC = 'Relaxing pixel art color by number, right here in your browser: pick a picture, choose a number, fill the squares. Free, no ads, no sign-up.'
 
-// Small, easy pictures with no third-party characters in them: these are
-// the ones the page points people to, and links shared from here travel.
+// Small, easy pictures with no third-party characters in them.
 const PICKS = [
   'penguin', 'cute-cat', 'little-raccoon', 'pumpkin-halloween', 'swimming-koi-fish', 'juicy-watermelon-slice',
   'morning-tea-cup', 'chubby-blue-cat', 'cat-under-a-sprout', 'little-ghost', 'fresh-carrot', 'brass-key',
 ]
 
-const {data} = await useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
-  params: {status: 'public', is_template: true, is_anim: false, width__lt: 49, height__lt: 49, ordering: '-score,-id', page_size: 80},
-  key: 'color-by-number-picks',
-})
-const picks = computed(() => {
-  const bySlug = new Map((data.value?.results || []).map(r => [r.id_string, r]))
-  return PICKS.map(s => bySlug.get(s)).filter(Boolean)
+const slug = computed(() => {
+  const q = String(route.query.art || '')
+  return /^[a-z0-9-]+$/.test(q) ? q : PICKS[0]
 })
 
+const {data: art} = await useAuthFetch<any>(() => `/coloring/shared-pages/${slug.value}/`, {
+  key: 'cbn-art',
+  watch: [slug],
+})
+const playable = computed(() => art.value?.map_numbers && art.value?.colors ? art.value : null)
+
+const thumb = (s: string) => `${config.public.api}/coloring/files/art-thumb/${s}.png`
+
 const steps = [
-  {name: 'Pick a picture', text: 'Open the extension and choose one of hundreds of small pixel art pictures: cats, food, fruit, Halloween and more.'},
-  {name: 'Choose a number', text: 'Tap a number in the palette. Every square with that number lights up, and the palette shows how many are left.'},
-  {name: 'Fill the squares', text: 'Click or drag to color. Wrong squares stay empty, so the picture always comes out right.'},
+  {name: 'Pick a picture', text: 'from the row below.'},
+  {name: 'Choose a number', text: 'and its squares light up.'},
+  {name: 'Fill the squares', text: 'wrong ones stay empty.'},
 ]
 
 const faq = [
-  {q: 'Is it free?', a: 'Yes. No ads, no account and nothing to buy.'},
-  {q: 'Does it work offline?', a: 'Pictures you have opened, and the gallery you last saw, open without a connection. Your progress is saved on your computer.'},
-  {q: 'Where do the pictures come from?', a: 'From SimplePixelArt.com, a free community for making and sharing pixel art. Finished a picture? Open it here to remix it or draw your own.'},
-  {q: 'Can I keep what I colored?', a: 'Download any finished picture as a crisp PNG, or copy a link to it.'},
+  {q: 'Is it free?', a: 'Yes. No ads, no account, nothing to buy.'},
+  {q: 'Is my progress saved?', a: 'Yes, in this browser. Come back to any picture and carry on.'},
+  {q: 'Can I color offline?', a: 'The Chrome extension keeps the pictures you started and works offline.'},
 ]
 
-// Written in English only; the other locales point Google back here.
-const translated = computed(() => locale.value === defaultLocale)
+// Written in English only; the other locales, and each picture's own query,
+// point Google back to the one page.
+const indexable = computed(() => locale.value === defaultLocale && !route.query.art)
 
 useCustomSeoMeta({
   title: TITLE,
   description: DESC,
   keywords: 'pixel art color by number, color by number, pixel color by number, color by number online, color by number game, paint by number, pixel coloring, chrome extension coloring',
   canonical: PAGE_URL,
-  robots: () => translated.value ? 'index, follow' : 'noindex, follow',
+  robots: () => indexable.value ? 'index, follow' : 'noindex, follow',
   ogType: 'website',
   ogImage: `https://simplepixelart.com${IMG}/og.jpg`,
   script: [
@@ -59,8 +62,9 @@ useCustomSeoMeta({
             '@type': 'SoftwareApplication',
             name: 'Pixel Art Color by Number',
             applicationCategory: 'GameApplication',
-            operatingSystem: 'Chrome',
-            url: STORE_URL,
+            operatingSystem: 'Web, Chrome',
+            url: PAGE_URL,
+            installUrl: STORE_URL,
             image: `https://simplepixelart.com${IMG}/og.jpg`,
             description: DESC,
             offers: {'@type': 'Offer', price: '0', priceCurrency: 'USD'},
@@ -79,31 +83,31 @@ useCustomSeoMeta({
 
 <template>
   <ToolLayout title="Pixel Art Color by Number" title-tag="h1">
-    <div class="screen">
-      <Widget title="Color pixel art, square by square">
-        <div class="cbn-hero">
-          <img :src="`${IMG}/demo.webp`" alt="A penguin being colored by number, one color at a time" width="480" height="480" class="cbn-demo">
-          <div class="cbn-pitch">
-            <p class="cbn-lead">
-              A calm little coloring book for your browser. Pick a picture, choose a number, fill the squares and
-              watch it come to life.
-            </p>
-            <ol class="cbn-steps">
-              <li v-for="s in steps" :key="s.name"><strong>{{ s.name }}.</strong> {{ s.text }}</li>
-            </ol>
-            <p class="cbn-cta">
-              <a :href="STORE_URL" class="btn primary" target="_blank" rel="noopener">Add to Chrome — it's free</a>
-              <span class="text-xs text-muted">No ads · no sign-up · works offline</span>
-            </p>
+    <div class="flat-editor cbn-page">
+      <ClientOnly>
+        <ColorByNumber :art="playable"/>
+        <template #fallback>
+          <div class="cbn-fallback">
+            <img :src="`${IMG}/demo.webp`" alt="A penguin being colored by number" width="480" height="480">
           </div>
-        </div>
-      </Widget>
-
-      <Widget v-if="picks.length" title="Pictures to color" to="/arts/new">
-        <div class="results">
-          <ItemCard v-for="item in picks" :key="item.id" :value="item"/>
-        </div>
-      </Widget>
+        </template>
+      </ClientOnly>
+      <nav class="cbn-picks" aria-label="Pictures to color">
+        <NuxtLink
+            v-for="s in PICKS"
+            :key="s"
+            :to="{query: {art: s}}"
+            replace
+            class="cbn-pick"
+            :class="{on: s === slug}"
+            :title="s.replace(/-/g, ' ')"
+        >
+          <img :src="thumb(s)" :alt="`${s.replace(/-/g, ' ')} pixel art to color`" loading="lazy" width="56" height="56">
+        </NuxtLink>
+        <NuxtLinkLocale to="/arts/new" class="cbn-pick cbn-more" title="More pixel art">
+          <span class="icon icon-angle-right"/>
+        </NuxtLinkLocale>
+      </nav>
     </div>
 
     <template #status>
@@ -111,12 +115,14 @@ useCustomSeoMeta({
     </template>
 
     <template #doc>
-      <h2>Pixel art color by number</h2>
-      <p>
-        Color by number with pixel art is the quietest way to make a picture: every square already has its color,
-        you only fill it in. The extension brings hundreds of free pictures from SimplePixelArt.com into a tab of
-        their own.
-      </p>
+      <h2>How to play</h2>
+      <ol>
+        <li v-for="s in steps" :key="s.name"><strong>{{ s.name }}</strong> {{ s.text }}</li>
+      </ol>
+      <p class="text-xs text-muted">Scroll to zoom · hold Space and drag to move</p>
+      <h2>Chrome extension</h2>
+      <p>Hundreds more pictures, offline, one click away.</p>
+      <p><a :href="STORE_URL" class="btn primary" target="_blank" rel="noopener">Add to Chrome — it's free</a></p>
       <h2>Questions</h2>
       <dl class="cbn-faq">
         <template v-for="f in faq" :key="f.q">
@@ -124,49 +130,76 @@ useCustomSeoMeta({
           <dd>{{ f.a }}</dd>
         </template>
       </dl>
-      <p>
-        Want to draw instead? Try the <NuxtLinkLocale to="/editor?new=true">free pixel art editor</NuxtLinkLocale>
-        or browse <NuxtLinkLocale to="/ideas">pixel art ideas</NuxtLinkLocale>.
-      </p>
     </template>
   </ToolLayout>
 </template>
 
 <style scoped>
-.cbn-hero {
+.cbn-page {
+  flex: 1;
+  min-height: 0;
+}
+
+.cbn-page > :first-child {
+  flex: 1;
+  min-height: 0;
+}
+
+.cbn-fallback {
+  flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
-  gap: var(--space-6);
-  align-items: center;
+  place-items: center;
   padding: var(--space-6);
 }
 
-.cbn-demo {
-  width: 100%;
+.cbn-fallback img {
+  width: min(100%, 320px);
   height: auto;
   image-rendering: pixelated;
-  border-radius: var(--radius-sm);
 }
 
-.cbn-lead {
-  margin: 0 0 var(--space-4);
-  font-size: var(--text-base);
-}
-
-.cbn-steps {
-  margin: 0 0 var(--space-6);
-  padding-left: var(--space-6);
+.cbn-picks {
+  flex-shrink: 0;
   display: flex;
-  flex-direction: column;
   gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  overflow-x: auto;
+  border-top: 1px solid var(--border);
 }
 
-.cbn-cta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-4);
-  margin: 0;
+.cbn-pick {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: calc(var(--space-6) * 4);
+  height: calc(var(--space-6) * 4);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  transition: border-color var(--transition);
+}
+
+.cbn-pick img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.cbn-pick.on {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cbn-pick:hover {
+    border-color: var(--primary);
+  }
+}
+
+.cbn-more {
+  color: var(--muted);
 }
 
 .cbn-faq dt {
@@ -176,11 +209,5 @@ useCustomSeoMeta({
 
 .cbn-faq dd {
   margin: var(--space-1) 0 0;
-}
-
-@media (max-width: 720px) {
-  .cbn-hero {
-    grid-template-columns: 1fr;
-  }
 }
 </style>
