@@ -355,6 +355,17 @@ useCustomSeoMeta({
         </Widget>
       </div>
 
+      <!-- Above What's new: seen by more visitors, and on phones it is no
+           longer right against the ad that opens the doc column below.
+           SPA_728_90 where the main column clears 728px (measured 736px at
+           768, 760 at 1024, 716 at 1280 with the doc rail, 876 at 1440), the
+           responsive unit everywhere else, phones included. Only the visible
+           one goes live: AdSlot skips a unit whose box is hidden. -->
+      <Widget class="home-leaderboard" :title="$t('c_AdSlot.advertisement')">
+        <div class="home-ad-fixed"><AdSlot slot="8090404628" :width="728" :height="90" bare/></div>
+        <div class="home-ad-fluid"><AdSlot slot="7838948172" size="small" bare/></div>
+      </Widget>
+
       <Widget :title="$t('p_index.whatSNew')" class="home-library">
         <template #ctl>
           <NuxtLinkLocale to="/arts/new" class="widget-ctl-btn">
@@ -362,15 +373,6 @@ useCustomSeoMeta({
           </NuxtLinkLocale>
         </template>
         <item-list :limit="24" hide-paginator ordering="-updated" originals-only/>
-      </Widget>
-
-      <!-- SPA_728_90 where the main column clears 728px (measured 736px at
-           768, 760 at 1024, 716 at 1280 with the doc rail, 876 at 1440), the
-           responsive unit everywhere else, phones included. Only the visible
-           one goes live: AdSlot skips a unit whose box is hidden. -->
-      <Widget class="home-leaderboard" :title="$t('c_AdSlot.advertisement')">
-        <div class="home-ad-fixed"><AdSlot slot="8090404628" :width="728" :height="90" bare/></div>
-        <div class="home-ad-fluid"><AdSlot slot="7838948172" size="small" bare/></div>
       </Widget>
     </div>
 
