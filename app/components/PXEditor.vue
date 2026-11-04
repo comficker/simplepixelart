@@ -4621,7 +4621,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 .px-loader span {
   width: 12px;
   height: 12px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: var(--primary, #5b6ee1);
   opacity: 0.18;
   transform: scale(0.7);
@@ -4845,7 +4845,7 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 .bg-tab-preview {
   width: 14px;
   height: 14px;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   flex-shrink: 0;
 }

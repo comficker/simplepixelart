@@ -22,13 +22,14 @@ type Cmd = {
 
 // Doing comes before going, preferences after both, and the legal pages last.
 // Theme used to sit at the top and pushed every real action below the fold.
-const GROUP_ORDER = ['Create', 'Go to', 'Preferences', 'Account', 'Help', 'System']
+const GROUP_ORDER = ['Create', 'Play', 'Go to', 'Preferences', 'Account', 'Help', 'System']
 
 type View = 'root' | 'theme' | 'language'
 const view = ref<View>('root')
 const VIEW_TITLE = computed<Record<Exclude<View, 'root'>, string>>(() => ({theme: t('c_CommandPalette.theme'), language: t('c_CommandPalette.language')}))
 const GROUP_LABEL = computed<Record<string, string>>(() => ({
   'Create': t('c_CommandPalette.group_create'),
+  'Play': t('c_CommandPalette.group_play'),
   'Go to': t('c_CommandPalette.group_goTo'),
   'Preferences': t('c_CommandPalette.group_preferences'),
   'Account': t('c_CommandPalette.group_account'),
@@ -107,6 +108,7 @@ const baseCommands = computed<Cmd[]>(() => [
   { id: 'create:tilemap', label: t('c_CommandPalette.newTilemap'), icon: 'icon-rhombus', hint: t('c_CommandPalette.gridIso'), group: 'Create', keywords: 'tilemap editor map isometric level scene world map grid isometric build level scene world', run: () => router.push(localePath('/tilemaps/editor')) },
   { id: 'create:slice', label: t('c_CommandPalette.sliceATileset'), icon: 'icon-select', group: 'Create', keywords: 'tileset slicer spritesheet sheet spritesheet cut sprites tiles', run: () => router.push(localePath('/tilesets/slicer')) },
   { id: 'create:palette', label: t('c_CommandPalette.extractAPalette'), icon: 'icon-image', hint: t('c_CommandPalette.fromImage'), group: 'Create', keywords: 'color palette from image extract', run: () => router.push(localePath('/palettes/color-palette-from-image')) },
+  { id: 'play:coloring', label: t('nav.coloring'), icon: 'icon-brush', hint: t('c_CommandPalette.colorByNumberHint'), group: 'Play', keywords: 'color by number coloring paint by number game relax', run: () => router.push('/color-by-number') },
   { id: 'help:guide', label: t('c_CommandPalette.guidelines'), icon: 'icon-flag', group: 'Help', keywords: 'community rules', run: () => router.push(localePath('/guidelines')) },
   { id: 'help:about', label: t('c_CommandPalette.aboutSimplepixelart'), icon: 'icon-explore', group: 'Help', keywords: 'info mission', run: () => router.push(localePath('/about')) },
   { id: 'help:contact', label: t('c_CommandPalette.contact'), icon: 'icon-at', group: 'Help', keywords: 'email support help', run: () => router.push(localePath('/contact')) },

@@ -839,7 +839,7 @@ defineExpose({ pct })
   top: calc(var(--space-2) * -1);
   min-width: calc(var(--space-6) + var(--space-1));
   padding: 0 var(--space-1);
-  border-radius: var(--space-4);
+  border-radius: var(--radius);
   border: 1px solid var(--surface);
   background: var(--surface-2);
   color: var(--foreground);

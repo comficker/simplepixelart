@@ -175,7 +175,7 @@ useHead({
 .dash-top-ctl {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: var(--space-2);
   margin-left: auto;
 }
 
@@ -196,11 +196,11 @@ useHead({
   padding: var(--space-1) var(--space-2);
 }
 
-/* The bar's own controls carry the base 20px icon; the menus they open keep
+/* The bar's own controls carry a 22.5px icon, like the sidebar's; the menus they open keep
    theirs. */
 .dash-top .dash-top-ctl :is(.hdr-link, .wallet-chip) > .icon {
-  width: calc(var(--space-4) * 2);
-  height: calc(var(--space-4) * 2);
+  width: calc(var(--space-4) * 2.25);
+  height: calc(var(--space-4) * 2.25);
 }
 
 /* Active reads by colour and fill alone here; the outline made the current
@@ -211,6 +211,12 @@ useHead({
 
 .dash-top-ctl .btn {
   padding: var(--space-1) var(--space-3);
+}
+
+/* Get started: the bar's one lit control, a size up from the rest. */
+.dash-top-ctl .btn.social-auth-cta {
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-sm);
 }
 
 .dash-top-ctl .social-sep {

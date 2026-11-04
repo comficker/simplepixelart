@@ -126,7 +126,7 @@ header .brand-name-stamp {
   letter-spacing: 0.18em;
   color: var(--primary-foreground);
   background: var(--primary-fill);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
 }
 
 header .brand-name-main {
@@ -146,7 +146,6 @@ header .brand-name-main {
   border-radius: var(--radius);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--muted);
   white-space: nowrap;
   transition: color 160ms ease, background 160ms ease;
   -webkit-tap-highlight-color: transparent;

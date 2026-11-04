@@ -93,6 +93,21 @@ const SECTIONS = [
       </nav>
     </template>
 
+    <!-- The coloring game is written in English only, so every locale links
+         to the one page. -->
+    <div class="dash-sec"><span class="dash-label">{{ $t('c_Sidebar.play') }}</span></div>
+    <nav class="dash-nav" :aria-label="$t('c_Sidebar.play')">
+      <NuxtLink
+          to="/color-by-number"
+          class="hdr-link dash-link"
+          :style="{'--ic-1': '#f472b6', '--ic-2': '#db2777'}"
+          :title="$t('nav.coloring')"
+      >
+        <span class="dash-tool-ic"><span class="icon icon-brush"/></span>
+        <span class="dash-label">{{ $t('nav.coloring') }}</span>
+      </NuxtLink>
+    </nav>
+
     <div class="dash-sec"><span class="dash-label">{{ $t('c_Sidebar.community') }}</span></div>
     <nav class="dash-nav" :aria-label="$t('c_Sidebar.community')">
       <NuxtLinkLocale to="/creator-program" class="hdr-link dash-link" :title="$t('c_Sidebar.creatorProgram')">
@@ -141,7 +156,6 @@ const SECTIONS = [
     top: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
     height: 100vh;
     padding: 0;
     overflow-y: auto;
@@ -200,7 +214,6 @@ const SECTIONS = [
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 0 var(--space-1);
 }
 
 .dash-link {
@@ -223,7 +236,6 @@ const SECTIONS = [
 }
 
 .dash-sec {
-  margin-top: var(--space-1);
   padding: var(--space-2) var(--space-4) 0;
   border-top: 1px solid var(--border);
   font-size: var(--text-2xs);
@@ -237,12 +249,12 @@ const SECTIONS = [
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Two base steps: its own size, not a gap, so it does not follow the
-     spacing scale down. */
-  width: calc(var(--space-4) * 2);
-  height: calc(var(--space-4) * 2);
+  /* Two and a quarter base steps: its own size, not a gap, so it does not
+     follow the spacing scale down. */
+  width: calc(var(--space-4) * 2.25);
+  height: calc(var(--space-4) * 2.25);
   flex-shrink: 0;
-  border-radius: var(--space-1);
+  border-radius: var(--radius);
   background: linear-gradient(135deg, var(--ic-1), var(--ic-2));
 }
 
@@ -292,10 +304,6 @@ const SECTIONS = [
   position: relative;
   justify-content: center;
   padding: 0;
-}
-
-.dash-side.is-collapsed .dash-nav {
-  padding: 0 var(--space-1);
 }
 
 .dash-side.is-collapsed .dash-link {

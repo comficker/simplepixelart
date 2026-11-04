@@ -24,7 +24,6 @@
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-
 *,
 *::before,
 *::after {
@@ -107,9 +106,9 @@ a {
 }
 
 :root {
-    --radius: 6px;
-    --radius-sm: 4px;
-    --radius-pill: 999px;
+    --radius: 0px;
+    --radius-sm: 0px;
+    --radius-pill: 0px;
 
     --danger: #dc2626;
     --danger-foreground: #ffffff;
@@ -173,63 +172,6 @@ a {
     --text-4xl: 2.5rem;
 }
 
-:root,
-[data-theme="gameboy"] {
-    --background: #0f380f;
-    --foreground: #9bbc0f;
-    --border: color-mix(in oklab, #306230 30%, transparent);
-    --primary: #9bbc0f;
-    --primary-foreground: #0f380f;
-    --secondary: #8bac0f;
-    --secondary-foreground: #0f380f;
-
-    --muted: color-mix(in oklab, #8bac0f 75%, transparent);
-    --surface: #1c4a1c;
-    --surface-2: #306230;
-}
-
-[data-theme="arcade"] {
-    --background: #1a1033;
-    --foreground: #f5e6a8;
-    --border: color-mix(in oklab, #4a2a7a 30%, transparent);
-    --primary: #ffb800;
-    --primary-foreground: #1a1033;
-    --secondary: #ff3d7f;
-    --secondary-foreground: #1a1033;
-
-    --muted: color-mix(in oklab, #a89cc9 75%, transparent);
-    --surface: #2a1a4a;
-    --surface-2: #3a2560;
-}
-
-[data-theme="nes"] {
-    --background: #000000;
-    --foreground: #fcfcfc;
-    --border: color-mix(in oklab, #383838 30%, transparent);
-    --primary: #e40058;
-    --primary-foreground: #fcfcfc;
-    --secondary: #0078f8;
-    --secondary-foreground: #fcfcfc;
-
-    --muted: color-mix(in oklab, #bcbcbc 75%, transparent);
-    --surface: #1c1c1c;
-    --surface-2: #383838;
-}
-
-[data-theme="synthwave"] {
-    --background: #1a0033;
-    --foreground: #f0f0ff;
-    --border: color-mix(in oklab, #8833ff 30%, transparent);
-    --primary: #00f5ff;
-    --primary-foreground: #1a0033;
-    --secondary: #ff006e;
-    --secondary-foreground: #1a0033;
-
-    --muted: color-mix(in oklab, #b19cd9 75%, transparent);
-    --surface: #2a0d4d;
-    --surface-2: #3d1a66;
-}
-
 [data-theme="light"] {
     /* Light lifts the other way: cards are the paper, the ground behind
        them is the warm page tone. */
@@ -282,18 +224,82 @@ a {
     --secondary-foreground: #0d0e11;
 }
 
-[data-theme="cozy"] {
-    --background: #f5e6d3;
-    --foreground: #4a3a2a;
-    --border: color-mix(in oklab, #d4c4a8 30%, transparent);
-    --primary: #d4854a;
-    --primary-foreground: #4a3a2a;
-    --secondary: #a8b89a;
-    --secondary-foreground: #4a3a2a;
+/* Lofi: a desk lamp at dusk. Dusty violet room, cream paper, a warm
+   peach glow for the accent. */
+[data-theme="lofi"] {
+    --radius: 0px;
+    --radius-sm: 0px;
+    --background: #1f1c27;
+    --surface: #27232f;
+    --card: #2d2936;
+    --surface-2: #36313f;
+    --card-ground: var(--surface);
+    --border: color-mix(in oklab, #4a4456 30%, transparent);
+    --foreground: #ebe3d6;
+    --muted: color-mix(in oklab, #c4b8c2 75%, transparent);
+    --primary: #f0a97e;
+    --primary-fill: #f0a97e;
+    --primary-foreground: #1f1c27;
+    --secondary: #a99bd0;
+    --secondary-foreground: #1f1c27;
+    --danger: #e0707a;
+    --success: #8fbf8a;
+    --warning: #e6b866;
+    --shadow-modal: 0 10px 28px -12px rgba(0, 0, 0, 0.5);
+}
 
-    --muted: color-mix(in oklab, #8a7a5e 75%, transparent);
-    --surface: #ede0c8;
-    --surface-2: #e0d2b8;
+/* Kawaii: strawberry milk. Pastel pink paper, cocoa text, a candy pink
+   accent. */
+[data-theme="kawaii"] {
+    --radius: 0px;
+    --radius-sm: 0px;
+    --card-ground: var(--background);
+    --card: var(--surface);
+    --field: #ffffff;
+    --field-border: color-mix(in oklab, #f0b8cc 70%, transparent);
+    --background: #fdeef3;
+    --surface: #fff8fa;
+    --surface-2: #fbe1ea;
+    --border: color-mix(in oklab, #f0b8cc 45%, transparent);
+    --foreground: #4f3440;
+    --muted: color-mix(in oklab, #8c6474 80%, transparent);
+    --primary: #e8578c;
+    /* White on this shade passes AA (4.6:1). */
+    --primary-fill: #d9437a;
+    --primary-foreground: #ffffff;
+    --secondary: #7fb3e8;
+    --secondary-foreground: #ffffff;
+    --danger: #c9334f;
+    --success: #2f8a5b;
+    --warning: #a8620a;
+    --shadow-modal: 0 10px 28px -12px rgba(140, 60, 90, 0.28);
+}
+
+/* Nature: a walk in the woods. White paper with a hint of leaf, a fresh
+   green accent with bark brown beside it; the default typeface. */
+[data-theme="nature"] {
+    --radius: 0px;
+    --radius-sm: 0px;
+    --card-ground: var(--background);
+    --card: var(--surface);
+    --field: #ffffff;
+    --field-border: color-mix(in oklab, #b4c2ae 60%, transparent);
+    --background: #f3f6f1;
+    --surface: #ffffff;
+    --surface-2: #e6ede2;
+    --border: color-mix(in oklab, #b4c2ae 35%, transparent);
+    --foreground: #232b1e;
+    --muted: color-mix(in oklab, #59644f 80%, transparent);
+    --primary: #1f9447;
+    /* Buttons with white text sit a shade deeper (4.9:1). */
+    --primary-fill: #198040;
+    --primary-foreground: #ffffff;
+    --secondary: #8a5a32;
+    --secondary-foreground: #ffffff;
+    --danger: #b3352b;
+    --success: #2e6e33;
+    --warning: #8f5a00;
+    --shadow-modal: 0 10px 28px -12px rgba(35, 43, 30, 0.26);
 }
 
 html, body {
@@ -948,7 +954,8 @@ footer {
 
 /* Dark theme: a thin scrim over the whole scene, under the wash, so the
    bright sky sits in the dark page instead of punching out of it. */
-[data-theme="dark"] .page-hero {
+[data-theme="dark"] .page-hero,
+[data-theme="lofi"] .page-hero {
     --hero-scrim: color-mix(in oklab, var(--surface) 30%, transparent);
 }
 
@@ -984,6 +991,18 @@ footer {
     flex-wrap: wrap;
     gap: var(--space-2);
     margin-top: var(--space-5);
+}
+
+/* The page's main way in: one size up from the everyday button. */
+.page-hero-cta .btn {
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-6);
+    font-size: var(--text-base);
+}
+
+.page-hero-cta .btn .icon {
+    width: var(--icon-md);
+    height: var(--icon-md);
 }
 
 /* One prompt row: a framed field with its action inside the frame (the
@@ -2823,7 +2842,7 @@ canvas.iso-line { cursor: crosshair; }
 .brush-size-dot {
     display: block;
     background: currentColor;
-    border-radius: 1px;
+    border-radius: var(--radius-sm);
     flex-shrink: 0;
     transition: background 140ms ease;
 }
@@ -2868,7 +2887,7 @@ canvas.iso-line { cursor: crosshair; }
 .desk-sw {
     width: 14px;
     height: 14px;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     flex: none;
     box-shadow: inset 0 0 0 1px var(--border);
 }
@@ -3859,7 +3878,7 @@ html.editor-fullscreen .consent {
     width: 8px;
     height: 2px;
     background: var(--border);
-    border-radius: 1px;
+    border-radius: var(--radius-sm);
 }
 
 .qa-a strong {

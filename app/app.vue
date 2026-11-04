@@ -158,7 +158,7 @@ if (import.meta.client) {
 .eb-loader span {
   width: 12px;
   height: 12px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   background: var(--primary, #5b6ee1);
   opacity: 0.18;
   transform: scale(0.7);

@@ -771,7 +771,7 @@ const faq = computed(() => [
   width: 32px;
   height: 32px;
   object-fit: cover;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background: var(--surface-2);
 }
 

@@ -153,7 +153,9 @@
     "savedCount": "{count} 件保存済み",
     "storageTitle": "ローカルストレージ: 約5 MB中 {used} MB 使用 ({pct}%)",
     "typeACommandOrSearch": "コマンドを入力または検索…",
-    "xActive": "{x}（使用中）"
+    "xActive": "{x}（使用中）",
+    "group_play": "遊ぶ",
+    "colorByNumberHint": "数字でぬりえ"
   },
   "c_Composer": {
     "copiedNColors": "{count}色をコピーしました",
@@ -581,7 +583,8 @@
     "pixelArt": "ドット絵",
     "sidebar": "サイドバー",
     "sourceOnGithub": "GitHub のソース",
-    "creatorProgram": "クリエイタープログラム"
+    "creatorProgram": "クリエイタープログラム",
+    "play": "遊ぶ"
   },
   "c_SocialAuth": {
     "followOnX": "Xでフォロー",
@@ -589,7 +592,8 @@
     "login": "ログイン",
     "openSourceOnGithub": "GitHubでオープンソース",
     "xTwitter": "X (Twitter)",
-    "yourPublicProfile": "公開プロフィール"
+    "yourPublicProfile": "公開プロフィール",
+    "getStarted": "はじめる"
   },
   "c_SocialSharing": {
     "share": "共有",
@@ -976,7 +980,8 @@
     "tilemap": "タイルマップ",
     "tileset": "タイルセット",
     "upload": "アップロード",
-    "yourWork": "マイ作品"
+    "yourWork": "マイ作品",
+    "coloring": "ぬりえ"
   },
   "p_about": {
     "aboutSimplepixelartCom": "SimplePixelArt.comについて",
@@ -2434,13 +2439,11 @@
     }
   },
   "theme": {
-    "arcade": "アーケード",
-    "cozy": "コージー",
+    "default": "デフォルト",
     "dark": "ダーク",
-    "gameBoy": "ゲームボーイ",
-    "light": "ライト",
-    "nes": "ファミコン",
-    "synthwave": "シンセウェイブ"
+    "lofi": "ローファイ",
+    "kawaii": "カワイイ",
+    "nature": "ナチュラル"
   },
   "p_collections": {
     "collectionCount": "{count} コレクション",

@@ -98,7 +98,7 @@ const handleError = () => clearError({ redirect: '/' })
 
 .err-pix {
   background: color-mix(in oklab, var(--primary) 60%, var(--foreground));
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
   opacity: 0;
   animation: errPix 2.4s cubic-bezier(.4,0,.2,1) infinite;
 }

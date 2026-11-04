@@ -4362,7 +4362,7 @@ const faq = computed(() => [
   background:
       repeating-conic-gradient(color-mix(in oklab, var(--muted, #888) 14%, transparent) 0 25%, transparent 0 50%)
       0 0 / 8px 8px;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .tsx-build-slot-thumb.empty {

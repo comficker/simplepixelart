@@ -1,14 +1,11 @@
 <script setup lang="ts">
 const year = new Date().getFullYear()
-// The color by number page is written in English only.
-const {locale, defaultLocale} = useI18n()
 </script>
 
 <template>
   <div class="footer-left">
     <span class="footer-copy">© {{ year }} SimplePixelArt.com</span>
     <nav class="footer-links" :aria-label="$t('c_FooterBar.footer')">
-      <NuxtLink v-if="locale === defaultLocale" to="/color-by-number">Color by number</NuxtLink>
       <NuxtLinkLocale to="/contact">{{ $t('c_FooterBar.contact') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/guidelines">{{ $t('common.guidelines') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/privacy">{{ $t('c_FooterBar.privacy') }}</NuxtLinkLocale>

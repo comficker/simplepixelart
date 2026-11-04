@@ -153,7 +153,9 @@
     "savedCount": "已保存 {count} 个",
     "storageTitle": "本地存储：已用 {used} MB / 约 5 MB（{pct}%）",
     "typeACommandOrSearch": "输入命令或搜索…",
-    "xActive": "{x}（当前）"
+    "xActive": "{x}（当前）",
+    "group_play": "玩",
+    "colorByNumberHint": "数字填色"
   },
   "c_Composer": {
     "copiedNColors": "已复制 {count} 种颜色",
@@ -581,7 +583,8 @@
     "pixelArt": "像素画",
     "sidebar": "侧边栏",
     "sourceOnGithub": "GitHub 源码",
-    "creatorProgram": "创作者计划"
+    "creatorProgram": "创作者计划",
+    "play": "玩"
   },
   "c_SocialAuth": {
     "followOnX": "在 X 上关注",
@@ -589,7 +592,8 @@
     "login": "登录",
     "openSourceOnGithub": "在 GitHub 上开源",
     "xTwitter": "X (Twitter)",
-    "yourPublicProfile": "你的公开主页"
+    "yourPublicProfile": "你的公开主页",
+    "getStarted": "开始使用"
   },
   "c_SocialSharing": {
     "share": "分享",
@@ -976,7 +980,8 @@
     "tilemap": "图块地图",
     "tileset": "图块集",
     "upload": "上传",
-    "yourWork": "我的作品"
+    "yourWork": "我的作品",
+    "coloring": "填色"
   },
   "p_about": {
     "aboutSimplepixelartCom": "关于 SimplePixelArt.com",
@@ -2434,13 +2439,11 @@
     }
   },
   "theme": {
-    "arcade": "街机",
-    "cozy": "温馨",
+    "default": "默认",
     "dark": "深色",
-    "gameBoy": "Game Boy",
-    "light": "浅色",
-    "nes": "红白机",
-    "synthwave": "赛博波"
+    "lofi": "Lo-fi",
+    "kawaii": "卡哇伊",
+    "nature": "自然"
   },
   "p_collections": {
     "collectionCount": "{count} 个合集",

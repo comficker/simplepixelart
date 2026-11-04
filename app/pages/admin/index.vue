@@ -669,7 +669,7 @@ watch(isStaff, (v) => { if (v) load() })
   min-width: 0;
   background: var(--primary-fill);
   opacity: 0.75;
-  border-radius: 1px;
+  border-radius: var(--radius-sm);
 }
 
 .adm-table-wrap { overflow-x: auto; }

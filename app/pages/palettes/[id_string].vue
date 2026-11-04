@@ -409,7 +409,7 @@ useCustomSeoMeta({
   flex: none;
   width: 52px;
   height: 52px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
 }
 

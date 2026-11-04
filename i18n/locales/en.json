@@ -160,7 +160,9 @@
     "savedCount": "{count} saved",
     "storageTitle": "Local storage: {used} MB of ~5 MB used ({pct}%)",
     "typeACommandOrSearch": "Type a command or search…",
-    "xActive": "{x} (active)"
+    "xActive": "{x} (active)",
+    "group_play": "Play",
+    "colorByNumberHint": "Color by number"
   },
   "c_Composer": {
     "copiedNColors": "Copied {count} colors",
@@ -599,7 +601,8 @@
     "pixelArt": "Pixel art",
     "sidebar": "Sidebar",
     "sourceOnGithub": "Source on GitHub",
-    "creatorProgram": "Creator Program"
+    "creatorProgram": "Creator Program",
+    "play": "Play"
   },
   "c_SocialAuth": {
     "followOnX": "Follow on X",
@@ -607,7 +610,8 @@
     "login": "Login",
     "openSourceOnGithub": "Open source on GitHub",
     "xTwitter": "X (Twitter)",
-    "yourPublicProfile": "Your public profile"
+    "yourPublicProfile": "Your public profile",
+    "getStarted": "Get started"
   },
   "c_SocialSharing": {
     "share": "Share",
@@ -1006,7 +1010,8 @@
     "tilemap": "Tilemap",
     "tileset": "Tileset",
     "upload": "Upload",
-    "yourWork": "Your work"
+    "yourWork": "Your work",
+    "coloring": "Coloring"
   },
   "p_about": {
     "aboutSimplepixelartCom": "About SimplePixelArt.com",
@@ -2480,13 +2485,11 @@
     }
   },
   "theme": {
-    "arcade": "Arcade",
-    "cozy": "Cozy",
+    "default": "Default",
     "dark": "Dark",
-    "gameBoy": "Game Boy",
-    "light": "Light",
-    "nes": "NES",
-    "synthwave": "Synthwave"
+    "lofi": "Lofi",
+    "kawaii": "Kawaii",
+    "nature": "Nature"
   },
   "p_collections": {
     "collectionCount": "1 collection | {count} collections",

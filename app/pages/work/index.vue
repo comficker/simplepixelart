@@ -1371,7 +1371,7 @@ onMounted(() => {
   inset: 24% 12% 34%;
   padding: 4%;
   background: var(--surface);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
@@ -1397,7 +1397,7 @@ onMounted(() => {
     color-mix(in oklab, var(--primary) 30%, var(--surface)),
     color-mix(in oklab, var(--primary) 46%, var(--surface))
   );
-  border-radius: 8px 8px var(--radius-sm) var(--radius-sm);
+  border-radius: var(--radius) var(--radius) var(--radius-sm) var(--radius-sm);
   box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.08);
   pointer-events: none;
   z-index: 1;
@@ -1412,7 +1412,7 @@ onMounted(() => {
 
 .work-card-folder .work-canvas .inside img {
   object-fit: cover;
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .work-card-folder .work-meta {

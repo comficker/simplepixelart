@@ -51,17 +51,13 @@ const loginModal = useLoginModal()
     <NuxtLinkLocale v-else to="/settings" class="social-auth-link">{{ $t('common.settings') }}</NuxtLinkLocale>
 
     <template v-if="!auth.isLogged">
-      <!-- In the bar these two sat at the same weight as each other and
-           brighter than every icon beside them, so the row shouted its least
-           used controls. Sign-in joins the muted icon row it sits in, and
-           the one action worth pointing at is the only lit thing. -->
+      <!-- One way in: the modal opens on sign-up for newcomers and switches
+           to sign-in in one tap, so a separate Login button only split the
+           eye between two controls doing the same job. -->
       <template v-if="compact">
         <span class="social-sep" aria-hidden="true"/>
-        <button type="button" class="hdr-link" @click="loginModal.show()">
-          {{ $t('c_SocialAuth.login') }}
-        </button>
-        <button type="button" class="btn primary" @click="loginModal.show(undefined, 'register')">
-          {{ $t('c_LoginModal.createAccount') }}
+        <button type="button" class="btn primary social-auth-cta" @click="loginModal.show(undefined, 'register')">
+          {{ $t('c_SocialAuth.getStarted') }}
         </button>
       </template>
       <template v-else>

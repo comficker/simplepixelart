@@ -409,6 +409,16 @@ useCustomSeoMeta({
 </template>
 
 <style scoped>
+/* The ad rides along the foot of the screen while the page scrolls, then
+   settles back into its place under What's new. */
+.home-leaderboard {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
 .home-ad-fixed {
   display: none;
 }

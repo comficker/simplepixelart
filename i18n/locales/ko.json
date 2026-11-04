@@ -153,7 +153,9 @@
     "savedCount": "{count}개 저장됨",
     "storageTitle": "로컬 저장소: 약 5 MB 중 {used} MB 사용 ({pct}%)",
     "typeACommandOrSearch": "명령을 입력하거나 검색…",
-    "xActive": "{x} (사용 중)"
+    "xActive": "{x} (사용 중)",
+    "group_play": "놀이",
+    "colorByNumberHint": "숫자 색칠"
   },
   "c_Composer": {
     "copiedNColors": "{count}색을 복사했습니다",
@@ -581,7 +583,8 @@
     "pixelArt": "픽셀 아트",
     "sidebar": "사이드바",
     "sourceOnGithub": "GitHub 소스",
-    "creatorProgram": "크리에이터 프로그램"
+    "creatorProgram": "크리에이터 프로그램",
+    "play": "놀이"
   },
   "c_SocialAuth": {
     "followOnX": "X에서 팔로우",
@@ -589,7 +592,8 @@
     "login": "로그인",
     "openSourceOnGithub": "GitHub에서 오픈소스",
     "xTwitter": "X (Twitter)",
-    "yourPublicProfile": "내 공개 프로필"
+    "yourPublicProfile": "내 공개 프로필",
+    "getStarted": "시작하기"
   },
   "c_SocialSharing": {
     "share": "공유",
@@ -976,7 +980,8 @@
     "tilemap": "타일맵",
     "tileset": "타일셋",
     "upload": "업로드",
-    "yourWork": "내 작업"
+    "yourWork": "내 작업",
+    "coloring": "색칠하기"
   },
   "p_about": {
     "aboutSimplepixelartCom": "SimplePixelArt.com 소개",
@@ -2434,13 +2439,11 @@
     }
   },
   "theme": {
-    "arcade": "아케이드",
-    "cozy": "코지",
+    "default": "기본",
     "dark": "다크",
-    "gameBoy": "게임보이",
-    "light": "라이트",
-    "nes": "패미컴",
-    "synthwave": "신스웨이브"
+    "lofi": "로파이",
+    "kawaii": "카와이",
+    "nature": "네이처"
   },
   "p_collections": {
     "collectionCount": "컬렉션 {count}개",

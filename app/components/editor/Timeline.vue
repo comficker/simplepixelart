@@ -717,7 +717,7 @@ onUnmounted(() => { store.isPlaying = false })
   gap: 3px;
   padding: 0 6px;
   border: 0;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   color: #fff;
   font-size: var(--text-2xs);
   font-weight: 700;
@@ -785,7 +785,7 @@ onUnmounted(() => { store.isPlaying = false })
   justify-content: center;
   padding: 2px 0;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--muted);
   cursor: pointer;
@@ -817,7 +817,7 @@ onUnmounted(() => { store.isPlaying = false })
   align-items: center;
   justify-content: center;
   border: 1px dashed var(--border);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--muted);
   cursor: pointer;
@@ -833,7 +833,7 @@ onUnmounted(() => { store.isPlaying = false })
   height: 34px;
   padding: 0 6px;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   color: var(--muted);
   font-size: var(--text-2xs);
   cursor: pointer;
@@ -848,7 +848,7 @@ onUnmounted(() => { store.isPlaying = false })
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background: var(--surface);
   border: 1px solid var(--border);
   font-size: var(--text-2xs);
@@ -879,7 +879,7 @@ onUnmounted(() => { store.isPlaying = false })
   height: 34px;
   padding: 0;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
   background:
       linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
       linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),

@@ -2358,7 +2358,7 @@ const faq = computed(() => [
   font-weight: 700;
   color: var(--primary-foreground);
   background: var(--primary-fill);
-  border-radius: 3px;
+  border-radius: var(--radius-sm);
 }
 
 .ts-region-dim {

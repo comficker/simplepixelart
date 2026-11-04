@@ -2,45 +2,36 @@ import useStatefulCookie from '~/composables/useStatefulCookie'
 
 export const THEMES = [
   {
-    id: 'cozy',
-    i18n: 'theme.cozy', name: 'Cozy',
-    colors: ['#f5e6d3', '#d4c4a8', '#d4854a', '#a8b89a'],
-  },
-  {
-    id: 'gameboy',
-    i18n: 'theme.gameBoy', name: 'Game Boy',
-    colors: ['#0f380f', '#306230', '#8bac0f', '#9bbc0f'],
-  },
-  {
-    id: 'arcade',
-    i18n: 'theme.arcade', name: 'Arcade',
-    colors: ['#1a1033', '#4a2a7a', '#ffb800', '#ff3d7f'],
-  },
-  {
-    id: 'nes',
-    i18n: 'theme.nes', name: 'NES',
-    colors: ['#000000', '#383838', '#e40058', '#0078f8'],
-  },
-  {
-    id: 'synthwave',
-    i18n: 'theme.synthwave', name: 'Synthwave',
-    colors: ['#1a0033', '#8833ff', '#00f5ff', '#ff006e'],
-  },
-  {
+    // The id stays "light" so existing cookies keep working.
     id: 'light',
-    i18n: 'theme.light', name: 'Light',
+    i18n: 'theme.default', name: 'Default',
     colors: ['#fdfcfa', '#eae7e0', '#1c1a17', '#2550cf'],
   },
   {
     id: 'dark',
     i18n: 'theme.dark', name: 'Dark',
-    colors: ['#111111', '#1f1f1f', '#e5e5e5', '#3b82f6'],
+    colors: ['#0d0e11', '#232428', '#e6e8eb', '#3b82f6'],
+  },
+  {
+    id: 'lofi',
+    i18n: 'theme.lofi', name: 'Lofi',
+    colors: ['#1f1c27', '#36313f', '#ebe3d6', '#f0a97e'],
+  },
+  {
+    id: 'kawaii',
+    i18n: 'theme.kawaii', name: 'Kawaii',
+    colors: ['#fff8fa', '#fbe1ea', '#4f3440', '#e8578c'],
+  },
+  {
+    id: 'nature',
+    i18n: 'theme.nature', name: 'Nature',
+    colors: ['#ffffff', '#e6ede2', '#232b1e', '#1f9447'],
   },
 ] as const
 
 export type ThemeId = typeof THEMES[number]['id']
 
-const DEFAULT_THEME: ThemeId = 'dark'
+const DEFAULT_THEME: ThemeId = 'light'
 
 export function useTheme() {
   // No default written back: a Set-Cookie on every first visit would keep

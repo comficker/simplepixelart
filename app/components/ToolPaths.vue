@@ -70,7 +70,7 @@ const shown = computed(() => {
   background:
     linear-gradient(160deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 55%),
     linear-gradient(160deg, var(--ic-1), var(--ic-2));
-  border-radius: 13px;
+  border-radius: var(--radius);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     0 2px 6px -2px var(--ic-2);
@@ -88,7 +88,7 @@ const shown = computed(() => {
     width: 36px;
     height: 36px;
     font-size: var(--text-lg);
-    border-radius: 10px;
+    border-radius: var(--radius);
   }
 }
 

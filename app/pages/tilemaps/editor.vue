@@ -3579,7 +3579,7 @@ const faq = computed(() => [
   .tm-cell-input, .tm-search input, .tm-layer-input { font-size: var(--text-base); }
 }
 .tm-board {
-  flex: none; font-size: 0; overflow: hidden; border-radius: 3px;
+  flex: none; font-size: 0; overflow: hidden; border-radius: var(--radius-sm);
   box-shadow:
       0 0 0 1px var(--border),
       0 1px 2px rgba(0, 0, 0, 0.05),
