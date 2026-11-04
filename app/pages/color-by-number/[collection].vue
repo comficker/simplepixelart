@@ -38,7 +38,9 @@ useCustomSeoMeta({
   canonical: PAGE_URL,
   robots: () => indexable.value ? 'index, follow' : 'noindex, follow',
   ogType: 'website',
-  ogImage: 'https://simplepixelart.com/images/color-by-number/og.jpg',
+  // Each collection has its own card (its pictures on a seasonal colour),
+  // so a shared link shows what is inside.
+  ogImage: `https://simplepixelart.com/images/color-by-number/og-${col.slug}.png`,
   script: [{
     type: 'application/ld+json',
     innerHTML: JSON.stringify({
