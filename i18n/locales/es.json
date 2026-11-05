@@ -219,8 +219,7 @@
     "contact": "Contacto",
     "footer": "Pie de página",
     "privacy": "Privacidad",
-    "terms": "Términos",
-    "moreFreeTools": "Más herramientas gratis"
+    "terms": "Términos"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Abrir la paleta de comandos (temas, navegación y más)"
@@ -2609,5 +2608,10 @@
     "verifiedHint": "Verificado por el equipo de SimplePixelArt",
     "artist": "Artista",
     "artistHint": "Miembro del Creator Program"
+  },
+  "c_MoreTools": {
+    "title": "Más herramientas gratis",
+    "beads": "patrones de cuentas a partir de una foto",
+    "graphPaper": "papel cuadriculado para imprimir"
   }
 }

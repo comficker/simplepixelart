@@ -219,8 +219,7 @@
     "contact": "Связаться",
     "footer": "Подвал",
     "privacy": "Приватность",
-    "terms": "Условия",
-    "moreFreeTools": "Другие бесплатные инструменты"
+    "terms": "Условия"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Открыть палитру команд (темы, навигация и другое)"
@@ -2609,5 +2608,10 @@
     "verifiedHint": "Подтверждён командой SimplePixelArt",
     "artist": "Художник",
     "artistHint": "Участник Creator Program"
+  },
+  "c_MoreTools": {
+    "title": "Другие бесплатные инструменты",
+    "beads": "схемы для бисера из фото",
+    "graphPaper": "миллиметровка для печати"
   }
 }

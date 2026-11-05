@@ -219,8 +219,7 @@
     "contact": "联系我们",
     "footer": "页脚",
     "privacy": "隐私",
-    "terms": "条款",
-    "moreFreeTools": "更多免费工具"
+    "terms": "条款"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "打开命令面板（主题、导航等）"
@@ -2609,5 +2608,10 @@
     "verifiedHint": "已由 SimplePixelArt 团队认证",
     "artist": "艺术家",
     "artistHint": "Creator Program 成员"
+  },
+  "c_MoreTools": {
+    "title": "更多免费工具",
+    "beads": "用照片生成拼豆图纸",
+    "graphPaper": "可打印的方格纸"
   }
 }

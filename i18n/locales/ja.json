@@ -219,8 +219,7 @@
     "contact": "お問い合わせ",
     "footer": "フッター",
     "privacy": "プライバシー",
-    "terms": "利用規約",
-    "moreFreeTools": "その他の無料ツール"
+    "terms": "利用規約"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "コマンドパレットを開く（テーマ、移動など）"
@@ -2609,5 +2608,10 @@
     "verifiedHint": "SimplePixelArt チームが認証しました",
     "artist": "アーティスト",
     "artistHint": "Creator Program のメンバー"
+  },
+  "c_MoreTools": {
+    "title": "その他の無料ツール",
+    "beads": "写真からアイロンビーズの図案",
+    "graphPaper": "印刷できる方眼紙"
   }
 }

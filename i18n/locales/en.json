@@ -230,8 +230,7 @@
     "contact": "Contact",
     "footer": "Footer",
     "privacy": "Privacy",
-    "terms": "Terms",
-    "moreFreeTools": "More free tools"
+    "terms": "Terms"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Open command palette (themes, navigation, more)"
@@ -2642,5 +2641,10 @@
     "verifiedHint": "Verified by the SimplePixelArt team",
     "artist": "Artist",
     "artistHint": "Member of the Creator Program"
+  },
+  "c_MoreTools": {
+    "title": "More free tools",
+    "beads": "bead patterns from any photo",
+    "graphPaper": "printable graph paper"
   }
 }

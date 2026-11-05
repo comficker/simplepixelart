@@ -219,8 +219,7 @@
     "contact": "Contato",
     "footer": "Rodapé",
     "privacy": "Privacidade",
-    "terms": "Termos",
-    "moreFreeTools": "Mais ferramentas grátis"
+    "terms": "Termos"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Abrir a paleta de comandos (temas, navegação e mais)"
@@ -2609,5 +2608,10 @@
     "verifiedHint": "Verificado pela equipe do SimplePixelArt",
     "artist": "Artista",
     "artistHint": "Membro do Creator Program"
+  },
+  "c_MoreTools": {
+    "title": "Mais ferramentas grátis",
+    "beads": "padrões de miçangas a partir de uma foto",
+    "graphPaper": "papel quadriculado para imprimir"
   }
 }

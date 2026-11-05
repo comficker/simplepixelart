@@ -219,8 +219,7 @@
     "contact": "문의",
     "footer": "푸터",
     "privacy": "개인정보",
-    "terms": "약관",
-    "moreFreeTools": "더 많은 무료 도구"
+    "terms": "약관"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "명령 팔레트 열기(테마, 이동 등)"
@@ -2609,5 +2608,10 @@
     "verifiedHint": "SimplePixelArt 팀이 인증했습니다",
     "artist": "아티스트",
     "artistHint": "Creator Program 멤버"
+  },
+  "c_MoreTools": {
+    "title": "더 많은 무료 도구",
+    "beads": "사진으로 비즈 도안 만들기",
+    "graphPaper": "인쇄용 모눈종이"
   }
 }
