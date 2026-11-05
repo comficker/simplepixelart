@@ -1222,12 +1222,22 @@
     "strongTransparentBackgroundStrongC": "<strong>背景を透過</strong> — 均一な背景を本物の透過に切り抜き、スプライトは何も背後にない状態でエディタに届きます。",
     "strongUploadAnImageStrongDrag": "<strong>画像をアップロード</strong> — PNG、JPG、WebPをドラッグ＆ドロップするか、クリックして選びます。どこにも送信されません。すべてブラウザ内で完結します。",
     "transparentBackground": "背景を透明に",
-    "turnAnyPhotoIntoPixelArt": "どんな写真も数秒でドット絵に。無料、登録不要、すべてブラウザ上で処理されます。",
+    "turnAnyPhotoIntoPixelArt": "画像・写真・イラストを数秒でドット絵に変換。無料、登録不要、処理はすべてブラウザ上で行われます。ファイルをドロップしてサイズと色数を選ぶだけで、編集・ダウンロード・スプライト作成に使えるきれいなドット絵ができます。",
     "cleanedOrphans": "孤立ピクセルを{count}個除去しました",
     "colorsMerged": "色を統合しました",
     "autoResult": "自動 → {w}×{h}",
     "nativeGridDetected": " — 元のグリッドを検出",
-    "imageToPixelConverter": "画像をドット絵に変換"
+    "imageToPixelConverter": "画像をドット絵に変換",
+    "faq5q": "写真はどのサイズで変換すればいいですか？",
+    "faq5a": "<p>顔やペット、ひとつの物なら32×32、風景なら48〜64から試してください。小さいほど大胆でレトロな仕上がりに、大きいほど細部が残ります。元がドット絵なら<strong>自動</strong>のままにすると、元のグリッドをそのまま読み取ります。</p>",
+    "faq6q": "変換したドット絵をゲームに使えますか？",
+    "faq6a": "<p>使えます。エディタで仕上げてから、PNGのスプライト、スプライトシート、GIFアニメとして書き出せます。シート全体をタイルに分けるならタイルセットスライサーを使ってください。</p>",
+    "moreTools": "ほかのドット絵ツール",
+    "lPalette": "画像からカラーパレット",
+    "lEditor": "ドット絵エディタ",
+    "lSprite": "スプライトメーカー",
+    "lCbn": "ナンバー塗り絵",
+    "lEasy": "簡単なドット絵のアイデア"
   },
   "p_creator": {
     "allTime": "全期間",
@@ -1700,7 +1710,9 @@
     "seoTitle": "画像からカラーパレット",
     "seoDescription": "どんな画像からもカラーパレットを抽出。写真を読み込み、2〜32色を選んで、HEXコードをコピーするかピクセルアートエディターで開けます。",
     "defaultName": "抽出したパレット",
-    "nColorsExtracted": "{count}色を抽出しました"
+    "nColorsExtracted": "{count}色を抽出しました",
+    "turnThePictureInto": "画像そのものをドット絵にするなら",
+    "imageToPixelArtConverter": "画像ドット絵変換ツール"
   },
   "p_palettes_id_string": {
     "artworksUsingThisPalette": "このパレットを使った作品",
@@ -2403,9 +2415,9 @@
       "title": "ピクセルアートのコレクション"
     },
     "converter": {
-      "description": "写真を数秒でドット絵に変換できる無料ツール。色数は4〜64色から選べ、ノイズ除去、色の置き換え、リアルタイムプレビューに対応。",
+      "description": "画像や写真を数秒でドット絵に変換できる無料ツール。サイズ自動判定、4〜64色のパレット、ディザリング、ノイズ除去、リアルタイムプレビューに対応。",
       "keywords": "画像 ドット絵 変換, 写真 ドット絵, ドット絵 変換 無料, ピクセル化, イラスト ドット絵",
-      "title": "画像をドット絵に変換"
+      "title": "画像をドット絵に変換 — 無料のドット変換ツール"
     },
     "creators": {
       "description": "SimplePixelArt.com で最も多く公開しているピクセルアートのクリエイターを、日・週・月・四半期で並べています。",
@@ -2608,10 +2620,5 @@
     "verifiedHint": "SimplePixelArt チームが認証しました",
     "artist": "アーティスト",
     "artistHint": "Creator Program のメンバー"
-  },
-  "c_MoreTools": {
-    "title": "その他の無料ツール",
-    "beads": "写真からアイロンビーズの図案",
-    "graphPaper": "印刷できる方眼紙"
   }
 }

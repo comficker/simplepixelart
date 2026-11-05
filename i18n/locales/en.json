@@ -1227,7 +1227,7 @@
     "faq4a": "<p>If your image is pixel art that was upscaled, screenshotted, JPEG-compressed, or captured with grid lines, Auto detects the original cell size and reads the art back cell for cell — no detail lost, no blur. For photos it estimates a sensible output size instead.</p>",
     "faq4q": "What does the Auto size do?",
     "howThisConverterWorks": "How this converter works",
-    "imageToPixelArtConverter": "Picture & Image to Pixel Art Converter",
+    "imageToPixelArtConverter": "Image to Pixel Art Converter",
     "imageToPixelArtConverterInterface": "Image to Pixel Art Converter interface showing live preview, size and color palette controls, brightness contrast saturation sliders, and generated pixel art output",
     "imageToPixelArtConverterLive": "Image to Pixel Art Converter — live preview with palette and adjustment controls",
     "livePreviewPaletteControlAnd": "Live preview, palette control, and image adjustments in one view.",
@@ -1252,12 +1252,22 @@
     "strongTransparentBackgroundStrongC": "<strong>Transparent background</strong> — cut a uniform backdrop to real transparency; the sprite lands in the editor with nothing behind it.",
     "strongUploadAnImageStrongDrag": "<strong>Upload an image</strong> — drag and drop a PNG, JPG or WebP, or click to browse. Nothing is uploaded — it all runs in your browser.",
     "transparentBackground": "Transparent background",
-    "turnAnyPhotoIntoPixelArt": "Turn any photo, picture or image into pixel art in seconds — free, no signup, and everything runs in your browser.",
+    "turnAnyPhotoIntoPixelArt": "Convert any image, photo or picture to pixel art in seconds — free, no signup, and everything runs in your browser. Drop a file, pick a size and a palette, and get a clean pixel grid you can edit, download or turn into a sprite.",
     "cleanedOrphans": "Cleaned 1 orphan pixel | Cleaned {count} orphan pixels",
     "colorsMerged": "Colors merged",
     "autoResult": "Auto → {w}×{h}",
     "nativeGridDetected": " — native grid detected",
-    "imageToPixelConverter": "Image to Pixel Converter"
+    "imageToPixelConverter": "Image to Pixel Converter",
+    "faq5q": "What size should I pick for a photo?",
+    "faq5a": "<p>Start at 32×32 for a face, pet or single object and 48–64 for a scene. Smaller grids look bolder and more retro; larger ones keep more detail. If the image is already pixel art, keep <strong>Auto</strong> so it reads the original grid.</p>",
+    "faq6q": "Can I use the result in a game?",
+    "faq6a": "<p>Yes. Open it in the editor to touch it up, then export a PNG sprite, a spritesheet or an animated GIF. To cut a whole sheet into tiles, use the tileset slicer.</p>",
+    "moreTools": "More pixel art tools",
+    "lPalette": "Color palette from image",
+    "lEditor": "Pixel art editor",
+    "lSprite": "Sprite maker",
+    "lCbn": "Color by number",
+    "lEasy": "Easy pixel art ideas"
   },
   "p_creator": {
     "allTime": "All time",
@@ -1730,7 +1740,9 @@
     "seoTitle": "Color Palette from Image",
     "seoDescription": "Extract a color palette from any image. Upload a photo, pick 2 to 32 colors, then copy the hex codes or open them in the pixel art editor.",
     "defaultName": "Extracted palette",
-    "nColorsExtracted": "1 color extracted | {count} colors extracted"
+    "nColorsExtracted": "1 color extracted | {count} colors extracted",
+    "turnThePictureInto": "Turn the picture itself into pixel art with the",
+    "imageToPixelArtConverter": "image to pixel art converter"
   },
   "p_palettes_id_string": {
     "artworksUsingThisPalette": "Artworks using this palette",
@@ -2449,9 +2461,9 @@
       "title": "Pixel Art Collections"
     },
     "converter": {
-      "description": "Turn any picture or image into pixel art in seconds. Free online converter with 4–64 color palettes, pixel cleaner, color swap and live preview.",
-      "keywords": "image to pixel art, photo to pixel art, pixel art converter, pixelate image, picture to pixel art",
-      "title": "Picture to Pixel Art Converter — Free Image to Pixel Art"
+      "description": "Convert any image or photo to pixel art in seconds. Free online converter with auto pixel size, 4–64 color palettes, dithering, pixel cleaner and live preview.",
+      "keywords": "image to pixel art converter, convert image to pixel art, photo to pixel art, picture to pixel art, pixelate image",
+      "title": "Image to Pixel Art Converter — Free Online"
     },
     "creators": {
       "description": "The pixel art creators publishing the most on SimplePixelArt.com, ranked by day, week, month and quarter.",
@@ -2641,10 +2653,5 @@
     "verifiedHint": "Verified by the SimplePixelArt team",
     "artist": "Artist",
     "artistHint": "Member of the Creator Program"
-  },
-  "c_MoreTools": {
-    "title": "More free tools",
-    "beads": "bead patterns from any photo",
-    "graphPaper": "printable graph paper"
   }
 }

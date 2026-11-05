@@ -8,111 +8,69 @@ import {cloneDeep, debounce, generateUUID, getStorageItem} from '~/helper/utils'
 import {cleanOrphanCells, convertImageToGrid} from '~/helper/pixel'
 import {hexToRgb, rgbToHex} from '~/helper/color'
 
+// Everything in the JSON-LD is read from the same strings the page shows,
+// in the page's own language, so the structured data never says something
+// the reader can't see.
+const plain = (html: string) => html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
+const STEP_KEYS = ['strongUploadAnImageStrongDrag', 'strongPickSizePaletteStrongKeep', 'strongCleanUpExportStrongRun']
+const FEATURE_KEYS = [
+  'strongFlexibleOutputSizeStrongConv', 'strongPaletteControlStrongLimitTo', 'strongLiveImageAdjustmentsStrongBr',
+  'strongPixelCleanerStrongRemovesOrp', 'strongAutoSizeStrongPixelArt', 'strongTransparentBackgroundStrongC',
+  'strongDitheringStrongOrderedBayerD', 'strongColorSwapMergeStrongClick', 'strongOneClickEditorHandoffStrong',
+]
+const faq = computed(() => [0, 1, 2, 3, 4, 5, 6].map(i => ({q: t(`p_converter.faq${i}q`), a: t(`p_converter.faq${i}a`)})))
+
+const {locale, defaultLocale} = useI18n()
+const pageUrl = computed(() => `https://simplepixelart.com${locale.value === defaultLocale ? '' : `/${locale.value}`}/converter`)
+const jsonLd = computed(() => {
+  const name = t('p_converter.imageToPixelArtConverter')
+  return JSON.stringify({
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebApplication',
+        name,
+        description: t('seo.converter.description'),
+        url: pageUrl.value,
+        inLanguage: locale.value,
+        applicationCategory: 'GraphicsApplication',
+        operatingSystem: 'Any (browser-based)',
+        offers: {'@type': 'Offer', price: '0', priceCurrency: 'USD'},
+        featureList: FEATURE_KEYS.map(k => plain(t(`p_converter.${k}`))),
+        publisher: {'@type': 'Organization', name: 'SimplePixelArt.com', url: 'https://simplepixelart.com/'},
+      },
+      {
+        '@type': 'HowTo',
+        name,
+        inLanguage: locale.value,
+        step: STEP_KEYS.map(k => {
+          const html = t(`p_converter.${k}`)
+          const head = html.match(/<strong>(.*?)<\/strong>/)?.[1] || ''
+          return {'@type': 'HowToStep', name: plain(head), text: plain(html)}
+        }),
+      },
+      {
+        '@type': 'FAQPage',
+        inLanguage: locale.value,
+        mainEntity: faq.value.map(f => ({'@type': 'Question', name: f.q, acceptedAnswer: {'@type': 'Answer', text: plain(f.a)}})),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {'@type': 'ListItem', position: 1, name: t('nav.home'), item: 'https://simplepixelart.com/'},
+          {'@type': 'ListItem', position: 2, name, item: pageUrl.value},
+        ],
+      },
+    ],
+  })
+})
+
 useCustomSeoMeta({
   title: () => t('seo.converter.title'),
   description: () => t('seo.converter.description'),
   keywords: () => t('seo.converter.keywords'),
   canonical: 'https://simplepixelart.com/converter',
-  script: [
-    {
-      type: 'application/ld+json',
-      innerHTML: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@graph': [
-          {
-            '@type': 'SoftwareApplication',
-            name: 'Image to Pixel Art Converter',
-            description: 'Free online tool that converts photos and images into pixel art with customizable palette, size, and cleanup options.',
-            url: 'https://simplepixelart.com/converter',
-            applicationCategory: 'GraphicsApplication',
-            operatingSystem: 'Any (browser-based)',
-            offers: {
-              '@type': 'Offer',
-              price: '0',
-              priceCurrency: 'USD',
-            },
-            featureList: [
-              'Drag and drop image upload',
-              'Auto size: detects the native pixel grid of upscaled pixel art',
-              'Output sizes from 8x8 to 64x64 pixels',
-              'Palette reduction 4 to 64 colors via median-cut quantization',
-              'Transparent background removal',
-              'Ordered (Bayer) dithering for photo gradients',
-              'Live brightness, contrast, saturation adjustment',
-              'Pixel Cleaner to remove orphan pixels',
-              'Color Swap and merge palette colors',
-              'One-click export to the pixel art editor',
-            ],
-            publisher: {
-              '@type': 'Organization',
-              name: 'SimplePixelArt.com',
-              url: 'https://simplepixelart.com/',
-            },
-          },
-          {
-            '@type': 'HowTo',
-            name: 'How to convert an image to pixel art',
-            description: 'Turn any photo into pixel art in three steps with our free online converter.',
-            totalTime: 'PT30S',
-            step: [
-              {
-                '@type': 'HowToStep',
-                name: 'Upload your image',
-                text: 'Click the upload area or drag and drop a PNG, JPG, or WebP file.',
-              },
-              {
-                '@type': 'HowToStep',
-                name: 'Pick size and palette',
-                text: 'Choose output pixel width (8–64) and number of colors (4–64). The preview updates live.',
-              },
-              {
-                '@type': 'HowToStep',
-                name: 'Polish and open in editor',
-                text: 'Clean orphan pixels, swap colors, then click Open in Editor to keep drawing or export.',
-              },
-            ],
-          },
-          {
-            '@type': 'FAQPage',
-            mainEntity: [
-              {
-                '@type': 'Question',
-                name: 'Is this image to pixel art converter free?',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'Yes. The entire tool runs in your browser and is completely free with no signup required.',
-                },
-              },
-              {
-                '@type': 'Question',
-                name: 'What image formats can I upload?',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'PNG, JPG, and WebP images are supported. Drag and drop or click to select a file.',
-                },
-              },
-              {
-                '@type': 'Question',
-                name: 'How does the Pixel Cleaner work?',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'Pixel Cleaner finds isolated pixels with no same-colored neighbors and replaces them with the majority color around them, producing cleaner sprites.',
-                },
-              },
-              {
-                '@type': 'Question',
-                name: 'Can I edit the result after conversion?',
-                acceptedAnswer: {
-                  '@type': 'Answer',
-                  text: 'Yes. Click Open in Editor to load the converted pixel art into our full-featured online editor for further touch-ups.',
-                },
-              },
-            ],
-          },
-        ],
-      }),
-    },
-  ],
+  script: [{type: 'application/ld+json', innerHTML: jsonLd}],
 })
 
 type RGB = [number, number, number]
@@ -282,13 +240,6 @@ function sendToEditor() {
 const debouncedConvert = debounce(() => { if (sourceImage.value) convert() }, 150)
 watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], () => debouncedConvert())
 
-const faq = computed(() => [
-  {q: t('p_converter.faq0q'), a: t('p_converter.faq0a')},
-  {q: t('p_converter.faq1q'), a: t('p_converter.faq1a')},
-  {q: t('p_converter.faq2q'), a: t('p_converter.faq2a')},
-  {q: t('p_converter.faq3q'), a: t('p_converter.faq3a')},
-  {q: t('p_converter.faq4q'), a: t('p_converter.faq4a')},
-])
 </script>
 
 <template>
@@ -482,6 +433,16 @@ const faq = computed(() => [
       </figure>
 
       <QnA :items="faq"/>
+
+      <h2>{{ $t('p_converter.moreTools') }}</h2>
+      <ul>
+        <li><NuxtLinkLocale to="/palettes/color-palette-from-image">{{ $t('p_converter.lPalette') }}</NuxtLinkLocale></li>
+        <li><NuxtLinkLocale to="/editor">{{ $t('p_converter.lEditor') }}</NuxtLinkLocale></li>
+        <!-- These two are written in English only, so every locale links to the one page. -->
+        <li><NuxtLink to="/sprite-maker">{{ $t('p_converter.lSprite') }}</NuxtLink></li>
+        <li><NuxtLink to="/color-by-number">{{ $t('p_converter.lCbn') }}</NuxtLink></li>
+        <li><NuxtLinkLocale to="/easy-pixel-art">{{ $t('p_converter.lEasy') }}</NuxtLinkLocale></li>
+      </ul>
     </template>
   </ToolLayout>
 </template>

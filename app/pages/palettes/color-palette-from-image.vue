@@ -208,6 +208,7 @@ useCustomSeoMeta({
         <li v-html="$t('p_palettes_color-palette-from-image.extractABrandOrLogoS')"/>
         <li v-html="$t('p_palettes_color-palette-from-image.pullAPaletteFromAReference')"/>
         <li v-html="$t('p_palettes_color-palette-from-image.reduceABusyImageToA')"/>
+        <li>{{ $t('p_palettes_color-palette-from-image.turnThePictureInto') }} <NuxtLinkLocale to="/converter">{{ $t('p_palettes_color-palette-from-image.imageToPixelArtConverter') }}</NuxtLinkLocale>.</li>
         <li>{{ $t('p_palettes_color-palette-from-image.generateA') }} <NuxtLinkLocale to="/palettes/color-palette-from-color">{{ $t('p_palettes_color-palette-from-image.harmoniousPalette') }}</NuxtLinkLocale> {{ $t('p_palettes_color-palette-from-image.fromTheDominantColorYouFound') }}</li>
         <li>{{ $t('p_palettes_color-palette-from-image.saveAndSharePalettesWithThe') }} <NuxtLinkLocale to="/palettes">{{ $t('p_palettes_color-palette-from-image.communityLibrary') }}</NuxtLinkLocale>.</li>
       </ul>

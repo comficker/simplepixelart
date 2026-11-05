@@ -1197,7 +1197,7 @@
     "faq4a": "<p>Si tu imagen es pixel art que fue ampliado, capturado en pantalla, comprimido en JPEG o tomado con líneas de cuadrícula, Auto detecta el tamaño de celda original y lee el dibujo celda a celda, sin perder detalle ni emborronar. Para fotos, en cambio, estima un tamaño de salida razonable.</p>",
     "faq4q": "¿Qué hace el tamaño Auto?",
     "howThisConverterWorks": "Cómo funciona este conversor",
-    "imageToPixelArtConverter": "Conversor de imagen a pixel art",
+    "imageToPixelArtConverter": "Convertir imagen a pixel art",
     "imageToPixelArtConverterInterface": "Interfaz del conversor de imagen a pixel art con vista previa en vivo, controles de tamaño y paleta de color, deslizadores de brillo, contraste y saturación, y el pixel art generado",
     "imageToPixelArtConverterLive": "Conversor de imagen a pixel art: vista previa en vivo con controles de paleta y ajuste",
     "livePreviewPaletteControlAnd": "Vista previa en vivo, control de paleta y ajustes de imagen en una sola vista.",
@@ -1222,12 +1222,22 @@
     "strongTransparentBackgroundStrongC": "<strong>Fondo transparente</strong> — recorta un fondo uniforme a transparencia real; el sprite llega al editor sin nada detrás.",
     "strongUploadAnImageStrongDrag": "<strong>Sube una imagen</strong> — arrastra y suelta un PNG, JPG o WebP, o haz clic para buscarlo. No se sube nada: todo corre en tu navegador.",
     "transparentBackground": "Fondo transparente",
-    "turnAnyPhotoIntoPixelArt": "Convierte cualquier foto en pixel art en segundos: gratis, sin registro y todo funcionando en tu navegador.",
+    "turnAnyPhotoIntoPixelArt": "Convierte cualquier imagen, foto o dibujo en pixel art en segundos: gratis, sin registro y todo funciona en tu navegador. Suelta un archivo, elige tamaño y paleta, y obtén una cuadrícula de píxeles limpia que puedes editar, descargar o convertir en un sprite.",
     "cleanedOrphans": "Se limpió 1 píxel huérfano | Se limpiaron {count} píxeles huérfanos",
     "colorsMerged": "Colores combinados",
     "autoResult": "Auto → {w}×{h}",
     "nativeGridDetected": " — cuadrícula nativa detectada",
-    "imageToPixelConverter": "Conversor de imagen a píxeles"
+    "imageToPixelConverter": "Conversor de imagen a píxeles",
+    "faq5q": "¿Qué tamaño elijo para una foto?",
+    "faq5a": "<p>Empieza con 32×32 para una cara, una mascota o un objeto, y 48–64 para una escena. Las cuadrículas pequeñas se ven más audaces y retro; las grandes conservan más detalle. Si la imagen ya es pixel art, deja <strong>Auto</strong> para que lea la cuadrícula original.</p>",
+    "faq6q": "¿Puedo usar el resultado en un juego?",
+    "faq6a": "<p>Sí. Ábrelo en el editor para retocarlo y exporta un sprite PNG, una hoja de sprites o un GIF animado. Para cortar una hoja entera en tiles, usa el cortador de tilesets.</p>",
+    "moreTools": "Más herramientas de pixel art",
+    "lPalette": "Paleta de colores desde imagen",
+    "lEditor": "Editor de pixel art",
+    "lSprite": "Creador de sprites",
+    "lCbn": "Colorear por números",
+    "lEasy": "Ideas de pixel art fácil"
   },
   "p_creator": {
     "allTime": "Histórico",
@@ -1700,7 +1710,9 @@
     "seoTitle": "Paleta de colores desde una imagen",
     "seoDescription": "Extrae una paleta de colores de cualquier imagen. Sube una foto, elige de 2 a 32 colores y copia los códigos hex o ábrelos en el editor de pixel art.",
     "defaultName": "Paleta extraída",
-    "nColorsExtracted": "1 color extraído | {count} colores extraídos"
+    "nColorsExtracted": "1 color extraído | {count} colores extraídos",
+    "turnThePictureInto": "Convierte la propia imagen en pixel art con el",
+    "imageToPixelArtConverter": "conversor de imagen a pixel art"
   },
   "p_palettes_id_string": {
     "artworksUsingThisPalette": "Obras que usan esta paleta",
@@ -2403,9 +2415,9 @@
       "title": "Colecciones de pixel art"
     },
     "converter": {
-      "description": "Convierte cualquier foto en pixel art en segundos. Herramienta online gratuita con control de paleta (4–64 colores), limpieza de píxeles y vista previa en vivo.",
+      "description": "Convierte cualquier imagen o foto en pixel art en segundos. Conversor online gratis con tamaño automático, paletas de 4–64 colores, tramado, limpieza de píxeles y vista previa en vivo.",
       "keywords": "imagen a pixel art, foto a pixel art, convertidor pixel art, pixelar imagen, convertir foto en pixeles",
-      "title": "Convertir Imagen a Pixel Art"
+      "title": "Convertir Imagen a Pixel Art — Gratis Online"
     },
     "creators": {
       "description": "Los creadores de pixel art que más publican en SimplePixelArt.com, clasificados por día, semana, mes y trimestre.",
@@ -2608,10 +2620,5 @@
     "verifiedHint": "Verificado por el equipo de SimplePixelArt",
     "artist": "Artista",
     "artistHint": "Miembro del Creator Program"
-  },
-  "c_MoreTools": {
-    "title": "Más herramientas gratis",
-    "beads": "patrones de cuentas a partir de una foto",
-    "graphPaper": "papel cuadriculado para imprimir"
   }
 }

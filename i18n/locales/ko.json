@@ -1222,12 +1222,22 @@
     "strongTransparentBackgroundStrongC": "<strong>투명 배경</strong> — 균일한 배경을 진짜 투명으로 도려냅니다. 스프라이트는 뒤에 아무것도 없는 상태로 편집기에 도착합니다.",
     "strongUploadAnImageStrongDrag": "<strong>이미지 올리기</strong> — PNG, JPG, WebP를 끌어다 놓거나 클릭해서 고르세요. 아무것도 업로드되지 않고 전부 브라우저에서 돌아갑니다.",
     "transparentBackground": "투명 배경",
-    "turnAnyPhotoIntoPixelArt": "어떤 사진이든 몇 초 만에 픽셀 아트로. 무료, 가입 없이, 모든 처리가 브라우저에서 이뤄집니다.",
+    "turnAnyPhotoIntoPixelArt": "이미지, 사진, 그림을 몇 초 만에 픽셀 아트로 변환하세요. 무료, 가입 없이, 모든 처리가 브라우저에서 이뤄집니다. 파일을 끌어다 놓고 크기와 팔레트를 고르면 편집하거나 내려받거나 스프라이트로 만들 수 있는 깔끔한 픽셀 그리드가 나옵니다.",
     "cleanedOrphans": "고립 픽셀 {count}개를 정리했습니다",
     "colorsMerged": "색상을 병합했습니다",
     "autoResult": "자동 → {w}×{h}",
     "nativeGridDetected": " — 원본 격자 감지됨",
-    "imageToPixelConverter": "이미지 픽셀 아트 변환기"
+    "imageToPixelConverter": "이미지 픽셀 아트 변환기",
+    "faq5q": "사진은 어떤 크기로 변환하면 좋나요?",
+    "faq5a": "<p>얼굴, 반려동물, 물건 하나는 32×32, 풍경은 48–64부터 시작해 보세요. 작을수록 대담하고 레트로하게, 클수록 디테일이 더 남습니다. 이미 픽셀 아트인 이미지라면 <strong>자동</strong>으로 두면 원래 그리드를 그대로 읽어 옵니다.</p>",
+    "faq6q": "결과물을 게임에 써도 되나요?",
+    "faq6a": "<p>네. 에디터에서 다듬은 뒤 PNG 스프라이트, 스프라이트 시트, 움직이는 GIF로 내보낼 수 있습니다. 시트 전체를 타일로 자르려면 타일셋 슬라이서를 쓰세요.</p>",
+    "moreTools": "다른 픽셀 아트 도구",
+    "lPalette": "이미지에서 색상 팔레트",
+    "lEditor": "픽셀 아트 에디터",
+    "lSprite": "스프라이트 메이커",
+    "lCbn": "숫자 색칠",
+    "lEasy": "쉬운 픽셀 아트 아이디어"
   },
   "p_creator": {
     "allTime": "전체 기간",
@@ -1700,7 +1710,9 @@
     "seoTitle": "이미지로 만드는 컬러 팔레트",
     "seoDescription": "어떤 이미지에서든 컬러 팔레트를 추출하세요. 사진을 올리고 2~32색을 고른 뒤 HEX 코드를 복사하거나 픽셀 아트 에디터에서 여세요.",
     "defaultName": "추출한 팔레트",
-    "nColorsExtracted": "{count}색 추출됨"
+    "nColorsExtracted": "{count}색 추출됨",
+    "turnThePictureInto": "이미지 자체를 픽셀 아트로 바꾸려면",
+    "imageToPixelArtConverter": "이미지 픽셀 아트 변환기"
   },
   "p_palettes_id_string": {
     "artworksUsingThisPalette": "이 팔레트를 쓴 작품",
@@ -2403,9 +2415,9 @@
       "title": "픽셀 아트 컬렉션"
     },
     "converter": {
-      "description": "사진을 몇 초 만에 픽셀 아트로 바꾸는 무료 온라인 도구. 색상 수 조절(4~64색), 픽셀 정리, 색상 교체, 실시간 미리보기를 지원합니다.",
+      "description": "이미지나 사진을 몇 초 만에 픽셀 아트로 변환하세요. 자동 크기, 4–64색 팔레트, 디더링, 픽셀 정리, 실시간 미리보기를 갖춘 무료 온라인 변환기입니다.",
       "keywords": "이미지 픽셀 아트 변환, 사진 도트 변환, 픽셀 아트 변환기, 이미지 픽셀화, 사진 도트화",
-      "title": "이미지를 픽셀 아트로 변환"
+      "title": "이미지를 픽셀 아트로 변환 — 무료 온라인 변환기"
     },
     "creators": {
       "description": "SimplePixelArt.com에서 가장 많이 공개하는 픽셀 아트 크리에이터를 일, 주, 월, 분기별로 정리했습니다.",
@@ -2608,10 +2620,5 @@
     "verifiedHint": "SimplePixelArt 팀이 인증했습니다",
     "artist": "아티스트",
     "artistHint": "Creator Program 멤버"
-  },
-  "c_MoreTools": {
-    "title": "더 많은 무료 도구",
-    "beads": "사진으로 비즈 도안 만들기",
-    "graphPaper": "인쇄용 모눈종이"
   }
 }

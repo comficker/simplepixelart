@@ -1222,12 +1222,22 @@
     "strongTransparentBackgroundStrongC": "<strong>透明背景</strong>——把单色背景抠成真正的透明；精灵进入编辑器时身后空无一物。",
     "strongUploadAnImageStrongDrag": "<strong>上传图片</strong>——拖放 PNG、JPG 或 WebP，也可以点击选择。什么都不会上传，全在你的浏览器里运行。",
     "transparentBackground": "透明背景",
-    "turnAnyPhotoIntoPixelArt": "几秒钟把任何照片变成像素画——免费、免注册，全部在你的浏览器里完成。",
+    "turnAnyPhotoIntoPixelArt": "几秒钟把任何图片、照片或插画转换成像素画——免费、免注册，全部在你的浏览器里完成。拖入文件，选好尺寸和调色板，就能得到干净的像素网格，可以继续编辑、下载或做成精灵图。",
     "cleanedOrphans": "已清理 {count} 个孤立像素",
     "colorsMerged": "颜色已合并",
     "autoResult": "自动 → {w}×{h}",
     "nativeGridDetected": " — 已检测到原生网格",
-    "imageToPixelConverter": "图片转像素画"
+    "imageToPixelConverter": "图片转像素画",
+    "faq5q": "照片选多大的尺寸合适？",
+    "faq5a": "<p>人像、宠物或单个物体从 32×32 开始，风景从 48–64 开始。尺寸越小越大胆、越复古；越大保留的细节越多。如果原图本来就是像素画，保持<strong>自动</strong>即可读取原始网格。</p>",
+    "faq6q": "转换结果能用在游戏里吗？",
+    "faq6a": "<p>可以。在编辑器里修整后，导出 PNG 精灵、精灵表或 GIF 动图。要把整张图切成图块，请用图块集切片工具。</p>",
+    "moreTools": "更多像素画工具",
+    "lPalette": "从图片提取调色板",
+    "lEditor": "像素画编辑器",
+    "lSprite": "精灵图制作器",
+    "lCbn": "数字填色",
+    "lEasy": "简单像素画灵感"
   },
   "p_creator": {
     "allTime": "全部时间",
@@ -1700,7 +1710,9 @@
     "seoTitle": "从图片提取调色板",
     "seoDescription": "从任意图片提取调色板。上传照片，选择 2 到 32 种颜色，然后复制十六进制色值或在像素画编辑器中打开。",
     "defaultName": "提取的调色板",
-    "nColorsExtracted": "已提取 {count} 种颜色"
+    "nColorsExtracted": "已提取 {count} 种颜色",
+    "turnThePictureInto": "想把图片本身变成像素画，可以用",
+    "imageToPixelArtConverter": "图片转像素画工具"
   },
   "p_palettes_id_string": {
     "artworksUsingThisPalette": "使用这个配色的作品",
@@ -2403,9 +2415,9 @@
       "title": "像素画合集"
     },
     "converter": {
-      "description": "几秒钟把照片转成像素画的免费在线工具。可控制调色板（4–64 色）、清理杂点、替换颜色，并实时预览效果。",
+      "description": "几秒钟把任何图片或照片转换成像素画。免费在线转换器，支持自动尺寸、4–64 色调色板、抖动、像素清理和实时预览。",
       "keywords": "图片转像素画, 照片转像素画, 像素画转换器, 图片像素化, 在线像素化",
-      "title": "图片转像素画"
+      "title": "图片转像素画 — 免费在线像素画转换器"
     },
     "creators": {
       "description": "在 SimplePixelArt.com 发布最多的像素画创作者，按日、周、月、季度排行。",
@@ -2608,10 +2620,5 @@
     "verifiedHint": "已由 SimplePixelArt 团队认证",
     "artist": "艺术家",
     "artistHint": "Creator Program 成员"
-  },
-  "c_MoreTools": {
-    "title": "更多免费工具",
-    "beads": "用照片生成拼豆图纸",
-    "graphPaper": "可打印的方格纸"
   }
 }
