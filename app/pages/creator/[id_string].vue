@@ -209,7 +209,7 @@ useCustomSeoMeta({
     <template #before>
       <section class="cp-hero">
         <div class="cp-cover" aria-hidden="true">
-          <img v-for="c in coverPieces" :key="c.id" :src="tileImageUrl(apiBase, c.id_string)" alt="" loading="lazy">
+          <img v-for="c in coverPieces" :key="c.id" :src="tileImageUrl(apiBase, c.id_string)" :alt="c.name || $t('p_creator_id_string.pixelArtAlt')" loading="lazy">
         </div>
         <div class="cp-id">
           <div class="cp-avatar">
