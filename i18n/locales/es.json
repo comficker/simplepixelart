@@ -1082,7 +1082,9 @@
     "searchTags": "Buscar etiquetas",
     "noTagsMatch": "Ninguna etiqueta coincide con “{q}”",
     "browseThousandsOfFreePixelArt": "Explora pixel art gratuito hecho por la comunidad: sprites, personajes e iconos. Cada remezcla da crédito al artista original.",
-    "pixelArtGallery": "Galería de Pixel Art"
+    "pixelArtGallery": "Galería de Pixel Art",
+    "collections": "Colecciones",
+    "tilesets": "Tilesets"
   },
   "p_arts_id_string": {
     "browseXPixelArtCreations": "Explora pixel art de {tag} hecho por la comunidad: sprites, personajes e iconos. Cada remezcla da crédito al artista original.",
@@ -2787,5 +2789,12 @@
     "col_for-adults_description": "Colorear por números para adultos: pixel art detallado con cientos de cuadros y paletas ricas, con pinceles de acuarela o lápiz. Gratis, en tu navegador.",
     "col_for-adults_intro": "Dibujos más grandes y detallados con cientos de cuadros: media hora tranquila con un pincel de acuarela.",
     "howToPlayGame": "Cómo jugar a colorear por números"
+  },
+  "p_tilesets": {
+    "title": "Tilesets de pixel art",
+    "desc": "Tilesets creados y compartidos por la comunidad: terrenos, objetos y autotiles, gratis para abrir en el editor de mapas.",
+    "newTileset": "Nuevo tileset",
+    "empty": "Aún no hay tilesets públicos.",
+    "count": "{count} tileset | {count} tilesets"
   }
 }

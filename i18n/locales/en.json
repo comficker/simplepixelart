@@ -1112,7 +1112,9 @@
     "searchTags": "Search tags",
     "noTagsMatch": "No tags match “{q}”",
     "browseThousandsOfFreePixelArt": "Browse free pixel art made by the community — sprites, characters and icons. Every remix credits the original artist.",
-    "pixelArtGallery": "Pixel Art Gallery"
+    "pixelArtGallery": "Pixel Art Gallery",
+    "collections": "Collections",
+    "tilesets": "Tilesets"
   },
   "p_arts_id_string": {
     "browseXPixelArtCreations": "Browse {tag} pixel art made by the community — sprites, characters and icons. Every remix credits the original artist.",
@@ -2820,5 +2822,12 @@
     "col_for-adults_description": "Color by number for adults: detailed pixel art with hundreds of squares and rich palettes, painted with watercolor or pencil brushes. Free, in your browser.",
     "col_for-adults_intro": "Bigger, more detailed pictures with hundreds of squares: a calm half hour with a watercolor brush.",
     "howToPlayGame": "How to play this color by number game"
+  },
+  "p_tilesets": {
+    "title": "Pixel Art Tilesets",
+    "desc": "Tilesets made and shared by the community: terrain, props and auto-tiles, free to open in the tilemap editor.",
+    "newTileset": "New tileset",
+    "empty": "No public tilesets yet.",
+    "count": "{count} tileset | {count} tilesets"
   }
 }

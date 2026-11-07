@@ -1082,7 +1082,9 @@
     "searchTags": "搜索标签",
     "noTagsMatch": "没有与“{q}”匹配的标签",
     "browseThousandsOfFreePixelArt": "浏览社区创作的免费像素画——精灵图、角色和图标。每次改编都会署上原作者的名字。",
-    "pixelArtGallery": "像素画图库"
+    "pixelArtGallery": "像素画图库",
+    "collections": "合集",
+    "tilesets": "图块集"
   },
   "p_arts_id_string": {
     "browseXPixelArtCreations": "浏览社区创作的 {tag} 像素画——精灵图、角色和图标。每次改编都会署上原作者的名字。",
@@ -2787,5 +2789,12 @@
     "col_for-adults_description": "成人数字填色：数百个方格、配色丰富的精细像素画，用水彩或铅笔画笔填。免费，在浏览器里玩。",
     "col_for-adults_intro": "更大更精细、数百个方格的画：用水彩画笔度过安静的半小时。",
     "howToPlayGame": "数字填色玩法"
+  },
+  "p_tilesets": {
+    "title": "像素画图块集",
+    "desc": "社区制作并分享的图块集：地形、道具和自动图块，可免费在地图编辑器中打开。",
+    "newTileset": "新建图块集",
+    "empty": "还没有公开的图块集。",
+    "count": "{count} 个图块集"
   }
 }

@@ -1082,7 +1082,9 @@
     "searchTags": "태그 검색",
     "noTagsMatch": "“{q}”와 일치하는 태그가 없어요",
     "browseThousandsOfFreePixelArt": "커뮤니티가 만든 무료 픽셀 아트 — 스프라이트, 캐릭터, 아이콘. 모든 리믹스에는 원작자 크레딧이 붙습니다.",
-    "pixelArtGallery": "픽셀 아트 갤러리"
+    "pixelArtGallery": "픽셀 아트 갤러리",
+    "collections": "컬렉션",
+    "tilesets": "타일셋"
   },
   "p_arts_id_string": {
     "browseXPixelArtCreations": "커뮤니티가 만든 {tag} 픽셀 아트 — 스프라이트, 캐릭터, 아이콘. 모든 리믹스에는 원작자 크레딧이 붙습니다.",
@@ -2787,5 +2789,12 @@
     "col_for-adults_description": "어른을 위한 숫자 색칠: 수백 칸과 풍부한 색의 정교한 픽셀 아트를 수채화·연필 브러시로. 무료, 브라우저에서.",
     "col_for-adults_intro": "수백 칸의 크고 정교한 그림: 수채화 브러시와 함께하는 고요한 30분.",
     "howToPlayGame": "숫자 색칠 플레이 방법"
+  },
+  "p_tilesets": {
+    "title": "픽셀 아트 타일셋",
+    "desc": "커뮤니티가 만들어 공유한 타일셋: 지형, 소품, 오토타일을 타일맵 편집기에서 무료로 열 수 있어요.",
+    "newTileset": "새 타일셋",
+    "empty": "아직 공개된 타일셋이 없어요.",
+    "count": "타일셋 {count}개"
   }
 }

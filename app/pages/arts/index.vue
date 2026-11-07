@@ -71,6 +71,14 @@ useCustomSeoMeta({
         :title="$t('p_arts.pixelArtGallery')"
         :desc="$t('p_arts.browseThousandsOfFreePixelArt')"
     >
+      <template #actions>
+        <NuxtLinkLocale to="/collections" class="btn">
+          <span class="icon icon-rhombus"/><span>{{ $t('p_arts.collections') }}</span>
+        </NuxtLinkLocale>
+        <NuxtLinkLocale to="/tilesets" class="btn">
+          <span class="icon icon-grid"/><span>{{ $t('p_arts.tilesets') }}</span>
+        </NuxtLinkLocale>
+      </template>
       <template #filters-extra>
         <BrowseFilter :label="$t('common.tags')" icon="icon-flag" :value="String(tagsRes?.count || tags.length)">
           <BrowseSearch v-model="tagQuery" :placeholder="$t('p_arts.searchTags')" :delay="300"/>

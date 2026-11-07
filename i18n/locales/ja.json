@@ -1082,7 +1082,9 @@
     "searchTags": "タグを検索",
     "noTagsMatch": "「{q}」に一致するタグはありません",
     "browseThousandsOfFreePixelArt": "コミュニティが描いた無料のドット絵 — スプライト、キャラクター、アイコン。リミックスには必ず元の作者のクレジットが付きます。",
-    "pixelArtGallery": "ドット絵ギャラリー"
+    "pixelArtGallery": "ドット絵ギャラリー",
+    "collections": "コレクション",
+    "tilesets": "タイルセット"
   },
   "p_arts_id_string": {
     "browseXPixelArtCreations": "コミュニティが描いた {tag} のドット絵 — スプライト、キャラクター、アイコン。リミックスには必ず元の作者のクレジットが付きます。",
@@ -2787,5 +2789,12 @@
     "col_for-adults_description": "大人向け数字ぬりえ：数百マスと豊かな配色の細かいピクセルアートを、水彩や鉛筆のブラシで。無料・ブラウザで。",
     "col_for-adults_intro": "数百マスの大きく細かい絵。水彩ブラシで穏やかな30分を。",
     "howToPlayGame": "数字ぬりえの遊び方"
+  },
+  "p_tilesets": {
+    "title": "ピクセルアートのタイルセット",
+    "desc": "コミュニティが作って共有したタイルセット。地形、小物、オートタイルを無料でタイルマップエディタで開けます。",
+    "newTileset": "新しいタイルセット",
+    "empty": "公開タイルセットはまだありません。",
+    "count": "{count} 個のタイルセット"
   }
 }
