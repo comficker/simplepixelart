@@ -165,8 +165,10 @@ const meta = computed(() => {
   const size = `${data.value.width}x${data.value.height}`
   const tagList = data.value.taxonomies?.map(t => t.title).filter(Boolean) || []
 
+  // Names that already say "pixel art" (imported packs: "Sword 1 — 1-bit
+  // pixel art") skip the "— 16x16 Pixel Art" tail, which pushed them past 70.
   const title = name
-      ? `${name} — ${size} Pixel Art`
+      ? (/pixel art/i.test(name) ? `${name} — ${size}` : `${name} — ${size} Pixel Art`)
       : tagList.length
           ? `${tagList.slice(0, 2).join(' ')} Pixel Art — ${size}`
           : `${size} Pixel Art by ${author}`
@@ -197,10 +199,16 @@ const hasOriginalContent = computed(() =>
     )
 )
 
+// Search engines cut descriptions near 160 characters; end on a whole word.
+function clipDesc(s: string) {
+  if (s.length <= 160) return s
+  return s.slice(0, 157).replace(/\s+\S*$/, '') + '…'
+}
+
 useCustomSeoMeta({
   untranslated: true,
   title: meta.value.title,
-  description: meta.value.desc || meta.value.descFallback,
+  description: clipDesc(meta.value.desc || meta.value.descFallback),
   canonical: meta.value.url,
   ogImage: isAnimatedArt.value ? gifUrl.value : meta.value.imgSrc,
   ogType: 'article',
