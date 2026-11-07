@@ -223,4 +223,17 @@ header .brand-name-main {
   .hdr-link { padding-left: var(--space-2); padding-right: var(--space-2); }
 }
 
+/* Icon-only below 1024px (the labels hide): a square button with the icon
+   centred and at the 20px the search icon uses. The padding rules above left
+   a 16px icon off-centre in a 32px box. */
+@media (max-width: 1023px) {
+  .hdr-link { justify-content: center; width: 36px; height: 36px; padding: 0; }
+  .hdr-link > .icon { width: 20px; height: 20px; }
+}
+
+@media (max-width: 400px) {
+  .hdr-link { width: 34px; height: 34px; }
+  .hdr-link > .icon { width: 18px; height: 18px; }
+}
+
 </style>
