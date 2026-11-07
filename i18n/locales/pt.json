@@ -1904,7 +1904,7 @@
     "discardMapMsg": "Suas edições neste mapa não foram salvas.",
     "discard": "Descartar",
     "seoTitle": "Editor de tilemaps — grade e isométrico",
-    "seoDescription": "Criador de tilemaps online e gratuito: pinte mapas em pixel art numa grade comum ou isométrica com camadas empilhadas de tiles e sprites. Funciona no seu navegador.",
+    "seoDescription": "Criador de tilemaps online e gratuito: pinte mapas em pixel art numa grade comum ou isométrica, com camadas de tiles e sprites. Funciona no navegador.",
     "pickSingleTileToTurn": "Escolha um único tile para virar ou girar",
     "onlySquareTilesTurn": "Só tiles quadrados podem girar — vire este em vez disso",
     "couldNotLoadWorld": "Não foi possível carregar esse mundo",
