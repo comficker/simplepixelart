@@ -4274,6 +4274,7 @@ watch(
             <EditorEmotePreview v-if="previewMode === 'emote'" :art="getArtCanvas" :rev="previewRev" :opts="preview"/>
             <EditorIconPreview v-if="previewMode === 'icon'" :art="getArtCanvas" :rev="previewRev" :opts="preview"/>
             <EditorWalkPreview v-if="previewMode === 'walk'" :art="getArtCanvas" :rev="previewRev" :opts="preview"/>
+            <EditorAutotilePreview v-if="previewMode === 'autotile'" :art="getArtCanvas" :rev="previewRev" :opts="preview"/>
             <EditorTurnPreview v-if="previewMode === 'mc-skin' || previewMode === 'mc-block'" :mode="previewMode" :art="getArtCanvas" :rev="previewRev" :opts="preview"/>
           </Square>
         </Widget>

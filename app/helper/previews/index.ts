@@ -37,6 +37,10 @@ export interface PreviewMeta {
   dir: 'auto' | 'down' | 'left' | 'right' | 'up'
   fps: number
   pingPong: boolean  // 0 1 2 1, the RPG Maker walk
+  // autotile: the board read as one terrain in the tileset sheet layout
+  terrainType: 'auto' | 'wang16' | 'blob47' | 'corner16'
+  sampleMap: 'island' | 'paths' | 'random'
+  seed: number
 }
 
 export const PREVIEW_DEFAULTS: PreviewMeta = {
@@ -46,6 +50,7 @@ export const PREVIEW_DEFAULTS: PreviewMeta = {
   chat: 'discord', chatTheme: 'dark', crisp: false,
   iconShape: 'rounded',
   sheetCols: 3, sheetRows: 4, dirOrder: 'down-left-right-up', dir: 'auto', fps: 6, pingPong: true,
+  terrainType: 'auto', sampleMap: 'island', seed: 1,
 }
 
 export interface PreviewMode {
@@ -59,6 +64,7 @@ export const PREVIEW_MODES: PreviewMode[] = [
   {id: 'mc-skin', fits: ed => ed.width === 64 && ed.height === 64},
   {id: 'emote', fits: ed => ed.width === ed.height && ed.width <= 128},
   {id: 'icon', fits: ed => ed.width === ed.height},
+  {id: 'autotile', fits: ed => (ed.width % 4 === 0 && ed.height % 4 === 0) || (ed.width % 7 === 0 && ed.height % 7 === 0)},
   {id: 'walk', fits: ed => ed.width >= 8 && ed.height >= 8},
   {id: 'mc-block', fits: ed => ed.width === ed.height && (ed.width === 16 || ed.width === 32)},
 ]

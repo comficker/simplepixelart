@@ -2663,6 +2663,7 @@
     "mode": "Mode",
     "mode_flat": "Flat",
     "mode_tiled": "Tiled",
+    "mode_autotile": "Autotile",
     "mode_emote": "Emote",
     "mode_icon": "Icon",
     "mode_walk": "Walk",
@@ -2710,6 +2711,16 @@
     "facing": "Facing",
     "auto": "Auto",
     "fps": "Frames per second",
-    "pingPong": "Walk back and forth (0 1 2 1)"
+    "pingPong": "Walk back and forth (0 1 2 1)",
+    "terrainType": "Terrain set",
+    "tt_wang16": "Sides 4×4",
+    "tt_blob47": "Blob 7×7",
+    "tt_corner16": "Corners 4×4",
+    "terrainHint": "Read like the tileset editor exports a terrain: one tile per slot, in slot order, 4 or 7 tiles across.",
+    "sampleMap": "Sample map",
+    "map_island": "Island",
+    "map_paths": "Paths",
+    "map_random": "Random",
+    "reroll": "New random map"
   }
 }

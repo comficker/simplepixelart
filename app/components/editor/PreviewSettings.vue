@@ -99,6 +99,31 @@ const k = (s: string) => t(`c_PreviewSettings.${s}`)
         </section>
       </template>
 
+      <template v-if="opts.mode === 'autotile'">
+        <section class="ps-row">
+          <label class="ps-label">{{ k('terrainType') }}</label>
+          <div class="tm-seg ps-seg">
+            <button v-for="tt in ['auto', 'wang16', 'blob47', 'corner16']" :key="tt" type="button" :class="{active: opts.terrainType === tt}" @click="set({terrainType: tt as any})">
+              {{ tt === 'auto' ? k('auto') : k('tt_' + tt) }}
+            </button>
+          </div>
+        </section>
+        <p class="text-2xs text-muted">{{ k('terrainHint') }}</p>
+        <section class="ps-row">
+          <label class="ps-label">{{ k('sampleMap') }}</label>
+          <div class="ps-inline">
+            <div class="tm-seg ps-seg">
+              <button v-for="sm in ['island', 'paths', 'random']" :key="sm" type="button" :class="{active: opts.sampleMap === sm}" @click="set({sampleMap: sm as any})">
+                {{ k('map_' + sm) }}
+              </button>
+            </div>
+            <button v-if="opts.sampleMap === 'random'" type="button" class="widget-ctl-btn" :title="k('reroll')" @click="set({seed: (opts.seed || 1) + 1})">
+              <span class="icon icon-refresh"/>
+            </button>
+          </div>
+        </section>
+      </template>
+
       <template v-if="opts.mode === 'walk'">
         <section class="ps-row">
           <label class="ps-label">{{ k('grid') }}</label>

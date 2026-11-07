@@ -2630,6 +2630,7 @@
     "mode": "モード",
     "mode_flat": "フラット",
     "mode_tiled": "タイル",
+    "mode_autotile": "オートタイル",
     "mode_emote": "エモート",
     "mode_icon": "アイコン",
     "mode_walk": "歩行",
@@ -2677,6 +2678,16 @@
     "facing": "向き",
     "auto": "自動",
     "fps": "フレーム/秒",
-    "pingPong": "往復歩き (0 1 2 1)"
+    "pingPong": "往復歩き (0 1 2 1)",
+    "terrainType": "地形セット",
+    "tt_wang16": "辺 4×4",
+    "tt_blob47": "ブロブ 7×7",
+    "tt_corner16": "角 4×4",
+    "terrainHint": "タイルセットエディタの書き出しと同じ読み方：スロット順に1枚ずつ、横4枚または7枚。",
+    "sampleMap": "サンプルマップ",
+    "map_island": "島",
+    "map_paths": "道",
+    "map_random": "ランダム",
+    "reroll": "新しいランダムマップ"
   }
 }

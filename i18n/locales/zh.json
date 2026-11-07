@@ -2630,6 +2630,7 @@
     "mode": "模式",
     "mode_flat": "平面",
     "mode_tiled": "平铺",
+    "mode_autotile": "自动图块",
     "mode_emote": "表情",
     "mode_icon": "图标",
     "mode_walk": "行走",
@@ -2677,6 +2678,16 @@
     "facing": "朝向",
     "auto": "自动",
     "fps": "每秒帧数",
-    "pingPong": "来回走 (0 1 2 1)"
+    "pingPong": "来回走 (0 1 2 1)",
+    "terrainType": "地形集",
+    "tt_wang16": "边 4×4",
+    "tt_blob47": "Blob 7×7",
+    "tt_corner16": "角 4×4",
+    "terrainHint": "按图块集编辑器导出地形的方式读取：每格一个图块，按槽位顺序，每行 4 或 7 个。",
+    "sampleMap": "示例地图",
+    "map_island": "岛屿",
+    "map_paths": "小路",
+    "map_random": "随机",
+    "reroll": "新的随机地图"
   }
 }

@@ -2630,6 +2630,7 @@
     "mode": "Modo",
     "mode_flat": "Plano",
     "mode_tiled": "En mosaico",
+    "mode_autotile": "Autotile",
     "mode_emote": "Emote",
     "mode_icon": "Icono",
     "mode_walk": "Caminar",
@@ -2677,6 +2678,16 @@
     "facing": "Mirando a",
     "auto": "Auto",
     "fps": "Fotogramas por segundo",
-    "pingPong": "Ida y vuelta (0 1 2 1)"
+    "pingPong": "Ida y vuelta (0 1 2 1)",
+    "terrainType": "Conjunto de terreno",
+    "tt_wang16": "Lados 4×4",
+    "tt_blob47": "Blob 7×7",
+    "tt_corner16": "Esquinas 4×4",
+    "terrainHint": "Se lee como exporta un terreno el editor de tilesets: una baldosa por hueco, en orden, 4 o 7 por fila.",
+    "sampleMap": "Mapa de prueba",
+    "map_island": "Isla",
+    "map_paths": "Caminos",
+    "map_random": "Aleatorio",
+    "reroll": "Nuevo mapa aleatorio"
   }
 }
