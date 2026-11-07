@@ -27,6 +27,7 @@ if (error.value && import.meta.server) {
 
 // `name` is what every client renames; `title` can still read "untitled".
 const title = computed(() => data.value?.name || data.value?.title || t('p_collections_id_string.untitledCollection'))
+useCrumbTitle(() => data.value ? title.value : '')
 const desc = computed(() => data.value?.desc || '')
 // The author's own project, repo or site, if they gave one (http(s) only).
 const projectLink = computed(() => {
@@ -250,11 +251,12 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
       <BrowseLayout>
       <template #head>
         <h1 class="screen-title">{{ title }}</h1>
+        <!-- Like a tag page: the description under the title; the count sits
+             in the foot with the pages. -->
         <p class="screen-desc">
-          {{ $t('p_collections.pieceCount', itemCount, {count: itemCount}) }}
-          <template v-if="formattedDate"> · {{ formattedDate }}</template>
+          <template v-if="desc">{{ desc }}</template>
+          <template v-else-if="formattedDate">{{ formattedDate }}</template>
           <template v-if="!isPublic"> · {{ $t('common.private') }}</template>
-          <template v-if="desc"> — {{ desc }}</template>
         </p>
       </template>
 
@@ -335,13 +337,6 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
           <NuxtLinkLocale to="/arts" class="btn">{{ $t('common.browseGallery') }}</NuxtLinkLocale>
         </div>
       </div>
-      <Paginator
-          v-if="!managing && pages > 1"
-          :page="page"
-          :pages="pages"
-          :prev-to="prevTo"
-          :next-to="nextTo"
-      />
 
       <section v-if="managing && isOwner" class="cl-manage-add">
         <header class="section-head">
@@ -378,15 +373,14 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
         <span class="browse-foot-start">
           {{ $t('p_collections.pieceCount', itemCount, {count: itemCount}) }}
         </span>
-        <span class="browse-foot-end cl-detail-actions">
-        <NuxtLinkLocale to="/arts" class="btn">
-          <span class="icon icon-grid"/>
-          <span>{{ $t('p_collections_id_string.browseAllPixelArt') }}</span>
-        </NuxtLinkLocale>
-        <NuxtLinkLocale to="/editor?new=true" class="btn">
-          <span class="icon icon-pen"/>
-          <span>{{ $t('p_collections_id_string.createYourOwn') }}</span>
-        </NuxtLinkLocale>
+        <span class="browse-foot-end">
+          <Paginator
+              v-if="!managing && pages > 1"
+              :page="page"
+              :pages="pages"
+              :prev-to="prevTo"
+              :next-to="nextTo"
+          />
         </span>
       </template>
       </BrowseLayout>
@@ -404,16 +398,6 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
 <style scoped>
 .cl-manage-add {
   padding: var(--space-4) 0 0;
-}
-
-/* .browse-foot-end already lays these out; this only lets them wrap. */
-.cl-detail-actions {
-  flex-wrap: wrap;
-}
-
-.cl-detail-actions .btn {
-  display: inline-flex;
-  gap: var(--space-2);
 }
 
 .cl-icon-btn {

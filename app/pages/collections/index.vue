@@ -21,7 +21,7 @@ const {data} = await useAuthFetch<APIResponse<CollectionRow>>('/coloring/collect
 
 const collections = computed(() => data.value?.results || [])
 
-const {covers, coverFailed, loadCovers} = useCollectionCovers(() => collections.value)
+const {covers, mosaics, coverFailed, loadCovers} = useCollectionCovers(() => collections.value)
 
 /* Immediate rather than onMounted as well: on a client-side navigation the
    fetch can resolve after mount, and both would have fired. */
@@ -57,6 +57,7 @@ useCustomSeoMeta({
             :key="c.id"
             :value="c"
             :cover="covers[c.id]"
+            :mosaic="mosaics[c.id]"
             :failed="coverFailed[c.id]"
             @error="coverFailed[c.id] = true"
         />

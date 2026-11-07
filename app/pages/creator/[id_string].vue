@@ -149,7 +149,7 @@ const collections = computed(() => collectionsRes.value?.results || [])
 const totalWorks = computed(() => worksCount.value?.count || 0)
 const isEmptyCreator = computed(() => totalWorks.value === 0 && collections.value.length === 0)
 
-const {covers, coverFailed, loadCovers} = useCollectionCovers(() => collections.value)
+const {covers, mosaics, coverFailed, loadCovers} = useCollectionCovers(() => collections.value)
 
 onMounted(loadCovers)
 watch(collections, loadCovers)
@@ -293,6 +293,7 @@ useCustomSeoMeta({
               :key="c.id"
               :value="c"
               :cover="covers[c.id as number]"
+              :mosaic="mosaics[c.id as number]"
               :failed="coverFailed[c.id as number]"
               @error="coverFailed[c.id as number] = true"
           />
