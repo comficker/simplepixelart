@@ -130,17 +130,18 @@ const creator = computed(() => palette.value?.user?.username || '')
 useCustomSeoMeta({
   untranslated: true,
   // Some palettes are named after their own hex codes, which made titles of
-  // 150+ characters. Those fall back to the colour count, and the hex-codes
-  // tail is dropped whenever the title would run past ~60 characters.
+  // 150+ characters. The site suffix (" - SimplePixelArt.com") takes 21 of
+  // the ~70 a result shows, so this part keeps to 48: the longest of
+  // name + count, name + creator, name alone that fits.
   title: computed(() => {
     const by = creator.value ? ` by ${creator.value}` : ''
     const n = palette.value?.color_count
     const raw = (palette.value?.name || '').trim()
     const named = raw && raw.length <= 32 && !/^[#\s0-9a-f,-]{6,}$/i.test(raw)
-    if (!named) return `${n}-Color Pixel Art Palette${by} & Hex Codes`
-    const head = `${raw} Color Palette${by}`
-    const full = `${head} — ${n} Colors & Hex Codes`
-    return full.length <= 60 ? full : head
+    const options = named
+        ? [`${raw} Color Palette${by} — ${n} Colors`, `${raw} Color Palette${by}`, `${raw} Color Palette`]
+        : [`${n}-Color Pixel Art Palette${by}`, `${n}-Color Pixel Art Palette`]
+    return options.find(o => o.length <= 48) || options[options.length - 1]
   }),
   description: computed(() => {
     const by = creator.value ? ` by ${creator.value}` : ''
