@@ -1104,7 +1104,9 @@
     "bg_dots": "Background: grid",
     "bg_light": "Background: light",
     "bg_dark": "Background: dark",
-    "otherSizes": "Other sizes"
+    "otherSizes": "Other sizes",
+    "view_mc-skin": "3D skin",
+    "view_mc-block": "3D block"
   },
   "p_arts": {
     "searchTags": "Search tags",

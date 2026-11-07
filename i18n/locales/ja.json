@@ -1074,7 +1074,9 @@
     "bg_dots": "背景：グリッド",
     "bg_light": "背景：明るい",
     "bg_dark": "背景：暗い",
-    "otherSizes": "他のサイズ"
+    "otherSizes": "他のサイズ",
+    "view_mc-skin": "3Dスキン",
+    "view_mc-block": "3Dブロック"
   },
   "p_arts": {
     "searchTags": "タグを検索",

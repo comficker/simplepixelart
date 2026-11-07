@@ -1074,7 +1074,9 @@
     "bg_dots": "배경: 격자",
     "bg_light": "배경: 밝게",
     "bg_dark": "배경: 어둡게",
-    "otherSizes": "다른 크기"
+    "otherSizes": "다른 크기",
+    "view_mc-skin": "3D 스킨",
+    "view_mc-block": "3D 블록"
   },
   "p_arts": {
     "searchTags": "태그 검색",

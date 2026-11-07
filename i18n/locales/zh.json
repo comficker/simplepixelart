@@ -1074,7 +1074,9 @@
     "bg_dots": "背景：网格",
     "bg_light": "背景：浅色",
     "bg_dark": "背景：深色",
-    "otherSizes": "其他尺寸"
+    "otherSizes": "其他尺寸",
+    "view_mc-skin": "3D 皮肤",
+    "view_mc-block": "3D 方块"
   },
   "p_arts": {
     "searchTags": "搜索标签",

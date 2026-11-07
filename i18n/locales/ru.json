@@ -1074,7 +1074,9 @@
     "bg_dots": "Фон: сетка",
     "bg_light": "Фон: светлый",
     "bg_dark": "Фон: тёмный",
-    "otherSizes": "Другие размеры"
+    "otherSizes": "Другие размеры",
+    "view_mc-skin": "3D-скин",
+    "view_mc-block": "3D-блок"
   },
   "p_arts": {
     "searchTags": "Поиск тегов",

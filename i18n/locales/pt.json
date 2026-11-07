@@ -1074,7 +1074,9 @@
     "bg_dots": "Fundo: grade",
     "bg_light": "Fundo: claro",
     "bg_dark": "Fundo: escuro",
-    "otherSizes": "Outros tamanhos"
+    "otherSizes": "Outros tamanhos",
+    "view_mc-skin": "Skin 3D",
+    "view_mc-block": "Bloco 3D"
   },
   "p_arts": {
     "searchTags": "Buscar tags",

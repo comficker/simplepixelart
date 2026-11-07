@@ -1074,7 +1074,9 @@
     "bg_dots": "Fondo: cuadrícula",
     "bg_light": "Fondo: claro",
     "bg_dark": "Fondo: oscuro",
-    "otherSizes": "Otros tamaños"
+    "otherSizes": "Otros tamaños",
+    "view_mc-skin": "Skin 3D",
+    "view_mc-block": "Bloque 3D"
   },
   "p_arts": {
     "searchTags": "Buscar etiquetas",

@@ -4,6 +4,7 @@ import type {SharedPage} from "~/types";
 import {editorDataToJSON, editorDataToSVG} from "~/helper/canvas";
 import {sharedPage2EditorData} from "~/helper/utils";
 import {licenseOf} from "~/helper/constants";
+import {PREVIEW_DEFAULTS, PREVIEW_MODES} from "~/helper/previews";
 import {toast} from "vue-sonner";
 
 const route = useRoute();
@@ -411,14 +412,30 @@ const beadView = ref(false)
 const coordView = ref(false)
 // Animations are drawn frame by frame; the bead/coordinate views only know
 // the flattened grid, so they stay off for them.
-const pixelView = computed(() => !isAnimatedArt.value && (beadView.value || coordView.value))
+const pixelView = computed(() => !isAnimatedArt.value && !view3d.value && (beadView.value || coordView.value))
+
+/* 3D views for art made for them: a 64×64 skin as a figure, a 16/32 px
+   texture as a block. A piece that saved one as its preview (meta.preview,
+   e.g. a skin base and its copies) opens in it. */
+const VIEW_3D = ['mc-skin', 'mc-block'] as const
+const view3dModes = computed(() => {
+  const d = data.value
+  if (!d || isAnimatedArt.value) return []
+  return VIEW_3D.filter(id => PREVIEW_MODES.find(m => m.id === id)!.fits(d))
+})
+const view3d = ref<'mc-skin' | 'mc-block' | null>(null)
+watch(view3dModes, (modes) => {
+  const want = (data.value?.meta as any)?.preview?.mode
+  view3d.value = modes.includes(want) ? want : null
+}, {immediate: true})
+const view3dOpts = computed(() => ({...PREVIEW_DEFAULTS, ...((data.value?.meta as any)?.preview || {})}))
 
 const pixelCount = computed(() => (data.value as any)?.pixel_count
     ?? Object.keys(data.value?.map_numbers || {}).length)
 
 // The grid the pixel views draw, fetched the first time one is turned on.
 const mapNumbers = ref<Record<string, number> | null>(null)
-watch(pixelView, async (on) => {
+watch(() => pixelView.value || !!view3d.value, async (on) => {
   if (!on || mapNumbers.value || !data.value) return
   try {
     const full = await useNativeFetch<SharedPage>(`/coloring/shared-pages/${data.value.id_string}/`)
@@ -426,7 +443,27 @@ watch(pixelView, async (on) => {
   } catch {
     beadView.value = false
     coordView.value = false
+    view3d.value = null
   }
+}, {immediate: true})
+
+// The figure is drawn from the art's own pixels, at their own size.
+const art3d = ref<HTMLCanvasElement | null>(null)
+watch([view3d, () => mapNumbers.value], () => {
+  if (!view3d.value || !mapNumbers.value || !data.value || typeof document === 'undefined') return
+  const d = data.value
+  const c = document.createElement('canvas')
+  c.width = d.width
+  c.height = d.height
+  const x = c.getContext('2d')!
+  for (const [k, ci] of Object.entries(mapNumbers.value)) {
+    const col = d.colors?.[ci as number]
+    if (!col) continue
+    const [px, py] = k.split('_').map(Number)
+    x.fillStyle = col
+    x.fillRect(px!, py!, 1, 1)
+  }
+  art3d.value = c
 })
 
 const CELL_SIZES = [8, 12, 16, 24, 32, 48] as const
@@ -435,7 +472,8 @@ const COORD_MIN_CELL = 24
 const cellSize = ref(16)
 
 const viewLabel = computed(() =>
-    !pixelView.value ? t('common.pixels')
+    view3d.value ? t('p_art_id_string.view_' + view3d.value)
+    : !pixelView.value ? t('common.pixels')
         : beadView.value && coordView.value ? t('p_art_id_string.beadsXy')
         : beadView.value ? t('p_art_id_string.beads')
             : coordView.value ? t('p_art_id_string.coords')
@@ -542,7 +580,12 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
           class="tm-stage art-stage"
           :class="[`bg-${stageBg}`, {'is-fit': previewSize === 'full' && !pixelView, 'has-anim': showAnimCtl}]"
       >
-        <ClientOnly v-if="pixelView && mapNumbers">
+        <ClientOnly v-if="view3d">
+          <div class="art-3d">
+            <EditorTurnPreview v-if="art3d" :mode="view3d" :art="() => art3d" :rev="0" :opts="view3dOpts"/>
+          </div>
+        </ClientOnly>
+        <ClientOnly v-else-if="pixelView && mapNumbers">
           <ArtPixelCanvas
               :width="data.width"
               :height="data.height"
@@ -672,7 +715,22 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
             </button>
             <template #menu>
               <div class="file-menu">
-                <template v-if="!isAnimatedArt">
+                <template v-if="view3dModes.length">
+                <button class="file-menu-item" @click="view3d = null">
+                  <span class="file-menu-label">
+                    <span>{{ $t('common.pixels') }}</span>
+                    <span v-if="!view3d" class="icon icon-check"/>
+                  </span>
+                </button>
+                <button v-for="m in view3dModes" :key="m" class="file-menu-item" @click="view3d = m">
+                  <span class="file-menu-label">
+                    <span>{{ $t('p_art_id_string.view_' + m) }}</span>
+                    <span v-if="view3d === m" class="icon icon-check"/>
+                  </span>
+                </button>
+                <div class="file-menu-sep"/>
+                </template>
+                <template v-if="!isAnimatedArt && !view3d">
                 <button class="file-menu-item" @click="beadView = !beadView">
                   <span class="file-menu-label">
                     <span>{{ $t('p_art_id_string.beads') }}</span>
@@ -722,7 +780,7 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
             </template>
           </ui-dropdown-menu>
 
-          <ui-dropdown-menu v-else position="right">
+          <ui-dropdown-menu v-else-if="!view3d" position="right">
             <button class="art-size-pill" :title="$t('p_art_id_string.previewSize')">
               <span class="icon icon-search"/>
               <span>{{ previewSizeShort }}</span>
