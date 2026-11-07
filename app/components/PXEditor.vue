@@ -10,6 +10,7 @@ import {downloadBlob, generateUUID, sharedPage2EditorData} from "~/helper/utils"
 import {cellsBetween} from "~/helper/tileBrush";
 import {LICENSES} from "~/helper/constants";
 import {saveWorkspaceFull} from "~/helper/workspaceSnapshot";
+import {previewModeOf, previewModesFor} from "~/helper/previews";
 import {toast} from "vue-sonner";
 
 const canvas = ref<HTMLCanvasElement | null>(null);
@@ -2936,7 +2937,22 @@ watch(() => store.isPlaying, (v) => {
   else stopPlayback();
 });
 
+// Preview modes other than the flat picture (helper/previews). The board
+// keeps its choice in meta.preview; previewRev tells a mode the art changed.
+const previewModes = computed(() => previewModesFor(editorData.value));
+const previewMode = computed(() => previewModeOf(editorData.value));
+const previewMeta = computed<any>(() => (editorData.value.meta as any)?.preview || {});
+const previewRev = ref(0);
+function setPreview(patch: Record<string, any>) {
+  const meta: any = {...(editorData.value.meta || {})};
+  meta.preview = {...(meta.preview || {}), ...patch};
+  editorData.value.meta = meta;
+  store.saveState();
+  if (patch.mode === 'flat') nextTick(() => { sizeMiniMap(); scheduleMiniMap(); });
+}
+
 function drawMiniMap() {
+  previewRev.value++;
   if (!miniMap.value || !canvas.value || !miniMapCtx) return;
   if (store.isPlaying && playbackOnPreview) return;
 
@@ -4226,12 +4242,24 @@ watch(
       <div class="editor-sidebar">
         <Widget :title="$t('common.preview')" class="preview-widget">
           <template #ctl>
+            <div v-if="previewModes.length > 1" class="tm-seg preview-modes">
+              <button v-for="m in previewModes" :key="m.id" type="button" :class="{active: previewMode === m.id}" @click="setPreview({mode: m.id})">{{ m.label }}</button>
+            </div>
             <a v-if="editorData.id_string" class="widget-ctl-btn" :title="$t('common.openPublicPage')" target="_blank" :href="localePath(`/art/${editorData.id_string}`)">
               <span class="icon icon-link"/>
             </a>
           </template>
           <Square class="inside">
-            <canvas ref="miniMap" class="mini-map"/>
+            <canvas v-show="previewMode === 'flat'" ref="miniMap" class="mini-map"/>
+            <EditorSkinPreview
+                v-if="previewMode === 'mc-skin'"
+                :art="getArtCanvas"
+                :rev="previewRev"
+                :arms="previewMeta.arms === 'slim' ? 'slim' : 'classic'"
+                :outer="previewMeta.outer !== false"
+                @arms="v => setPreview({arms: v})"
+                @outer="v => setPreview({outer: v})"
+            />
           </Square>
         </Widget>
 
@@ -4650,6 +4678,8 @@ canvas.select.sel-drag:not(.panning) {
 }
 
 canvas.guide-v:not(.panning) { cursor: col-resize; }
+.preview-modes { --tm-ctl: 24px; grid-auto-columns: auto; padding: 2px; }
+.preview-modes button { padding: 0 var(--space-2); font-size: var(--text-2xs); }
 canvas.guide-h:not(.panning) { cursor: row-resize; }
 
 .pick-readout {
