@@ -2630,6 +2630,7 @@
     "mode": "モード",
     "mode_flat": "フラット",
     "mode_tiled": "タイル",
+    "mode_emote": "エモート",
     "mode_mc-skin": "スキン",
     "mode_mc-block": "ブロック",
     "background": "背景",
@@ -2655,6 +2656,12 @@
     "angle": "カメラ角度",
     "dragHint": "ドラッグで回転、ダブルクリックでリセット。",
     "reset": "リセット",
-    "done": "完了"
+    "done": "完了",
+    "chat": "チャット",
+    "chatTheme": "テーマ",
+    "themeDark": "ダーク",
+    "themeLight": "ライト",
+    "crisp": "ピクセルをくっきり",
+    "emoteHint": "実際のサイズで表示：Discord 22・48・16px、Twitch 28・56・112px。"
   }
 }

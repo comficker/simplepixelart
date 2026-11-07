@@ -2630,6 +2630,7 @@
     "mode": "모드",
     "mode_flat": "평면",
     "mode_tiled": "타일",
+    "mode_emote": "이모트",
     "mode_mc-skin": "스킨",
     "mode_mc-block": "블록",
     "background": "배경",
@@ -2655,6 +2656,12 @@
     "angle": "카메라 각도",
     "dragHint": "미리보기를 드래그해 돌리고, 더블클릭으로 초기화하세요.",
     "reset": "초기화",
-    "done": "완료"
+    "done": "완료",
+    "chat": "채팅",
+    "chatTheme": "테마",
+    "themeDark": "다크",
+    "themeLight": "라이트",
+    "crisp": "픽셀 선명하게",
+    "emoteHint": "실제 크기로 표시: Discord 22·48·16px, Twitch 28·56·112px."
   }
 }

@@ -26,7 +26,8 @@ const k = (s: string) => t(`c_PreviewSettings.${s}`)
         </div>
       </section>
 
-      <section class="ps-row">
+      <!-- The emote mock brings its own chat background. -->
+      <section v-if="opts.mode !== 'emote'" class="ps-row">
         <label class="ps-label">{{ k('background') }}</label>
         <div class="ps-inline">
           <div class="tm-seg ps-seg">
@@ -52,6 +53,28 @@ const k = (s: string) => t(`c_PreviewSettings.${s}`)
             <button v-for="n in [2, 3, 4, 6]" :key="n" type="button" :class="{active: opts.repeat === n}" @click="set({repeat: n})">{{ n }}×{{ n }}</button>
           </div>
         </section>
+      </template>
+
+      <template v-if="opts.mode === 'emote'">
+        <section class="ps-row">
+          <label class="ps-label">{{ k('chat') }}</label>
+          <div class="tm-seg ps-seg">
+            <button type="button" :class="{active: opts.chat === 'discord'}" @click="set({chat: 'discord'})">Discord</button>
+            <button type="button" :class="{active: opts.chat === 'twitch'}" @click="set({chat: 'twitch'})">Twitch</button>
+          </div>
+        </section>
+        <section class="ps-row">
+          <label class="ps-label">{{ k('chatTheme') }}</label>
+          <div class="tm-seg ps-seg">
+            <button type="button" :class="{active: opts.chatTheme === 'dark'}" @click="set({chatTheme: 'dark'})">{{ k('themeDark') }}</button>
+            <button type="button" :class="{active: opts.chatTheme === 'light'}" @click="set({chatTheme: 'light'})">{{ k('themeLight') }}</button>
+          </div>
+        </section>
+        <section class="ps-row">
+          <label class="ps-label">{{ k('crisp') }}</label>
+          <UiSwitch size="sm" :model-value="opts.crisp" @change="v => set({crisp: v})"/>
+        </section>
+        <p class="text-2xs text-muted">{{ k('emoteHint') }}</p>
       </template>
 
       <template v-if="opts.mode === 'mc-block'">

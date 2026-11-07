@@ -2958,6 +2958,7 @@ function setPreview(patch: Record<string, any> | null) {
 }
 const previewBgStyle = computed(() => {
   const p = preview.value;
+  if (p.mode === 'emote') return {};
   if (p.bg === 'color') return {background: p.bgColor};
   if (p.bg === 'checker') return {background: 'repeating-conic-gradient(#d4d4d8 0% 25%, #f4f4f5 0% 50%) 0 0 / 16px 16px'};
   return {};
@@ -4270,6 +4271,7 @@ watch(
           <Square class="inside preview-stage" :style="previewBgStyle">
             <canvas v-show="previewMode === 'flat'" ref="miniMap" class="mini-map"/>
             <EditorTilePreview v-if="previewMode === 'tiled'" :art="getArtCanvas" :rev="previewRev" :repeat="preview.repeat"/>
+            <EditorEmotePreview v-if="previewMode === 'emote'" :art="getArtCanvas" :rev="previewRev" :opts="preview"/>
             <EditorTurnPreview v-if="previewMode === 'mc-skin' || previewMode === 'mc-block'" :mode="previewMode" :art="getArtCanvas" :rev="previewRev" :opts="preview"/>
           </Square>
         </Widget>

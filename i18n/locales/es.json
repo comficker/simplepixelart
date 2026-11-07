@@ -2630,6 +2630,7 @@
     "mode": "Modo",
     "mode_flat": "Plano",
     "mode_tiled": "En mosaico",
+    "mode_emote": "Emote",
     "mode_mc-skin": "Skin",
     "mode_mc-block": "Bloque",
     "background": "Fondo",
@@ -2655,6 +2656,12 @@
     "angle": "Ángulo de cámara",
     "dragHint": "Arrastra la vista para girarla; doble clic para restablecer.",
     "reset": "Restablecer",
-    "done": "Listo"
+    "done": "Listo",
+    "chat": "Chat",
+    "chatTheme": "Tema",
+    "themeDark": "Oscuro",
+    "themeLight": "Claro",
+    "crisp": "Píxeles nítidos",
+    "emoteHint": "Se muestra a tamaño real: Discord 22, 48 y 16 px; Twitch 28, 56 y 112 px."
   }
 }

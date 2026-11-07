@@ -2663,6 +2663,7 @@
     "mode": "Mode",
     "mode_flat": "Flat",
     "mode_tiled": "Tiled",
+    "mode_emote": "Emote",
     "mode_mc-skin": "Skin",
     "mode_mc-block": "Block",
     "background": "Background",
@@ -2688,6 +2689,12 @@
     "angle": "Camera angle",
     "dragHint": "Drag the preview to turn it; double-click to reset.",
     "reset": "Reset",
-    "done": "Done"
+    "done": "Done",
+    "chat": "Chat",
+    "chatTheme": "Theme",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "crisp": "Sharp pixels",
+    "emoteHint": "Shown at the real sizes: Discord 22, 48 and 16 px; Twitch 28, 56 and 112 px."
   }
 }

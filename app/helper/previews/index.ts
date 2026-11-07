@@ -24,12 +24,17 @@ export interface PreviewMeta {
   pitch: number      // camera angle in degrees
   shade: boolean
   framing: 'body' | 'head'
+  // emote
+  chat: 'discord' | 'twitch'
+  chatTheme: 'dark' | 'light'
+  crisp: boolean     // keep pixels sharp when scaled (apps smooth them)
 }
 
 export const PREVIEW_DEFAULTS: PreviewMeta = {
   mode: 'flat', bg: 'none', bgColor: '#FFFFFF',
   pixelPerfect: false, repeat: 3,
   arms: 'classic', outer: true, pose: 'stand', spin: true, speed: 6, pitch: 18, shade: true, framing: 'body',
+  chat: 'discord', chatTheme: 'dark', crisp: false,
 }
 
 export interface PreviewMode {
@@ -41,6 +46,7 @@ export const PREVIEW_MODES: PreviewMode[] = [
   {id: 'flat', fits: () => true},
   {id: 'tiled', fits: () => true},
   {id: 'mc-skin', fits: ed => ed.width === 64 && ed.height === 64},
+  {id: 'emote', fits: ed => ed.width === ed.height && ed.width <= 128},
   {id: 'mc-block', fits: ed => ed.width === ed.height && (ed.width === 16 || ed.width === 32)},
 ]
 
