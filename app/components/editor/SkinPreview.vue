@@ -1,24 +1,25 @@
 <script setup lang="ts">
-// The skin preview mode: the board as a turning figure. Turns on its own
-// until dragged; the art is re-read whenever `rev` moves.
-import {drawSkin, type SkinArms} from '~/helper/previews/mc-skin'
+// The skin preview mode: the board as a figure. Turns on its own unless
+// spin is off or it was dragged; the art is re-read whenever `rev` moves.
+import {drawSkin} from '~/helper/previews/mc-skin'
+import type {PreviewMeta} from '~/helper/previews'
 
 const props = defineProps<{
   art: () => HTMLCanvasElement | null
   rev: number
-  arms: SkinArms
-  outer: boolean
+  opts: PreviewMeta
 }>()
-const emit = defineEmits<{ arms: [SkinArms]; outer: [boolean] }>()
 
 const cv = ref<HTMLCanvasElement | null>(null)
 let yaw = 0.6
-const pitch = 0.32
-let spinning = true
+let phase = 0
+let dragged = false
 let raf = 0
 let last = 0
-// Painted every frame only while it turns; otherwise when something changed.
+// Painted every frame only while something moves; otherwise on change.
 let dirty = true
+
+const moving = () => (props.opts.spin && !dragged) || props.opts.pose !== 'stand'
 
 function paint() {
   const c = cv.value, src = props.art()
@@ -27,20 +28,26 @@ function paint() {
   const dpr = window.devicePixelRatio || 1
   const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr))
   if (c.width !== w || c.height !== h) { c.width = w; c.height = h }
-  drawSkin(c.getContext('2d')!, src, w, h, {yaw, pitch, arms: props.arms, outer: props.outer})
+  const o = props.opts
+  drawSkin(c.getContext('2d')!, src, w, h, {
+    yaw, phase, pitch: o.pitch * Math.PI / 180, arms: o.arms, outer: o.outer,
+    pose: o.pose, shade: o.shade, framing: o.framing,
+  }, props.rev)
 }
 
 function loop(t: number) {
-  if (spinning && last) yaw += (t - last) * 0.0006
+  const dt = last ? Math.min(t - last, 100) : 0
   last = t
-  if (spinning || dirty) { paint(); dirty = false }
+  if (props.opts.spin && !dragged) yaw += dt * props.opts.speed * Math.PI * 2 / 60000
+  if (props.opts.pose !== 'stand') phase += dt * 0.006
+  if (moving() || dirty) { paint(); dirty = false }
   raf = requestAnimationFrame(loop)
 }
 
 let dragX: number | null = null
 function down(e: PointerEvent) {
   dragX = e.clientX
-  spinning = false
+  dragged = true
   ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
 }
 function move(e: PointerEvent) {
@@ -50,31 +57,20 @@ function move(e: PointerEvent) {
   dirty = true
 }
 function up() { dragX = null }
+function reset() { dragged = false; yaw = 0.6; dirty = true }
 
-watch(() => [props.rev, props.arms, props.outer], () => { dirty = true })
+watch(() => [props.rev, props.opts], () => { dirty = true }, {deep: true})
+// Turning spin back on in the settings resumes it even after a drag.
+watch(() => props.opts.spin, v => { if (v) dragged = false })
 onMounted(() => { raf = requestAnimationFrame(loop) })
 onBeforeUnmount(() => cancelAnimationFrame(raf))
 </script>
 
 <template>
-  <div class="skin-preview">
-    <canvas ref="cv" class="skin-cv" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up" @dblclick="spinning = true"/>
-    <div class="skin-opts">
-      <button type="button" :class="{active: arms === 'classic'}" @click="emit('arms', 'classic')">4px</button>
-      <button type="button" :class="{active: arms === 'slim'}" @click="emit('arms', 'slim')">3px</button>
-      <button type="button" :class="{active: outer}" :title="'Outer layer'" @click="emit('outer', !outer)">Outer</button>
-    </div>
-  </div>
+  <canvas ref="cv" class="preview-fill skin-cv" @pointerdown="down" @pointermove="move" @pointerup="up" @pointercancel="up" @dblclick="reset"/>
 </template>
 
 <style scoped>
-.skin-preview { position: absolute; inset: 0; }
-.skin-cv { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.skin-cv { cursor: grab; touch-action: none; }
 .skin-cv:active { cursor: grabbing; }
-.skin-opts { position: absolute; left: var(--space-2); bottom: var(--space-2); display: flex; gap: 2px; }
-.skin-opts button {
-  font-size: var(--text-2xs); font-weight: 700; padding: 2px var(--space-2); border-radius: var(--radius-sm);
-  background: var(--surface-2); color: var(--muted); border: 0; cursor: pointer;
-}
-.skin-opts button.active { background: var(--surface); color: var(--foreground); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
 </style>

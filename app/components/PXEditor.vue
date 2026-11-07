@@ -10,7 +10,7 @@ import {downloadBlob, generateUUID, sharedPage2EditorData} from "~/helper/utils"
 import {cellsBetween} from "~/helper/tileBrush";
 import {LICENSES} from "~/helper/constants";
 import {saveWorkspaceFull} from "~/helper/workspaceSnapshot";
-import {previewModeOf, previewModesFor} from "~/helper/previews";
+import {previewModesFor, previewOf} from "~/helper/previews";
 import {toast} from "vue-sonner";
 
 const canvas = ref<HTMLCanvasElement | null>(null);
@@ -2937,19 +2937,31 @@ watch(() => store.isPlaying, (v) => {
   else stopPlayback();
 });
 
-// Preview modes other than the flat picture (helper/previews). The board
-// keeps its choice in meta.preview; previewRev tells a mode the art changed.
+// Preview modes and their options (helper/previews), set in the preview
+// settings modal. The board keeps them in meta.preview; previewRev tells a
+// mode the art changed.
 const previewModes = computed(() => previewModesFor(editorData.value));
-const previewMode = computed(() => previewModeOf(editorData.value));
-const previewMeta = computed<any>(() => (editorData.value.meta as any)?.preview || {});
+const preview = computed(() => previewOf(editorData.value));
+const previewMode = computed(() => preview.value.mode);
 const previewRev = ref(0);
-function setPreview(patch: Record<string, any>) {
+const showPreviewSettings = ref(false);
+let previewSaveTimer: ReturnType<typeof setTimeout> | null = null;
+function setPreview(patch: Record<string, any> | null) {
   const meta: any = {...(editorData.value.meta || {})};
-  meta.preview = {...(meta.preview || {}), ...patch};
+  if (patch) meta.preview = {...(meta.preview || {}), ...patch};
+  else delete meta.preview;
   editorData.value.meta = meta;
-  store.saveState();
-  if (patch.mode === 'flat') nextTick(() => { sizeMiniMap(); scheduleMiniMap(); });
+  // Sliders send a stream of changes; one history step for the lot.
+  if (previewSaveTimer) clearTimeout(previewSaveTimer);
+  previewSaveTimer = setTimeout(() => store.saveState(), 400);
+  nextTick(() => { sizeMiniMap(); scheduleMiniMap(); });
 }
+const previewBgStyle = computed(() => {
+  const p = preview.value;
+  if (p.bg === 'color') return {background: p.bgColor};
+  if (p.bg === 'checker') return {background: 'repeating-conic-gradient(#d4d4d8 0% 25%, #f4f4f5 0% 50%) 0 0 / 16px 16px'};
+  return {};
+});
 
 function drawMiniMap() {
   previewRev.value++;
@@ -3016,6 +3028,12 @@ function sizeMiniMap() {
   } else {
     miniMap.value.height = parentH;
     miniMap.value.width = parentH * artRatio;
+  }
+  // Pixel-perfect: a whole number of screen pixels per art pixel.
+  if (previewOf(editorData.value).pixelPerfect) {
+    const k = Math.max(1, Math.floor(miniMap.value.width / editorData.value.width));
+    miniMap.value.width = editorData.value.width * k;
+    miniMap.value.height = editorData.value.height * k;
   }
   MINIMAP_SIZE.value = miniMap.value.width;
 }
@@ -4242,24 +4260,17 @@ watch(
       <div class="editor-sidebar">
         <Widget :title="$t('common.preview')" class="preview-widget">
           <template #ctl>
-            <div v-if="previewModes.length > 1" class="tm-seg preview-modes">
-              <button v-for="m in previewModes" :key="m.id" type="button" :class="{active: previewMode === m.id}" @click="setPreview({mode: m.id})">{{ m.label }}</button>
-            </div>
+            <button type="button" class="widget-ctl-btn" :title="$t('c_PreviewSettings.title')" @click="showPreviewSettings = true">
+              <span class="icon icon-cog"/>
+            </button>
             <a v-if="editorData.id_string" class="widget-ctl-btn" :title="$t('common.openPublicPage')" target="_blank" :href="localePath(`/art/${editorData.id_string}`)">
               <span class="icon icon-link"/>
             </a>
           </template>
-          <Square class="inside">
+          <Square class="inside preview-stage" :style="previewBgStyle">
             <canvas v-show="previewMode === 'flat'" ref="miniMap" class="mini-map"/>
-            <EditorSkinPreview
-                v-if="previewMode === 'mc-skin'"
-                :art="getArtCanvas"
-                :rev="previewRev"
-                :arms="previewMeta.arms === 'slim' ? 'slim' : 'classic'"
-                :outer="previewMeta.outer !== false"
-                @arms="v => setPreview({arms: v})"
-                @outer="v => setPreview({outer: v})"
-            />
+            <EditorTilePreview v-if="previewMode === 'tiled'" :art="getArtCanvas" :rev="previewRev" :repeat="preview.repeat"/>
+            <EditorSkinPreview v-if="previewMode === 'mc-skin'" :art="getArtCanvas" :rev="previewRev" :opts="preview"/>
           </Square>
         </Widget>
 
@@ -4609,6 +4620,15 @@ watch(
           </div>
       </UiModal>
 
+    <EditorPreviewSettings
+        v-if="showPreviewSettings"
+        :opts="preview"
+        :modes="previewModes"
+        @update="setPreview"
+        @reset="setPreview(null)"
+        @close="showPreviewSettings = false"
+    />
+
     <EditorLoadBrowser
         v-if="showBasePicker"
         :title="$t('c_PXEditor.startFromBase')"
@@ -4678,8 +4698,8 @@ canvas.select.sel-drag:not(.panning) {
 }
 
 canvas.guide-v:not(.panning) { cursor: col-resize; }
-.preview-modes { --tm-ctl: 24px; grid-auto-columns: auto; padding: 2px; }
-.preview-modes button { padding: 0 var(--space-2); font-size: var(--text-2xs); }
+.preview-stage { border-radius: var(--radius-sm); }
+.preview-stage :deep(.preview-fill) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 canvas.guide-h:not(.panning) { cursor: row-resize; }
 
 .pick-readout {
