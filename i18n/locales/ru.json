@@ -2631,6 +2631,8 @@
     "mode_flat": "Плоский",
     "mode_tiled": "Плитка",
     "mode_emote": "Эмоут",
+    "mode_icon": "Иконка",
+    "mode_walk": "Ходьба",
     "mode_mc-skin": "Скин",
     "mode_mc-block": "Блок",
     "background": "Фон",
@@ -2662,6 +2664,19 @@
     "themeDark": "Тёмная",
     "themeLight": "Светлая",
     "crisp": "Чёткие пиксели",
-    "emoteHint": "Показано в реальных размерах: Discord 22, 48 и 16 px; Twitch 28, 56 и 112 px."
+    "emoteHint": "Показано в реальных размерах: Discord 22, 48 и 16 px; Twitch 28, 56 и 112 px.",
+    "iconShape": "Форма на экране",
+    "shape_rounded": "Скруглённая",
+    "shape_circle": "Круг",
+    "shape_square": "Квадрат",
+    "grid": "Кадры × направления",
+    "frames": "Кадры",
+    "directions": "Направления",
+    "gridHint": "Холст режется по этой сетке: столбец — кадр, строка — направление.",
+    "rowOrder": "Порядок строк",
+    "facing": "Направление",
+    "auto": "Авто",
+    "fps": "Кадров в секунду",
+    "pingPong": "Туда-обратно (0 1 2 1)"
   }
 }

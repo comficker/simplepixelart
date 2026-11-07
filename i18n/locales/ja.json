@@ -2631,6 +2631,8 @@
     "mode_flat": "フラット",
     "mode_tiled": "タイル",
     "mode_emote": "エモート",
+    "mode_icon": "アイコン",
+    "mode_walk": "歩行",
     "mode_mc-skin": "スキン",
     "mode_mc-block": "ブロック",
     "background": "背景",
@@ -2662,6 +2664,19 @@
     "themeDark": "ダーク",
     "themeLight": "ライト",
     "crisp": "ピクセルをくっきり",
-    "emoteHint": "実際のサイズで表示：Discord 22・48・16px、Twitch 28・56・112px。"
+    "emoteHint": "実際のサイズで表示：Discord 22・48・16px、Twitch 28・56・112px。",
+    "iconShape": "ホーム画面の形",
+    "shape_rounded": "角丸",
+    "shape_circle": "円",
+    "shape_square": "四角",
+    "grid": "フレーム × 方向",
+    "frames": "フレーム",
+    "directions": "方向",
+    "gridHint": "キャンバスをこのグリッドで分割：列がフレーム、行が方向。",
+    "rowOrder": "行の順番",
+    "facing": "向き",
+    "auto": "自動",
+    "fps": "フレーム/秒",
+    "pingPong": "往復歩き (0 1 2 1)"
   }
 }

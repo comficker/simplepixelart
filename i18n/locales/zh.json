@@ -2631,6 +2631,8 @@
     "mode_flat": "平面",
     "mode_tiled": "平铺",
     "mode_emote": "表情",
+    "mode_icon": "图标",
+    "mode_walk": "行走",
     "mode_mc-skin": "皮肤",
     "mode_mc-block": "方块",
     "background": "背景",
@@ -2662,6 +2664,19 @@
     "themeDark": "深色",
     "themeLight": "浅色",
     "crisp": "像素清晰",
-    "emoteHint": "按真实尺寸显示：Discord 22、48、16px；Twitch 28、56、112px。"
+    "emoteHint": "按真实尺寸显示：Discord 22、48、16px；Twitch 28、56、112px。",
+    "iconShape": "主屏幕形状",
+    "shape_rounded": "圆角",
+    "shape_circle": "圆形",
+    "shape_square": "方形",
+    "grid": "帧 × 方向",
+    "frames": "帧",
+    "directions": "方向",
+    "gridHint": "画布按此网格切分：每列一帧，每行一个方向。",
+    "rowOrder": "行顺序",
+    "facing": "朝向",
+    "auto": "自动",
+    "fps": "每秒帧数",
+    "pingPong": "来回走 (0 1 2 1)"
   }
 }

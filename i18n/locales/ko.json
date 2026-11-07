@@ -2631,6 +2631,8 @@
     "mode_flat": "평면",
     "mode_tiled": "타일",
     "mode_emote": "이모트",
+    "mode_icon": "아이콘",
+    "mode_walk": "걷기",
     "mode_mc-skin": "스킨",
     "mode_mc-block": "블록",
     "background": "배경",
@@ -2662,6 +2664,19 @@
     "themeDark": "다크",
     "themeLight": "라이트",
     "crisp": "픽셀 선명하게",
-    "emoteHint": "실제 크기로 표시: Discord 22·48·16px, Twitch 28·56·112px."
+    "emoteHint": "실제 크기로 표시: Discord 22·48·16px, Twitch 28·56·112px.",
+    "iconShape": "홈 화면 모양",
+    "shape_rounded": "둥근 모서리",
+    "shape_circle": "원",
+    "shape_square": "사각형",
+    "grid": "프레임 × 방향",
+    "frames": "프레임",
+    "directions": "방향",
+    "gridHint": "캔버스를 이 격자로 나눕니다: 열은 프레임, 행은 방향.",
+    "rowOrder": "행 순서",
+    "facing": "방향",
+    "auto": "자동",
+    "fps": "초당 프레임",
+    "pingPong": "왕복 걷기 (0 1 2 1)"
   }
 }

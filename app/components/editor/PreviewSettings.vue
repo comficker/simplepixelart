@@ -27,7 +27,7 @@ const k = (s: string) => t(`c_PreviewSettings.${s}`)
       </section>
 
       <!-- The emote mock brings its own chat background. -->
-      <section v-if="opts.mode !== 'emote'" class="ps-row">
+      <section v-if="opts.mode !== 'emote' && opts.mode !== 'icon'" class="ps-row">
         <label class="ps-label">{{ k('background') }}</label>
         <div class="ps-inline">
           <div class="tm-seg ps-seg">
@@ -75,6 +75,61 @@ const k = (s: string) => t(`c_PreviewSettings.${s}`)
           <UiSwitch size="sm" :model-value="opts.crisp" @change="v => set({crisp: v})"/>
         </section>
         <p class="text-2xs text-muted">{{ k('emoteHint') }}</p>
+      </template>
+
+      <template v-if="opts.mode === 'icon'">
+        <section class="ps-row">
+          <label class="ps-label">{{ k('iconShape') }}</label>
+          <div class="tm-seg ps-seg">
+            <button v-for="sh in ['rounded', 'circle', 'square']" :key="sh" type="button" :class="{active: opts.iconShape === sh}" @click="set({iconShape: sh as any})">
+              {{ k('shape_' + sh) }}
+            </button>
+          </div>
+        </section>
+        <section class="ps-row">
+          <label class="ps-label">{{ k('chatTheme') }}</label>
+          <div class="tm-seg ps-seg">
+            <button type="button" :class="{active: opts.chatTheme === 'dark'}" @click="set({chatTheme: 'dark'})">{{ k('themeDark') }}</button>
+            <button type="button" :class="{active: opts.chatTheme === 'light'}" @click="set({chatTheme: 'light'})">{{ k('themeLight') }}</button>
+          </div>
+        </section>
+        <section class="ps-row">
+          <label class="ps-label">{{ k('crisp') }}</label>
+          <UiSwitch size="sm" :model-value="opts.crisp" @change="v => set({crisp: v})"/>
+        </section>
+      </template>
+
+      <template v-if="opts.mode === 'walk'">
+        <section class="ps-row">
+          <label class="ps-label">{{ k('grid') }}</label>
+          <div class="ps-inline">
+            <input type="number" min="1" max="16" class="ps-num" :value="opts.sheetCols" :aria-label="k('frames')" @change="set({sheetCols: Math.max(1, +($event.target as HTMLInputElement).value || 1)})">
+            <span class="text-muted">×</span>
+            <input type="number" min="1" max="8" class="ps-num" :value="opts.sheetRows" :aria-label="k('directions')" @change="set({sheetRows: Math.max(1, +($event.target as HTMLInputElement).value || 1)})">
+          </div>
+        </section>
+        <p class="text-2xs text-muted">{{ k('gridHint') }}</p>
+        <section class="ps-row">
+          <label class="ps-label">{{ k('rowOrder') }}</label>
+          <select class="ps-select" :value="opts.dirOrder" @change="set({dirOrder: ($event.target as HTMLSelectElement).value as any})">
+            <option value="down-left-right-up">↓ ← → ↑</option>
+            <option value="down-up-left-right">↓ ↑ ← →</option>
+          </select>
+        </section>
+        <section class="ps-row">
+          <label class="ps-label">{{ k('facing') }}</label>
+          <div class="tm-seg ps-seg">
+            <button v-for="d in [['auto', k('auto')], ['down', '↓'], ['left', '←'], ['right', '→'], ['up', '↑']]" :key="d[0]" type="button" :class="{active: opts.dir === d[0]}" @click="set({dir: d[0] as any})">{{ d[1] }}</button>
+          </div>
+        </section>
+        <section class="ps-row">
+          <label class="ps-label">{{ k('fps') }} <span class="text-muted">{{ opts.fps }}</span></label>
+          <input type="range" min="1" max="24" step="1" class="ps-range" :value="opts.fps" @input="set({fps: +($event.target as HTMLInputElement).value})">
+        </section>
+        <section class="ps-row">
+          <label class="ps-label">{{ k('pingPong') }}</label>
+          <UiSwitch size="sm" :model-value="opts.pingPong" @change="v => set({pingPong: v})"/>
+        </section>
       </template>
 
       <template v-if="opts.mode === 'mc-block'">
@@ -158,5 +213,7 @@ const k = (s: string) => t(`c_PreviewSettings.${s}`)
 .ps-seg button { padding: 0 var(--space-3); }
 .ps-color { width: 30px; height: 30px; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); background: none; }
 .ps-range { width: 9rem; }
+.ps-num { width: 3.5rem; height: 30px; padding: 0 var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: inherit; }
+.ps-select { height: 30px; padding: 0 var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: inherit; }
 .ps-foot { display: flex; justify-content: flex-end; gap: var(--space-2); padding-top: var(--space-2); }
 </style>

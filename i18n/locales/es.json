@@ -2631,6 +2631,8 @@
     "mode_flat": "Plano",
     "mode_tiled": "En mosaico",
     "mode_emote": "Emote",
+    "mode_icon": "Icono",
+    "mode_walk": "Caminar",
     "mode_mc-skin": "Skin",
     "mode_mc-block": "Bloque",
     "background": "Fondo",
@@ -2662,6 +2664,19 @@
     "themeDark": "Oscuro",
     "themeLight": "Claro",
     "crisp": "Píxeles nítidos",
-    "emoteHint": "Se muestra a tamaño real: Discord 22, 48 y 16 px; Twitch 28, 56 y 112 px."
+    "emoteHint": "Se muestra a tamaño real: Discord 22, 48 y 16 px; Twitch 28, 56 y 112 px.",
+    "iconShape": "Forma en inicio",
+    "shape_rounded": "Redondeado",
+    "shape_circle": "Círculo",
+    "shape_square": "Cuadrado",
+    "grid": "Fotogramas × direcciones",
+    "frames": "Fotogramas",
+    "directions": "Direcciones",
+    "gridHint": "El lienzo se corta en esta cuadrícula: una columna por fotograma, una fila por dirección.",
+    "rowOrder": "Orden de filas",
+    "facing": "Mirando a",
+    "auto": "Auto",
+    "fps": "Fotogramas por segundo",
+    "pingPong": "Ida y vuelta (0 1 2 1)"
   }
 }

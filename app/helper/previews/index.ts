@@ -28,6 +28,15 @@ export interface PreviewMeta {
   chat: 'discord' | 'twitch'
   chatTheme: 'dark' | 'light'
   crisp: boolean     // keep pixels sharp when scaled (apps smooth them)
+  // icon (chatTheme and crisp are shared with emote)
+  iconShape: 'rounded' | 'circle' | 'square'
+  // walk: a character sheet, `sheetCols` frames by `sheetRows` directions
+  sheetCols: number
+  sheetRows: number
+  dirOrder: 'down-left-right-up' | 'down-up-left-right'
+  dir: 'auto' | 'down' | 'left' | 'right' | 'up'
+  fps: number
+  pingPong: boolean  // 0 1 2 1, the RPG Maker walk
 }
 
 export const PREVIEW_DEFAULTS: PreviewMeta = {
@@ -35,6 +44,8 @@ export const PREVIEW_DEFAULTS: PreviewMeta = {
   pixelPerfect: false, repeat: 3,
   arms: 'classic', outer: true, pose: 'stand', spin: true, speed: 6, pitch: 18, shade: true, framing: 'body',
   chat: 'discord', chatTheme: 'dark', crisp: false,
+  iconShape: 'rounded',
+  sheetCols: 3, sheetRows: 4, dirOrder: 'down-left-right-up', dir: 'auto', fps: 6, pingPong: true,
 }
 
 export interface PreviewMode {
@@ -47,6 +58,8 @@ export const PREVIEW_MODES: PreviewMode[] = [
   {id: 'tiled', fits: () => true},
   {id: 'mc-skin', fits: ed => ed.width === 64 && ed.height === 64},
   {id: 'emote', fits: ed => ed.width === ed.height && ed.width <= 128},
+  {id: 'icon', fits: ed => ed.width === ed.height},
+  {id: 'walk', fits: ed => ed.width >= 8 && ed.height >= 8},
   {id: 'mc-block', fits: ed => ed.width === ed.height && (ed.width === 16 || ed.width === 32)},
 ]
 

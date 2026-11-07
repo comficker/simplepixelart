@@ -2664,6 +2664,8 @@
     "mode_flat": "Flat",
     "mode_tiled": "Tiled",
     "mode_emote": "Emote",
+    "mode_icon": "Icon",
+    "mode_walk": "Walk",
     "mode_mc-skin": "Skin",
     "mode_mc-block": "Block",
     "background": "Background",
@@ -2695,6 +2697,19 @@
     "themeDark": "Dark",
     "themeLight": "Light",
     "crisp": "Sharp pixels",
-    "emoteHint": "Shown at the real sizes: Discord 22, 48 and 16 px; Twitch 28, 56 and 112 px."
+    "emoteHint": "Shown at the real sizes: Discord 22, 48 and 16 px; Twitch 28, 56 and 112 px.",
+    "iconShape": "Home-screen shape",
+    "shape_rounded": "Rounded",
+    "shape_circle": "Circle",
+    "shape_square": "Square",
+    "grid": "Frames × directions",
+    "frames": "Frames",
+    "directions": "Directions",
+    "gridHint": "The canvas is cut into this grid: one column per frame, one row per direction.",
+    "rowOrder": "Row order",
+    "facing": "Facing",
+    "auto": "Auto",
+    "fps": "Frames per second",
+    "pingPong": "Walk back and forth (0 1 2 1)"
   }
 }
