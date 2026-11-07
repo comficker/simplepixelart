@@ -31,6 +31,12 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
 
   if (!options.title) return
   const v = (g: V) => () => toValue(g)
+  // Search engines cut descriptions near 160 characters; end on a whole word.
+  const desc = () => {
+    const s = toValue(options.description)
+    if (!s || s.length <= 160) return s
+    return s.slice(0, 157).replace(/\s+\S*$/, '').replace(/[\s,.;:—–-]+$/, '') + '…'
+  }
 
   // Pages pass a canonical without a locale in it, so on /ja every page was
   // pointing Google back at the English URL -- telling it the Japanese page was
@@ -53,7 +59,7 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
   useHead({
     title: v(options.title),
     meta: [
-      { name: 'description', content: v(options.description) },
+      { name: 'description', content: desc },
       { name: 'keywords', content: v(options.keywords) },
       { name: 'author', content: () => toValue(options.author) || 'SimplePixelArt.com' },
       { name: 'robots', content: () => {
@@ -64,7 +70,7 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
       } },
 
       { property: 'og:title', content: v(options.title) },
-      { property: 'og:description', content: v(options.description) },
+      { property: 'og:description', content: desc },
       { property: 'og:type', content: () => toValue(options.ogType) || 'website' },
       { property: 'og:url', content: localised(options.canonical) },
       { property: 'og:site_name', content: 'SimplePixelArt.com' },
@@ -77,7 +83,7 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
       { name: 'twitter:site', content: '@comficker' },
       { name: 'twitter:creator', content: '@comficker' },
       { name: 'twitter:title', content: v(options.title) },
-      { name: 'twitter:description', content: v(options.description) },
+      { name: 'twitter:description', content: desc },
       { name: 'twitter:image', content: () => toValue(options.ogImage) || `${baseUrl}/og-image.png` },
 
       ...(options.articleSection ? [{ property: 'article:section', content: v(options.articleSection) }] : []),

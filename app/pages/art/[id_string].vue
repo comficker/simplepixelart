@@ -199,16 +199,10 @@ const hasOriginalContent = computed(() =>
     )
 )
 
-// Search engines cut descriptions near 160 characters; end on a whole word.
-function clipDesc(s: string) {
-  if (s.length <= 160) return s
-  return s.slice(0, 157).replace(/\s+\S*$/, '') + '…'
-}
-
 useCustomSeoMeta({
   untranslated: true,
   title: meta.value.title,
-  description: clipDesc(meta.value.desc || meta.value.descFallback),
+  description: meta.value.desc || meta.value.descFallback,
   canonical: meta.value.url,
   ogImage: isAnimatedArt.value ? gifUrl.value : meta.value.imgSrc,
   ogType: 'article',
