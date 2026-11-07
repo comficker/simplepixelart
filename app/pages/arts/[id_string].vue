@@ -16,7 +16,9 @@ const cbnLink = computed(() => {
 const isSizeSlug = computed(() => /^size-\d+x\d+$/i.test(idString.value))
 const isColorSlug = computed(() => /^color-[0-9a-f]{3,8}$/i.test(idString.value))
 const isNewSlug = computed(() => idString.value === 'new')
-const isValidSlug = computed(() => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(idString.value))
+// Underscores too: older tags such as moonstone_pickaxe have them, and the
+// sitemap lists them.
+const isValidSlug = computed(() => /^[a-z0-9_]+(?:-[a-z0-9_]+)*$/.test(idString.value))
 const sizeFromSlug = computed(() => {
   const m = idString.value.match(/^size-(\d+)x(\d+)$/i)
   return m ? `${m[1]}×${m[2]}` : null
