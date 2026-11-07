@@ -2631,6 +2631,7 @@
     "mode_flat": "Plano",
     "mode_tiled": "Em mosaico",
     "mode_mc-skin": "Skin",
+    "mode_mc-block": "Bloco",
     "background": "Fundo",
     "bg_none": "Nenhum",
     "bg_checker": "Xadrez",

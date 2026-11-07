@@ -2631,6 +2631,7 @@
     "mode_flat": "평면",
     "mode_tiled": "타일",
     "mode_mc-skin": "스킨",
+    "mode_mc-block": "블록",
     "background": "배경",
     "bg_none": "없음",
     "bg_checker": "체크무늬",

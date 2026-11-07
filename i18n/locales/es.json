@@ -2631,6 +2631,7 @@
     "mode_flat": "Plano",
     "mode_tiled": "En mosaico",
     "mode_mc-skin": "Skin",
+    "mode_mc-block": "Bloque",
     "background": "Fondo",
     "bg_none": "Ninguno",
     "bg_checker": "Cuadros",

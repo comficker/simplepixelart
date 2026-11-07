@@ -2664,6 +2664,7 @@
     "mode_flat": "Flat",
     "mode_tiled": "Tiled",
     "mode_mc-skin": "Skin",
+    "mode_mc-block": "Block",
     "background": "Background",
     "bg_none": "None",
     "bg_checker": "Checker",

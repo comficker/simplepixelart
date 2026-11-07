@@ -4270,7 +4270,7 @@ watch(
           <Square class="inside preview-stage" :style="previewBgStyle">
             <canvas v-show="previewMode === 'flat'" ref="miniMap" class="mini-map"/>
             <EditorTilePreview v-if="previewMode === 'tiled'" :art="getArtCanvas" :rev="previewRev" :repeat="preview.repeat"/>
-            <EditorSkinPreview v-if="previewMode === 'mc-skin'" :art="getArtCanvas" :rev="previewRev" :opts="preview"/>
+            <EditorTurnPreview v-if="previewMode === 'mc-skin' || previewMode === 'mc-block'" :mode="previewMode" :art="getArtCanvas" :rev="previewRev" :opts="preview"/>
           </Square>
         </Widget>
 

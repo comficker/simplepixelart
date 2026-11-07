@@ -2631,6 +2631,7 @@
     "mode_flat": "Плоский",
     "mode_tiled": "Плитка",
     "mode_mc-skin": "Скин",
+    "mode_mc-block": "Блок",
     "background": "Фон",
     "bg_none": "Нет",
     "bg_checker": "Шахматка",

@@ -2631,6 +2631,7 @@
     "mode_flat": "平面",
     "mode_tiled": "平铺",
     "mode_mc-skin": "皮肤",
+    "mode_mc-block": "方块",
     "background": "背景",
     "bg_none": "无",
     "bg_checker": "棋盘格",

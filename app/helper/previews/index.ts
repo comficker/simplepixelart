@@ -15,7 +15,7 @@ export interface PreviewMeta {
   pixelPerfect: boolean
   // tiled
   repeat: number
-  // mc-skin
+  // mc-skin and mc-block (spin, speed, pitch and shade are shared)
   arms: SkinArms
   outer: boolean
   pose: SkinPose
@@ -41,6 +41,7 @@ export const PREVIEW_MODES: PreviewMode[] = [
   {id: 'flat', fits: () => true},
   {id: 'tiled', fits: () => true},
   {id: 'mc-skin', fits: ed => ed.width === 64 && ed.height === 64},
+  {id: 'mc-block', fits: ed => ed.width === ed.height && (ed.width === 16 || ed.width === 32)},
 ]
 
 export function previewModesFor(ed: { width: number, height: number }): PreviewMode[] {

@@ -54,6 +54,25 @@ const k = (s: string) => t(`c_PreviewSettings.${s}`)
         </section>
       </template>
 
+      <template v-if="opts.mode === 'mc-block'">
+        <section class="ps-row">
+          <label class="ps-label">{{ k('shade') }}</label>
+          <UiSwitch size="sm" :model-value="opts.shade" @change="v => set({shade: v})"/>
+        </section>
+        <section class="ps-row">
+          <label class="ps-label">{{ k('spin') }}</label>
+          <div class="ps-inline">
+            <UiSwitch size="sm" :model-value="opts.spin" @change="v => set({spin: v})"/>
+            <input v-if="opts.spin" type="range" min="1" max="30" step="1" class="ps-range" :value="opts.speed" :aria-label="k('speed')" @input="set({speed: +($event.target as HTMLInputElement).value})">
+          </div>
+        </section>
+        <section class="ps-row">
+          <label class="ps-label">{{ k('angle') }} <span class="text-muted">{{ opts.pitch }}°</span></label>
+          <input type="range" min="-30" max="60" step="1" class="ps-range" :value="opts.pitch" @input="set({pitch: +($event.target as HTMLInputElement).value})">
+        </section>
+        <p class="text-2xs text-muted">{{ k('dragHint') }}</p>
+      </template>
+
       <template v-if="opts.mode === 'mc-skin'">
         <section class="ps-row">
           <label class="ps-label">{{ k('arms') }}</label>
