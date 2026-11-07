@@ -35,6 +35,10 @@ const localePath = useLocalePath()
 const config = useRuntimeConfig()
 const siteUrl = (config.public.siteUrl as string) || 'https://simplepixelart.com'
 
+// A detail page names its own last crumb (the artwork, collection or
+// tileset title) through useCrumbTitle; otherwise it reads the slug.
+const crumbTitle = useCrumbTitle()
+
 const crumbs = computed(() => {
   // The locale prefix is not a page, so /ja/editor should read "Editor",
   // not "Ja > Editor".
@@ -45,7 +49,8 @@ const crumbs = computed(() => {
     return {
       to,
       linked: routePaths.has(to),
-      label: LABELS[seg] ? t(LABELS[seg]) : decodeURIComponent(seg).replace(/[-_]+/g, ' ').replace(/^\w/, c => c.toUpperCase()),
+      label: i === parts.length - 1 && crumbTitle.value ? crumbTitle.value
+          : LABELS[seg] ? t(LABELS[seg]) : decodeURIComponent(seg).replace(/[-_]+/g, ' ').replace(/^\w/, c => c.toUpperCase()),
     }
   })
 })

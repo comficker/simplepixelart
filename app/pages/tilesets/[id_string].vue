@@ -17,6 +17,7 @@ if (error.value && import.meta.server) {
 }
 
 const title = computed(() => data.value?.name || 'Untitled tileset')
+useCrumbTitle(() => data.value ? title.value : '')
 const isPublic = computed(() => data.value?.status === 'public')
 const isOwner = computed(() =>
     !!auth.logged?.username && data.value?.username === auth.logged.username,

@@ -130,6 +130,8 @@ const imgOriginal = computed(() =>
 const artImage = useArtImage()
 const imgLarge = computed(() => data.value ? artImage(data.value, 'art-large') : '')
 const artAlt = useArtAlt()
+useCrumbTitle(() => data.value?.name?.trim() || '')
+
 const mainAlt = computed(() =>
     artAlt(data.value?.name, t('p_art_id_string.whPixelArt', {w: data.value?.width, h: data.value?.height})))
 const imgCard = computed(() =>
