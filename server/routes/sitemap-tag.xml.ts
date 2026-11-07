@@ -1,5 +1,6 @@
 import {ofetch} from "ofetch";
 import {APIResponse, SharedPage} from "~/types";
+import {KEEP_THIN_TAGS, MIN_TAG_ARTS} from "~/helper/thin-tags";
 
 const domain = "simplepixelart.com"
 const LOCALES = ['ja', 'zh', 'ko', 'es', 'pt', 'ru']
@@ -12,14 +13,26 @@ export default defineEventHandler(async (event) => {
     // A failed fetch serves an empty urlset instead of a 500 to crawlers.
     // Walk every page: the first 500 alone left 600+ tags (pumpkin among them)
     // out of the sitemap.
-    const tags: any[] = []
-    for (let page = 1; page <= 20; page++) {
-        const res: APIResponse<SharedPage> | null = await ofetch(`https://touch.ninosaur.com/coloring/tags/`, {
-            query: {page_size: 500, page, has_pages: 1}
-        }).catch(() => null)
-        tags.push(...(res?.results || []))
-        if (!res?.results?.length || tags.length >= (res.count || 0)) break
+    const walk = async (query: Record<string, any>) => {
+        const out: any[] = []
+        for (let page = 1; page <= 20; page++) {
+            const res: APIResponse<SharedPage> | null = await ofetch(`https://touch.ninosaur.com/coloring/tags/`, {
+                query: {page_size: 500, page, has_pages: 1, ...query}
+            }).catch(() => null)
+            out.push(...(res?.results || []))
+            if (!res?.results?.length || out.length >= (res.count || 0)) break
+        }
+        return out
     }
+    // Thin tags (fewer than MIN_TAG_ARTS pieces) are noindex on the page, so
+    // they stay out of here too -- except the ones in KEEP_THIN_TAGS.
+    const [all, full] = await Promise.all([walk({}), walk({min_pages: MIN_TAG_ARTS})])
+    const fullIds = new Set(full.map((t: any) => t.id_string))
+    // An empty `full` means the request failed; listing every tag beats an
+    // empty sitemap.
+    const tags = fullIds.size
+        ? all.filter((t: any) => fullIds.has(t.id_string) || KEEP_THIN_TAGS.has(t.id_string))
+        : all
     // Tag pages are index,follow with a self canonical in every locale, so each
     // locale goes in as a page of its own with the full set of alternates --
     // only for tags that have public artworks, the same set as English.

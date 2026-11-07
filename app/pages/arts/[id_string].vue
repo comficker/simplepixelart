@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {CBN_COLLECTIONS} from '~/helper/cbn-collections'
+import {KEEP_THIN_TAGS, MIN_TAG_ARTS} from '~/helper/thin-tags'
 const {t, te, locale, defaultLocale} = useI18n()
 const localHtml = useLocalHtml()
 import type {APIResponse, ResponseSharedPage, SharedPage, TagSchema} from "~/types";
@@ -125,6 +126,11 @@ const robotsValue = computed(() => {
   // Only when the count is actually known: a failed request reads as zero, and
   // noindexing a good page over an API blip is the worse mistake.
   if (!statsError.value && stats.value && totalCount.value === 0) return 'noindex, follow'
+  // A tag with only a piece or two is a thin page that reads like every other
+  // one; keep it out of the index until it grows, unless it already earns
+  // search impressions.
+  if (tag.value && !statsError.value && stats.value
+      && totalCount.value < MIN_TAG_ARTS && !KEEP_THIN_TAGS.has(idString.value)) return 'noindex, follow'
   return 'index, follow'
 })
 
