@@ -4,8 +4,10 @@
 export const MIN_TAG_ARTS = 3
 
 // Tags kept indexed even when thin: >= 10 Search Console impressions over
-// 28 days (2026-10-08 .. 2026-11-04, all locales together). Regenerate from
-// GSC rather than editing by hand.
+// 28 days, all locales together. The union of growth's list
+// (ops/seo/reports/spa-thin-tags-keep-2026-11-07.tsv) and a GSC pull for
+// 2026-10-08..11-04. Size slugs (size-WxH) are not tags and never reach this
+// rule. Regenerate from GSC rather than editing by hand.
 export const KEEP_THIN_TAGS = new Set<string>([
   '32x32',
   '64px',
