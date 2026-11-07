@@ -520,7 +520,8 @@
     "drawBeforePublishing": "请先画点什么再发布",
     "offerAsBase": "允许他人以此为底稿",
     "startFromBase": "从底稿开始",
-    "noBasesYet": "还没有底稿"
+    "noBasesYet": "还没有底稿",
+    "basePreview": "副本的预览"
   },
   "c_Palette": {
     "colorNHex": "颜色 {n}：{hex}",

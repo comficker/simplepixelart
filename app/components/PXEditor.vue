@@ -4412,6 +4412,19 @@ watch(
               <label class="publish-label" for="publish-base">{{ $t('c_PXEditor.offerAsBase') }}</label>
               <input id="publish-base" v-model="publishBase" type="checkbox">
             </div>
+            <!-- A base hands its preview (mode and options, meta.preview) to every
+                 copy, so a skin base opens its copies in the skin view. -->
+            <div v-if="publishStatus === 'public' && publishBase" class="publish-status-row">
+              <label class="publish-label" for="publish-base-preview">{{ $t('c_PXEditor.basePreview') }}</label>
+              <div class="publish-base-preview">
+                <select id="publish-base-preview" class="publish-input" :value="previewMode" @change="setPreview({mode: ($event.target as HTMLSelectElement).value})">
+                  <option v-for="m in previewModes" :key="m.id" :value="m.id">{{ $t('c_PreviewSettings.mode_' + m.id) }}</option>
+                </select>
+                <button type="button" class="widget-ctl-btn" :title="$t('c_PreviewSettings.title')" @click="showPreviewSettings = true">
+                  <span class="icon icon-cog"/>
+                </button>
+              </div>
+            </div>
             <p v-if="publishStatus === 'public' && editorData.meta?.ai" class="text-2xs text-muted">
               {{ $t('c_PXEditor.aiLabelNote') }}
             </p>
@@ -4699,6 +4712,8 @@ canvas.select.sel-drag:not(.panning) {
 
 canvas.guide-v:not(.panning) { cursor: col-resize; }
 .preview-stage { border-radius: var(--radius-sm); }
+.publish-base-preview { display: flex; align-items: center; gap: var(--space-2); }
+.publish-base-preview .publish-input { flex: 1; min-width: 0; }
 .preview-stage :deep(.preview-fill) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 canvas.guide-h:not(.panning) { cursor: row-resize; }
 

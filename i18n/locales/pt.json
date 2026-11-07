@@ -520,7 +520,8 @@
     "drawBeforePublishing": "Desenhe algo antes de publicar",
     "offerAsBase": "Deixar outros começarem a partir desta",
     "startFromBase": "Começar de uma base",
-    "noBasesYet": "Ainda não há bases"
+    "noBasesYet": "Ainda não há bases",
+    "basePreview": "Prévia das cópias"
   },
   "c_Palette": {
     "colorNHex": "Cor {n}: {hex}",

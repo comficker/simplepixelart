@@ -520,7 +520,8 @@
     "drawBeforePublishing": "게시하기 전에 무언가를 그려 주세요",
     "offerAsBase": "다른 사람이 이걸로 시작할 수 있게",
     "startFromBase": "베이스로 시작하기",
-    "noBasesYet": "아직 베이스가 없어요"
+    "noBasesYet": "아직 베이스가 없어요",
+    "basePreview": "복사본 미리보기"
   },
   "c_Palette": {
     "colorNHex": "색 {n}: {hex}",

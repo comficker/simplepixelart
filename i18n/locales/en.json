@@ -534,7 +534,8 @@
     "drawBeforePublishing": "Draw something before publishing",
     "offerAsBase": "Let others start from this",
     "startFromBase": "Start from a base",
-    "noBasesYet": "No bases yet"
+    "noBasesYet": "No bases yet",
+    "basePreview": "Preview for copies"
   },
   "c_Paginator": {},
   "c_Palette": {
