@@ -34,11 +34,11 @@ const words = (s: string) => s.replace(/-\d+$/, '').replace(/-/g, ' ')
       <LazyColorByNumber :art="playable"/>
       <template #fallback>
         <div class="cbn-fallback">
-          <img :src="`${IMG}/demo.webp`" alt="A penguin pixel art being colored by number online" width="480" height="480" fetchpriority="high">
+          <img :src="`${IMG}/demo.webp`" :alt="$t('p_cbn.demoAlt')" width="480" height="480" fetchpriority="high">
         </div>
       </template>
     </ClientOnly>
-    <nav class="cbn-picks" aria-label="Pictures to color">
+    <nav class="cbn-picks" :aria-label="$t('p_cbn.picksLabel')">
       <NuxtLink
           v-for="s in picks"
           :key="s"
@@ -50,7 +50,7 @@ const words = (s: string) => s.replace(/-\d+$/, '').replace(/-/g, ' ')
       >
         <img :src="thumb(s)" :alt="`${words(s)} pixel art color by number`" loading="lazy" decoding="async" width="56" height="56">
       </NuxtLink>
-      <NuxtLinkLocale :to="moreTo || '/arts/new'" class="cbn-pick cbn-more" title="More pixel art">
+      <NuxtLinkLocale :to="moreTo || '/arts/new'" class="cbn-pick cbn-more" :title="$t('p_cbn.morePixelArt')">
         <span class="icon icon-angle-right"/>
       </NuxtLinkLocale>
     </nav>

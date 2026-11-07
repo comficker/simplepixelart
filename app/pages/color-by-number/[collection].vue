@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {CBN_COLLECTIONS, CBN_MIN_PICTURES, cbnPlayable, cbnHeading, type CbnCollection} from '~/helper/cbn-collections'
+import {CBN_COLLECTIONS, CBN_MIN_PICTURES, cbnPlayable, type CbnCollection} from '~/helper/cbn-collections'
 
 const route = useRoute()
 const config = useRuntimeConfig()
-const {locale, defaultLocale} = useI18n()
+const {t} = useI18n()
+const k = (key: string) => t(`p_cbn.${key}`)
 
 const col = CBN_COLLECTIONS.find(c => c.slug === route.params.collection)
 if (!col) throw createError({statusCode: 404, statusMessage: 'Not found', fatal: true})
@@ -38,14 +39,15 @@ const {data: picks} = await useAsyncData(`cbn-col-${col.slug}`, async () => {
 }, {default: () => [] as string[]})
 
 const others = CBN_COLLECTIONS.filter(c => c.slug !== col.slug)
+const colText = (slug: string, field: 'heading' | 'title' | 'description' | 'intro') => k(`col_${slug}_${field}`)
 
-// English only; the other locales, each picture's own query and a thin
-// collection all point Google back to the one page.
-const indexable = computed(() => locale.value === defaultLocale && !route.query.art && picks.value.length >= CBN_MIN_PICTURES)
+// Translated in every locale; each picture's own query and a thin
+// collection point Google back to the page.
+const indexable = computed(() => !route.query.art && picks.value.length >= CBN_MIN_PICTURES)
 
 useCustomSeoMeta({
-  title: col.title,
-  description: col.description,
+  title: () => colText(col.slug, 'title'),
+  description: () => colText(col.slug, 'description'),
   keywords: `${col.name.toLowerCase()} color by number, ${col.name.toLowerCase()} pixel art, color by number online, free color by number`,
   canonical: PAGE_URL,
   robots: () => indexable.value ? 'index, follow' : 'noindex, follow',
@@ -55,12 +57,12 @@ useCustomSeoMeta({
   ogImage: `https://simplepixelart.com/images/color-by-number/og-${col.slug}.png`,
   script: [{
     type: 'application/ld+json',
-    innerHTML: JSON.stringify({
+    innerHTML: () => JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: cbnHeading(col),
+      name: colText(col.slug, 'heading'),
       url: PAGE_URL,
-      description: col.description,
+      description: colText(col.slug, 'description'),
       isPartOf: {'@type': 'WebPage', url: 'https://simplepixelart.com/color-by-number'},
       // The pictures on the page, so search engines see what can be colored.
       mainEntity: {
@@ -80,7 +82,7 @@ useCustomSeoMeta({
 </script>
 
 <template>
-  <ToolLayout :title="cbnHeading(col!)" title-tag="h1">
+  <ToolLayout :title="colText(col!.slug, 'heading')" title-tag="h1">
     <CbnPlay v-if="picks.length" :picks="picks" :more-to="col!.moreTo || `/arts/${col!.tags[0]}`"/>
 
     <template #status>
@@ -88,26 +90,26 @@ useCustomSeoMeta({
     </template>
 
     <template #doc>
-      <p>{{ col!.intro }}</p>
-      <h2>How to play</h2>
+      <p>{{ colText(col!.slug, 'intro') }}</p>
+      <h2>{{ k('howToPlay') }}</h2>
       <ol>
-        <li><strong>Pick a picture</strong> from the row below.</li>
-        <li><strong>Choose a number</strong> and its squares light up.</li>
-        <li><strong>Fill the squares</strong> with a pencil, watercolor or crayon brush.</li>
+        <li><strong>{{ k('step1n') }}</strong> {{ k('step1t') }}</li>
+        <li><strong>{{ k('step2n') }}</strong> {{ k('step2t') }}</li>
+        <li><strong>{{ k('step3n') }}</strong> {{ k('step3tBrush') }}</li>
       </ol>
-      <h2>More color by number</h2>
+      <h2>{{ k('moreCbn') }}</h2>
       <ul>
         <li v-for="c in others" :key="c.slug">
-          <NuxtLink :to="`/color-by-number/${c.slug}`">{{ cbnHeading(c) }}</NuxtLink>
+          <NuxtLinkLocale :to="`/color-by-number/${c.slug}`">{{ colText(c.slug, 'heading') }}</NuxtLinkLocale>
         </li>
-        <li><NuxtLink to="/color-by-number">All color by number pictures</NuxtLink></li>
+        <li><NuxtLinkLocale to="/color-by-number">{{ k('allCbn') }}</NuxtLinkLocale></li>
       </ul>
-      <h2>Make your own pixel art</h2>
+      <h2>{{ k('makeOwnH2') }}</h2>
       <ul>
-        <li><NuxtLink to="/converter">Turn a photo into pixel art</NuxtLink></li>
-        <li><NuxtLink to="/editor">Draw pixel art online</NuxtLink></li>
-        <li><NuxtLink to="/easy-pixel-art">Easy pixel art to start with</NuxtLink></li>
-        <li><NuxtLink to="/palettes">Color palettes for pixel art</NuxtLink></li>
+        <li><NuxtLinkLocale to="/converter">{{ k('linkConverter') }}</NuxtLinkLocale></li>
+        <li><NuxtLinkLocale to="/editor">{{ k('linkEditor') }}</NuxtLinkLocale></li>
+        <li><NuxtLinkLocale to="/easy-pixel-art">{{ k('linkEasy') }}</NuxtLinkLocale></li>
+        <li><NuxtLinkLocale to="/palettes">{{ k('linkPalettes') }}</NuxtLinkLocale></li>
       </ul>
     </template>
   </ToolLayout>

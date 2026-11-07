@@ -20,6 +20,14 @@ interface Stroke { s: number; c: number; w: number; p: number[] }
 const props = defineProps<{ art: Art | null }>()
 const auth = useAuthStore()
 const emit = defineEmits<{ finished: [] }>()
+const {t} = useI18n()
+const k = (key: string, p?: Record<string, any>) => t(`p_cbn.${key}`, p || {})
+const BRUSH_KEY: Record<string, string> = {pixel: 'brushOne', brush3: 'brush3', brush5: 'brush5', bucket: 'brushBucket', wand: 'brushWand'}
+const STYLE_KEY: Record<string, string> = {flat: 'styleFlat', watercolor: 'styleWatercolor', pencil: 'stylePencil', charcoal: 'styleCrayon', marker: 'styleMarker'}
+const FORMAT_KEY: Record<string, string> = {square: 'fmtSquare', portrait: 'fmtPortrait', story: 'fmtStory', picture: 'fmtPicture'}
+const fmtName = (f: ExportFormat | {id: string, name: string}) => FORMAT_KEY[f.id] ? k(FORMAT_KEY[f.id]!) : f.name
+// The size notes are mostly numbers and app names; only "picture" says words.
+const fmtNote = (f: {id: string, note: string}) => f.id === 'picture' ? k('fmtPictureNote') : f.note
 
 const BRUSHES = [
   {id: 'pixel', icon: 'pencil', size: 1, title: 'One square'},
@@ -603,18 +611,18 @@ defineExpose({ pct })
         />
       </div>
       <div v-if="finished && art" class="cbn-done">
-        <p class="cbn-done-title">Finished!</p>
+        <p class="cbn-done-title">{{ k('finished') }}</p>
         <div class="cbn-done-actions">
           <button type="button" class="btn primary" @click="openExport">
-            <span class="icon icon-download"/><span>Save &amp; share</span>
+            <span class="icon icon-download"/><span>{{ k('saveShare') }}</span>
           </button>
-          <NuxtLink :to="`/art/${art.id_string}`" class="btn">See the original</NuxtLink>
-          <button type="button" class="btn" @click="restart">Color it again</button>
+          <NuxtLink :to="`/art/${art.id_string}`" class="btn">{{ k('seeOriginal') }}</NuxtLink>
+          <button type="button" class="btn" @click="restart">{{ k('colorAgain') }}</button>
         </div>
       </div>
     </div>
     <div class="cbn-bar">
-      <div class="cbn-brushes" role="radiogroup" aria-label="Brush">
+      <div class="cbn-brushes" role="radiogroup" :aria-label="k('brush')">
         <button
             v-for="b in BRUSHES"
             :key="b.id"
@@ -623,14 +631,14 @@ defineExpose({ pct })
             class="toolbar-btn cbn-brush"
             :class="{active: brush === b.id}"
             :aria-checked="brush === b.id"
-            :title="`${b.title} (B)`"
+            :title="`${k(BRUSH_KEY[b.id]!)} (B)`"
             @click="setBrush(b.id)"
         >
           <span class="icon" :class="`icon-${b.icon}`"/>
           <span v-if="b.size > 1" class="cbn-size">{{ b.size }}</span>
         </button>
       </div>
-      <div class="cbn-styles" role="radiogroup" aria-label="Paint">
+      <div class="cbn-styles" role="radiogroup" :aria-label="k('paint')">
         <button
             v-for="(st, i) in PAINT_STYLES"
             :key="st.id"
@@ -639,7 +647,7 @@ defineExpose({ pct })
             class="cbn-style"
             :class="{on: style === i}"
             :aria-checked="style === i"
-            :title="st.name"
+            :title="STYLE_KEY[st.id] ? k(STYLE_KEY[st.id]!) : st.name"
             :style="{backgroundImage: `url(${previews[i]})`}"
             @click="setStyle(i)"
         />
@@ -652,7 +660,7 @@ defineExpose({ pct })
             class="cbn-swatch"
             :class="{on: c === selected, complete: colorDone(c)}"
             :style="{'--c': art!.colors[c], '--ink': ink(art!.colors[c])}"
-            :title="`${left(c)} left`"
+            :title="k('nLeft', {n: left(c)})"
             @click="pick(c)"
         >
           <span class="cbn-num">{{ i + 1 }}</span>
@@ -660,18 +668,18 @@ defineExpose({ pct })
         </button>
       </div>
       <span class="cbn-pct">{{ pct }}%</span>
-      <button type="button" class="toolbar-btn" title="Save &amp; share" aria-label="Save and share" @click="openExport">
+      <button type="button" class="toolbar-btn" :title="k('saveShare')" :aria-label="k('saveShare')" @click="openExport">
         <span class="icon icon-share"/>
       </button>
       <div class="cbn-zoom">
-        <button type="button" class="widget-ctl-btn" title="Zoom out (scroll)" @click="zoomBy(1 / 1.25)"><span class="icon icon-minus"/></button>
-        <button type="button" class="widget-ctl-btn" title="Fit" @click="fit"><span class="icon icon-fullscreen"/></button>
-        <button type="button" class="widget-ctl-btn" title="Zoom in (scroll)" @click="zoomBy(1.25)"><span class="icon icon-plus"/></button>
+        <button type="button" class="widget-ctl-btn" :title="k('zoomOut')" @click="zoomBy(1 / 1.25)"><span class="icon icon-minus"/></button>
+        <button type="button" class="widget-ctl-btn" :title="k('fit')" @click="fit"><span class="icon icon-fullscreen"/></button>
+        <button type="button" class="widget-ctl-btn" :title="k('zoomIn')" @click="zoomBy(1.25)"><span class="icon icon-plus"/></button>
       </div>
     </div>
-    <UiModal v-if="exporting" title="Save & share" sub="Signed and sized for social posts." width="560px" @close="closeExport">
+    <UiModal v-if="exporting" :title="k('saveShare')" :sub="k('exportSub')" width="560px" @close="closeExport">
       <div class="cbn-export">
-        <div class="cbn-formats" role="radiogroup" aria-label="Size">
+        <div class="cbn-formats" role="radiogroup" :aria-label="k('size')">
           <button
               v-for="f in EXPORT_FORMATS"
               :key="f.id"
@@ -680,20 +688,20 @@ defineExpose({ pct })
               class="btn"
               :class="{primary: format === f.id}"
               :aria-checked="format === f.id"
-              :title="f.note"
+              :title="fmtNote(f)"
               @click="format = f.id"
-          >{{ f.name }}</button>
+          >{{ fmtName(f) }}</button>
         </div>
-        <p class="cbn-export-note">{{ EXPORT_FORMATS.find(f => f.id === format)!.note }}</p>
+        <p class="cbn-export-note">{{ fmtNote(EXPORT_FORMATS.find(f => f.id === format)!) }}</p>
         <div class="cbn-export-preview">
-          <img v-if="exportUrl" :src="exportUrl" :alt="`${art?.name || 'Pixel art'} colored by number`">
+          <img v-if="exportUrl" :src="exportUrl" :alt="k('coloredBy', {name: art?.name || 'Pixel art'})">
         </div>
         <div class="cbn-export-actions">
           <button type="button" class="btn primary" :disabled="!exportUrl" @click="download">
-            <span class="icon icon-download"/><span>Download PNG</span>
+            <span class="icon icon-download"/><span>{{ k('downloadPng') }}</span>
           </button>
           <button v-if="canShare" type="button" class="btn" @click="share">
-            <span class="icon icon-share"/><span>Share</span>
+            <span class="icon icon-share"/><span>{{ k('share') }}</span>
           </button>
         </div>
       </div>

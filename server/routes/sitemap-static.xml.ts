@@ -30,7 +30,9 @@ const staticPages = [
 // Submitting /ja/privacy while it still reads in English would be asking Google
 // to index a page that does not deliver what the URL promises.
 const LOCALES = ['ja', 'zh', 'ko', 'es', 'pt', 'ru']
-const TRANSLATED = new Set(['/', '/arts', '/palettes', '/easy-pixel-art', '/ideas', '/creator', '/collections', '/about', '/contact'])
+const TRANSLATED = new Set(['/', '/arts', '/palettes', '/easy-pixel-art', '/ideas', '/creator', '/collections', '/about', '/contact',
+    '/color-by-number', '/color-by-number/christmas', '/color-by-number/thanksgiving', '/color-by-number/halloween',
+    '/color-by-number/fall', '/color-by-number/for-kids', '/color-by-number/for-adults'])
 
 const localise = (loc: string, code: string) =>
     `https://${domain}/${code}${loc === '/' ? '' : loc}`
