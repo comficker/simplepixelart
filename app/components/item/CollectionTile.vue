@@ -3,7 +3,7 @@
  *  its first pieces when there are four) and its name and piece count,
  *  laid out like the palette cards. */
 const props = defineProps<{
-  value: { id_string: string; name?: string; title?: string; items?: unknown[] | null }
+  value: { id_string: string; name?: string; title?: string; items?: unknown[] | null; creators?: { username: string }[] }
   cover?: string | null
   mosaic?: string[] | null
   failed?: boolean
@@ -32,7 +32,9 @@ const count = computed(() => (props.value.items || []).length)
     </div>
     <div class="cl-head">
       <p class="cl-name">{{ name || $t('common.untitled') }}</p>
-      <p class="cl-meta">{{ $t('p_collections.pieceCount', count, {count}) }}</p>
+      <p class="cl-meta">
+        {{ $t('p_collections.pieceCount', count, {count}) }}<template v-if="value.creators?.length"> · @{{ value.creators[0]!.username }}</template>
+      </p>
     </div>
   </NuxtLinkLocale>
 </template>
@@ -101,6 +103,9 @@ const count = computed(() => (props.value.items || []).length)
 }
 
 .cl-meta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   margin-top: 0.125rem;
   font-size: var(--text-2xs);
   color: var(--muted);

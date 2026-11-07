@@ -1156,7 +1156,8 @@
     "noCloudArtworksYet": "Aún no tienes obras en la nube.",
     "pixelArtAlt": "Pixel art",
     "untitledCollection": "Colección sin título",
-    "visitProject": "Visitar el proyecto"
+    "visitProject": "Visitar el proyecto",
+    "updatedOn": "Actualizada el {date}"
   },
   "p_contact": {
     "about": "Acerca de",

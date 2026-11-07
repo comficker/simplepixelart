@@ -1156,7 +1156,8 @@
     "noCloudArtworksYet": "クラウドに保存された作品はまだありません。",
     "pixelArtAlt": "ピクセルアート",
     "untitledCollection": "無題のコレクション",
-    "visitProject": "プロジェクトを見る"
+    "visitProject": "プロジェクトを見る",
+    "updatedOn": "{date} 更新"
   },
   "p_contact": {
     "about": "概要",

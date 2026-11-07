@@ -1156,7 +1156,8 @@
     "noCloudArtworksYet": "У вас пока нет работ в облаке.",
     "pixelArtAlt": "Пиксель-арт",
     "untitledCollection": "Коллекция без названия",
-    "visitProject": "Открыть проект"
+    "visitProject": "Открыть проект",
+    "updatedOn": "Обновлено {date}"
   },
   "p_contact": {
     "about": "О проекте",

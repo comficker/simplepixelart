@@ -10,6 +10,7 @@ interface CollectionDetail extends Collection {
   items: SharedPage[]
   owners?: number[]
   meta?: Record<string, any>
+  creators?: { username: string, avatar?: string | null }[]
 }
 
 const route = useRoute()
@@ -254,11 +255,20 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
         <h1 class="screen-title">{{ title }}</h1>
         <!-- Like a tag page: the description under the title; the count sits
              in the foot with the pages. -->
-        <p class="screen-desc">
-          <template v-if="desc">{{ desc }}</template>
-          <template v-else-if="formattedDate">{{ formattedDate }}</template>
-          <template v-if="!isPublic"> · {{ $t('common.private') }}</template>
-        </p>
+        <p v-if="desc" class="screen-desc">{{ desc }}</p>
+        <!-- Who made it and the facts a visitor checks first. -->
+        <div class="cl-facts">
+          <NuxtLinkLocale v-for="c in data.creators || []" :key="c.username" :to="`/creator/${c.username}`" class="cl-by">
+            <span class="cl-av">
+              <img v-if="c.avatar" :src="c.avatar" alt="" loading="lazy">
+              <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
+            </span>
+            <span>@{{ c.username }}</span>
+          </NuxtLinkLocale>
+          <span>{{ $t('p_collections.pieceCount', itemCount, {count: itemCount}) }}</span>
+          <span v-if="formattedDate">{{ $t('p_collections_id_string.updatedOn', {date: formattedDate}) }}</span>
+          <span v-if="!isPublic">{{ $t('common.private') }}</span>
+        </div>
       </template>
 
       <template #actions>
@@ -397,6 +407,42 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
 </template>
 
 <style scoped>
+.cl-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.cl-by {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.cl-av {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--surface-2);
+  font-size: var(--text-2xs);
+}
+
+.cl-av img { width: 100%; height: 100%; object-fit: cover; }
+
+@media (hover: hover) and (pointer: fine) {
+  .cl-by:hover { color: var(--primary); }
+}
+
 .cl-manage-add {
   padding: var(--space-4) 0 0;
 }

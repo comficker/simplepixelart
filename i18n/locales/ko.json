@@ -1156,7 +1156,8 @@
     "noCloudArtworksYet": "아직 클라우드에 저장된 작품이 없습니다.",
     "pixelArtAlt": "픽셀 아트",
     "untitledCollection": "제목 없는 컬렉션",
-    "visitProject": "프로젝트 보기"
+    "visitProject": "프로젝트 보기",
+    "updatedOn": "{date} 업데이트"
   },
   "p_contact": {
     "about": "소개",

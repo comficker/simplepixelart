@@ -1156,7 +1156,8 @@
     "noCloudArtworksYet": "你还没有云端作品。",
     "pixelArtAlt": "像素画",
     "untitledCollection": "未命名收藏集",
-    "visitProject": "查看项目"
+    "visitProject": "查看项目",
+    "updatedOn": "{date} 更新"
   },
   "p_contact": {
     "about": "关于",
