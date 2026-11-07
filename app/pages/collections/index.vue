@@ -15,7 +15,8 @@ interface CollectionRow {
 const currentPage = computed(() => route.query.page ? Number.parseInt(route.query.page.toString()) : 1)
 
 const {data} = await useAuthFetch<APIResponse<CollectionRow>>('/coloring/collections/', {
-  query: computed(() => ({page: currentPage.value, page_size: 24})),
+  // Empty sets have nothing to open; the API leaves them out (has_items).
+  query: computed(() => ({page: currentPage.value, page_size: 24, has_items: 1})),
   key: computed(() => `collections|${currentPage.value}`),
 })
 
