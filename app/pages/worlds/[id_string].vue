@@ -8,7 +8,7 @@ const {locale} = useI18n()
 const config = useRuntimeConfig()
 const auth = useAuthStore()
 
-const {data, error} = await useAuthFetch<any>(`/coloring/worlds/${route.params.id_string}/`)
+const {data, error} = await useAuthFetch<any>(`/coloring/worlds/${route.params.id_string}/`, {key: `detail:/coloring/worlds/${route.params.id_string}/`})
 
 if (error.value && import.meta.server) {
   setResponseStatus(useRequestEvent()!, 404)

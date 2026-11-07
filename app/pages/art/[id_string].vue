@@ -22,6 +22,7 @@ useArtListFetch({limit: 6, exact: true})
 // needed by the bead and coordinate views, which load them on demand below.
 const {data, pending, error} = await useAuthFetch<SharedPage>(`/coloring/shared-pages/${route.params.id_string}/`, {
   query: {lite: 1},
+  key: `detail:/coloring/shared-pages/${route.params.id_string}/`,
 })
 
 if (import.meta.server && !data.value) {

@@ -19,6 +19,7 @@ const {t, locale} = useI18n()
 
 const {data, error} = await useAuthFetch<CollectionDetail>(
     `/coloring/collections/${route.params.id_string}/`,
+    {key: `detail:/coloring/collections/${route.params.id_string}/`},
 )
 
 if (error.value && import.meta.server) {

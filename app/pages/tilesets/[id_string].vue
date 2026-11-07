@@ -10,7 +10,7 @@ const config = useRuntimeConfig()
 const auth = useAuthStore()
 const apiBase = config.public.api as string
 
-const {data, error} = await useAuthFetch<any>(`/coloring/tilesets/${route.params.id_string}/`)
+const {data, error} = await useAuthFetch<any>(`/coloring/tilesets/${route.params.id_string}/`, {key: `detail:/coloring/tilesets/${route.params.id_string}/`})
 
 if (error.value && import.meta.server) {
   setResponseStatus(useRequestEvent()!, 404)

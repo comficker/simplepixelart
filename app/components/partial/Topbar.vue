@@ -39,6 +39,27 @@ const siteUrl = (config.public.siteUrl as string) || 'https://simplepixelart.com
 // tileset title) through useCrumbTitle; otherwise it reads the slug.
 const crumbTitle = useCrumbTitle()
 
+// On the server the bar renders before the page has fetched its piece, so
+// it would print the slug. Ask for the same piece under the page's own key
+// (one request, shared) and name the crumb from it.
+const DETAIL: Record<string, { url: (s: string) => string, query?: Record<string, any> }> = {
+  'art-id_string': {url: s => `/coloring/shared-pages/${s}/`, query: {lite: 1}},
+  'collections-id_string': {url: s => `/coloring/collections/${s}/`},
+  'tilesets-id_string': {url: s => `/coloring/tilesets/${s}/`},
+  'worlds-id_string': {url: s => `/coloring/worlds/${s}/`},
+}
+if (import.meta.server) {
+  const base = String(route.name || '').split('___')[0]!
+  const d = DETAIL[base]
+  const slug = String(route.params.id_string || '')
+  if (d && slug) {
+    const url = d.url(slug)
+    const {data} = await useAuthFetch<any>(url, {key: `detail:${url}`, ...(d.query ? {query: d.query} : {})})
+    const name = (data.value?.name || data.value?.title || '').trim()
+    if (name) crumbTitle.value = name
+  }
+}
+
 const crumbs = computed(() => {
   // The locale prefix is not a page, so /ja/editor should read "Editor",
   // not "Ja > Editor".
