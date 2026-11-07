@@ -517,7 +517,10 @@
     "selectionToBoardTip": "Copia la selección en un tablero nuevo de su mismo tamaño, con sus capas",
     "selectionIsEmpty": "No hay nada en la selección para copiar",
     "selectionNowBoard": "Nuevo tablero de {w}×{h} a partir de la selección",
-    "drawBeforePublishing": "Dibuja algo antes de publicar"
+    "drawBeforePublishing": "Dibuja algo antes de publicar",
+    "offerAsBase": "Permitir que otros partan de esta",
+    "startFromBase": "Empezar desde una base",
+    "noBasesYet": "Aún no hay bases"
   },
   "c_Palette": {
     "colorNHex": "Color {n}: {hex}",

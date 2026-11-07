@@ -517,7 +517,10 @@
     "selectionToBoardTip": "Копирует выделение в новую доску того же размера, слои сохраняются",
     "selectionIsEmpty": "В выделении нечего копировать",
     "selectionNowBoard": "Новая доска {w}×{h} из выделения",
-    "drawBeforePublishing": "Нарисуйте что-нибудь перед публикацией"
+    "drawBeforePublishing": "Нарисуйте что-нибудь перед публикацией",
+    "offerAsBase": "Разрешить другим начинать с этого",
+    "startFromBase": "Начать с основы",
+    "noBasesYet": "Основ пока нет"
   },
   "c_Palette": {
     "colorNHex": "Цвет {n}: {hex}",

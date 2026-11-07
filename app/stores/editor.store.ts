@@ -1347,6 +1347,7 @@ export const useEditor = defineStore('editor', () => {
                 palette: ed.palette ?? null,
                 id_string: ed.id_string,
                 is_public: ed.is_public,
+                is_base: !!ed.is_base,
                 meta: ed.meta ?? {},
             }
             async function createCloud() {

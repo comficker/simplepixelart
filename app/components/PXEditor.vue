@@ -165,6 +165,8 @@ const PUBLISH_STATUSES = computed(() => [
 ] as const)
 const publishStatus = ref<'public' | 'draft'>('draft')
 const publishLicense = ref('')
+// Offer the piece as a base others can start from (public pieces only).
+const publishBase = ref(false)
 // The publish form starts from what was picked last time: status, license
 // and, for staff, publishing as a bot. Saved when the visitor changes one.
 const PUBLISH_PREFS_KEY = 'publish_prefs'
@@ -203,6 +205,7 @@ function openPublish() {
   publishStatus.value = editorData.value.is_public || !meta?.published_at ? (prefs.status || 'public') : 'draft'
   boostOnPublish.value = isAdmin.value && !!readPublishPrefs().boost
   publishLicense.value = meta?.license || prefs.license || ''
+  publishBase.value = !!editorData.value.is_base
   publishStep.value = 'edit'
   showPublishModal.value = true
   loadEconomyForPublish()
@@ -314,6 +317,7 @@ async function saveArt() {
   }
   const wasPublic = !!editorData.value.is_public
   editorData.value.is_public = publishStatus.value === 'public'
+  editorData.value.is_base = editorData.value.is_public && publishBase.value
   if (editorData.value.is_public) {
     const meta: any = {...(editorData.value.meta || {})}
     if (publishLicense.value) meta.license = publishLicense.value
@@ -707,6 +711,53 @@ async function loadArtIntoBoard(art: {id: string; name: string}) {
     store.addBoardWithData(data);
     fitAllBoards();
     showArtPicker.value = false;
+    toast.success(t('c_PXEditor.addedToCanvas', {name: data.name || t('common.untitled')}));
+  } catch (e) {
+    toast.error(t('c_StampPicker.couldNotLoadArt'));
+  } finally {
+    loadingArtInsert.value = false;
+  }
+}
+
+// Bases: public pieces offered as starting points (is_base). Picking one
+// adds a copy as a new board -- the base itself is never edited -- and the
+// copy's `template` points back, so the base's remix count is its use count.
+const showBasePicker = ref(false);
+const baseLoading = ref(false);
+const baseItems = ref<Array<{id: string; name: string; previewImgs: string[]}>>([]);
+
+async function openBasePicker() {
+  showBasePicker.value = true;
+  if (baseItems.value.length) return;
+  baseLoading.value = true;
+  try {
+    const res = await useNativeFetch<{results: Array<{id_string: string; name: string}>}>(
+        '/coloring/shared-pages/',
+        {params: {is_base: true, status: 'public', page_size: 100, ordering: '-id', lite: 1}}
+    );
+    baseItems.value = (res.results || []).map(r => ({id: r.id_string, name: r.name || r.id_string, previewImgs: [artImage(r)]}));
+  } catch {
+    baseItems.value = [];
+  } finally {
+    baseLoading.value = false;
+  }
+}
+
+async function onPickBase(id: string) {
+  if (loadingArtInsert.value) return;
+  loadingArtInsert.value = true;
+  try {
+    const res = await useNativeFetch<any>(`/coloring/shared-pages/${id}/`);
+    const data = sharedPage2EditorData(res, {id: generateUUID(), id_string: '', template: res.id, desc: '', is_base: false});
+    data.status = 'draft';
+    data.is_public = false;
+    const meta: any = {...(data.meta || {})};
+    delete meta.license;
+    data.meta = meta;
+    store.addBoardWithData(data);
+    fitAllBoards();
+    showBasePicker.value = false;
+    track('base_use', {base: res.id_string});
     toast.success(t('c_PXEditor.addedToCanvas', {name: data.name || t('common.untitled')}));
   } catch (e) {
     toast.error(t('c_StampPicker.couldNotLoadArt'));
@@ -3549,6 +3600,9 @@ watch(
               <button class="file-menu-item" @click="openArtPicker">
                 <span class="icon icon-workspace"/><span>{{ $t('c_PXEditor.loadBoard') }}</span>
               </button>
+              <button class="file-menu-item" @click="openBasePicker">
+                <span class="icon icon-stamp"/><span>{{ $t('c_PXEditor.startFromBase') }}</span>
+              </button>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" @click="onImportFiles">
                 <span class="icon icon-upload"/><span>{{ $t('c_PXEditor.importFiles') }}</span>
@@ -4315,6 +4369,10 @@ watch(
                 <option v-for="l in LICENSES" :key="l.value" :value="l.value">{{ $t(`p_upload.license_${l.key}`) }}</option>
               </select>
             </div>
+            <div v-if="publishStatus === 'public'" class="publish-status-row">
+              <label class="publish-label" for="publish-base">{{ $t('c_PXEditor.offerAsBase') }}</label>
+              <input id="publish-base" v-model="publishBase" type="checkbox">
+            </div>
             <p v-if="publishStatus === 'public' && editorData.meta?.ai" class="text-2xs text-muted">
               {{ $t('c_PXEditor.aiLabelNote') }}
             </p>
@@ -4522,6 +4580,16 @@ watch(
             </button>
           </div>
       </UiModal>
+
+    <EditorLoadBrowser
+        v-if="showBasePicker"
+        :title="$t('c_PXEditor.startFromBase')"
+        :items="baseItems"
+        :loading="baseLoading"
+        :empty-text="$t('c_PXEditor.noBasesYet')"
+        @select="onPickBase"
+        @close="showBasePicker = false"
+    />
 
     <EditorLoadBrowser
         v-if="showArtPicker"

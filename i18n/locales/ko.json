@@ -517,7 +517,10 @@
     "selectionToBoardTip": "선택 영역을 같은 크기의 새 보드로 복사합니다(레이어 유지)",
     "selectionIsEmpty": "선택 영역에 복사할 내용이 없습니다",
     "selectionNowBoard": "선택 영역으로 {w}×{h} 새 보드를 만들었습니다",
-    "drawBeforePublishing": "게시하기 전에 무언가를 그려 주세요"
+    "drawBeforePublishing": "게시하기 전에 무언가를 그려 주세요",
+    "offerAsBase": "다른 사람이 이걸로 시작할 수 있게",
+    "startFromBase": "베이스로 시작하기",
+    "noBasesYet": "아직 베이스가 없어요"
   },
   "c_Palette": {
     "colorNHex": "색 {n}: {hex}",

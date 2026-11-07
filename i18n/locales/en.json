@@ -531,7 +531,10 @@
     "selectionToBoardTip": "Copy the selection into a new board of its own size, layers kept",
     "selectionIsEmpty": "Nothing in the selection to copy",
     "selectionNowBoard": "New {w}×{h} board from the selection",
-    "drawBeforePublishing": "Draw something before publishing"
+    "drawBeforePublishing": "Draw something before publishing",
+    "offerAsBase": "Let others start from this",
+    "startFromBase": "Start from a base",
+    "noBasesYet": "No bases yet"
   },
   "c_Paginator": {},
   "c_Palette": {

@@ -255,6 +255,8 @@ export interface EditorData {
     layers: Layer[];
     template?: number | null;
     palette?: number | null;
+    // Offered as a base: a starting point others pick in the editor.
+    is_base?: boolean;
     updated: string;
     is_public: boolean;
     // What the server actually stored. A publish can land as `pending` when
