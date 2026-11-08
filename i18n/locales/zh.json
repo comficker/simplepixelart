@@ -242,7 +242,10 @@
     "startCreating": "开始创作",
     "theGalleryIsEmptyHereFor": "这里暂时还空着。来做第一个发布作品的人吧。",
     "trending": "热门",
-    "nothingMatchesSearch": "没有与“{q}”匹配的内容。请换个关键词试试。"
+    "nothingMatchesSearch": "没有与“{q}”匹配的内容。请换个关键词试试。",
+    "madeWith": "制作方式",
+    "handPixelled": "手绘像素",
+    "anyMaker": "全部"
   },
   "c_LoadBrowser": {
     "recent": "最近"
@@ -954,7 +957,8 @@
     "zoomOut": "缩小",
     "ai": "AI",
     "aiGenerated": "AI 生成",
-    "foundingCreator": "创始创作者"
+    "foundingCreator": "创始创作者",
+    "learnMore": "了解更多"
   },
   "crumb": {
     "howToMakePixelArt": "如何画像素画",
@@ -1076,7 +1080,8 @@
     "bg_dark": "背景：深色",
     "otherSizes": "其他尺寸",
     "view_mc-skin": "3D 皮肤",
-    "view_mc-block": "3D 方块"
+    "view_mc-block": "3D 方块",
+    "creatorLinks": "链接"
   },
   "p_arts": {
     "searchTags": "搜索标签",
@@ -1283,7 +1288,21 @@
     "thisWeek": "本周",
     "pixelArtAlt": "像素画",
     "pixelArtByUser": "{user} 的像素画",
-    "shareTitle": "SimplePixelArt 上的 {user}"
+    "shareTitle": "SimplePixelArt 上的 {user}",
+    "claimPrompt": "这些作品来自开放素材包，以作者名义导入。是你吗？",
+    "claimButton": "认领此主页",
+    "claimTitle": "认领此主页",
+    "claimStep1": "你的验证码：",
+    "claimStep2": "把它放到你这个页面的任意位置（个人简介即可），保存后回来：",
+    "claimStep3": "我们只检查验证码。找到后，这里的所有作品、合集和图块集都会转到你的账号，之后可以删掉验证码。",
+    "claimVerify": "检查并认领",
+    "claimChecking": "检查中…",
+    "claimDone": "认领成功：{n} 件作品已归你所有。",
+    "claimErr_CODE_NOT_FOUND": "那个页面上还没有验证码。保存后一分钟再试。",
+    "claimErr_TOO_MANY_TRIES": "检查次数太多，请等一分钟。",
+    "claimErr_NOT_CLAIMABLE": "此主页已无法认领。",
+    "claimErr_OWN_PROFILE": "这已经是你的主页。",
+    "claimErr_ERROR": "出错了，请稍后再试。"
   },
   "p_easy-pixel-art": {
     "graphPaper": "<strong>更喜欢纸笔？</strong>打印免费的<a href=\"https://freegraphpaper.net/graph-paper/1-4-inch\">像素画方格纸</a>，先手绘构思。",
@@ -2525,7 +2544,8 @@
     "fit": "适应",
     "couldNotReadFile": "无法读取 {name}",
     "seoTitle": "上传你的像素画",
-    "seoDescription": "分享你已经创作的像素画：拖入 PNG，按真实尺寸保持像素清晰，选择许可并发布到你的 SimplePixelArt 个人主页。"
+    "seoDescription": "分享你已经创作的像素画：拖入 PNG，按真实尺寸保持像素清晰，选择许可并发布到你的 SimplePixelArt 个人主页。",
+    "noAiPledge": "你的作品归你所有：我们绝不用它训练 AI，也不会出售。"
   },
   "c_AnimatedArt": {
     "pause": "暂停",

@@ -61,7 +61,7 @@ watch(search, v => {
 })
 
 const {
-  fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive, openLicense, animOnly, sort, effectiveLimit,
+  fetch: listFetch, isNewView, sizeSlugMatch, currentSize, isoActive, openLicense, animOnly, made, sort, effectiveLimit,
 } = useArtListFetch({limit, status, ordering, exact: exactLimit, originalsOnly})
 
 const SIZE_PRESETS = [
@@ -114,6 +114,15 @@ function setLicense(open: boolean) {
   router.push({query: q})
 }
 
+function setMade(v: '' | 'hand' | 'ai') {
+  const q: Record<string, any> = {...route.query}
+  delete q.page
+  if (v) q.made = v
+  else delete q.made
+  router.push({query: q})
+}
+const madeLabel = computed(() => made.value === 'hand' ? t('c_List.handPixelled') : made.value === 'ai' ? t('common.ai') : t('common.all'))
+
 function setView(v: 'all' | 'iso' | 'anim') {
   const q: Record<string, any> = {...route.query}
   delete q.page
@@ -145,6 +154,7 @@ function clearFilters() {
   delete q.is_iso
   delete q.is_anim
   delete q.license
+  delete q.made
   delete q.search
   router.push({query: q})
 }
@@ -202,6 +212,12 @@ function isCurrentPreset(p: {width: number, height: number}): boolean {
       <BrowseFilter :label="$t('p_upload.license')" icon="icon-check" :value="openLicense ? $t('c_List.freeToUse') : $t('common.all')" :active="openLicense">
         <BrowseOpt :active="!openLicense" @click="setLicense(false)">{{ $t('c_List.anyLicense') }}</BrowseOpt>
         <BrowseOpt :active="openLicense" @click="setLicense(true)">{{ $t('c_List.freeToUse') }}</BrowseOpt>
+      </BrowseFilter>
+
+      <BrowseFilter :label="$t('c_List.madeWith')" icon="icon-brush" :value="madeLabel" :active="!!made">
+        <BrowseOpt :active="!made" @click="setMade('')">{{ $t('c_List.anyMaker') }}</BrowseOpt>
+        <BrowseOpt :active="made === 'hand'" @click="setMade('hand')">{{ $t('c_List.handPixelled') }}</BrowseOpt>
+        <BrowseOpt :active="made === 'ai'" @click="setMade('ai')">{{ $t('common.ai') }}</BrowseOpt>
       </BrowseFilter>
 
       <BrowseFilter :label="$t('common.sort')" icon="icon-rocket" :value="sortLabel">

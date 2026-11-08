@@ -242,7 +242,10 @@
     "startCreating": "作ってみる",
     "theGalleryIsEmptyHereFor": "ここにはまだ作品がありません。最初の投稿をしてみませんか。",
     "trending": "トレンド",
-    "nothingMatchesSearch": "「{q}」に一致するものはありません。別のキーワードをお試しください。"
+    "nothingMatchesSearch": "「{q}」に一致するものはありません。別のキーワードをお試しください。",
+    "madeWith": "制作方法",
+    "handPixelled": "手描きドット",
+    "anyMaker": "すべて"
   },
   "c_LoadBrowser": {
     "recent": "最近"
@@ -954,7 +957,8 @@
     "zoomOut": "縮小",
     "ai": "AI",
     "aiGenerated": "AI生成",
-    "foundingCreator": "ファウンディングクリエイター"
+    "foundingCreator": "ファウンディングクリエイター",
+    "learnMore": "詳しく"
   },
   "crumb": {
     "howToMakePixelArt": "ドット絵の描き方",
@@ -1076,7 +1080,8 @@
     "bg_dark": "背景：暗い",
     "otherSizes": "他のサイズ",
     "view_mc-skin": "3Dスキン",
-    "view_mc-block": "3Dブロック"
+    "view_mc-block": "3Dブロック",
+    "creatorLinks": "リンク"
   },
   "p_arts": {
     "searchTags": "タグを検索",
@@ -1283,7 +1288,21 @@
     "thisWeek": "今週",
     "pixelArtAlt": "ピクセルアート",
     "pixelArtByUser": "{user} のピクセルアート",
-    "shareTitle": "SimplePixelArt の {user}"
+    "shareTitle": "SimplePixelArt の {user}",
+    "claimPrompt": "これらの作品はオープンなパックから作者名で取り込まれました。あなたの作品ですか？",
+    "claimButton": "このプロフィールを引き継ぐ",
+    "claimTitle": "プロフィールを引き継ぐ",
+    "claimStep1": "あなたのコード：",
+    "claimStep2": "このページのどこかに貼り付けて保存し、戻ってきてください（プロフィール説明欄で大丈夫です）：",
+    "claimStep3": "確認するのはコードだけです。見つかると、ここの作品・コレクション・タイルセットがすべてあなたのアカウントに移り、コードは消して構いません。",
+    "claimVerify": "確認して引き継ぐ",
+    "claimChecking": "確認中…",
+    "claimDone": "引き継ぎ完了：{n} 点の作品があなたのものになりました。",
+    "claimErr_CODE_NOT_FOUND": "まだそのページにコードがありません。保存して1分後にもう一度お試しください。",
+    "claimErr_TOO_MANY_TRIES": "確認が多すぎます。1分待ってください。",
+    "claimErr_NOT_CLAIMABLE": "このプロフィールはもう引き継げません。",
+    "claimErr_OWN_PROFILE": "すでにあなたのプロフィールです。",
+    "claimErr_ERROR": "問題が発生しました。少ししてからお試しください。"
   },
   "p_easy-pixel-art": {
     "graphPaper": "<strong>紙で描きたいなら。</strong>無料の<a href=\"https://freegraphpaper.net/graph-paper/1-4-inch\">ドット絵用方眼紙</a>を印刷して、まず手で下書きできます。",
@@ -2525,7 +2544,8 @@
     "fit": "フィット",
     "couldNotReadFile": "{name} を読み込めませんでした",
     "seoTitle": "ピクセルアートをアップロード",
-    "seoDescription": "作ったピクセルアートを共有しよう：PNGをドロップすれば原寸でくっきり保存。ライセンスを選んでSimplePixelArtのプロフィールに公開できます。"
+    "seoDescription": "作ったピクセルアートを共有しよう：PNGをドロップすれば原寸でくっきり保存。ライセンスを選んでSimplePixelArtのプロフィールに公開できます。",
+    "noAiPledge": "作品はあなたのものです。AIの学習に使ったり販売したりすることはありません。"
   },
   "c_AnimatedArt": {
     "pause": "一時停止",

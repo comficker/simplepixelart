@@ -4413,6 +4413,10 @@ watch(
                 <option v-for="l in LICENSES" :key="l.value" :value="l.value">{{ $t(`p_upload.license_${l.key}`) }}</option>
               </select>
             </div>
+            <p v-if="publishStatus === 'public'" class="text-2xs text-muted">
+              {{ $t('p_upload.noAiPledge') }}
+              <NuxtLinkLocale to="/guidelines#your-art">{{ $t('common.learnMore') }}</NuxtLinkLocale>
+            </p>
             <div v-if="publishStatus === 'public'" class="publish-status-row">
               <label class="publish-label" for="publish-base">{{ $t('c_PXEditor.offerAsBase') }}</label>
               <input id="publish-base" v-model="publishBase" type="checkbox">

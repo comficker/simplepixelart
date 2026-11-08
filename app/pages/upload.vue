@@ -438,6 +438,10 @@ useCustomSeoMeta({
               <option v-for="l in LICENSES" :key="l.value" :value="l.value">{{ $t(`p_upload.license_${l.key}`) }}</option>
             </select>
             <p class="up-note">{{ $t(`p_upload.license_${LICENSES.find(l => l.value === license)!.key}_hint`) }}</p>
+            <p class="up-note">
+              {{ $t('p_upload.noAiPledge') }}
+              <NuxtLinkLocale to="/guidelines#your-art">{{ $t('common.learnMore') }}</NuxtLinkLocale>
+            </p>
             <button type="button" class="btn primary block" :disabled="!canPublish" @click="publish">
               <span class="icon icon-earth"/>
               <span v-if="!auth.isLogged">{{ $t('p_upload.signInToPublish') }}</span>

@@ -51,6 +51,8 @@ export function useArtListFetch(opts: {
     // Pieces their artists let others use elsewhere (CC BY or CC0).
     const openLicense = computed(() => route.query.license === 'open')
     const animOnly = computed(() => route.query.is_anim === '1')
+    // Hand-pixelled (no AI) or AI-made only, from ?made=hand|ai.
+    const made = computed<'hand' | 'ai' | ''>(() => route.query.made === 'hand' || route.query.made === 'ai' ? route.query.made : '')
     // The gallery's sorts. Popular is the default on /arts and its tag and
     // size pages; Newest has its own path; the other two ride on ?sort=.
     const isGallery = computed(() => path.value === '/arts' || (path.value.startsWith('/arts/') && !isNewView.value))
@@ -72,6 +74,7 @@ export function useArtListFetch(opts: {
         following: isGallery.value && sort.value === 'following' ? 'true' : undefined,
         liked: isGallery.value && sort.value === 'liked' ? 'true' : undefined,
         is_anim: animOnly.value ? 'true' : undefined,
+        is_ai: made.value === 'hand' ? 'false' : made.value === 'ai' ? 'true' : undefined,
         related: relatedId.value,
         width: !sizeSlugMatch.value && route.query.width ? route.query.width : undefined,
         height: !sizeSlugMatch.value && route.query.height ? route.query.height : undefined,
@@ -106,5 +109,5 @@ export function useArtListFetch(opts: {
         } : {}),
     })
 
-    return {fetch, isNewView, sizeSlugMatch, currentSize, isoActive, openLicense, animOnly, sort, search, effectiveLimit}
+    return {fetch, isNewView, sizeSlugMatch, currentSize, isoActive, openLicense, animOnly, made, sort, search, effectiveLimit}
 }

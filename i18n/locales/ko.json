@@ -242,7 +242,10 @@
     "startCreating": "만들어 보기",
     "theGalleryIsEmptyHereFor": "여기는 아직 비어 있습니다. 첫 작품을 올려 보세요.",
     "trending": "트렌딩",
-    "nothingMatchesSearch": "“{q}”와 일치하는 항목이 없습니다. 다른 키워드를 시도해 보세요."
+    "nothingMatchesSearch": "“{q}”와 일치하는 항목이 없습니다. 다른 키워드를 시도해 보세요.",
+    "madeWith": "제작 방식",
+    "handPixelled": "직접 찍은 픽셀",
+    "anyMaker": "전체"
   },
   "c_LoadBrowser": {
     "recent": "최근"
@@ -954,7 +957,8 @@
     "zoomOut": "축소",
     "ai": "AI",
     "aiGenerated": "AI 생성",
-    "foundingCreator": "창립 크리에이터"
+    "foundingCreator": "창립 크리에이터",
+    "learnMore": "자세히 보기"
   },
   "crumb": {
     "howToMakePixelArt": "픽셀아트 그리는 법",
@@ -1076,7 +1080,8 @@
     "bg_dark": "배경: 어둡게",
     "otherSizes": "다른 크기",
     "view_mc-skin": "3D 스킨",
-    "view_mc-block": "3D 블록"
+    "view_mc-block": "3D 블록",
+    "creatorLinks": "링크"
   },
   "p_arts": {
     "searchTags": "태그 검색",
@@ -1283,7 +1288,21 @@
     "thisWeek": "이번 주",
     "pixelArtAlt": "픽셀 아트",
     "pixelArtByUser": "{user}의 픽셀 아트",
-    "shareTitle": "SimplePixelArt의 {user}"
+    "shareTitle": "SimplePixelArt의 {user}",
+    "claimPrompt": "이 작품들은 공개 팩에서 작가 이름으로 가져왔어요. 본인이신가요?",
+    "claimButton": "이 프로필 가져오기",
+    "claimTitle": "프로필 가져오기",
+    "claimStep1": "코드:",
+    "claimStep2": "본인 페이지 어디에든 붙여 넣고 저장한 뒤 돌아오세요 (프로필 소개란도 괜찮아요):",
+    "claimStep3": "코드만 확인해요. 찾으면 이곳의 작품, 컬렉션, 타일셋이 모두 내 계정으로 옮겨지고, 코드는 지워도 돼요.",
+    "claimVerify": "확인하고 가져오기",
+    "claimChecking": "확인 중…",
+    "claimDone": "완료: 작품 {n}개가 내 것이 되었어요.",
+    "claimErr_CODE_NOT_FOUND": "아직 그 페이지에 코드가 없어요. 저장하고 1분 뒤 다시 시도하세요.",
+    "claimErr_TOO_MANY_TRIES": "확인을 너무 많이 했어요. 1분 기다려 주세요.",
+    "claimErr_NOT_CLAIMABLE": "이 프로필은 더 이상 가져올 수 없어요.",
+    "claimErr_OWN_PROFILE": "이미 내 프로필이에요.",
+    "claimErr_ERROR": "문제가 생겼어요. 잠시 후 다시 시도하세요."
   },
   "p_easy-pixel-art": {
     "graphPaper": "<strong>종이가 좋다면.</strong> 무료 <a href=\"https://freegraphpaper.net/graph-paper/1-4-inch\">픽셀아트 모눈종이</a>를 인쇄해 손으로 먼저 구상해 보세요.",
@@ -2525,7 +2544,8 @@
     "fit": "맞춤",
     "couldNotReadFile": "{name}을(를) 읽을 수 없습니다",
     "seoTitle": "픽셀 아트 업로드",
-    "seoDescription": "이미 만든 픽셀 아트를 공유하세요: PNG를 끌어다 놓으면 실제 크기로 선명하게 유지됩니다. 라이선스를 고르고 SimplePixelArt 프로필에 게시하세요."
+    "seoDescription": "이미 만든 픽셀 아트를 공유하세요: PNG를 끌어다 놓으면 실제 크기로 선명하게 유지됩니다. 라이선스를 고르고 SimplePixelArt 프로필에 게시하세요.",
+    "noAiPledge": "작품은 당신의 것이에요. AI 학습에 쓰거나 판매하지 않아요."
   },
   "c_AnimatedArt": {
     "pause": "일시정지",

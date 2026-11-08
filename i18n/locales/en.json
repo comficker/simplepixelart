@@ -253,7 +253,10 @@
     "startCreating": "Start creating",
     "theGalleryIsEmptyHereFor": "The gallery is empty here for now. Be the first to publish something.",
     "trending": "Trending",
-    "nothingMatchesSearch": "Nothing matches “{q}”. Try a different keyword."
+    "nothingMatchesSearch": "Nothing matches “{q}”. Try a different keyword.",
+    "madeWith": "Made with",
+    "handPixelled": "Hand-pixelled",
+    "anyMaker": "Any"
   },
   "c_LoadBrowser": {
     "recent": "Recent"
@@ -984,7 +987,8 @@
     "zoomOut": "Zoom out",
     "ai": "AI",
     "aiGenerated": "AI-generated",
-    "foundingCreator": "Founding Creator"
+    "foundingCreator": "Founding Creator",
+    "learnMore": "Learn more"
   },
   "crumb": {
     "howToMakePixelArt": "How to make pixel art",
@@ -1106,7 +1110,8 @@
     "bg_dark": "Background: dark",
     "otherSizes": "Other sizes",
     "view_mc-skin": "3D skin",
-    "view_mc-block": "3D block"
+    "view_mc-block": "3D block",
+    "creatorLinks": "Links"
   },
   "p_arts": {
     "searchTags": "Search tags",
@@ -1313,7 +1318,21 @@
     "thisWeek": "this week",
     "pixelArtAlt": "Pixel art",
     "pixelArtByUser": "Pixel art by {user}",
-    "shareTitle": "{user} on SimplePixelArt"
+    "shareTitle": "{user} on SimplePixelArt",
+    "claimPrompt": "These pieces were brought in from an open pack under the artist's name. Is this you?",
+    "claimButton": "Claim this profile",
+    "claimTitle": "Claim this profile",
+    "claimStep1": "Here is your code:",
+    "claimStep2": "Add it anywhere on this page of yours (your profile description works), save, then come back:",
+    "claimStep3": "We only look for the code. Once it is found, every piece, collection and tileset here moves to your account, and you can remove the code again.",
+    "claimVerify": "Check and claim",
+    "claimChecking": "Checking…",
+    "claimDone": "Profile claimed: {n} pieces are now yours.",
+    "claimErr_CODE_NOT_FOUND": "The code is not on that page yet. Save the page and try again in a minute.",
+    "claimErr_TOO_MANY_TRIES": "Too many checks. Wait a minute and try again.",
+    "claimErr_NOT_CLAIMABLE": "This profile can no longer be claimed.",
+    "claimErr_OWN_PROFILE": "This is already your profile.",
+    "claimErr_ERROR": "Something went wrong. Try again in a moment."
   },
   "p_easy-pixel-art": {
     "graphPaper": "<strong>Prefer paper?</strong> Print free <a href=\"https://freegraphpaper.net/graph-paper/1-4-inch\">pixel art graph paper</a> and plan a piece by hand first.",
@@ -2571,7 +2590,8 @@
     "fit": "Fit",
     "couldNotReadFile": "Could not read {name}",
     "seoTitle": "Upload Your Pixel Art",
-    "seoDescription": "Share the pixel art you already made: drop in PNGs, keep them pixel-sharp at their true size, pick a license and publish to your SimplePixelArt profile."
+    "seoDescription": "Share the pixel art you already made: drop in PNGs, keep them pixel-sharp at their true size, pick a license and publish to your SimplePixelArt profile.",
+    "noAiPledge": "Your art stays yours: we never use it to train AI or sell it."
   },
   "c_CollectionTile": {
     "collection": "Collection"

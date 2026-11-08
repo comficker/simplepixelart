@@ -242,7 +242,10 @@
     "startCreating": "Empieza a crear",
     "theGalleryIsEmptyHereFor": "La galería está vacía por aquí. Sé quien publique lo primero.",
     "trending": "Tendencia",
-    "nothingMatchesSearch": "Nada coincide con «{q}». Prueba con otra palabra clave."
+    "nothingMatchesSearch": "Nada coincide con «{q}». Prueba con otra palabra clave.",
+    "madeWith": "Hecho con",
+    "handPixelled": "Pixelado a mano",
+    "anyMaker": "Cualquiera"
   },
   "c_LoadBrowser": {
     "recent": "Recientes"
@@ -954,7 +957,8 @@
     "zoomOut": "Alejar",
     "ai": "IA",
     "aiGenerated": "Generado con IA",
-    "foundingCreator": "Creador fundador"
+    "foundingCreator": "Creador fundador",
+    "learnMore": "Más información"
   },
   "crumb": {
     "howToMakePixelArt": "Cómo hacer pixel art",
@@ -1076,7 +1080,8 @@
     "bg_dark": "Fondo: oscuro",
     "otherSizes": "Otros tamaños",
     "view_mc-skin": "Skin 3D",
-    "view_mc-block": "Bloque 3D"
+    "view_mc-block": "Bloque 3D",
+    "creatorLinks": "Enlaces"
   },
   "p_arts": {
     "searchTags": "Buscar etiquetas",
@@ -1283,7 +1288,21 @@
     "thisWeek": "esta semana",
     "pixelArtAlt": "Pixel art",
     "pixelArtByUser": "Pixel art de {user}",
-    "shareTitle": "{user} en SimplePixelArt"
+    "shareTitle": "{user} en SimplePixelArt",
+    "claimPrompt": "Estas piezas vienen de un pack abierto, a nombre del artista. ¿Eres tú?",
+    "claimButton": "Reclamar este perfil",
+    "claimTitle": "Reclamar este perfil",
+    "claimStep1": "Este es tu código:",
+    "claimStep2": "Añádelo en cualquier parte de esta página tuya (la descripción del perfil sirve), guarda y vuelve:",
+    "claimStep3": "Solo buscamos el código. Cuando lo encontremos, todas las piezas, colecciones y tilesets pasan a tu cuenta y puedes quitar el código.",
+    "claimVerify": "Comprobar y reclamar",
+    "claimChecking": "Comprobando…",
+    "claimDone": "Perfil reclamado: {n} piezas ya son tuyas.",
+    "claimErr_CODE_NOT_FOUND": "El código aún no está en esa página. Guárdala y vuelve a intentarlo en un minuto.",
+    "claimErr_TOO_MANY_TRIES": "Demasiados intentos. Espera un minuto.",
+    "claimErr_NOT_CLAIMABLE": "Este perfil ya no se puede reclamar.",
+    "claimErr_OWN_PROFILE": "Este ya es tu perfil.",
+    "claimErr_ERROR": "Algo salió mal. Inténtalo de nuevo en un momento."
   },
   "p_easy-pixel-art": {
     "graphPaper": "<strong>¿Prefieres papel?</strong> Imprime <a href=\"https://freegraphpaper.net/graph-paper/1-4-inch\">papel cuadriculado para pixel art</a> gratis y planea tu dibujo a mano.",
@@ -2525,7 +2544,8 @@
     "fit": "Ajustar",
     "couldNotReadFile": "No se pudo leer {name}",
     "seoTitle": "Sube tu pixel art",
-    "seoDescription": "Comparte el pixel art que ya hiciste: suelta tus PNG, mantenlos nítidos a su tamaño real, elige una licencia y publícalos en tu perfil de SimplePixelArt."
+    "seoDescription": "Comparte el pixel art que ya hiciste: suelta tus PNG, mantenlos nítidos a su tamaño real, elige una licencia y publícalos en tu perfil de SimplePixelArt.",
+    "noAiPledge": "Tu arte sigue siendo tuyo: nunca lo usamos para entrenar IA ni lo vendemos."
   },
   "c_AnimatedArt": {
     "pause": "Pausar",

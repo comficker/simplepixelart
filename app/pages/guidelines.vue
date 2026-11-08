@@ -28,6 +28,14 @@ useCustomSeoMeta({
       <li><strong>Malware</strong> — Uploading files or links that contain or distribute malicious code.</li>
     </ul>
 
+    <h2 id="your-art">Your Art Stays Yours</h2>
+    <ul>
+      <li><strong>No AI training</strong> — We never use the artwork you upload to train AI models.</li>
+      <li><strong>Not for sale</strong> — We don't sell your artwork or license it to others. You keep the copyright.</li>
+      <li><strong>You choose the license</strong> — Every piece is all rights reserved unless you pick an open license (CC BY or CC0) when you publish.</li>
+      <li><strong>AI is labelled</strong> — Pieces made with our AI generator carry an "AI" label, and the gallery's <em>Made with → Hand-pixelled</em> filter leaves them out.</li>
+    </ul>
+
     <h2>Fan Art & Derivative Work</h2>
     <p>Fan art of copyrighted characters sits in a gray zone. We allow transformative pixel-art reinterpretations, but we will remove artwork on valid rights-holder request. If you're recreating an exact logo or frame-by-frame copy, expect a takedown.</p>
 
