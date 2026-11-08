@@ -4,6 +4,7 @@ import type {SharedPage} from "~/types";
 import {editorDataToJSON, editorDataToSVG} from "~/helper/canvas";
 import {sharedPage2EditorData} from "~/helper/utils";
 import {licenseOf} from "~/helper/constants";
+import {PROFILE_LINKS, linkHost} from "~/helper/profileLinks";
 import {PREVIEW_DEFAULTS, PREVIEW_MODES} from "~/helper/previews";
 import {toast} from "vue-sonner";
 
@@ -30,6 +31,12 @@ if (import.meta.server && !data.value) {
 }
 
 const license = computed(() => licenseOf((data.value?.meta as any)?.license))
+// Where else the artist posts. Followed once they have enough hand-made public
+// work (the API decides); nofollow until then.
+const creatorLinks = computed(() => {
+  const saved = data.value?.creator_links?.links || {}
+  return PROFILE_LINKS.filter(p => saved[p.key]).map(p => ({key: p.key, url: saved[p.key]!, label: p.key === 'website' ? linkHost(saved[p.key]!) : p.label}))
+})
 // Where a piece came from when it was brought in from elsewhere (an open-source
 // pack, say): meta.source = {name, url}. Only http(s) links are shown.
 const source = computed(() => {
@@ -900,6 +907,19 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
             <CreatorBadges :badges="data.creator_badges"/>
           </dd>
         </div>
+        <div v-if="creatorLinks.length" class="art-meta-row">
+          <dt>{{ $t('p_art_id_string.creatorLinks') }}</dt>
+          <dd class="art-meta-links">
+            <a
+                v-for="l in creatorLinks"
+                :key="l.key"
+                :href="l.url"
+                target="_blank"
+                :rel="data.creator_links?.follow ? 'noopener' : 'nofollow ugc noopener'"
+                class="art-meta-link"
+            >{{ l.label }}</a>
+          </dd>
+        </div>
         <div v-if="isAi" class="art-meta-row">
           <dt>{{ $t('p_art_id_string.madeWith') }}</dt>
           <dd>{{ $t('common.ai') }}</dd>
@@ -1383,6 +1403,8 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
 
 
 /* Labels wrap under a long handle rather than squeezing it. */
+.art-meta-links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-1) var(--space-3); }
+.art-meta-links .art-meta-link { color: var(--primary); font-weight: 600; }
 .art-meta-creator {
   display: flex;
   flex-wrap: wrap;

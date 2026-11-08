@@ -47,6 +47,8 @@ export interface SharedPage {
     next: string
     // Labels beside the creator's name: 'pro' | 'verified' | 'artist'.
     creator_badges?: string[]
+    // The creator's own pages; follow says whether they earn a followed link.
+    creator_links?: { links: Record<string, string>, follow: boolean } | null
     id: number
     width: number
     height: number
