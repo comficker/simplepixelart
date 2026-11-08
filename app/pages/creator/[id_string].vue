@@ -54,6 +54,10 @@ interface CreatorProfile {
   following: boolean
   badges?: string[]
   is_bot?: boolean
+  links_follow?: boolean
+  claimable?: boolean
+  claim_url?: string | null
+  claimed_by?: string | null
 }
 
 const profileFetch = useAuthFetch<CreatorProfile>(
@@ -107,6 +111,53 @@ async function followAfterLogin() {
 }
 
 const isSelf = computed(() => auth.logged?.username === username.value)
+const localePath = useLocalePath()
+
+// A profile its real author has taken over sends visitors to their account.
+watch(() => profile.value?.claimed_by, (to) => {
+  if (to && to.toLowerCase() !== username.value.toLowerCase()) {
+    navigateTo(localePath(`/creator/${to}`), {redirectCode: 301, replace: true})
+  }
+}, {immediate: true})
+
+/* Claim this profile: an imported profile (a pack brought in under its
+   author's name) can be taken over by the author. They put a code on their
+   own page (claim_url, e.g. their itch.io profile) and we check it there. */
+const showClaim = ref(false)
+const claim = ref<{ code: string, url: string } | null>(null)
+const claimBusy = ref(false)
+const claimError = ref('')
+async function openClaim() {
+  if (!auth.isLogged) {
+    loginModal.show(openClaim)
+    return
+  }
+  claimError.value = ''
+  showClaim.value = true
+  try {
+    claim.value = await useNativeFetch<{ code: string, url: string }>(`/coloring/creators/${username.value}/claim/`)
+  } catch (e: any) {
+    claimError.value = e?.response?._data?.[0] || 'ERROR'
+  }
+}
+async function copyClaimCode() {
+  try { await navigator.clipboard.writeText(claim.value?.code || '') } catch {}
+}
+async function verifyClaim() {
+  claimBusy.value = true
+  claimError.value = ''
+  try {
+    const res = await useNativeFetch<{ username: string, moved: { pieces: number } }>(`/coloring/creators/${username.value}/claim/`, {method: 'POST'})
+    track('profile_claim', {pieces: res.moved.pieces})
+    toast.success(t('p_creator_id_string.claimDone', {n: res.moved.pieces}))
+    showClaim.value = false
+    navigateTo(localePath(`/creator/${res.username}`))
+  } catch (e: any) {
+    claimError.value = e?.response?._data?.[0] || 'ERROR'
+  } finally {
+    claimBusy.value = false
+  }
+}
 
 // The owner's own numbers. Fetched in the browser only: they are private, and
 // the HTML of this page is cached and served to everyone.
@@ -222,9 +273,10 @@ useCustomSeoMeta({
             <p v-if="profile?.bio" class="cp-bio">{{ profile.bio }}</p>
             <ul v-if="profileLinks.length" class="cp-links">
               <li v-for="l in profileLinks" :key="l.key">
-                <!-- User-supplied and unverified, so it carries no ranking signal
-                     and opens without handing over the referrer. -->
-                <a :href="l.url" target="_blank" rel="nofollow ugc noopener noreferrer" :title="l.host">
+                <!-- Followed once the creator has enough hand-made public work
+                     (links_follow, decided by the API); nofollow until then, so a
+                     new account cannot farm links. -->
+                <a :href="l.url" target="_blank" :rel="profile?.links_follow ? 'noopener' : 'nofollow ugc noopener noreferrer'" :title="l.host">
                   <span class="icon icon-link"/><span>{{ l.label }}</span>
                 </a>
               </li>
@@ -249,6 +301,12 @@ useCustomSeoMeta({
           </div>
         </div>
 
+        <div v-if="profile?.claimable && !isSelf" class="cp-claim">
+          <span class="icon icon-check-decagram"/>
+          <span>{{ $t('p_creator_id_string.claimPrompt') }}</span>
+          <button type="button" class="btn" @click="openClaim">{{ $t('p_creator_id_string.claimButton') }}</button>
+        </div>
+
         <dl v-if="profile" class="cp-stats" :aria-label="$t('p_creator_id_string.creatorStats')">
           <div><dt>{{ $t('p_creator_id_string.stat_artworks') }}</dt><dd>{{ profile.arts }}</dd></div>
           <div>
@@ -267,6 +325,25 @@ useCustomSeoMeta({
         </dl>
       </section>
 
+
+  <UiModal v-if="showClaim" :title="$t('p_creator_id_string.claimTitle')" @close="showClaim = false">
+        <div class="cp-claim-modal">
+          <p>{{ $t('p_creator_id_string.claimStep1') }}</p>
+          <div v-if="claim" class="cp-claim-code">
+            <code>{{ claim.code }}</code>
+            <button type="button" class="btn" @click="copyClaimCode"><span class="icon icon-content-copy"/></button>
+          </div>
+          <p v-if="claim">
+            {{ $t('p_creator_id_string.claimStep2') }}
+            <a :href="claim.url" target="_blank" rel="nofollow noopener">{{ claim.url }}</a>
+          </p>
+          <p class="text-xs text-muted">{{ $t('p_creator_id_string.claimStep3') }}</p>
+          <p v-if="claimError" class="cp-claim-err">{{ $t('p_creator_id_string.claimErr_' + claimError, $t('p_creator_id_string.claimErr_ERROR')) }}</p>
+          <button type="button" class="btn primary" :disabled="!claim || claimBusy" @click="verifyClaim">
+            {{ claimBusy ? $t('p_creator_id_string.claimChecking') : $t('p_creator_id_string.claimVerify') }}
+          </button>
+        </div>
+      </UiModal>
 
       <section v-if="featured.length" class="cp-sec">
         <h2 class="cp-cap">{{ $t('p_creator_id_string.bestWork') }}</h2>
@@ -408,6 +485,28 @@ useCustomSeoMeta({
   font-size: var(--text-sm);
   color: var(--muted);
 }
+
+.cp-claim {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--primary);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--primary) 6%, var(--surface));
+  font-size: var(--text-sm);
+}
+.cp-claim .icon { color: var(--primary); }
+.cp-claim .btn { margin-left: auto; }
+.cp-claim-modal { display: flex; flex-direction: column; gap: var(--space-3); font-size: var(--text-sm); }
+.cp-claim-code { display: flex; align-items: center; gap: var(--space-2); }
+.cp-claim-code code {
+  flex: 1; padding: var(--space-2) var(--space-3); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--surface-2); font-size: var(--text-base); font-weight: 700;
+}
+.cp-claim-err { color: var(--danger); }
 
 .cp-links {
   display: flex;
