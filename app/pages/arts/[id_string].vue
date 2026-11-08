@@ -3,7 +3,7 @@ import {CBN_COLLECTIONS} from '~/helper/cbn-collections'
 import {KEEP_THIN_TAGS, MIN_TAG_ARTS} from '~/helper/thin-tags'
 const {t, te, locale, defaultLocale} = useI18n()
 const localHtml = useLocalHtml()
-import type {APIResponse, ResponseSharedPage, SharedPage, TagSchema} from "~/types";
+import type {APIResponse, SharedPage, TagSchema} from "~/types";
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -15,7 +15,9 @@ const cbnLink = computed(() => {
 })
 
 const isSizeSlug = computed(() => /^size-\d+x\d+$/i.test(idString.value))
-const isColorSlug = computed(() => /^color-[0-9a-f]{3,8}$/i.test(idString.value))
+// 3 or 6 hex digits only: that is all the art page links. Anything else
+// (4/5/7/8 digits) was a crawler guessing and still cost a render.
+const isColorSlug = computed(() => /^color-(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(idString.value))
 const isNewSlug = computed(() => idString.value === 'new')
 // Underscores too: older tags such as moonstone_pickaxe have them, and the
 // sitemap lists them.
@@ -43,27 +45,23 @@ const tagFetch = (isSizeSlug.value || isColorSlug.value || isNewSlug.value || !i
     ? null
     : useAuthFetch<TagSchema>(`/coloring/tags/${idString.value}/`, { key: `tag-${locale.value}-${idString.value}` })
 
-const statsFetch = useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
-  params: {
-    slug: `/arts/${idString.value}`,
-    status: 'public',
-    page_size: 10,
-  },
-  key: `tag-stats-${idString.value}`,
-})
-
-const relatedFetch = useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {
+// Colour pages are a crawl trap (see robots.txt) that crawlers hit anyway:
+// they skip the related-tags request and render on the grid alone.
+const relatedFetch = isColorSlug.value ? null : useAuthFetch<APIResponse<TagSchema>>('/coloring/tags/', {
   params: {page_size: 30, has_pages: 1},
   key: `tag-related-${locale.value}`,
 })
 
-const gridPrewarm = useArtListFetch({limit: 24}).fetch
+// The grid's own request also gives the count and first sample this page
+// needs, so it is the only shared-pages request: a separate stats call made
+// every render hit the backend twice for the same slug.
+const gridFetch = useArtListFetch({limit: 24}).fetch
 
-await Promise.all([tagFetch, statsFetch, relatedFetch, gridPrewarm].filter(Boolean))
+await Promise.all([tagFetch, relatedFetch, gridFetch].filter(Boolean))
 const tag = tagFetch ? tagFetch.data : ref<TagSchema | null>(null)
 const tagError = tagFetch ? tagFetch.error : ref<any>(null)
-const {data: stats, error: statsError} = statsFetch
-const {data: relatedTags} = relatedFetch
+const {data: stats, error: statsError} = gridFetch
+const relatedTags = relatedFetch ? relatedFetch.data : ref<APIResponse<TagSchema> | null>(null)
 
 const tagTitle = computed(() => {
   if (tag.value?.title) return tag.value.title
