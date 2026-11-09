@@ -486,6 +486,7 @@
     "loginRequired": "로그인이 필요합니다",
     "maxFrames": "최대 {max}프레임",
     "mergedCanvasNow": "병합됨 — 캔버스가 이제 {w}×{h}입니다",
+    "mergeDown": "아래 레이어와 병합",
     "mergedLayers": "레이어를 하나로 병합했습니다",
     "nMinutes": "{count}분 후",
     "noLocalBoards": "아직 로컬 보드가 없습니다 — 먼저 무언가를 그려 보세요.",

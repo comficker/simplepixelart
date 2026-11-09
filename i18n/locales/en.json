@@ -500,6 +500,7 @@
     "loginRequired": "Login required",
     "maxFrames": "Max {max} frames",
     "mergedCanvasNow": "Merged — canvas is now {w}×{h}",
+    "mergeDown": "Merge with the layer below",
     "mergedLayers": "Merged layers into one",
     "nMinutes": "a minute | {count} minutes",
     "noLocalBoards": "No local boards yet — draw something first.",

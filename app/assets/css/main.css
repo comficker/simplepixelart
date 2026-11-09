@@ -3371,6 +3371,10 @@ canvas.iso-line { cursor: crosshair; }
         color: #fff;
         background: #ef4444;
     }
+    .layers .layer-merge:hover {
+        color: var(--primary-foreground);
+        background: var(--primary-fill, var(--primary));
+    }
 }
 
 .layers .layer-del:focus-visible {

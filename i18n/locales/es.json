@@ -486,6 +486,7 @@
     "loginRequired": "Debes iniciar sesión",
     "maxFrames": "Máximo {max} fotogramas",
     "mergedCanvasNow": "Combinado; el lienzo ahora es de {w}×{h}",
+    "mergeDown": "Combinar con la capa de abajo",
     "mergedLayers": "Capas combinadas en una",
     "nMinutes": "un minuto | {count} minutos",
     "noLocalBoards": "Aún no hay tableros locales; dibuja algo primero.",

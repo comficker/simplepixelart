@@ -486,6 +486,7 @@
     "loginRequired": "ログインが必要です",
     "maxFrames": "最大{max}フレーム",
     "mergedCanvasNow": "結合しました — キャンバスは{w}×{h}になりました",
+    "mergeDown": "下のレイヤーと結合",
     "mergedLayers": "レイヤーを1つに結合しました",
     "nMinutes": "{count}分後",
     "noLocalBoards": "ローカルのボードはまだありません — まず何か描いてみましょう。",

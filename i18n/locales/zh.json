@@ -486,6 +486,7 @@
     "loginRequired": "需要登录",
     "maxFrames": "最多 {max} 帧",
     "mergedCanvasNow": "已合并 — 画布现在为 {w}×{h}",
+    "mergeDown": "与下方图层合并",
     "mergedLayers": "已将图层合并为一个",
     "nMinutes": "{count} 分钟后",
     "noLocalBoards": "还没有本地画板 — 先画点什么吧。",

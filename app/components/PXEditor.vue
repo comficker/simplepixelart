@@ -3147,6 +3147,16 @@ function toggleLayerMultiSelect() {
   if (!multiSelectLayers.value) selectedLayers.value = new Set()
 }
 
+// Merge a row into the one under it in the list, without going through
+// multi-select first (users looked for it on the row and never found it).
+function mergeLayerDown(index: number, below: number) {
+  selectedLayers.value = new Set()
+  multiSelectLayers.value = false
+  if (!store.mergeLayers([index, below])) return
+  scheduleDraw()
+  toast.success(t('c_PXEditor.mergedLayers'))
+}
+
 function onMergeLayers() {
   if (!store.mergeLayers([...selectedLayers.value])) return
   selectedLayers.value = new Set()
@@ -4343,6 +4353,15 @@ watch(
                   class="layer-name"
                   @changed="store.saveState()"
               />
+              <button
+                  v-if="visibleLayers[i + 1]"
+                  @click.stop="mergeLayerDown(row.index, visibleLayers[i + 1]!.index)"
+                  class="layer-del layer-merge"
+                  :title="$t('c_PXEditor.mergeDown')"
+                  :aria-label="$t('c_PXEditor.mergeDown')"
+              >
+                <span class="icon icon-merge"/>
+              </button>
               <button
                   v-if="visibleLayers.length > 1"
                   @click.stop="store.deleteLayer(row.index)"
