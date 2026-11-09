@@ -490,6 +490,7 @@
     "nMinutes": "un minuto | {count} minutos",
     "noLocalBoards": "Aún no hay tableros locales; dibuja algo primero.",
     "noSavedArts": "Aún no hay obras guardadas; publica una primero.",
+    "cantReadFile": "No se pudo leer {name}. Usa PNG, JPG, GIF, WebP o un archivo .json de SimplePixelArt.",
     "nothingImported": "No se pudo importar nada",
     "nothingImportedSkipped": "No se importó nada; se omitió {count} archivo | No se importó nada; se omitieron {count} archivos",
     "nothingToCleanUp": "Nada que limpiar; todos los colores están en uso",

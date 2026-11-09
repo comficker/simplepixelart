@@ -490,6 +490,7 @@
     "nMinutes": "{count}分後",
     "noLocalBoards": "ローカルのボードはまだありません — まず何か描いてみましょう。",
     "noSavedArts": "保存済みの作品はまだありません — まず1つ公開しましょう。",
+    "cantReadFile": "{name} を読み込めませんでした。PNG・JPG・GIF・WebP か SimplePixelArt の .json ファイルを使ってください。",
     "nothingImported": "何も読み込めませんでした",
     "nothingImportedSkipped": "何も読み込まれませんでした — {count}個のファイルをスキップ",
     "nothingToCleanUp": "整理するものはありません — すべての色が使用中です",

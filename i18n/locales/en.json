@@ -504,6 +504,7 @@
     "nMinutes": "a minute | {count} minutes",
     "noLocalBoards": "No local boards yet — draw something first.",
     "noSavedArts": "No saved arts yet — publish one first.",
+    "cantReadFile": "Couldn't read {name}. Use PNG, JPG, GIF, WebP or a SimplePixelArt .json file.",
     "nothingImported": "Nothing could be imported",
     "nothingImportedSkipped": "Nothing imported — {count} file skipped | Nothing imported — {count} files skipped",
     "nothingToCleanUp": "Nothing to clean up — every color is in use",

@@ -1052,21 +1052,57 @@ export const useEditor = defineStore('editor', () => {
 
     async function fileToGrid(file: File, process: ImportProcess): Promise<(number[] | null)[][] | null> {
         const dataUrl = await readFileAsDataUrl(file);
-        return process === 'original' ? importOriginalGrid(dataUrl) : importFileGrid(dataUrl);
+        // "Original" keeps every pixel and refuses anything over 256px a side
+        // (a photo, an upscaled export). Rather than import nothing, read it
+        // the way the default mode does, which finds the pixel grid.
+        if (process === 'original') return (await importOriginalGrid(dataUrl)) ?? importFileGrid(dataUrl);
+        return importFileGrid(dataUrl);
+    }
+
+    // A .json is either a whole editor board or the {colors, map} file the
+    // "JSON" download writes. Only the first was accepted, so importing the
+    // app's own export failed as unreadable.
+    function jsonToEditorData(json: any, name: string): EditorData | null {
+        if (!json || typeof json !== 'object') return null;
+        if (Array.isArray(json.layers)) {
+            const data = {...json, id: generateUUID()};
+            if (!validateEditorData(data)) return null;
+            return markRawPixels({
+                ...cloneDeep(DEFAULT_EDITOR_DATA),
+                ...data,
+                updated: new Date().toISOString(),
+            });
+        }
+        if (!Array.isArray(json.colors) || !json.map || typeof json.map !== 'object') return null;
+        const pixels: Record<string, number> = {};
+        let w = 0, h = 0;
+        for (const [key, ci] of Object.entries(json.map)) {
+            const [x, y] = key.split('_').map(Number);
+            if (!Number.isInteger(x) || !Number.isInteger(y) || x! < 0 || y! < 0) continue;
+            if (typeof ci !== 'number' || !json.colors[ci]) continue;
+            pixels[key] = ci;
+            w = Math.max(w, x! + 1);
+            h = Math.max(h, y! + 1);
+        }
+        if (!w) return null;
+        const data = markRawPixels({
+            ...cloneDeep(DEFAULT_EDITOR_DATA),
+            id: generateUUID(),
+            name,
+            width: typeof json.width === 'number' ? Math.max(w, json.width) : w,
+            height: typeof json.height === 'number' ? Math.max(h, json.height) : h,
+            colors: json.colors.map((c: any) => String(c).toUpperCase()),
+            updated: new Date().toISOString(),
+        });
+        data.layers[0]!.pixels = markRaw(pixels);
+        return data;
     }
 
     async function fileToEditorData(file: File, process: ImportProcess): Promise<EditorData | null> {
         const baseName = file.name.replace(/\.[^.]+$/, '')
         if (file.name.toLowerCase().endsWith('.json')) {
             try {
-                const jsonData = JSON.parse(await file.text());
-                if (!validateEditorData(jsonData)) return null;
-                return markRawPixels({
-                    ...cloneDeep(DEFAULT_EDITOR_DATA),
-                    ...jsonData,
-                    id: generateUUID(),
-                    updated: new Date().toISOString(),
-                });
+                return jsonToEditorData(JSON.parse(await file.text()), baseName);
             } catch {
                 return null;
             }

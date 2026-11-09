@@ -490,6 +490,7 @@
     "nMinutes": "{count} 分钟后",
     "noLocalBoards": "还没有本地画板 — 先画点什么吧。",
     "noSavedArts": "还没有已保存的作品 — 先发布一个吧。",
+    "cantReadFile": "无法读取 {name}。请使用 PNG、JPG、GIF、WebP 或 SimplePixelArt 的 .json 文件。",
     "nothingImported": "没有可导入的内容",
     "nothingImportedSkipped": "未导入任何内容 — 跳过了 {count} 个文件",
     "nothingToCleanUp": "无需清理 — 所有颜色都在使用中",

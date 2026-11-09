@@ -1449,6 +1449,7 @@ async function confirmImport() {
   importBusy.value = true;
   try {
     const dest = importDest.value;
+    const picked = importPicked.value;
     let res: {added: number; skipped: number};
     try {
       res = await store.importFiles(importPicked.value, {process: importProcess.value, dest});
@@ -1469,8 +1470,13 @@ async function confirmImport() {
           ? t('c_PXEditor.importedWithSkipped', {imported, count: res.skipped})
           : imported);
     } else {
-      track('import_failed', {dest, files: res.skipped, reason: res.skipped ? 'unreadable' : 'empty'});
-      toast.error(res.skipped ? t('c_PXEditor.nothingImportedSkipped', {count: res.skipped}, res.skipped) : t('c_PXEditor.nothingImported'));
+      // The file type, so the next report says which formats still fail.
+      const first = picked[0];
+      const ext = (first?.name.match(/\.([a-z0-9]{1,6})$/i)?.[1] || first?.type || 'none').toLowerCase();
+      track('import_failed', {dest, files: res.skipped, reason: res.skipped ? 'unreadable' : 'empty', ext});
+      toast.error(res.skipped === 1 && first
+          ? t('c_PXEditor.cantReadFile', {name: first.name})
+          : res.skipped ? t('c_PXEditor.nothingImportedSkipped', {count: res.skipped}, res.skipped) : t('c_PXEditor.nothingImported'));
     }
   } finally {
     importBusy.value = false;

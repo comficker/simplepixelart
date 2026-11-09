@@ -490,6 +490,7 @@
     "nMinutes": "um minuto | {count} minutos",
     "noLocalBoards": "Nenhum quadro local ainda — desenhe algo primeiro.",
     "noSavedArts": "Nenhuma arte salva ainda — publique uma primeiro.",
+    "cantReadFile": "Não foi possível ler {name}. Use PNG, JPG, GIF, WebP ou um arquivo .json do SimplePixelArt.",
     "nothingImported": "Nada pôde ser importado",
     "nothingImportedSkipped": "Nada importado — {count} arquivo ignorado | Nada importado — {count} arquivos ignorados",
     "nothingToCleanUp": "Nada para limpar — todas as cores estão em uso",
