@@ -207,8 +207,21 @@ function setTileGroups(groups: TileBrowseGroup[], meta: any = null) {
   stamp.value = null
 }
 
+// What the Tiles list can show: the tileset's groups, then each terrain's
+// pieces -- those are in no group, so picking a terrain brush left the list
+// on whatever group it was on.
+const browseGroups = computed<TileBrowseGroup[]>(() => [
+  ...tileGroups.value,
+  ...terrains.value.map(tr => ({
+    id: `terrain:${tr.id}`,
+    name: tr.name,
+    tiles: [...new Set(Object.values(tr.map).map(Number))],
+    pos: null,
+  })).filter(g => g.tiles.length),
+])
+
 const activeTileGroup = computed(() =>
-    paletteMode.value === 'tiles' ? tileGroups.value.find(g => g.id === tileGroupId.value) || null : null)
+    paletteMode.value === 'tiles' ? browseGroups.value.find(g => g.id === tileGroupId.value) || null : null)
 const sheetGroup = computed(() => activeTileGroup.value?.pos ? activeTileGroup.value : null)
 const tool = ref<'paint' | 'select' | 'fill' | 'line' | 'rect' | 'pick'>('paint')
 const brushSize = ref(1)
@@ -601,6 +614,12 @@ function onSheetCancel() {
 function pickBrush(b: typeof brush.value) {
   brush.value = b
   eraserChosen = false
+  // A brush shows its own tiles below: a random group's, or a terrain's
+  // pieces.
+  if (typeof b === 'string') {
+    const id = b.startsWith('random:') ? b.slice('random:'.length) : b.startsWith('terrain:') ? b : ''
+    if (id && browseGroups.value.some(g => g.id === id)) tileGroupId.value = id
+  }
 }
 
 /** The terrain's solid middle tile — the one it fills an area with. */
@@ -669,6 +688,10 @@ function onSheetUp(e: PointerEvent) {
 }
 
 const LS_KEY = 'spa_tilemap_freestyle_v1'
+// The world last open, so coming back to the editor (the sidebar link, a
+// bookmark without ?world=) reopens it with its tileset instead of an empty
+// free-style canvas. Cleared when free style is chosen.
+const LAST_WORLD_KEY = 'spa_tilemap_last_world'
 
 function restoreFreeStyle(): string | null {
   let saved: any = null
@@ -804,6 +827,7 @@ async function loadWorld(slug: string): Promise<boolean> {
     if (!items.value.length) paletteTab.value = 'search'
     loadImages()
     fetchWorldSiblings()
+    try { localStorage.setItem(LAST_WORLD_KEY, w.id_string) } catch { /* private mode */ }
     return true
   } catch {
     toast.error(t('p_tilemaps_editor.couldNotLoadWorld'))
@@ -1387,6 +1411,7 @@ function goPage(p: number) {
 }
 
 function enterFreeStyle(opts?: {fresh?: boolean}) {
+  try { localStorage.removeItem(LAST_WORLD_KEY) } catch { /* private mode */ }
   resetHistory()
   selRect.value = null
   world.value = null
@@ -1487,9 +1512,17 @@ onMounted(async () => {
   await fetchMyTilesets()
   loadingList.value = false
   const qWorld = String(route.query.world || '')
-  if (route.query.new == null && qWorld) {
-    const ok = await loadWorld(qWorld)
-    if (ok) return
+  let lastWorld = ''
+  if (!qWorld && route.query.new == null && auth.isLogged) {
+    try { lastWorld = localStorage.getItem(LAST_WORLD_KEY) || '' } catch { /* private mode */ }
+  }
+  const open = qWorld || lastWorld
+  if (route.query.new == null && open) {
+    const ok = await loadWorld(open)
+    if (ok) {
+      if (!qWorld) router.replace({query: {world: open}})
+      return
+    }
   }
   enterFreeStyle({fresh: route.query.new != null})
 })
@@ -3015,12 +3048,12 @@ const faq = computed(() => [
             ><span class="icon icon-sync"/></button>
           </div>
           <select
-              v-if="paletteMode === 'tiles' && tileGroups.length > 1"
+              v-if="paletteMode === 'tiles' && browseGroups.length > 1"
               v-model="tileGroupId"
               class="tm-world-select tm-src-select tm-tp-group"
               :title="$t('p_tilemaps_editor.tileGroup')"
           >
-            <option v-for="g in tileGroups" :key="g.id" :value="g.id">{{ g.name }} ({{ g.tiles.length }})</option>
+            <option v-for="g in browseGroups" :key="g.id" :value="g.id">{{ g.name }} ({{ g.tiles.length }})</option>
             <option value="">{{ $t('p_tilemaps_editor.allTilesN', {count: items.length}) }}</option>
           </select>
           <p v-if="sheetGroup && !paletteLoading" class="tm-hint">{{ $t('p_tilemaps_editor.sheetHint') }}</p>
