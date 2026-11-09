@@ -58,6 +58,9 @@ const groups = computed(() => {
       tiles: unique.map(id => ({id, slug: reg[String(id)]!})),
     }
   }).filter((g: any) => g.tiles.length)
+  // Biggest groups first: they are what the set is mostly made of. Tiles in
+  // no group stay last, whatever their count.
+  out.sort((a: any, b: any) => b.tiles.length - a.tiles.length)
   const rest = tiles.value.filter(t => !seen.has(t.id))
   if (rest.length) out.push({id: '__rest', name: t('p_tilesets_id_string.other'), terrain: false, tiles: rest.map(t => ({id: t.id, slug: t.id_string}))})
   return out
@@ -357,11 +360,14 @@ function drawWithTiles() {
   padding: 0;
 }
 
+/* The whole column wide, as tall as the map's shape asks up to most of the
+   screen; the map then fits inside it. Left to its aspect ratio alone, a
+   capped height narrowed the stage too and left bare strips either side. */
 .tsd-stage {
   position: relative;
+  width: 100%;
   aspect-ratio: var(--tsd-ratio, 16 / 9);
   max-height: 70vh;
-  margin: 0 auto;
   overflow: hidden;
 }
 
@@ -442,9 +448,19 @@ img.tsd-tile-img {
   display: none;
 }
 
+/* Hidden, it is still the screen's first child: the widget after it took
+   the rule a screen draws between widgets, doubling the head's own line. */
+.screen > .tsd-actions-main + .widget {
+  border-top: 0;
+}
+
 @media (max-width: 1279px) {
   .tsd-actions-main {
     display: block;
+  }
+
+  .screen > .tsd-actions-main + .widget {
+    border-top: 1px solid var(--border);
   }
 
   .tsd-actions-rail {

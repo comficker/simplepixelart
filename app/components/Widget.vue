@@ -6,7 +6,10 @@ defineProps<{ title?: string, to?: string }>()
 
 <template>
   <div class="widget">
-    <div class="widget-head">
+    <!-- No title and no controls: no head. ":empty" was meant to hide it,
+         but the v-if comments inside count as content, so an untitled
+         widget showed an empty band and a rule above its body. -->
+    <div v-if="title || $slots.ctl" class="widget-head">
       <h2 v-if="title" class="title">
         <NuxtLinkLocale v-if="to" :to="to" class="title-link">{{ title }}</NuxtLinkLocale>
         <template v-else>{{ title }}</template>

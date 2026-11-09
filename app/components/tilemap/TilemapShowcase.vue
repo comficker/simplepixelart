@@ -45,9 +45,10 @@ function measure() {
   const availH = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
   if (availW <= 0 || availH <= 0) return
   const fit = Math.min(availW / cv.width, availH / cv.height)
-  // A detail page's stage has room to spare: grow by whole steps, so every
-  // pixel stays the same size.
-  const s = props.flush && fit >= 2 ? Math.floor(fit) : Math.min(fit, 1)
+  // A detail page's stage is sized to the map: fill it. Whole steps kept
+  // every pixel the same size but left up to half the stage empty (a fit of
+  // 2.9 drew at 2x), so the map never looked fitted.
+  const s = props.flush ? fit : Math.min(fit, 1)
   baseW.value = Math.max(1, cv.width * s)
 }
 
