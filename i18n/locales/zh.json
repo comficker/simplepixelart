@@ -1983,6 +1983,16 @@
     "fitMapInView": "适应视图显示整张地图"
   },
   "p_tilesets_editor": {
+    "searchTiles": "搜索图块",
+    "slotPickMore": "还有 {n} 个：搜索即可找到",
+    "dragTilesHere": "把图块拖到这里",
+    "paintEdges": "在图块上标记边",
+    "paintEdgesTitle": "标记边 · {name}",
+    "addTilesToGroup": "向 {name} 添加图块",
+    "addToGroup": "添加到分组",
+    "moveToGroup": "移到分组…",
+    "slotPickTitle": "为此格选择图块",
+    "slotClear": "清空此格",
     "addAnotherTerrainToThisTileset": "再给这个图块集添加一个地形，才能定义彼此的关系。",
     "addGroup": "添加分组",
     "addTerrainAutoTileGroupWith": "添加地形——带连接槽位的自动拼接分组",
@@ -2834,5 +2844,11 @@
     "newTileset": "新建图块集",
     "empty": "还没有公开的图块集。",
     "count": "{count} 个图块集"
+  },
+  "c_TerrainPainter": {
+    "help": "在每个图块上，点击与同一地形相连的边；点击中间可加入或移除该图块。它在地形中的位置由所标记的边决定。",
+    "onlyTerrain": "仅此地形的图块",
+    "slotsFilled": "已放置 {n}/{total}",
+    "apply": "应用"
   }
 }

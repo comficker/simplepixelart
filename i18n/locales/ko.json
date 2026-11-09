@@ -1983,6 +1983,16 @@
     "fitMapInView": "맵 전체 보기"
   },
   "p_tilesets_editor": {
+    "searchTiles": "타일 검색",
+    "slotPickMore": "{n}개 더 있음: 검색해서 찾으세요",
+    "dragTilesHere": "여기로 타일을 끌어오세요",
+    "paintEdges": "타일 가장자리 표시",
+    "paintEdgesTitle": "가장자리 표시 · {name}",
+    "addTilesToGroup": "{name}에 타일 추가",
+    "addToGroup": "추가할 그룹",
+    "moveToGroup": "그룹으로 이동…",
+    "slotPickTitle": "이 슬롯에 넣을 타일 선택",
+    "slotClear": "슬롯 비우기",
     "addAnotherTerrainToThisTileset": "관계를 정의하려면 이 타일셋에 지형을 하나 더 추가하세요.",
     "addGroup": "그룹 추가",
     "addTerrainAutoTileGroupWith": "지형 추가 — 연결 슬롯이 있는 오토타일 그룹",
@@ -2834,5 +2844,11 @@
     "newTileset": "새 타일셋",
     "empty": "아직 공개된 타일셋이 없어요.",
     "count": "타일셋 {count}개"
+  },
+  "c_TerrainPainter": {
+    "help": "각 타일에서 같은 지형과 이어지는 변을 클릭하세요. 가운데를 누르면 타일을 넣거나 뺍니다. 지형 안의 위치는 표시한 변으로 정해집니다.",
+    "onlyTerrain": "이 지형의 타일만",
+    "slotsFilled": "{total}개 중 {n}개 배치",
+    "apply": "적용"
   }
 }

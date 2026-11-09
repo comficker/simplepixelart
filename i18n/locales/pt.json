@@ -1983,6 +1983,16 @@
     "fitMapInView": "Ajustar o mapa à tela"
   },
   "p_tilesets_editor": {
+    "searchTiles": "Buscar tiles",
+    "slotPickMore": "Mais {n}: busque para encontrá-los",
+    "dragTilesHere": "arraste tiles aqui",
+    "paintEdges": "Marcar bordas nos tiles",
+    "paintEdgesTitle": "Marcar bordas · {name}",
+    "addTilesToGroup": "Adicionar tiles a {name}",
+    "addToGroup": "Adicionar ao grupo",
+    "moveToGroup": "Mover para o grupo…",
+    "slotPickTitle": "Escolha um tile para este espaço",
+    "slotClear": "Esvaziar espaço",
     "addAnotherTerrainToThisTileset": "Adicione outro terreno a este tileset para definir relações.",
     "addGroup": "Adicionar grupo",
     "addTerrainAutoTileGroupWith": "Adicionar terreno — grupo de autotiling com vagas de conexão",
@@ -2834,5 +2844,11 @@
     "newTileset": "Novo tileset",
     "empty": "Ainda não há tilesets públicos.",
     "count": "{count} tileset | {count} tilesets"
+  },
+  "c_TerrainPainter": {
+    "help": "Em cada tile, clique nos lados onde ele se une ao mesmo terreno; o centro adiciona ou remove o tile. O lugar dele no terreno vem dos lados marcados.",
+    "onlyTerrain": "Só tiles deste terreno",
+    "slotsFilled": "{n} de {total} colocados",
+    "apply": "Aplicar"
   }
 }

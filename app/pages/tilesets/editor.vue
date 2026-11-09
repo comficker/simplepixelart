@@ -4,6 +4,7 @@ const localePath = useLocalePath()
 import {toast} from 'vue-sonner'
 import type {EditorData, SharedPage} from '~/types'
 import {tileImageUrl} from '~/helper/tilemap'
+import {loadSheet, sheetWindowStyle, sheets} from '~/helper/tileSheet'
 import {type Terrain, type TerrainRelations, type TerrainType, cornerSides, slotSides, terrainMask} from '~/helper/autotile'
 import {type SheetSource, buildSheet, layoutGroup, sheetColumns, terrainGridNOf, terrainSlotsOf, tileCells as cellsOf} from '~/helper/sheet-layout'
 import {buildGodotTileSet, buildTiledTileset} from '~/helper/engine-export'
@@ -1224,17 +1225,22 @@ function onKeydown(e: KeyboardEvent) {
     e.shiftKey ? redoTs() : undoTs()
     return
   }
-  if ((e.key === 'Delete' || e.key === 'Backspace') && !typing && !showAdd.value && !showBuild.value && !showSettings.value && !showRelations.value) {
-    if (selectedTileIds.value.length) {
+  if ((e.key === 'Delete' || e.key === 'Backspace') && !typing && !showAdd.value && !showBuild.value && !showSettings.value && !showRelations.value && !showPainter.value) {
+    if (activeSlot.value) {
+      e.preventDefault()
+      clearActiveSlot()
+    } else if (selectedTileIds.value.length) {
       e.preventDefault()
       deleteSelectedTiles()
     }
     return
   }
   if (e.key !== 'Escape') return
-  if (showRelations.value) showRelations.value = false
+  if (showPainter.value) showPainter.value = false
+  else if (showRelations.value) showRelations.value = false
   else if (showBuild.value) showBuild.value = false
   else if (showAdd.value) showAdd.value = false
+  else if (activeSlot.value) activeSlot.value = null
   else {
     selectedTileIds.value = []
     selectedGroupId.value = null
@@ -2216,21 +2222,96 @@ async function syncBuilders() {
   }
 }
 
-function slotClick(g: TileGroup, mask: number) {
+// A terrain slot being filled: clicked with no tile in hand, it waits for
+// the next tile clicked on the board. A click used to clear a filled slot
+// outright -- one stray click and a tile was gone; clearing is now Delete
+// on the chosen slot.
+const activeSlot = ref<{ group: string, index: number } | null>(null)
+
+function assignSlot(g: TileGroup, mask: number, tileId: number) {
   const map = g.map || (g.map = {})
-  if (selectedTileId.value != null) {
-    if (g.type !== 'corner16' && mask === centerMask(g) && !Object.keys(map).length) {
-      quickBuild(g, selectedTileId.value)
-      return
-    }
-    commit()
-    map[String(mask)] = selectedTileId.value
-    dirty.value = true
-  } else if (map[String(mask)]) {
-    commit()
-    delete map[String(mask)]
-    dirty.value = true
+  if (g.type !== 'corner16' && mask === centerMask(g) && !Object.keys(map).length) {
+    quickBuild(g, tileId)
+    return
   }
+  commit()
+  map[String(mask)] = tileId
+  dirty.value = true
+}
+
+function slotClick(g: TileGroup, mask: number) {
+  if (selectedTileId.value != null) {
+    assignSlot(g, mask, selectedTileId.value)
+    activeSlot.value = null
+    return
+  }
+  const same = activeSlot.value?.group === g.id && activeSlot.value.index === mask
+  activeSlot.value = same ? null : {group: g.id, index: mask}
+  scheduleDraw()
+}
+
+// What the chosen slot can take, for the picker under the board: the
+// terrain's own pieces first (a piece taken out of its slot is in no group,
+// so the board had nothing left to click), then every other tile.
+const slotPicks = computed(() => {
+  const a = activeSlot.value
+  const g = a ? groupById(a.group) : null
+  if (!g) return {own: [] as {id: number, id_string: string}[], rest: [] as {id: number, id_string: string}[], ownIds: new Set<number>(), current: null as number | null}
+  const ownIds = new Set(Object.values(g.map || {}).map(Number))
+  // Pieces that were in the terrain when the slot was chosen stay offered
+  // after their slot is cleared.
+  for (const id of slotPickMemory.value) ownIds.add(id)
+  const q = slotQuery.value.trim().toLowerCase()
+  const own = tiles.value.filter(t => ownIds.has(t.id))
+  const rest = tiles.value.filter(t => !ownIds.has(t.id) && (!q || t.id_string.toLowerCase().includes(q)))
+  const cur = g.map?.[String(a!.index)]
+  return {own, rest, ownIds, current: cur != null ? Number(cur) : null}
+})
+const slotPickMemory = ref<number[]>([])
+// A big set lists the first few hundred until searched: thousands of
+// buttons opened with every slot click.
+const SLOT_PICK_MAX = 240
+const slotQuery = ref('')
+// The saved set's sheet: every tile in one picture, so the picker asks for
+// one image instead of one per tile. Tiles added since the last save are
+// not on it yet and show their own picture.
+const slotSheet = computed(() => {
+  const id = tileset.value?.id_string
+  return id ? sheets.get(id) || null : null
+})
+function slotTileStyle(id: number) {
+  return sheetWindowStyle(slotSheet.value, id)
+}
+// Another tileset opened: the slot chosen in the last one is gone.
+watch(tileset, () => { activeSlot.value = null })
+watch(activeSlot, (a) => {
+  if (!a) { slotQuery.value = ''; return }
+  const id = tileset.value?.id_string
+  if (id && !sheets.has(id)) loadSheet(id)
+})
+watch(() => activeSlot.value?.group, (gid) => {
+  const g = gid ? groupById(gid) : null
+  slotPickMemory.value = g ? Object.values(g.map || {}).map(Number) : []
+})
+
+function pickForSlot(id: number) {
+  const a = activeSlot.value
+  const g = a ? groupById(a.group) : null
+  if (!g) return
+  assignSlot(g, a!.index, id)
+  activeSlot.value = null
+  scheduleDraw()
+}
+
+function clearActiveSlot(): boolean {
+  const a = activeSlot.value
+  const g = a ? groupById(a.group) : null
+  if (!a || !g?.map?.[String(a.index)]) return false
+  commit()
+  delete g.map[String(a.index)]
+  dirty.value = true
+  scheduleDraw()
+  return true
 }
 
 function slotTile(g: TileGroup, mask: number): string | null {
@@ -2256,8 +2337,13 @@ let layoutRects: HitRect[] = []
 function groupSizeNative(g: TileGroup) {
   const cell = tileset.value?.cell || {w: 32, h: 32}
   if (g.kind === 'terrain') {
+    // Slots are square (the layout draws them sw x sw), so the group is as
+    // tall as it is wide. With a flat cell (iso 32x16) the body used the
+    // cell's height: the frame, the hit area and the gap below covered half
+    // the slots.
     const n = terrainGridN(g)
-    return {w: n * cell.w + (n - 1) * SLOT_GAP_N, h: n * cell.h + (n - 1) * SLOT_GAP_N}
+    const side = n * cell.w + (n - 1) * SLOT_GAP_N
+    return {w: side, h: side}
   }
   const L = layoutGroupTiles(g)
   return {w: L.w, h: L.h}
@@ -2374,8 +2460,26 @@ function placeUnplaced() {
   const ts = tileset.value
   if (!ts) return
   const loose = ts.groups.filter(g => g.x == null || g.y == null)
+  const placed: TileGroup[] = []
+  // A group sitting on top of one already kept (two written at the same
+  // spot by a script or an old import) is placed again like a new one: the
+  // board showed them stacked, labels and tiles through each other.
+  const headN = Math.ceil(HEAD_H / zoom.value)
+  const rectOf = (g: TileGroup) => {
+    const sz = groupSizeNative(g)
+    return {x: g.x!, y: g.y! - headN, w: Math.max(sz.w, labelWidthNative(g)), h: sz.h + headN}
+  }
+  for (const g of ts.groups) {
+    if (g.x == null || g.y == null) continue
+    const r = rectOf(g)
+    const hit = placed.some(o => {
+      const q = rectOf(o)
+      return r.x < q.x + q.w && q.x < r.x + r.w && r.y < q.y + q.h && q.y < r.y + r.h
+    })
+    if (hit) loose.push(g)
+    else placed.push(g)
+  }
   if (!loose.length) return
-  const placed = ts.groups.filter(g => g.x != null && g.y != null)
   if (!placed.length) {
     packGroups(loose, 0, 0)
     return
@@ -2417,7 +2521,7 @@ function makeChecker(ctx: CanvasRenderingContext2D) {
   const c = document.createElement('canvas')
   c.width = c.height = 16
   const x = c.getContext('2d')!
-  x.fillStyle = 'rgba(127, 127, 127, 0.12)'
+  x.fillStyle = 'rgba(127, 127, 127, 0.07)'
   x.fillRect(0, 0, 8, 8)
   x.fillRect(8, 8, 8, 8)
   checkerPattern = ctx.createPattern(c, 'repeat')
@@ -2431,6 +2535,83 @@ function drawTileImage(ctx: CanvasRenderingContext2D, slug: string | null, x: nu
   const dw = Math.max(1, Math.round(img.naturalWidth * scale))
   const dh = Math.max(1, Math.round(img.naturalHeight * scale))
   ctx.drawImage(img, x + Math.floor((w - dw) / 2), y + Math.floor((h - dh) / 2), dw, dh)
+}
+
+/** A terrain slot drawn in its place on the map: the slot's tile with the
+ *  terrain's middle piece on every side that is the same terrain, the way
+ *  they will sit when painted. A seam or a missing rim shows at a glance --
+ *  the bare tile with a symbol beside it asked the reader to imagine that. */
+function drawSlotContext(ctx: CanvasRenderingContext2D, g: TileGroup, mask: number, slug: string | null,
+                         r: { x: number; y: number; w: number; h: number }, empty: string) {
+  const ts = tileset.value
+  if (!ts) return false
+  const face = slotTile(g, centerMask(g))
+  const faceImg = face ? boardImg(face) : null
+  const img = slug ? boardImg(slug) : null
+  const ref = img || faceImg
+  if (!ref) return false
+  const cw = ts.cell.w, ch = ts.cell.h
+  const tw = ref.naturalWidth, th = ref.naturalHeight
+  const sd = slotSides(mask)
+  const blob = g.type === 'blob47'
+  // Neighbour cells in grid steps; iso sits them on screen by its own rule.
+  const cells: { dc: number; dr: number; self?: boolean }[] = []
+  if (sd.n) cells.push({dc: 0, dr: -1})
+  if (sd.e) cells.push({dc: 1, dr: 0})
+  if (sd.s) cells.push({dc: 0, dr: 1})
+  if (sd.w) cells.push({dc: -1, dr: 0})
+  if (blob) {
+    if (sd.ne) cells.push({dc: 1, dr: -1})
+    if (sd.se) cells.push({dc: 1, dr: 1})
+    if (sd.sw) cells.push({dc: -1, dr: 1})
+    if (sd.nw) cells.push({dc: -1, dr: -1})
+  }
+  cells.push({dc: 0, dr: 0, self: true})
+  const iso = ts.iso
+  const place = (dc: number, dr: number) => iso
+      ? {cx: (dc - dr) * cw / 2, by: (dc + dr) * ch / 2 + ch / 2}   // image bottom on the cell's bottom vertex
+      : {cx: dc * cw + cw / 2, by: dr * ch + ch}
+  // Draw back to front, so nearer cells cover farther ones.
+  cells.sort((a, b) => iso ? (a.dc + a.dr) - (b.dc + b.dr) : (a.dr - b.dr) || (a.dc - b.dc))
+  // Fit the whole neighbourhood (with room for every side, painted or not,
+  // so the tile stays put from slot to slot) inside the slot.
+  const all = [] as { cx: number; by: number }[]
+  for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) {
+    if (!blob && dc !== 0 && dr !== 0) continue
+    all.push(place(dc, dr))
+  }
+  const minX = Math.min(...all.map(p => p.cx - tw / 2)), maxX = Math.max(...all.map(p => p.cx + tw / 2))
+  const minY = Math.min(...all.map(p => p.by - th)), maxY = Math.max(...all.map(p => p.by))
+  const pad = 2
+  const k = Math.min((r.w - pad * 2) / (maxX - minX), (r.h - pad * 2) / (maxY - minY))
+  const ox = r.x + (r.w - (maxX - minX) * k) / 2 - minX * k
+  const oy = r.y + (r.h - (maxY - minY) * k) / 2 - minY * k
+  ctx.imageSmoothingEnabled = false
+  for (const c of cells) {
+    const p = place(c.dc, c.dr)
+    const im = c.self ? img : faceImg
+    const x = ox + (p.cx - tw / 2) * k, y = oy + (p.by - th) * k
+    if (!im) {
+      if (c.self) {
+        // Nothing chosen yet: the cell's outline, where the tile will go.
+        ctx.strokeStyle = empty
+        ctx.setLineDash([3, 3])
+        ctx.beginPath()
+        if (iso) {
+          const bx = ox + p.cx * k, bb = oy + p.by * k
+          ctx.moveTo(bx, bb - ch * k); ctx.lineTo(bx + cw / 2 * k, bb - ch / 2 * k)
+          ctx.lineTo(bx, bb); ctx.lineTo(bx - cw / 2 * k, bb - ch / 2 * k); ctx.closePath()
+        } else ctx.rect(x, y + (th - ch) * k, cw * k, ch * k)
+        ctx.stroke()
+        ctx.setLineDash([])
+      }
+      continue
+    }
+    ctx.globalAlpha = c.self ? 1 : 0.45
+    ctx.drawImage(im, Math.round(x), Math.round(y), Math.round(tw * k), Math.round(th * k))
+  }
+  ctx.globalAlpha = 1
+  return true
 }
 
 let press: { x: number; y: number; hit: HitRect; pid: number; add: boolean } | null = null
@@ -2502,10 +2683,18 @@ function draw() {
 
   const gz = zoom.value
   const factor = Math.max(1, boardGridStep.value)
+  // The board's grid is for placing groups, so it is square: an iso cell
+  // (32x16) drew a grid of flat rectangles that matched nothing on the board
+  // -- tiles and terrain slots are square boxes.
   const stepX = ts.cell.w * factor * gz
-  const stepY = ts.cell.h * factor * gz
+  const stepY = (ts.iso ? ts.cell.w : ts.cell.h) * factor * gz
   if (boardGrid.value && stepX >= 6 && stepY >= 6) {
-    const gcolor = boardIsLight() ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.14)'
+    // The board's grid is a guide for placing groups, not content: faint
+    // enough that the tiles, not the lines, are what the eye lands on.
+    const lines = boardGridStyle.value !== 'dots'
+    const gcolor = boardIsLight()
+        ? (lines ? 'rgba(0,0,0,0.06)' : 'rgba(0,0,0,0.22)')
+        : (lines ? 'rgba(255,255,255,0.045)' : 'rgba(255,255,255,0.18)')
     const ox = ((cam.value.x % stepX) + stepX) % stepX
     const oy = ((cam.value.y % stepY) + stepY) % stepY
     if (boardGridStyle.value === 'dots') {
@@ -2576,17 +2765,17 @@ function draw() {
     }
 
     if (g.kind === 'group') {
-      if (checker) {
-        ctx.fillStyle = checker
-        ctx.fillRect(body.x, body.y, body.w, body.h)
-      }
+      // A group is a flat panel a shade off the board: the checkerboard on
+      // every group, over the board's grid, was three patterns at once.
+      ctx.fillStyle = boardIsLight() ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)'
+      ctx.fillRect(body.x, body.y, body.w, body.h)
       ctx.strokeStyle = active ? primary : border
       ctx.strokeRect(body.x + 0.5, body.y + 0.5, body.w - 1, body.h - 1)
       if (!g.tiles.length) {
         ctx.fillStyle = muted
         ctx.font = '600 10px sans-serif'
         ctx.globalAlpha = 0.7
-        ctx.fillText('drag tiles here', body.x + 8, body.y + body.h / 2)
+        ctx.fillText(t('p_tilesets_editor.dragTilesHere'), body.x + 8, body.y + body.h / 2)
         ctx.globalAlpha = 1
       }
       for (const r of entry.items) {
@@ -2637,14 +2826,25 @@ function draw() {
           ctx.fillStyle = checker
           ctx.fillRect(r.x, r.y, r.w, r.h)
         }
+        const inContext = g.type !== 'corner16' && !pendCv && drawSlotContext(ctx, g, r.index, slug, r, muted)
         if (slug) {
-          drawTileImage(ctx, slug, r.x, r.y, r.w, r.h)
+          if (!inContext) drawTileImage(ctx, slug, r.x, r.y, r.w, r.h)
           const sid = g.map?.[String(r.index)]
           if (sid != null && solidSet.value.has(Number(sid))) markSolid(ctx, r)
         } else if (pendCv) {
           ctx.drawImage(pendCv, r.x, r.y, r.w, r.h)
         }
         gridPath.rect(gsnap(r.x), gsnap(r.y), gsnap(r.x + r.w) - gsnap(r.x), gsnap(r.y + r.h) - gsnap(r.y))
+        if (activeSlot.value?.group === g.id && activeSlot.value.index === r.index) {
+          ctx.fillStyle = primary
+          ctx.globalAlpha = 0.12
+          ctx.fillRect(r.x, r.y, r.w, r.h)
+          ctx.globalAlpha = 1
+          ctx.strokeStyle = primary
+          ctx.lineWidth = 2
+          ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2)
+          ctx.lineWidth = 1
+        }
         if (g.type !== 'corner16' && !Object.keys(g.map || {}).length && !pendingBuilds.has(g.id) && r.index === centerMask(g)) {
           ctx.strokeStyle = primary
           ctx.lineWidth = 2
@@ -2658,7 +2858,7 @@ function draw() {
           ctx.textAlign = 'left'
           ctx.globalAlpha = 1
         }
-        if (pendCv) continue
+        if (pendCv || inContext) continue
         if (g.type !== 'corner16' && !Object.keys(g.map || {}).length && !pendingBuilds.has(g.id) && r.index === centerMask(g)) continue
         const gs = slug ? 3 : Math.max(4, Math.round(r.w / 9))
         const gap = slug ? 1 : 2
@@ -2680,6 +2880,54 @@ function draw() {
           continue
         }
         const sides = slotSides(r.index)
+        if (tileset.value?.iso) {
+          // An iso set's slot is drawn as the tile it wants: one diamond,
+          // with a bright edge wherever the tile must show its border --
+          // the sides with no same-terrain neighbour (N is the top-right
+          // edge, E bottom-right, S bottom-left, W top-left). Matching a
+          // tile is then comparing two pictures.
+          const hw = slug ? Math.max(6, Math.round(r.w / 7)) : Math.max(8, Math.round(r.w / 4))
+          const hh = hw / 2
+          const x = slug ? r.x + 6 + hw : r.x + r.w / 2
+          const y = slug ? r.y + 6 + hh : r.y + r.h / 2
+          const top: [number, number] = [x, y - hh], right: [number, number] = [x + hw, y]
+          const bottom: [number, number] = [x, y + hh], left: [number, number] = [x - hw, y]
+          ctx.beginPath()
+          ctx.moveTo(...top); ctx.lineTo(...right); ctx.lineTo(...bottom); ctx.lineTo(...left)
+          ctx.closePath()
+          ctx.fillStyle = muted
+          ctx.globalAlpha = 0.35
+          ctx.fill()
+          ctx.globalAlpha = 1
+          const edge = (p: [number, number], q: [number, number], open: boolean) => {
+            ctx.beginPath()
+            ctx.moveTo(...p); ctx.lineTo(...q)
+            ctx.strokeStyle = open ? primary : muted
+            ctx.globalAlpha = open ? 1 : 0.5
+            ctx.lineWidth = open ? Math.max(2, Math.round(hw / 5)) : 1
+            ctx.stroke()
+          }
+          edge(top, right, !sides.n)
+          edge(right, bottom, !sides.e)
+          edge(bottom, left, !sides.s)
+          edge(left, top, !sides.w)
+          ctx.globalAlpha = 1
+          ctx.lineWidth = 1
+          if (g.type === 'blob47') {
+            // An inner corner: both sides joined but the cell between them
+            // is not -- a dot on that corner of the diamond.
+            const dotAt = (p: [number, number], on: boolean) => {
+              if (!on) return
+              ctx.fillStyle = primary
+              ctx.beginPath(); ctx.arc(p[0], p[1], Math.max(2, hw / 6), 0, Math.PI * 2); ctx.fill()
+            }
+            dotAt(right, sides.n && sides.e && !sides.ne)
+            dotAt(bottom, sides.e && sides.s && !sides.se)
+            dotAt(left, sides.s && sides.w && !sides.sw)
+            dotAt(top, sides.w && sides.n && !sides.nw)
+          }
+          continue
+        }
         dot(0, 0, true)
         dot(0, -1, sides.n)
         dot(1, 0, sides.e)
@@ -2890,7 +3138,8 @@ function boardUp(e: PointerEvent) {
       const g = groupById(d.group)
       if (g) {
         g.x = Math.round((g.x ?? 0) / ts.cell.w) * ts.cell.w
-        g.y = Math.round((g.y ?? 0) / ts.cell.h) * ts.cell.h
+        const gyStep = ts.iso ? ts.cell.w : ts.cell.h
+        g.y = Math.round((g.y ?? 0) / gyStep) * gyStep
       }
       dirty.value = true
     }
@@ -2901,7 +3150,11 @@ function boardUp(e: PointerEvent) {
       selectGroup(g.id)
     } else if (h.kind === 'tile' && g?.kind === 'group') {
       const id = g.tiles[h.index]
-      if (id != null) selectTile(id, press.add)
+      const slotGroup = activeSlot.value ? groupById(activeSlot.value.group) : null
+      if (id != null && slotGroup) {
+        assignSlot(slotGroup, activeSlot.value!.index, id)
+        activeSlot.value = null
+      } else if (id != null) selectTile(id, press.add)
     } else if (h.kind === 'slot' && g?.kind === 'terrain') {
       slotClick(g, h.index)
     }
@@ -2987,11 +3240,56 @@ async function loadCollection(id: string) {
   }
 }
 
-function openAdd() {
+// Where new tiles land: the group they were added from (its + in the list,
+// or the one selected), chosen again in the dialog. They used to go into the
+// first group whatever was selected, and then had to be found and dragged.
+const addTarget = ref('')
+
+// Marking edges on tiles (TerrainPainter) writes the terrain's whole map.
+const showPainter = ref(false)
+const painterTiles = computed(() => tiles.value.map(tl => ({id: tl.id, src: tileSrc(tl.id_string)})))
+function applyPainted(map: Record<string, number>) {
+  const g = activeGroup.value
+  if (!g || g.kind !== 'terrain') return
+  commit()
+  g.map = map
+  dirty.value = true
+  showPainter.value = false
+  scheduleDraw()
+}
+
+function openAdd(groupId?: string) {
   picked.value = {}
   toRemove.value = {}
+  const sel = activeGroup.value?.kind === 'group' ? activeGroup.value.id : ''
+  addTarget.value = groupId || sel || plainGroups.value[0]?.id || ''
   showAdd.value = true
   if (!searchResults.value.length) runSearch()
+}
+
+/** Moves tiles into a plain group, out of whichever group held them. A
+ *  terrain keeps its slots: a tile can be a terrain piece and in a group. */
+function moveTilesToGroup(ids: number[], gid: string) {
+  const to = plainGroups.value.find(g => g.id === gid)
+  if (!to || !ids.length) return
+  commit()
+  for (const g of plainGroups.value) {
+    if (g === to) continue
+    g.tiles = g.tiles.filter(id => !ids.includes(id))
+    for (const id of ids) delete g.pos?.[String(id)]
+  }
+  for (const id of ids) if (!to.tiles.includes(id)) to.tiles.push(id)
+  dirty.value = true
+  scheduleDraw()
+}
+
+function moveSelectionTo(e: Event) {
+  const el = e.target as HTMLSelectElement
+  const gid = el.value
+  el.value = ''
+  if (!gid) return
+  moveTilesToGroup([...selectedTileIds.value], gid)
+  focusGroup(gid)
 }
 
 function togglePick(a: SharedPage) {
@@ -3017,10 +3315,12 @@ function applyChanges() {
   commit()
   const added = pickedCount.value
   const removed = removeCount.value
-  const home = tileset.value.groups.find(g => g.kind === 'group')
+  const home = plainGroups.value.find(g => g.id === addTarget.value) || plainGroups.value[0]
+  const newIds: number[] = []
   for (const [id, idString] of Object.entries(picked.value)) {
     tileset.value.registry[id] = idString
     home?.tiles.push(Number(id))
+    newIds.push(Number(id))
   }
   for (const id of Object.keys(toRemove.value)) {
     removeTileById(Number(id))
@@ -3030,6 +3330,14 @@ function applyChanges() {
   picked.value = {}
   toRemove.value = {}
   showAdd.value = false
+  // Show where they went: their group in view, the new tiles selected.
+  if (home && newIds.length) {
+    nextTick(() => {
+      focusGroup(home.id)
+      selectedTileIds.value = newIds
+      scheduleDraw()
+    })
+  }
 }
 
 const pngInput = ref<HTMLInputElement | null>(null)
@@ -3256,7 +3564,7 @@ const faq = computed(() => [
               <button class="file-menu-item" @click="showSettings = true">
                 <span class="icon icon-cog"/><span>{{ $t('p_tilesets_editor.tilesetSettings') }}</span>
               </button>
-              <button class="file-menu-item" @click="openAdd">
+              <button class="file-menu-item" @click="openAdd()">
                 <span class="icon icon-plus"/><span>{{ $t('p_tilesets_editor.manageTiles') }}</span>
               </button>
               <button class="file-menu-item" @click="showCanvasModal = true">
@@ -3320,6 +3628,11 @@ const faq = computed(() => [
             <ui-tooltip v-if="activeGroup.kind === 'terrain' && activeGroup.type !== 'corner16'" :text="$t('p_tilesets_editor.buildBordersGenerateEveryVariantFr')">
               <button class="toolbar-btn" @click="openBuild">
                 <span class="icon icon-auto-fix"/>
+              </button>
+            </ui-tooltip>
+            <ui-tooltip v-if="activeGroup.kind === 'terrain' && activeGroup.type !== 'corner16'" :text="$t('p_tilesets_editor.paintEdges')">
+              <button class="toolbar-btn" @click="showPainter = true">
+                <span class="icon icon-brush"/>
               </button>
             </ui-tooltip>
             <ui-tooltip v-if="activeGroup.kind === 'terrain'" :text="$t('p_tilesets_editor.fillEmptySlotsWithTheSelected')">
@@ -3389,7 +3702,7 @@ const faq = computed(() => [
         >
           <div v-if="!tiles.length" class="tsx-desk-empty">
             <p>{{ $t('p_tilesets_editor.noTilesYet') }}</p>
-            <button class="btn" @click="openAdd">
+            <button class="btn" @click="openAdd()">
               <span class="icon icon-plus"/>
               <span>{{ $t('p_tilesets_editor.addTiles') }}</span>
             </button>
@@ -3409,10 +3722,53 @@ const faq = computed(() => [
           </div>
 
           <Transition name="tsx-pop">
+            <div v-if="activeSlot" class="tsx-slotpick" role="dialog" :aria-label="$t('p_tilesets_editor.slotPickTitle')">
+              <div class="tsx-slotpick-head">
+                <span class="tsx-slotpick-title">{{ $t('p_tilesets_editor.slotPickTitle') }}</span>
+                <button v-if="slotPicks.current != null" type="button" class="tsx-selbar-btn" :title="$t('p_tilesets_editor.slotClear')" @click="clearActiveSlot()">
+                  <span class="icon icon-trash"/>
+                </button>
+                <button type="button" class="tsx-selbar-btn" :title="$t('common.close')" @click="activeSlot = null">
+                  <span class="icon icon-close"/>
+                </button>
+              </div>
+              <input
+                  v-if="tiles.length > 24"
+                  v-model="slotQuery"
+                  type="search"
+                  class="tsx-group-filter tsx-slotpick-search"
+                  :placeholder="$t('p_tilesets_editor.searchTiles')"
+                  :aria-label="$t('p_tilesets_editor.searchTiles')"
+              >
+              <div class="tsx-slotpick-grid">
+                <button
+                    v-for="tl in [...slotPicks.own, ...slotPicks.rest.slice(0, SLOT_PICK_MAX)]"
+                    :key="tl.id"
+                    type="button"
+                    class="tsx-slotpick-tile"
+                    :class="{on: tl.id === slotPicks.current, own: slotPicks.ownIds.has(tl.id)}"
+                    :title="tl.id_string"
+                    @click="pickForSlot(tl.id)"
+                >
+                  <span v-if="slotTileStyle(tl.id)" class="tsx-slotpick-sheet" :style="slotTileStyle(tl.id)!"/>
+                  <img v-else :src="tileSrc(tl.id_string)" alt="" loading="lazy">
+                </button>
+              </div>
+              <p v-if="slotPicks.rest.length > SLOT_PICK_MAX" class="tsx-slotpick-more text-xs text-muted">
+                {{ $t('p_tilesets_editor.slotPickMore', {n: slotPicks.rest.length - SLOT_PICK_MAX}) }}
+              </p>
+            </div>
+          </Transition>
+
+          <Transition name="tsx-pop">
             <div v-if="selectedTile" class="tsx-selbar">
               <img :src="tileSrc(selectedTile.id_string)" alt="" class="tsx-selbar-thumb">
               <span class="tsx-selbar-name">{{ selectedTileIds.length > 1 ? $t('p_tilesets_editor.nTiles', {count: selectedTileIds.length}) : selectedTile.id_string }}</span>
               <span class="tsx-selbar-hint">{{ selectedTileIds.length > 1 ? $t('p_tilesets_editor.dragMovesTogether') : $t('p_tilesets_editor.clickTerrainSlotToPlace') }}</span>
+              <select v-if="plainGroups.length > 1" class="tsx-import tsx-selbar-move" :aria-label="$t('p_tilesets_editor.moveToGroup')" @change="moveSelectionTo">
+                <option value="">{{ $t('p_tilesets_editor.moveToGroup') }}</option>
+                <option v-for="g in plainGroups" :key="g.id" :value="g.id">{{ g.name || $t('p_tilesets_editor.group') }}</option>
+              </select>
               <ui-tooltip :text="selectionSolid ? $t('p_tilesets_editor.solidOn') : $t('p_tilesets_editor.solidOff')">
                 <button class="tsx-selbar-btn" :class="{active: selectionSolid}" :aria-pressed="selectionSolid" @click="toggleSolid">
                   <span class="icon icon-square"/>
@@ -3481,10 +3837,20 @@ const faq = computed(() => [
             <span v-else class="icon icon-grid tsx-kind-ic" :title="$t('p_tilesets_editor.group')"/>
             <input v-model="g.name" type="text" class="tsx-terrain-name" @input="dirty = true">
             <em class="tsx-group-count">{{ g.kind === 'terrain' ? Object.keys(g.map || {}).length : g.tiles.length }}</em>
+            <button
+                v-if="g.kind === 'group'"
+                type="button"
+                class="tsx-mini-btn tsx-group-add"
+                :title="$t('p_tilesets_editor.addTilesToGroup', {name: g.name})"
+                :aria-label="$t('p_tilesets_editor.addTilesToGroup', {name: g.name})"
+                @click.stop="openAdd(g.id)"
+            >
+              <span class="icon icon-plus"/>
+            </button>
           </div>
           <!-- Adding tiles was only on the empty board and inside the cog
                menu; once there were tiles it was easy to lose. -->
-          <button v-if="tiles.length" class="btn tsx-add-tiles" @click="openAdd">
+          <button v-if="tiles.length" class="btn tsx-add-tiles" @click="openAdd()">
             <span class="icon icon-plus"/>
             <span>{{ $t('p_tilesets_editor.addTiles') }}</span>
           </button>
@@ -3650,6 +4016,23 @@ const faq = computed(() => [
             </button>
           </div>
       </UiModal>
+
+    <UiModal
+        v-if="showPainter && activeGroup?.kind === 'terrain' && tileset"
+        :title="$t('p_tilesets_editor.paintEdgesTitle', {name: activeGroup.name})"
+        width="56rem"
+        @close="showPainter = false"
+    >
+      <TerrainPainter
+          :tiles="painterTiles"
+          :map="activeGroup.map || {}"
+          :type="activeGroup.type || 'wang16'"
+          :iso="!!tileset.iso"
+          :ratio="tileset.cell.h / tileset.cell.w"
+          @apply="applyPainted"
+          @close="showPainter = false"
+      />
+    </UiModal>
 
     <UiModal v-if="showRelations && activeGroup?.kind === 'terrain'" :title="$t('p_tilesets_editor.relationsTitle', {name: activeGroup.name})" @close="showRelations = false">
           <div class="publish-form">
@@ -3874,25 +4257,6 @@ const faq = computed(() => [
             </select>
           </div>
           <div class="tsx-add-body no-scrollbar">
-            <template v-if="tiles.length">
-              <span class="tm-label">
-                <span>{{ $t('p_tilesets_editor.inTileset') }} <em>{{ tiles.length }}</em></span>
-                <span class="text-xs text-muted">{{ $t('p_tilesets_editor.clickToRemove') }}</span>
-              </span>
-              <div class="tsx-add-grid">
-                <button
-                    v-for="t in tiles"
-                    :key="t.id"
-                    class="tsx-result added"
-                    :class="{removing: toRemove[t.id]}"
-                    :title="toRemove[t.id] ? $t('p_tilesets_editor.willBeRemoved') : $t('p_tilesets_editor.clickToRemoveFromTileset')"
-                    @click="toggleRemove(t.id)"
-                >
-                  <img :src="tileSrc(t.id_string)" :alt="t.id_string" loading="lazy">
-                  <span class="tsx-result-badge icon" :class="toRemove[t.id] ? 'icon-minus' : 'icon-check'"/>
-                </button>
-              </div>
-            </template>
             <span class="tm-label">
               <span>{{ $t('p_tilesets_editor.publicArt') }}</span>
               <button class="tsx-add-all" @click="pickAll">{{ $t('p_tilesets_editor.selectAll') }}</button>
@@ -3912,7 +4276,34 @@ const faq = computed(() => [
                 <span v-if="picked[a.id as number]" class="tsx-result-badge icon icon-check"/>
               </button>
             </div>
+            <!-- What is already in the set comes after what can be added:
+                 adding is why the dialog was opened. -->
+            <template v-if="tiles.length">
+              <span class="tm-label">
+                <span>{{ $t('p_tilesets_editor.inTileset') }} <em>{{ tiles.length }}</em></span>
+                <span class="text-xs text-muted">{{ $t('p_tilesets_editor.clickToRemove') }}</span>
+              </span>
+              <div class="tsx-add-grid">
+                <button
+                    v-for="t in tiles"
+                    :key="t.id"
+                    class="tsx-result added"
+                    :class="{removing: toRemove[t.id]}"
+                    :title="toRemove[t.id] ? $t('p_tilesets_editor.willBeRemoved') : $t('p_tilesets_editor.clickToRemoveFromTileset')"
+                    @click="toggleRemove(t.id)"
+                >
+                  <img :src="tileSrc(t.id_string)" :alt="t.id_string" loading="lazy">
+                  <span class="tsx-result-badge icon" :class="toRemove[t.id] ? 'icon-minus' : 'icon-check'"/>
+                </button>
+              </div>
+            </template>
           </div>
+          <label v-if="plainGroups.length > 1" class="tsx-add-target">
+            <span>{{ $t('p_tilesets_editor.addToGroup') }}</span>
+            <select v-model="addTarget" class="tsx-import">
+              <option v-for="g in plainGroups" :key="g.id" :value="g.id">{{ g.name || $t('p_tilesets_editor.group') }}</option>
+            </select>
+          </label>
           <div class="publish-actions">
             <button class="btn block" @click="showAdd = false">{{ $t('common.cancel') }}</button>
             <button class="btn primary block" :disabled="!pickedCount && !removeCount" @click="applyChanges">
@@ -4027,6 +4418,121 @@ const faq = computed(() => [
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* The chosen terrain slot's picker: the terrain's pieces first (tinted),
+   then the rest of the set. */
+.tsx-slotpick {
+  position: absolute;
+  bottom: var(--space-3);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  width: min(calc(var(--space-6) * 30), calc(100% - var(--space-4)));
+  max-height: 45%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.25);
+}
+
+.tsx-slotpick-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.tsx-slotpick-title {
+  flex: 1;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.tsx-slotpick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-6) * 3), 1fr));
+  gap: var(--space-1);
+  padding: var(--space-2);
+  overflow-y: auto;
+}
+
+.tsx-slotpick-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: var(--space-1);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.tsx-slotpick-tile.own {
+  background: color-mix(in oklab, var(--primary) 12%, var(--surface-2));
+}
+
+.tsx-slotpick-tile.on {
+  border-color: var(--primary);
+}
+
+.tsx-slotpick-search {
+  margin: var(--space-2) var(--space-2) 0;
+  width: auto;
+}
+
+.tsx-slotpick-sheet {
+  display: block;
+  image-rendering: pixelated;
+  background-repeat: no-repeat;
+}
+
+.tsx-slotpick-more {
+  margin: 0;
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+.tsx-slotpick-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tsx-slotpick-tile:hover { border-color: var(--primary); }
+}
+
+.tsx-group-add {
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.tsx-group-row:hover .tsx-group-add,
+.tsx-group-row.active .tsx-group-add,
+.tsx-group-add:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .tsx-group-add { opacity: 1; }
+}
+
+.tsx-add-target {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.tsx-selbar-move {
+  max-width: calc(var(--space-6) * 9);
 }
 
 .tsx-selbar-thumb {

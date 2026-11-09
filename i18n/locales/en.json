@@ -2015,6 +2015,16 @@
   },
   "p_tileset": {},
   "p_tilesets_editor": {
+    "searchTiles": "Search tiles",
+    "slotPickMore": "{n} more: search to find them",
+    "dragTilesHere": "drag tiles here",
+    "paintEdges": "Mark edges on tiles",
+    "paintEdgesTitle": "Mark edges · {name}",
+    "addTilesToGroup": "Add tiles to {name}",
+    "addToGroup": "Add to group",
+    "moveToGroup": "Move to group…",
+    "slotPickTitle": "Pick a tile for this slot",
+    "slotClear": "Clear slot",
     "addAnotherTerrainToThisTileset": "Add another terrain to this tileset to define relations.",
     "addGroup": "Add group",
     "addTerrainAutoTileGroupWith": "Add terrain — auto-tile group with connection slots",
@@ -2867,5 +2877,11 @@
     "newTileset": "New tileset",
     "empty": "No public tilesets yet.",
     "count": "{count} tileset | {count} tilesets"
+  },
+  "c_TerrainPainter": {
+    "help": "On each tile, click the sides where it joins the same terrain; the middle adds or removes the tile. Its place in the terrain follows from the sides you mark.",
+    "onlyTerrain": "Only tiles in this terrain",
+    "slotsFilled": "{n} of {total} placed",
+    "apply": "Apply"
   }
 }

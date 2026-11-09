@@ -1983,6 +1983,16 @@
     "fitMapInView": "マップ全体を表示"
   },
   "p_tilesets_editor": {
+    "searchTiles": "タイルを検索",
+    "slotPickMore": "ほか {n} 件：検索して見つけてください",
+    "dragTilesHere": "ここにタイルをドラッグ",
+    "paintEdges": "タイルの辺を指定",
+    "paintEdgesTitle": "辺を指定 · {name}",
+    "addTilesToGroup": "{name} にタイルを追加",
+    "addToGroup": "追加先のグループ",
+    "moveToGroup": "グループへ移動…",
+    "slotPickTitle": "このスロットのタイルを選択",
+    "slotClear": "スロットを空にする",
     "addAnotherTerrainToThisTileset": "関係を定義するには、このタイルセットにもう1つ地形を追加してください。",
     "addGroup": "グループを追加",
     "addTerrainAutoTileGroupWith": "地形を追加 — 接続枠を持つオートタイルのグループ",
@@ -2834,5 +2844,11 @@
     "newTileset": "新しいタイルセット",
     "empty": "公開タイルセットはまだありません。",
     "count": "{count} 個のタイルセット"
+  },
+  "c_TerrainPainter": {
+    "help": "各タイルで、同じ地形とつながる辺をクリックします。中央でタイルを追加・削除します。地形内の位置は指定した辺から決まります。",
+    "onlyTerrain": "この地形のタイルのみ",
+    "slotsFilled": "{total} 中 {n} 配置済み",
+    "apply": "適用"
   }
 }
