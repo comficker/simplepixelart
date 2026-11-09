@@ -1821,6 +1821,14 @@
     "couldNotUpdatePassword": "비밀번호를 업데이트하지 못했습니다"
   },
   "p_tilemaps_editor": {
+    "mapInfo": "맵",
+    "mapName": "맵 이름",
+    "mapDescription": "설명 (선택)",
+    "visibility": "공개 범위",
+    "public": "공개",
+    "publicHint": "누구나 열 수 있고 커뮤니티 타일맵 목록에 표시됩니다.",
+    "viewPage": "페이지 열기",
+    "privateHint": "나만 볼 수 있습니다.",
     "0TrueRandomASeedMakes": "0은 완전 무작위입니다. 시드를 넣으면 칸마다의 변형 선택을 그대로 재현할 수 있습니다",
     "addLayer": "레이어 추가",
     "addObjectLayerHint": "오브젝트 레이어 추가 — 스폰·문·트리거용 이름 있는 지점",
@@ -2442,9 +2450,12 @@
     "selectedInTilesets": "선택한 항목 {count}개가 타일셋에서 사용 중이며 거기서도 빠집니다."
   },
   "p_worlds_id_string": {
+    "gameEngines": "게임 엔진",
+    "gridOnly": "그리드 맵 전용",
+    "anyEngine": "직접 만든 로더용",
+    "gameExportNote": "타일셋, 지형, 충돌이 포함된 맵. 바로 열 수 있습니다.",
     "buildYourOwnWorld": "나만의 월드 만들기",
     "editWorld": "월드 편집",
-    "gameExportHint": "Godot이나 Tiled에서 쓰려면 에디터를 열고 내보내기를 사용하세요.",
     "openTheWorldEditor": "월드 편집기 열기",
     "renderingWorld": "월드를 그리는 중…",
     "thisWorldMayBePrivateOr": "이 월드는 비공개이거나 더 이상 존재하지 않을 수 있습니다.",
@@ -2850,5 +2861,12 @@
     "onlyTerrain": "이 지형의 타일만",
     "slotsFilled": "{total}개 중 {n}개 배치",
     "apply": "적용"
+  },
+  "p_worlds": {
+    "title": "픽셀 아트 타일맵",
+    "desc": "커뮤니티가 타일로 그린 맵: 그리드와 아이소메트릭 월드, 각각 타일셋 포함, Godot·Tiled·Phaser에 바로 사용.",
+    "newTilemap": "새 타일맵",
+    "empty": "아직 공개 타일맵이 없습니다.",
+    "count": "타일맵 {count}개"
   }
 }

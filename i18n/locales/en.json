@@ -1852,6 +1852,14 @@
   },
   "p_tilemap": {},
   "p_tilemaps_editor": {
+    "mapInfo": "Map",
+    "mapName": "Map name",
+    "mapDescription": "Description (optional)",
+    "visibility": "Visibility",
+    "public": "Public",
+    "publicHint": "Anyone can open it, and it is listed with the community's tilemaps.",
+    "viewPage": "Open its page",
+    "privateHint": "Only you can see it.",
     "0TrueRandomASeedMakes": "0 = true random; a seed makes variant picks repeatable per cell",
     "addLayer": "Add layer",
     "addObjectLayerHint": "Add an object layer — named points for spawns, doors and triggers",
@@ -2474,9 +2482,12 @@
     "selectedInTilesets": "1 selected piece is used in a tileset and will be removed from it. | {count} selected pieces are used in tilesets and will be removed from them."
   },
   "p_worlds_id_string": {
+    "gameEngines": "Game engines",
+    "gridOnly": "grid maps only",
+    "anyEngine": "your own loader",
+    "gameExportNote": "The map with its tileset, terrains and collision, ready to open.",
     "buildYourOwnWorld": "Build your own world",
     "editWorld": "Edit world",
-    "gameExportHint": "Need it in Godot or Tiled? Open the editor and use Export.",
     "openTheWorldEditor": "Open the world editor",
     "renderingWorld": "Rendering world…",
     "thisWorldMayBePrivateOr": "This world may be private or no longer exists.",
@@ -2883,5 +2894,12 @@
     "onlyTerrain": "Only tiles in this terrain",
     "slotsFilled": "{n} of {total} placed",
     "apply": "Apply"
+  },
+  "p_worlds": {
+    "title": "Pixel Art Tilemaps",
+    "desc": "Maps painted tile by tile by the community: grid and isometric worlds, each with its tileset, ready for Godot, Tiled and Phaser.",
+    "newTilemap": "New tilemap",
+    "empty": "No public tilemaps yet.",
+    "count": "{count} tilemap | {count} tilemaps"
   }
 }

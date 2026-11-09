@@ -1821,6 +1821,14 @@
     "couldNotUpdatePassword": "无法更新密码"
   },
   "p_tilemaps_editor": {
+    "mapInfo": "地图",
+    "mapName": "地图名称",
+    "mapDescription": "描述（可选）",
+    "visibility": "可见性",
+    "public": "公开",
+    "publicHint": "任何人都能打开，并会列在社区的瓦片地图中。",
+    "viewPage": "打开页面",
+    "privateHint": "只有你能看到。",
     "0TrueRandomASeedMakes": "0 表示完全随机；填入种子后，每个格子的变体选择就可以复现",
     "addLayer": "添加图层",
     "addObjectLayerHint": "添加对象图层——用于出生点、门和触发器的命名点",
@@ -2442,9 +2450,12 @@
     "selectedInTilesets": "所选的 {count} 项正被图块集使用，也会从中移除。"
   },
   "p_worlds_id_string": {
+    "gameEngines": "游戏引擎",
+    "gridOnly": "仅限网格地图",
+    "anyEngine": "自定义加载器",
+    "gameExportNote": "地图连同图块集、地形和碰撞，可直接打开。",
     "buildYourOwnWorld": "创建你自己的世界",
     "editWorld": "编辑世界",
-    "gameExportHint": "需要在 Godot 或 Tiled 中使用？打开编辑器并选择导出。",
     "openTheWorldEditor": "打开世界编辑器",
     "renderingWorld": "正在渲染世界…",
     "thisWorldMayBePrivateOr": "这个世界可能是私密的，或者已经不存在了。",
@@ -2850,5 +2861,12 @@
     "onlyTerrain": "仅此地形的图块",
     "slotsFilled": "已放置 {n}/{total}",
     "apply": "应用"
+  },
+  "p_worlds": {
+    "title": "像素画瓦片地图",
+    "desc": "社区一格一格绘制的地图：网格与等距世界，各自附带图块集，可直接用于 Godot、Tiled 和 Phaser。",
+    "newTilemap": "新建瓦片地图",
+    "empty": "还没有公开的瓦片地图。",
+    "count": "{count} 个瓦片地图"
   }
 }

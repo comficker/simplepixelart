@@ -1821,6 +1821,14 @@
     "couldNotUpdatePassword": "No se pudo actualizar la contraseña"
   },
   "p_tilemaps_editor": {
+    "mapInfo": "Mapa",
+    "mapName": "Nombre del mapa",
+    "mapDescription": "Descripción (opcional)",
+    "visibility": "Visibilidad",
+    "public": "Público",
+    "publicHint": "Cualquiera puede abrirlo y aparece entre los tilemaps de la comunidad.",
+    "viewPage": "Abrir su página",
+    "privateHint": "Solo tú puedes verlo.",
     "0TrueRandomASeedMakes": "0 = azar puro; una semilla hace que las variantes elegidas se repitan igual en cada celda",
     "addLayer": "Añadir capa",
     "addObjectLayerHint": "Añadir una capa de objetos: puntos con nombre para spawns, puertas y triggers",
@@ -2442,9 +2450,12 @@
     "selectedInTilesets": "1 pieza seleccionada está en un tileset y se quitará de él. | {count} piezas seleccionadas están en tilesets y se quitarán de ellos."
   },
   "p_worlds_id_string": {
+    "gameEngines": "Motores de juego",
+    "gridOnly": "solo mapas de cuadrícula",
+    "anyEngine": "tu propio cargador",
+    "gameExportNote": "El mapa con su tileset, terrenos y colisiones, listo para abrir.",
     "buildYourOwnWorld": "Crea tu propio mundo",
     "editWorld": "Editar el mundo",
-    "gameExportHint": "¿Lo necesitas en Godot o Tiled? Abre el editor y usa Exportar.",
     "openTheWorldEditor": "Abrir el editor de mundos",
     "renderingWorld": "Dibujando el mundo…",
     "thisWorldMayBePrivateOr": "Puede que este mundo sea privado o que ya no exista.",
@@ -2850,5 +2861,12 @@
     "onlyTerrain": "Solo tiles de este terreno",
     "slotsFilled": "{n} de {total} colocados",
     "apply": "Aplicar"
+  },
+  "p_worlds": {
+    "title": "Tilemaps de pixel art",
+    "desc": "Mapas pintados tile a tile por la comunidad: mundos en cuadrícula e isométricos, cada uno con su tileset, listos para Godot, Tiled y Phaser.",
+    "newTilemap": "Nuevo tilemap",
+    "empty": "Aún no hay tilemaps públicos.",
+    "count": "{count} tilemap | {count} tilemaps"
   }
 }

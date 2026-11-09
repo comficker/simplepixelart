@@ -16,6 +16,8 @@ const routePaths = new Set(useRouter().getRoutes().map(r => r.path))
 // than sit dead because /art itself does not exist.
 const CRUMB_TARGET: Record<string, string> = {
   art: '/arts',
+  // The tilemap editor's "Tilemaps" crumb: the public list of maps.
+  tilemaps: '/worlds',
 }
 
 const {t, locales} = useI18n()
@@ -24,7 +26,7 @@ const LOCALE_SEGMENTS = new Set((locales.value as {code: string}[]).map(l => l.c
 const LABELS: Record<string, string> = {
   arts: 'nav.discovery', art: 'nav.discovery', work: 'nav.yourWork', editor: 'crumb.editor',
   converter: 'nav.converter', generator: 'nav.generator',
-  tilesets: 'crumb.tilesets', slicer: 'nav.slicer', tilemaps: 'crumb.tilemaps',
+  tilesets: 'crumb.tilesets', slicer: 'nav.slicer', tilemaps: 'crumb.tilemaps', worlds: 'crumb.tilemaps',
   palettes: 'nav.palettes', challenges: 'nav.challenges', creator: 'crumb.creators', settings: 'common.settings',
   'creator-program': 'crumb.creatorProgram',
   collections: 'crumb.collections', missions: 'crumb.missions', tag: 'common.tags',

@@ -2,9 +2,11 @@
 import TilemapShowcase from '~/components/tilemap/TilemapShowcase.vue'
 import {normalizeTilemap, computeGeometry, tileImageUrl, tileOf} from '~/helper/tilemap'
 import {downloadBlob} from '~/helper/utils'
+import {toast} from 'vue-sonner'
+import {exportGodot, exportJSON, exportTiled, hasContent, type WorldExportSource} from '~/helper/world-export'
 
 const route = useRoute()
-const {locale} = useI18n()
+const {locale, t} = useI18n()
 const config = useRuntimeConfig()
 const auth = useAuthStore()
 
@@ -84,8 +86,61 @@ async function downloadPng(scale: number) {
   }
 }
 
+// Game-engine exports, the same files the editor makes. The tile pictures
+// they are cut from load on the first export, not with the page.
+const images = new Map<number, HTMLImageElement>()
+function ensureImages(ids: number[]): Promise<void> {
+  const slugs = Object.fromEntries(tileItems.value.map(t => [t.id, t.id_string]))
+  return Promise.all(ids.map(id => new Promise<void>((resolve) => {
+    const have = images.get(id)
+    if (have?.complete) return resolve()
+    const slug = slugs[id]
+    if (!slug) return resolve()
+    const img = have || new Image()
+    if (!have) {
+      img.crossOrigin = 'anonymous'
+      img.src = tileImageUrl(config.public.api as string, slug)
+      images.set(id, img)
+    }
+    img.addEventListener('load', () => resolve(), {once: true})
+    img.addEventListener('error', () => resolve(), {once: true})
+  }))).then(() => undefined)
+}
+const {load: loadTileAnims} = useTileAnims()
+const exporting = ref<'' | 'godot' | 'tiled' | 'json'>('')
+const isIso = computed(() => scene.value?.mode === 'iso')
+
+async function runExport(kind: 'godot' | 'tiled' | 'json') {
+  if (!scene.value || exporting.value) return
+  if (!hasContent(scene.value)) {
+    toast.error(t('p_tilemaps_editor.placeSomeTilesFirst'))
+    return
+  }
+  const src: WorldExportSource = {
+    config: scene.value, name: data.value?.name || 'tilemap',
+    tilesetIdString: data.value?.tileset_id_string, tilesetName: data.value?.tileset_name,
+    tilesetMeta: data.value?.tileset_meta,
+    slugs: Object.fromEntries(tileItems.value.map(t => [t.id, t.id_string])),
+    images, loadAnims: loadTileAnims, ensureImages,
+  }
+  exporting.value = kind
+  try {
+    const f = kind === 'json' ? exportJSON(src, config.public.api as string)
+        : kind === 'godot' ? await exportGodot(src) : await exportTiled(src)
+    downloadBlob(f.blob, f.filename)
+    if (f.missing) toast.warning(t('p_tilemaps_editor.tilesNotExported', {count: f.missing}, f.missing))
+  } catch {
+    toast.error(t('p_tilemaps_editor.couldNotExportTilesFailed'))
+  } finally {
+    exporting.value = ''
+  }
+}
+
+// What the author wrote about the map in its settings.
+const worldDesc = computed(() => typeof data.value?.meta?.desc === 'string' ? data.value.meta.desc.trim() : '')
+
 const canonicalUrl = computed(() => `${config.public.siteUrl}/worlds/${route.params.id_string}`)
-const seoDesc = `A pixel art world built tile by tile on SimplePixelArt${data.value?.username ? ` by @${data.value.username}` : ''}. Explore the map or build your own in the free world editor.`
+const seoDesc = worldDesc.value ? worldDesc.value.slice(0, 160) : `A pixel art world built tile by tile on SimplePixelArt${data.value?.username ? ` by @${data.value.username}` : ''}. Explore the map or build your own in the free world editor.`
 
 useCustomSeoMeta({
   untranslated: true,
@@ -167,7 +222,34 @@ const formattedDate = computed(() => {
             <span class="text-muted">{{ dlScale === s ? '…' : `${mapPx.w * s}×${mapPx.h * s}` }}</span>
           </button>
         </div>
-        <p v-if="isOwner" class="wd-note">{{ $t('p_worlds_id_string.gameExportHint') }}</p>
+      </Widget>
+
+      <Widget v-if="scene" :title="$t('p_worlds_id_string.gameEngines')">
+        <div class="wd-dl">
+          <button
+              type="button"
+              class="wd-dl-item"
+              :disabled="!!exporting || isIso"
+              :title="isIso ? $t('p_tilemaps_editor.godotGridOnly') : $t('p_tilemaps_editor.exportForGodotHint')"
+              @click="runExport('godot')"
+          >
+            <span>Godot 4 · .tscn</span>
+            <span class="text-muted">{{ exporting === 'godot' ? '…' : isIso ? $t('p_worlds_id_string.gridOnly') : 'zip' }}</span>
+          </button>
+          <button type="button" class="wd-dl-item" :disabled="!!exporting" @click="runExport('tiled')">
+            <span>Tiled · .tmj</span>
+            <span class="text-muted">{{ exporting === 'tiled' ? '…' : 'Phaser · Unity · zip' }}</span>
+          </button>
+          <button type="button" class="wd-dl-item" :disabled="!!exporting" @click="runExport('json')">
+            <span>JSON</span>
+            <span class="text-muted">{{ exporting === 'json' ? '…' : $t('p_worlds_id_string.anyEngine') }}</span>
+          </button>
+        </div>
+        <p class="wd-note">{{ $t('p_worlds_id_string.gameExportNote') }}</p>
+      </Widget>
+
+      <Widget v-if="worldDesc" :title="$t('common.description')">
+        <p class="wd-desc">{{ worldDesc }}</p>
       </Widget>
 
       <Widget :title="$t('p_art_id_string.meta')">
@@ -253,6 +335,13 @@ const formattedDate = computed(() => {
   margin: auto;
   color: var(--muted);
   font-size: var(--text-sm);
+}
+
+.wd-desc {
+  margin: 0;
+  font-size: var(--text-sm);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .wd-dl {

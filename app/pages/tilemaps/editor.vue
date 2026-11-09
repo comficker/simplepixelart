@@ -12,12 +12,7 @@ import {
 } from '~/helper/tilemap'
 import {type Terrain, eraseCornerTerrain, reflowTerrain} from '~/helper/autotile'
 import {type TileAnim, animFrame, cellPhase} from '~/helper/tile-anim'
-import {buildTiledMap} from '~/helper/tilemap-export'
-import {buildGodotMap, buildTiledMapShared, packSprites} from '~/helper/map-export'
-import {buildGodotTileSet, buildTiledTileset} from '~/helper/engine-export'
-import {canvasBytes, packTileset} from '~/helper/tileset-pack'
-import type {SheetGroup} from '~/helper/sheet-layout'
-import {createZip} from '~/helper/zip'
+import {type WorldExportSource, exportJSON as exportWorldJSON, exportGodot as exportWorldGodot, exportTiled as exportWorldTiled, hasContent} from '~/helper/world-export'
 
 const route = useRoute()
 const router = useRouter()
@@ -732,7 +727,7 @@ function touch() {
   if (freeStyle.value && !world.value) debouncedFreeStyleSave()
 }
 
-interface WorldRow { id: number; id_string: string; name: string; status: string; tileset_id_string: string; tileset_name: string }
+interface WorldRow { id: number; id_string: string; name: string; status: string; tileset_id_string: string; tileset_name: string; desc?: string }
 
 const world = ref<WorldRow | null>(null)
 const terrains = ref<Terrain[]>([])
@@ -775,6 +770,7 @@ async function loadWorld(slug: string): Promise<boolean> {
       id: w.id, id_string: w.id_string, name: w.name || t('common.untitled'),
       status: w.status, tileset_id_string: w.tileset_id_string,
       tileset_name: w.tileset_name || t('common.tileset'),
+      desc: typeof w.meta?.desc === 'string' ? w.meta.desc : '',
     }
     tilesetRegistry.value = {...(w.registry || {})}
     for (const [id, ids] of Object.entries(w.registry || {})) {
@@ -1156,69 +1152,20 @@ function exportPNG() {
   cv.toBlob(b => { if (b) downloadBlob(b, `${exportName()}.png`) })
 }
 
-function exportJSON() {
-  const tiles: Record<string, string> = {}
-  for (const id of placedIds(config)) {
-    if (knownTiles[id]) tiles[String(id)] = tileImageUrl(apiBase, knownTiles[id]!)
+// Engine and file exports live in helper/world-export, shared with a
+// world's public page.
+function exportSource(): WorldExportSource {
+  return {
+    config, name: world.value?.name || exportName(),
+    tilesetIdString: world.value?.tileset_id_string, tilesetName: world.value?.tileset_name,
+    tilesetMeta: tilesetMeta.value, slugs: knownTiles, images: tileImages,
+    loadAnims: loadTileAnims, ensureImages: awaitImages,
   }
-  const data = {
-    format: 'simplepixelart.tilemap',
-    version: 1,
-    name: world.value?.name || 'Untitled',
-    mode: config.mode,
-    cols: config.cols,
-    rows: config.rows,
-    cellW: config.cellW,
-    cellH: config.cellH,
-    isoRatio: config.isoRatio,
-    seed: config.seed,
-    bg: config.bg,
-    layers: config.layers.map(l => ({
-      id: l.id, name: l.name, kind: l.kind, visible: l.visible, ySort: l.ySort,
-      cells: l.cells, terrain: l.terrain,
-    })),
-    tiles,
-  }
-  downloadBlob(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}), `${exportName()}.json`)
 }
 
-function tiledReadme(base: string): string {
-  if (config.mode === 'iso') {
-    return [
-      `${world.value?.name || 'Tilemap'} — Tiled map export from https://simplepixelart.com`,
-      '',
-      `Files: ${base}.tmj (Tiled 1.10 JSON map) + one tileset PNG per tile size.`,
-      'Tiled: File > Open and pick the .tmj — keep the PNGs next to it.',
-      '',
-    ].join('\n')
-  }
-  const ts = world.value?.tileset_id_string ? `${world.value.tileset_id_string}_tileset` : `${base}_tileset`
-  return [
-    `${world.value?.name || 'Tilemap'} — Tiled map export from https://simplepixelart.com`,
-    '',
-    `${base}.tmj       the map (Tiled 1.10 JSON). Its tileset is embedded: the same`,
-    `                  atlas, terrains (Wang sets) and collision as ${ts}.tsx.`,
-    `${ts}.tsx  that tileset on its own, for other Tiled maps.`,
-    `${base}_sprites.png  sprite layers' art, at its own size; sprite layers are`,
-    '                  object layers of tile objects. Object layers are named points.',
-    '',
-    'Tiled: File > Open and pick the .tmj — keep the PNGs next to it.',
-    '',
-    'Phaser 3:',
-    '  preload() {',
-    `    this.load.tilemapTiledJSON('map', '${base}.tmj')`,
-    `    this.load.image('tiles', '${ts}_${config.cellW}x${config.cellH}.png')`,
-    '  }',
-    '  create() {',
-    "    const map = this.make.tilemap({key: 'map'})",
-    `    const tiles = map.addTilesetImage(map.tilesets[0].name, 'tiles')`,
-    `    map.createLayer('${config.layers.find(l => l.kind === 'ground')?.name || 'Layer 1'}', tiles)`,
-    '  }',
-    '',
-    'Godot 4: use the Godot export instead — it is a ready scene.',
-    'Unity: import with SuperTiled2Unity.',
-    '',
-  ].join('\n')
+function exportJSON() {
+  const f = exportWorldJSON(exportSource(), apiBase)
+  downloadBlob(f.blob, f.filename)
 }
 
 /** Wait until these tiles' images are in (or have failed). */
@@ -1232,101 +1179,19 @@ async function awaitImages(ids: number[]) {
   })))
 }
 
-/** Everything both engine exports share: the tileset rebuilt from its own
- * meta (plus any tile the map uses that the tileset does not list), its
- * animations, and the map's sprites in an atlas of their own. */
-async function prepareGameExport() {
-  const meta = tilesetMeta.value || {}
-  const known = (id: number) => !!knownTiles[id]
-  const groups: SheetGroup[] = (Array.isArray(meta.groups) ? meta.groups : [])
-      .filter((g: any) => g && (g.kind === 'group' || g.kind === 'terrain'))
-      .map((g: any) => ({
-        id: String(g.id), name: String(g.name || 'Tiles'), kind: g.kind,
-        tiles: (Array.isArray(g.tiles) ? g.tiles : []).map(Number).filter(known),
-        ...(g.pos ? {pos: g.pos} : {}),
-        ...(g.random ? {random: true, weights: g.weights || {}} : {}),
-        ...(g.kind === 'terrain' ? {
-          type: g.type,
-          map: Object.fromEntries(Object.entries(g.map || {}).map(([k, v]) => [k, Number(v)]).filter(([, v]) => known(v as number))),
-        } : {}),
-      }))
-  const inTileset = new Set<number>()
-  for (const g of groups) {
-    for (const id of g.tiles) inTileset.add(id)
-    for (const id of Object.values(g.map || {})) inTileset.add(id)
-  }
-  const placed = [...new Set(placedIds(config))].filter(known)
-  const loose = placed.filter(id => !inTileset.has(id))
-  if (loose.length) groups.push({id: 'map-loose', name: 'Map tiles', kind: 'group', tiles: loose})
-  const all = [...new Set([...inTileset, ...loose])]
-  await awaitImages(all)
-
-  const bySlug = new Map<string, HTMLImageElement>()
-  for (const id of all) {
-    const img = tileImages.get(id)
-    if (img?.naturalWidth && knownTiles[id]) bySlug.set(knownTiles[id]!, img)
-  }
-  const anims = await loadTileAnims(all)
-  const base = exportName()
-  const tilesetBase = world.value?.tileset_id_string ? `${world.value.tileset_id_string}_tileset` : `${base}_tileset`
-  const cell = {w: config.cellW, h: config.cellH}
-  const tilesetImage = `${tilesetBase}_${cell.w}x${cell.h}.png`
-  const solid = new Set<number>((Array.isArray(meta.solid) ? meta.solid : []).map(Number))
-  const pack = packTileset({
-    name: meta.name || world.value?.tileset_name || base, image: tilesetImage, animImage: `${tilesetBase}_anim.png`,
-    groups,
-    src: {
-      cell,
-      slugOf: id => knownTiles[id] || null,
-      sizeOf: slug => {
-        const img = slug ? bySlug.get(slug) : null
-        return img ? {w: img.naturalWidth, h: img.naturalHeight} : null
-      },
-    },
-    imageOf: slug => bySlug.get(slug) || null,
-    solid, anims,
-  })
-  const spriteIds = config.layers.filter(l => l.kind === 'sprite').flatMap(l => Object.values(l.cells).map(tileOf))
-  const sprites = packSprites(spriteIds, tileImages, anims)
-  return {
-    base, tilesetBase, tilesetImage, pack, sprites, solid,
-    input: {
-      config, name: world.value?.name || base, spritesImage: `${base}_sprites.png`,
-      tilesetBase, tilesetImage, pack, sprites, solid, animated: new Set(pack.animOf.keys()),
-    },
-  }
-}
-
 async function exportTiled() {
-  const base = exportName()
-  if (!placedIds(config).length && !config.layers.some(l => l.objects?.length)) {
+  if (!hasContent(config)) {
     toast.error(t('p_tilemaps_editor.placeSomeTilesFirst'))
     return
   }
-  const enc = new TextEncoder()
-  if (config.mode === 'iso') {
-    // Isometric maps keep the per-size export until the shared one draws them.
-    const {tmj, images, missing} = buildTiledMap(config, tileImages, base)
-    const files: { name: string; data: Uint8Array }[] = [{name: `${base}.tmj`, data: enc.encode(tmj)}]
-    for (const im of images) files.push({name: im.name, data: await canvasBytes(im.canvas)})
-    files.push({name: 'README.txt', data: enc.encode(tiledReadme(base))})
-    downloadBlob(createZip(files), `${base}_tiled.zip`)
-    if (missing) toast.warning(t('p_tilemaps_editor.tileImagesNotLoaded', {count: missing}, missing))
-    return
-  }
   try {
-    const x = await prepareGameExport()
-    const {tmj, missing} = buildTiledMapShared(x.input)
-    const files = [
-      {name: `${base}.tmj`, data: enc.encode(tmj)},
-      {name: `${x.tilesetBase}.tsx`, data: enc.encode(buildTiledTileset(x.pack.engine))},
-      {name: x.tilesetImage, data: await canvasBytes(x.pack.canvas)},
-      {name: `${base}_sprites.png`, data: await canvasBytes(x.sprites.canvas)},
-      {name: 'README.txt', data: enc.encode(tiledReadme(base))},
-    ]
-    downloadBlob(createZip(files), `${base}_tiled.zip`)
-    if (missing) toast.warning(t('p_tilemaps_editor.tilesNotExported', {count: missing}, missing))
-    else toast.success(t('p_tilemaps_editor.exportedForTiled'))
+    const f = await exportWorldTiled(exportSource())
+    downloadBlob(f.blob, f.filename)
+    if (f.missing) {
+      toast.warning(config.mode === 'iso'
+          ? t('p_tilemaps_editor.tileImagesNotLoaded', {count: f.missing}, f.missing)
+          : t('p_tilemaps_editor.tilesNotExported', {count: f.missing}, f.missing))
+    } else if (config.mode !== 'iso') toast.success(t('p_tilemaps_editor.exportedForTiled'))
   } catch {
     toast.error(t('p_tilemaps_editor.couldNotExportTilesFailed'))
   }
@@ -1337,44 +1202,18 @@ async function exportGodot() {
     toast.info(t('p_tilemaps_editor.godotGridOnly'))
     return
   }
-  if (!placedIds(config).length && !config.layers.some(l => l.objects?.length)) {
+  if (!hasContent(config)) {
     toast.error(t('p_tilemaps_editor.placeSomeTilesFirst'))
     return
   }
   try {
-    const x = await prepareGameExport()
-    const {tscn, missing} = buildGodotMap({...x.input, slugOf: id => knownTiles[id] || `tile_${id}`})
-    const enc = new TextEncoder()
-    const files = [
-      {name: `${x.base}.tscn`, data: enc.encode(tscn)},
-      {name: `${x.tilesetBase}.tres`, data: enc.encode(buildGodotTileSet(x.pack.engine).text)},
-      {name: x.tilesetImage, data: await canvasBytes(x.pack.canvas)},
-      ...(x.pack.animCanvas ? [{name: `${x.tilesetBase}_anim.png`, data: await canvasBytes(x.pack.animCanvas)}] : []),
-      {name: `${x.base}_sprites.png`, data: await canvasBytes(x.sprites.canvas)},
-      {name: 'README.txt', data: enc.encode(godotReadme(x.base, x.tilesetBase))},
-    ]
-    downloadBlob(createZip(files), `${x.base}_godot.zip`)
-    if (missing) toast.warning(t('p_tilemaps_editor.tilesNotExported', {count: missing}, missing))
+    const f = await exportWorldGodot(exportSource())
+    downloadBlob(f.blob, f.filename)
+    if (f.missing) toast.warning(t('p_tilemaps_editor.tilesNotExported', {count: f.missing}, f.missing))
     else toast.success(t('p_tilemaps_editor.exportedGodot'))
   } catch {
     toast.error(t('p_tilemaps_editor.couldNotExportTilesFailed'))
   }
-}
-
-function godotReadme(base: string, tilesetBase: string): string {
-  return [
-    `${world.value?.name || 'Tilemap'} — Godot 4 scene from https://simplepixelart.com`,
-    '',
-    `1. Copy every file into one folder of your Godot 4 project (4.3 or newer).`,
-    `2. Open ${base}.tscn. Ground layers are TileMapLayers on ${tilesetBase}.tres —`,
-    '   keep painting them, terrains included, from the TileMap panel.',
-    '3. Sprite layers are Sprite2D / AnimatedSprite2D nodes, y-sorted where the map was.',
-    '   Object layers are Marker2D nodes named as on the map.',
-    '',
-    'Solid tiles collide on physics layer 1. For crisp pixels set',
-    'Project Settings > Rendering > Textures > Default Texture Filter to Nearest.',
-    '',
-  ].join('\n')
 }
 
 async function runSearch(page = 1) {
@@ -2498,17 +2337,38 @@ function deleteSelection() {
   draw()
 }
 
+// The map's name, description and who can see it, from Map settings. A
+// change is saved with the map; making it public (or private) saves at once,
+// since that is what the person is asking for.
+function setWorldInfo(field: 'name' | 'desc', value: string) {
+  if (!world.value) return
+  world.value[field] = value
+  dirty.value = true
+}
+async function setVisibility(pub: boolean) {
+  if (!world.value || (world.value.status === 'public') === pub) return
+  world.value.status = pub ? 'public' : 'private'
+  await save()
+}
+
 const firstSaveTileset = ref<any>(null)
 async function save() {
   if (saving.value) return
   if (world.value) {
     saving.value = true
     try {
-      await useNativeFetch(`/coloring/worlds/${world.value.id_string}/`, {
+      const w = world.value
+      await useNativeFetch(`/coloring/worlds/${w.id_string}/`, {
         method: 'PATCH',
-        body: {meta: {config: snapshot(), tiles: extraTiles()}},
+        body: {
+          name: (w.name || '').trim() || t('common.untitled'),
+          status: w.status === 'public' ? 'public' : 'private',
+          meta: {config: snapshot(), tiles: extraTiles(), ...(w.desc?.trim() ? {desc: w.desc.trim().slice(0, 500)} : {})},
+        },
       })
       dirty.value = false
+      const sib = worldSiblings.value.find(x => x.id_string === w.id_string)
+      if (sib) sib.name = w.name
       toast.success(t('p_tilemaps_editor.worldSaved'))
     } catch {
       toast.error(t('p_tilemaps_editor.couldNotSaveWorld'))
@@ -3121,7 +2981,43 @@ const faq = computed(() => [
     <template #extra>
 
     <UiModal v-if="sizeOpen" class="tm-settings-modal" :title="$t('p_tilemaps_editor.mapSettings')" @close="sizeOpen = false">
-          <div class="tm-settings-body">
+          <div class="tm-settings-body no-scrollbar">
+            <div v-if="world" class="tm-group">
+              <span class="tm-label">{{ $t('p_tilemaps_editor.mapInfo') }}</span>
+              <input
+                  :value="world.name"
+                  type="text"
+                  class="tm-info-input"
+                  maxlength="80"
+                  :placeholder="$t('p_tilemaps_editor.mapName')"
+                  :aria-label="$t('p_tilemaps_editor.mapName')"
+                  @input="setWorldInfo('name', ($event.target as HTMLInputElement).value)"
+              >
+              <textarea
+                  :value="world.desc"
+                  class="tm-info-input tm-info-desc no-scrollbar"
+                  rows="3"
+                  maxlength="500"
+                  :placeholder="$t('p_tilemaps_editor.mapDescription')"
+                  :aria-label="$t('p_tilemaps_editor.mapDescription')"
+                  @input="setWorldInfo('desc', ($event.target as HTMLTextAreaElement).value)"
+              />
+              <div class="tm-seg" role="group" :aria-label="$t('p_tilemaps_editor.visibility')">
+                <button :class="{active: world.status !== 'public'}" :disabled="saving" @click="setVisibility(false)">
+                  <span class="icon icon-eye-cross"/> {{ $t('common.private') }}
+                </button>
+                <button :class="{active: world.status === 'public'}" :disabled="saving" @click="setVisibility(true)">
+                  <span class="icon icon-earth"/> {{ $t('p_tilemaps_editor.public') }}
+                </button>
+              </div>
+              <p class="tm-hint">
+                <template v-if="world.status === 'public'">
+                  {{ $t('p_tilemaps_editor.publicHint') }}
+                  <NuxtLinkLocale :to="`/worlds/${world.id_string}`" class="underline" target="_blank">{{ $t('p_tilemaps_editor.viewPage') }}</NuxtLinkLocale>
+                </template>
+                <template v-else>{{ $t('p_tilemaps_editor.privateHint') }}</template>
+              </p>
+            </div>
             <div class="tm-group">
               <span class="tm-label">{{ $t('common.gridType') }}</span>
               <div class="tm-seg">
@@ -3528,6 +3424,32 @@ const faq = computed(() => [
 
 /* Brushes carry their names: the auto-tile and random ones are picked by
    what they paint, and an 8px caption under an icon could not be read. */
+/* The same field as the modal's number inputs (.tm-cell-input): its height,
+   border and focus -- a primary border, no browser outline ring. */
+.tm-info-input {
+  width: 100%;
+  height: var(--tm-ctl);
+  padding: 0 var(--space-2);
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--foreground);
+  font-size: var(--text-sm);
+}
+
+.tm-info-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.tm-info-desc {
+  height: auto;
+  padding: var(--space-1) var(--space-2);
+  resize: vertical;
+  font-family: inherit;
+}
+
 .tm-brushes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2); }
 .tm-brush {
   display: flex; align-items: center; gap: var(--space-2); min-width: 0;

@@ -1821,6 +1821,14 @@
     "couldNotUpdatePassword": "パスワードを更新できませんでした"
   },
   "p_tilemaps_editor": {
+    "mapInfo": "マップ",
+    "mapName": "マップ名",
+    "mapDescription": "説明（任意）",
+    "visibility": "公開範囲",
+    "public": "公開",
+    "publicHint": "誰でも開けて、コミュニティのタイルマップ一覧に載ります。",
+    "viewPage": "ページを開く",
+    "privateHint": "あなただけが見られます。",
     "0TrueRandomASeedMakes": "0 は完全ランダム。シードを入れるとセルごとのバリアント選びが再現できます",
     "addLayer": "レイヤーを追加",
     "addObjectLayerHint": "オブジェクトレイヤーを追加 — スポーン・ドア・トリガー用の名前付きポイント",
@@ -2442,9 +2450,12 @@
     "selectedInTilesets": "選択した{count}件はタイルセットで使われており、そこからも外れます。"
   },
   "p_worlds_id_string": {
+    "gameEngines": "ゲームエンジン",
+    "gridOnly": "グリッドマップのみ",
+    "anyEngine": "独自のローダー用",
+    "gameExportNote": "タイルセット・地形・当たり判定付きのマップ。そのまま開けます。",
     "buildYourOwnWorld": "自分のワールドを作る",
     "editWorld": "ワールドを編集",
-    "gameExportHint": "Godot や Tiled で使うには、エディターを開いてエクスポートしてください。",
     "openTheWorldEditor": "ワールドエディタを開く",
     "renderingWorld": "ワールドを描画中…",
     "thisWorldMayBePrivateOr": "このワールドは非公開か、すでに存在しない可能性があります。",
@@ -2850,5 +2861,12 @@
     "onlyTerrain": "この地形のタイルのみ",
     "slotsFilled": "{total} 中 {n} 配置済み",
     "apply": "適用"
+  },
+  "p_worlds": {
+    "title": "ピクセルアートのタイルマップ",
+    "desc": "コミュニティがタイルを並べて描いたマップ。グリッドもアイソメトリックも、タイルセット付きで Godot・Tiled・Phaser にそのまま使えます。",
+    "newTilemap": "新しいタイルマップ",
+    "empty": "公開タイルマップはまだありません。",
+    "count": "{count} 件のタイルマップ"
   }
 }
