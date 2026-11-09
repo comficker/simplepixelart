@@ -18,6 +18,11 @@ export const THEMES = [
     colors: ['#1f1c27', '#36313f', '#ebe3d6', '#f0a97e'],
   },
   {
+    id: 'gameboy',
+    i18n: 'theme.gameBoy', name: 'Game Boy',
+    colors: ['#0f380f', '#306230', '#8bac0f', '#9bbc0f'],
+  },
+  {
     id: 'kawaii',
     i18n: 'theme.kawaii', name: 'Kawaii',
     colors: ['#fff8fa', '#fbe1ea', '#4f3440', '#e8578c'],

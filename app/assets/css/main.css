@@ -248,6 +248,32 @@ a {
     --shadow-modal: 0 10px 28px -12px rgba(0, 0, 0, 0.5);
 }
 
+/* Game Boy: the DMG's four greens. Darkest green room, pale screen-green
+   text, the light green for the accent. Brought back on request after the
+   retro set was retired. */
+[data-theme="gameboy"] {
+    --radius: 0px;
+    --radius-sm: 0px;
+    --background: #0f380f;
+    --surface: #173f17;
+    --card: #1c4a1c;
+    --surface-2: #306230;
+    --card-ground: var(--surface);
+    --field: #173f17;
+    --border: color-mix(in oklab, #8bac0f 30%, transparent);
+    --foreground: #c4dc5a;
+    --muted: color-mix(in oklab, #8bac0f 80%, transparent);
+    --primary: #9bbc0f;
+    --primary-fill: #9bbc0f;
+    --primary-foreground: #0f380f;
+    --secondary: #8bac0f;
+    --secondary-foreground: #0f380f;
+    --danger: #e0707a;
+    --success: #9bbc0f;
+    --warning: #e6c25a;
+    --shadow-modal: 0 10px 28px -12px rgba(0, 0, 0, 0.55);
+}
+
 /* Kawaii: strawberry milk. Pastel pink paper, cocoa text, a candy pink
    accent. */
 [data-theme="kawaii"] {
@@ -955,7 +981,8 @@ footer {
 /* Dark theme: a thin scrim over the whole scene, under the wash, so the
    bright sky sits in the dark page instead of punching out of it. */
 [data-theme="dark"] .page-hero,
-[data-theme="lofi"] .page-hero {
+[data-theme="lofi"] .page-hero,
+[data-theme="gameboy"] .page-hero {
     --hero-scrim: color-mix(in oklab, var(--surface) 30%, transparent);
 }
 
