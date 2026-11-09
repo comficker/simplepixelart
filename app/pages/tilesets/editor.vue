@@ -2548,10 +2548,12 @@ function drawSlotContext(ctx: CanvasRenderingContext2D, g: TileGroup, mask: numb
   const face = slotTile(g, centerMask(g))
   const faceImg = face ? boardImg(face) : null
   const img = slug ? boardImg(slug) : null
+  // A terrain with no tiles yet is drawn the same way, its cells as plain
+  // shapes: a new terrain looked nothing like a filled one (a symbol in a
+  // box), so it was not clear it was the same kind of thing.
   const ref = img || faceImg
-  if (!ref) return false
   const cw = ts.cell.w, ch = ts.cell.h
-  const tw = ref.naturalWidth, th = ref.naturalHeight
+  const tw = ref ? ref.naturalWidth : cw, th = ref ? ref.naturalHeight : ch
   const sd = slotSides(mask)
   const blob = g.type === 'blob47'
   // Neighbour cells in grid steps; iso sits them on screen by its own rule.
@@ -2592,18 +2594,25 @@ function drawSlotContext(ctx: CanvasRenderingContext2D, g: TileGroup, mask: numb
     const im = c.self ? img : faceImg
     const x = ox + (p.cx - tw / 2) * k, y = oy + (p.by - th) * k
     if (!im) {
+      // No picture: the cell's shape. Nothing chosen yet for this slot is a
+      // dashed outline; a neighbour with no terrain tile to show is a faint
+      // filled cell.
+      ctx.beginPath()
+      if (iso) {
+        const bx = ox + p.cx * k, bb = oy + p.by * k
+        ctx.moveTo(bx, bb - ch * k); ctx.lineTo(bx + cw / 2 * k, bb - ch / 2 * k)
+        ctx.lineTo(bx, bb); ctx.lineTo(bx - cw / 2 * k, bb - ch / 2 * k); ctx.closePath()
+      } else ctx.rect(x, y + (th - ch) * k, cw * k, ch * k)
       if (c.self) {
-        // Nothing chosen yet: the cell's outline, where the tile will go.
         ctx.strokeStyle = empty
         ctx.setLineDash([3, 3])
-        ctx.beginPath()
-        if (iso) {
-          const bx = ox + p.cx * k, bb = oy + p.by * k
-          ctx.moveTo(bx, bb - ch * k); ctx.lineTo(bx + cw / 2 * k, bb - ch / 2 * k)
-          ctx.lineTo(bx, bb); ctx.lineTo(bx - cw / 2 * k, bb - ch / 2 * k); ctx.closePath()
-        } else ctx.rect(x, y + (th - ch) * k, cw * k, ch * k)
         ctx.stroke()
         ctx.setLineDash([])
+      } else {
+        ctx.fillStyle = empty
+        ctx.globalAlpha = 0.3
+        ctx.fill()
+        ctx.globalAlpha = 1
       }
       continue
     }
@@ -3722,9 +3731,12 @@ const faq = computed(() => [
           </div>
 
           <Transition name="tsx-pop">
-            <div v-if="activeSlot" class="tsx-slotpick" role="dialog" :aria-label="$t('p_tilesets_editor.slotPickTitle')">
+            <div v-if="activeSlot" class="tsx-slotpick" role="dialog" :aria-label="$t('p_tilesets_editor.slotPickTitle')" @wheel.stop @pointerdown.stop>
               <div class="tsx-slotpick-head">
                 <span class="tsx-slotpick-title">{{ $t('p_tilesets_editor.slotPickTitle') }}</span>
+                <button type="button" class="tsx-selbar-btn" :title="$t('p_tilesets_editor.addTiles')" @click="openAdd()">
+                  <span class="icon icon-plus"/>
+                </button>
                 <button v-if="slotPicks.current != null" type="button" class="tsx-selbar-btn" :title="$t('p_tilesets_editor.slotClear')" @click="clearActiveSlot()">
                   <span class="icon icon-trash"/>
                 </button>
@@ -3740,7 +3752,7 @@ const faq = computed(() => [
                   :placeholder="$t('p_tilesets_editor.searchTiles')"
                   :aria-label="$t('p_tilesets_editor.searchTiles')"
               >
-              <div class="tsx-slotpick-grid">
+              <div class="tsx-slotpick-grid no-scrollbar">
                 <button
                     v-for="tl in [...slotPicks.own, ...slotPicks.rest.slice(0, SLOT_PICK_MAX)]"
                     :key="tl.id"
@@ -4422,16 +4434,19 @@ const faq = computed(() => [
 
 /* The chosen terrain slot's picker: the terrain's pieces first (tinted),
    then the rest of the set. */
+/* A drawer down the board's right side, the full height: at the bottom it
+   was a short strip over the very slots being filled. The board's wheel
+   (zoom) and drag (pan) stop at its edge, so the list scrolls. */
 .tsx-slotpick {
   position: absolute;
-  bottom: var(--space-3);
-  left: 50%;
-  translate: -50% 0;
+  /* Below the board's own corner button (open the tileset page). */
+  top: calc(var(--space-6) * 3);
+  right: var(--space-2);
+  bottom: var(--space-2);
   z-index: 3;
   display: flex;
   flex-direction: column;
-  width: min(calc(var(--space-6) * 30), calc(100% - var(--space-4)));
-  max-height: 45%;
+  width: min(calc(var(--space-6) * 22), calc(100% - var(--space-4)));
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -4453,11 +4468,15 @@ const faq = computed(() => [
 }
 
 .tsx-slotpick-grid {
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-6) * 3), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-6) * 4), 1fr));
+  align-content: start;
   gap: var(--space-1);
   padding: var(--space-2);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .tsx-slotpick-tile {
@@ -4480,9 +4499,12 @@ const faq = computed(() => [
   border-color: var(--primary);
 }
 
-.tsx-slotpick-search {
+/* Inside the drawer's padding: the shared filter field is width: 100%, and
+   with this margin it ran past the drawer's edge. */
+.tsx-slotpick .tsx-slotpick-search {
+  box-sizing: border-box;
+  width: calc(100% - var(--space-2) * 2);
   margin: var(--space-2) var(--space-2) 0;
-  width: auto;
 }
 
 .tsx-slotpick-sheet {
