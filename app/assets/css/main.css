@@ -4843,3 +4843,16 @@ select.publish-input { height: var(--tm-ctl, 34px); cursor: pointer; }
 @media (hover: hover) and (pointer: fine) {
   .art-meta-link:hover { color: var(--primary); }
 }
+
+/* Phones: the palette (eraser, eyedropper, colours, canvas background) stays
+   pinned to the bottom of the screen while the canvas is in view, so changing
+   colour no longer means scrolling down past the canvas and back. */
+@media (max-width: 767px) {
+    .editor .palette-widget {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        background: var(--surface);
+        box-shadow: 0 -1px 0 var(--border);
+    }
+}

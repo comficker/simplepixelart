@@ -486,6 +486,7 @@
     "loginRequired": "Login necessário",
     "maxFrames": "Máximo de {max} quadros",
     "mergedCanvasNow": "Mesclado — a tela agora é {w}×{h}",
+    "canvasBackground": "Fundo da tela: claro, escuro ou cinza",
     "mergeDown": "Mesclar com a camada abaixo",
     "mergedLayers": "Camadas mescladas em uma",
     "nMinutes": "um minuto | {count} minutos",

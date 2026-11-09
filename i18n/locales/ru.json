@@ -486,6 +486,7 @@
     "loginRequired": "Требуется вход",
     "maxFrames": "Максимум кадров: {max}",
     "mergedCanvasNow": "Объединено — холст теперь {w}×{h}",
+    "canvasBackground": "Фон холста: светлый, тёмный или серый",
     "mergeDown": "Объединить со слоем ниже",
     "mergedLayers": "Слои объединены в один",
     "nMinutes": "{count} минуту | {count} минуты | {count} минут",

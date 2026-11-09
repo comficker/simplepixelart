@@ -441,6 +441,16 @@ const checkerA = computed({get: () => lookOf(editorData.value).a, set: (v: strin
 const checkerB = computed({get: () => lookOf(editorData.value).b, set: (v: string) => setLook({b: v})});
 const guideColor = computed({get: () => lookOf(editorData.value).guide, set: (v: string) => setLook({guide: v})});
 
+// Light, dark and mid-grey canvas backgrounds, one tap apart: white art was
+// hard to see on the default white/grey checker, and the colour pickers for
+// it sit deep in the settings sheet.
+const CHECKER_PRESETS = [['', ''], ['#2b2b2b', '#3a3a3a'], ['#8c8c8c', '#a0a0a0']] as const;
+const checkerPreset = computed(() => Math.max(0, CHECKER_PRESETS.findIndex(([a, b]) => a === checkerA.value && b === checkerB.value)));
+function cycleChecker() {
+  const [a, b] = CHECKER_PRESETS[(checkerPreset.value + 1) % CHECKER_PRESETS.length]!;
+  setLook({a, b});
+}
+
 function setCheckerSize(v: string | number) {
   checkerSize.value = Math.max(1, Math.min(64, Math.round(Number(v) || 1)));
 }
@@ -4240,7 +4250,7 @@ watch(
           </Square>
         </Widget>
 
-        <Widget :title="$t('common.palette')">
+        <Widget :title="$t('common.palette')" class="palette-widget">
           <template #ctl>
             <div class="widget-ctl-group">
               <span v-if="store.currentTool === 'picker'" class="pick-readout">
@@ -4250,6 +4260,15 @@ watch(
                 </template>
                 <span v-else class="pick-text pick-hint">{{ $t('c_PXEditor.tapAPixel') }}</span>
               </span>
+              <button
+                  class="widget-ctl-btn checker-toggle"
+                  :class="{ active: checkerPreset > 0 }"
+                  @click="cycleChecker"
+                  :title="$t('c_PXEditor.canvasBackground')"
+                  :aria-label="$t('c_PXEditor.canvasBackground')"
+              >
+                <span class="icon icon-checkerboard"/>
+              </button>
               <button class="widget-ctl-btn" @click="showPalettePicker = true" :title="$t('c_PXEditor.paletteLibraryBrowseApplySaveExtra')">
                 <span class="icon icon-grid"/>
                 <span>{{ $t('c_PXEditor.library') }}</span>

@@ -486,6 +486,7 @@
     "loginRequired": "ログインが必要です",
     "maxFrames": "最大{max}フレーム",
     "mergedCanvasNow": "結合しました — キャンバスは{w}×{h}になりました",
+    "canvasBackground": "キャンバスの背景：明るい・暗い・グレー",
     "mergeDown": "下のレイヤーと結合",
     "mergedLayers": "レイヤーを1つに結合しました",
     "nMinutes": "{count}分後",
