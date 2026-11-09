@@ -1434,11 +1434,14 @@ export const useEditor = defineStore('editor', () => {
         if (auth.isLogged) {
             try {
                 await save2Cloud();
+                cloudRetries = 0
             } catch (e) {
                 console.error('Failed to save to cloud, keeping local copy:', e);
-                toast.error($i18n.t('c_PXEditor.cloudSaveFailed'))
                 saveError.value = failReason(e)
+                // One toast per run of failures, not one per retry.
+                if (!cloudRetries) toast.error($i18n.t('c_PXEditor.cloudSaveFailed'))
                 reportSaveFailure('cloud', saveError.value)
+                scheduleCloudRetry(saveError.value)
             }
             save2Local(false)
         } else {
@@ -1490,6 +1493,29 @@ export const useEditor = defineStore('editor', () => {
     let saveInFlight: Promise<void> | null = null
     let resaveQueued = false
 
+    // A cloud save that failed on a dropped connection or a busy server was
+    // only tried again on the next edit: stop drawing and the cloud copy
+    // stayed behind the local one. Retry it on its own, backing off, and as
+    // soon as the browser says it is back online.
+    const CLOUD_RETRY_DELAYS = [5000, 15000, 45000, 120000]
+    let cloudRetries = 0
+    let cloudRetryTimer: ReturnType<typeof setTimeout> | null = null
+    function retryCloudNow() {
+        if (cloudRetryTimer) clearTimeout(cloudRetryTimer)
+        cloudRetryTimer = null
+        void saveNow()
+    }
+    function scheduleCloudRetry(reason: string) {
+        const transient = reason === 'network' || reason === 'timeout'
+            || reason === 'http_408' || reason === 'http_429' || /^http_5\d\d$/.test(reason)
+        if (!transient || cloudRetries >= CLOUD_RETRY_DELAYS.length || cloudRetryTimer) return
+        const delay = CLOUD_RETRY_DELAYS[cloudRetries++]!
+        cloudRetryTimer = setTimeout(retryCloudNow, delay)
+    }
+    if (typeof window !== 'undefined') {
+        window.addEventListener('online', () => { if (cloudRetryTimer) retryCloudNow() })
+    }
+
     async function saveNow(): Promise<void> {
         if (saveInFlight) {
             resaveQueued = true
@@ -1510,6 +1536,8 @@ export const useEditor = defineStore('editor', () => {
     let saveTimer: ReturnType<typeof setTimeout> | null = null
     function save() {
         savePending = true
+        // A fresh edit starts a fresh run of retries (and its one toast).
+        cloudRetries = 0
         if (saveTimer) clearTimeout(saveTimer)
         saveTimer = setTimeout(() => { saveTimer = null; savePending = false; void saveNow() }, SAVE_DELAY)
     }
