@@ -218,10 +218,6 @@ useHead({
   gap: 0;
 }
 
-.dash-top-ctl .hdr-link {
-  padding: var(--space-1) var(--space-2);
-}
-
 /* The bar's own controls carry a 22.5px icon, like the sidebar's; the menus they open keep
    theirs. */
 .dash-top .dash-top-ctl :is(.hdr-link, .wallet-chip) > .icon {

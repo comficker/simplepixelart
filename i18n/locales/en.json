@@ -609,6 +609,7 @@
     "tapAQuestionToExpand": "Tap a question to expand"
   },
   "c_Sidebar": {
+    "main": "Main",
     "collapseSidebar": "Collapse sidebar",
     "color": "Color",
     "community": "Community",

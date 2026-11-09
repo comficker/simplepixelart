@@ -142,7 +142,7 @@ header .brand-name-main {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 7px var(--space-3);
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius);
   font-size: var(--text-sm);
   font-weight: 600;
@@ -201,10 +201,6 @@ header .brand-name-main {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-}
-
-@media (max-width: 1023px) {
-  .hdr-link { padding: 7px 10px; }
 }
 
 @media (max-width: 767px) {

@@ -591,6 +591,7 @@
     "tapAQuestionToExpand": "質問をタップすると開きます"
   },
   "c_Sidebar": {
+    "main": "メイン",
     "collapseSidebar": "サイドバーを畳む",
     "color": "カラー",
     "community": "コミュニティ",

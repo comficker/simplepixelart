@@ -591,6 +591,7 @@
     "tapAQuestionToExpand": "Pulsa una pregunta para desplegarla"
   },
   "c_Sidebar": {
+    "main": "Principal",
     "collapseSidebar": "Contraer la barra lateral",
     "color": "Color",
     "community": "Comunidad",

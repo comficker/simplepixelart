@@ -27,7 +27,8 @@ defineProps<{ title?: string, to?: string }>()
   overflow: hidden;
 }
 
-:is(.widget, .tool-main) > .widget-head {
+/* The sidebar's sections reuse the head as their title band. */
+:is(.widget, .tool-main, .dash-group) > .widget-head {
   display: flex;
   gap: var(--space-2);
   justify-content: space-between;

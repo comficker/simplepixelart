@@ -591,6 +591,7 @@
     "tapAQuestionToExpand": "点击问题展开"
   },
   "c_Sidebar": {
+    "main": "主要",
     "collapseSidebar": "收起侧边栏",
     "color": "颜色",
     "community": "社区",

@@ -62,71 +62,80 @@ const SECTIONS = [
       </NuxtLinkLocale>
     </div>
 
-    <nav class="dash-nav" :aria-label="$t('common.primary')">
-      <NuxtLinkLocale
-          v-for="l in PRIMARY"
-          :key="l.to"
-          :to="l.to"
-          class="hdr-link dash-link"
-          :style="{'--ic-1': l.c1, '--ic-2': l.c2}"
-          :title="$t(l.key)"
-      >
-        <span class="dash-tool-ic"><span class="icon" :class="l.icon"/></span>
-        <span class="dash-label">{{ $t(l.key) }}</span>
-      </NuxtLinkLocale>
-    </nav>
-
-    <template v-for="sec in SECTIONS" :key="sec.key">
-      <div class="dash-sec"><span class="dash-label">{{ $t(sec.key) }}</span></div>
-      <nav class="dash-nav" :aria-label="$t(sec.key)">
+    <section class="dash-group">
+      <div class="widget-head"><h2 class="title dash-label">{{ $t('c_Sidebar.main') }}</h2></div>
+      <nav class="widget-body dash-nav" :aria-label="$t('common.primary')">
         <NuxtLinkLocale
-            v-for="t in sec.items"
-            :key="t.key"
-            :to="t.to"
+            v-for="l in PRIMARY"
+            :key="l.to"
+            :to="l.to"
             class="hdr-link dash-link"
-            :style="{'--ic-1': t.c1, '--ic-2': t.c2}"
-            :title="$t(t.i18n)"
+            :style="{'--ic-1': l.c1, '--ic-2': l.c2}"
+            :title="$t(l.key)"
         >
-          <span class="dash-tool-ic"><span class="icon" :class="t.icon"/></span>
-          <span class="dash-label">{{ $t(t.i18n) }}</span>
+          <span class="dash-tool-ic"><span class="icon" :class="l.icon"/></span>
+          <span class="dash-label">{{ $t(l.key) }}</span>
         </NuxtLinkLocale>
       </nav>
+    </section>
+
+    <template v-for="sec in SECTIONS" :key="sec.key">
+      <section class="dash-group">
+        <div class="widget-head"><h2 class="title dash-label">{{ $t(sec.key) }}</h2></div>
+        <nav class="widget-body dash-nav" :aria-label="$t(sec.key)">
+          <NuxtLinkLocale
+              v-for="t in sec.items"
+              :key="t.key"
+              :to="t.to"
+              class="hdr-link dash-link"
+              :style="{'--ic-1': t.c1, '--ic-2': t.c2}"
+              :title="$t(t.i18n)"
+          >
+            <span class="dash-tool-ic"><span class="icon" :class="t.icon"/></span>
+            <span class="dash-label">{{ $t(t.i18n) }}</span>
+          </NuxtLinkLocale>
+        </nav>
+      </section>
     </template>
 
     <!-- The coloring game is written in English only, so every locale links
          to the one page. -->
-    <div class="dash-sec"><span class="dash-label">{{ $t('c_Sidebar.play') }}</span></div>
-    <nav class="dash-nav" :aria-label="$t('c_Sidebar.play')">
-      <NuxtLink
-          to="/color-by-number"
-          class="hdr-link dash-link"
-          :style="{'--ic-1': '#f472b6', '--ic-2': '#db2777'}"
-          :title="$t('nav.coloring')"
-      >
-        <span class="dash-tool-ic"><span class="icon icon-brush"/></span>
-        <span class="dash-label">{{ $t('nav.coloring') }}</span>
-      </NuxtLink>
-    </nav>
+    <section class="dash-group">
+      <div class="widget-head"><h2 class="title dash-label">{{ $t('c_Sidebar.play') }}</h2></div>
+      <nav class="widget-body dash-nav" :aria-label="$t('c_Sidebar.play')">
+        <NuxtLink
+            to="/color-by-number"
+            class="hdr-link dash-link"
+            :style="{'--ic-1': '#f472b6', '--ic-2': '#db2777'}"
+            :title="$t('nav.coloring')"
+        >
+          <span class="dash-tool-ic"><span class="icon icon-brush"/></span>
+          <span class="dash-label">{{ $t('nav.coloring') }}</span>
+        </NuxtLink>
+      </nav>
+    </section>
 
-    <div class="dash-sec"><span class="dash-label">{{ $t('c_Sidebar.community') }}</span></div>
-    <nav class="dash-nav" :aria-label="$t('c_Sidebar.community')">
-      <NuxtLinkLocale to="/creator-program" class="hdr-link dash-link" :title="$t('c_Sidebar.creatorProgram')">
-        <span class="dash-tool-ic dash-tool-ic-plain"><span class="icon icon-trophy"/></span>
-        <span class="dash-label">{{ $t('c_Sidebar.creatorProgram') }}</span>
-      </NuxtLinkLocale>
-      <a
-          v-for="l in SOCIAL"
-          :key="l.href"
-          :href="l.href"
-          target="_blank"
-          rel="noopener"
-          class="hdr-link dash-link"
-          :title="$t(l.key)"
-      >
-        <span class="dash-tool-ic dash-tool-ic-plain"><span class="icon" :class="l.icon"/></span>
-        <span class="dash-label">{{ $t(l.key) }}</span>
-      </a>
-    </nav>
+    <section class="dash-group">
+      <div class="widget-head"><h2 class="title dash-label">{{ $t('c_Sidebar.community') }}</h2></div>
+      <nav class="widget-body dash-nav" :aria-label="$t('c_Sidebar.community')">
+        <NuxtLinkLocale to="/creator-program" class="hdr-link dash-link" :title="$t('c_Sidebar.creatorProgram')">
+          <span class="dash-tool-ic dash-tool-ic-plain"><span class="icon icon-trophy"/></span>
+          <span class="dash-label">{{ $t('c_Sidebar.creatorProgram') }}</span>
+        </NuxtLinkLocale>
+        <a
+            v-for="l in SOCIAL"
+            :key="l.href"
+            :href="l.href"
+            target="_blank"
+            rel="noopener"
+            class="hdr-link dash-link"
+            :title="$t(l.key)"
+        >
+          <span class="dash-tool-ic dash-tool-ic-plain"><span class="icon" :class="l.icon"/></span>
+          <span class="dash-label">{{ $t(l.key) }}</span>
+        </a>
+      </nav>
+    </section>
 
     <div class="dash-foot">
       <button
@@ -216,6 +225,13 @@ const SECTIONS = [
   gap: 1px;
 }
 
+/* Each section is a widget: a head band over a padded body, the next one
+   below a single rule. */
+.dash-group {
+  border-bottom: 1px solid var(--border);
+}
+
+
 .dash-link {
   display: flex;
   width: 100%;
@@ -235,15 +251,6 @@ const SECTIONS = [
   color: #fff;
 }
 
-.dash-sec {
-  padding: var(--space-2) var(--space-4) 0;
-  border-top: 1px solid var(--border);
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
 
 .dash-tool-ic {
   display: inline-flex;
@@ -312,8 +319,9 @@ const SECTIONS = [
   padding-right: 0;
 }
 
-.dash-side.is-collapsed .dash-sec {
-  padding: var(--space-2) 0 0;
+/* Collapsed, the titles have no room: the groups part by their rule alone. */
+.dash-side.is-collapsed .widget-head {
+  display: none;
 }
 
 /* Same height as the status bar beside it; the search button just centres. */

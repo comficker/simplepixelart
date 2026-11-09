@@ -591,6 +591,7 @@
     "tapAQuestionToExpand": "질문을 누르면 펼쳐집니다"
   },
   "c_Sidebar": {
+    "main": "메인",
     "collapseSidebar": "사이드바 접기",
     "color": "색상",
     "community": "커뮤니티",

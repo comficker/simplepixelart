@@ -591,6 +591,7 @@
     "tapAQuestionToExpand": "Нажмите на вопрос, чтобы раскрыть"
   },
   "c_Sidebar": {
+    "main": "Главное",
     "collapseSidebar": "Свернуть боковую панель",
     "color": "Цвет",
     "community": "Сообщество",
