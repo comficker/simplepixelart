@@ -3493,6 +3493,9 @@ onMounted(async () => {
     navigateTo(localePath(`/generator?prompt=${encodeURIComponent(String(route.query.ai).slice(0, 300))}`))
     return
   }
+  // A tileset page sent us here to draw with its tiles: the art brush picks
+  // the set up itself once it shows (StampPicker reads ?stamp).
+  if (route.query.stamp) store.setTool('stamp')
   if (route.query.palette) {
     try {
       const pal = await useNativeFetch<any>(`/coloring/palettes/${route.query.palette}/`)

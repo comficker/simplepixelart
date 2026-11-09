@@ -2211,6 +2211,11 @@
     "refreshTiles": "Recarregar tiles"
   },
   "p_tilesets_id_string": {
+    "paintMap": "Pintar um mapa",
+    "drawWithTiles": "Desenhar com estes tiles",
+    "showAllN": "Mostrar todos os {n}",
+    "showFewer": "Mostrar menos",
+    "opening": "Abrindo…",
     "buildYourOwn": "Crie o seu",
     "groups": "Grupos",
     "shownAbove": "Exibido acima",

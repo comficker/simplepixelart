@@ -2211,6 +2211,11 @@
     "refreshTiles": "刷新图块"
   },
   "p_tilesets_id_string": {
+    "paintMap": "绘制地图",
+    "drawWithTiles": "用这些图块绘画",
+    "showAllN": "显示全部 {n} 个",
+    "showFewer": "收起",
+    "opening": "正在打开…",
     "buildYourOwn": "创建自己的",
     "groups": "分组",
     "shownAbove": "显示在上方",

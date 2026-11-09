@@ -2211,6 +2211,11 @@
     "refreshTiles": "타일 새로고침"
   },
   "p_tilesets_id_string": {
+    "paintMap": "맵 그리기",
+    "drawWithTiles": "이 타일로 그리기",
+    "showAllN": "{n}개 모두 보기",
+    "showFewer": "접기",
+    "opening": "여는 중…",
     "buildYourOwn": "직접 만들기",
     "groups": "그룹",
     "shownAbove": "위에 표시됨",

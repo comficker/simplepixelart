@@ -2211,6 +2211,11 @@
     "refreshTiles": "タイルを再読み込み"
   },
   "p_tilesets_id_string": {
+    "paintMap": "マップを描く",
+    "drawWithTiles": "このタイルで描く",
+    "showAllN": "{n} 個すべて表示",
+    "showFewer": "少なく表示",
+    "opening": "開いています…",
     "buildYourOwn": "自分で作る",
     "groups": "グループ",
     "shownAbove": "上に表示中",

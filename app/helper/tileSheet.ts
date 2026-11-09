@@ -54,6 +54,22 @@ export function loadSheet(idString: string): Promise<SheetInfo | null> {
   return p
 }
 
+/** CSS that shows tile `id` as a window on the sheet: the sheet as the
+ *  background, scaled and shifted so the tile fills its box. Null when the
+ *  sheet does not hold that tile. */
+export function sheetWindowStyle(info: SheetInfo | null | undefined, id: number): Record<string, string> | null {
+  const r = info?.rects[String(id)]
+  if (!info || !r) return null
+  const [x, y, w, h] = r
+  return {
+    backgroundImage: `url(${info.url})`,
+    backgroundSize: `${info.w / w * 100}% ${info.h / h * 100}%`,
+    backgroundPosition: `${info.w === w ? 0 : x / (info.w - w) * 100}% ${info.h === h ? 0 : y / (info.h - h) * 100}%`,
+    aspectRatio: `${w} / ${h}`,
+    [w >= h ? 'width' : 'height']: '100%',
+  }
+}
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()

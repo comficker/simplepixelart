@@ -9,7 +9,7 @@ import {
   gatheredSet, isGathered, isLocalSet, parseTileset, patchOf, randomBrushes, stripOf, terrainFace, terrainPieces,
   ANY_ID, type Brush, type BrushGroup, type BrushSet,
 } from '~/helper/tileBrush'
-import {flipPixels, loadSheet, sheets, tilePixels, type TilePixels} from '~/helper/tileSheet'
+import {flipPixels, loadSheet, sheetWindowStyle, sheets, tilePixels, type TilePixels} from '~/helper/tileSheet'
 
 // The art brush is one thing: a strip of brushes -- one artwork, a few
 // gathered one by one, or a whole tileset -- and how they land: free, or on
@@ -42,17 +42,7 @@ function localTile(s: BrushSet, id: number) {
 
 function sheetStyle(s: BrushSet, id: number): Record<string, string> | null {
   if (!s.id_string || isLocalSet(s)) return null
-  const info = sheets.get(s.id_string)
-  const r = info?.rects[String(id)]
-  if (!info || !r) return null
-  const [x, y, w, h] = r
-  return {
-    backgroundImage: `url(${info.url})`,
-    backgroundSize: `${info.w / w * 100}% ${info.h / h * 100}%`,
-    backgroundPosition: `${info.w === w ? 0 : x / (info.w - w) * 100}% ${info.h === h ? 0 : y / (info.h - h) * 100}%`,
-    aspectRatio: `${w} / ${h}`,
-    [w >= h ? 'width' : 'height']: '100%',
-  }
+  return sheetWindowStyle(sheets.get(s.id_string), id)
 }
 
 const TileImg = defineComponent({
@@ -351,6 +341,19 @@ async function pickSet(row: TsRow) {
   const pieces = terrainPieces(s)
   return selectTile(s, (s.tiles.find(x => !pieces.has(x.id)) || s.tiles[0]!).id)
 }
+
+// A tileset page's "Draw with these tiles" opens the editor with
+// ?stamp=<tileset>: the brush starts on that set, read once and then dropped
+// from the URL so a reload does not reset the brush.
+const route = useRoute()
+const router = useRouter()
+onMounted(() => {
+  const key = String(route.query.stamp || '')
+  if (!key) return
+  const q = {...route.query}; delete q.stamp
+  router.replace({query: q}).catch(() => {})
+  pickSet({key, name: '', count: 0, face: ''})
+})
 
 // ── Browsing the whole set ───────────────────────────────────────────
 

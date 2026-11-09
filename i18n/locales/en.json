@@ -2243,6 +2243,11 @@
     "refreshTiles": "Refresh tiles"
   },
   "p_tilesets_id_string": {
+    "paintMap": "Paint a map",
+    "drawWithTiles": "Draw with these tiles",
+    "showAllN": "Show all {n}",
+    "showFewer": "Show fewer",
+    "opening": "Opening…",
     "buildYourOwn": "Build your own",
     "groups": "Groups",
     "shownAbove": "Shown above",

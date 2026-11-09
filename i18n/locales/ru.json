@@ -2211,6 +2211,11 @@
     "refreshTiles": "Обновить тайлы"
   },
   "p_tilesets_id_string": {
+    "paintMap": "Нарисовать карту",
+    "drawWithTiles": "Рисовать этими тайлами",
+    "showAllN": "Показать все {n}",
+    "showFewer": "Свернуть",
+    "opening": "Открываем…",
     "buildYourOwn": "Соберите свой",
     "groups": "Группы",
     "shownAbove": "Показан выше",
