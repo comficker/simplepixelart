@@ -34,18 +34,11 @@ const loginModal = useLoginModal()
       <span class="icon icon-brand-x"/>
     </a>
     <span v-if="!compact" class="social-sep" aria-hidden="true"/>
-    <!-- Settings works signed out too -- theme, language and app data are all
-         on it -- so it is not hidden behind an account any more. -->
-    <NuxtLinkLocale
-        v-if="compact && auth.isLogged && auth.logged?.username"
-        :to="`/creator/${auth.logged.username}`"
-        class="hdr-link"
-        :title="$t('c_SocialAuth.yourPublicProfile')"
-        :aria-label="$t('c_SocialAuth.yourPublicProfile')"
-    >
-      <span class="icon icon-account"/>
-    </NuxtLinkLocale>
-    <NuxtLinkLocale v-if="compact" to="/settings" class="hdr-link" :title="$t('common.settings')">
+    <!-- Signed in, the bar ends on the account menu (profile, work,
+         settings, log out). Signed out, Settings still opens -- theme,
+         language and app data are all on it. -->
+    <PartialAccountMenu v-if="compact && auth.isLogged"/>
+    <NuxtLinkLocale v-else-if="compact" to="/settings" class="hdr-link" :title="$t('common.settings')">
       <span class="icon icon-cog"/>
     </NuxtLinkLocale>
     <NuxtLinkLocale v-else to="/settings" class="social-auth-link">{{ $t('common.settings') }}</NuxtLinkLocale>

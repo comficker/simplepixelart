@@ -2,6 +2,7 @@
 const cmdk = useCommandPalette()
 const desktop = useIsDesktop()
 const {openFeedback} = useFeedback()
+const auth = useAuthStore()
 const isMac = ref(true)
 onMounted(() => {
   isMac.value = /Mac|iPhone|iPad/.test(navigator.platform)
@@ -35,14 +36,17 @@ function openCommandPalette() {
           <span class="icon icon-workspace"/>
           <span class="hdr-link-label">{{ $t('nav.yourWork') }}</span>
         </NuxtLinkLocale>
-        <button type="button" class="hdr-link" :title="$t('c_Feedback.title')" @click="openFeedback('header')">
+        <button v-if="!(desktop === false && auth.isLogged)" type="button" class="hdr-link" :title="$t('c_Feedback.title')" @click="openFeedback('header')">
           <span class="icon icon-chat"/>
           <span class="hdr-link-label">{{ $t('c_Feedback.title') }}</span>
         </button>
         <span class="hdr-divider" aria-hidden="true"/>
+        <!-- Phones: balance, notifications, then the account menu (with
+             settings and log out); the desktop bar has the same order. -->
         <template v-if="desktop === false">
-          <PartialNotifyBell/>
           <WalletMenu/>
+          <PartialNotifyBell/>
+          <PartialAccountMenu feedback/>
         </template>
         <button
             type="button"

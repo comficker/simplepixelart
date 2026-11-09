@@ -2,6 +2,7 @@
 import useStatefulCookie from '~/composables/useStatefulCookie'
 
 const desktop = useIsDesktop()
+const auth = useAuthStore()
 const sideState = useStatefulCookie('dash_side')
 const sideCollapsed = computed(() => sideState.value === 'collapsed')
 function toggleSide() {
@@ -118,14 +119,17 @@ useHead({
       </template>
     </nav>
     <div class="dash-top-ctl">
-      <PartialTopPrefs/>
-      <PartialSocialAuth compact/>
-      <!-- Balance and notifications only exist once signed in, so they sit
-           last and the bar does not reflow when they appear. -->
-      <template v-if="desktop !== false">
-        <PartialNotifyBell/>
+      <!-- Balance first, then the page's own tools (feedback, theme,
+           language), then what is about you: notifications and the account
+           menu, last, with settings and log out in it. -->
+      <template v-if="desktop !== false && auth.isLogged">
         <WalletMenu/>
+        <span class="dash-top-sep" aria-hidden="true"/>
       </template>
+      <PartialTopPrefs/>
+      <span class="dash-top-sep" aria-hidden="true"/>
+      <PartialNotifyBell v-if="desktop !== false"/>
+      <PartialSocialAuth compact/>
     </div>
   </div>
 </template>
@@ -203,6 +207,13 @@ useHead({
   align-items: center;
   gap: var(--space-2);
   margin-left: auto;
+}
+
+/* Splits the bar's groups: balance | page tools | you. */
+.dash-top-sep {
+  width: 1px;
+  height: var(--space-5);
+  background: var(--border);
 }
 
 /* The theme and language menus wrap their button in an inline-flex box that
