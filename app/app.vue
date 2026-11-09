@@ -184,6 +184,12 @@ if (import.meta.client) {
   opacity: 0;
   transform: translateY(-2px);
 }
+/* The leaving page is already unmounted (its template refs are null) but
+   stays on screen for the animation; a pointer event landing on it ran
+   handlers against a null element. */
+.page-leave-active {
+  pointer-events: none;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .page-enter-active,

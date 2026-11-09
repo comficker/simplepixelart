@@ -1195,6 +1195,7 @@ function openBoardMenu(id: string, clientX: number, clientY: number) {
 function closeBoardMenu() { boardMenu.value = null; }
 
 function onContextMenu(e: MouseEvent) {
+  if (!canvas.value) return;
   const b = boardAt(e) || boardChromeAt(e);
   if (!b) return;
   e.preventDefault();
@@ -1567,6 +1568,7 @@ watch(fsMode, (m) => {
 });
 
 function onDblClick(e: any) {
+  if (!canvas.value) return;
   const hit = boardAt(e);
   if (!hit) return;
   if (hit.id !== store.activeBoardId) store.setActiveBoard(hit.id);
@@ -1574,6 +1576,7 @@ function onDblClick(e: any) {
 }
 
 function startDraw(e: any) {
+  if (!canvas.value) return;
   if (spacePressed.value) return;
   if ('button' in e && e.button !== 0) return;
   const dotBoard = boardDotAt(e);
@@ -1723,6 +1726,10 @@ function startDraw(e: any) {
 }
 
 function draw(e: any) {
+  // The page transition unmounts this component (canvas ref -> null) while its
+  // DOM stays on screen for the leave animation, and the canvas's own
+  // listeners still fire there.
+  if (!canvas.value) return;
   if (isResizingBoard.value) {
     if ('touches' in e) e.preventDefault();
     doResizeBoard(e);
@@ -1983,6 +1990,7 @@ function stopPinch() {
 }
 
 function handleTouchStart(e: TouchEvent) {
+  if (!canvas.value) return;
   if (e.touches.length === 2) {
     startPinch(e);
   } else {
@@ -1991,6 +1999,7 @@ function handleTouchStart(e: TouchEvent) {
 }
 
 function handleTouchMove(e: TouchEvent) {
+  if (!canvas.value) return;
   if ('touches' in e) e.preventDefault();
   if (isPinching.value) {
     pinch(e);
