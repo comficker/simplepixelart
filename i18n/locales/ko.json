@@ -213,6 +213,13 @@
     "notePlaceholder": "불편했던 점이 있나요? (선택)",
     "send": "보내기",
     "thanks": "감사합니다. 모두 꼼꼼히 읽고 있어요.",
+    "onLeave": "가기 전에: 여기서 그리기가 얼마나 쉬웠나요?",
+    "whereHard": "어떤 점이 어려웠나요?",
+    "hard_colors": "색 고르기",
+    "hard_layers": "레이어",
+    "hard_mobile": "휴대폰에서",
+    "hard_finding": "도구 찾기",
+    "hard_other": "기타",
     "sendFailed": "피드백을 보내지 못했어요. 잠시 후 다시 시도해 주세요."
   },
   "c_FooterBar": {

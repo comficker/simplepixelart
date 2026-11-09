@@ -213,6 +213,13 @@
     "notePlaceholder": "Algo atrapalhou? (opcional)",
     "send": "Enviar",
     "thanks": "Obrigado — lemos todos.",
+    "onLeave": "Antes de sair: foi fácil desenhar aqui?",
+    "whereHard": "O que foi difícil?",
+    "hard_colors": "Escolher cores",
+    "hard_layers": "Camadas",
+    "hard_mobile": "No celular",
+    "hard_finding": "Encontrar uma ferramenta",
+    "hard_other": "Outra coisa",
     "sendFailed": "Não foi possível enviar seu feedback. Tente de novo em instantes."
   },
   "c_FooterBar": {

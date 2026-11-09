@@ -1736,6 +1736,7 @@ function startDraw(e: any) {
   }
   if (store.currentTool !== 'select') {
     needSave.value = true;
+    drewThisVisit = true;
   }
   scheduleDraw();
   isStarted.value = true;
@@ -3250,6 +3251,7 @@ const {openFeedback} = useFeedback()
 // Asks once, after the first export that worked: by then there is something
 // to rate. Remembered in localStorage, so a cleared browser may ask again.
 function afterExport() {
+  exportedThisVisit = true
   try {
     if (localStorage.getItem('feedback_asked')) return
     localStorage.setItem('feedback_asked', '1')
@@ -3258,6 +3260,23 @@ function afterExport() {
   }
   setTimeout(() => openFeedback('export'), 2500)
 }
+
+// People who draw and leave without exporting never saw the export prompt,
+// and they are the ones it would tell us most about. Ask them once too (one
+// key per question, so having seen one does not hide the other), when they
+// leave the editor for another page having drawn something.
+let drewThisVisit = false;
+let exportedThisVisit = false;
+onBeforeUnmount(() => {
+  if (!drewThisVisit || exportedThisVisit) return
+  try {
+    if (localStorage.getItem('feedback_asked') || localStorage.getItem('feedback_leave_asked')) return
+    localStorage.setItem('feedback_leave_asked', '1')
+  } catch {
+    return
+  }
+  setTimeout(() => openFeedback('leave'), 600)
+})
 
 function exportFailed(format: string, e: unknown) {
   track('export_failed', {format, reason: failReason(e)})

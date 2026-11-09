@@ -213,6 +213,13 @@
     "notePlaceholder": "有什么地方不顺手吗？（可选）",
     "send": "发送",
     "thanks": "谢谢，每条反馈我们都会看。",
+    "onLeave": "离开前：在这里画画容易吗？",
+    "whereHard": "哪里比较难？",
+    "hard_colors": "选颜色",
+    "hard_layers": "图层",
+    "hard_mobile": "在手机上",
+    "hard_finding": "找不到工具",
+    "hard_other": "其他",
     "sendFailed": "反馈发送失败，请稍后再试。"
   },
   "c_FooterBar": {

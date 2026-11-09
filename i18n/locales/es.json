@@ -213,6 +213,13 @@
     "notePlaceholder": "¿Algo te lo puso difícil? (opcional)",
     "send": "Enviar",
     "thanks": "Gracias, leemos todos los comentarios.",
+    "onLeave": "Antes de irte: ¿qué tan fácil fue dibujar aquí?",
+    "whereHard": "¿Qué fue difícil?",
+    "hard_colors": "Elegir colores",
+    "hard_layers": "Capas",
+    "hard_mobile": "En el móvil",
+    "hard_finding": "Encontrar una herramienta",
+    "hard_other": "Otra cosa",
     "sendFailed": "No se pudo enviar tu comentario. Inténtalo de nuevo en un momento."
   },
   "c_FooterBar": {

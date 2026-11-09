@@ -14,6 +14,10 @@ const route = useRoute()
 
 const RATINGS = ['easy', 'ok', 'hard'] as const
 const rating = ref<typeof RATINGS[number] | ''>('')
+// "Hard" alone says little; one more tap says where. Kept in the feedback's
+// meta (hard_area) so the dashboard can count them.
+const HARD_AREAS = ['colors', 'layers', 'mobile', 'finding', 'other'] as const
+const hardArea = ref<typeof HARD_AREAS[number] | ''>('')
 const text = ref('')
 const sending = ref(false)
 const sent = ref(false)
@@ -21,6 +25,7 @@ const sent = ref(false)
 watch(open, (v) => {
   if (!v) return
   rating.value = ''
+  hardArea.value = ''
   text.value = ''
   sent.value = false
 })
@@ -39,10 +44,14 @@ async function send() {
           route: String(route.name ?? '').split('___')[0],
           platform: window.matchMedia('(pointer: coarse)').matches ? 'web_touch' : 'web',
           locale: locale.value,
+          ...(rating.value === 'hard' && hardArea.value ? {hard_area: hardArea.value} : {}),
         },
       },
     })
-    track('feedback', {rating: rating.value || 'none', has_text: !!text.value.trim(), trigger: trigger.value})
+    track('feedback', {
+      rating: rating.value || 'none', has_text: !!text.value.trim(), trigger: trigger.value,
+      ...(rating.value === 'hard' && hardArea.value ? {hard_area: hardArea.value} : {}),
+    })
     sent.value = true
     setTimeout(() => { open.value = false }, 1600)
   } catch (e) {
@@ -57,7 +66,7 @@ async function send() {
 <template>
   <UiModal
       v-if="open"
-      :title="trigger === 'export' ? $t('c_Feedback.afterExport') : $t('c_Feedback.general')"
+      :title="trigger === 'export' ? $t('c_Feedback.afterExport') : trigger === 'leave' ? $t('c_Feedback.onLeave') : $t('c_Feedback.general')"
       @close="open = false"
   >
     <p v-if="sent" class="publish-sub">{{ $t('c_Feedback.thanks') }}</p>
@@ -72,6 +81,19 @@ async function send() {
               :aria-pressed="rating === r"
               @click="rating = rating === r ? '' : r"
           >{{ $t('c_Feedback.' + r) }}</button>
+        </div>
+        <div v-if="rating === 'hard'">
+          <span class="publish-label">{{ $t('c_Feedback.whereHard') }}</span>
+          <div class="onb-chips" role="group" :aria-label="$t('c_Feedback.whereHard')">
+            <button
+                v-for="a in HARD_AREAS" :key="a"
+                type="button"
+                class="onb-chip"
+                :class="{active: hardArea === a}"
+                :aria-pressed="hardArea === a"
+                @click="hardArea = hardArea === a ? '' : a"
+            >{{ $t('c_Feedback.hard_' + a) }}</button>
+          </div>
         </div>
         <div>
           <label class="publish-label" for="feedback-note">{{ $t('c_Feedback.note') }}</label>

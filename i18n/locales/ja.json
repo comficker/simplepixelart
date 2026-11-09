@@ -213,6 +213,13 @@
     "notePlaceholder": "困ったことがあれば教えてください（任意）",
     "send": "送信",
     "thanks": "ありがとうございます。すべて読んでいます。",
+    "onLeave": "最後に：ここでの描きやすさはどうでしたか？",
+    "whereHard": "どこが難しかったですか？",
+    "hard_colors": "色選び",
+    "hard_layers": "レイヤー",
+    "hard_mobile": "スマホでの操作",
+    "hard_finding": "ツールが見つからない",
+    "hard_other": "その他",
     "sendFailed": "送信できませんでした。少し待ってからもう一度お試しください。"
   },
   "c_FooterBar": {

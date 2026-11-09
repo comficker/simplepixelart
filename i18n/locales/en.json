@@ -224,6 +224,13 @@
     "notePlaceholder": "Anything that got in your way? (optional)",
     "send": "Send",
     "thanks": "Thanks — we read every one.",
+    "onLeave": "Before you go: how easy was drawing here?",
+    "whereHard": "What was hard?",
+    "hard_colors": "Picking colours",
+    "hard_layers": "Layers",
+    "hard_mobile": "On my phone",
+    "hard_finding": "Finding a tool",
+    "hard_other": "Something else",
     "sendFailed": "Couldn't send your feedback. Try again in a moment."
   },
   "c_FooterBar": {
