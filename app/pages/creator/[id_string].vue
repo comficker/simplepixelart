@@ -68,11 +68,9 @@ const profileFetch = useAuthFetch<CreatorProfile>(
 const auth = useAuthStore()
 const apiBase = useRuntimeConfig().public.api as string
 
-// The creator's best-liked pieces: the first three shown large as the page's
-// centrepiece, and up to a dozen laid out as the cover, so every profile
-// looks like its owner's work without them uploading a banner.
+// The creator's three best-liked pieces, shown large above all their work.
 const featuredFetch = useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
-  params: {user: username.value, status: 'public', is_tile: false, ordering: '-score,-id', page_size: 12},
+  params: {user: username.value, status: 'public', is_tile: false, ordering: '-score,-id', page_size: 3},
   key: `creator-featured-${username.value}`,
 })
 
@@ -82,8 +80,7 @@ const {data: collectionsRes} = collectionsFetch
 const {data: worksCount} = worksCountFetch
 const {data: profile, refresh: refreshProfile} = profileFetch
 const {data: featuredRes} = featuredFetch
-const coverPieces = computed(() => featuredRes.value?.results || [])
-const featured = computed(() => coverPieces.value.slice(0, 3))
+const featured = computed(() => (featuredRes.value?.results || []).slice(0, 3))
 const followBusy = ref(false)
 const loginModal = useLoginModal()
 
@@ -256,97 +253,13 @@ useCustomSeoMeta({
 </script>
 
 <template>
-  <item-list :limit="24">
-    <template #before>
-      <section class="cp-hero">
-        <div class="cp-cover" aria-hidden="true">
-          <img v-for="c in coverPieces" :key="c.id" :src="tileImageUrl(apiBase, c.id_string)" :alt="c.name || $t('p_creator_id_string.pixelArtAlt')" loading="lazy">
-        </div>
-        <div class="cp-id">
-          <div class="cp-avatar">
-            <img v-if="profile?.avatar" :src="profile.avatar" :alt="`@${username}`">
-            <span v-else>{{ username.slice(0, 1).toUpperCase() }}</span>
-          </div>
-          <div class="cp-name">
-            <h1 class="cp-handle">@{{ username }}</h1>
-            <CreatorBadges :badges="profile?.badges"/>
-            <p v-if="profile?.bio" class="cp-bio">{{ profile.bio }}</p>
-            <ul v-if="profileLinks.length" class="cp-links">
-              <li v-for="l in profileLinks" :key="l.key">
-                <!-- Followed once the creator has enough hand-made public work
-                     (links_follow, decided by the API); nofollow until then, so a
-                     new account cannot farm links. -->
-                <a :href="l.url" target="_blank" :rel="profile?.links_follow ? 'noopener' : 'nofollow ugc noopener noreferrer'" :title="l.host">
-                  <span class="icon icon-link"/><span>{{ l.label }}</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div v-if="profile" class="cp-actions">
-            <button
-                v-if="!isSelf"
-                class="btn"
-                :class="{primary: !profile.following}"
-                :disabled="followBusy"
-                @click="toggleFollow"
-            >
-              <span class="icon" :class="profile.following ? 'icon-check' : 'icon-plus'"/>
-              <span>{{ profile.following ? $t('p_creator_id_string.following') : $t('p_creator_id_string.follow') }}</span>
-            </button>
-            <NuxtLinkLocale v-else to="/upload" class="btn primary">
-              <span class="icon icon-upload"/><span>{{ $t('p_upload.uploadPixelArt') }}</span>
-            </NuxtLinkLocale>
-            <TipButton v-if="!isSelf && !profile.is_bot" :username="username"/>
-            <SocialSharing :meta="shareMeta" position="right"/>
-          </div>
-        </div>
+  <!-- Works in the main column, the person in the rail: the same split as an
+       art page, so the profile reads as one panel rather than a banner the
+       works had to scroll past. -->
+  <ToolLayout class="creator-page">
 
-        <div v-if="profile?.claimable && !isSelf" class="cp-claim">
-          <span class="icon icon-check-decagram"/>
-          <span>{{ $t('p_creator_id_string.claimPrompt') }}</span>
-          <button type="button" class="btn" @click="openClaim">{{ $t('p_creator_id_string.claimButton') }}</button>
-        </div>
-
-        <dl v-if="profile" class="cp-stats" :aria-label="$t('p_creator_id_string.creatorStats')">
-          <div><dt>{{ $t('p_creator_id_string.stat_artworks') }}</dt><dd>{{ profile.arts }}</dd></div>
-          <div>
-            <dt>{{ $t('p_creator_id_string.stat_likes') }}<span v-if="thisWeek?.likes" class="cp-up">+{{ thisWeek.likes }} {{ $t('p_creator_id_string.thisWeek') }}</span></dt>
-            <dd>{{ profile.likes }}</dd>
-          </div>
-          <div>
-            <dt>{{ $t('p_creator_id_string.stat_followers') }}<span v-if="thisWeek?.followers" class="cp-up">+{{ thisWeek.followers }} {{ $t('p_creator_id_string.thisWeek') }}</span></dt>
-            <dd>{{ profile.followers }}</dd>
-          </div>
-          <div>
-            <dt>{{ $t('p_creator_id_string.stat_remixed') }}<span v-if="thisWeek?.remixes" class="cp-up">+{{ thisWeek.remixes }} {{ $t('p_creator_id_string.thisWeek') }}</span></dt>
-            <dd>{{ profile.remixes || 0 }}</dd>
-          </div>
-          <div v-if="joinedText"><dt>{{ $t('p_creator_id_string.joined') }}</dt><dd>{{ joinedText }}</dd></div>
-        </dl>
-      </section>
-
-
-  <UiModal v-if="showClaim" :title="$t('p_creator_id_string.claimTitle')" @close="showClaim = false">
-        <div class="cp-claim-modal">
-          <p>{{ $t('p_creator_id_string.claimStep1') }}</p>
-          <div v-if="claim" class="cp-claim-code">
-            <code>{{ claim.code }}</code>
-            <button type="button" class="btn" @click="copyClaimCode"><span class="icon icon-content-copy"/></button>
-          </div>
-          <p v-if="claim">
-            {{ $t('p_creator_id_string.claimStep2') }}
-            <a :href="claim.url" target="_blank" rel="nofollow noopener">{{ claim.url }}</a>
-          </p>
-          <p class="text-xs text-muted">{{ $t('p_creator_id_string.claimStep3') }}</p>
-          <p v-if="claimError" class="cp-claim-err">{{ $t('p_creator_id_string.claimErr_' + claimError, $t('p_creator_id_string.claimErr_ERROR')) }}</p>
-          <button type="button" class="btn primary" :disabled="!claim || claimBusy" @click="verifyClaim">
-            {{ claimBusy ? $t('p_creator_id_string.claimChecking') : $t('p_creator_id_string.claimVerify') }}
-          </button>
-        </div>
-      </UiModal>
-
-      <section v-if="featured.length" class="cp-sec">
-        <h2 class="cp-cap">{{ $t('p_creator_id_string.bestWork') }}</h2>
+    <div class="screen">
+      <Widget v-if="featured.length" :title="$t('p_creator_id_string.bestWork')">
         <div class="cp-featured" :class="`n-${featured.length}`">
           <NuxtLinkLocale
               v-for="(f, i) in featured"
@@ -360,10 +273,9 @@ useCustomSeoMeta({
             <span class="cp-feat-name">{{ f.name || $t('common.untitled') }}</span>
           </NuxtLinkLocale>
         </div>
-      </section>
+      </Widget>
 
-      <section v-if="collections.length" class="cp-sec creator-colls">
-        <h2 class="cp-cap">{{ $t('p_creator_id_string.collections') }}</h2>
+      <Widget v-if="collections.length" :title="$t('p_creator_id_string.collections')" class="creator-colls">
         <div class="results">
           <ItemCollectionTile
               v-for="c in collections"
@@ -375,80 +287,162 @@ useCustomSeoMeta({
               @error="coverFailed[c.id as number] = true"
           />
         </div>
-      </section>
+      </Widget>
 
-      <h2 v-if="totalWorks" class="cp-cap cp-all">{{ $t('p_creator_id_string.allWorkN', {n: totalWorks}) }}</h2>
+      <Widget :title="$t('p_creator_id_string.allWorkN', {n: totalWorks || 0})">
+        <item-list :limit="24"/>
+      </Widget>
+    </div>
+
+    <template #aside>
+      <Widget class="cp-profile" :title="$t('p_art_id_string.creator')">
+        <template #ctl>
+          <SocialSharing :meta="shareMeta" position="right" icon-only/>
+        </template>
+        <div class="cp-id">
+          <div class="cp-avatar">
+            <img v-if="profile?.avatar" :src="profile.avatar" :alt="`@${username}`">
+            <span v-else>{{ username.slice(0, 1).toUpperCase() }}</span>
+          </div>
+          <div class="cp-name">
+            <h1 class="cp-handle">@{{ username }}</h1>
+            <CreatorBadges :badges="profile?.badges"/>
+            <span v-if="joinedText" class="cp-joined">{{ $t('p_creator_id_string.joined') }} {{ joinedText }}</span>
+          </div>
+        </div>
+        <p v-if="profile?.bio" class="cp-bio">{{ profile.bio }}</p>
+        <div v-if="profile" class="cp-actions">
+          <button
+              v-if="!isSelf"
+              class="btn"
+              :class="{primary: !profile.following}"
+              :disabled="followBusy"
+              @click="toggleFollow"
+          >
+            <span class="icon" :class="profile.following ? 'icon-check' : 'icon-plus'"/>
+            <span>{{ profile.following ? $t('p_creator_id_string.following') : $t('p_creator_id_string.follow') }}</span>
+          </button>
+          <NuxtLinkLocale v-else to="/upload" class="btn primary">
+            <span class="icon icon-upload"/><span>{{ $t('p_upload.uploadPixelArt') }}</span>
+          </NuxtLinkLocale>
+          <TipButton v-if="!isSelf && !profile.is_bot" :username="username"/>
+        </div>
+        <div v-if="profile?.claimable && !isSelf" class="cp-claim">
+          <span class="icon icon-check-decagram"/>
+          <span>{{ $t('p_creator_id_string.claimPrompt') }}</span>
+          <button type="button" class="btn" @click="openClaim">{{ $t('p_creator_id_string.claimButton') }}</button>
+        </div>
+      </Widget>
+
+      <Widget v-if="profile" :title="$t('p_creator_id_string.creatorStats')">
+        <dl class="cp-stats">
+          <div><dd>{{ profile.arts }}</dd><dt>{{ $t('p_creator_id_string.stat_artworks') }}</dt></div>
+          <div>
+            <dd>{{ profile.likes }}<span v-if="thisWeek?.likes" class="cp-up" :title="$t('p_creator_id_string.thisWeek')">+{{ thisWeek.likes }}</span></dd>
+            <dt>{{ $t('p_creator_id_string.stat_likes') }}</dt>
+          </div>
+          <div>
+            <dd>{{ profile.followers }}<span v-if="thisWeek?.followers" class="cp-up" :title="$t('p_creator_id_string.thisWeek')">+{{ thisWeek.followers }}</span></dd>
+            <dt>{{ $t('p_creator_id_string.stat_followers') }}</dt>
+          </div>
+          <div>
+            <dd>{{ profile.remixes || 0 }}<span v-if="thisWeek?.remixes" class="cp-up" :title="$t('p_creator_id_string.thisWeek')">+{{ thisWeek.remixes }}</span></dd>
+            <dt>{{ $t('p_creator_id_string.stat_remixed') }}</dt>
+          </div>
+        </dl>
+      </Widget>
+
+      <!-- The same label / value rows as an art page's details. Followed once
+           the creator has enough hand-made public work (links_follow, decided
+           by the API); nofollow until then, so a new account cannot farm
+           links. -->
+      <Widget v-if="profileLinks.length" :title="$t('p_art_id_string.creatorLinks')">
+        <dl class="art-meta-side">
+          <div v-for="l in profileLinks" :key="l.key" class="art-meta-row">
+            <dt>{{ l.label }}</dt>
+            <dd>
+              <a :href="l.url" target="_blank" :rel="profile?.links_follow ? 'noopener' : 'nofollow ugc noopener noreferrer'" class="art-meta-link cp-link">
+                <span class="icon icon-link"/>{{ l.host }}
+              </a>
+            </dd>
+          </div>
+        </dl>
+      </Widget>
     </template>
-  </item-list>
+    <UiModal v-if="showClaim" :title="$t('p_creator_id_string.claimTitle')" @close="showClaim = false">
+      <div class="cp-claim-modal">
+        <p>{{ $t('p_creator_id_string.claimStep1') }}</p>
+        <div v-if="claim" class="cp-claim-code">
+          <code>{{ claim.code }}</code>
+          <button type="button" class="btn" @click="copyClaimCode"><span class="icon icon-content-copy"/></button>
+        </div>
+        <p v-if="claim">
+          {{ $t('p_creator_id_string.claimStep2') }}
+          <a :href="claim.url" target="_blank" rel="nofollow noopener">{{ claim.url }}</a>
+        </p>
+        <p class="text-xs text-muted">{{ $t('p_creator_id_string.claimStep3') }}</p>
+        <p v-if="claimError" class="cp-claim-err">{{ $t('p_creator_id_string.claimErr_' + claimError, $t('p_creator_id_string.claimErr_ERROR')) }}</p>
+        <button type="button" class="btn primary" :disabled="!claim || claimBusy" @click="verifyClaim">
+          {{ claimBusy ? $t('p_creator_id_string.claimChecking') : $t('p_creator_id_string.claimVerify') }}
+        </button>
+      </div>
+    </UiModal>
+  </ToolLayout>
 </template>
 
 <style scoped>
-/* ── hero ─────────────────────────────────────────────────────────── */
-.cp-hero {
-  position: relative;
-  margin-bottom: var(--space-6);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  overflow: hidden;
-}
-
-/* A strip of the creator's own pieces, fading into the panel below. With no
-   public work yet it is a wash of the accent colour. */
-.cp-cover {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(calc(var(--space-6) * 4), 1fr));
-  grid-auto-rows: calc(var(--space-6) * 4);
-  gap: var(--space-4);
-  height: calc(var(--space-6) * 6);
-  padding: var(--space-4);
-  overflow: hidden;
-  background: color-mix(in oklab, var(--primary) 18%, var(--surface));
-}
-
-.cp-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  image-rendering: pixelated;
-  opacity: 0.85;
-}
-
-.cp-cover::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 30%, var(--surface));
-}
-
-/* Positioned so it paints over the cover: the cover is positioned too, and
-   would otherwise hide the handle where the two overlap. */
-.cp-id {
-  position: relative;
+/* ── profile (rail) ───────────────────────────────────────────────── */
+.cp-profile :deep(.widget-body) {
   display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* The avatar is as tall as the name block beside it (handle, labels,
+   joined), square by its aspect ratio rather than a fixed size. A grid
+   row, since a flex row will not size a stretched item's width from it. */
+.cp-id {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.cp-name {
+  display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-5);
-  margin-top: calc(var(--space-6) * -2);
-  padding: 0 var(--space-5);
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.cp-handle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.cp-joined {
+  font-size: var(--text-xs);
+  color: var(--muted);
 }
 
 .cp-avatar {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   flex: none;
-  width: calc(var(--space-6) * 4);
-  height: calc(var(--space-6) * 4);
+  height: 100%;
+  aspect-ratio: 1;
   overflow: hidden;
   border-radius: var(--radius-sm);
   background: var(--primary-fill);
   color: var(--primary-foreground);
   font-family: var(--font-display);
-  font-size: var(--text-4xl);
+  font-size: var(--text-2xl);
   font-weight: 800;
-  box-shadow: 0 0 0 var(--space-1) var(--surface);
 }
 
 .cp-avatar img {
@@ -457,42 +451,42 @@ useCustomSeoMeta({
   object-fit: cover;
 }
 
-/* Only the avatar overlaps the cover. The name starts just under it, so the
-   block can grow downwards (labels, bio, links) without climbing into the
-   art. */
-.cp-name {
+/* Follow takes the row; Tip sits beside it as the second ask. */
+.cp-actions {
   display: flex;
-  flex-direction: column;
   gap: var(--space-2);
-  flex: 1;
-  min-width: 0;
-  margin-top: calc(var(--space-6) * 2 + var(--space-3));
 }
 
+.cp-actions > :first-child {
+  flex: 1;
+  justify-content: center;
+}
 
-.cp-handle {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-3xl);
-  font-weight: 800;
-  line-height: 1.1;
-  overflow-wrap: anywhere;
+.cp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.cp-link .icon {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  color: var(--muted);
 }
 
 .cp-bio {
   margin: 0;
-  max-width: 60ch;
   font-size: var(--text-sm);
   color: var(--muted);
 }
+
 
 .cp-claim {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2) var(--space-3);
-  margin-top: var(--space-4);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-3);
   border: 1px dashed var(--primary);
   border-radius: var(--radius-sm);
   background: color-mix(in oklab, var(--primary) 6%, var(--surface));
@@ -508,67 +502,33 @@ useCustomSeoMeta({
 }
 .cp-claim-err { color: var(--danger); }
 
-.cp-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: var(--text-xs);
-}
-
-.cp-links a {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: var(--muted);
-}
-
-.cp-links .icon {
-  width: var(--icon-sm);
-  height: var(--icon-sm);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .cp-links a:hover { color: var(--primary); }
-}
-
-.cp-actions {
-  display: flex;
-  gap: var(--space-2);
-  flex: none;
-  margin-top: calc(var(--space-6) * 2 + var(--space-3));
-}
-
-/* Numbers first, labels under them: the figures are what is being shown. */
+/* ── stats (rail): a 2×2 of quiet tiles, label over figure ───────── */
 .cp-stats {
-  display: flex;
-  flex-wrap: wrap;
-  margin: var(--space-5) 0 0;
-  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
 }
 
 .cp-stats > div {
   display: flex;
   flex-direction: column-reverse;
   gap: var(--space-1);
-  flex: 1 1 0;
-  min-width: calc(var(--space-6) * 4);
-  padding: var(--space-4) var(--space-5);
-}
-
-.cp-stats > div + div {
-  border-left: 1px solid var(--border);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
 }
 
 .cp-stats dd {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
   margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: 800;
+  font-size: var(--text-xl);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .cp-stats dt {
@@ -576,25 +536,14 @@ useCustomSeoMeta({
   color: var(--muted);
 }
 
-/* ── sections ─────────────────────────────────────────────────────── */
-.cp-sec {
-  margin-bottom: var(--space-6);
+/* Only the owner sees how the week went, beside the total it adds to. */
+.cp-up {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--success);
 }
 
-.cp-cap {
-  margin: 0 0 var(--space-3);
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.cp-all {
-  margin-bottom: var(--space-3);
-}
-
-/* Best work: the most liked piece large, the next two stacked beside it. */
+/* ── best work: the most liked piece large, the next two beside it ── */
 .cp-featured {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -622,7 +571,7 @@ useCustomSeoMeta({
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: repeating-conic-gradient(var(--surface-2) 0 25%, var(--surface) 0 50%) 0 0 / var(--space-4) var(--space-4);
+  background: var(--card);
 }
 
 .cp-featured:not(.n-1):not(.n-2) .cp-feat.is-lead {
@@ -655,44 +604,29 @@ useCustomSeoMeta({
   .cp-feat:hover { border-color: var(--primary); }
 }
 
-/* Only the owner sees how the week went, beside the totals it adds to. */
-.cp-up {
-  margin-left: var(--space-2);
-  font-weight: 600;
-  color: var(--success);
+/* Stacked (below 1280, where the rail drops under the tool), the person
+   comes first: below thirty pieces nobody would find who made them. Moved
+   up under the site header, the rail gives its top rule to the works. */
+@media (max-width: 1279px) {
+  .creator-page {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .main-wrapper.dash .creator-page > :deep(.tool-doc) {
+    order: -1;
+    margin-top: 0;
+    border-top: 0;
+  }
+
+  .main-wrapper.dash .creator-page > :deep(.tool-main) {
+    margin-top: 0;
+    border-top: 1px solid var(--border);
+  }
 }
 
 /* ── phones ───────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
-  .cp-cover { height: calc(var(--space-6) * 4); }
-
-  .cp-id {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-3);
-    margin-top: calc(var(--space-4) * -2);
-    padding: 0 var(--space-4);
-  }
-
-  .cp-name,
-  .cp-actions { margin-top: 0; }
-
-  .cp-avatar {
-    width: calc(var(--space-6) * 3);
-    height: calc(var(--space-6) * 3);
-    font-size: var(--text-3xl);
-  }
-
-  .cp-handle { font-size: var(--text-2xl); }
-
-  .cp-stats > div {
-    flex-basis: 33%;
-    padding: var(--space-3) var(--space-4);
-  }
-
-  .cp-stats > div:nth-child(4) { border-left: 0; }
-  .cp-stats > div:nth-child(n + 4) { border-top: 1px solid var(--border); }
-
   /* One row of equal squares: the lead at full width took a whole screen
      before the rest of the page. */
   .cp-featured,
@@ -711,6 +645,5 @@ useCustomSeoMeta({
 
   /* Too small to caption without covering the piece. */
   .cp-feat-name { display: none; }
-
 }
 </style>
