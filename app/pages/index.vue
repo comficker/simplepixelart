@@ -219,11 +219,9 @@ useCustomSeoMeta({
     <div class="screen home-stack">
       <section class="page-hero">
         <div class="page-hero-main">
-          <h1 class="page-hero-title">
-            <span class="page-hero-title-main">{{ $t('p_index.findPixelArtYouLove') }}</span>
-            <span class="page-hero-title-accent">{{ $t('p_index.thenMakeYourOwn') }}</span>
-          </h1>
-          <p class="page-hero-tagline">{{ $t('p_index.heroTagline') }}</p>
+          <!-- The page's one h1 stays for search engines and screen readers;
+               the hero itself is just the way in. -->
+          <h1 class="sr-only">{{ $t('p_index.findPixelArtYouLove') }} {{ $t('p_index.thenMakeYourOwn') }}</h1>
           <div class="page-hero-cta">
             <NuxtLinkLocale to="/arts" class="btn primary">
               <span class="icon icon-explore"/><span>{{ $t('p_index.browsePixelArt') }}</span>
@@ -234,7 +232,7 @@ useCustomSeoMeta({
           </div>
           <div class="home-tools"><ToolPaths/></div>
         </div>
-        <HeroShowcase/>
+        <HeroDinos/>
       </section>
 
       <Widget v-if="showStudio" :title="auth.logged ? $t('p_index.yourStudio') : $t('p_index.startAProject')">
@@ -453,6 +451,23 @@ useCustomSeoMeta({
 .home-chal-live {
   font-weight: 600;
   color: var(--primary);
+}
+
+/* Only the actions here: they open the hero. */
+.page-hero .page-hero-cta {
+  margin-top: 0;
+}
+
+/* The dinos (HeroDinos) walk along the bottom, in front of the copy. */
+.page-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.page-hero > .page-hero-main {
+  position: relative;
+  z-index: 1;
 }
 
 .page-hero .home-tools {

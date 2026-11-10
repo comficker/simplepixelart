@@ -24,6 +24,19 @@
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* Read by screen readers and search engines, not shown. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 *,
 *::before,
 *::after {
@@ -950,10 +963,11 @@ footer {
 
 @media (min-width: 1024px) {
     .page-hero {
-        --hero-wash: linear-gradient(to bottom right, var(--surface) 0%, var(--surface) 34%, color-mix(in oklab, var(--surface) 82%, transparent) 44%, color-mix(in oklab, var(--surface) 55%, transparent) 54%, color-mix(in oklab, var(--surface) 28%, transparent) 64%, color-mix(in oklab, var(--surface) 10%, transparent) 74%, color-mix(in oklab, var(--surface) 0%, transparent) 84%);
+        /* Left to right: the copy sits on the plain panel, the piece owns the
+           right side, with a short soft edge between them. */
+        --hero-wash: linear-gradient(to right, var(--surface) 0%, var(--surface) 50%, color-mix(in oklab, var(--surface) 85%, transparent) 56%, color-mix(in oklab, var(--surface) 50%, transparent) 63%, color-mix(in oklab, var(--surface) 15%, transparent) 70%, color-mix(in oklab, var(--surface) 0%, transparent) 76%);
         grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
         align-items: center;
-        min-height: calc(var(--space-6) * 11);
         padding-bottom: var(--space-5);
         background:
             var(--hero-wash),
@@ -1008,9 +1022,10 @@ footer {
 
 .page-hero-tagline {
     margin-top: var(--space-3);
-    max-width: 60ch;
+    max-width: 46ch;
     color: var(--muted);
-    font-size: var(--text-sm);
+    font-size: var(--text-base);
+    line-height: 1.5;
 }
 
 .page-hero-cta {

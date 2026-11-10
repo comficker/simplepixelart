@@ -115,7 +115,6 @@ useCustomSeoMeta({
             {{ $t('p_creator_program.spotsLeft', {n: info.spots_left, limit: info.limit}) }}
           </p>
         </div>
-        <HeroShowcase/>
       </section>
 
       <!-- What you get for joining, beside the form that gets it. -->
