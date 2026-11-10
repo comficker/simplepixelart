@@ -2868,5 +2868,18 @@
     "newTilemap": "Nuevo tilemap",
     "empty": "Aún no hay tilemaps públicos.",
     "count": "{count} tilemap | {count} tilemaps"
+  },
+  "c_AndroidApp": {
+    "short": "App para Android",
+    "title": "Descarga la app para Android",
+    "sub": "Dibuja y anima pixel art en tu móvil.",
+    "get": "Disponible en Google Play",
+    "install": "Instalar",
+    "news": "Ya estamos en Google Play",
+    "freeDownload": "Descarga gratis →",
+    "barSub": "Gratis en Google Play · dibuja en tu móvil"
+  },
+  "c_SystemNotice": {
+    "label": "Aviso del sistema"
   }
 }

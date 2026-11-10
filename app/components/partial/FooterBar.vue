@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import {playUrl} from '~/helper/play'
+
 const year = new Date().getFullYear()
 </script>
 
@@ -6,6 +8,7 @@ const year = new Date().getFullYear()
   <div class="footer-left">
     <span class="footer-copy">© {{ year }} SimplePixelArt.com</span>
     <nav class="footer-links" :aria-label="$t('c_FooterBar.footer')">
+      <a :href="playUrl('footer')" target="_blank" rel="noopener">{{ $t('c_AndroidApp.short') }}</a>
       <NuxtLinkLocale to="/contact">{{ $t('c_FooterBar.contact') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/guidelines">{{ $t('common.guidelines') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/privacy">{{ $t('c_FooterBar.privacy') }}</NuxtLinkLocale>

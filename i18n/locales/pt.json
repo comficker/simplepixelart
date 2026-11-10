@@ -2868,5 +2868,18 @@
     "newTilemap": "Novo tilemap",
     "empty": "Ainda não há tilemaps públicos.",
     "count": "{count} tilemap | {count} tilemaps"
+  },
+  "c_AndroidApp": {
+    "short": "App para Android",
+    "title": "Baixe o app para Android",
+    "sub": "Desenhe e anime pixel art no celular.",
+    "get": "Disponível no Google Play",
+    "install": "Instalar",
+    "news": "Agora estamos no Google Play",
+    "freeDownload": "Download grátis →",
+    "barSub": "Grátis no Google Play · desenhe no celular"
+  },
+  "c_SystemNotice": {
+    "label": "Aviso do sistema"
   }
 }

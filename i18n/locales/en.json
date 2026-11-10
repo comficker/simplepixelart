@@ -2901,5 +2901,18 @@
     "newTilemap": "New tilemap",
     "empty": "No public tilemaps yet.",
     "count": "{count} tilemap | {count} tilemaps"
+  },
+  "c_AndroidApp": {
+    "short": "Android app",
+    "title": "Get the Android app",
+    "sub": "Draw and animate pixel art on your phone.",
+    "get": "Get it on Google Play",
+    "install": "Install",
+    "news": "We're now on Google Play",
+    "freeDownload": "Free download →",
+    "barSub": "Free on Google Play · draw on your phone"
+  },
+  "c_SystemNotice": {
+    "label": "System notice"
   }
 }

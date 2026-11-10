@@ -2868,5 +2868,18 @@
     "newTilemap": "新建瓦片地图",
     "empty": "还没有公开的瓦片地图。",
     "count": "{count} 个瓦片地图"
+  },
+  "c_AndroidApp": {
+    "short": "安卓应用",
+    "title": "下载安卓应用",
+    "sub": "在手机上绘制像素画并制作动画。",
+    "get": "在 Google Play 下载",
+    "install": "安装",
+    "news": "我们已上架 Google Play",
+    "freeDownload": "免费下载 →",
+    "barSub": "Google Play 免费 · 在手机上画"
+  },
+  "c_SystemNotice": {
+    "label": "系统通知"
   }
 }

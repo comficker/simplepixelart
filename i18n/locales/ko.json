@@ -2868,5 +2868,18 @@
     "newTilemap": "새 타일맵",
     "empty": "아직 공개 타일맵이 없습니다.",
     "count": "타일맵 {count}개"
+  },
+  "c_AndroidApp": {
+    "short": "안드로이드 앱",
+    "title": "안드로이드 앱 받기",
+    "sub": "휴대폰에서 픽셀 아트를 그리고 애니메이션으로 만드세요.",
+    "get": "Google Play에서 받기",
+    "install": "설치",
+    "news": "이제 Google Play에서 만나보세요",
+    "freeDownload": "무료 다운로드 →",
+    "barSub": "Google Play 무료 · 휴대폰으로 그리기"
+  },
+  "c_SystemNotice": {
+    "label": "시스템 알림"
   }
 }

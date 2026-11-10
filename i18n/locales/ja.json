@@ -2868,5 +2868,18 @@
     "newTilemap": "新しいタイルマップ",
     "empty": "公開タイルマップはまだありません。",
     "count": "{count} 件のタイルマップ"
+  },
+  "c_AndroidApp": {
+    "short": "Androidアプリ",
+    "title": "Androidアプリを入手",
+    "sub": "スマホでドット絵を描いてアニメーションに。",
+    "get": "Google Playで入手",
+    "install": "インストール",
+    "news": "Google Playで配信中",
+    "freeDownload": "無料ダウンロード →",
+    "barSub": "Google Playで無料 · スマホで描こう"
+  },
+  "c_SystemNotice": {
+    "label": "お知らせ"
   }
 }

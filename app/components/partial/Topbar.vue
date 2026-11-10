@@ -120,6 +120,7 @@ useHead({
         <span v-else class="dash-crumb" :class="{'is-current': i === crumbs.length - 1}" :aria-current="i === crumbs.length - 1 ? 'page' : undefined">{{ c.label }}</span>
       </template>
     </nav>
+    <PartialSystemNotice/>
     <div class="dash-top-ctl">
       <!-- Balance first, then the page's own tools (feedback, theme,
            language), then what is about you: notifications and the account

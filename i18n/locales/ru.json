@@ -2868,5 +2868,18 @@
     "newTilemap": "Новый тайлмап",
     "empty": "Публичных тайлмапов пока нет.",
     "count": "{count} тайлмап | {count} тайлмапа | {count} тайлмапов"
+  },
+  "c_AndroidApp": {
+    "short": "Приложение для Android",
+    "title": "Скачайте приложение для Android",
+    "sub": "Рисуйте и анимируйте пиксель-арт на телефоне.",
+    "get": "Доступно в Google Play",
+    "install": "Установить",
+    "news": "Мы теперь в Google Play",
+    "freeDownload": "Скачать бесплатно →",
+    "barSub": "Бесплатно в Google Play · рисуйте на телефоне"
+  },
+  "c_SystemNotice": {
+    "label": "Системное уведомление"
   }
 }

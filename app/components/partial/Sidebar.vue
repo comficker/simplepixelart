@@ -2,6 +2,7 @@
 const cmdk = useCommandPalette()
 import {TOOLS} from '~/helper/tools'
 import useStatefulCookie from '~/composables/useStatefulCookie'
+import {playUrl} from '~/helper/play'
 
 const sideState = useStatefulCookie('dash_side')
 const collapsed = computed(() => sideState.value === 'collapsed')
@@ -122,6 +123,10 @@ const SECTIONS = [
           <span class="dash-tool-ic dash-tool-ic-plain"><span class="icon icon-trophy"/></span>
           <span class="dash-label">{{ $t('c_Sidebar.creatorProgram') }}</span>
         </NuxtLinkLocale>
+        <a :href="playUrl('sidebar')" target="_blank" rel="noopener" class="hdr-link dash-link" :title="$t('c_AndroidApp.title')">
+          <span class="dash-tool-ic dash-tool-ic-plain"><span class="icon icon-android"/></span>
+          <span class="dash-label">{{ $t('c_AndroidApp.short') }}</span>
+        </a>
         <a
             v-for="l in SOCIAL"
             :key="l.href"

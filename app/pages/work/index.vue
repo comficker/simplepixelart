@@ -799,6 +799,8 @@ onMounted(() => {
       </BrowseFilter>
     </template>
 
+    <AndroidAppCard v-if="auth.isLogged" spot="work_banner" dismissible class="work-android"/>
+
     <template v-if="tab === 'artworks'">
       <div v-if="loadingWorks" class="results" aria-busy="true">
         <div v-for="i in 10" :key="i" class="skeleton skeleton-square"/>
@@ -1203,6 +1205,9 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.work-android {
+  margin-bottom: var(--space-3);
+}
 
 
 

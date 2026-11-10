@@ -70,6 +70,7 @@ if (import.meta.client) {
         </div>
       </main>
       <PartialFooter/>
+      <ClientOnly><PartialAndroidBar/></ClientOnly>
     </div>
     <LazyUiCommandPalette v-if="cmdk.loaded.value"/>
     <PartialLoginModal v-if="loginModal.open.value" @close="loginModal.hide()" @success="loginModal.done()"/>

@@ -2,9 +2,10 @@
 
 Free, browser-based pixel art editor — draw sprites, build tilesets with auto-tiling terrains, paint tilemaps, animate frame-by-frame, and share to a community gallery. No install, no signup required.
 
-**Live: [simplepixelart.com](https://simplepixelart.com)**
+**Live: [simplepixelart.com](https://simplepixelart.com)** · **Android: [Google Play](https://play.google.com/store/apps/details?id=com.simple.pixel.art&referrer=utm_source%3Dgithub%26utm_medium%3Dreadme)**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Get it on Google Play](https://img.shields.io/badge/Google_Play-Get_the_app-3DDC84?logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.simple.pixel.art&referrer=utm_source%3Dgithub%26utm_medium%3Dreadme)
 
 ![Simple Pixel Art editor](public/screenshot/editor.png)
 

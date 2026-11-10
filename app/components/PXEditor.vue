@@ -6,6 +6,7 @@ const artImage = useArtImage()
 import {onMounted, ref, toRaw} from "vue";
 import {buildIsoPath, compositeFrame, drawThumbnail, editorDataToJSON, editorDataToSVG, layers2MapNumbers} from "~/helper/canvas";
 import {hexToRgb} from "~/helper/color";
+import {playUrl} from "~/helper/play";
 import {downloadBlob, generateUUID, sharedPage2EditorData} from "~/helper/utils";
 import {cellsBetween} from "~/helper/tileBrush";
 import {LICENSES} from "~/helper/constants";
@@ -3253,12 +3254,27 @@ const {openFeedback} = useFeedback()
 function afterExport() {
   exportedThisVisit = true
   try {
-    if (localStorage.getItem('feedback_asked')) return
+    if (localStorage.getItem('feedback_asked')) return androidNudge()
     localStorage.setItem('feedback_asked', '1')
   } catch {
     return
   }
   setTimeout(() => openFeedback('export'), 2500)
+}
+
+// The first export asks for feedback; a later one mentions the Android app,
+// once per device, so the two never stack.
+function androidNudge() {
+  try {
+    if (localStorage.getItem('android_export_nudge')) return
+    localStorage.setItem('android_export_nudge', '1')
+  } catch {
+    return
+  }
+  setTimeout(() => toast(t('c_AndroidApp.title'), {
+    description: t('c_AndroidApp.sub'),
+    action: {label: t('c_AndroidApp.get'), onClick: () => window.open(playUrl('export_done'), '_blank', 'noopener')},
+  }), 1500)
 }
 
 // People who draw and leave without exporting never saw the export prompt,
@@ -4560,6 +4576,7 @@ watch(
                   <span>{{ $t('common.download') }}</span>
                 </button>
               </div>
+              <AndroidAppCard spot="publish_done"/>
               <NuxtLinkLocale
                   :to="`/art/${editorData.id_string}`"
                   class="btn primary wide"
