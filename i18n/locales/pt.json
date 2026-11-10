@@ -534,7 +534,8 @@
     "offerAsBase": "Deixar outros começarem a partir desta",
     "startFromBase": "Começar de uma base",
     "noBasesYet": "Ainda não há bases",
-    "basePreview": "Prévia das cópias"
+    "basePreview": "Prévia das cópias",
+    "colorsReduced": "Cores demais para pixel art — reduzidas para {count}."
   },
   "c_Palette": {
     "colorNHex": "Cor {n}: {hex}",

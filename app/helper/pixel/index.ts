@@ -1,5 +1,6 @@
 
 import {isSameColor, rgbToHex} from '~/helper/color'
+import {medianCut} from '~/helper/palette'
 import {dataUrlToOriginalGrid, dataUrlToSamplesGrid} from './legacy'
 import {
     estimateCellPx, imageToCells, peelGround, quantizeCells,
@@ -30,6 +31,42 @@ export async function importFileGrid(dataUrl: string, opts?: { keepBackground?: 
         if (opts?.keepBackground) return cell as Cell
         return shouldIgnoreColor(rgbToHex(cell[0]!, cell[1]!, cell[2]!), ig) ? null : cell as Cell
     }))
+}
+
+/** Most colours an imported image keeps. Past this a picture reads as a
+ * photo in pixel style rather than pixel art, so it is cut down to this many
+ * (median cut, every pixel to its nearest) -- the converter's highest
+ * setting. */
+export const MAX_IMPORT_COLORS = 64
+
+export function capColors(grid: Cell[][], max = MAX_IMPORT_COLORS): { grid: Cell[][]; reduced: boolean } {
+    const seen = new Set<number>()
+    const flat: [number, number, number][] = []
+    for (const row of grid) for (const c of row) {
+        if (!c) continue
+        seen.add((c[0] << 16) | (c[1] << 8) | c[2])
+        flat.push(c)
+    }
+    if (seen.size <= max) return {grid, reduced: false}
+    const palette = medianCut(flat, max).map(hex => {
+        const n = parseInt(hex.slice(1), 16)
+        return [n >> 16, (n >> 8) & 255, n & 255] as [number, number, number]
+    })
+    const memo = new Map<number, [number, number, number]>()
+    const near = (c: [number, number, number]) => {
+        const key = (c[0] << 16) | (c[1] << 8) | c[2]
+        let hit = memo.get(key)
+        if (!hit) {
+            let best = Infinity
+            for (const p of palette) {
+                const d = (p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 + (p[2] - c[2]) ** 2
+                if (d < best) { best = d; hit = p }
+            }
+            memo.set(key, hit!)
+        }
+        return hit!
+    }
+    return {grid: grid.map(row => row.map(c => c ? near(c) : null)), reduced: true}
 }
 
 export async function importOriginalGrid(dataUrl: string): Promise<Cell[][] | null> {

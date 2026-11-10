@@ -534,7 +534,8 @@
     "offerAsBase": "Разрешить другим начинать с этого",
     "startFromBase": "Начать с основы",
     "noBasesYet": "Основ пока нет",
-    "basePreview": "Предпросмотр копий"
+    "basePreview": "Предпросмотр копий",
+    "colorsReduced": "Слишком много цветов для пиксель-арта — сокращено до {count}."
   },
   "c_Palette": {
     "colorNHex": "Цвет {n}: {hex}",

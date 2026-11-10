@@ -534,7 +534,8 @@
     "offerAsBase": "다른 사람이 이걸로 시작할 수 있게",
     "startFromBase": "베이스로 시작하기",
     "noBasesYet": "아직 베이스가 없어요",
-    "basePreview": "복사본 미리보기"
+    "basePreview": "복사본 미리보기",
+    "colorsReduced": "픽셀 아트에 비해 색이 너무 많아 {count}색으로 줄였어요."
   },
   "c_Palette": {
     "colorNHex": "색 {n}: {hex}",

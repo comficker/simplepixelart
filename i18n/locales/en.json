@@ -548,7 +548,8 @@
     "offerAsBase": "Let others start from this",
     "startFromBase": "Start from a base",
     "noBasesYet": "No bases yet",
-    "basePreview": "Preview for copies"
+    "basePreview": "Preview for copies",
+    "colorsReduced": "Too many colors for pixel art — reduced to {count}."
   },
   "c_Paginator": {},
   "c_Palette": {

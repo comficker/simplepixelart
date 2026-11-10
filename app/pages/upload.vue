@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {toast} from 'vue-sonner'
 import type {ComponentPublicInstance} from 'vue'
-import {importFileGrid, type Cell} from '~/helper/pixel'
+import {capColors, importFileGrid, MAX_IMPORT_COLORS, type Cell} from '~/helper/pixel'
 import {gifToFrames} from '~/helper/pixel/gif'
 import {rgbToHex} from '~/helper/color'
 import {layers2MapNumbers} from '~/helper/canvas'
@@ -124,7 +124,10 @@ async function setFile(list: FileList | File[] | null | undefined) {
   reading.value = true
   try {
     const anim = await gifToFrames(file)
-    const grid = anim ? null : await importFileGrid(await readDataUrl(file))
+    const raw = anim ? null : await importFileGrid(await readDataUrl(file))
+    const capped = raw ? capColors(raw) : null
+    if (capped?.reduced) toast.info(t('c_PXEditor.colorsReduced', {count: MAX_IMPORT_COLORS}))
+    const grid = capped?.grid
     const next = anim ? toPiece(file, anim.frames as Cell[][][], anim.durations)
         : grid?.length ? toPiece(file, [grid]) : null
     if (!next) {

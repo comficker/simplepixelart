@@ -534,7 +534,8 @@
     "offerAsBase": "ベースとして公開する",
     "startFromBase": "ベースから始める",
     "noBasesYet": "ベースはまだありません",
-    "basePreview": "コピーのプレビュー"
+    "basePreview": "コピーのプレビュー",
+    "colorsReduced": "ピクセルアートには色が多すぎるため、{count}色に減らしました。"
   },
   "c_Palette": {
     "colorNHex": "色 {n}: {hex}",

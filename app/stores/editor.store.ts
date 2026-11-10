@@ -8,7 +8,7 @@ import {DEFAULT_EDITOR_DATA} from "~/helper/constants";
 import {markRaw, ref, shallowRef, toRaw} from "vue";
 import {layers2MapNumbers} from "~/helper/canvas";
 import {hexColorDelta, isSameColor, rgbToHex} from "~/helper/color";
-import {importFileGrid, importOriginalGrid, shouldIgnoreColor} from "~/helper/pixel";
+import {capColors, type Cell, importFileGrid, importOriginalGrid, MAX_IMPORT_COLORS, shouldIgnoreColor} from "~/helper/pixel";
 import {loadWorkspaceFull, saveWorkspaceFull, clearWorkspaceFull} from "~/helper/workspaceSnapshot";
 import {autoErase, autoPaint, autoReflow, cellOf, gridOf, originOf, type AutoLayer, type BrushGrid, type BrushSet} from "~/helper/tileBrush";
 import {toast} from "vue-sonner";
@@ -1055,8 +1055,18 @@ export const useEditor = defineStore('editor', () => {
         // "Original" keeps every pixel and refuses anything over 256px a side
         // (a photo, an upscaled export). Rather than import nothing, read it
         // the way the default mode does, which finds the pixel grid.
-        if (process === 'original') return (await importOriginalGrid(dataUrl)) ?? importFileGrid(dataUrl);
-        return importFileGrid(dataUrl);
+        const grid = process === 'original'
+            ? (await importOriginalGrid(dataUrl)) ?? await importFileGrid(dataUrl)
+            : await importFileGrid(dataUrl);
+        return grid ? capImportColors(grid) : null;
+    }
+
+    // A photo keeps thousands of colours even at pixel size; cut it down so
+    // what lands on the canvas is pixel art, and say so.
+    function capImportColors(grid: (number[] | null)[][]) {
+        const res = capColors(grid as Cell[][]);
+        if (res.reduced) toast.info($i18n.t('c_PXEditor.colorsReduced', {count: MAX_IMPORT_COLORS}));
+        return res.grid;
     }
 
     // A .json is either a whole editor board or the {colors, map} file the
@@ -1242,7 +1252,7 @@ export const useEditor = defineStore('editor', () => {
                 try {
                     const dataUrl = ev.target?.result as string;
                     const grid = await importFileGrid(dataUrl);
-                    if (grid) insertFromGrid(grid);
+                    if (grid) insertFromGrid(capImportColors(grid));
                 } catch (error) {
                     console.error('Error inserting image:', error);
                 }
