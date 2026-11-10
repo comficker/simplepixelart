@@ -1055,9 +1055,10 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
 
       <Widget>
         <p class="art-report">
-          {{ $t('p_art_id_string.somethingOffAboutThisArtwork') }}
-          <a :href="reportMailto" class="art-report-link">{{ $t('p_art_id_string.report') }}</a> ·
-          <NuxtLinkLocale to="/dmca">{{ $t('common.dmca') }}</NuxtLinkLocale> ·
+          <a :href="reportMailto" class="art-report-link">{{ $t('p_art_id_string.report') }}</a>
+          <span aria-hidden="true">·</span>
+          <NuxtLinkLocale to="/dmca">{{ $t('common.dmca') }}</NuxtLinkLocale>
+          <span aria-hidden="true">·</span>
           <NuxtLinkLocale to="/guidelines">{{ $t('common.guidelines') }}</NuxtLinkLocale>
         </p>
       </Widget>
@@ -1288,10 +1289,7 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
 }
 
 .art-desc {
-  margin-top: var(--space-3);
-  color: var(--muted);
-  font-size: var(--text-base);
-  max-width: 56ch;
+  font-size: var(--text-sm);
 }
 
 .art-dl-list {
@@ -1370,7 +1368,17 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
   }
 }
 
+/* One row as tall as the editor's foot bar, filling the widget body. The
+   foot's 35px counts its own top rule; here the rule above belongs to the
+   widget before, so one pixel less lines the two rules up. */
 .art-report {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: calc(var(--foot-h) - 1px);
+  margin: calc(var(--space-2) * -1);
+  padding: var(--space-1) var(--space-2);
   font-size: var(--text-xs);
   color: var(--muted);
 }
