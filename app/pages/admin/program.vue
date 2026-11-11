@@ -56,139 +56,64 @@ watch(isStaff, (v) => { if (v) load() })
 </script>
 
 <template>
-  <div class="page">
-    <section class="readme adm-panel">
-      <div class="adm-head">
-        <h1 class="adm-title"><span class="icon icon-trophy"/><span>Creator Program</span></h1>
-        <div class="adm-head-actions">
-          <span v-if="data" class="text-xs text-muted">{{ data.founding }} / {{ data.limit }} founding</span>
-          <NuxtLinkLocale to="/admin/users" class="btn"><span class="icon icon-user"/><span>Users</span></NuxtLinkLocale>
-          <button v-if="isStaff" class="btn" :disabled="loading" @click="load">
-            <span class="icon icon-refresh"/><span>Refresh</span>
-          </button>
-        </div>
-      </div>
+  <AdminShell title="Creator Program" :busy="loading" @refresh="load">
+    <template #actions>
+      <span v-if="data" class="adm-badge">{{ data.founding }} / {{ data.limit }} founding</span>
+    </template>
+    <div class="prg-tabs">
+      <button
+          v-for="s in STATUSES"
+          :key="s"
+          type="button"
+          class="btn"
+          :class="{primary: status === s}"
+          @click="status = s"
+      >{{ s }}</button>
+    </div>
 
-      <div class="adm-body">
-        <div v-if="!isStaff" class="adm-empty">
-          <p class="text-xs text-muted">Staff only.</p>
-        </div>
+    <div v-if="data" class="adm-table-wrap">
+      <table class="adm-table">
+        <thead>
+        <tr><th>Artist</th><th>Links</th><th>Note</th><th class="is-num">Arts</th><th>Applied</th><th/></tr>
+        </thead>
+        <tbody>
+        <tr v-for="r in data.results" :key="r.id">
+          <td>
+            <NuxtLinkLocale :to="`/creator/${r.username}`" class="adm-link">@{{ r.username }}</NuxtLinkLocale>
+          </td>
+          <td>
+            <a v-for="l in r.links" :key="l" :href="l" target="_blank" rel="noopener noreferrer" class="prg-out">{{ l.replace(/^https?:\/\//, '') }}</a>
+          </td>
+          <td class="prg-note">{{ r.note || '—' }}</td>
+          <td class="is-num">{{ r.arts }}</td>
+          <td>{{ r.applied_at ? r.applied_at.slice(0, 10) : '—' }}</td>
+          <td>
+            <div v-if="status === 'applied'" class="adm-row-actions">
+              <button class="btn primary" :disabled="busy === r.id" @click="decide(r, 'approve')">Approve</button>
+              <button class="btn" :disabled="busy === r.id" @click="decide(r, 'decline')">Decline</button>
+            </div>
+          </td>
+        </tr>
+        <tr v-if="!data.results.length">
+          <td colspan="6" class="adm-empty">Nothing here.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
 
-        <template v-else>
-          <div class="prg-tabs">
-            <button
-                v-for="s in STATUSES"
-                :key="s"
-                type="button"
-                class="btn"
-                :class="{primary: status === s}"
-                @click="status = s"
-            >{{ s }}</button>
-          </div>
-
-          <div v-if="data" class="adm-table-wrap">
-            <table class="adm-table">
-              <thead>
-              <tr><th>Artist</th><th>Links</th><th>Note</th><th>Arts</th><th>Applied</th><th/></tr>
-              </thead>
-              <tbody>
-              <tr v-for="r in data.results" :key="r.id">
-                <td>
-                  <NuxtLinkLocale :to="`/creator/${r.username}`" class="prg-link">@{{ r.username }}</NuxtLinkLocale>
-                </td>
-                <td>
-                  <a v-for="l in r.links" :key="l" :href="l" target="_blank" rel="noopener noreferrer" class="prg-out">{{ l.replace(/^https?:\/\//, '') }}</a>
-                </td>
-                <td class="prg-note">{{ r.note || '—' }}</td>
-                <td>{{ r.arts }}</td>
-                <td>{{ r.applied_at ? r.applied_at.slice(0, 10) : '—' }}</td>
-                <td>
-                  <div v-if="status === 'applied'" class="prg-actions">
-                    <button class="btn primary" :disabled="busy === r.id" @click="decide(r, 'approve')">Approve</button>
-                    <button class="btn" :disabled="busy === r.id" @click="decide(r, 'decline')">Decline</button>
-                  </div>
-                </td>
-              </tr>
-              <tr v-if="!data.results.length">
-                <td colspan="6" class="adm-empty">Nothing here.</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-        </template>
-      </div>
-    </section>
-  </div>
+    <div v-if="loading && !data" aria-busy="true">
+      <div v-for="i in 3" :key="i" class="skeleton adm-skel"/>
+    </div>
+  </AdminShell>
 </template>
 
 <style scoped>
-.adm-panel {
-  max-width: 1100px;
-  margin-inline: auto;
-}
-
-.adm-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
-}
-
-.adm-head-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.adm-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-base);
-  font-weight: 700;
-}
-
-.adm-title .icon { color: var(--primary); }
-
-.adm-body {
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.adm-empty { padding: var(--space-6) 0; text-align: center; }
-
-.adm-table-wrap { overflow-x: auto; }
-
-.adm-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-xs);
-}
-
-.adm-table th {
-  text-align: left;
-  font-weight: 600;
-  color: var(--muted);
-  padding: var(--space-1) var(--space-2);
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-
-.adm-table td {
-  padding: var(--space-1) var(--space-2);
-  border-bottom: 1px solid var(--border);
-  vertical-align: top;
-}
-
-.prg-tabs,
-.prg-actions {
+.prg-tabs {
   display: flex;
   gap: var(--space-2);
 }
 
-.prg-link { font-weight: 600; color: var(--foreground); }
+.prg-tabs .btn { text-transform: capitalize; }
 .prg-out { display: block; color: var(--primary); white-space: nowrap; }
 .prg-note { max-width: 280px; color: var(--muted); }
 </style>

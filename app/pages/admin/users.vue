@@ -96,89 +96,70 @@ watch(isStaff, (v) => { if (v) load() })
 </script>
 
 <template>
-  <div class="page">
-    <section class="readme adm-panel">
-      <div class="adm-head">
-        <h1 class="adm-title"><span class="icon icon-user"/><span>Users</span></h1>
-        <div class="adm-head-actions">
-          <NuxtLinkLocale to="/admin" class="btn"><span class="icon icon-adjust"/><span>Overview</span></NuxtLinkLocale>
-          <NuxtLinkLocale to="/admin/program" class="btn"><span class="icon icon-trophy"/><span>Creator Program</span></NuxtLinkLocale>
-          <button v-if="isStaff" class="btn" :disabled="loading" @click="load">
-            <span class="icon icon-refresh"/><span>Refresh</span>
-          </button>
-        </div>
+  <AdminShell title="Users" :busy="loading" @refresh="load">
+    <div class="adm-toolbar">
+      <div class="adm-search">
+        <span class="icon icon-search"/>
+        <input v-model="q" type="search" class="adm-input" placeholder="Search username or email…" aria-label="Search users">
       </div>
+    </div>
 
-      <div class="adm-body">
-        <div v-if="!isStaff" class="adm-empty">
-          <p class="text-xs text-muted">Staff only.</p>
-        </div>
+    <div v-if="data" class="adm-table-wrap">
+      <table class="adm-table">
+        <thead>
+        <tr><th>User</th><th>Joined</th><th class="is-num">Arts</th><th class="is-num">Invited</th><th class="is-num">Balance</th><th/></tr>
+        </thead>
+        <tbody>
+        <tr v-for="u in data.results" :key="u.id">
+          <td>
+            <div class="usr-name">
+              <NuxtLinkLocale :to="`/creator/${u.username}`" class="adm-link">@{{ u.username }}</NuxtLinkLocale>
+              <span v-if="u.is_staff" class="adm-badge is-on">staff</span>
+            </div>
+            <div class="adm-sub">{{ u.email || '—' }}</div>
+          </td>
+          <td>{{ u.date_joined }}</td>
+          <td class="is-num">{{ u.arts }}</td>
+          <td class="is-num">{{ u.invited }}</td>
+          <td class="is-num usr-balance">🪙{{ u.balance }}</td>
+          <td>
+            <div class="adm-row-actions">
+              <button
+                  class="btn usr-give"
+                  :class="{primary: u.verified}"
+                  :aria-pressed="u.verified"
+                  :title="u.verified ? 'Remove the Verified label' : 'Give the Verified label'"
+                  @click="toggleVerified(u)"
+              >
+                <span class="icon icon-check-decagram"/><span>{{ u.verified ? 'Verified' : 'Verify' }}</span>
+              </button>
+              <button class="btn usr-give" title="Give tokens" @click="openGive(u)">
+                <span class="icon icon-gift"/><span>Give</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr v-if="!data.results.length">
+          <td colspan="6" class="adm-empty">No users match.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
 
-        <template v-else>
-          <div class="usr-search">
-            <span class="icon icon-search"/>
-            <input v-model="q" type="search" class="adm-input" placeholder="Search username or email…" aria-label="Search users">
-          </div>
+    <div v-if="data && pages > 1" class="adm-pager">
+      <button class="btn" :disabled="page <= 1 || loading" @click="go(page - 1)">
+        <span class="icon icon-angle-left"/>
+      </button>
+      <span class="adm-pager-label">{{ page }} / {{ pages }} · {{ data.count }} users</span>
+      <button class="btn" :disabled="page >= pages || loading" @click="go(page + 1)">
+        <span class="icon icon-angle-right"/>
+      </button>
+    </div>
 
-          <div v-if="data" class="adm-table-wrap">
-            <table class="adm-table">
-              <thead>
-              <tr><th>User</th><th>Joined</th><th>Arts</th><th>Invited</th><th>Balance</th><th/></tr>
-              </thead>
-              <tbody>
-              <tr v-for="u in data.results" :key="u.id">
-                <td>
-                  <div class="usr-name">
-                    <NuxtLinkLocale :to="`/creator/${u.username}`" class="usr-link">@{{ u.username }}</NuxtLinkLocale>
-                    <span v-if="u.is_staff" class="usr-badge">staff</span>
-                  </div>
-                  <div class="usr-mail">{{ u.email || '—' }}</div>
-                </td>
-                <td>{{ u.date_joined }}</td>
-                <td>{{ u.arts }}</td>
-                <td>{{ u.invited }}</td>
-                <td class="usr-balance">🪙{{ u.balance }}</td>
-                <td>
-                  <div class="usr-acts">
-                    <button
-                        class="btn usr-give"
-                        :class="{primary: u.verified}"
-                        :aria-pressed="u.verified"
-                        :title="u.verified ? 'Remove the Verified label' : 'Give the Verified label'"
-                        @click="toggleVerified(u)"
-                    >
-                      <span class="icon icon-check-decagram"/><span>{{ u.verified ? 'Verified' : 'Verify' }}</span>
-                    </button>
-                    <button class="btn usr-give" title="Give tokens" @click="openGive(u)">
-                      <span class="icon icon-gift"/><span>Give</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <tr v-if="!data.results.length">
-                <td colspan="6" class="adm-empty">No users match.</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div v-if="data && pages > 1" class="usr-pager">
-            <button class="btn" :disabled="page <= 1 || loading" @click="go(page - 1)">
-              <span class="icon icon-angle-left"/>
-            </button>
-            <span class="usr-pager-label">{{ page }} / {{ pages }} · {{ data.count }} users</span>
-            <button class="btn" :disabled="page >= pages || loading" @click="go(page + 1)">
-              <span class="icon icon-angle-right"/>
-            </button>
-          </div>
-
-          <div v-if="loading && !data" class="adm-empty" aria-busy="true">
-            <div v-for="i in 3" :key="i" class="skeleton adm-skel"/>
-          </div>
-        </template>
-      </div>
-    </section>
-
+    <div v-if="loading && !data" class="adm-empty" aria-busy="true">
+      <div v-for="i in 3" :key="i" class="skeleton adm-skel"/>
+    </div>
+    <template #outside>
     <UiModal
         v-if="giving"
         title="Give tokens"
@@ -197,134 +178,23 @@ watch(isStaff, (v) => { if (v) load() })
         </button>
       </form>
     </UiModal>
-  </div>
+    </template>
+  </AdminShell>
 </template>
 
 <style scoped>
-.adm-panel {
-  max-width: 900px;
-  margin-inline: auto;
-}
-
-.adm-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
-}
-
-.adm-head-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.adm-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-base);
-  font-weight: 700;
-}
-
-.adm-title .icon { color: var(--primary); }
-
-.adm-body {
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.adm-empty { padding: 2rem 0; text-align: center; }
-.adm-skel { height: 72px; border-radius: var(--radius-sm); margin-bottom: var(--space-2); }
-
-.adm-table-wrap { overflow-x: auto; }
-
-.adm-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-xs);
-  font-variant-numeric: tabular-nums;
-}
-
-.adm-table th {
-  text-align: left;
-  font-weight: 600;
-  color: var(--muted);
-  padding: 6px var(--space-2);
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-
-.adm-table td {
-  padding: 6px var(--space-2);
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-
-.usr-search {
-  position: relative;
-  max-width: 320px;
-}
-
-.usr-search .icon {
-  position: absolute;
-  left: var(--space-2);
-  top: 50%;
-  translate: 0 -50%;
-  width: var(--icon-sm);
-  height: var(--icon-sm);
-  color: var(--muted);
-  pointer-events: none;
-}
-
-.usr-search .adm-input { padding-left: 28px; }
-
 .usr-name {
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  font-weight: 600;
-}
-
-.usr-link { color: var(--foreground); }
-.usr-link:hover { color: var(--primary); }
-
-.usr-badge {
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  color: var(--primary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0 var(--space-1);
-}
-
-.usr-mail {
-  color: var(--muted);
-  font-size: var(--text-2xs);
 }
 
 .usr-balance { font-weight: 700; white-space: nowrap; }
-.usr-acts { display: flex; gap: var(--space-1); justify-content: flex-end; }
 
 .usr-give {
   padding: var(--space-1) var(--space-2);
   font-size: var(--text-2xs);
   white-space: nowrap;
-}
-
-.usr-pager {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-}
-
-.usr-pager-label {
-  font-size: var(--text-xs);
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
 }
 
 .usr-give-form {

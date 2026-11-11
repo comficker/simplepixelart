@@ -18,6 +18,7 @@ interface Stats {
   daily: DayRow[]
   monthly: MonthRow[]
   creators?: { weeks: CreatorWeek[]; creators_total: number }
+  generated_at?: string
 }
 interface Mission {
   code: string; title: string; period: string; reward: number
@@ -40,12 +41,14 @@ const checks = ref<string[]>([])
 const loading = ref(false)
 const saving = ref(false)
 
-async function load() {
+/* Stats are cached for five minutes server-side; the Refresh button asks
+   for a fresh count, the first paint takes whatever is cached. */
+async function load(fresh = false) {
   if (!isStaff.value) return
   loading.value = true
   try {
     const [s, e] = await Promise.all([
-      useNativeFetch<Stats>('/coloring/admin/stats/'),
+      useNativeFetch<Stats>(`/coloring/admin/stats/${fresh ? '?fresh=1' : ''}`),
       useNativeFetch<{ config: any; checks: string[] }>('/coloring/admin/economy/'),
     ])
     stats.value = s
@@ -232,6 +235,19 @@ function bars(rows: DayRow[], key: keyof DayRow) {
   }))
 }
 
+const asOf = computed(() => stats.value?.generated_at
+    ? new Date(stats.value.generated_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
+    : '')
+
+const sum = (rows: DayRow[], key: keyof DayRow) => rows.reduce((n, r) => n + (Number(r[key]) || 0), 0)
+
+const TOGGLES = [
+  {path: ['ai', 'enabled'], label: 'AI enabled', hint: 'Kill switch: hides every AI button even with an API key set.'},
+  {path: ['ai', 'image_enabled'], label: 'AI image generation', hint: 'Needs a billing-enabled Gemini key; the free tier has no image quota.'},
+  {path: ['bots', 'in_leaderboard'], label: 'Bots in leaderboard', hint: 'Automated accounts show in the creator ranking, still labelled as bots.'},
+  {path: ['bots', 'auto_boost'], label: 'Auto bot activity', hint: 'New public pages pick up bot likes and their creators bot followers over a few hours.'},
+] as const
+
 const CHARTS: { key: keyof DayRow; label: string }[] = [
   {key: 'users', label: 'New users'},
   {key: 'arts', label: 'New arts'},
@@ -239,461 +255,399 @@ const CHARTS: { key: keyof DayRow; label: string }[] = [
   {key: 'tokens_spent', label: 'Tokens spent'},
 ]
 
-onMounted(load)
+onMounted(() => load())
 watch(isStaff, (v) => { if (v) load() })
 </script>
 
 <template>
-  <div class="page">
-    <section class="readme adm-panel">
-      <div class="readme-head adm-head">
-        <h1 class="adm-title"><span class="icon icon-adjust"/><span>Admin</span></h1>
-        <div class="adm-head-actions">
-          <NuxtLinkLocale v-if="isStaff" to="/admin/arts" class="btn">
-            <span class="icon icon-image"/><span>Arts</span>
-          </NuxtLinkLocale>
-          <NuxtLinkLocale v-if="isStaff" to="/admin/program" class="btn">
-            <span class="icon icon-trophy"/><span>Creator Program</span>
-          </NuxtLinkLocale>
-          <NuxtLinkLocale v-if="isStaff" to="/admin/users" class="btn">
-            <span class="icon icon-user"/><span>Users</span>
-          </NuxtLinkLocale>
-          <button v-if="isStaff" class="btn" :disabled="loading" @click="load">
-            <span class="icon icon-refresh"/><span>Refresh</span>
-          </button>
+  <AdminShell title="Overview" :busy="loading" @refresh="load(true)">
+    <template #actions>
+      <span v-if="asOf" class="adm-sub" title="Stats are cached for five minutes; Refresh recounts">as of {{ asOf }}</span>
+    </template>
+
+    <template v-if="stats">
+      <div class="adm-cards">
+        <div class="adm-card">
+          <div class="adm-card-l">Users</div>
+          <div class="adm-card-n">{{ stats.totals.users.toLocaleString() }}</div>
+          <div class="adm-sub">+{{ sum(stats.daily, 'users') }} in 30 days</div>
+        </div>
+        <div class="adm-card">
+          <div class="adm-card-l">Public arts</div>
+          <div class="adm-card-n">{{ stats.totals.arts_public.toLocaleString() }}</div>
+          <div class="adm-sub">of {{ stats.totals.arts.toLocaleString() }} · +{{ sum(stats.daily, 'arts') }} in 30 days</div>
+        </div>
+        <div class="adm-card">
+          <div class="adm-card-l">Tokens circulating</div>
+          <div class="adm-card-n">{{ stats.totals.tokens_circulating.toLocaleString() }}</div>
+          <div class="adm-sub">{{ stats.totals.tokens_minted.toLocaleString() }} minted · {{ stats.totals.tokens_spent.toLocaleString() }} spent</div>
+        </div>
+        <div class="adm-card">
+          <div class="adm-card-l">Tilesets · worlds</div>
+          <div class="adm-card-n">{{ stats.totals.tilesets }} · {{ stats.totals.worlds }}</div>
         </div>
       </div>
 
-      <div class="adm-body">
-        <div v-if="!isStaff" class="adm-empty">
-          <p class="text-xs text-muted">Staff only.</p>
+      <section class="adm-section">
+        <h2 class="adm-section-title">Last 30 days</h2>
+        <div class="adm-charts">
+          <div v-for="c in CHARTS" :key="c.key" class="adm-chart">
+            <div class="adm-chart-head">
+              <span class="adm-card-l">{{ c.label }}</span>
+              <span class="adm-chart-total">{{ sum(stats.daily, c.key).toLocaleString() }}</span>
+            </div>
+            <div class="adm-chart-bars">
+              <span
+                  v-for="(b, i) in bars(stats.daily, c.key)"
+                  :key="i"
+                  class="adm-bar"
+                  :style="{height: `${Math.max(2, b.h)}%`}"
+                  :title="b.title"
+              />
+            </div>
+          </div>
         </div>
+      </section>
 
-        <template v-else-if="stats">
-
-          <div class="adm-cards">
-            <div class="adm-card">
-              <div class="adm-card-n">{{ stats.totals.users }}</div>
-              <div class="adm-card-l">Users</div>
-            </div>
-            <div class="adm-card">
-              <div class="adm-card-n">{{ stats.totals.arts_public }}<span class="adm-card-sub">/ {{ stats.totals.arts }}</span></div>
-              <div class="adm-card-l">Public / all arts</div>
-            </div>
-            <div class="adm-card">
-              <div class="adm-card-n">{{ stats.totals.tokens_circulating }}</div>
-              <div class="adm-card-l">Tokens circulating</div>
-            </div>
-            <div class="adm-card">
-              <div class="adm-card-n">{{ stats.totals.tokens_minted }}<span class="adm-card-sub">− {{ stats.totals.tokens_spent }}</span></div>
-              <div class="adm-card-l">Minted − spent</div>
-            </div>
-            <div class="adm-card">
-              <div class="adm-card-n">{{ stats.totals.tilesets }}<span class="adm-card-sub">+ {{ stats.totals.worlds }}</span></div>
-              <div class="adm-card-l">Tilesets + worlds</div>
-            </div>
-          </div>
-
-          <template v-if="stats.creators">
-            <h2 class="adm-section-title">Creators · {{ stats.creators.creators_total }} have published</h2>
-            <p class="adm-note">People only: staff, bots and throwaway accounts are left out. The gap between who drew and who published is what onboarding has to close.</p>
-            <div class="adm-table-wrap">
-              <table class="adm-table">
-                <thead>
-                <tr><th>Week of</th><th>Drew</th><th>Published</th><th>First time</th><th>Pieces</th></tr>
-                </thead>
-                <tbody>
-                <tr v-for="w in [...stats.creators.weeks].reverse()" :key="w.week">
-                  <td>{{ w.week }}</td>
-                  <td>{{ w.drew }}</td>
-                  <td>{{ w.published }}</td>
-                  <td>{{ w.first_published }}</td>
-                  <td>{{ w.pieces }}</td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
-          </template>
-
-          <h2 class="adm-section-title">Last 30 days</h2>
-          <div class="adm-charts">
-            <div v-for="c in CHARTS" :key="c.key" class="adm-chart">
-              <div class="adm-chart-label">{{ c.label }}</div>
-              <div class="adm-chart-bars">
-                <span
-                    v-for="(b, i) in bars(stats.daily, c.key)"
-                    :key="i"
-                    class="adm-bar"
-                    :style="{height: `${Math.max(2, b.h)}%`}"
-                    :title="b.title"
-                />
-              </div>
-            </div>
-          </div>
-
-          <h2 class="adm-section-title">Monthly</h2>
+      <div class="adm-split">
+        <section v-if="stats.creators" class="adm-section">
+          <h2 class="adm-section-title">Creators <span class="adm-sub">{{ stats.creators.creators_total }} have published</span></h2>
+          <p class="adm-note">People only: no staff, bots or throwaway accounts. The gap between drew and published is what onboarding has to close.</p>
           <div class="adm-table-wrap">
             <table class="adm-table">
               <thead>
-              <tr><th>Month</th><th>Users</th><th>Arts</th><th>Granted</th><th>Spent</th></tr>
+              <tr><th>Week of</th><th class="is-num">Drew</th><th class="is-num">Published</th><th class="is-num">First time</th><th class="is-num">Pieces</th></tr>
               </thead>
               <tbody>
-              <tr v-for="m in [...stats.monthly].reverse()" :key="m.month">
-                <td>{{ m.month }}</td>
-                <td>{{ m.users }}</td>
-                <td>{{ m.arts }}</td>
-                <td>{{ m.tokens_granted }}</td>
-                <td>{{ m.tokens_spent }}</td>
+              <tr v-for="w in [...stats.creators.weeks].reverse()" :key="w.week">
+                <td>{{ w.week }}</td>
+                <td class="is-num">{{ w.drew }}</td>
+                <td class="is-num">{{ w.published }}</td>
+                <td class="is-num">{{ w.first_published }}</td>
+                <td class="is-num">{{ w.pieces.toLocaleString() }}</td>
               </tr>
               </tbody>
             </table>
           </div>
+        </section>
 
-          <template v-if="config">
-            <h2 class="adm-section-title">Economy</h2>
-            <div class="adm-knobs">
-              <label class="adm-knob">
-                <span>Daily grant</span>
-                <input v-model.number="config.daily_grant" type="number" min="0" class="adm-input">
-              </label>
-              <label class="adm-knob">
-                <span>Referral signup</span>
-                <input v-model.number="config.referral.signup_reward" type="number" min="0" class="adm-input">
-              </label>
-              <label class="adm-knob">
-                <span>Purchase rate</span>
-                <input v-model.number="config.referral.purchase_rate" type="number" min="0" max="1" step="0.01" class="adm-input">
-              </label>
-              <label class="adm-knob">
-                <span>USD / token</span>
-                <input v-model.number="config.base_usd_per_token" type="number" min="0" step="0.0001" class="adm-input">
-              </label>
-              <label class="adm-knob">
-                <span>Margin ×</span>
-                <input v-model.number="config.margin" type="number" min="1" step="0.5" class="adm-input">
-              </label>
+        <section class="adm-section">
+          <h2 class="adm-section-title">Monthly</h2>
+          <div class="adm-table-wrap">
+            <table class="adm-table">
+              <thead>
+              <tr><th>Month</th><th class="is-num">Users</th><th class="is-num">Arts</th><th class="is-num">Granted</th><th class="is-num">Spent</th></tr>
+              </thead>
+              <tbody>
+              <tr v-for="m in [...stats.monthly].reverse()" :key="m.month">
+                <td>{{ m.month }}</td>
+                <td class="is-num">{{ m.users.toLocaleString() }}</td>
+                <td class="is-num">{{ m.arts.toLocaleString() }}</td>
+                <td class="is-num">{{ m.tokens_granted.toLocaleString() }}</td>
+                <td class="is-num">{{ m.tokens_spent.toLocaleString() }}</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
 
-              <label class="adm-knob adm-knob-check" title="Kill switch — hides every AI button even with an API key set">
-                <span>AI enabled</span>
-                <input v-model="config.ai.enabled" type="checkbox">
-              </label>
-              <label class="adm-knob adm-knob-check" title="Image generation needs a BILLING-enabled Gemini key (free tier has zero image quota) — turn on only after billing is set up">
-                <span>AI image gen</span>
-                <input v-model="config.ai.image_enabled" type="checkbox">
-              </label>
-
-              <label class="adm-knob adm-knob-check" title="Show automated accounts in the creator ranking. They stay labelled as bots wherever they appear.">
-                <span>Bots in leaderboard</span>
-                <input v-model="config.bots.in_leaderboard" type="checkbox">
-              </label>
-
-              <label class="adm-knob adm-knob-check" title="Every page that turns public picks up bot likes, and its creator picks up bot followers, over the next few hours.">
-                <span>Auto bot activity</span>
-                <input v-model="config.bots.auto_boost" type="checkbox">
-              </label>
+      <template v-if="config">
+        <section class="adm-section">
+          <h2 class="adm-section-title">Economy</h2>
+          <div class="adm-knobs">
+            <label class="adm-knob">
+              <span>Daily grant</span>
+              <input v-model.number="config.daily_grant" type="number" min="0" class="adm-input">
+            </label>
+            <label class="adm-knob">
+              <span>Referral signup</span>
+              <input v-model.number="config.referral.signup_reward" type="number" min="0" class="adm-input">
+            </label>
+            <label class="adm-knob">
+              <span>Purchase rate</span>
+              <input v-model.number="config.referral.purchase_rate" type="number" min="0" max="1" step="0.01" class="adm-input">
+            </label>
+            <label class="adm-knob">
+              <span>USD / token</span>
+              <input v-model.number="config.base_usd_per_token" type="number" min="0" step="0.0001" class="adm-input">
+            </label>
+            <label class="adm-knob">
+              <span>Margin ×</span>
+              <input v-model.number="config.margin" type="number" min="1" step="0.5" class="adm-input">
+            </label>
+          </div>
+          <div class="adm-toggles">
+            <div v-for="t in TOGGLES" :key="t.label" class="adm-toggle">
+              <div>
+                <div class="adm-toggle-label">{{ t.label }}</div>
+                <div class="adm-sub">{{ t.hint }}</div>
+              </div>
+              <UiSwitch v-model="config[t.path[0]][t.path[1]]" size="sm" :aria-label="t.label"/>
             </div>
+          </div>
+        </section>
 
-            <h2 class="adm-section-title">Action pricing</h2>
-            <div class="adm-table-wrap">
-              <table class="adm-table">
-                <thead>
-                <tr><th>Action</th><th>API cost (USD)</th><th>Tokens override</th><th>Charged</th></tr>
-                </thead>
-                <tbody>
-                <tr v-for="(spec, code) in config.actions" :key="code">
-                  <td>{{ code }}</td>
-                  <td><input v-model.number="spec.usd" type="number" min="0" step="0.001" class="adm-input adm-input-n"></td>
-                  <td>
+        <section class="adm-section">
+          <h2 class="adm-section-title">Action pricing</h2>
+          <div class="adm-table-wrap">
+            <table class="adm-table">
+              <thead>
+              <tr><th>Action</th><th>API cost (USD)</th><th>Tokens override</th><th class="is-num">Charged</th></tr>
+              </thead>
+              <tbody>
+              <tr v-for="(spec, code) in config.actions" :key="code">
+                <td>{{ code }}</td>
+                <td><input v-model.number="spec.usd" type="number" min="0" step="0.001" class="adm-input adm-input-n"></td>
+                <td>
+                  <input
+                      :value="spec.tokens"
+                      type="number" min="1" placeholder="auto"
+                      class="adm-input adm-input-n"
+                      @input="e => { const v = (e.target as HTMLInputElement).value; v === '' ? delete spec.tokens : spec.tokens = Number(v) }"
+                  >
+                </td>
+                <td class="is-num adm-charged">🪙{{ chargedCost(spec) }}</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-                    <input
-                        :value="spec.tokens"
-                        type="number" min="1" placeholder="auto"
-                        class="adm-input adm-input-n"
-                        @input="e => { const v = (e.target as HTMLInputElement).value; v === '' ? delete spec.tokens : spec.tokens = Number(v) }"
-                    >
-                  </td>
-                  <td class="adm-charged">🪙{{ chargedCost(spec) }}</td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <h2 class="adm-section-title">Missions</h2>
-            <div class="adm-table-wrap">
-              <table class="adm-table adm-missions">
-                <thead>
-                <tr><th>On</th><th>Code</th><th>Title</th><th>Period</th><th>Check</th><th>Reward</th><th/></tr>
-                </thead>
-                <tbody>
-                <tr v-for="(m, i) in missions" :key="i">
-                  <td><input v-model="m.enabled" type="checkbox" :true-value="true" :false-value="false"></td>
-                  <td><input v-model="m.code" class="adm-input" placeholder="code"></td>
-                  <td><input v-model="m.title" class="adm-input" placeholder="Shown to users"></td>
-                  <td>
-                    <select v-model="m.period" class="adm-input">
-                      <option value="daily">daily</option>
-                      <option value="once">once</option>
-                    </select>
-                  </td>
-                  <td>
-                    <select v-model="m.check" class="adm-input">
-                      <option v-for="c in checks" :key="c" :value="c">{{ c }}</option>
-                    </select>
-                  </td>
-                  <td><input v-model.number="m.reward" type="number" min="0" class="adm-input adm-input-n"></td>
-                  <td>
-                    <button class="btn adm-ic" title="Remove mission" @click="removeMission(i)">
+        <section class="adm-section">
+          <h2 class="adm-section-title">Missions</h2>
+          <div class="adm-table-wrap">
+            <table class="adm-table adm-missions">
+              <thead>
+              <tr><th>On</th><th>Code</th><th>Title</th><th>Period</th><th>Check</th><th>Reward</th><th/></tr>
+              </thead>
+              <tbody>
+              <tr v-for="(m, i) in missions" :key="i">
+                <td><UiSwitch v-model="m.enabled" size="sm" :aria-label="`Mission ${m.code} on`"/></td>
+                <td><input v-model="m.code" class="adm-input" placeholder="code"></td>
+                <td><input v-model="m.title" class="adm-input" placeholder="Shown to users"></td>
+                <td>
+                  <select v-model="m.period" class="adm-input">
+                    <option value="daily">daily</option>
+                    <option value="once">once</option>
+                  </select>
+                </td>
+                <td>
+                  <select v-model="m.check" class="adm-input">
+                    <option v-for="c in checks" :key="c" :value="c">{{ c }}</option>
+                  </select>
+                </td>
+                <td><input v-model.number="m.reward" type="number" min="0" class="adm-input adm-input-n"></td>
+                <td>
+                  <div class="adm-row-actions">
+                    <button class="btn adm-ic" title="Remove mission" aria-label="Remove mission" @click="removeMission(i)">
                       <span class="icon icon-trash"/>
                     </button>
-                  </td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="adm-actions">
-              <button class="btn" @click="addMission"><span class="icon icon-plus"/><span>Add mission</span></button>
-              <button class="btn primary" :disabled="saving" @click="saveConfig">
-                {{ saving ? 'Saving…' : 'Save config' }}
-              </button>
-            </div>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <button class="btn" @click="addMission"><span class="icon icon-plus"/><span>Add mission</span></button>
+          </div>
+        </section>
 
-            <h2 class="adm-section-title">Coupons</h2>
-            <div class="adm-table-wrap">
-              <table class="adm-table">
-                <thead>
-                <tr><th>Code</th><th>Credits</th><th>Used</th><th>Expires</th><th>Note</th><th/></tr>
-                </thead>
-                <tbody>
-                <template v-for="c in coupons" :key="c.id">
-                  <tr>
-                    <td>{{ c.code }}</td>
-                    <td>{{ c.amount }}</td>
-                    <td>{{ c.used }}<span v-if="c.max_uses"> / {{ c.max_uses }}</span></td>
-                    <td>
-                      <template v-if="c.expires_at">
-                        {{ new Date(c.expires_at).toLocaleDateString() }}
-                        <span v-if="c.expired"> · expired</span>
-                      </template>
-                      <template v-else>never</template>
-                    </td>
-                    <td>{{ c.note }}</td>
-                    <td>
-                      <div class="adm-actions">
-                        <button
-                            class="btn adm-ic"
-                            :title="openCoupon === c.id ? 'Hide who claimed it' : 'Who claimed it'"
-                            :disabled="!c.used"
-                            @click="toggleRedemptions(c)"
-                        >
-                          <span class="icon" :class="openCoupon === c.id ? 'icon-eye-cross' : 'icon-eye'"/>
-                        </button>
-                        <button class="btn adm-ic" title="Retire coupon" @click="retireCoupon(c)">
-                          <span class="icon icon-trash"/>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  <tr v-if="openCoupon === c.id">
-                    <td colspan="6">
-                      <template v-if="redemptions[c.id]">
-                        <div class="adm-actions">
-                          <span>
-                            {{ redemptions[c.id].count }} claim{{ redemptions[c.id].count === 1 ? '' : 's' }}
-                            · {{ redemptions[c.id].total }} credits given
-                          </span>
-                          <button
-                              v-if="redemptions[c.id].results.length < redemptions[c.id].count"
-                              class="btn"
-                              :disabled="loadingRedemptions === c.id"
-                              @click="fetchRedemptions(c, redemptions[c.id].page + 1)"
-                          >Load more</button>
-                        </div>
-                        <table class="adm-table">
-                          <thead>
-                          <tr><th>Who</th><th>Credits</th><th>When</th></tr>
-                          </thead>
-                          <tbody>
-                          <tr v-for="r in redemptions[c.id].results" :key="r.user_id">
-                            <td>{{ r.username }}</td>
-                            <td>{{ r.amount }}</td>
-                            <td>{{ new Date(r.created).toLocaleString() }}</td>
-                          </tr>
-                          </tbody>
-                        </table>
-                      </template>
-                      <span v-else>Loading…</span>
-                    </td>
-                  </tr>
-                </template>
-                <tr v-if="!coupons.length">
-                  <td colspan="6">No coupons yet.</td>
-                </tr>
-                <tr>
-                  <td><input v-model="draft.code" class="adm-input" placeholder="SPRING24"></td>
-                  <td><input v-model.number="draft.amount" type="number" min="1" class="adm-input adm-input-n"></td>
-                  <td><input v-model.number="draft.max_uses" type="number" min="0" class="adm-input adm-input-n" title="0 = unlimited"></td>
-                  <td><input v-model="draft.expires_at" type="datetime-local" class="adm-input"></td>
-                  <td><input v-model="draft.note" class="adm-input" placeholder="What it is for"></td>
-                  <td>
-                    <button class="btn adm-ic" title="Create coupon" :disabled="couponBusy" @click="addCoupon">
-                      <span class="icon icon-plus"/>
-                    </button>
-                  </td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
-          </template>
-        </template>
-
-        <div v-else-if="loading" class="adm-empty" aria-busy="true">
-          <div v-for="i in 3" :key="i" class="skeleton adm-skel"/>
+        <!-- Economy, pricing and missions are one config; one save for all. -->
+        <div class="adm-savebar">
+          <span class="adm-sub">Economy, pricing and missions save together and go live at once.</span>
+          <button class="btn primary" :disabled="saving" @click="saveConfig">
+            <span class="icon icon-check"/><span>{{ saving ? 'Saving…' : 'Save config' }}</span>
+          </button>
         </div>
-      </div>
-    </section>
-  </div>
+
+        <section class="adm-section">
+          <h2 class="adm-section-title">Coupons</h2>
+          <div class="adm-table-wrap">
+            <table class="adm-table">
+              <thead>
+              <tr><th>Code</th><th>Credits</th><th>Used</th><th>Expires</th><th>Note</th><th/></tr>
+              </thead>
+              <tbody>
+              <template v-for="c in coupons" :key="c.id">
+                <tr>
+                  <td>{{ c.code }}</td>
+                  <td>{{ c.amount }}</td>
+                  <td>{{ c.used }}<span v-if="c.max_uses"> / {{ c.max_uses }}</span></td>
+                  <td>
+                    <template v-if="c.expires_at">
+                      {{ new Date(c.expires_at).toLocaleDateString() }}
+                      <span v-if="c.expired"> · expired</span>
+                    </template>
+                    <template v-else>never</template>
+                  </td>
+                  <td>{{ c.note }}</td>
+                  <td>
+                    <div class="adm-row-actions">
+                      <button
+                          class="btn adm-ic"
+                          :title="openCoupon === c.id ? 'Hide who claimed it' : 'Who claimed it'"
+                          :disabled="!c.used"
+                          @click="toggleRedemptions(c)"
+                      >
+                        <span class="icon" :class="openCoupon === c.id ? 'icon-eye-cross' : 'icon-eye'"/>
+                      </button>
+                      <button class="btn adm-ic" title="Retire coupon" @click="retireCoupon(c)">
+                        <span class="icon icon-trash"/>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="openCoupon === c.id">
+                  <td colspan="6">
+                    <template v-if="redemptions[c.id]">
+                      <div class="adm-toolbar">
+                        <span>
+                          {{ redemptions[c.id].count }} claim{{ redemptions[c.id].count === 1 ? '' : 's' }}
+                          · {{ redemptions[c.id].total }} credits given
+                        </span>
+                        <button
+                            v-if="redemptions[c.id].results.length < redemptions[c.id].count"
+                            class="btn"
+                            :disabled="loadingRedemptions === c.id"
+                            @click="fetchRedemptions(c, redemptions[c.id].page + 1)"
+                        >Load more</button>
+                      </div>
+                      <table class="adm-table">
+                        <thead>
+                        <tr><th>Who</th><th>Credits</th><th>When</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="r in redemptions[c.id].results" :key="r.user_id">
+                          <td>{{ r.username }}</td>
+                          <td>{{ r.amount }}</td>
+                          <td>{{ new Date(r.created).toLocaleString() }}</td>
+                        </tr>
+                        </tbody>
+                      </table>
+                    </template>
+                    <span v-else>Loading…</span>
+                  </td>
+                </tr>
+              </template>
+              <tr v-if="!coupons.length">
+                <td colspan="6">No coupons yet.</td>
+              </tr>
+              <tr>
+                <td><input v-model="draft.code" class="adm-input" placeholder="SPRING24"></td>
+                <td><input v-model.number="draft.amount" type="number" min="1" class="adm-input adm-input-n"></td>
+                <td><input v-model.number="draft.max_uses" type="number" min="0" class="adm-input adm-input-n" title="0 = unlimited"></td>
+                <td><input v-model="draft.expires_at" type="datetime-local" class="adm-input"></td>
+                <td><input v-model="draft.note" class="adm-input" placeholder="What it is for"></td>
+                <td>
+                  <button class="btn adm-ic" title="Create coupon" :disabled="couponBusy" @click="addCoupon">
+                    <span class="icon icon-plus"/>
+                  </button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </template>
+    </template>
+
+    <div v-else-if="loading" aria-busy="true">
+      <div v-for="i in 3" :key="i" class="skeleton adm-skel"/>
+    </div>
+  </AdminShell>
 </template>
 
 <style scoped>
-.adm-panel {
-  max-width: 900px;
-  margin-inline: auto;
-}
-
-.adm-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
-}
-
-.adm-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-base);
-  font-weight: 700;
-}
-
-.adm-title .icon { color: var(--primary); }
-
-.adm-head-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.adm-body {
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.adm-empty { padding: 2rem 0; text-align: center; }
-.adm-skel { height: 72px; border-radius: var(--radius-sm); margin-bottom: var(--space-2); }
-
-.adm-section-title {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  border-top: 1px solid var(--border);
-  padding-top: var(--space-4);
-}
-
-.adm-note {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-xs);
-  color: var(--muted);
-}
-
 .adm-cards {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
-.adm-card {
+.adm-card,
+.adm-chart {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
 .adm-card-n {
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-}
-
-.adm-card-sub {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--muted);
-  margin-left: var(--space-1);
+  line-height: 1.1;
 }
 
 .adm-card-l {
   font-size: var(--text-2xs);
+  font-weight: 600;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--muted);
-  margin-top: 2px;
 }
+
+.adm-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.adm-section-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.adm-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.adm-split .adm-section-title { border-top: 0; padding-top: 0; }
+.adm-split { border-top: 1px solid var(--border); padding-top: var(--space-4); }
 
 .adm-charts {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
-.adm-chart {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: var(--space-3);
+.adm-chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
 }
 
-.adm-chart-label {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--muted);
-  margin-bottom: var(--space-2);
+.adm-chart-total {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .adm-chart-bars {
   display: flex;
   align-items: flex-end;
-  gap: 2px;
-  height: 72px;
+  gap: 1px;
+  height: 56px;
+  margin-top: var(--space-2);
 }
 
 .adm-bar {
   flex: 1;
   min-width: 0;
-  background: var(--primary-fill);
-  opacity: 0.75;
-  border-radius: var(--radius-sm);
+  background: var(--primary);
+  opacity: 0.7;
 }
 
-.adm-table-wrap { overflow-x: auto; }
-
-.adm-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-xs);
-  font-variant-numeric: tabular-nums;
-}
-
-.adm-table th {
-  text-align: left;
-  font-weight: 600;
-  color: var(--muted);
-  padding: 6px var(--space-2);
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-
-.adm-table td {
-  padding: 6px var(--space-2);
-  border-bottom: 1px solid var(--border);
-}
+.adm-bar:hover { opacity: 1; }
 
 .adm-knobs {
   display: grid;
@@ -710,28 +664,48 @@ watch(isStaff, (v) => { if (v) load() })
   color: var(--muted);
 }
 
-.adm-input-n { max-width: 72px; }
-
-.adm-knob-check input {
-  width: 16px;
-  height: 16px;
-  margin-top: var(--space-2);
+.adm-toggles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
 }
 
-.adm-missions td { padding: 4px 4px; }
-
-.adm-charged { font-weight: 700; white-space: nowrap; }
-
-.adm-ic { padding: 6px; }
-
-.adm-actions {
+.adm-toggle {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--space-3);
+  padding: var(--space-3);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.adm-toggle-label { font-size: var(--text-xs); font-weight: 600; }
+
+.adm-input-n { max-width: 88px; }
+.adm-missions td { padding: var(--space-1); }
+.adm-charged { font-weight: 700; white-space: nowrap; }
+.adm-ic { padding: var(--space-2); }
+
+.adm-savebar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-inline: calc(var(--space-4) * -1);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
 }
 
 @media (max-width: 767px) {
-  .adm-cards, .adm-knobs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .adm-charts { grid-template-columns: 1fr; }
+  .adm-cards, .adm-charts, .adm-knobs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adm-split, .adm-toggles { grid-template-columns: 1fr; }
+  .adm-savebar .adm-sub { display: none; }
 }
 </style>

@@ -928,6 +928,164 @@ footer {
     box-shadow: 0 0 0 1px var(--primary);
 }
 
+/* The /admin screens share one frame (components/admin/Shell.vue) and
+   these pieces; page files only style what is theirs. */
+.adm-panel {
+    max-width: 1100px;
+    margin-inline: auto;
+}
+
+.adm-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 0 var(--space-4);
+    border-bottom: 1px solid var(--border);
+}
+
+.adm-tabs {
+    display: flex;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.adm-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    color: var(--muted);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.adm-tab:hover { color: var(--foreground); }
+.adm-tab.is-active { color: var(--foreground); border-bottom-color: var(--primary); }
+.adm-tab.is-active .icon { color: var(--primary); }
+
+.adm-head-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+
+.adm-spin { animation: adm-spin 0.8s linear infinite; }
+@keyframes adm-spin { to { rotate: 360deg; } }
+
+.adm-body {
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.adm-empty { padding: var(--space-6) 0; text-align: center; color: var(--muted); }
+.adm-skel { height: 72px; margin-bottom: var(--space-2); }
+
+.adm-section-title {
+    font-size: var(--text-sm);
+    font-weight: 700;
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-4);
+}
+
+.adm-note { margin: 0; font-size: var(--text-xs); color: var(--muted); }
+
+.adm-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.adm-search {
+    position: relative;
+    flex: 1 1 14rem;
+    min-width: 0;
+    max-width: 360px;
+}
+
+.adm-search .icon {
+    position: absolute;
+    left: var(--space-2);
+    top: 50%;
+    translate: 0 -50%;
+    color: var(--muted);
+    pointer-events: none;
+}
+
+.adm-search .adm-input { padding-left: calc(var(--space-2) * 2 + var(--icon-sm)); }
+.adm-toolbar select.adm-input { width: auto; }
+
+.adm-table-wrap { overflow-x: auto; }
+
+.adm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+}
+
+.adm-table th,
+.adm-table td {
+    padding: var(--space-2);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.adm-table th {
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.adm-table tbody tr:hover > td { background: var(--secondary); }
+.adm-table .is-num { text-align: right; }
+
+.adm-link { color: var(--foreground); font-weight: 600; }
+.adm-link:hover { color: var(--primary); }
+.adm-sub { color: var(--muted); font-size: var(--text-2xs); }
+
+.adm-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--space-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.adm-badge.is-on { color: var(--primary); border-color: var(--primary); }
+
+.adm-row-actions {
+    display: flex;
+    gap: var(--space-1);
+    justify-content: flex-end;
+}
+
+.adm-pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
+.adm-pager-label {
+    color: var(--muted);
+    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+}
+
 /* The row of actions under a tool's preview (converter, generator). */
 .tool-actions {
     display: flex;
