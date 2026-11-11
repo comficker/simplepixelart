@@ -124,6 +124,45 @@ async function fromUrl(url: string): Promise<TilePixels | null> {
   return data ? cellsOf(data, 0, 0, data.width, data.height) : null
 }
 
+const imageSets = new Map<string, Promise<Map<number, HTMLImageElement>>>()
+
+/** Every tile on a tileset's sheet as an image of its own, cut from the
+ *  sheet into an object URL: a board or a picker draws a thousand-tile set
+ *  from one request instead of a thousand. Tiles the sheet leaves out (too
+ *  big, or not visible to this viewer) are not in the map; fetch those one
+ *  by one. */
+export function sheetTileImages(idString: string): Promise<Map<number, HTMLImageElement>> {
+  let p = imageSets.get(idString)
+  if (!p) {
+    p = (async () => {
+      const out = new Map<number, HTMLImageElement>()
+      const info = await loadSheet(idString)
+      if (!info) return out
+      const sheet = await loadImage(info.url)
+      await Promise.all(Object.entries(info.rects).map(async ([id, [x, y, w, h]]) => {
+        const c = document.createElement('canvas')
+        c.width = w
+        c.height = h
+        c.getContext('2d')?.drawImage(sheet, x, y, w, h, 0, 0, w, h)
+        const blob = await new Promise<Blob | null>(res => c.toBlob(res))
+        if (blob) out.set(Number(id), await loadImage(URL.createObjectURL(blob)))
+      }))
+      return out
+    })().catch(() => new Map<number, HTMLImageElement>())
+    imageSets.set(idString, p)
+  }
+  return p
+}
+
+/** Drop what is kept of a tileset's sheet, after its tiles changed. */
+export function forgetSheet(idString: string) {
+  sheetLoads.delete(idString)
+  sheetData.delete(idString)
+  imageSets.delete(idString)
+  sheets.delete(idString)
+  for (const k of [...pixelCache.keys()]) if (k.startsWith(`${idString}|`)) pixelCache.delete(k)
+}
+
 /** Pixels of tile `id` of `set` (apiBase: the API's origin). `local` gives a guest tileset's tiles their
  *  pixels straight from the art kept in the browser. */
 export function tilePixels(set: BrushSet, id: number, apiBase: string,

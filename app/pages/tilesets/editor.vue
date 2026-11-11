@@ -4,7 +4,7 @@ const localePath = useLocalePath()
 import {toast} from 'vue-sonner'
 import type {EditorData, SharedPage} from '~/types'
 import {tileImageUrl} from '~/helper/tilemap'
-import {loadSheet, sheetWindowStyle, sheets} from '~/helper/tileSheet'
+import {forgetSheet, loadSheet, sheetTileImages, sheetWindowStyle, sheets} from '~/helper/tileSheet'
 import {type Terrain, type TerrainRelations, type TerrainType, cornerSides, slotSides, terrainMask} from '~/helper/autotile'
 import {type SheetSource, buildSheet, layoutGroup, sheetColumns, terrainGridNOf, terrainSlotsOf, tileCells as cellsOf} from '~/helper/sheet-layout'
 import {buildGodotTileSet, buildTiledTileset} from '~/helper/engine-export'
@@ -306,6 +306,8 @@ function refreshArt() {
     }
   }
   imgCache.clear()
+  const ts = tileset.value
+  if (ts && !ts.localId && ts.id_string) { forgetSheet(ts.id_string); primeFromSheet(ts.id_string, ts.registry) }
   scheduleDraw()
   syncBuilders()
   toast.success(t('p_tilesets_editor.tilesRefreshed'))
@@ -369,6 +371,7 @@ async function loadTileset(slug: string) {
   try {
     const row = await useNativeFetch<any>(`/coloring/tilesets/${slug}/`)
     const meta = row.meta || {}
+    primeFromSheet(row.id_string, meta.registry || {})
     tileset.value = {
       id: row.id, id_string: row.id_string, name: row.name || t('common.untitled'),
       status: row.status,
@@ -2497,7 +2500,34 @@ function placeUnplaced() {
 }
 
 const imgCache = new Map<string, HTMLImageElement | null>()
+// A saved tileset's tiles come from its sheet (one request for the set); a
+// tile waits for it instead of asking for its own picture, and what the
+// sheet leaves out is fetched on its own once it lands.
+let sheetWait: { slugs: Set<string>; done: Promise<void> } | null = null
+function primeFromSheet(idString: string, registry: Record<string, string>) {
+  const slugs = new Set(Object.values(registry))
+  const done = sheetTileImages(idString)
+      .then(map => {
+        for (const [id, img] of map) {
+          const slug = registry[String(id)]
+          if (slug && !imgCache.get(slug)) imgCache.set(slug, img)
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (sheetWait?.done === done) sheetWait = null
+        // Tiles held back while it came in ask for their own picture now.
+        for (const [slug, img] of imgCache) if (!img && slugs.has(slug)) imgCache.delete(slug)
+        scheduleDraw()
+      })
+  sheetWait = {slugs, done}
+}
+
 function boardImg(slug: string): HTMLImageElement | null {
+  if (sheetWait?.slugs.has(slug) && !imgCache.get(slug)) {
+    imgCache.set(slug, null)
+    return null
+  }
   if (!imgCache.has(slug)) {
     imgCache.set(slug, null)
     const img = new Image()

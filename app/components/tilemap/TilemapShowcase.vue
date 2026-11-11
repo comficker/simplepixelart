@@ -5,12 +5,16 @@ import {
   type TilemapConfig, normalizeTilemap, computeGeometry, renderTilemap, tileImageUrl, placedIds,
 } from '~/helper/tilemap'
 import {type TileAnim, animFrame, cellPhase} from '~/helper/tile-anim'
+import {sheetTileImages} from '~/helper/tileSheet'
 
 const props = defineProps<{
   config: any
   items: SharedPage[]
   // Fill a detail page's stage edge to edge, instead of a framed 16:9 card.
   flush?: boolean
+  // The map's tileset: its tiles come from the tileset's sheet, one request
+  // for the lot instead of one per tile.
+  tileset?: string
 }>()
 
 const apiBase = useRuntimeConfig().public.api as string
@@ -101,7 +105,19 @@ async function refreshAnims() {
   if (tileAnims.value.size && !animReq) animReq = requestAnimationFrame(animLoop)
 }
 
+let sheetDone = false
+async function loadFromSheet() {
+  if (props.tileset) {
+    const map = await sheetTileImages(props.tileset)
+    for (const [id, img] of map) if (!tileImages.has(id)) tileImages.set(id, img)
+  }
+  sheetDone = true
+  loadImages()
+}
+
 function loadImages() {
+  // Until the sheet is in, nothing is fetched one by one: most of it is there.
+  if (!sheetDone) return draw()
   const byId = new Map<number, SharedPage>()
   for (const it of props.items || []) if (it && it.id != null) byId.set(it.id as number, it)
   for (const id of usedIds.value) {
@@ -132,7 +148,7 @@ function toPng(scale = 1): Promise<Blob | null> {
 defineExpose({toPng})
 
 onMounted(() => {
-  loadImages()
+  loadFromSheet()
   refreshAnims()
   if (viewport.value) {
     ro = new ResizeObserver(measure)
