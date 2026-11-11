@@ -4508,9 +4508,9 @@ watch(
               {{ $t('p_upload.noAiPledge') }}
               <NuxtLinkLocale to="/guidelines#your-art">{{ $t('common.learnMore') }}</NuxtLinkLocale>
             </p>
-            <div v-if="publishStatus === 'public'" class="publish-status-row">
-              <label class="publish-label" for="publish-base">{{ $t('c_PXEditor.offerAsBase') }}</label>
-              <input id="publish-base" v-model="publishBase" type="checkbox">
+            <div v-if="publishStatus === 'public'" class="publish-status-row publish-toggle-row">
+              <span class="publish-label">{{ $t('c_PXEditor.offerAsBase') }}</span>
+              <UiSwitch v-model="publishBase" size="sm" :aria-label="$t('c_PXEditor.offerAsBase')"/>
             </div>
             <!-- A base hands its preview (mode and options, meta.preview) to every
                  copy, so a skin base opens its copies in the skin view. -->
@@ -4528,9 +4528,9 @@ watch(
             <p v-if="publishStatus === 'public' && editorData.meta?.ai" class="text-2xs text-muted">
               {{ $t('c_PXEditor.aiLabelNote') }}
             </p>
-            <div v-if="isAdmin && publishStatus === 'public'" class="publish-status-row">
-              <label class="publish-label" for="publish-boost">{{ $t('c_PXEditor.publishAsABotCreator') }}</label>
-              <input id="publish-boost" v-model="boostOnPublish" type="checkbox" @change="rememberPublishPrefs">
+            <div v-if="isAdmin && publishStatus === 'public'" class="publish-status-row publish-toggle-row">
+              <span class="publish-label">{{ $t('c_PXEditor.publishAsABotCreator') }}</span>
+              <UiSwitch v-model="boostOnPublish" size="sm" @change="rememberPublishPrefs"/>
             </div>
             <div class="publish-actions">
               <button class="btn primary block" @click="saveArt">
@@ -4576,7 +4576,12 @@ watch(
                   <span>{{ $t('common.download') }}</span>
                 </button>
               </div>
-              <AndroidAppCard spot="publish_done"/>
+              <!-- The app, as one more way out of the modal: same row as the
+                   share buttons above, not a card of its own. -->
+              <a :href="playUrl('publish_done')" target="_blank" rel="noopener" class="social-btn">
+                <img src="/images/google-play.svg" alt="" class="social-btn-img">
+                <span>{{ $t('c_AndroidApp.get') }}</span>
+              </a>
               <NuxtLinkLocale
                   :to="`/art/${editorData.id_string}`"
                   class="btn primary wide"
@@ -4813,6 +4818,10 @@ canvas.select.sel-drag:not(.panning) {
 
 canvas.guide-v:not(.panning) { cursor: col-resize; }
 .preview-stage { border-radius: var(--radius-sm); }
+/* A yes/no in the publish form: the caption left, its switch right. */
+.social-btn-img { width: var(--icon-sm); height: var(--icon-sm); }
+.publish-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.publish-toggle-row .publish-label { margin-bottom: 0; }
 .publish-base-preview { display: flex; align-items: center; gap: var(--space-2); }
 .publish-base-preview .publish-input { flex: 1; min-width: 0; }
 .preview-stage :deep(.preview-fill) { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }

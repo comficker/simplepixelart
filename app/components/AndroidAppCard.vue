@@ -35,6 +35,7 @@ function close() {
 <style scoped>
 .android-card {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2) var(--space-3);
@@ -52,7 +53,7 @@ function close() {
 
 .android-card-copy {
   display: flex;
-  flex: 1;
+  flex: 1 1 12rem;
   flex-direction: column;
   min-width: 0;
 }
@@ -64,5 +65,10 @@ function close() {
 .android-card-sub {
   font-size: var(--text-xs);
   color: var(--muted);
+}
+
+/* Never squeeze the button's label; on a narrow row it wraps below. */
+.android-card .btn {
+  white-space: nowrap;
 }
 </style>
