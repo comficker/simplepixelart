@@ -6,7 +6,7 @@ import type {SharedPage} from '~/types'
 import {debounce, downloadBlob, pruneStorageKeys} from '~/helper/utils'
 import {
   type TilemapConfig, type TilemapLayer, type TilemapMode, type LayerKind, normalizeTilemap,
-  CELL_PRESETS, MIN_CELL, MAX_CELL, ISO_RATIOS, MIN_DIM, MAX_DIM, MAX_LAYERS, makeLayer, placedIds,
+  CELL_PRESETS, MIN_CELL, MAX_CELL, ISO_RATIOS, MIN_DIM, MAX_DIM, MAX_LAYERS, MAX_OFFSET, makeLayer, placedIds,
   computeGeometry, cellAt, cellCenter, tileImageUrl, drawPlacedTiles, drawGround, cellRoll,
   FLIP_D, FLIP_H, FLIP_V, flagsOf, rotateFlags, tileOf,
 } from '~/helper/tilemap'
@@ -706,7 +706,12 @@ function snapshot(): TilemapConfig {
   return {
     mode: config.mode, cols: config.cols, rows: config.rows,
     cellW: config.cellW, cellH: config.cellH, isoRatio: config.isoRatio, bg: config.bg, seed: config.seed,
-    layers: config.layers.map(l => ({...l, cells: {...l.cells}, terrain: {...(l.terrain || {})}})),
+    layers: config.layers.map(l => {
+      const offsets = Object.fromEntries(Object.entries(l.offsets || {}).filter(([k]) => k in l.cells))
+      const {offsets: _, ...rest} = l
+      return {...rest, cells: {...l.cells}, terrain: {...(l.terrain || {})},
+        ...(Object.keys(offsets).length ? {offsets} : {})}
+    }),
   }
 }
 
@@ -1306,6 +1311,13 @@ function onHotkey(e: KeyboardEvent) {
     return
   }
   if (e.altKey) return
+  if (kk.startsWith('arrow') && tool.value === 'select' && selRect.value && activeLayer.value?.kind === 'sprite') {
+    e.preventDefault()
+    const step = e.shiftKey ? 8 : 1
+    nudgeSelection(kk === 'arrowleft' ? -step : kk === 'arrowright' ? step : 0,
+        kk === 'arrowup' ? -step : kk === 'arrowdown' ? step : 0)
+    return
+  }
   if (kk === 'x') {
     orientBrush('h')
   } else if (kk === 'y') {
@@ -1394,12 +1406,18 @@ onBeforeRouteLeave(async () => {
 
 function key(col: number, row: number) { return `${col}_${row}` }
 
+/** A cell's sprite was replaced or removed: its nudge goes with it. */
+function dropOffset(layer: TilemapLayer, k: string) {
+  if (layer.offsets && k in layer.offsets) delete layer.offsets[k]
+}
+
 function pruneCells() {
   for (const layer of config.layers) {
     for (const k of Object.keys(layer.cells)) {
       const [c, r] = k.split('_').map(Number)
       if (c! < 0 || r! < 0 || c! >= config.cols || r! >= config.rows) delete layer.cells[k]
     }
+    for (const k of Object.keys(layer.offsets || {})) if (!(k in layer.cells)) delete layer.offsets![k]
     for (const k of Object.keys(layer.terrain || {})) {
       const [c, r] = k.split('_').map(Number)
       if (c! < 0 || r! < 0 || c! >= config.cols || r! >= config.rows) delete layer.terrain[k]
@@ -1442,6 +1460,7 @@ function paintCell(col: number, row: number, erase: boolean, tileId?: number) {
     if (k in map || k in layer.terrain) {
       remember()
       delete map[k]
+      dropOffset(layer, k)
       const hadTerrain = k in layer.terrain
       delete layer.terrain[k]
       if (hadTerrain) reflowTerrain(layer, terrains.value, col, row, config)
@@ -1461,6 +1480,7 @@ function paintCell(col: number, row: number, erase: boolean, tileId?: number) {
         if (dc < span.cols && dr < span.rows) {
           remember(ak)
           delete map[ak]
+          dropOffset(layer, ak)
           touch()
           return
         }
@@ -1512,6 +1532,7 @@ function paintCell(col: number, row: number, erase: boolean, tileId?: number) {
   if (map[k] !== value) {
     remember()
     map[k] = value
+    dropOffset(layer, k)
     if (k in layer.terrain) {
       delete layer.terrain[k]
       reflowTerrain(layer, terrains.value, col, row, config)
@@ -1528,6 +1549,7 @@ function paintCell(col: number, row: number, erase: boolean, tileId?: number) {
         if (ck in map || ck in layer.terrain) {
           remember(ck)
           delete map[ck]
+          dropOffset(layer, ck)
           const hadT = ck in layer.terrain
           delete layer.terrain[ck]
           if (hadT) reflowTerrain(layer, terrains.value, c2, r2, config)
@@ -1587,6 +1609,7 @@ function clearLayer() {
   const layer = activeLayer.value
   if (!layer || !Object.keys(layer.cells).length) return
   layer.cells = {}
+  delete layer.offsets
   touch()
   redraw()
 }
@@ -2182,11 +2205,11 @@ let selAction: {
   startC: number
   startR: number
   base: { c0: number; r0: number; c1: number; r1: number } | null
-  grabbed: { cells: Record<string, number>; terrain: Record<string, string> } | null
+  grabbed: { cells: Record<string, number>; terrain: Record<string, string>; offsets: Record<string, [number, number]> } | null
   dc: number
   dr: number
 } | null = null
-let clipboard: { w: number; h: number; cells: Record<string, number>; terrain: Record<string, string> } | null = null
+let clipboard: { w: number; h: number; cells: Record<string, number>; terrain: Record<string, string>; offsets: Record<string, [number, number]> } | null = null
 
 function inSelRect(col: number, row: number) {
   const s = selRect.value
@@ -2202,12 +2225,14 @@ function selDown(cell: { col: number; row: number }) {
     const s = selRect.value!
     const cells: Record<string, number> = {}
     const terr: Record<string, string> = {}
+    const offs: Record<string, [number, number]> = {}
     for (let r = s.r0; r <= s.r1; r++) {
       for (let c = s.c0; c <= s.c1; c++) {
         const k = key(c, r)
         if (layer.cells[k] != null) {
           cells[k] = layer.cells[k]!
           delete layer.cells[k]
+          if (layer.offsets?.[k]) { offs[k] = layer.offsets[k]!; delete layer.offsets[k] }
         }
         if (layer.terrain[k]) {
           terr[k] = layer.terrain[k]!
@@ -2215,7 +2240,7 @@ function selDown(cell: { col: number; row: number }) {
         }
       }
     }
-    selAction = {mode: 'move', startC: cell.col, startR: cell.row, base: {...s}, grabbed: {cells, terrain: terr}, dc: 0, dr: 0}
+    selAction = {mode: 'move', startC: cell.col, startR: cell.row, base: {...s}, grabbed: {cells, terrain: terr, offsets: offs}, dc: 0, dr: 0}
   } else {
     selAction = {mode: 'select', startC: cell.col, startR: cell.row, base: null, grabbed: null, dc: 0, dr: 0}
     selRect.value = {c0: cell.col, r0: cell.row, c1: cell.col, r1: cell.row}
@@ -2249,6 +2274,9 @@ function selUp() {
         const nr = r! + selAction.dr
         if (nc < 0 || nr < 0 || nc >= config.cols || nr >= config.rows) continue
         layer.cells[key(nc, nr)] = id
+        dropOffset(layer, key(nc, nr))
+        const off = selAction.grabbed.offsets[k]
+        if (off) (layer.offsets ??= {})[key(nc, nr)] = off
       }
       for (const [k, tid] of Object.entries(selAction.grabbed.terrain)) {
         const [c, r] = k.split('_').map(Number)
@@ -2271,14 +2299,16 @@ function copySelection() {
   if (!s || !layer) return
   const cells: Record<string, number> = {}
   const terr: Record<string, string> = {}
+  const offs: Record<string, [number, number]> = {}
   for (let r = s.r0; r <= s.r1; r++) {
     for (let c = s.c0; c <= s.c1; c++) {
       const k = key(c, r)
       if (layer.cells[k] != null) cells[`${c - s.c0}_${r - s.r0}`] = layer.cells[k]!
+      if (layer.cells[k] != null && layer.offsets?.[k]) offs[`${c - s.c0}_${r - s.r0}`] = layer.offsets[k]!
       if (layer.terrain?.[k]) terr[`${c - s.c0}_${r - s.r0}`] = layer.terrain[k]!
     }
   }
-  clipboard = {w: s.c1 - s.c0 + 1, h: s.r1 - s.r0 + 1, cells, terrain: terr}
+  clipboard = {w: s.c1 - s.c0 + 1, h: s.r1 - s.r0 + 1, cells, terrain: terr, offsets: offs}
   toast.success(t('p_tilemaps_editor.regionCopied'))
 }
 
@@ -2295,6 +2325,9 @@ function pasteClipboard() {
     const nr = at.row + dr!
     if (nc < 0 || nr < 0 || nc >= config.cols || nr >= config.rows) continue
     layer.cells[key(nc, nr)] = id
+    dropOffset(layer, key(nc, nr))
+    const off = layer.kind === 'sprite' ? clipboard.offsets[k] : undefined
+    if (off) (layer.offsets ??= {})[key(nc, nr)] = off
   }
   for (const [k, tid] of Object.entries(clipboard.terrain)) {
     const [dc, dr] = k.split('_').map(Number)
@@ -2315,6 +2348,27 @@ function pasteClipboard() {
   draw()
 }
 
+/** Nudge the sprites in the selection by pixels (arrow keys; Shift = 8),
+ * so props can stand between grid points. They stay on their cells. */
+function nudgeSelection(dx: number, dy: number) {
+  const s = selRect.value
+  const layer = activeLayer.value
+  if (!s || !layer || layer.kind !== 'sprite') return
+  const keys: string[] = []
+  for (let r = s.r0; r <= s.r1; r++) for (let c = s.c0; c <= s.c1; c++) if (layer.cells[key(c, r)] != null) keys.push(key(c, r))
+  if (!keys.length) return
+  pushHistory()
+  layer.offsets ??= {}
+  const clamp = (n: number) => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, n))
+  for (const k of keys) {
+    const [ox, oy] = layer.offsets[k] ?? [0, 0]
+    const nx = clamp(ox + dx), ny = clamp(oy + dy)
+    if (nx || ny) layer.offsets[k] = [nx, ny]; else delete layer.offsets[k]
+  }
+  touch()
+  draw()
+}
+
 function deleteSelection() {
   const s = selRect.value
   const layer = activeLayer.value
@@ -2326,6 +2380,7 @@ function deleteSelection() {
     for (let c = s.c0; c <= s.c1; c++) {
       const k = key(c, r)
       delete layer.cells[k]
+      dropOffset(layer, k)
       if (layer.terrain[k]) {
         delete layer.terrain[k]
         reflowAt.push([c, r])

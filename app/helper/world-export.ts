@@ -62,6 +62,7 @@ export function exportJSON(src: WorldExportSource, apiBase: string): ExportFile 
     layers: c.layers.map(l => ({
       id: l.id, name: l.name, kind: l.kind, visible: l.visible, ySort: l.ySort,
       cells: l.cells, terrain: l.terrain,
+      ...(l.offsets && Object.keys(l.offsets).length ? {offsets: l.offsets} : {}),
     })),
     tiles,
   }

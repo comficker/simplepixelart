@@ -1919,7 +1919,7 @@
     "removePoint": "Quitar punto",
     "search": "Buscar",
     "searchPixelArt": "Buscar pixel art…",
-    "selectMMoveCopyOrDelete": "Seleccionar (M): mueve, copia o borra una región",
+    "selectMMoveCopyOrDelete": "Seleccionar (M): mueve, copia o borra una región · las flechas mueven los sprites (Mayús = 8px)",
     "sheetHint": "Haz clic en un tile para pintar con él, o arrastra sobre varios para usarlos como sello.",
     "showLayer": "Mostrar la capa",
     "stampBrushHint": "Sello: el bloque que arrastraste en la hoja. Arrastra en el mapa para colocarlo en fila.",

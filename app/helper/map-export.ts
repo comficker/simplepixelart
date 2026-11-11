@@ -11,7 +11,7 @@
  * Grid maps only: an isometric map still goes through tilemap-export.ts.
  */
 import {
-  FLIP_D, FLIP_H, FLIP_V, flagsOf, tileOf, type TilemapConfig,
+  FLIP_D, FLIP_H, FLIP_V, flagsOf, offsetOf, tileOf, type TilemapConfig,
 } from '~/helper/tilemap'
 import type {AtlasRect, PackedTileset} from '~/helper/tileset-pack'
 import {buildTiledTilesetJSON} from '~/helper/engine-export'
@@ -175,12 +175,14 @@ export function buildTiledMapShared(inp: MapExportInput): { tmj: string; missing
         if (tile == null || !r) { missing++; continue }
         const sep = k.indexOf('_')
         const col = +k.slice(0, sep), row = +k.slice(sep + 1)
+        const [dx, dy] = offsetOf(l, k)
         // A tile object hangs from its bottom-left point; the board centres a
-        // sprite on its cell and stands it on the cell's bottom edge.
+        // sprite on its cell and stands it on the cell's bottom edge (plus
+        // the sprite's own nudge).
         objects.push({
           id: nextObject++, name: '', type: '', rotation: 0, visible: true,
           gid: spriteFirst + tile + tiledFlags(flagsOf(v) & (FLIP_H | FLIP_V)),
-          x: col * cw + (cw - r.w) / 2, y: (row + 1) * ch, width: r.w, height: r.h,
+          x: col * cw + (cw - r.w) / 2 + dx, y: (row + 1) * ch + dy, width: r.w, height: r.h,
         })
       }
       return {...base, type: 'objectgroup', draworder: l.ySort ? 'topdown' : 'index', objects}
@@ -334,8 +336,9 @@ export function buildGodotMap(inp: MapExportInput & { slugOf: (id: number) => st
         const frames = inp.sprites.frames.get(id)
         // Stands on the cell's bottom edge, centred — and that point is the
         // node's position, so y-sort orders sprites by where they stand.
+        const [dx, dy] = offsetOf(l, k)
         const common = [
-          `position = Vector2(${num(col * cw + cw / 2)}, ${num((row + 1) * ch)})`,
+          `position = Vector2(${num(col * cw + cw / 2 + dx)}, ${num((row + 1) * ch + dy)})`,
           'centered = false',
           `offset = Vector2(${num(-r.w / 2)}, ${num(-r.h)})`,
           ...(f & FLIP_H ? ['flip_h = true'] : []),

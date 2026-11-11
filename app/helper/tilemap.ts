@@ -40,6 +40,10 @@ export interface TilemapLayer {
   cells: Record<string, number>
   terrain: Record<string, string>
   objects?: TilemapObject[]
+  /** Sprite layers: a placed sprite's nudge off its cell, in map pixels
+   * ([dx, dy], right and down), so props can sit anywhere, not only on the
+   * grid. Only cells that hold a sprite keep one. */
+  offsets?: Record<string, [number, number]>
 }
 
 export interface TilemapConfig {
@@ -66,7 +70,9 @@ export const MIN_ISO_RATIO = 0.25
 export const MAX_ISO_RATIO = 2
 export const MIN_DIM = 2
 export const MAX_DIM = 128
-export const MAX_LAYERS = 12
+export const MAX_LAYERS = 16
+/** How far a sprite may be nudged off its cell, in map pixels. */
+export const MAX_OFFSET = 1024
 
 function cleanCells(raw: any): Record<string, number> {
   const out: Record<string, number> = {}
@@ -77,6 +83,24 @@ function cleanCells(raw: any): Record<string, number> {
     }
   }
   return out
+}
+
+function cleanOffsets(raw: any, cells: Record<string, number>): Record<string, [number, number]> {
+  const out: Record<string, [number, number]> = {}
+  if (raw && typeof raw === 'object') {
+    for (const [k, v] of Object.entries(raw)) {
+      if (!(k in cells) || !Array.isArray(v)) continue
+      const clamp = (n: any) => Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, Math.round(Number(n) || 0)))
+      const dx = clamp(v[0]), dy = clamp(v[1])
+      if (dx || dy) out[k] = [dx, dy]
+    }
+  }
+  return out
+}
+
+/** A placed sprite's nudge off its cell, [0, 0] when it sits on the grid. */
+export function offsetOf(layer: Pick<TilemapLayer, 'offsets'>, k: string): [number, number] {
+  return layer.offsets?.[k] ?? [0, 0]
 }
 
 function cleanTerrain(raw: any): Record<string, string> {
@@ -122,15 +146,18 @@ function cleanObjects(raw: any): TilemapObject[] {
 
 function normLayer(l: any, i: number): TilemapLayer {
   const kind: LayerKind = l?.kind === 'sprite' || l?.kind === 'object' ? l.kind : 'ground'
+  const cells = cleanCells(l?.cells)
+  const offsets = kind === 'sprite' ? cleanOffsets(l?.offsets, cells) : {}
   return {
     id: (typeof l?.id === 'string' && l.id) ? l.id : `layer-${i + 1}`,
     name: (typeof l?.name === 'string' && l.name) ? l.name : `Layer ${i + 1}`,
     kind,
     visible: l?.visible !== false,
     ySort: typeof l?.ySort === 'boolean' ? l.ySort : kind === 'sprite',
-    cells: cleanCells(l?.cells),
+    cells,
     terrain: cleanTerrain(l?.terrain),
     ...(kind === 'object' ? {objects: cleanObjects(l?.objects)} : {}),
+    ...(Object.keys(offsets).length ? {offsets} : {}),
   }
 }
 
@@ -282,36 +309,42 @@ export function drawGround(ctx: CanvasRenderingContext2D, img: HTMLImageElement,
   }
 }
 
-function drawSprite(ctx: CanvasRenderingContext2D, img: HTMLImageElement,
-                    c: TilemapConfig, g: TileGeometry, col: number, row: number, s: number,
-                    src: CanvasImageSource = img, flags = 0) {
-  const iw = Math.round(img.naturalWidth * s), ih = Math.round(img.naturalHeight * s)
+/** Where a sprite stands: the bottom-centre of its cell, nudged by its offset. */
+export function spriteFoot(c: TilemapConfig, g: TileGeometry, col: number, row: number,
+                           off: [number, number] = [0, 0]) {
   const {x: cx, y: cy} = cellCenter(c, g, col, row)
   const baseY = c.mode === 'iso' ? (cy + g.tileH / 2) : (row + 1) * g.tileH
-  drawOriented(ctx, src, Math.round(cx * s - iw / 2), Math.round(baseY * s - ih), iw, ih, flags)
+  return {x: cx + off[0], y: baseY + off[1]}
 }
 
-function depthKey(c: TilemapConfig, col: number, row: number): number {
-  return c.mode === 'iso' ? col + row : row
+function drawSprite(ctx: CanvasRenderingContext2D, img: HTMLImageElement,
+                    c: TilemapConfig, g: TileGeometry, col: number, row: number, s: number,
+                    src: CanvasImageSource = img, flags = 0, off: [number, number] = [0, 0]) {
+  const iw = Math.round(img.naturalWidth * s), ih = Math.round(img.naturalHeight * s)
+  const foot = spriteFoot(c, g, col, row, off)
+  drawOriented(ctx, src, Math.round(foot.x * s - iw / 2), Math.round(foot.y * s - ih), iw, ih, flags)
 }
 
 function drawLayer(ctx: CanvasRenderingContext2D, c: TilemapConfig, g: TileGeometry,
-                   layer: Record<string, number>, images: ImgMap,
-                   how: (i: HTMLImageElement, col: number, row: number, src: CanvasImageSource | undefined, flags: number) => void,
+                   layer: TilemapLayer, images: ImgMap,
+                   how: (i: HTMLImageElement, col: number, row: number, src: CanvasImageSource | undefined, flags: number, off: [number, number]) => void,
                    ySort: boolean, frameOf?: FrameOf) {
-  const placed = Object.entries(layer)
+  const placed = Object.entries(layer.cells)
       .map(([k, v]) => {
         const [col, row] = k.split('_').map(Number)
-        return {col: col!, row: row!, id: tileOf(v), flags: flagsOf(v)}
+        const off = offsetOf(layer, k)
+        // Sorted by where the thing stands: its foot, offset included.
+        const foot = spriteFoot(c, g, col!, row!, off)
+        return {col: col!, row: row!, id: tileOf(v), flags: flagsOf(v), off, fy: foot.y}
       })
   if (ySort) {
-    placed.sort((a, b) => depthKey(c, a.col, a.row) - depthKey(c, b.col, b.row) || a.row - b.row || a.col - b.col)
+    placed.sort((a, b) => a.fy - b.fy || a.row - b.row || a.col - b.col)
   } else {
     placed.sort((a, b) => a.row - b.row || a.col - b.col)
   }
-  for (const {col, row, id, flags} of placed) {
+  for (const {col, row, id, flags, off} of placed) {
     const img = images.get(id)
-    if (ready(img)) how(img, col, row, frameOf?.(id, col, row) ?? undefined, flags)
+    if (ready(img)) how(img, col, row, frameOf?.(id, col, row) ?? undefined, flags, off)
   }
 }
 
@@ -325,11 +358,11 @@ export function drawPlacedTiles(ctx: CanvasRenderingContext2D, c: TilemapConfig,
   for (const layer of c.layers) {
     if (!layer.visible || layer.kind === 'object') continue
     const how = layer.kind === 'sprite'
-        ? (img: HTMLImageElement, col: number, row: number, src: CanvasImageSource | undefined, flags: number) =>
-            drawSprite(ctx, img, c, g, col, row, scale, src, flags)
+        ? (img: HTMLImageElement, col: number, row: number, src: CanvasImageSource | undefined, flags: number, off: [number, number]) =>
+            drawSprite(ctx, img, c, g, col, row, scale, src, flags, off)
         : (img: HTMLImageElement, col: number, row: number, src: CanvasImageSource | undefined, flags: number) =>
             drawGround(ctx, img, c, g, col, row, scale, src, flags)
-    drawLayer(ctx, c, g, layer.cells, images, how, layer.ySort ?? (layer.kind === 'sprite'), frameOf)
+    drawLayer(ctx, c, g, layer, images, how, layer.ySort ?? (layer.kind === 'sprite'), frameOf)
   }
 }
 

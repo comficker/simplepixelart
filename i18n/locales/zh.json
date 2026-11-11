@@ -1919,7 +1919,7 @@
     "removePoint": "删除点",
     "search": "搜索",
     "searchPixelArt": "搜索像素画…",
-    "selectMMoveCopyOrDelete": "选择（M）——移动、复制或删除一块区域",
+    "selectMMoveCopyOrDelete": "选择（M）——移动、复制或删除一块区域 · 方向键微调精灵（Shift = 8px）",
     "sheetHint": "点击图块即可绘制，或拖选多个图块作为图章。",
     "showLayer": "显示图层",
     "stampBrushHint": "图章——在图块表上拖选的整块。在地图上拖动可首尾相接地铺设。",

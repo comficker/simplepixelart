@@ -1950,7 +1950,7 @@
     "removePoint": "Remove point",
     "search": "Search",
     "searchPixelArt": "Search pixel art…",
-    "selectMMoveCopyOrDelete": "Select (M) — move, copy or delete a region",
+    "selectMMoveCopyOrDelete": "Select (M) — move, copy or delete a region · arrows nudge sprites (Shift = 8px)",
     "sheetHint": "Click a tile to paint with it, or drag across several to lift them as a stamp.",
     "showLayer": "Show layer",
     "stampBrushHint": "Stamp — the block you dragged on the sheet. Drag on the map to lay it end to end.",

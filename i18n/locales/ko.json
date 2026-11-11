@@ -1919,7 +1919,7 @@
     "removePoint": "지점 삭제",
     "search": "검색",
     "searchPixelArt": "픽셀 아트 검색…",
-    "selectMMoveCopyOrDelete": "선택（M） — 영역을 옮기거나 복사하거나 지웁니다",
+    "selectMMoveCopyOrDelete": "선택（M） — 영역을 옮기거나 복사하거나 지웁니다 · 화살표로 스프라이트 미세 이동 (Shift = 8px)",
     "sheetHint": "타일을 클릭해 칠하거나, 여러 타일을 드래그해 스탬프로 가져오세요.",
     "showLayer": "레이어 표시",
     "stampBrushHint": "스탬프 — 시트에서 드래그한 블록입니다. 맵에서 드래그하면 이어서 배치됩니다.",

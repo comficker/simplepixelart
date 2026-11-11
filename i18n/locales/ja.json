@@ -1919,7 +1919,7 @@
     "removePoint": "ポイントを削除",
     "search": "検索",
     "searchPixelArt": "ドット絵を検索…",
-    "selectMMoveCopyOrDelete": "選択（M） — 領域の移動・複製・削除",
+    "selectMMoveCopyOrDelete": "選択（M） — 領域の移動・複製・削除 · 矢印キーでスプライトを微調整（Shift = 8px）",
     "sheetHint": "タイルをクリックして描くか、複数のタイルをドラッグしてスタンプにします。",
     "showLayer": "レイヤーを表示",
     "stampBrushHint": "スタンプ：シートでドラッグして選んだブロック。マップ上でドラッグすると隙間なく並べられます。",

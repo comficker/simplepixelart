@@ -1919,7 +1919,7 @@
     "removePoint": "Remover ponto",
     "search": "Buscar",
     "searchPixelArt": "Buscar pixel art…",
-    "selectMMoveCopyOrDelete": "Selecionar (M) — mova, copie ou apague uma região",
+    "selectMMoveCopyOrDelete": "Selecionar (M) — mova, copie ou apague uma região · setas ajustam os sprites (Shift = 8px)",
     "sheetHint": "Clique em um tile para pintar com ele, ou arraste sobre vários para usá-los como carimbo.",
     "showLayer": "Mostrar a camada",
     "stampBrushHint": "Carimbo: o bloco que você arrastou na folha. Arraste no mapa para colocá-lo em sequência.",
