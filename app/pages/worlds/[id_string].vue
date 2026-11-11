@@ -179,7 +179,7 @@ const formattedDate = computed(() => {
     <div class="flat-editor art-editor">
       <div class="tm-stage art-stage wd-stage" :style="{'--wd-ratio': `${mapPx.w} / ${mapPx.h}`}">
         <ClientOnly>
-          <TilemapShowcase v-if="shownConfig" ref="showcase" flush :config="shownConfig" :items="tileItems as any" :tileset="data?.tileset_id_string"/>
+          <TilemapShowcase v-if="shownConfig" ref="showcase" flush :config="shownConfig" :items="tileItems as any" :tileset="data?.tileset_id_string" :world="data?.id_string"/>
           <template #fallback>
             <p class="wd-ph">{{ $t('p_worlds_id_string.renderingWorld') }}</p>
           </template>

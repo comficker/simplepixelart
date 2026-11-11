@@ -15,6 +15,8 @@ const props = defineProps<{
   // The map's tileset: its tiles come from the tileset's sheet, one request
   // for the lot instead of one per tile.
   tileset?: string
+  // The world it shows: its own pieces (props) come from the world's sheet.
+  world?: string
 }>()
 
 const apiBase = useRuntimeConfig().public.api as string
@@ -107,10 +109,11 @@ async function refreshAnims() {
 
 let sheetDone = false
 async function loadFromSheet() {
-  if (props.tileset) {
-    const map = await sheetTileImages(props.tileset)
-    for (const [id, img] of map) if (!tileImages.has(id)) tileImages.set(id, img)
-  }
+  const maps = await Promise.all([
+    props.tileset ? sheetTileImages(props.tileset) : null,
+    props.world ? sheetTileImages(props.world, 'world') : null,
+  ])
+  for (const map of maps) if (map) for (const [id, img] of map) if (!tileImages.has(id)) tileImages.set(id, img)
   sheetDone = true
   loadImages()
 }

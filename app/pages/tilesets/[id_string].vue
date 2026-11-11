@@ -256,7 +256,7 @@ function drawWithTiles() {
       <Widget v-if="world?.meta?.config" class="tsd-preview">
         <div class="tsd-stage" :style="worldRatio ? {'--tsd-ratio': worldRatio} : undefined">
           <ClientOnly>
-            <TilemapShowcase flush :config="world.meta.config" :items="worldItems as any" :tileset="data?.id_string"/>
+            <TilemapShowcase flush :config="world.meta.config" :items="worldItems as any" :tileset="data?.id_string" :world="world?.id_string"/>
           </ClientOnly>
         </div>
       </Widget>

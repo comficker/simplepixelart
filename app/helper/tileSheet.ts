@@ -40,16 +40,22 @@ function blobUrl(b64: string): string {
   return URL.createObjectURL(new Blob([bytes], {type: 'image/png'}))
 }
 
-export function loadSheet(idString: string): Promise<SheetInfo | null> {
-  let p = sheetLoads.get(idString)
+/** A world's sheet holds its own pieces (props and sprites not in its
+ *  tileset); it is kept under `world:<id>` so it never shadows a tileset. */
+export type SheetOwner = 'tileset' | 'world'
+const sheetKey = (idString: string, owner: SheetOwner) => owner === 'world' ? `world:${idString}` : idString
+
+export function loadSheet(idString: string, owner: SheetOwner = 'tileset'): Promise<SheetInfo | null> {
+  const key = sheetKey(idString, owner)
+  let p = sheetLoads.get(key)
   if (!p) {
-    p = useNativeFetch<any>(`/coloring/tilesets/${idString}/sheet/`)
+    p = useNativeFetch<any>(`/coloring/${owner === 'world' ? 'worlds' : 'tilesets'}/${idString}/sheet/`)
         .then(res => res && typeof res.png === 'string' && res.tiles
             ? {url: blobUrl(res.png), w: Number(res.w) || 0, h: Number(res.h) || 0, rects: res.tiles}
             : null)
         .catch(() => null)
-        .then(info => { sheets.set(idString, info); return info })
-    sheetLoads.set(idString, p)
+        .then(info => { sheets.set(key, info); return info })
+    sheetLoads.set(key, p)
   }
   return p
 }
@@ -131,12 +137,13 @@ const imageSets = new Map<string, Promise<Map<number, HTMLImageElement>>>()
  *  from one request instead of a thousand. Tiles the sheet leaves out (too
  *  big, or not visible to this viewer) are not in the map; fetch those one
  *  by one. */
-export function sheetTileImages(idString: string): Promise<Map<number, HTMLImageElement>> {
-  let p = imageSets.get(idString)
+export function sheetTileImages(idString: string, owner: SheetOwner = 'tileset'): Promise<Map<number, HTMLImageElement>> {
+  const key = sheetKey(idString, owner)
+  let p = imageSets.get(key)
   if (!p) {
     p = (async () => {
       const out = new Map<number, HTMLImageElement>()
-      const info = await loadSheet(idString)
+      const info = await loadSheet(idString, owner)
       if (!info) return out
       const sheet = await loadImage(info.url)
       await Promise.all(Object.entries(info.rects).map(async ([id, [x, y, w, h]]) => {
@@ -149,17 +156,18 @@ export function sheetTileImages(idString: string): Promise<Map<number, HTMLImage
       }))
       return out
     })().catch(() => new Map<number, HTMLImageElement>())
-    imageSets.set(idString, p)
+    imageSets.set(key, p)
   }
   return p
 }
 
 /** Drop what is kept of a tileset's sheet, after its tiles changed. */
-export function forgetSheet(idString: string) {
-  sheetLoads.delete(idString)
-  sheetData.delete(idString)
-  imageSets.delete(idString)
-  sheets.delete(idString)
+export function forgetSheet(idString: string, owner: SheetOwner = 'tileset') {
+  const key = sheetKey(idString, owner)
+  sheetLoads.delete(key)
+  sheetData.delete(key)
+  imageSets.delete(key)
+  sheets.delete(key)
   for (const k of [...pixelCache.keys()]) if (k.startsWith(`${idString}|`)) pixelCache.delete(k)
 }
 

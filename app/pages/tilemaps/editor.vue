@@ -12,7 +12,7 @@ import {
 } from '~/helper/tilemap'
 import {type Terrain, eraseCornerTerrain, reflowTerrain} from '~/helper/autotile'
 import {type TileAnim, animFrame, cellPhase} from '~/helper/tile-anim'
-import {forgetSheet, sheetTileImages} from '~/helper/tileSheet'
+import {type SheetOwner, forgetSheet, sheetTileImages} from '~/helper/tileSheet'
 import {type WorldExportSource, exportJSON as exportWorldJSON, exportGodot as exportWorldGodot, exportTiled as exportWorldTiled, hasContent} from '~/helper/world-export'
 
 const route = useRoute()
@@ -381,23 +381,25 @@ function registerTiles(arts: { id: number; id_string: string }[]) {
 // While a tileset's sheet is on its way, its tiles wait for it rather than
 // each asking the server for its own picture (a thousand requests for a big
 // set); what the sheet leaves out is fetched one by one when it lands.
-let sheetWait: Promise<void> | null = null
-function primeFromSheet(idString: string) {
+// A world's own pieces (props from the gallery) have a sheet of their own.
+const sheetWaits = new Set<{ ids: Set<number> }>()
+function primeFromSheet(idString: string, ids: Iterable<string | number>, owner: SheetOwner = 'tileset') {
   pendingImages.value++
-  const wait = sheetTileImages(idString)
+  const wait = {ids: new Set([...ids].map(Number))}
+  sheetWaits.add(wait)
+  sheetTileImages(idString, owner)
       .then(map => { for (const [id, img] of map) if (!tileImages.has(id)) tileImages.set(id, img) })
       .catch(() => {})
       .finally(() => {
-        if (sheetWait === wait) sheetWait = null
+        sheetWaits.delete(wait)
         pendingImages.value = Math.max(0, pendingImages.value - 1)
         loadImages()
       })
-  sheetWait = wait
 }
 
 function ensureImage(id: number) {
   if (tileImages.has(id) || !knownTiles[id]) return
-  if (sheetWait && tilesetRegistry.value[String(id)]) return
+  for (const w of sheetWaits) if (w.ids.has(id)) return
   const img = new Image()
 
 
@@ -797,7 +799,8 @@ async function loadWorld(slug: string): Promise<boolean> {
       desc: typeof w.meta?.desc === 'string' ? w.meta.desc : '',
     }
     tilesetRegistry.value = {...(w.registry || {})}
-    if (w.tileset_id_string) primeFromSheet(w.tileset_id_string)
+    if (w.tileset_id_string) primeFromSheet(w.tileset_id_string, Object.keys(w.registry || {}))
+    if (Object.keys(w.meta?.tiles || {}).length) primeFromSheet(w.id_string, Object.keys(w.meta.tiles), 'world')
     for (const [id, ids] of Object.entries(w.registry || {})) {
       if (typeof ids === 'string') knownTiles[Number(id)] = ids
     }
@@ -1074,7 +1077,8 @@ function refreshTiles() {
   tileImages.clear()
   pendingImages.value = 0
   const ts = world.value?.tileset_id_string
-  if (ts) { forgetSheet(ts); primeFromSheet(ts) }
+  if (ts) { forgetSheet(ts); primeFromSheet(ts, Object.keys(tilesetRegistry.value)) }
+  if (world.value) forgetSheet(world.value.id_string, 'world')
   loadImages()
   // The sheet keeps what it has painted; fresh art means painting it again.
   sheet = null
