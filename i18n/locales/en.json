@@ -2529,6 +2529,18 @@
         "title": "Pixel Art Characters — Game Sprites & 16×16 Characters",
         "description": "Browse {count} pixel art characters — game sprites, chibi heroes and 16×16 pixel characters. Open any in the free editor to recolor, animate or remix.",
         "intro": "Pixel characters for games and fan art. Small ones start at <a href=\"/arts/size-16x16\">16×16</a>; for big heads and small bodies see <a href=\"/arts/chibi\">chibi pixel art</a>, or draw your own in the <a href=\"/editor\">editor</a>."
+      },
+      "pokemon": {
+        "h1": "Pokémon Pixel Art",
+        "title": "Pokémon Pixel Art — Sprites to Copy & Remix",
+        "description": "Browse {count} Pokémon pixel art pieces made by the community — Pikachu, starters and more, mostly 16×16 to 32×32. Open any in the free editor to remix it.",
+        "intro": "Fan-made Pokémon sprites drawn by the community, most liked first. See also <a href=\"/arts/pikachu\">Pikachu</a>, <a href=\"/arts/bulbasaur\">Bulbasaur</a>, <a href=\"/arts/squirtle\">Squirtle</a> and <a href=\"/arts/charmander\">Charmander</a>."
+      },
+      "sonic": {
+        "h1": "Sonic Pixel Art",
+        "title": "Sonic Pixel Art — Fan Sprites to Copy & Remix",
+        "description": "Sonic the Hedgehog pixel art made by the community: {count} fan sprites to open in the free online editor, recolor, animate or remix into your own.",
+        "intro": "Fan-made Sonic sprites drawn by the community, most liked first. For more game characters see <a href=\"/arts/mario\">Mario</a>, <a href=\"/arts/pokemon\">Pokémon</a> and <a href=\"/arts/minecraft\">Minecraft</a>."
       }
     },
     "size": {
@@ -2610,6 +2622,14 @@
       "size-64x64": {
         "h2": "What 64×64 pixel art is good for",
         "body": "<p>A 64×64 canvas holds 4,096 pixels, enough for a detailed portrait, a small scene, a boss sprite or a piece of fan art with a background. It is the largest grid most people draw by hand pixel by pixel, and it takes hours rather than minutes.</p><p>At this size, plan before you place pixels. Sketch the composition in rough blocks, settle the palette (ten to twenty colors), then refine area by area. Dithering, a checkerboard mix of two colors, helps with gradients in skies and large shadows.</p><p>Open any 64×64 piece above to see how it is built, or start a blank 64×64 canvas in the <a href=\"/editor\">online pixel art maker</a>. You can also turn a photo into a 64×64 starting point with the <a href=\"/converter\">image to pixel art converter</a>.</p>"
+      },
+      "pokemon": {
+        "h2": "How to draw Pokémon pixel art",
+        "body": "<p>Pokémon have been pixel art since the first Game Boy games, where every creature was a small sprite in four shades of green. That is why they translate so well to a grid: big round heads, simple bodies and one or two signature features (Pikachu's ears and cheeks, Bulbasaur's bulb) that read even at 16×16.</p><ol><li><strong>Pick a grid.</strong> 16×16 for a menu-icon style, 32×32 if you want a face with expression.</li><li><strong>Block the silhouette</strong> in the main body color. Check it at actual size: you should recognize the Pokémon from the shape alone.</li><li><strong>Add the signature details</strong>: eyes, cheeks, markings. Use as few pixels as you can.</li><li><strong>Shade and outline.</strong> One darker tone on the side away from the light, then a dark outline around the whole shape.</li></ol><p>Every piece above opens in the <a href=\"/editor\">online pixel art maker</a>, so you can study how it is built or remix it into your own version. More characters: <a href=\"/arts/mario\">Mario</a>, <a href=\"/arts/minecraft\">Minecraft</a>, <a href=\"/arts/sonic\">Sonic</a> and <a href=\"/arts/character\">pixel art characters</a>. All pieces here are fan art by community members, not official artwork.</p>"
+      },
+      "sonic": {
+        "h2": "How to draw Sonic pixel art",
+        "body": "<p>Sonic was born as a 16-bit sprite on the Mega Drive / Genesis, so his design is already built for pixels: a blue ball of a body, swept-back quills, big eyes, red shoes with a white stripe. Those few shapes are what make him recognizable at any size.</p><ol><li><strong>Start at 24×24 or 32×32.</strong> 16×16 works for an icon, but the quills and eyes need a little more room.</li><li><strong>Block the blue silhouette</strong> first, quills included. Keep the spikes as clean diagonal steps (one pixel across, one down) so they read sharp.</li><li><strong>Add the face and shoes</strong>: the tan muzzle, the joined eyes, the red shoes. These are the details people look for.</li><li><strong>Shade with one darker blue</strong> on the back and under the quills, then outline in a deep navy rather than black.</li></ol><p>Open any piece above in the <a href=\"/editor\">online pixel art maker</a> to study it, or add frames and animate a run cycle. All pieces here are fan art by community members, not official artwork.</p>"
       }
     }
   },

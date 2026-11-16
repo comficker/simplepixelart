@@ -5,7 +5,7 @@
         <img
             v-if="!isDraw && !imgError"
             :src="src"
-            :alt="artAlt(value.name, $t('c_Card.pixelArtArtwork'))"
+            :alt="artAlt(value.name, $t('c_Card.pixelArtArtwork'), value)"
             class="size-full"
             width="200"
             height="200"

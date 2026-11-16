@@ -3,6 +3,7 @@ import {CBN_COLLECTIONS} from '~/helper/cbn-collections'
 import {KEEP_THIN_SIZES, KEEP_THIN_TAGS, MIN_SIZE_ARTS, MIN_TAG_ARTS} from '~/helper/thin-tags'
 const {t, te, locale, defaultLocale, getLocaleMessage} = useI18n()
 const localHtml = useLocalHtml()
+const artAlt = useArtAlt()
 import type {APIResponse, SharedPage, TagSchema} from "~/types";
 
 const route = useRoute()
@@ -206,10 +207,8 @@ const seoKeywords = computed(() =>
     t('seo.tag.keywords', {tag: tagTitle.value.toLowerCase()}),
 )
 
-const items = computed(() => {
-  const list = stats.value?.results || []
-  return list.slice(0, 10)
-})
+// The whole first page, as shown: the list in the schema is the grid.
+const items = computed(() => stats.value?.results || [])
 
 const structuredData = computed(() => {
   const url = canonicalUrl.value
@@ -239,7 +238,7 @@ const structuredData = computed(() => {
           '@type': 'ListItem',
           position: idx + 1,
           url: `https://simplepixelart.com/art/${it.id_string}`,
-          name: it.name || tagTitle.value,
+          name: artAlt(it.name, tagTitle.value, it),
           image: `${config.public.api}/coloring/files/art-social/${it.id_string}.png`,
         })),
       },
