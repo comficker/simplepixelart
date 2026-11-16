@@ -2534,6 +2534,7 @@
       "keywords": "{tag} ドット絵, {tag} スプライト, {tag} ピクセルアート, {tag} 8ビット, {tag} 16ビット, {tag} ドット絵 テンプレート, {tag} ドット絵 無料, {tag} ドット絵 ダウンロード",
       "title": "{tag}のドット絵 — 無料スプライト",
       "titleCount": "{tag}のドット絵 — スプライト{count}点",
+      "titleCountFree": "{tag}のドット絵 — 無料スプライト{count}点",
       "titlePage": "{tag}のドット絵 — {page}ページ"
     }
   },

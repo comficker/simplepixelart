@@ -169,6 +169,14 @@ const seoTitle = computed(() => {
   if (isSizeSlug.value && shownCount.value > 1) {
     return t('seo.tag.titleCount', {tag: tagTitle.value, count: shownCount.value})
   }
+  // Character tags sit at position 3-5 on Bing with CTR under 0.6%; a
+  // concrete count ("Mario Pixel Art — 41 Free Sprites") gives the result a
+  // reason to be clicked. Plain title when it would not fit the ~49
+  // characters left beside the site suffix.
+  if (!isSizeSlug.value && shownCount.value >= MIN_TAG_ARTS) {
+    const s = t('seo.tag.titleCountFree', {tag: tagTitle.value, count: shownCount.value})
+    if (s.length <= 49) return s
+  }
   return t('seo.tag.title', {tag: tagTitle.value})
 })
 

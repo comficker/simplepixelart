@@ -2592,6 +2592,7 @@
       "keywords": "{tag} pixel art, {tag} sprite, {tag} 8-bit, {tag} 16-bit, {tag} pixel art template, free {tag} pixel art, {tag} pixel art download",
       "title": "{tag} Pixel Art — Free Sprites",
       "titleCount": "{tag} Pixel Art — {count} Sprites",
+      "titleCountFree": "{tag} Pixel Art — {count} Free Sprites",
       "titlePage": "{tag} Pixel Art — Page {page}"
     },
     "about": {

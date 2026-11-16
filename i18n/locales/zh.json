@@ -2534,6 +2534,7 @@
       "keywords": "{tag}像素画, {tag}精灵图, {tag}像素图, {tag} 8位, {tag} 16位, {tag}像素画模板, {tag}像素画免费, {tag}像素画下载",
       "title": "{tag}像素画 — 免费精灵图",
       "titleCount": "{tag}像素画 — {count} 张精灵图",
+      "titleCountFree": "{tag}像素画 — {count} 张免费精灵图",
       "titlePage": "{tag}像素画 — 第 {page} 页"
     }
   },
