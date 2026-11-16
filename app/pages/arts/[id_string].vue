@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {CBN_COLLECTIONS} from '~/helper/cbn-collections'
 import {KEEP_THIN_SIZES, KEEP_THIN_TAGS, MIN_SIZE_ARTS, MIN_TAG_ARTS} from '~/helper/thin-tags'
-const {t, te, locale, defaultLocale, getLocaleMessage} = useI18n()
+const {t, locale, defaultLocale, getLocaleMessage} = useI18n()
 const localHtml = useLocalHtml()
 const artAlt = useArtAlt()
 import type {APIResponse, SharedPage, TagSchema} from "~/types";
@@ -152,11 +152,13 @@ const ogImage = computed(() => {
 
 // A few tags carry a whole search cluster ("pixel art animation", "pixel art
 // character") that the generic "<Tag> Pixel Art — Free Sprites" misses. They
-// get their own title, description and intro, written in English only.
+// get their own title, description and intro.
+// Shown in a locale only when that locale has its own copy (ko/es/ru/pt
+// for the top tags), never English text under /ko.
+const ownMessages = computed(() => getLocaleMessage(locale.value) as any)
 const pageCopy = computed(() => {
-  const key = `seo.tagPage.${idString.value}`
-  if (locale.value !== defaultLocale || page.value > 1 || hasFilterQuery.value) return null
-  return te(`${key}.title`, defaultLocale) ? key : null
+  if (page.value > 1 || hasFilterQuery.value) return null
+  return ownMessages.value?.seo?.tagPage?.[idString.value]?.title ? `seo.tagPage.${idString.value}` : null
 })
 
 const seoTitle = computed(() => {
@@ -197,10 +199,8 @@ const seoDesc = computed(() => {
 // locale (sizes and character tags people search for). First page only.
 const aboutKey = computed(() => {
   if (page.value > 1 || hasFilterQuery.value) return null
-  // Looked up in this locale's own messages: te() here also answers true
-  // for a key only English has, which put English copy on /ko.
-  const own = (getLocaleMessage(locale.value) as any)?.seo?.about?.[idString.value]
-  return own?.body ? `seo.about.${idString.value}` : null
+  // te() here also answers true for a key only English has.
+  return ownMessages.value?.seo?.about?.[idString.value]?.body ? `seo.about.${idString.value}` : null
 })
 
 const seoKeywords = computed(() =>

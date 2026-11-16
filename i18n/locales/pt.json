@@ -2535,6 +2535,42 @@
       "title": "Pixel art de {tag} — Sprites grátis",
       "titleCount": "Pixel art de {tag} — {count} sprites",
       "titlePage": "Pixel art de {tag} — Página {page}"
+    },
+    "about": {
+      "size-16x16": {
+        "h2": "Para que serve o pixel art 16×16",
+        "body": "<p>16×16 é o tamanho clássico de sprite. Ícones de itens, tiles e personagens de muitos jogos de 8 e 16 bits eram desenhados em grades de 16 pixels, assim como a maioria das texturas do Minecraft e boa parte dos assets de jogos indie de hoje. Com 256 pixels cabe um personagem inteiro com cabeça, corpo e pernas, uma espada com cabo e brilho, ou uma fruta com luz e sombra.</p><p>O método de sempre: preencha a silhueta com uma cor chapada, adicione um tom mais escuro para a sombra, um mais claro para o brilho e um contorno escuro. Fique entre quatro e oito cores para a peça continuar nítida quando ampliada. Como 16 é par, sprites simétricos são desenhados como duas metades espelhadas de oito colunas.</p><p>Cada peça acima abre no editor para você ver como foi feita e criar a sua versão. Para começar do zero, abra uma tela vazia de 16×16 no <a href=\"/editor\">criador de pixel art online</a> e exporte um PNG ou uma sprite sheet para o seu jogo.</p>"
+      },
+      "size-24x24": {
+        "h2": "Para que serve o pixel art 24×24",
+        "body": "<p>Uma grade de 24×24 tem 576 pixels, mais que o dobro de 16×16. É nesse espaço extra que aparece a expressão: os olhos de um personagem podem mostrar um humor, uma armadura pode ter acabamento e um pet pode ter textura de pelo. É um tamanho muito usado para avatares, emotes e retratos de personagens de RPG.</p><p>Com mais espaço vem a vontade de colocar detalhe. Primeiro garanta uma silhueta forte e depois gaste os pixels extras no rosto e nas mãos, que é para onde o olhar vai. De seis a doze cores funciona bem, com dois ou três tons por material.</p><p>Faça a sua versão de qualquer peça 24×24 acima, ou abra uma tela vazia de 24×24 no <a href=\"/editor\">criador de pixel art online</a>. Para aquecer antes, há grades menores em <a href=\"/easy-pixel-art\">pixel art fácil</a>.</p>"
+      },
+      "size-32x32": {
+        "h2": "Para que serve o pixel art 32×32",
+        "body": "<p>32×32 tem 1.024 pixels e é o tamanho padrão para sprites de jogo detalhados, retratos de personagens, fotos de perfil e tiles de RPG com visão de cima. É grande o bastante para traços de rosto claros, dobras de roupa e sombra de verdade, e pequeno o bastante para cada pixel ainda importar.</p><p>Trabalhe do grande para o pequeno: posicione as formas principais, decida de onde vem a luz e acrescente dois ou três tons por cor. O anti-aliasing (um pixel de tom intermediário nas bordas curvas) começa a valer a pena neste tamanho. Confira a peça em 1×: se ela não se entende pequena, mais detalhe não vai salvá-la.</p><p>Cada peça acima abre no editor para estudar ou criar a sua versão. Para começar do zero, abra uma tela vazia de 32×32 no <a href=\"/editor\">criador de pixel art online</a> e adicione quadros se quiser animar.</p>"
+      },
+      "pokemon": {
+        "h2": "Como desenhar pixel art de Pokémon",
+        "body": "<p>Pokémon é pixel art desde os primeiros jogos de Game Boy, onde cada criatura era um sprite pequeno em quatro tons de verde. Por isso funciona tão bem numa grade: cabeças grandes e redondas, corpos simples e um ou dois traços marcantes (as orelhas e bochechas do Pikachu, o bulbo do Bulbasaur) que se reconhecem até em 16×16.</p><ol><li><strong>Escolha a grade.</strong> 16×16 para um estilo de ícone de menu, 32×32 se quiser um rosto com expressão.</li><li><strong>Preencha a silhueta</strong> com a cor principal do corpo. Confira no tamanho real: dá para reconhecer o Pokémon só pela forma.</li><li><strong>Adicione os traços marcantes</strong>: olhos, bochechas, manchas. Com o mínimo de pixels possível.</li><li><strong>Sombra e contorno.</strong> Um tom mais escuro no lado oposto à luz e depois um contorno escuro em volta de toda a figura.</li></ol><p>Cada peça acima abre no <a href=\"/editor\">criador de pixel art online</a>, para você ver como foi feita ou transformá-la na sua própria versão. Mais personagens: <a href=\"/arts/mario\">Mario</a>, <a href=\"/arts/minecraft\">Minecraft</a>, <a href=\"/arts/sonic\">Sonic</a> e <a href=\"/arts/character\">personagens em pixel art</a>. Todas as peças são fan art de membros da comunidade, não arte oficial.</p>"
+      },
+      "sonic": {
+        "h2": "Como desenhar pixel art do Sonic",
+        "body": "<p>O Sonic nasceu como sprite de 16 bits no Mega Drive, então o design dele já é feito para pixels: um corpo azul redondo, espinhos para trás, olhos grandes e tênis vermelhos com uma faixa branca. São essas poucas formas que o tornam reconhecível em qualquer tamanho.</p><ol><li><strong>Comece em 24×24 ou 32×32.</strong> 16×16 serve para um ícone, mas os espinhos e os olhos precisam de um pouco mais de espaço.</li><li><strong>Preencha primeiro a silhueta azul</strong>, com os espinhos. Faça os espinhos em degraus diagonais limpos (um pixel para o lado, um para baixo) para ficarem afiados.</li><li><strong>Adicione o rosto e os tênis</strong>: o focinho bege, os olhos juntos, os tênis vermelhos. São os detalhes que todo mundo procura.</li><li><strong>Sombreie com um azul mais escuro</strong> nas costas e embaixo dos espinhos, e faça o contorno em azul-marinho em vez de preto.</li></ol><p>Abra qualquer peça acima no <a href=\"/editor\">criador de pixel art online</a> para estudar, ou adicione quadros e anime uma corrida. Todas as peças são fan art de membros da comunidade, não arte oficial.</p>"
+      }
+    },
+    "tagPage": {
+      "pokemon": {
+        "h1": "Pixel art de Pokémon",
+        "title": "Pixel art de Pokémon — Sprites para copiar e remixar",
+        "description": "{count} peças de pixel art de Pokémon feitas pela comunidade: Pikachu, iniciais e mais, quase todas de 16×16 a 32×32. Abra no editor grátis e faça a sua versão.",
+        "intro": "Sprites de Pokémon feitos por fãs da comunidade, os mais curtidos primeiro. Veja também <a href=\"/arts/pikachu\">Pikachu</a>, <a href=\"/arts/bulbasaur\">Bulbasaur</a>, <a href=\"/arts/squirtle\">Squirtle</a> e <a href=\"/arts/charmander\">Charmander</a>."
+      },
+      "sonic": {
+        "h1": "Pixel art do Sonic",
+        "title": "Pixel art do Sonic — Sprites de fãs para copiar e remixar",
+        "description": "Pixel art do Sonic the Hedgehog feito pela comunidade: {count} sprites de fãs para abrir no editor online grátis, recolorir, animar ou refazer do seu jeito.",
+        "intro": "Sprites do Sonic feitos por fãs da comunidade, os mais curtidos primeiro. Mais personagens de games: <a href=\"/arts/mario\">Mario</a>, <a href=\"/arts/pokemon\">Pokémon</a> e <a href=\"/arts/minecraft\">Minecraft</a>."
+      }
     }
   },
   "theme": {
