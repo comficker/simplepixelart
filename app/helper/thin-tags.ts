@@ -61,7 +61,8 @@ export const KEEP_THIN_SIZES = new Set<string>([
 // Tags kept indexed even when thin: >= 10 Search Console impressions over
 // 28 days, all locales together. The union of growth's list
 // (ops/seo/reports/spa-thin-tags-keep-2026-11-07.tsv) and a GSC pull for
-// 2026-10-08..11-04. Size slugs (size-WxH) are not tags and never reach this
+// 2026-10-08..11-04, plus tags Bing Webmaster reports traffic for
+// (2026-08-16..11-13: dino, turkey, clock, …). Size slugs (size-WxH) are not tags and never reach this
 // rule. Regenerate from GSC rather than editing by hand.
 export const KEEP_THIN_TAGS = new Set<string>([
   '32x32',
@@ -101,6 +102,7 @@ export const KEEP_THIN_TAGS = new Set<string>([
   'beer',
   'bell',
   'berries',
+  'berserk',
   'beverage',
   'bicycle',
   'big-hero-6',
@@ -134,6 +136,7 @@ export const KEEP_THIN_TAGS = new Set<string>([
   'calico',
   'camel',
   'camera',
+  'campfire',
   'candle',
   'captain-america',
   'car',
@@ -143,6 +146,7 @@ export const KEEP_THIN_TAGS = new Set<string>([
   'castle',
   'cat-pixel',
   'chaien',
+  'chain',
   'chalice',
   'challenge',
   'character',
@@ -156,6 +160,7 @@ export const KEEP_THIN_TAGS = new Set<string>([
   'chihiro',
   'chikorita',
   'chuck',
+  'clock',
   'cloud',
   'clouds',
   'clover',
@@ -190,6 +195,7 @@ export const KEEP_THIN_TAGS = new Set<string>([
   'desert',
   'dessert',
   'diamond',
+  'dino',
   'dinosaur',
   'dog',
   'donald-duck',
@@ -294,6 +300,7 @@ export const KEEP_THIN_TAGS = new Set<string>([
   'jake',
   'japan',
   'japanese',
+  'jellyfish',
   'joker',
   'jumping',
   'kazuma-sato',
@@ -409,6 +416,7 @@ export const KEEP_THIN_TAGS = new Set<string>([
   'portrait',
   'pot',
   'potion',
+  'power',
   'president',
   'pumpkin',
   'pup',
@@ -498,6 +506,7 @@ export const KEEP_THIN_TAGS = new Set<string>([
   'tear',
   'tears',
   'tepig',
+  'tesla',
   'the-simpson',
   'thor',
   'thumb',
@@ -509,6 +518,7 @@ export const KEEP_THIN_TAGS = new Set<string>([
   'traveler',
   'treasure',
   'treecko',
+  'turkey',
   'turtwig',
   'twitch',
   'twitter',
