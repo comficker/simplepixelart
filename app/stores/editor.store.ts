@@ -5,7 +5,7 @@ import {useHasWork} from "~/composables/useHasWork";
 import {failReason, track} from "~/composables/useTrack";
 import {cloneDeep, generateUUID, getStorageItem, key2Point, sharedPage2EditorData} from "~/helper/utils";
 import {DEFAULT_EDITOR_DATA} from "~/helper/constants";
-import {markRaw, ref, shallowRef, toRaw} from "vue";
+import {markRaw, ref, shallowRef, toRaw, watch} from "vue";
 import {layers2MapNumbers} from "~/helper/canvas";
 import {hexColorDelta, isSameColor, rgbToHex} from "~/helper/color";
 import {capColors, type Cell, importFileGrid, importOriginalGrid, MAX_IMPORT_COLORS, shouldIgnoreColor} from "~/helper/pixel";
@@ -533,6 +533,18 @@ export const useEditor = defineStore('editor', () => {
 
     const MAX_FRAMES = 64
     const currentFrameIndex = ref(0)
+    // The layer index is set from many places (board switch, undo, frame
+    // change, layer delete) and editorData.layers is swapped under it; any
+    // one of them leaving it past the end crashed the next read of
+    // layers[currentLayerIndex] ("reading 'pixels'", "reading 'x'" in GA).
+    // Clamp synchronously whenever either side changes.
+    watch(
+        [currentLayerIndex, () => editorData.value.layers?.length ?? 0],
+        ([i, n]) => {
+            if (i > 0 && i >= n) currentLayerIndex.value = Math.max(0, n - 1)
+        },
+        {flush: 'sync'},
+    )
     const onionSkin = ref(false)
     const isPlaying = ref(false)
     const sharedRev = ref(0)
@@ -720,7 +732,9 @@ export const useEditor = defineStore('editor', () => {
             toast.error($i18n.t('c_PXEditor.maxFrames', {max: MAX_FRAMES}))
             return
         }
-        const at = currentFrameIndex.value
+        // -1 is the shared (background) stack, which is no frame to copy:
+        // add after the first frame instead of reading frames[-1].
+        const at = Math.max(0, Math.min(anim.frames.length - 1, currentFrameIndex.value))
         const src = anim.frames[at]!
         const layers = duplicate ? cloneLayers(src.layers) : newBlankLayers()
         anim.frames.splice(at + 1, 0, {id: generateUUID(), layers, duration: src.duration ?? Math.round(1000 / fps.value)})
