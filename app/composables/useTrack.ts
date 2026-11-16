@@ -8,8 +8,17 @@ type TrackParams = Record<string, string | number | boolean | undefined>
 let send: ((name: string, params?: TrackParams) => void) | null = null
 const pending: [string, TrackParams | undefined][] = []
 
+// Events that are something the visitor did with the product, as opposed
+// to errors and bookkeeping. The first one marks the visit engaged.
+const NOT_PRODUCT = /_failed$|^app_exception$|^save_recovered$|^engaged_visit$/
+let onProduct: (() => void) | null = null
+export function onProductEvent(fn: (() => void) | null) {
+  onProduct = fn
+}
+
 export function track(name: string, params?: TrackParams) {
   if (import.meta.server) return
+  if (onProduct && !NOT_PRODUCT.test(name)) onProduct()
   if (send) send(name, params)
   else if (pending.length < 50) pending.push([name, params])
 }
