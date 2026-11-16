@@ -6,8 +6,8 @@ The site is available in English (default), Japanese (/ja), Chinese (/zh), Korea
 
 ## Tools
 
+- [Image to pixel art converter](https://simplepixelart.com/converter): turn a photo, picture or PNG/JPG image into pixel art in the browser. Pick a grid size from 8×8 to 64×64 (or Auto, which recovers the grid of upscaled pixel art) and a 4–64 color palette, then fine-tune the result in the editor and export a PNG. Free, no sign-up, the image never leaves the browser.
 - [Pixel art maker](https://simplepixelart.com/editor): the main editor. Brush, fill, layers, mirror mode, palettes, animation frames; export PNG, GIF or sprite sheet. Canvases up to 128×128.
-- [Image to pixel art converter](https://simplepixelart.com/converter): turn a photo or image into pixel art with a chosen grid size and 4–64 color palette.
 - [AI pixel art generator](https://simplepixelart.com/generator): describe a sprite and get editable pixel art from 16×16 to 128×128.
 - [Sprite maker](https://simplepixelart.com/sprite-maker): draw and animate game sprites, export a sprite sheet for Unity, Godot or Phaser.
 - [Pixel art animation maker](https://simplepixelart.com/pixel-art-animation-maker): frame-by-frame animation with onion skin, exported as GIF or sprite sheet.
@@ -24,6 +24,12 @@ The site is available in English (default), Japanese (/ja), Chinese (/zh), Korea
 - [Pixel art sizes](https://simplepixelart.com/arts/sizes): every canvas size with its gallery, e.g. [16×16](https://simplepixelart.com/arts/size-16x16), [32×32](https://simplepixelart.com/arts/size-32x32).
 - [Gallery](https://simplepixelart.com/arts): community pixel art, filterable by size, tag, animation and license.
 - [Tilesets](https://simplepixelart.com/tilesets): community tilesets for the tilemap editor.
+
+## 中文
+
+- [在线像素画制作工具](https://simplepixelart.com/zh/editor)：免费像素画网站，在浏览器里画像素画、做动画，导出 PNG、GIF 或精灵图表。
+- [图片转像素画](https://simplepixelart.com/zh/converter)：把照片或图片转换成像素画。
+- [简单像素画](https://simplepixelart.com/zh/easy-pixel-art)：新手入门和可临摹的小尺寸作品。
 
 ## Optional
 
