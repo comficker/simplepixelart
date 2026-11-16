@@ -18,8 +18,8 @@ export interface UseSeoMetaOptions {
    * The page's visible content is not localised -- artwork, tag, palette and
    * user names all come from the API in English, and the legal pages are
    * English-only by choice. Such a page exists under every locale prefix but
-   * reads the same in all of them, so only the default locale is worth
-   * indexing; the rest would compete as near-duplicates.
+   * reads the same in all of them: the locale copies canonicalise to the
+   * English URL and advertise no hreflang alternates of their own.
    */
   untranslated?: boolean;
   script?: any[]
@@ -85,12 +85,10 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
       { name: 'description', content: desc },
       { name: 'keywords', content: v(options.keywords) },
       { name: 'author', content: () => toValue(options.author) || 'SimplePixelArt.com' },
-      { name: 'robots', content: () => {
-        const own = toValue(options.robots) || 'index, follow'
-        if (!options.untranslated) return own
-        const code = toValue(locale)
-        return !code || code === defaultLocale ? own : 'noindex, follow'
-      } },
+      // An untranslated page's locale copy is not noindex: its canonical
+      // already points at the English URL, and noindex next to a canonical
+      // elsewhere is a mixed signal Google reports as 45K excluded URLs.
+      { name: 'robots', content: () => toValue(options.robots) || 'index, follow' },
 
       { property: 'og:title', content: v(options.title) },
       { property: 'og:description', content: desc },
