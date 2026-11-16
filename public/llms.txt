@@ -1,0 +1,33 @@
+# SimplePixelArt
+
+> SimplePixelArt.com is a free, browser-based pixel art maker and community gallery. People draw pixel art on a grid, turn photos into pixel art, animate sprites and build game tilemaps, with no download and no sign-up needed to start. Every piece in the gallery opens in the editor, so it can be studied or remixed with credit to the original artist.
+
+The site is available in English (default), Japanese (/ja), Chinese (/zh), Korean (/ko), Spanish (/es), Portuguese (/pt) and Russian (/ru). Gallery art is made by community members; character fan art is not official artwork.
+
+## Tools
+
+- [Pixel art maker](https://simplepixelart.com/editor): the main editor. Brush, fill, layers, mirror mode, palettes, animation frames; export PNG, GIF or sprite sheet. Canvases up to 128×128.
+- [Image to pixel art converter](https://simplepixelart.com/converter): turn a photo or image into pixel art with a chosen grid size and 4–64 color palette.
+- [AI pixel art generator](https://simplepixelart.com/generator): describe a sprite and get editable pixel art from 16×16 to 128×128.
+- [Sprite maker](https://simplepixelart.com/sprite-maker): draw and animate game sprites, export a sprite sheet for Unity, Godot or Phaser.
+- [Pixel art animation maker](https://simplepixelart.com/pixel-art-animation-maker): frame-by-frame animation with onion skin, exported as GIF or sprite sheet.
+- [Tilemap editor](https://simplepixelart.com/tilemaps/editor): paint game maps on a square or isometric grid with layers of tiles and sprites.
+- [Tileset slicer](https://simplepixelart.com/tilesets/slicer): cut a sprite sheet or tileset into separate sprites and download them as a ZIP.
+- [Color palettes](https://simplepixelart.com/palettes): ready-made pixel art palettes (retro, pastel, Game Boy and more), plus palettes from an image or a color.
+- [Pixel art color by number](https://simplepixelart.com/color-by-number): relaxing coloring of pixel pictures in the browser.
+
+## Learn and browse
+
+- [Easy pixel art](https://simplepixelart.com/easy-pixel-art): beginner guide with small grids, four steps and easy pieces to copy.
+- [How to make pixel art](https://simplepixelart.com/learn/how-to-make-pixel-art): step-by-step tutorial.
+- [Pixel art ideas](https://simplepixelart.com/ideas): drawing ideas by theme (animals, food, characters, holidays).
+- [Pixel art sizes](https://simplepixelart.com/arts/sizes): every canvas size with its gallery, e.g. [16×16](https://simplepixelart.com/arts/size-16x16), [32×32](https://simplepixelart.com/arts/size-32x32).
+- [Gallery](https://simplepixelart.com/arts): community pixel art, filterable by size, tag, animation and license.
+- [Tilesets](https://simplepixelart.com/tilesets): community tilesets for the tilemap editor.
+
+## Optional
+
+- [About](https://simplepixelart.com/about)
+- [Community guidelines](https://simplepixelart.com/guidelines)
+- [Terms](https://simplepixelart.com/terms)
+- [Sitemap](https://simplepixelart.com/sitemap-index.xml)
