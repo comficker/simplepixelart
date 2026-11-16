@@ -1093,7 +1093,8 @@
     "otherSizes": "Otros tamaños",
     "view_mc-skin": "Skin 3D",
     "view_mc-block": "Bloque 3D",
-    "creatorLinks": "Enlaces"
+    "creatorLinks": "Enlaces",
+    "makerLink": "O empieza un lienzo en blanco en el creador de pixel art"
   },
   "p_arts": {
     "searchTags": "Buscar etiquetas",
@@ -1406,7 +1407,15 @@
     "strongMultipleLayersStrongSketchOn": "<strong>Varias capas</strong> — boceta en una, colorea en otra y apila los detalles encima.",
     "strongPickACanvasSizeStrong": "<strong>Elige el tamaño del lienzo</strong> — abre el editor y escoge un lienzo de <code>8×8</code> hasta <code>64×64</code> píxeles.",
     "strongUndoRedoStrongFullHistory": "<strong>Deshacer / rehacer</strong> — historial completo; experimenta sin miedo y vuelve atrás en cualquier cambio.",
-    "pixelArtEditor": "Editor de pixel art"
+    "pixelArtEditor": "Editor de pixel art",
+    "howToMakeH": "Cómo hacer pixel art online",
+    "stepPalette": "<strong>Elige una paleta</strong> — quédate en 4–8 colores o carga un juego listo de la <a href=\"/palettes\">biblioteca de paletas</a>; luego puedes cambiar cualquier color en todo el lienzo.",
+    "stepAnimate": "<strong>Anímalo (opcional)</strong> — añade fotogramas, activa la piel de cebolla para ver el anterior y pulsa reproducir para revisar el bucle.",
+    "stepExport": "<strong>Exporta y comparte</strong> — descarga un PNG a cualquier escala, un GIF animado o una hoja de sprites, o publícalo en la <a href=\"/arts\">galería</a>.",
+    "faq5q": "¿El creador de pixel art funciona en móvil o tablet?",
+    "faq5a": "<p>Sí. Funciona en el navegador del móvil, en Android y iPhone: toca para poner píxeles, pellizca para hacer zoom y usa dos dedos para moverte. Tu trabajo se guarda en el navegador mientras dibujas. En Android también hay una app gratuita (Google Play).</p>",
+    "faq6q": "¿Puedo exportar un GIF animado o una hoja de sprites?",
+    "faq6a": "<p>Sí. Añade fotogramas y exporta la animación como GIF o como una hoja de sprites PNG con todos los fotogramas en fila, lista para un motor de juego. Las imágenes sueltas se exportan en PNG a 1× o ampliadas para que sigan nítidas.</p>"
   },
   "p_generator": {
     "aPhotoHoldsUpBetterAt": "Una foto aguanta mejor a 64+",

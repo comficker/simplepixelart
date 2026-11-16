@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const {t} = useI18n()
+const localHtml = useLocalHtml()
 const store = useEditor()
 const route = useRoute()
 
@@ -9,6 +10,21 @@ const canonical = computed(() =>
         ? `https://simplepixelart.com/art/${editId.value}`
         : 'https://simplepixelart.com/editor'
 )
+
+// One source for the visible how-to/FAQ and their JSON-LD, so /ko gets
+// Korean structured data rather than the English copy it used to carry.
+const steps = [
+  'p_editor.strongPickACanvasSizeStrong',
+  'p_editor.stepPalette',
+  'p_editor.strongDrawWithTheToolsStrong',
+  'p_editor.stepAnimate',
+  'p_editor.stepExport',
+]
+const faq = computed(() => [0, 1, 2, 3, 4, 5, 6].map(i => ({
+  q: t(`p_editor.faq${i}q`),
+  a: t(`p_editor.faq${i}a`),
+})))
+const plain = (html: string) => html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
 
 useCustomSeoMeta({
   title: () => t('seo.editor.title'),
@@ -24,10 +40,10 @@ useCustomSeoMeta({
         '@graph': [
           {
             '@type': 'SoftwareApplication',
-            name: 'Pixel Art Editor',
-            description: 'Free browser-based pixel art editor with brushes, fill, layers, mirror mode, custom palettes and PNG export.',
+            name: 'SimplePixelArt Pixel Art Maker',
+            description: plain(t('seo.editor.description')),
             url: 'https://simplepixelart.com/editor',
-            applicationCategory: 'GraphicsApplication',
+            applicationCategory: 'DesignApplication',
             operatingSystem: 'Any (browser-based)',
             offers: {'@type': 'Offer', price: '0', priceCurrency: 'USD'},
             featureList: [
@@ -35,48 +51,38 @@ useCustomSeoMeta({
               'Flood fill tool',
               'Horizontal and vertical mirror drawing',
               'Multiple layers',
+              'Animation frames with onion skin',
               'Undo / redo history',
-              'Custom canvas sizes from 8×8 to 64×64',
+              'Custom canvas sizes up to 128×128',
               'Custom color palette with global color swap',
-              'Export as PNG and share to the gallery',
+              'Export as PNG, animated GIF or sprite sheet',
             ],
             publisher: {'@type': 'Organization', name: 'SimplePixelArt.com', url: 'https://simplepixelart.com/'},
           },
           {
             '@type': 'HowTo',
-            name: 'How to draw pixel art online',
-            description: 'Create pixel art in your browser in three steps with the free Simple Pixel Art editor.',
-            totalTime: 'PT2M',
-            tool: [{'@type': 'HowToTool', name: 'Pixel Art Editor (web browser)'}],
-            step: [
-              {'@type': 'HowToStep', name: 'Pick a canvas size', text: 'Open the editor and choose a canvas from 8×8 up to 64×64 pixels.'},
-              {'@type': 'HowToStep', name: 'Draw with the tools', text: 'Paint with the brush, flood-fill regions, work across layers, and turn on mirror mode for symmetric sprites.'},
-              {'@type': 'HowToStep', name: 'Export and share', text: 'Export your art as a PNG, or publish it to the SimplePixelArt gallery.'},
-            ],
+            name: t('p_editor.howToMakeH'),
+            totalTime: 'PT10M',
+            tool: [{'@type': 'HowToTool', name: 'SimplePixelArt pixel art maker (web browser)'}],
+            step: steps.map((k, i) => {
+              const html = t(k)
+              const m = html.match(/<strong>(.*?)<\/strong>\s*[—–-]*\s*(.*)/)
+              return {'@type': 'HowToStep', position: i + 1, name: plain(m ? m[1] : html), text: plain(m ? m[2] : html)}
+            }),
           },
           {
             '@type': 'FAQPage',
-            mainEntity: [
-              {'@type': 'Question', name: 'Is the pixel art editor free?', acceptedAnswer: {'@type': 'Answer', text: 'Yes. It is completely free and runs entirely in your browser — no signup needed to start, and no watermark.'}},
-              {'@type': 'Question', name: 'Do I need to install anything?', acceptedAnswer: {'@type': 'Answer', text: 'No. The editor runs in any modern web browser on desktop or mobile — nothing to download.'}},
-              {'@type': 'Question', name: 'What canvas sizes can I use?', acceptedAnswer: {'@type': 'Answer', text: 'Anywhere from 8×8 to 64×64 pixels. Smaller canvases suit icons and sprites; larger ones allow more detail.'}},
-              {'@type': 'Question', name: 'Can I turn a photo or sprite sheet into pixel art?', acceptedAnswer: {'@type': 'Answer', text: 'Yes. Use the image-to-pixel-art converter to pixelate a photo, or the tileset slicer to cut sprites from a sheet, then open the result in the editor.'}},
-              {'@type': 'Question', name: 'How do I export my pixel art?', acceptedAnswer: {'@type': 'Answer', text: 'Export your artwork as a PNG for games, the web or print, and optionally share it to the SimplePixelArt gallery.'}},
-            ],
+            mainEntity: faq.value.map(f => ({
+              '@type': 'Question',
+              name: f.q,
+              acceptedAnswer: {'@type': 'Answer', text: plain(f.a)},
+            })),
           },
         ],
       })
     }
   ]
 });
-
-const faq = computed(() => [
-  {q: t('p_editor.faq0q'), a: t('p_editor.faq0a')},
-  {q: t('p_editor.faq1q'), a: t('p_editor.faq1a')},
-  {q: t('p_editor.faq2q'), a: t('p_editor.faq2a')},
-  {q: t('p_editor.faq3q'), a: t('p_editor.faq3a')},
-  {q: t('p_editor.faq4q'), a: t('p_editor.faq4a')},
-])
 </script>
 
 <template>
@@ -109,11 +115,9 @@ const faq = computed(() => [
         <p v-html="$t('p_editor.drawOnAnEmptyPartOf')"/>
       </blockquote>
 
-      <h2>{{ $t('common.howToUseIt') }}</h2>
+      <h2>{{ $t('p_editor.howToMakeH') }}</h2>
       <ol>
-        <li v-html="$t('p_editor.strongPickACanvasSizeStrong')"/>
-        <li v-html="$t('p_editor.strongDrawWithTheToolsStrong')"/>
-        <li v-html="$t('p_editor.strongExportShareStrongExportYour')"/>
+        <li v-for="k in steps" :key="k" v-html="localHtml($t(k))"/>
       </ol>
 
       <h2>{{ $t('common.features') }}</h2>

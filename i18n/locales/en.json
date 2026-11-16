@@ -1123,7 +1123,8 @@
     "otherSizes": "Other sizes",
     "view_mc-skin": "3D skin",
     "view_mc-block": "3D block",
-    "creatorLinks": "Links"
+    "creatorLinks": "Links",
+    "makerLink": "Or start a blank canvas in the pixel art maker"
   },
   "p_arts": {
     "searchTags": "Search tags",
@@ -1368,7 +1369,7 @@
     "fourStepsThatDoMostOf": "Four steps that do most of the work",
     "labelPixelArt": "{label} pixel art",
     "openTheEditor": "Open the editor",
-    "pixelArtEditor": "Pixel art editor",
+    "pixelArtEditor": "Pixel art maker",
     "pixelArtGetsEasyTheMoment": "Pixel art gets easy the moment you shrink the canvas. On an 8×8 grid there are 64 squares and no room to overthink — pick three colors, block the shape, done in minutes. Below: the grids that work best when you are starting, the four steps that matter, and a free editor to do it in.",
     "readyMade38ColorSets": "— ready-made 3-8 color sets, so you skip the hardest beginner decision.",
     "sizeNote0": "icons, hearts, tiny sprites",
@@ -1436,7 +1437,15 @@
     "strongMultipleLayersStrongSketchOn": "<strong>Multiple layers</strong> — sketch on one, color on another, stack details on top.",
     "strongPickACanvasSizeStrong": "<strong>Pick a canvas size</strong> — open the editor and choose a canvas from <code>8×8</code> up to <code>64×64</code> pixels.",
     "strongUndoRedoStrongFullHistory": "<strong>Undo / redo</strong> — full history; experiment freely and step back through any change.",
-    "pixelArtEditor": "Pixel Art Editor"
+    "pixelArtEditor": "Pixel Art Editor",
+    "howToMakeH": "How to make pixel art online",
+    "stepPalette": "<strong>Choose a palette</strong> — keep to 4–8 colors, or load a ready-made set from the <a href=\"/palettes\">palette library</a>; you can swap any color across the whole canvas later.",
+    "stepAnimate": "<strong>Animate it (optional)</strong> — add frames, turn on onion skin to see the previous frame, and press play to check the loop.",
+    "stepExport": "<strong>Export & share</strong> — download a PNG at any scale, an animated GIF or a sprite sheet, or publish it to the <a href=\"/arts\">gallery</a>.",
+    "faq5q": "Does the pixel art maker work on a phone or tablet?",
+    "faq5a": "<p>Yes. It runs in mobile browsers on Android and iPhone: tap to place pixels, pinch to zoom, two fingers to pan. Your work saves in the browser as you go. On Android there is also a free app (Google Play).</p>",
+    "faq6q": "Can I export an animated GIF or a sprite sheet?",
+    "faq6a": "<p>Yes. Add animation frames, then export the animation as a GIF or as a sprite sheet PNG with every frame in a row, ready for a game engine. Single images export as PNG at 1× or scaled up so they stay sharp.</p>"
   },
   "p_generator": {
     "aPhotoHoldsUpBetterAt": "A photo holds up better at 64+",

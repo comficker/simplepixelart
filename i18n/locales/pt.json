@@ -1093,7 +1093,8 @@
     "otherSizes": "Outros tamanhos",
     "view_mc-skin": "Skin 3D",
     "view_mc-block": "Bloco 3D",
-    "creatorLinks": "Links"
+    "creatorLinks": "Links",
+    "makerLink": "Ou comece uma tela em branco no criador de pixel art"
   },
   "p_arts": {
     "searchTags": "Buscar tags",
@@ -1406,7 +1407,15 @@
     "strongMultipleLayersStrongSketchOn": "<strong>Várias camadas</strong> — esboce numa, pinte em outra e empilhe os detalhes por cima.",
     "strongPickACanvasSizeStrong": "<strong>Escolha o tamanho da tela</strong> — abra o editor e escolha uma tela de <code>8×8</code> até <code>64×64</code> pixels.",
     "strongUndoRedoStrongFullHistory": "<strong>Desfazer / refazer</strong> — histórico completo; experimente à vontade e volte em qualquer alteração.",
-    "pixelArtEditor": "Editor de pixel art"
+    "pixelArtEditor": "Editor de pixel art",
+    "howToMakeH": "Como fazer pixel art online",
+    "stepPalette": "<strong>Escolha uma paleta</strong> — fique em 4–8 cores ou carregue um conjunto pronto da <a href=\"/palettes\">biblioteca de paletas</a>; depois dá para trocar qualquer cor na tela inteira.",
+    "stepAnimate": "<strong>Anime (opcional)</strong> — adicione quadros, ligue o onion skin para ver o quadro anterior e aperte play para conferir o loop.",
+    "stepExport": "<strong>Exporte e compartilhe</strong> — baixe um PNG em qualquer escala, um GIF animado ou uma sprite sheet, ou publique na <a href=\"/arts\">galeria</a>.",
+    "faq5q": "O criador de pixel art funciona no celular ou tablet?",
+    "faq5a": "<p>Sim. Funciona no navegador do celular, no Android e no iPhone: toque para colocar pixels, faça pinça para dar zoom e use dois dedos para mover. Seu trabalho é salvo no navegador enquanto você desenha. No Android também há um app gratuito (Google Play).</p>",
+    "faq6q": "Posso exportar um GIF animado ou uma sprite sheet?",
+    "faq6a": "<p>Sim. Adicione quadros e exporte a animação como GIF ou como uma sprite sheet PNG com todos os quadros em linha, pronta para um motor de jogo. Imagens únicas saem em PNG a 1× ou ampliadas para continuarem nítidas.</p>"
   },
   "p_generator": {
     "aPhotoHoldsUpBetterAt": "Uma foto fica melhor a partir de 64",

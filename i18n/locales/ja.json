@@ -1093,7 +1093,8 @@
     "otherSizes": "他のサイズ",
     "view_mc-skin": "3Dスキン",
     "view_mc-block": "3Dブロック",
-    "creatorLinks": "リンク"
+    "creatorLinks": "リンク",
+    "makerLink": "または、ドット絵メーカーで白紙のキャンバスから始める"
   },
   "p_arts": {
     "searchTags": "タグを検索",
@@ -1406,7 +1407,15 @@
     "strongMultipleLayersStrongSketchOn": "<strong>複数レイヤー</strong> — 1枚に下描き、別の1枚に着色、その上にディテールを重ねられます。",
     "strongPickACanvasSizeStrong": "<strong>キャンバスサイズを選ぶ</strong> — エディタを開き、<code>8×8</code>から<code>64×64</code>ピクセルの中からキャンバスを選びます。",
     "strongUndoRedoStrongFullHistory": "<strong>元に戻す／やり直す</strong> — 履歴はすべて残ります。思い切り試して、どの変更にも戻れます。",
-    "pixelArtEditor": "ドット絵エディター"
+    "pixelArtEditor": "ドット絵エディター",
+    "howToMakeH": "オンラインでドット絵を作る方法",
+    "stepPalette": "<strong>パレットを選ぶ</strong> — 色は4〜8色に絞るか、<a href=\"/palettes\">パレットライブラリ</a>から既製のセットを読み込みます。あとからキャンバス全体の色を一括で入れ替えられます。",
+    "stepAnimate": "<strong>アニメーションにする（任意）</strong> — フレームを追加し、オニオンスキンで前のフレームを見ながら描いて、再生でループを確認します。",
+    "stepExport": "<strong>書き出しと共有</strong> — 好きな倍率のPNG、アニメーションGIF、スプライトシートでダウンロードするか、<a href=\"/arts\">ギャラリー</a>に投稿します。",
+    "faq5q": "スマホやタブレットでも使えますか？",
+    "faq5a": "<p>はい。AndroidとiPhoneのブラウザで動きます。タップでドットを置き、ピンチで拡大縮小、二本指で移動します。描いている間、作品はブラウザに保存されます。Android向けには無料アプリ (Google Play)もあります。</p>",
+    "faq6q": "アニメーションGIFやスプライトシートを書き出せますか？",
+    "faq6a": "<p>はい。アニメーションのフレームを追加し、GIFとして、または全フレームを横一列に並べたスプライトシートPNGとして書き出せます。ゲームエンジンにそのまま使えます。1枚絵は等倍または拡大したPNGで、くっきり保存されます。</p>"
   },
   "p_generator": {
     "aPhotoHoldsUpBetterAt": "写真は64以上のほうが綺麗です",

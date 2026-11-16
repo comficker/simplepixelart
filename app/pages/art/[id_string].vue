@@ -839,6 +839,7 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
           <span class="icon icon-pen"/>
           <span>{{ isOwner ? $t('common.edit') : $t('p_art_id_string.makeYourOwnVersion') }}</span>
         </NuxtLinkLocale>
+
         <!-- Staff can change the piece itself, not a copy of it. Beside Remix
              rather than instead of it: a moderator fixing a stray pixel and a
              moderator making their own version are different jobs. -->
@@ -1051,6 +1052,11 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
           </NuxtLinkLocale>
         </template>
         <item-list :limit="6" exact-limit/>
+        <!-- Remix points at ?id= (noindex); this is the crawlable way into
+             the maker from every art page. -->
+        <p class="art-maker-link text-xs">
+          <NuxtLinkLocale to="/editor">{{ $t('p_art_id_string.makerLink') }}</NuxtLinkLocale>
+        </p>
       </Widget>
 
       <Widget>
@@ -1069,6 +1075,10 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
 </template>
 
 <style scoped>
+.art-maker-link {
+  margin-top: var(--space-3);
+}
+
 /* An h1 for the outline, still drawn like every other empty-state title. */
 .art-not-found-title {
   font-family: inherit;

@@ -1093,7 +1093,8 @@
     "otherSizes": "다른 크기",
     "view_mc-skin": "3D 스킨",
     "view_mc-block": "3D 블록",
-    "creatorLinks": "링크"
+    "creatorLinks": "링크",
+    "makerLink": "또는 픽셀 아트 메이커에서 빈 캔버스로 시작하기"
   },
   "p_arts": {
     "searchTags": "태그 검색",
@@ -1406,7 +1407,15 @@
     "strongMultipleLayersStrongSketchOn": "<strong>여러 레이어</strong> — 하나에 스케치, 다른 하나에 채색, 그 위에 디테일을 쌓으세요.",
     "strongPickACanvasSizeStrong": "<strong>캔버스 크기 고르기</strong> — 편집기를 열고 <code>8×8</code>부터 <code>64×64</code> 픽셀까지 원하는 캔버스를 고르세요.",
     "strongUndoRedoStrongFullHistory": "<strong>실행 취소 / 다시 실행</strong> — 기록이 모두 남습니다. 마음껏 시도하고 어떤 변경이든 되돌리세요.",
-    "pixelArtEditor": "픽셀 아트 에디터"
+    "pixelArtEditor": "픽셀 아트 에디터",
+    "howToMakeH": "온라인으로 픽셀 아트 만드는 법",
+    "stepPalette": "<strong>팔레트 고르기</strong> — 4~8색으로 제한하거나 <a href=\"/palettes\">팔레트 라이브러리</a>에서 준비된 세트를 불러오세요. 나중에 캔버스 전체에서 어떤 색이든 바꿀 수 있습니다.",
+    "stepAnimate": "<strong>애니메이션 넣기 (선택)</strong> — 프레임을 추가하고 어니언 스킨을 켜서 이전 프레임을 보며 그린 뒤, 재생해 반복이 자연스러운지 확인하세요.",
+    "stepExport": "<strong>내보내기와 공유</strong> — 원하는 배율의 PNG, 움직이는 GIF, 스프라이트 시트로 내려받거나 <a href=\"/arts\">갤러리</a>에 게시하세요.",
+    "faq5q": "픽셀 아트 메이커를 휴대폰이나 태블릿에서도 쓸 수 있나요?",
+    "faq5a": "<p>네. 안드로이드와 아이폰의 모바일 브라우저에서 작동합니다. 탭으로 픽셀을 찍고, 두 손가락으로 확대·축소하고 화면을 옮기세요. 작업은 그리는 동안 브라우저에 저장됩니다. 안드로이드용 무료 앱 (Google Play)도 있습니다.</p>",
+    "faq6q": "움직이는 GIF나 스프라이트 시트로 내보낼 수 있나요?",
+    "faq6a": "<p>네. 애니메이션 프레임을 추가한 뒤 GIF로, 또는 모든 프레임을 한 줄로 늘어놓은 스프라이트 시트 PNG로 내보내면 게임 엔진에 바로 쓸 수 있습니다. 한 장짜리 그림은 1× 또는 확대한 PNG로 선명하게 저장됩니다.</p>"
   },
   "p_generator": {
     "aPhotoHoldsUpBetterAt": "사진은 64 이상에서 더 잘 나옵니다",

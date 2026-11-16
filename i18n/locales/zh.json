@@ -1093,7 +1093,8 @@
     "otherSizes": "其他尺寸",
     "view_mc-skin": "3D 皮肤",
     "view_mc-block": "3D 方块",
-    "creatorLinks": "链接"
+    "creatorLinks": "链接",
+    "makerLink": "或者在像素画制作器中从空白画布开始"
   },
   "p_arts": {
     "searchTags": "搜索标签",
@@ -1406,7 +1407,15 @@
     "strongMultipleLayersStrongSketchOn": "<strong>多图层</strong>——一层打草稿，一层上色，再把细节叠在上面。",
     "strongPickACanvasSizeStrong": "<strong>选择画布尺寸</strong>——打开编辑器，选一个 <code>8×8</code> 到 <code>64×64</code> 像素的画布。",
     "strongUndoRedoStrongFullHistory": "<strong>撤销／重做</strong>——完整历史记录；放心尝试，随时退回任何一步。",
-    "pixelArtEditor": "像素画编辑器"
+    "pixelArtEditor": "像素画编辑器",
+    "howToMakeH": "如何在线制作像素画",
+    "stepPalette": "<strong>选择调色板</strong>——控制在 4–8 种颜色，或从<a href=\"/palettes\">调色板库</a>载入现成的配色；之后可以在整个画布上一键替换任意颜色。",
+    "stepAnimate": "<strong>做成动画（可选）</strong>——添加帧，打开洋葱皮查看上一帧，再点播放检查循环是否流畅。",
+    "stepExport": "<strong>导出与分享</strong>——下载任意倍数的 PNG、动态 GIF 或精灵图，或发布到<a href=\"/arts\">作品库</a>。",
+    "faq5q": "像素画制作器能在手机或平板上用吗？",
+    "faq5a": "<p>可以。它在 Android 和 iPhone 的手机浏览器中都能运行：点按放置像素，双指缩放和平移。作品会边画边保存在浏览器里。Android 还有免费应用 (Google Play)。</p>",
+    "faq6q": "可以导出动态 GIF 或精灵图吗？",
+    "faq6a": "<p>可以。添加动画帧后，可导出为 GIF，或导出为所有帧排成一行的精灵图 PNG，直接用于游戏引擎。单张图片可按 1× 或放大后导出为 PNG，保持清晰。</p>"
   },
   "p_generator": {
     "aPhotoHoldsUpBetterAt": "照片在 64 以上效果更好",
