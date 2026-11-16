@@ -226,7 +226,8 @@
     "contact": "Contato",
     "footer": "Rodapé",
     "privacy": "Privacidade",
-    "terms": "Termos"
+    "terms": "Termos",
+    "easyPixelArt": "Pixel art fácil"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Abrir a paleta de comandos (temas, navegação e mais)"
@@ -1357,7 +1358,14 @@
     "theEasiestCanvasSizes": "Os tamanhos de tela mais fáceis",
     "whereToGoNext": "Para onde ir depois",
     "seoTitle": "Pixel art fácil para iniciantes",
-    "seoDescription": "Pixel art fácil para iniciantes: comece numa grade 8×8 com três cores. Um método passo a passo, os tamanhos de tela mais fáceis e um editor online grátis."
+    "seoDescription": "Pixel art fácil para iniciantes: comece numa grade 8×8 com três cores. Um método passo a passo, os tamanhos de tela mais fáceis e um editor online grátis.",
+    "ideasH": "Ideias de pixel art fácil para copiar",
+    "ideasP": "As peças mais curtidas em grades de 16×16 ou menores. Abra uma para ver pixel por pixel, ou toque em Desenhar isto para começar a partir dela no editor e mudar o que quiser.",
+    "drawThis": "Desenhar isto",
+    "faq4q": "Quanto tempo leva um pixel art fácil?",
+    "faq4a": "<p>De dez a vinte minutos numa grade de 8×8 ou 12×12, contando os erros. Um sprite de 16×16 com sombra leva perto de uma hora na primeira vez. Copiar uma peça quadrado por quadrado é ainda mais rápido, e é assim que a maioria aprende.</p>",
+    "faq5q": "Dá para fazer pixel art fácil no celular?",
+    "faq5a": "<p>Sim. O <a href=\"/editor\">editor</a> funciona no navegador do celular: toque para colocar um pixel e faça pinça para dar zoom. Grades pequenas são as melhores numa tela de celular, porque cada quadrado continua grande o bastante para o dedo.</p>"
   },
   "p_editor": {
     "browser": "navegador",

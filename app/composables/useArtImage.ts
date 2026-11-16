@@ -26,12 +26,14 @@ export const useArtImage = () => {
 export const useArtAlt = () => {
     const {t} = useI18n()
 
-    return (name: string | null | undefined, fallback = '') => {
+    // `size` adds the grid ("Pikachu pixel art 16×16"): searches name it.
+    return (name: string | null | undefined, fallback = '', size?: {width?: number, height?: number}) => {
+        const grid = size?.width && size?.height ? ` ${size.width}×${size.height}` : ''
         const words = (name || '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim()
-        if (!words) return fallback
+        if (!words) return fallback + grid
         // A lowercase slug-ish name reads better title-cased; a name the
         // author capitalised is left the way they wrote it.
         const label = /[A-Z]/.test(words) ? words : words.replace(/\b\p{L}/gu, c => c.toUpperCase())
-        return /pixel art/i.test(label) ? label : t('common.artAlt', {name: label})
+        return (/pixel art/i.test(label) ? label : t('common.artAlt', {name: label})) + grid
     }
 }

@@ -237,7 +237,8 @@
     "contact": "Contact",
     "footer": "Footer",
     "privacy": "Privacy",
-    "terms": "Terms"
+    "terms": "Terms",
+    "easyPixelArt": "Easy pixel art"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Open command palette (themes, navigation, more)"
@@ -1387,7 +1388,14 @@
     "theEasiestCanvasSizes": "The easiest canvas sizes",
     "whereToGoNext": "Where to go next",
     "seoTitle": "Easy Pixel Art for Beginners",
-    "seoDescription": "Easy pixel art for beginners: start on an 8×8 grid with three colors. A step-by-step method, the easiest canvas sizes and a free online editor."
+    "seoDescription": "Easy pixel art for beginners: start on an 8×8 grid with three colors. A step-by-step method, the easiest canvas sizes and a free online editor.",
+    "ideasH": "Easy pixel art ideas to copy",
+    "ideasP": "The most liked pieces on a grid of 16×16 or smaller. Open one to see it pixel by pixel, or press Draw this to start from it in the editor and change whatever you like.",
+    "drawThis": "Draw this",
+    "faq4q": "How long does an easy pixel art piece take?",
+    "faq4a": "<p>Ten to twenty minutes on an 8×8 or 12×12 grid, including mistakes. A 16×16 sprite with shading takes closer to an hour the first time. Copying an existing piece square by square is faster still, and it is how most people learn.</p>",
+    "faq5q": "Can I draw easy pixel art on my phone?",
+    "faq5a": "<p>Yes. The <a href=\"/editor\">editor</a> works in a mobile browser: tap to place a pixel, pinch to zoom. Small grids suit a phone screen best, since every square stays big enough to hit with a finger.</p>"
   },
   "p_editor": {
     "browser": "browser",

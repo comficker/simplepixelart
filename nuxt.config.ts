@@ -65,6 +65,9 @@ export default defineNuxtConfig({
             // old URLs keep whatever they have earned).
             ...localizedRedirects('/generate', '/generator'),
             ...localizedRedirects('/convert', '/converter'),
+            // "easy" is no tag, so /arts/easy rendered the easy-pixel-art copy
+            // under a 404. Searchers type it; send them to the real page.
+            ...localizedRedirects('/arts/easy', '/easy-pixel-art'),
         },
     },
     css: [

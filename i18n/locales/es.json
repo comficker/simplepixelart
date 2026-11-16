@@ -226,7 +226,8 @@
     "contact": "Contacto",
     "footer": "Pie de página",
     "privacy": "Privacidad",
-    "terms": "Términos"
+    "terms": "Términos",
+    "easyPixelArt": "Pixel art fácil"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Abrir la paleta de comandos (temas, navegación y más)"
@@ -1357,7 +1358,14 @@
     "theEasiestCanvasSizes": "Los tamaños de lienzo más fáciles",
     "whereToGoNext": "Adónde ir después",
     "seoTitle": "Pixel art fácil para principiantes",
-    "seoDescription": "Pixel art fácil para principiantes: empieza en una cuadrícula de 8×8 con tres colores. Un método paso a paso, los tamaños de lienzo más fáciles y un editor online gratis."
+    "seoDescription": "Pixel art fácil para principiantes: empieza en una cuadrícula de 8×8 con tres colores. Un método paso a paso, los tamaños de lienzo más fáciles y un editor online gratis.",
+    "ideasH": "Ideas de pixel art fácil para copiar",
+    "ideasP": "Las piezas más votadas en una cuadrícula de 16×16 o menos. Abre una para verla píxel a píxel, o pulsa Dibujar esto para empezar desde ella en el editor y cambiar lo que quieras.",
+    "drawThis": "Dibujar esto",
+    "faq4q": "¿Cuánto se tarda en hacer un pixel art fácil?",
+    "faq4a": "<p>De diez a veinte minutos en una cuadrícula de 8×8 o 12×12, contando los errores. Un sprite de 16×16 con sombras lleva cerca de una hora la primera vez. Copiar una pieza cuadro a cuadro es aún más rápido, y así aprende la mayoría.</p>",
+    "faq5q": "¿Puedo hacer pixel art fácil en el móvil?",
+    "faq5a": "<p>Sí. El <a href=\"/editor\">editor</a> funciona en el navegador del móvil: toca para poner un píxel y pellizca para hacer zoom. Las cuadrículas pequeñas son las que mejor van en una pantalla de teléfono, porque cada cuadro sigue siendo fácil de tocar con el dedo.</p>"
   },
   "p_editor": {
     "browser": "navegador",

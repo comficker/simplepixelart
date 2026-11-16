@@ -9,6 +9,7 @@ const year = new Date().getFullYear()
     <span class="footer-copy">© {{ year }} SimplePixelArt.com</span>
     <nav class="footer-links" :aria-label="$t('c_FooterBar.footer')">
       <a :href="playUrl('footer')" target="_blank" rel="noopener">{{ $t('c_AndroidApp.short') }}</a>
+      <NuxtLinkLocale to="/easy-pixel-art">{{ $t('c_FooterBar.easyPixelArt') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/contact">{{ $t('c_FooterBar.contact') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/guidelines">{{ $t('common.guidelines') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/privacy">{{ $t('c_FooterBar.privacy') }}</NuxtLinkLocale>

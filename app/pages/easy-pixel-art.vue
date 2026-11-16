@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type {ResponseSharedPage} from '~/types'
 const {t} = useI18n()
 const EASY_SIZES = computed(() => [
   {slug: '8x8', label: '8×8', note: t('p_easy-pixel-art.sizeNote0')},
@@ -28,12 +29,19 @@ const steps = computed(() => [
   },
 ])
 
-const faq = computed(() => [
-  {q: t('p_easy-pixel-art.faq0q'), a: t('p_easy-pixel-art.faq0a')},
-  {q: t('p_easy-pixel-art.faq1q'), a: t('p_easy-pixel-art.faq1a')},
-  {q: t('p_easy-pixel-art.faq2q'), a: t('p_easy-pixel-art.faq2a')},
-  {q: t('p_easy-pixel-art.faq3q'), a: t('p_easy-pixel-art.faq3a')},
-])
+const faq = computed(() => [0, 1, 2, 3, 4, 5].map(i => ({
+  q: t(`p_easy-pixel-art.faq${i}q`),
+  a: t(`p_easy-pixel-art.faq${i}a`),
+})))
+
+// The page ranks for "easy pixel art" but showed two pictures; searchers came
+// for pieces to copy. Small grids, most liked first.
+const {data: ideas} = await useAuthFetch<ResponseSharedPage>('/coloring/shared-pages/', {
+  key: 'easy-pixel-art-ideas',
+  query: {status: 'public', width__lt: 17, height__lt: 17, ordering: '-score,-id', page_size: 24},
+})
+const artAlt = useArtAlt()
+const artImage = useArtImage()
 
 useCustomSeoMeta({
   title: () => t('p_easy-pixel-art.seoTitle'),
@@ -84,6 +92,25 @@ useCustomSeoMeta({
       <NuxtLinkLocale to="/editor?new=true" class="btn">{{ $t('p_easy-pixel-art.openTheEditor') }}</NuxtLinkLocale>
     </p>
 
+    <template v-if="ideas?.results?.length">
+      <h2>{{ $t('p_easy-pixel-art.ideasH') }}</h2>
+      <p>{{ $t('p_easy-pixel-art.ideasP') }}</p>
+      <ul class="results easy-ideas">
+        <li v-for="a in ideas.results" :key="a.id">
+          <NuxtLinkLocale :to="`/art/${a.id_string}`" class="card easy-idea">
+            <img
+                :src="artImage(a)"
+                :alt="artAlt(a.name, $t('c_Card.pixelArtArtwork'), a)"
+                width="120" height="120" loading="lazy" decoding="async"
+            >
+          </NuxtLinkLocale>
+          <NuxtLinkLocale :to="`/editor?id=${a.id_string}`" rel="nofollow" class="easy-draw text-xs">
+            {{ $t('p_easy-pixel-art.drawThis') }}
+          </NuxtLinkLocale>
+        </li>
+      </ul>
+    </template>
+
     <h2>{{ $t('p_easy-pixel-art.theEasiestCanvasSizes') }}</h2>
     <p v-html="$t('p_easy-pixel-art.eachOfTheseHasRealPieces')"/>
     <ul>
@@ -127,3 +154,34 @@ useCustomSeoMeta({
     </ToolReadme>
   </div>
 </template>
+
+<style scoped>
+.prose > .easy-ideas {
+  max-width: none;
+  padding: 0;
+  list-style: none;
+}
+
+.easy-ideas li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.easy-idea {
+  aspect-ratio: 1;
+  padding: var(--space-2);
+  image-rendering: pixelated;
+}
+
+.easy-idea img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.easy-draw {
+  text-align: center;
+}
+</style>
