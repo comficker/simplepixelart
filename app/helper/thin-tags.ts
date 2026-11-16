@@ -8,8 +8,55 @@ export const MIN_TAG_ARTS = 3
 // pages. Below MIN_SIZE_ARTS they are noindex and out of the size sitemap,
 // unless they already earn search impressions.
 export const MIN_SIZE_ARTS = 12
-// size-10x10: 11 pieces, 910 impressions / 28 days for "10x10 pixel art".
-export const KEEP_THIN_SIZES = new Set<string>(['size-10x10'])
+// Size pages kept indexed even when thin: >= 10 Search Console impressions
+// over 28 days (GSC 2026-10-17..11-14, all locales), the same rule as
+// KEEP_THIN_TAGS. Source: marketing/seo/keep-thin-sizes-2026-11-16.tsv.
+// Regenerate from GSC rather than editing by hand.
+export const KEEP_THIN_SIZES = new Set<string>([
+  'size-9x8',
+  'size-9x9',
+  'size-10x10',
+  'size-11x11',
+  'size-13x14',
+  'size-14x4',
+  'size-15x14',
+  'size-16x18',
+  'size-18x20',
+  'size-20x16',
+  'size-22x20',
+  'size-23x23',
+  'size-24x25',
+  'size-24x26',
+  'size-24x27',
+  'size-24x28',
+  'size-24x30',
+  'size-24x32',
+  'size-26x25',
+  'size-26x26',
+  'size-26x28',
+  'size-27x27',
+  'size-27x28',
+  'size-30x30',
+  'size-31x31',
+  'size-32x40',
+  'size-33x32',
+  'size-34x34',
+  'size-35x35',
+  'size-36x36',
+  'size-37x37',
+  'size-38x38',
+  'size-39x39',
+  'size-40x40',
+  'size-42x42',
+  'size-56x56',
+  'size-60x60',
+  'size-64x96',
+  'size-68x68',
+  'size-100x100',
+  'size-126x67',
+  'size-150x150',
+  'size-256x256',
+])
 
 // Tags kept indexed even when thin: >= 10 Search Console impressions over
 // 28 days, all locales together. The union of growth's list
