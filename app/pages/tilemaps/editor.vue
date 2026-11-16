@@ -17,6 +17,7 @@ import {type WorldExportSource, exportJSON as exportWorldJSON, exportGodot as ex
 
 const route = useRoute()
 const router = useRouter()
+const localePath = useLocalePath()
 const auth = useAuthStore()
 const apiBase = useRuntimeConfig().public.api as string
 const localTs = useLocalTilesets()
