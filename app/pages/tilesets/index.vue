@@ -58,7 +58,7 @@ useCustomSeoMeta({
         <NuxtLinkLocale v-for="ts in tilesets" :key="ts.id" :to="`/tilesets/${ts.id_string}`" class="ts-card" :title="ts.name">
           <div class="ts-cover">
             <div v-if="coverOf(ts).length" class="ts-mosaic" :class="{one: coverOf(ts).length < 4}">
-              <img v-for="(src, i) in coverOf(ts).slice(0, coverOf(ts).length < 4 ? 1 : 4)" :key="i" :src="src" alt="" loading="lazy" decoding="async">
+              <img v-for="(src, i) in coverOf(ts).slice(0, coverOf(ts).length < 4 ? 1 : 4)" :key="i" :src="src" :alt="`${ts.name} tile ${i + 1}`" loading="lazy" decoding="async">
             </div>
             <div v-else class="card-empty"><span class="icon icon-grid"/></div>
           </div>

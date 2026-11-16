@@ -17,7 +17,7 @@ const count = computed(() => (props.value.items || []).length)
   <NuxtLinkLocale class="cl-card" :to="`/collections/${value.id_string}`" :title="name || $t('common.untitled')">
     <div class="cl-cover">
       <div v-if="mosaic && mosaic.length >= 4 && !failed" class="cl-mosaic">
-        <img v-for="(src, i) in mosaic.slice(0, 4)" :key="i" :src="src" alt="" loading="lazy" decoding="async">
+        <img v-for="(src, i) in mosaic.slice(0, 4)" :key="i" :src="src" :alt="`${name || $t('c_CollectionTile.collection')} ${i + 1}`" loading="lazy" decoding="async">
       </div>
       <img
           v-else-if="cover && !failed"

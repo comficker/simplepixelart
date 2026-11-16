@@ -31,7 +31,7 @@ function close() {
     <!-- Keeps the end of the page clear of the bar. -->
     <div class="android-bar-space" aria-hidden="true"/>
     <aside class="android-bar" :aria-label="$t('c_AndroidApp.title')">
-      <img src="/images/google-play.svg" alt="" width="32" height="32" class="android-bar-logo">
+      <img src="/images/google-play.svg" alt="Google Play" width="32" height="32" class="android-bar-logo">
       <span class="android-bar-copy">
         <strong class="android-bar-title">{{ $t('c_AndroidApp.title') }}</strong>
         <span class="android-bar-sub">{{ $t('c_AndroidApp.barSub') }}</span>

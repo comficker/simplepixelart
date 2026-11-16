@@ -315,7 +315,7 @@ const formattedDate = computed(() => {
           </NuxtLinkLocale>
         </template>
         <div class="wd-tiles">
-          <img v-for="t in usedTiles" :key="t.id" :src="t.src" alt="" loading="lazy" class="wd-tile">
+          <img v-for="(t, i) in usedTiles" :key="t.id" :src="t.src" :alt="`${title} tile ${i + 1}`" loading="lazy" class="wd-tile">
         </div>
       </Widget>
     </template>

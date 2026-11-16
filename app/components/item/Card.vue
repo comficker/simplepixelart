@@ -53,7 +53,7 @@
             @click.prevent.stop="goCreator"
             @keydown.enter.prevent.stop="goCreator"
         >
-          <img v-if="creator.avatar" :src="creator.avatar" alt="" loading="lazy">
+          <img v-if="creator.avatar" :src="creator.avatar" :alt="`@${creator.username}`" loading="lazy">
           <span v-else>{{ creator.username.slice(0, 1).toUpperCase() }}</span>
         </span>
       </div>

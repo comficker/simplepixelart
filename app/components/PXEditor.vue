@@ -4579,7 +4579,7 @@ watch(
               <!-- The app, as one more way out of the modal: same row as the
                    share buttons above, not a card of its own. -->
               <a :href="playUrl('publish_done')" target="_blank" rel="noopener" class="social-btn">
-                <img src="/images/google-play.svg" alt="" class="social-btn-img">
+                <img src="/images/google-play.svg" alt="Google Play" class="social-btn-img">
                 <span>{{ $t('c_AndroidApp.get') }}</span>
               </a>
               <NuxtLinkLocale

@@ -95,7 +95,7 @@ onBeforeUnmount(() => clearInterval(timer))
   >
     <div class="hero-show-blur" aria-hidden="true">
       <Transition name="hero-fade">
-        <img :key="current.id_string" :src="src(current)" alt="">
+        <img :key="current.id_string" :src="src(current)" :alt="current.name">
       </Transition>
     </div>
 
@@ -117,7 +117,7 @@ onBeforeUnmount(() => clearInterval(timer))
           class="rank-avatar hero-show-by"
           :aria-label="`@${current.username}`"
       >
-        <img v-if="current.avatar" :src="current.avatar" alt="" loading="lazy">
+        <img v-if="current.avatar" :src="current.avatar" :alt="`@${current.username}`" loading="lazy">
         <span v-else>{{ current.username.slice(0, 1).toUpperCase() }}</span>
       </NuxtLinkLocale>
     </Transition>

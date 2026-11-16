@@ -69,7 +69,7 @@ async function submit() {
   >
     <div class="share-stack login-stack">
       <a :href="googleAuthUrl" class="btn secondary wide">
-        <img src="/images/google-g.svg" alt="" class="google-g" width="20" height="20">
+        <img src="/images/google-g.svg" alt="Google" class="google-g" width="20" height="20">
         <span>{{ $t('c_PXEditor.loginWithGoogle') }}</span>
       </a>
 

@@ -260,7 +260,7 @@ function onCollectionUpdated(updated: Partial<CollectionDetail>) {
         <div class="cl-facts">
           <NuxtLinkLocale v-for="c in data.creators || []" :key="c.username" :to="`/creator/${c.username}`" class="cl-by">
             <span class="cl-av">
-              <img v-if="c.avatar" :src="c.avatar" alt="" loading="lazy">
+              <img v-if="c.avatar" :src="c.avatar" :alt="`@${c.username}`" loading="lazy">
               <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
             </span>
             <span>@{{ c.username }}</span>
