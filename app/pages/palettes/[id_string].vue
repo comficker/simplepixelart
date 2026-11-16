@@ -146,7 +146,13 @@ useCustomSeoMeta({
   description: computed(() => {
     const by = creator.value ? ` by ${creator.value}` : ''
     const tone = insights.value ? `${insights.value.tone.toLowerCase()} ` : ''
-    return `${palette.value?.name} is a ${tone}${palette.value?.color_count}-color pixel art palette${by}. Copy the hex codes or open it directly in the editor.`
+    const head = `${palette.value?.name} is a ${tone}${palette.value?.color_count}-color pixel art palette${by}`
+    const tail = 'Copy the hex codes or open it in the free online pixel art editor.'
+    // Short names left it under 120 characters, which Bing reports as thin;
+    // the colours themselves are the page's content, so list them.
+    const hex = (palette.value?.colors || []).slice(0, 6).join(', ')
+    const s = `${head}. ${tail}`
+    return s.length >= 120 || !hex ? s : `${head}: ${hex}. ${tail}`
   }),
   canonical: computed(() => `https://simplepixelart.com/palettes/${idString.value}`),
   ogImage: computed(() => `${config.public.api}/coloring/palettes/${idString.value}/og/`),

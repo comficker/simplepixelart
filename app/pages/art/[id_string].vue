@@ -163,6 +163,7 @@ const meta = computed(() => {
       url: `${config.public.siteUrl}/art/${route.params.id_string}`,
       title: 'Artwork not found',
       desc: 'This pixel art could not be found.',
+      descMeta: 'This pixel art could not be found.',
       imgSrc: imgSocial.value,
     }
   }
@@ -178,19 +179,32 @@ const meta = computed(() => {
 
   // Names that already say "pixel art" (imported packs: "Sword 1 — 1-bit
   // pixel art") skip the "— 16x16 Pixel Art" tail, which pushed them past 70.
+  // The site suffix (" - SimplePixelArt.com") takes 21 of the ~70 characters
+  // a result shows, so this part keeps to 49: drop the size, then cut the
+  // name at a word (Bing flagged long names like "Netherite Chestplate
+  // (Awaken Version) — 16x16 Pixel Art").
+  const fit = (options: string[]) => options.find(o => o.length <= 49)
+      || options[options.length - 1].slice(0, 48).replace(/\s+\S*$/, '').replace(/[\s,.;:—–(-]+$/, '') + '…'
   const title = name
-      ? (/pixel art/i.test(name) ? `${name} — ${size}` : `${name} — ${size} Pixel Art`)
+      ? fit(/pixel art/i.test(name)
+          ? [`${name} — ${size}`, name]
+          : [`${name} — ${size} Pixel Art`, `${name} Pixel Art`, name])
       : tagList.length
-          ? `${tagList.slice(0, 2).join(' ')} Pixel Art — ${size}`
-          : `${size} Pixel Art by ${author}`
+          ? fit([`${tagList.slice(0, 2).join(' ')} Pixel Art — ${size}`, `${tagList[0]} Pixel Art — ${size}`])
+          : fit([`${size} Pixel Art by ${author}`, `${size} Pixel Art`])
   const desc = data.value.desc?.trim() || ''
   const descFallback = `${name || 'A'} ${size} pixel art with ${pixelCount} pixels${tagList.length ? `, tagged ${tagList.slice(0, 3).join(', ')}` : ''}, by ${author}. Remix it in the free online editor on SimplePixelArt.`
+  // A one-line creator description reads thin in a result (Bing: 240 pages
+  // under 120 characters); finish it with what the page offers.
+  const descMeta = !desc || desc.length >= 120 ? desc
+      : `${desc.replace(/[\s.!…]+$/, '')}. ${size} pixel art by ${author} — edit or remix it free in your browser.`
 
   return {
     url,
     title,
     desc,
     descFallback,
+    descMeta,
     imgSrc,
     imgSrcOrigin,
     author: data.value.user?.username,
@@ -213,7 +227,7 @@ const hasOriginalContent = computed(() =>
 useCustomSeoMeta({
   untranslated: true,
   title: meta.value.title,
-  description: meta.value.desc || meta.value.descFallback,
+  description: meta.value.descMeta || meta.value.descFallback,
   canonical: meta.value.url,
   ogImage: isAnimatedArt.value ? gifUrl.value : meta.value.imgSrc,
   ogType: 'article',
