@@ -1375,12 +1375,23 @@ export const useEditor = defineStore('editor', () => {
     const saveError = ref('')
     // Autosave retries every few seconds; one event per kind of failure.
     const reportedSaveFailures = new Set<string>()
-    function reportSaveFailure(target: 'cloud' | 'local', reason: string) {
+    function reportSaveFailure(target: 'cloud' | 'local', reason: string, err?: any) {
         const key = `${target}:${reason}`
         if (reportedSaveFailures.has(key)) return
         reportedSaveFailures.add(key)
-        track('save_failed', {target, reason})
+        // `online`: a "network" failure with the browser offline is the
+        // user's connection; online, it is something between us and the API.
+        const online = typeof navigator === 'undefined' ? '' : String(navigator.onLine)
+        // For "network", the browser's own words ("Failed to fetch", "Load
+        // failed", "NetworkError ...") tell offline, a dropped connection
+        // and a blocked request apart.
+        const detail = reason === 'network' ? String(err?.cause?.message || err?.message || '').slice(-80) : ''
+        track('save_failed', {target, reason, online, ...(detail ? {detail} : {})})
     }
+    // save_failed fires on the first failure, before any retry, so on its
+    // own it cannot say whether the work ever reached the server. This is
+    // the other half: a cloud save that went through after failing.
+    let lastCloudFailure = ''
 
     async function performSave() {
         // The board this save is for. The requests below take a while, and
@@ -1494,13 +1505,18 @@ export const useEditor = defineStore('editor', () => {
         if (auth.isLogged) {
             try {
                 await save2Cloud();
+                if (lastCloudFailure) {
+                    track('save_recovered', {reason: lastCloudFailure, attempts: cloudRetries})
+                    lastCloudFailure = ''
+                }
                 cloudRetries = 0
             } catch (e) {
                 console.error('Failed to save to cloud, keeping local copy:', e);
                 saveError.value = failReason(e)
+                lastCloudFailure = saveError.value
                 // One toast per run of failures, not one per retry.
                 if (!cloudRetries) toast.error($i18n.t('c_PXEditor.cloudSaveFailed'))
-                reportSaveFailure('cloud', saveError.value)
+                reportSaveFailure('cloud', saveError.value, e)
                 scheduleCloudRetry(saveError.value)
             }
             save2Local(false)
