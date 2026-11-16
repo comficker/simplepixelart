@@ -227,7 +227,8 @@
     "footer": "Pie de página",
     "privacy": "Privacidad",
     "terms": "Términos",
-    "easyPixelArt": "Pixel art fácil"
+    "easyPixelArt": "Pixel art fácil",
+    "sizes": "Tamaños de pixel art"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Abrir la paleta de comandos (temas, navegación y más)"
@@ -986,7 +987,8 @@
     "missions": "Misiones",
     "tilemaps": "Tilemaps",
     "tilesets": "Tilesets",
-    "creatorProgram": "Programa de creadores"
+    "creatorProgram": "Programa de creadores",
+    "sizes": "Tamaños"
   },
   "nav": {
     "challenges": "Retos",
@@ -2898,5 +2900,13 @@
   },
   "c_SystemNotice": {
     "label": "Aviso del sistema"
+  },
+  "p_arts_sizes": {
+    "h1": "Tamaños de pixel art",
+    "seoTitle": "Tamaños de pixel art — 8×8, 16×16, 32×32 y más",
+    "seoDescription": "Todos los tamaños de lienzo de pixel art en una lista, de iconos de 8×8 a retratos de 64×64, con cuántas piezas tiene cada uno. Abre cualquiera y dibuja en una cuadrícula vacía.",
+    "intro": "Cada tamaño de cuadrícula de la galería con al menos una docena de piezas, y cuántas tiene. Las cuadrículas pequeñas (de 8×8 a 16×16) son el mejor punto de partida; desde 32×32 hay sitio para caras y sombras. Cada página abre un lienzo vacío de su tamaño en el <a href=\"/editor\">creador de pixel art</a>.",
+    "squareH": "Cuadrículas cuadradas",
+    "otherH": "Otros tamaños"
   }
 }

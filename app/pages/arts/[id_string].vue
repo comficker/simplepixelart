@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {CBN_COLLECTIONS} from '~/helper/cbn-collections'
-import {KEEP_THIN_TAGS, MIN_TAG_ARTS} from '~/helper/thin-tags'
-const {t, te, locale, defaultLocale} = useI18n()
+import {KEEP_THIN_SIZES, KEEP_THIN_TAGS, MIN_SIZE_ARTS, MIN_TAG_ARTS} from '~/helper/thin-tags'
+const {t, te, locale, defaultLocale, getLocaleMessage} = useI18n()
 const localHtml = useLocalHtml()
 import type {APIResponse, SharedPage, TagSchema} from "~/types";
 
@@ -129,6 +129,8 @@ const robotsValue = computed(() => {
   // search impressions.
   if (tag.value && !statsError.value && stats.value
       && totalCount.value < MIN_TAG_ARTS && !KEEP_THIN_TAGS.has(idString.value)) return 'noindex, follow'
+  if (isSizeSlug.value && !statsError.value && stats.value
+      && totalCount.value < MIN_SIZE_ARTS && !KEEP_THIN_SIZES.has(idString.value)) return 'noindex, follow'
   return 'index, follow'
 })
 
@@ -188,6 +190,16 @@ const seoDesc = computed(() => {
   return n > 1 ? t('seo.tag.description', args)
       : n === 1 ? t('seo.tag.descriptionOne', args)
           : t('seo.tag.descriptionEmpty', args)
+})
+
+// A longer write-up under the grid, for the slugs that have one in this
+// locale (sizes and character tags people search for). First page only.
+const aboutKey = computed(() => {
+  if (page.value > 1 || hasFilterQuery.value) return null
+  // Looked up in this locale's own messages: te() here also answers true
+  // for a key only English has, which put English copy on /ko.
+  const own = (getLocaleMessage(locale.value) as any)?.seo?.about?.[idString.value]
+  return own?.body ? `seo.about.${idString.value}` : null
 })
 
 const seoKeywords = computed(() =>
@@ -277,6 +289,24 @@ useCustomSeoMeta({
           </BrowseOpt>
         </BrowseFilter>
       </template>
+      <template v-if="aboutKey" #after>
+        <section class="tag-about prose">
+          <h2>{{ $t(`${aboutKey}.h2`) }}</h2>
+          <div v-html="localHtml($t(`${aboutKey}.body`))"/>
+        </section>
+      </template>
     </item-list>
   </div>
 </template>
+
+<style scoped>
+.tag-about {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.tag-about :deep(p + p) {
+  margin-top: var(--space-3);
+}
+</style>

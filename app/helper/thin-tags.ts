@@ -3,6 +3,14 @@
 // grows, since the count is read at render time.
 export const MIN_TAG_ARTS = 3
 
+// Size pages (/arts/size-WxH) need more: 464 of 484 sizes hold under a
+// dozen pieces, mostly one-off odd grids (30×6, 14×4) that read as empty
+// pages. Below MIN_SIZE_ARTS they are noindex and out of the size sitemap,
+// unless they already earn search impressions.
+export const MIN_SIZE_ARTS = 12
+// size-10x10: 11 pieces, 910 impressions / 28 days for "10x10 pixel art".
+export const KEEP_THIN_SIZES = new Set<string>(['size-10x10'])
+
 // Tags kept indexed even when thin: >= 10 Search Console impressions over
 // 28 days, all locales together. The union of growth's list
 // (ops/seo/reports/spa-thin-tags-keep-2026-11-07.tsv) and a GSC pull for

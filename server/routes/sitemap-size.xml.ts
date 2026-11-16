@@ -1,4 +1,5 @@
 import {ofetch} from "ofetch";
+import {KEEP_THIN_SIZES, MIN_SIZE_ARTS} from "~/helper/thin-tags";
 
 const domain = "simplepixelart.com"
 
@@ -16,7 +17,9 @@ export default defineEventHandler(async (event) => {
 
     const lastmod = new Date().toISOString()
     const urls = (sizes || [])
-        .filter(s => s.count > 0 && s.width > 0 && s.height > 0)
+        .filter(s => s.width > 0 && s.height > 0
+            // Thin sizes are noindex on the page; don't submit them.
+            && (s.count >= MIN_SIZE_ARTS || KEEP_THIN_SIZES.has(`size-${s.width}x${s.height}`)))
         .map(s =>
             `<url>` +
             `<loc>https://${domain}/arts/size-${s.width}x${s.height}</loc>` +

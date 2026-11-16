@@ -227,7 +227,8 @@
     "footer": "푸터",
     "privacy": "개인정보",
     "terms": "약관",
-    "easyPixelArt": "쉬운 픽셀 아트"
+    "easyPixelArt": "쉬운 픽셀 아트",
+    "sizes": "픽셀 아트 크기"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "명령 팔레트 열기(테마, 이동 등)"
@@ -986,7 +987,8 @@
     "missions": "미션",
     "tilemaps": "타일맵",
     "tilesets": "타일셋",
-    "creatorProgram": "크리에이터 프로그램"
+    "creatorProgram": "크리에이터 프로그램",
+    "sizes": "크기"
   },
   "nav": {
     "challenges": "챌린지",
@@ -2898,5 +2900,13 @@
   },
   "c_SystemNotice": {
     "label": "시스템 알림"
+  },
+  "p_arts_sizes": {
+    "h1": "픽셀 아트 크기",
+    "seoTitle": "픽셀 아트 크기 — 8×8, 16×16, 32×32 등",
+    "seoDescription": "8×8 아이콘부터 64×64 초상화까지, 모든 픽셀 아트 캔버스 크기와 크기별 작품 수를 한 목록에서 확인하세요. 원하는 크기를 열고 빈 격자에 바로 그릴 수 있습니다.",
+    "intro": "갤러리에서 작품이 12개 이상인 모든 격자 크기와 작품 수입니다. 작은 격자(8×8~16×16)가 시작하기 가장 쉽고, 32×32 이상은 얼굴과 음영을 넣을 여유가 있습니다. 각 페이지에서 해당 크기의 빈 캔버스를 <a href=\"/editor\">픽셀 아트 메이커</a>로 열 수 있습니다.",
+    "squareH": "정사각형 격자",
+    "otherH": "기타 크기"
   }
 }

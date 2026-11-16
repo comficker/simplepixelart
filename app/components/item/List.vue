@@ -264,6 +264,7 @@ function isCurrentPreset(p: {width: number, height: number}): boolean {
         :prev-to="prevTo"
         :next-to="nextTo"
     />
+    <slot name="after"/>
     <template v-if="showFilter && !hidePaginator && data?.results.length" #foot>
       <span class="browse-foot-start">{{ $t('c_List.itemCount', data.count, {count: data.count}) }}</span>
       <span class="browse-foot-end">

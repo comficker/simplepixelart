@@ -16,6 +16,7 @@ const staticPages = [
     {loc: '/color-by-number/for-adults', changefreq: 'weekly', priority: '0.7'},
     {loc: '/palettes', changefreq: 'daily', priority: '0.8'},
     {loc: '/arts', changefreq: 'daily', priority: '0.8'},
+    {loc: '/arts/sizes', changefreq: 'weekly', priority: '0.8'},
     {loc: '/creator', changefreq: 'daily', priority: '0.7'},
     {loc: '/collections', changefreq: 'daily', priority: '0.7'},
     {loc: '/about', changefreq: 'monthly', priority: '0.4'},
@@ -30,7 +31,7 @@ const staticPages = [
 // Submitting /ja/privacy while it still reads in English would be asking Google
 // to index a page that does not deliver what the URL promises.
 const LOCALES = ['ja', 'zh', 'ko', 'es', 'pt', 'ru']
-const TRANSLATED = new Set(['/', '/arts', '/palettes', '/easy-pixel-art', '/ideas', '/creator', '/collections', '/about', '/contact',
+const TRANSLATED = new Set(['/', '/arts', '/arts/sizes', '/palettes', '/easy-pixel-art', '/ideas', '/creator', '/collections', '/about', '/contact',
     '/color-by-number', '/color-by-number/christmas', '/color-by-number/thanksgiving', '/color-by-number/halloween',
     '/color-by-number/fall', '/color-by-number/for-kids', '/color-by-number/for-adults'])
 

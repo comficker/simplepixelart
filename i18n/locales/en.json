@@ -238,7 +238,8 @@
     "footer": "Footer",
     "privacy": "Privacy",
     "terms": "Terms",
-    "easyPixelArt": "Easy pixel art"
+    "easyPixelArt": "Easy pixel art",
+    "sizes": "Pixel art sizes"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Open command palette (themes, navigation, more)"
@@ -1016,7 +1017,8 @@
     "missions": "Missions",
     "tilemaps": "Tilemaps",
     "tilesets": "Tilesets",
-    "creatorProgram": "Creator Program"
+    "creatorProgram": "Creator Program",
+    "sizes": "Sizes"
   },
   "nav": {
     "challenges": "Challenges",
@@ -2579,6 +2581,36 @@
       "title": "{tag} Pixel Art — Free Sprites",
       "titleCount": "{tag} Pixel Art — {count} Sprites",
       "titlePage": "{tag} Pixel Art — Page {page}"
+    },
+    "about": {
+      "size-8x8": {
+        "h2": "What 8×8 pixel art is good for",
+        "body": "<p>An 8×8 grid holds 64 pixels, which is about the smallest space where a shape still reads: a heart, a coin, a mushroom, a sword, a key. It is the size of an inventory icon or a tile in a tiny handheld game, and the best grid for a very first piece, since you can fill it in a couple of minutes.</p><p>At this size every pixel is a decision. Keep to two or three colors, draw the silhouette in one flat tone, then add a single highlight. Outlines usually eat too much space, so let the shape's edge do the work.</p><p>Pick any piece above to see how it is built pixel by pixel, remix it, or open a blank 8×8 canvas in the <a href=\"/editor\">online pixel art maker</a>. More beginner grids are on the <a href=\"/easy-pixel-art\">easy pixel art</a> page.</p>"
+      },
+      "size-10x10": {
+        "h2": "What 10×10 pixel art is good for",
+        "body": "<p>A 10×10 grid gives you 100 pixels: two more rows and columns than 8×8, which is just enough for a face with eyes and a mouth, a small fruit with a leaf, or an emoji. It is also a common size for cross-stitch, bead and graph-paper patterns, because a 10-square block is easy to count.</p><p>Even grids like this have no single center pixel, so symmetric faces split down the middle between columns five and six. Use mirror mode in the editor and draw only the left half. Three or four colors are plenty.</p><p>Open any 10×10 piece above to remix it, or start a blank 10×10 canvas in the <a href=\"/editor\">online pixel art maker</a>. If you want to print it, <a href=\"https://freegraphpaper.net/graph-paper/1-4-inch\">graph paper</a> works well at this size.</p>"
+      },
+      "size-12x12": {
+        "h2": "What 12×12 pixel art is good for",
+        "body": "<p>A 12×12 grid holds 144 pixels and is one of the most comfortable sizes for beginners: big enough for a recognizable animal, a potion bottle or a tiny character, small enough to finish in one sitting. Many emoji-style pieces and favicons are drawn at this size.</p><p>Start with the silhouette in one color, then add one shadow tone on the side away from the light. With a 12-pixel width you can afford a one-pixel outline, which makes the piece stand out on any background.</p><p>Remix any 12×12 piece above, or open a blank 12×12 canvas in the <a href=\"/editor\">online pixel art maker</a> and try a palette from the <a href=\"/palettes\">palette library</a>.</p>"
+      },
+      "size-16x16": {
+        "h2": "What 16×16 pixel art is good for",
+        "body": "<p>16×16 is the classic sprite size. Item icons, tiles and characters in many 8-bit and 16-bit era games were built on 16-pixel grids, and so are most Minecraft textures and a lot of modern indie game assets. With 256 pixels you can draw a full character with a head, body and legs, a sword with a hilt and shine, or a fruit with a highlight and shadow.</p><p>The usual approach: block the silhouette in one flat color, add a darker tone for shadow, one lighter tone for highlight, and a dark outline. Keep the palette to four to eight colors so the piece stays crisp when scaled up. Because 16 is even, symmetric sprites are drawn as two mirrored halves of eight columns each.</p><p>Every piece above opens in the editor so you can see how it is built and remix it. To start from scratch, open a blank 16×16 canvas in the <a href=\"/editor\">online pixel art maker</a>, then export a PNG or a sprite sheet for your game.</p>"
+      },
+      "size-24x24": {
+        "h2": "What 24×24 pixel art is good for",
+        "body": "<p>A 24×24 grid holds 576 pixels, more than twice the room of 16×16. That extra space is where expression appears: a character's eyes can show a mood, armor can have trim, a pet can have fur texture. It is a popular size for avatars, emotes and RPG character portraits.</p><p>With more room comes more temptation to add detail. Keep the silhouette strong first, then spend your extra pixels on the face and hands, where the eye goes. Six to twelve colors is a good range, with two or three shades per material.</p><p>Remix any 24×24 piece above, or open a blank 24×24 canvas in the <a href=\"/editor\">online pixel art maker</a>. Smaller grids are on the <a href=\"/easy-pixel-art\">easy pixel art</a> page if you want a warm-up.</p>"
+      },
+      "size-32x32": {
+        "h2": "What 32×32 pixel art is good for",
+        "body": "<p>32×32 holds 1,024 pixels and is the standard size for detailed game sprites, character portraits, profile pictures and tiles in top-down RPGs. It is big enough for clear facial features, clothing folds and proper shading, yet small enough that each pixel still matters.</p><p>Work from big to small: block the main shapes, decide where the light comes from, then add two or three shades per color. Anti-aliasing (a pixel of an in-between tone on curved edges) starts to pay off at this size. Keep an eye on the piece at 1× zoom; if it does not read small, more detail will not save it.</p><p>Every piece above opens in the editor to study or remix. To start fresh, open a blank 32×32 canvas in the <a href=\"/editor\">online pixel art maker</a>, and add frames if you want to animate it.</p>"
+      },
+      "size-64x64": {
+        "h2": "What 64×64 pixel art is good for",
+        "body": "<p>A 64×64 canvas holds 4,096 pixels, enough for a detailed portrait, a small scene, a boss sprite or a piece of fan art with a background. It is the largest grid most people draw by hand pixel by pixel, and it takes hours rather than minutes.</p><p>At this size, plan before you place pixels. Sketch the composition in rough blocks, settle the palette (ten to twenty colors), then refine area by area. Dithering, a checkerboard mix of two colors, helps with gradients in skies and large shadows.</p><p>Open any 64×64 piece above to see how it is built, or start a blank 64×64 canvas in the <a href=\"/editor\">online pixel art maker</a>. You can also turn a photo into a 64×64 starting point with the <a href=\"/converter\">image to pixel art converter</a>.</p>"
+      }
     }
   },
   "theme": {
@@ -2931,5 +2963,13 @@
   },
   "c_SystemNotice": {
     "label": "System notice"
+  },
+  "p_arts_sizes": {
+    "h1": "Pixel Art Sizes",
+    "seoTitle": "Pixel Art Sizes — 8×8, 16×16, 32×32 and More",
+    "seoDescription": "Every pixel art canvas size in one list, from 8×8 icons to 64×64 portraits, with how many pieces each holds. Open any size and draw on a blank grid.",
+    "intro": "Every grid size in the gallery with at least a dozen pieces, and how many each holds. Small grids (8×8 to 16×16) are the easiest place to start; 32×32 and up leave room for faces and shading. Each page opens a blank canvas of its size in the <a href=\"/editor\">pixel art maker</a>.",
+    "squareH": "Square grids",
+    "otherH": "Other sizes"
   }
 }

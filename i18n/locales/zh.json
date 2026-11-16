@@ -227,7 +227,8 @@
     "footer": "页脚",
     "privacy": "隐私",
     "terms": "条款",
-    "easyPixelArt": "简单像素画"
+    "easyPixelArt": "简单像素画",
+    "sizes": "像素画尺寸"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "打开命令面板（主题、导航等）"
@@ -986,7 +987,8 @@
     "missions": "任务",
     "tilemaps": "图块地图",
     "tilesets": "图块集",
-    "creatorProgram": "创作者计划"
+    "creatorProgram": "创作者计划",
+    "sizes": "尺寸"
   },
   "nav": {
     "challenges": "挑战",
@@ -2898,5 +2900,13 @@
   },
   "c_SystemNotice": {
     "label": "系统通知"
+  },
+  "p_arts_sizes": {
+    "h1": "像素画尺寸",
+    "seoTitle": "像素画尺寸 — 8×8、16×16、32×32 等",
+    "seoDescription": "从 8×8 图标到 64×64 肖像，所有像素画画布尺寸及各自的作品数量一览。打开任意尺寸，在空白网格上直接开画。",
+    "intro": "作品库中至少有十几幅作品的所有网格尺寸，以及每个尺寸的作品数。小网格（8×8 到 16×16）最适合入门；32×32 及以上有空间画脸和阴影。每个页面都能在<a href=\"/editor\">像素画制作器</a>中打开该尺寸的空白画布。",
+    "squareH": "正方形网格",
+    "otherH": "其他尺寸"
   }
 }

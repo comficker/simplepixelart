@@ -227,7 +227,8 @@
     "footer": "Rodapé",
     "privacy": "Privacidade",
     "terms": "Termos",
-    "easyPixelArt": "Pixel art fácil"
+    "easyPixelArt": "Pixel art fácil",
+    "sizes": "Tamanhos de pixel art"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Abrir a paleta de comandos (temas, navegação e mais)"
@@ -986,7 +987,8 @@
     "missions": "Missões",
     "tilemaps": "Tilemaps",
     "tilesets": "Tilesets",
-    "creatorProgram": "Programa de criadores"
+    "creatorProgram": "Programa de criadores",
+    "sizes": "Tamanhos"
   },
   "nav": {
     "challenges": "Desafios",
@@ -2898,5 +2900,13 @@
   },
   "c_SystemNotice": {
     "label": "Aviso do sistema"
+  },
+  "p_arts_sizes": {
+    "h1": "Tamanhos de pixel art",
+    "seoTitle": "Tamanhos de pixel art — 8×8, 16×16, 32×32 e mais",
+    "seoDescription": "Todos os tamanhos de tela de pixel art numa lista, de ícones 8×8 a retratos 64×64, com quantas peças cada um tem. Abra qualquer um e desenhe numa grade vazia.",
+    "intro": "Cada tamanho de grade da galeria com pelo menos uma dúzia de peças, e quantas cada um tem. Grades pequenas (8×8 a 16×16) são o melhor lugar para começar; a partir de 32×32 sobra espaço para rostos e sombras. Cada página abre uma tela vazia do seu tamanho no <a href=\"/editor\">criador de pixel art</a>.",
+    "squareH": "Grades quadradas",
+    "otherH": "Outros tamanhos"
   }
 }
