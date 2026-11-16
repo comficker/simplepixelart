@@ -5,7 +5,7 @@ import {useHasWork} from "~/composables/useHasWork";
 import {failReason, track} from "~/composables/useTrack";
 import {cloneDeep, generateUUID, getStorageItem, key2Point, sharedPage2EditorData} from "~/helper/utils";
 import {DEFAULT_EDITOR_DATA} from "~/helper/constants";
-import {markRaw, ref, shallowRef, toRaw} from "vue";
+import {markRaw, ref, shallowRef, toRaw, watch} from "vue";
 import {layers2MapNumbers} from "~/helper/canvas";
 import {hexColorDelta, isSameColor, rgbToHex} from "~/helper/color";
 import {capColors, type Cell, importFileGrid, importOriginalGrid, MAX_IMPORT_COLORS, shouldIgnoreColor} from "~/helper/pixel";
@@ -533,6 +533,18 @@ export const useEditor = defineStore('editor', () => {
 
     const MAX_FRAMES = 64
     const currentFrameIndex = ref(0)
+    // The layer index is set from many places (board switch, undo, frame
+    // change, layer delete) and editorData.layers is swapped under it; any
+    // one of them leaving it past the end crashed the next read of
+    // layers[currentLayerIndex] ("reading 'pixels'", "reading 'x'" in GA).
+    // Clamp synchronously whenever either side changes.
+    watch(
+        [currentLayerIndex, () => editorData.value.layers?.length ?? 0],
+        ([i, n]) => {
+            if (i > 0 && i >= n) currentLayerIndex.value = Math.max(0, n - 1)
+        },
+        {flush: 'sync'},
+    )
     const onionSkin = ref(false)
     const isPlaying = ref(false)
     const sharedRev = ref(0)
@@ -720,7 +732,9 @@ export const useEditor = defineStore('editor', () => {
             toast.error($i18n.t('c_PXEditor.maxFrames', {max: MAX_FRAMES}))
             return
         }
-        const at = currentFrameIndex.value
+        // -1 is the shared (background) stack, which is no frame to copy:
+        // add after the first frame instead of reading frames[-1].
+        const at = Math.max(0, Math.min(anim.frames.length - 1, currentFrameIndex.value))
         const src = anim.frames[at]!
         const layers = duplicate ? cloneLayers(src.layers) : newBlankLayers()
         anim.frames.splice(at + 1, 0, {id: generateUUID(), layers, duration: src.duration ?? Math.round(1000 / fps.value)})
@@ -1361,12 +1375,23 @@ export const useEditor = defineStore('editor', () => {
     const saveError = ref('')
     // Autosave retries every few seconds; one event per kind of failure.
     const reportedSaveFailures = new Set<string>()
-    function reportSaveFailure(target: 'cloud' | 'local', reason: string) {
+    function reportSaveFailure(target: 'cloud' | 'local', reason: string, err?: any) {
         const key = `${target}:${reason}`
         if (reportedSaveFailures.has(key)) return
         reportedSaveFailures.add(key)
-        track('save_failed', {target, reason})
+        // `online`: a "network" failure with the browser offline is the
+        // user's connection; online, it is something between us and the API.
+        const online = typeof navigator === 'undefined' ? '' : String(navigator.onLine)
+        // For "network", the browser's own words ("Failed to fetch", "Load
+        // failed", "NetworkError ...") tell offline, a dropped connection
+        // and a blocked request apart.
+        const detail = reason === 'network' ? String(err?.cause?.message || err?.message || '').slice(-80) : ''
+        track('save_failed', {target, reason, online, ...(detail ? {detail} : {})})
     }
+    // save_failed fires on the first failure, before any retry, so on its
+    // own it cannot say whether the work ever reached the server. This is
+    // the other half: a cloud save that went through after failing.
+    let lastCloudFailure = ''
 
     async function performSave() {
         // The board this save is for. The requests below take a while, and
@@ -1480,13 +1505,18 @@ export const useEditor = defineStore('editor', () => {
         if (auth.isLogged) {
             try {
                 await save2Cloud();
+                if (lastCloudFailure) {
+                    track('save_recovered', {reason: lastCloudFailure, attempts: cloudRetries})
+                    lastCloudFailure = ''
+                }
                 cloudRetries = 0
             } catch (e) {
                 console.error('Failed to save to cloud, keeping local copy:', e);
                 saveError.value = failReason(e)
+                lastCloudFailure = saveError.value
                 // One toast per run of failures, not one per retry.
                 if (!cloudRetries) toast.error($i18n.t('c_PXEditor.cloudSaveFailed'))
-                reportSaveFailure('cloud', saveError.value)
+                reportSaveFailure('cloud', saveError.value, e)
                 scheduleCloudRetry(saveError.value)
             }
             save2Local(false)
