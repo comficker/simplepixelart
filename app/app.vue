@@ -6,13 +6,23 @@ const {style: resultsColsStyle} = useResultsCols()
 // alternate links at all, so the localised URLs had nothing telling Google
 // what they were or who they were for.
 const localeHead = useLocaleHead({dir: true, lang: true, seo: true})
+const seoAltFlag = useSeoAlternatesFlag()
+const route = useRoute()
 useHead({
   htmlAttrs: {
     style: resultsColsStyle,
     lang: computed(() => localeHead.value?.htmlAttrs?.lang),
     dir: computed(() => localeHead.value?.htmlAttrs?.dir),
   },
-  link: computed(() => localeHead.value?.link || []),
+  // A page whose localised copies are noindex (untranslated, or noindex
+  // itself) keeps only en + x-default, so Google stops crawling 6 dead copies
+  // of every art/palette/tag page.
+  link: computed(() => {
+    const links = localeHead.value?.link || []
+    const flag = seoAltFlag.value
+    if (!flag || flag.path !== route.path || !flag.hide()) return links
+    return links.filter((l: any) => !l.hreflang || l.hreflang === 'x-default' || l.hreflang === 'en')
+  }),
   meta: computed(() => localeHead.value?.meta || []),
 })
 const loginModal = useLoginModal()

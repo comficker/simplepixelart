@@ -1,4 +1,4 @@
-import {toValue, type MaybeRefOrGetter} from 'vue'
+import {toValue, shallowRef, type MaybeRefOrGetter, type Ref} from 'vue'
 
 type V = MaybeRefOrGetter<string | undefined>
 
@@ -25,6 +25,18 @@ export interface UseSeoMetaOptions {
   script?: any[]
 }
 
+/**
+ * Whether the current page should drop its non-default hreflang alternates.
+ * app.vue owns the hreflang set; the page knows whether its localised copies
+ * are worth anything. Kept on nuxtApp (per request on the server) rather than
+ * useState because the getter reads the page's own reactive data.
+ */
+export const useSeoAlternatesFlag = () => {
+  const nuxtApp = useNuxtApp() as any
+  return (nuxtApp._seoAltFlag ||= shallowRef<{ path: string, hide: () => boolean } | null>(null)) as
+    Ref<{ path: string, hide: () => boolean } | null>
+}
+
 export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
   const config = useRuntimeConfig();
   const baseUrl = config.public.siteUrl || 'https://simplepixelart.com';
@@ -45,6 +57,9 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
   const localised = (g: V) => () => {
     const url = toValue(g)
     if (!url) return url
+    // An untranslated page reads the same under /ja as under /, so its
+    // localised copy is a duplicate: point it at the English original.
+    if (options.untranslated) return url
     const code = toValue(locale)
     if (!code || code === defaultLocale) return url
     try {
@@ -56,6 +71,14 @@ export const useCustomSeoMeta = (options: UseSeoMetaOptions) => {
       return url
     }
   }
+  // GSC 16/11/2026: ~45K URLs "Excluded by noindex", 94% of them /ja,/ru,…
+  // copies that Google found through hreflang on the English page. Only
+  // advertise localised alternates when they are indexable.
+  useSeoAlternatesFlag().value = {
+    path: useRoute().path,
+    hide: () => !!options.untranslated || /noindex/.test(toValue(options.robots) || ''),
+  }
+
   useHead({
     title: v(options.title),
     meta: [
