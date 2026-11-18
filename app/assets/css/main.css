@@ -5029,3 +5029,58 @@ select.publish-input { height: var(--tm-ctl, 34px); cursor: pointer; }
         box-shadow: 0 -1px 0 var(--border);
     }
 }
+
+/* Widget (components/Widget.vue). Global rather than in the component: the
+   sidebar reuses .widget-head/.title on every page, and on pages with no
+   Widget of their own the component's CSS chunk never loaded, so the
+   sidebar's section titles fell back to 26px heading styles. */
+.widget {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+/* The sidebar's sections reuse the head as their title band. */
+:is(.widget, .tool-main, .dash-group) > .widget-head {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  border-bottom: 1px solid var(--border);
+}
+
+.title-link {
+  color: inherit;
+  transition: color var(--transition);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .title-link:hover {
+    color: var(--primary);
+  }
+}
+
+.widget-head:empty {
+  display: none;
+}
+
+.widget-head .title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-display);
+  padding: 0;
+  color: var(--muted);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.widget-body {
+  padding: var(--space-2);
+  background: var(--surface);
+}
