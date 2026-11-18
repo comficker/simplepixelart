@@ -7,6 +7,8 @@ The site is available in English (default), Japanese (/ja), Chinese (/zh), Korea
 ## Tools
 
 - [Image to pixel art converter](https://simplepixelart.com/converter): turn a photo, picture or PNG/JPG image into pixel art in the browser. Pick a grid size from 8×8 to 64×64 (or Auto, which recovers the grid of upscaled pixel art) and a 4–64 color palette, then fine-tune the result in the editor and export a PNG. Free, no sign-up, the image never leaves the browser.
+- [Pixel art resizer](https://simplepixelart.com/pixel-art-resizer): upscale pixel art 1× to 16× with nearest-neighbor scaling (no blur), or read an enlarged screenshot back to its real pixels.
+- [Minecraft pixel art generator](https://simplepixelart.com/minecraft-pixel-art-generator): turn an image into a concrete or wool block design 16–128 blocks wide, with a block count in stacks.
 - [Pixel art maker](https://simplepixelart.com/editor): the main editor. Brush, fill, layers, mirror mode, palettes, animation frames; export PNG, GIF or sprite sheet. Canvases up to 128×128.
 - [AI pixel art generator](https://simplepixelart.com/generator): describe a sprite and get editable pixel art from 16×16 to 128×128.
 - [Sprite maker](https://simplepixelart.com/sprite-maker): draw and animate game sprites, export a sprite sheet for Unity, Godot or Phaser.

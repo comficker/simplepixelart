@@ -67,7 +67,8 @@ export default defineNuxtConfig({
             ...localizedRedirects('/convert', '/converter'),
             // "easy" is no tag, so /arts/easy rendered the easy-pixel-art copy
             // under a 404. Searchers type it; send them to the real page.
-            ...localizedRedirects('/arts/easy', '/easy-pixel-art'),
+            ...localizedRedirects('/pixel-art-ideas', '/ideas'),
+        ...localizedRedirects('/arts/easy', '/easy-pixel-art'),
         },
     },
     css: [

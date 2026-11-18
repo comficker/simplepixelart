@@ -9,6 +9,9 @@ const toolPages = [
     {loc: '/tilemaps/editor', changefreq: 'weekly', priority: '0.8'},
     {loc: '/palettes/color-palette-from-image', changefreq: 'weekly', priority: '0.8'},
     {loc: '/palettes/color-palette-from-color', changefreq: 'weekly', priority: '0.8'},
+    // English only so far: one URL each, no locale alternates.
+    {loc: '/pixel-art-resizer', changefreq: 'monthly', priority: '0.8', en: true},
+    {loc: '/minecraft-pixel-art-generator', changefreq: 'monthly', priority: '0.8', en: true},
 ]
 
 // Every tool page is fully translated -- chrome, README and FAQ -- so each
@@ -21,6 +24,10 @@ export default defineEventHandler((event) => {
     setHeader(event, 'cache-control', 'public, max-age=86400, stale-while-revalidate=604800')
     const lastmod = new Date().toISOString()
     const urls = toolPages.flatMap(p => {
+        if ((p as any).en) {
+            return [`<url><loc>https://${domain}${p.loc}</loc><lastmod>${lastmod}</lastmod>` +
+                `<changefreq>${p.changefreq}</changefreq><priority>${p.priority}</priority></url>`]
+        }
         const alts =
             `<xhtml:link rel="alternate" hreflang="x-default" href="https://${domain}${p.loc}"/>` +
             `<xhtml:link rel="alternate" hreflang="en" href="https://${domain}${p.loc}"/>` +
