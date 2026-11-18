@@ -165,6 +165,7 @@ useCustomSeoMeta({
       <li>Save as <strong>PNG</strong>, never JPG, which adds color noise.</li>
       <li>Scale by whole numbers only. 2.5× makes some pixels wider than others.</li>
       <li>In game engines, turn off texture filtering (Godot: Default Texture Filter = Nearest; Unity: Filter Mode = Point).</li>
+      <li>The <NuxtLink to="/pixel-art-resizer">pixel art resizer</NuxtLink> scales a PNG 2× to 16× this way, and reads an already-enlarged screenshot back to 1×.</li>
     </ul>
 
     <h2>Tools</h2>
@@ -173,6 +174,8 @@ useCustomSeoMeta({
       older version. Piskel and Lospec's editor run in the browser, and so does the
       <NuxtLinkLocale to="/editor">pixel art editor on this site</NuxtLinkLocale>, with palettes, a grid and
       nearest-neighbor export built in. Any of these will do. The workflow matters more than the tool.
+      To start from a photo instead of a blank grid, run it through the
+      <NuxtLinkLocale to="/converter">image to pixel art converter</NuxtLinkLocale> and clean up the result by hand.
     </p>
 
     <h2>Practice ideas</h2>
