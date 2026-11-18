@@ -208,7 +208,7 @@ useCustomSeoMeta({
       </div>
     </div>
 
-    <Widget :title="$t('p_palettes_color-palette-from-color.moreTools')" class="tool-more">
+    <Widget label :title="$t('p_palettes_color-palette-from-color.moreTools')" class="tool-more">
       <ToolPaths/>
     </Widget>
 

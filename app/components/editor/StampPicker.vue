@@ -388,7 +388,7 @@ function addFrom(kind: 'art' | 'tileset') {
 </script>
 
 <template>
-  <Widget class="stp" :title="$t('c_StampPicker.artBrush')">
+  <Widget label class="stp" :title="$t('c_StampPicker.artBrush')">
     <template v-if="!set" #ctl>
       <ui-dropdown-menu>
         <button type="button" class="widget-ctl-btn" :title="$t('c_StampPicker.choose')" :aria-label="$t('c_StampPicker.choose')">

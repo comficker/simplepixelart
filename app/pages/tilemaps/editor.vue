@@ -2661,7 +2661,7 @@ const faq = computed(() => [
 
         <div class="tm-layout tm-layout-rail">
 
-          <Widget class="tool-rail">
+          <Widget label class="tool-rail">
             <div class="tools tools-rail no-scrollbar">
               <!-- Phones: the tile in hand, first on the rail; it opens the
                    tile sheet. On a desk the picker is always in the side rail. -->

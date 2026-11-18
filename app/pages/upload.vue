@@ -400,7 +400,7 @@ useCustomSeoMeta({
     </template>
 
     <template #aside>
-      <Widget :title="$t('p_upload.publish')" class="up-publish-widget">
+      <Widget label :title="$t('p_upload.publish')" class="up-publish-widget">
         <div class="up-publish">
           <template v-if="piece?.tooBig">
             <p class="up-note">{{ $t('p_upload.tooBig', {w: piece.width, h: piece.height}) }}</p>

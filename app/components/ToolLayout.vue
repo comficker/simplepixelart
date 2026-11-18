@@ -92,7 +92,7 @@ function nudge(step: number) {
            then the page's own widgets, then the readme. A direct child of
            .tool-doc like ToolReadme, so the rail's own rules give it the same
            flat panel and divider. -->
-      <Widget v-if="$slots.doc && !noAd" :title="$t('c_AdSlot.advertisement')">
+      <Widget label v-if="$slots.doc && !noAd" :title="$t('c_AdSlot.advertisement')">
         <AdSlot slot="7838948172" bare/>
       </Widget>
       <slot name="aside"/>

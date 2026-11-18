@@ -1649,7 +1649,7 @@ const faq = computed(() => [
       <!-- Slice settings: a sidebar on the left, the tiles on the right. -->
       <div class="editor-sidebar ts-settings-side no-scrollbar" :class="{'is-open': showSettings}">
         <!-- Input: how the sheet is cut, and how it is prepared first. -->
-        <Widget :title="$t('p_tilesets_slicer.inputSettings')">
+        <Widget label :title="$t('p_tilesets_slicer.inputSettings')">
           <div class="ts-sec">
             <p v-if="modeHint" class="ts-hint">{{ modeHint }}</p>
           <template v-if="mode === 'grid'">
@@ -1760,7 +1760,7 @@ const faq = computed(() => [
 
       <div class="editor-sidebar">
 
-        <Widget :title="$t('p_tilesets_slicer.selected')">
+        <Widget label :title="$t('p_tilesets_slicer.selected')">
           <ui-tooltip v-if="activeBox" :text="previewInfo" position="bottom" class="ts-preview-tip">
             <div class="ts-preview-box">
               <canvas ref="tilePreview" class="pixelated"/>
@@ -1774,7 +1774,7 @@ const faq = computed(() => [
           </div>
         </Widget>
 
-        <Widget :title="$t('common.tiles')" class="ts-tiles-widget">
+        <Widget label :title="$t('common.tiles')" class="ts-tiles-widget">
           <template #ctl>
             <button v-if="mode === 'select' && regions.length" class="widget-ctl-btn" @click="clearRegions">
               <span class="icon icon-broom"/>

@@ -4135,7 +4135,7 @@ watch(
 
     <div class="editor-body">
 
-      <Widget class="tool-rail">
+      <Widget label class="tool-rail">
         <div class="tools tools-rail no-scrollbar">
           <ui-tooltip :text="$t('c_PXEditor.brushB')">
             <Square :aria-label="$t('c_PXEditor.brush')" @click="store.setTool('brush')" :class="{ active: store.currentTool === 'brush' }">
@@ -4288,7 +4288,7 @@ watch(
           </Square>
         </Widget>
 
-        <Widget :title="$t('common.palette')" class="palette-widget">
+        <Widget label :title="$t('common.palette')" class="palette-widget">
           <template #ctl>
             <div class="widget-ctl-group">
               <span v-if="store.currentTool === 'picker'" class="pick-readout">
@@ -4341,7 +4341,7 @@ watch(
       </div>
 
       <div class="editor-sidebar">
-        <Widget :title="$t('common.preview')" class="preview-widget">
+        <Widget label :title="$t('common.preview')" class="preview-widget">
           <template #ctl>
             <button type="button" class="widget-ctl-btn" :title="$t('c_PreviewSettings.title')" @click="showPreviewSettings = true">
               <span class="icon icon-cog"/>
@@ -4375,7 +4375,7 @@ watch(
                 @tileset-change="store.setArtTileset($event)"
             />
 
-            <Widget :title="$t('common.layers')" class="layers">
+            <Widget label :title="$t('common.layers')" class="layers">
               <template #ctl>
                 <div class="widget-ctl-group">
                   <button

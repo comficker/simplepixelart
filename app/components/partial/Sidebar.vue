@@ -64,7 +64,7 @@ const SECTIONS = [
     </div>
 
     <section class="dash-group">
-      <div class="widget-head"><h2 class="title dash-label">{{ $t('c_Sidebar.main') }}</h2></div>
+      <div class="widget-head"><div class="title dash-label">{{ $t('c_Sidebar.main') }}</div></div>
       <nav class="widget-body dash-nav" :aria-label="$t('common.primary')">
         <NuxtLinkLocale
             v-for="l in PRIMARY"
@@ -82,7 +82,7 @@ const SECTIONS = [
 
     <template v-for="sec in SECTIONS" :key="sec.key">
       <section class="dash-group">
-        <div class="widget-head"><h2 class="title dash-label">{{ $t(sec.key) }}</h2></div>
+        <div class="widget-head"><div class="title dash-label">{{ $t(sec.key) }}</div></div>
         <nav class="widget-body dash-nav" :aria-label="$t(sec.key)">
           <NuxtLinkLocale
               v-for="t in sec.items"
@@ -102,7 +102,7 @@ const SECTIONS = [
     <!-- The coloring game is written in English only, so every locale links
          to the one page. -->
     <section class="dash-group">
-      <div class="widget-head"><h2 class="title dash-label">{{ $t('c_Sidebar.play') }}</h2></div>
+      <div class="widget-head"><div class="title dash-label">{{ $t('c_Sidebar.play') }}</div></div>
       <nav class="widget-body dash-nav" :aria-label="$t('c_Sidebar.play')">
         <NuxtLink
             to="/color-by-number"
@@ -117,7 +117,7 @@ const SECTIONS = [
     </section>
 
     <section class="dash-group">
-      <div class="widget-head"><h2 class="title dash-label">{{ $t('c_Sidebar.community') }}</h2></div>
+      <div class="widget-head"><div class="title dash-label">{{ $t('c_Sidebar.community') }}</div></div>
       <nav class="widget-body dash-nav" :aria-label="$t('c_Sidebar.community')">
         <NuxtLinkLocale to="/creator-program" class="hdr-link dash-link" :title="$t('c_Sidebar.creatorProgram')">
           <span class="dash-tool-ic dash-tool-ic-plain"><span class="icon icon-trophy"/></span>

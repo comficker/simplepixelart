@@ -449,7 +449,7 @@ const faq = computed(() => [
     <div class="gen-grid flat-editor">
 
       <div class="canvas-col">
-        <Widget :title="$t('p_generator.pixelArtGenerator')">
+        <Widget label :title="$t('p_generator.pixelArtGenerator')">
           <div class="preview-wrapper">
 
             <div v-if="hasResult" class="tm-seg gen-viewseg">
@@ -569,7 +569,7 @@ const faq = computed(() => [
       </div>
 
       <div class="editor-sidebar">
-        <Widget :title="$t('p_generator.look')">
+        <Widget label :title="$t('p_generator.look')">
           <div class="settings-row">
             <label v-for="s in STYLES" :key="s.v" class="pill" :class="{active: style === s.v}">
               <input type="radio" :value="s.v" v-model="style" :disabled="busy">
@@ -588,7 +588,7 @@ const faq = computed(() => [
           </label>
         </Widget>
 
-        <Widget :title="$t('p_generator.output')">
+        <Widget label :title="$t('p_generator.output')">
           <div class="settings-row" :title="$t('p_generator.canvasSizeAutoKeepsTheModel')">
             <label v-for="s in SIZES" :key="s" class="pill" :class="{active: size === s}">
               <input type="radio" :value="s" v-model="size">
@@ -610,7 +610,7 @@ const faq = computed(() => [
           </p>
         </Widget>
 
-        <Widget :title="$t('p_generator.backdrop')">
+        <Widget label :title="$t('p_generator.backdrop')">
           <div class="settings-row">
             <label v-for="m in BG_MODES" :key="m.v" class="pill" :class="{active: bgMode === m.v}" :title="m.t">
               <input type="radio" :value="m.v" v-model="bgMode">
@@ -623,7 +623,7 @@ const faq = computed(() => [
           </label>
         </Widget>
 
-        <Widget v-if="history.length" :title="$t('p_generator.history')">
+        <Widget label v-if="history.length" :title="$t('p_generator.history')">
           <div class="gen-hist">
             <div v-for="h in history" :key="h.id" class="gen-hist-item" :class="{active: h.id === historyId}">
               <button class="gen-hist-thumb" :title="h.prompt" :disabled="busy" @click="restoreFromHistory(h)">

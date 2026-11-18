@@ -275,7 +275,7 @@ defineExpose({removeItem, refresh, siblingId})
 </script>
 
 <template>
-  <Widget class="cstrip" :title="$t('common.tileset')">
+  <Widget label class="cstrip" :title="$t('common.tileset')">
     <template #ctl>
       <ui-dropdown-menu>
         <button type="button" class="widget-ctl-btn" :class="{active: boundId != null}" :title="`${$t('c_TilesetStrip.chooseTileset')} (${selectedTitle})`">

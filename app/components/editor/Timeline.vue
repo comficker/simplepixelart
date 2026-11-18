@@ -243,7 +243,7 @@ onUnmounted(() => { store.isPlaying = false })
 </script>
 
 <template>
-  <Widget :title="$t('common.animationFrames')" class="timeline">
+  <Widget label :title="$t('common.animationFrames')" class="timeline">
     <div class="tl-bar">
 
       <div class="tl-controls" v-if="store.isAnimated">
