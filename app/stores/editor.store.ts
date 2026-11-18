@@ -9,6 +9,7 @@ import {markRaw, ref, shallowRef, toRaw, watch} from "vue";
 import {layers2MapNumbers} from "~/helper/canvas";
 import {hexColorDelta, isSameColor, rgbToHex} from "~/helper/color";
 import {capColors, type Cell, importFileGrid, importOriginalGrid, MAX_IMPORT_COLORS, shouldIgnoreColor} from "~/helper/pixel";
+import {fpsFromDurations, gifToFrames} from "~/helper/pixel/gif";
 import {loadWorkspaceFull, saveWorkspaceFull, clearWorkspaceFull} from "~/helper/workspaceSnapshot";
 import {autoErase, autoPaint, autoReflow, cellOf, gridOf, originOf, type AutoLayer, type BrushGrid, type BrushSet} from "~/helper/tileBrush";
 import {toast} from "vue-sonner";
@@ -532,6 +533,9 @@ export const useEditor = defineStore('editor', () => {
     const boardAddedRev = ref(0)
 
     const MAX_FRAMES = 64
+    // An animated GIF wider or taller than this after its pixel grid is read
+    // back is footage, not sprite art: import it as one still image instead.
+    const MAX_GIF_SIDE = 256
     const currentFrameIndex = ref(0)
     // The layer index is set from many places (board switch, undo, frame
     // change, layer delete) and editorData.layers is swapped under it; any
@@ -1008,16 +1012,28 @@ export const useEditor = defineStore('editor', () => {
     }
 
     function loadAnimationFrames(frameGrids: (number[] | null)[][][]) {
-        if (!frameGrids.length) return
+        const converted = framesToEditorData(frameGrids)
+        if (converted) replaceCanvasWith(converted)
+    }
+
+    /** Frames (each a grid of RGB or empty) as one board: animated when there
+     *  are two or more, a still otherwise. `durations` are per-frame ms, as a
+     *  GIF carries them. */
+    function framesToEditorData(
+        frameGrids: (number[] | null)[][][],
+        durations: number[] = [],
+        name = '',
+    ): EditorData | null {
+        if (!frameGrids.length) return null
 
         const first = frameGrids[0]!
         const fh = first.length
         let fw = 0
         for (const row of first) fw = Math.max(fw, row?.length || 0)
-        if (!fw || !fh) return
+        if (!fw || !fh) return null
 
         const colors: string[] = []
-        const frames = frameGrids.slice(0, MAX_FRAMES).map(grid => {
+        const frames = frameGrids.slice(0, MAX_FRAMES).map((grid, n) => {
             const pixels: { [key: string]: number } = {}
             for (let y = 0; y < grid.length; y++) {
                 const row = grid[y]
@@ -1031,13 +1047,14 @@ export const useEditor = defineStore('editor', () => {
             return {
                 id: generateUUID(),
                 layers: [{name: 'Layer 1', pixels: markRaw(pixels), x: 0, y: 0}],
-                duration: 100,
+                duration: durations[n] || 100,
             }
         })
 
         const converted = markRawPixels({
             ...cloneDeep(DEFAULT_EDITOR_DATA),
             id: generateUUID(),
+            name,
             updated: new Date().toISOString(),
             width: fw,
             height: fh,
@@ -1045,11 +1062,22 @@ export const useEditor = defineStore('editor', () => {
         converted.colors = colors.map(c => c.toUpperCase())
         if (frames.length > 1) {
             if (!converted.meta) converted.meta = {}
-            converted.meta.animation = {fps: 10, loop: true, frames, shared: []}
+            converted.meta.animation = {
+                fps: durations.length ? fpsFromDurations(durations) : 10, loop: true, frames, shared: [],
+            }
         } else {
             converted.layers = frames[0]!.layers
         }
-        replaceCanvasWith(converted)
+        return converted
+    }
+
+    // An animated GIF read as frames, or null for a still, a GIF too big to
+    // be pixel art (the caller then reads it as one image), or a browser
+    // without ImageDecoder.
+    async function gifFrames(file: File) {
+        const anim = await gifToFrames(file)
+        if (!anim || anim.width > MAX_GIF_SIDE || anim.height > MAX_GIF_SIDE) return null
+        return anim
     }
 
     type ImportProcess = 'filter' | 'original'
@@ -1132,6 +1160,8 @@ export const useEditor = defineStore('editor', () => {
             }
         }
         try {
+            const anim = await gifFrames(file);
+            if (anim) return framesToEditorData(anim.frames as (number[] | null)[][][], anim.durations, baseName);
             const grid = await fileToGrid(file, process);
             if (!grid) return null;
             return gridToEditorData(grid, null, baseName, true);
@@ -1149,17 +1179,25 @@ export const useEditor = defineStore('editor', () => {
 
         if (opts.dest === 'frames') {
             const frameGrids: (number[] | null)[][][] = [];
+            const frameMs: number[] = [];
             for (const file of files) {
                 if (file.name.toLowerCase().endsWith('.json')) { skipped++; continue; }
                 try {
+                    const anim = await gifFrames(file);
+                    if (anim) {
+                        frameGrids.push(...anim.frames as (number[] | null)[][][]);
+                        frameMs.push(...anim.durations);
+                        continue;
+                    }
                     const grid = await fileToGrid(file, opts.process);
-                    if (grid) frameGrids.push(grid);
+                    if (grid) { frameGrids.push(grid); frameMs.push(100); }
                     else skipped++;
                 } catch { skipped++; }
             }
             if (frameGrids.length) {
-                loadAnimationFrames(frameGrids);
-                added = frameGrids.length;
+                const converted = framesToEditorData(frameGrids, frameMs);
+                if (converted) replaceCanvasWith(converted);
+                added = Math.min(frameGrids.length, MAX_FRAMES);
             }
             return {added, skipped};
         }

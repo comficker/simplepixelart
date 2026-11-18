@@ -13,6 +13,10 @@ import {detectPixelScale, modeDownscale, shiftCrop} from './reconstruct'
 
 const ALPHA_ON = 16
 const MAX_FRAMES = 64
+// Every frame is decoded at full size before scale detection; past a
+// megapixel a frame (64 of them at 4 bytes a pixel) would stall the tab, and
+// an image that big is a video clip, not pixel art.
+const MAX_FRAME_PIXELS = 1024 * 1024
 
 export interface GifCells {
   width: number
@@ -35,6 +39,7 @@ export async function gifToFrames(file: File): Promise<GifCells | null> {
     for (let i = 0; i < count; i++) {
       const {image} = await decoder.decode({frameIndex: i})
       const w = image.displayWidth, h = image.displayHeight
+      if (w * h > MAX_FRAME_PIXELS) { image.close(); return null }
       const cv = new OffscreenCanvas(w, h)
       const ctx = cv.getContext('2d')!
       ctx.drawImage(image, 0, 0)
@@ -80,4 +85,12 @@ export async function gifToFrames(file: File): Promise<GifCells | null> {
   } finally {
     decoder?.close?.()
   }
+}
+
+/** A steady playback rate for frames that each carry their own delay: the
+ *  median, so one long hold at the end of a loop does not slow the rest. */
+export function fpsFromDurations(durations: number[]): number {
+  if (!durations.length) return 10
+  const sorted = [...durations].sort((a, b) => a - b)
+  return Math.min(30, Math.max(1, Math.round(1000 / sorted[sorted.length >> 1]!)))
 }

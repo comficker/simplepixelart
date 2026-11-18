@@ -2,7 +2,7 @@
 import {toast} from 'vue-sonner'
 import type {ComponentPublicInstance} from 'vue'
 import {capColors, importFileGrid, MAX_IMPORT_COLORS, type Cell} from '~/helper/pixel'
-import {gifToFrames} from '~/helper/pixel/gif'
+import {fpsFromDurations, gifToFrames} from '~/helper/pixel/gif'
 import {rgbToHex} from '~/helper/color'
 import {layers2MapNumbers} from '~/helper/canvas'
 import {LICENSES} from '~/helper/constants'
@@ -191,9 +191,8 @@ function paint(el: Element | ComponentPublicInstance | null) {
 
 function animationMeta(p: Piece) {
   if (!p.frames.length) return null
-  const sorted = p.frames.map(f => f.duration).sort((a, b) => a - b)
   return {
-    fps: Math.min(30, Math.max(1, Math.round(1000 / sorted[sorted.length >> 1]!))),
+    fps: fpsFromDurations(p.frames.map(f => f.duration)),
     loop: true,
     shared: [],
     frames: p.frames.map(f => ({
