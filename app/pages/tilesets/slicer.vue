@@ -16,7 +16,7 @@ const auth = useAuthStore()
 useCustomSeoMeta({
   title: () => t('p_tilesets_slicer.seoTitle'),
   description: () => t('p_tilesets_slicer.seoDescription'),
-  keywords: 'tileset slicer, spritesheet cutter, sprite extractor, manual sprite select, export sprites zip, auto detect sprites, cut tiles from image, pixel art tileset editor',
+  keywords: 'sprite sheet splitter, split sprite sheet, tileset slicer, spritesheet cutter, sprite extractor, manual sprite select, export sprites zip, auto detect sprites, cut tiles from image, pixel art tileset editor',
   canonical: 'https://simplepixelart.com/tilesets/slicer',
   script: [
     {
@@ -1887,7 +1887,7 @@ const faq = computed(() => [
         <span v-if="processing" class="text-xs text-muted">{{ $t('p_tilesets_slicer.processing') }}</span>
       </template>
     <template #doc>
-      <h1>{{ $t('p_tilesets_slicer.tilesetSlicer') }}</h1>
+      <h1>{{ $t('p_tilesets_slicer.h1') }}</h1>
       <p v-html="$t('p_tilesets_slicer.cutSpritesOutOfATileset')"/>
       <h2>{{ $t('p_tilesets_slicer.sliceAnyTilesetOrSpritesheetFree') }}</h2>
       <p>

@@ -229,7 +229,10 @@
     "terms": "利用規約",
     "easyPixelArt": "簡単なドット絵",
     "sizes": "ドット絵のサイズ",
-    "converter": "ドット絵変換ツール"
+    "converter": "ドット絵変換ツール",
+    "godot": "Godot向けドット絵",
+    "compare": "エディタ比較",
+    "mcp": "MCPサーバー"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "コマンドパレットを開く（テーマ、移動など）"
@@ -2378,7 +2381,7 @@
     "zoomIn": "拡大",
     "zoomLevelClickFor100": "ズーム倍率 — クリックで100%",
     "zoomOut": "縮小",
-    "seoTitle": "タイルセット＆スプライトシート分割ツール",
+    "seoTitle": "スプライトシート分割＆タイルセットスライサー",
     "seoDescription": "無料のオンライン タイルセット・スプライトシート分割ツール：グリッドで切り出し、詰まったスプライトを自動検出、または1つずつ選択して、まとめて ZIP で書き出せます。",
     "couldNotProcessImage": "画像を処理できませんでした — 元の画像を使用します",
     "detectionFailed": "検出に失敗しました",
@@ -2417,7 +2420,8 @@
     "prepareSheet": "シートの下準備",
     "inputSettings": "入力設定",
     "moveGrid": "グリッドを移動",
-    "resetGridPosition": "グリッドの位置をリセット"
+    "resetGridPosition": "グリッドの位置をリセット",
+    "h1": "スプライトシート分割＆タイルセットスライサー"
   },
   "p_work": {
     "aTilesetIsACuratedSet": "タイルセットは、いくつものワールドを描ける厳選されたタイルの集まりです。",

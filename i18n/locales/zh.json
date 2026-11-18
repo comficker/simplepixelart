@@ -229,7 +229,10 @@
     "terms": "条款",
     "easyPixelArt": "简单像素画",
     "sizes": "像素画尺寸",
-    "converter": "像素画转换器"
+    "converter": "像素画转换器",
+    "godot": "Godot 像素画",
+    "compare": "编辑器对比",
+    "mcp": "MCP 服务器"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "打开命令面板（主题、导航等）"
@@ -2378,7 +2381,7 @@
     "zoomIn": "放大",
     "zoomLevelClickFor100": "缩放比例 — 点击回到 100%",
     "zoomOut": "缩小",
-    "seoTitle": "图块集与精灵图切割工具",
+    "seoTitle": "精灵图切割与图块集切图工具 — 免费",
     "seoDescription": "免费在线图块集与精灵图切割工具：按网格切割、自动检测紧凑排列的精灵，或逐个框选，然后全部导出为 ZIP。",
     "couldNotProcessImage": "无法处理图片 — 将使用原图",
     "detectionFailed": "检测失败",
@@ -2417,7 +2420,8 @@
     "prepareSheet": "预处理图集",
     "inputSettings": "输入设置",
     "moveGrid": "移动网格",
-    "resetGridPosition": "重置网格位置"
+    "resetGridPosition": "重置网格位置",
+    "h1": "精灵图切割与图块集切图工具"
   },
   "p_work": {
     "aTilesetIsACuratedSet": "图块集是一组精选的图块，可以用来绘制许多个世界。",

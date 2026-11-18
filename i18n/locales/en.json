@@ -240,7 +240,10 @@
     "terms": "Terms",
     "easyPixelArt": "Easy pixel art",
     "sizes": "Pixel art sizes",
-    "converter": "Pixel art converter"
+    "converter": "Pixel art converter",
+    "godot": "Pixel art for Godot",
+    "compare": "Compare editors",
+    "mcp": "MCP server"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Open command palette (themes, navigation, more)"
@@ -2410,7 +2413,7 @@
     "zoomIn": "Zoom in",
     "zoomLevelClickFor100": "Zoom level — click for 100%",
     "zoomOut": "Zoom out",
-    "seoTitle": "Tileset & Spritesheet Slicer",
+    "seoTitle": "Sprite Sheet Splitter & Tileset Slicer — Free",
     "seoDescription": "Free online tileset and spritesheet slicer: cut sprites by grid, auto-detect packed sprites, or select each one, then export them all as a ZIP.",
     "couldNotProcessImage": "Could not process image — using the original",
     "detectionFailed": "Detection failed",
@@ -2449,7 +2452,8 @@
     "prepareSheet": "Prepare the sheet",
     "inputSettings": "Input settings",
     "moveGrid": "Move grid",
-    "resetGridPosition": "Reset grid position"
+    "resetGridPosition": "Reset grid position",
+    "h1": "Sprite Sheet Splitter & Tileset Slicer"
   },
   "p_work": {
     "aTilesetIsACuratedSet": "A tileset is a curated set of tiles you can paint many worlds with.",

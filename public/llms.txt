@@ -33,6 +33,14 @@ The site is available in English (default), Japanese (/ja), Chinese (/zh), Korea
 - [图片转像素画](https://simplepixelart.com/zh/converter)：把照片或图片转换成像素画。
 - [简单像素画](https://simplepixelart.com/zh/easy-pixel-art)：新手入门和可临摹的小尺寸作品。
 
+## Game dev
+
+- [Pixel art for Godot 4](https://simplepixelart.com/pixel-art-for-godot): draw tiles, build Wang 16 / blob 47 autotile terrains, export a Godot 4 TileSet (.tres) and a ready scene (.tscn).
+- [GIF to sprite sheet](https://simplepixelart.com/gif-to-sprite-sheet): open an animated GIF as frames (timings kept, upscaled GIFs read back to real pixels) and export a PNG sheet or sheet + JSON; sprite sheet to GIF too.
+- [Sprite sheet splitter](https://simplepixelart.com/tilesets/slicer): cut a sprite sheet or tileset into separate sprites by grid, auto-detection or hand selection, downloaded as a ZIP of PNGs.
+- [Free pixel art MCP server](https://simplepixelart.com/mcp): `npx -y simplepixelart-mcp` gives Claude, Cursor or VS Code tools to pixelate images, extract and remap palettes and upscale without blur. MIT, no API key.
+- [Compare pixel art editors](https://simplepixelart.com/compare): SimplePixelArt vs Aseprite, Piskel and Pixelorama.
+
 ## Optional
 
 - [About](https://simplepixelart.com/about)

@@ -229,7 +229,10 @@
     "terms": "약관",
     "easyPixelArt": "쉬운 픽셀 아트",
     "sizes": "픽셀 아트 크기",
-    "converter": "픽셀 아트 변환기"
+    "converter": "픽셀 아트 변환기",
+    "godot": "Godot용 픽셀 아트",
+    "compare": "에디터 비교",
+    "mcp": "MCP 서버"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "명령 팔레트 열기(테마, 이동 등)"
@@ -2378,7 +2381,7 @@
     "zoomIn": "확대",
     "zoomLevelClickFor100": "확대 비율 — 클릭하면 100%",
     "zoomOut": "축소",
-    "seoTitle": "타일셋 & 스프라이트시트 슬라이서",
+    "seoTitle": "스프라이트 시트 분할 & 타일셋 슬라이서 — 무료",
     "seoDescription": "무료 온라인 타일셋·스프라이트시트 슬라이서: 그리드로 자르거나, 빽빽한 스프라이트를 자동 감지하거나, 하나씩 선택한 뒤 모두 ZIP으로 내보내세요.",
     "couldNotProcessImage": "이미지를 처리할 수 없어 원본을 사용합니다",
     "detectionFailed": "감지에 실패했습니다",
@@ -2417,7 +2420,8 @@
     "prepareSheet": "시트 준비",
     "inputSettings": "입력 설정",
     "moveGrid": "그리드 이동",
-    "resetGridPosition": "그리드 위치 초기화"
+    "resetGridPosition": "그리드 위치 초기화",
+    "h1": "스프라이트 시트 분할 & 타일셋 슬라이서"
   },
   "p_work": {
     "aTilesetIsACuratedSet": "타일셋은 여러 세계를 그릴 수 있는, 엄선된 타일 모음입니다.",
