@@ -25,6 +25,14 @@ const staticPages = [
     {loc: '/terms', changefreq: 'yearly', priority: '0.3'},
     {loc: '/guidelines', changefreq: 'yearly', priority: '0.3'},
     {loc: '/dmca', changefreq: 'yearly', priority: '0.3'},
+    // Game dev pages, English only so far.
+    {loc: '/pixel-art-for-godot', changefreq: 'monthly', priority: '0.8'},
+    {loc: '/mcp', changefreq: 'monthly', priority: '0.7'},
+    {loc: '/gif-to-sprite-sheet', changefreq: 'monthly', priority: '0.8'},
+    {loc: '/compare', changefreq: 'monthly', priority: '0.6'},
+    {loc: '/compare/aseprite', changefreq: 'monthly', priority: '0.7'},
+    {loc: '/compare/piskel', changefreq: 'monthly', priority: '0.7'},
+    {loc: '/compare/pixelorama', changefreq: 'monthly', priority: '0.7'},
 ]
 
 // Locale codes are only listed for pages whose content is actually translated.

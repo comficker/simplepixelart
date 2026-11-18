@@ -15,6 +15,9 @@ const year = new Date().getFullYear()
       <NuxtLinkLocale to="/guidelines">{{ $t('common.guidelines') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/privacy">{{ $t('c_FooterBar.privacy') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/terms">{{ $t('c_FooterBar.terms') }}</NuxtLinkLocale>
+      <NuxtLink to="/pixel-art-for-godot">{{ $t('c_FooterBar.godot') }}</NuxtLink>
+      <NuxtLink to="/compare">{{ $t('c_FooterBar.compare') }}</NuxtLink>
+      <NuxtLink to="/mcp">{{ $t('c_FooterBar.mcp') }}</NuxtLink>
     </nav>
   </div>
 </template>

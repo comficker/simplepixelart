@@ -228,7 +228,10 @@
     "privacy": "Privacidad",
     "terms": "Términos",
     "easyPixelArt": "Pixel art fácil",
-    "sizes": "Tamaños de pixel art"
+    "sizes": "Tamaños de pixel art",
+    "godot": "Pixel art para Godot",
+    "compare": "Comparar editores",
+    "mcp": "Servidor MCP"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Abrir la paleta de comandos (temas, navegación y más)"
@@ -2348,7 +2351,7 @@
     "zoomIn": "Acercar",
     "zoomLevelClickFor100": "Nivel de zoom — pulsa para el 100%",
     "zoomOut": "Alejar",
-    "seoTitle": "Cortador de tilesets y spritesheets",
+    "seoTitle": "Divisor de sprite sheets y cortador de tilesets",
     "seoDescription": "Cortador de tilesets y spritesheets gratis en línea: corta sprites por cuadrícula, detecta automáticamente sprites agrupados o selecciona cada uno, y expórtalos todos en un ZIP.",
     "couldNotProcessImage": "No se pudo procesar la imagen; se usa la original",
     "detectionFailed": "La detección falló",
@@ -2387,7 +2390,8 @@
     "prepareSheet": "Preparar la hoja",
     "inputSettings": "Ajustes de entrada",
     "moveGrid": "Mover la cuadrícula",
-    "resetGridPosition": "Restablecer la posición de la cuadrícula"
+    "resetGridPosition": "Restablecer la posición de la cuadrícula",
+    "h1": "Divisor de sprite sheets y cortador de tilesets"
   },
   "p_work": {
     "aTilesetIsACuratedSet": "Un tileset es un conjunto curado de tiles con el que puedes pintar muchos mundos.",
