@@ -18,7 +18,14 @@ const FEATURE_KEYS = [
   'strongPixelCleanerStrongRemovesOrp', 'strongAutoSizeStrongPixelArt', 'strongTransparentBackgroundStrongC',
   'strongDitheringStrongOrderedBayerD', 'strongColorSwapMergeStrongClick', 'strongOneClickEditorHandoffStrong',
 ]
-const faq = computed(() => [0, 1, 2, 3, 4, 5, 6].map(i => ({q: t(`p_converter.faq${i}q`), a: t(`p_converter.faq${i}a`)})))
+const faq = computed(() => Array.from({length: 20}, (_, i) => ({q: t(`p_converter.faq${i}q`), a: t(`p_converter.faq${i}a`)})))
+// Each feature string is "<strong>Name</strong> — what it does": one h3 per
+// feature reads as a section of its own to a crawler, not one long list.
+const features = computed(() => FEATURE_KEYS.map(k => {
+  const html = t(`p_converter.${k}`)
+  const m = html.match(/^\s*<strong>(.*?)<\/strong>\s*[—–-]?\s*([\s\S]*)$/)
+  return m ? {name: m[1]!, body: m[2]!} : {name: '', body: html}
+}))
 
 const {locale, defaultLocale} = useI18n()
 const pageUrl = computed(() => `https://simplepixelart.com${locale.value === defaultLocale ? '' : `/${locale.value}`}/converter`)
@@ -248,7 +255,7 @@ watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], 
     <div class="editor-body flat-editor">
 
       <div class="canvas-col">
-        <Widget :title="$t('p_converter.imageToPixelConverter')">
+        <Widget label :title="$t('p_converter.imageToPixelConverter')">
           <template #ctl>
             <button v-if="hasImage" class="widget-ctl-btn" @click="openFileDialog">
               <span class="icon icon-image"/>
@@ -290,7 +297,7 @@ watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], 
       </div>
 
       <div class="editor-sidebar">
-        <Widget :title="$t('common.size')">
+        <Widget label :title="$t('common.size')">
           <div class="settings-row" :title="$t('p_converter.autoReadsTheImageSOwn')">
             <label v-for="s in sizeOptions" :key="s" class="pill" :class="{active: outputSize === s}">
               <input type="radio" :value="s" v-model="outputSize">
@@ -302,7 +309,7 @@ watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], 
           </p>
         </Widget>
 
-        <Widget :title="$t('common.colors')">
+        <Widget label :title="$t('common.colors')">
           <div class="settings-row">
             <label v-for="c in colorOptions" :key="c" class="pill" :class="{active: maxColors === c}">
               <input type="radio" :value="c" v-model="maxColors">
@@ -319,7 +326,7 @@ watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], 
           </label>
         </Widget>
 
-        <Widget :title="$t('p_converter.adjust')">
+        <Widget label :title="$t('p_converter.adjust')">
           <div class="slider-row">
             <label>{{ $t('p_converter.brightness') }} <span>{{ brightness }}</span></label>
             <input type="range" v-model.number="brightness" min="-100" max="100" step="5">
@@ -334,7 +341,7 @@ watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], 
           </div>
         </Widget>
 
-        <Widget :title="$t('common.palette')">
+        <Widget label :title="$t('common.palette')">
           <template #ctl>
             <span class="text-xs">{{ $t('common.nColors', {count: palette.length}) }}</span>
           </template>
@@ -394,7 +401,7 @@ watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], 
     </template>
 
     <template #doc>
-      <h1>{{ $t('p_converter.imageToPixelArtConverter') }}</h1>
+      <h1>{{ $t('p_converter.h1') }}</h1>
       <p v-html="$t('p_converter.turnAnyPhotoIntoPixelArt')"/>
 
       <h2>{{ $t('common.howToUseIt') }}</h2>
@@ -408,17 +415,10 @@ watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], 
       <p v-html="$t('p_converter.ourFreeImageToPixelArt')"/>
 
       <h2>{{ $t('common.features') }}</h2>
-      <ul>
-        <li v-html="$t('p_converter.strongFlexibleOutputSizeStrongConv')"/>
-        <li v-html="$t('p_converter.strongPaletteControlStrongLimitTo')"/>
-        <li v-html="$t('p_converter.strongLiveImageAdjustmentsStrongBr')"/>
-        <li v-html="$t('p_converter.strongPixelCleanerStrongRemovesOrp')"/>
-        <li v-html="$t('p_converter.strongAutoSizeStrongPixelArt')"/>
-        <li v-html="$t('p_converter.strongTransparentBackgroundStrongC')"/>
-        <li v-html="$t('p_converter.strongDitheringStrongOrderedBayerD')"/>
-        <li v-html="$t('p_converter.strongColorSwapMergeStrongClick')"/>
-        <li v-html="$t('p_converter.strongOneClickEditorHandoffStrong')"/>
-      </ul>
+      <template v-for="f in features" :key="f.name">
+        <h3 v-if="f.name" v-html="f.name"/>
+        <p v-html="f.body"/>
+      </template>
 
       <h2>{{ $t('p_converter.screenshot') }}</h2>
       <figure>
@@ -442,6 +442,9 @@ watch([outputSize, maxColors, brightness, contrast, saturation, bgCut, dither], 
         <li><NuxtLink to="/sprite-maker">{{ $t('p_converter.lSprite') }}</NuxtLink></li>
         <li><NuxtLink to="/color-by-number">{{ $t('p_converter.lCbn') }}</NuxtLink></li>
         <li><NuxtLinkLocale to="/easy-pixel-art">{{ $t('p_converter.lEasy') }}</NuxtLinkLocale></li>
+        <!-- English-only pages: one URL for every locale. -->
+        <li><NuxtLink to="/pixel-art-resizer">{{ $t('p_converter.lResizer') }}</NuxtLink></li>
+        <li><NuxtLink to="/mcp">{{ $t('p_converter.lMcp') }}</NuxtLink></li>
       </ul>
     </template>
   </ToolLayout>

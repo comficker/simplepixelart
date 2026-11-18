@@ -239,7 +239,8 @@
     "privacy": "Privacy",
     "terms": "Terms",
     "easyPixelArt": "Easy pixel art",
-    "sizes": "Pixel art sizes"
+    "sizes": "Pixel art sizes",
+    "converter": "Pixel art converter"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Open command palette (themes, navigation, more)"
@@ -1281,7 +1282,7 @@
     "strongTransparentBackgroundStrongC": "<strong>Transparent background</strong> — cut a uniform backdrop to real transparency; the sprite lands in the editor with nothing behind it.",
     "strongUploadAnImageStrongDrag": "<strong>Upload an image</strong> — drag and drop a PNG, JPG or WebP, or click to browse. Nothing is uploaded — it all runs in your browser.",
     "transparentBackground": "Transparent background",
-    "turnAnyPhotoIntoPixelArt": "Convert any image, photo or picture to pixel art in seconds — free, no signup, and everything runs in your browser. Drop a file, pick a size and a palette, and get a clean pixel grid you can edit, download or turn into a sprite.",
+    "turnAnyPhotoIntoPixelArt": "This free pixel art converter turns any image, photo or picture into pixel art in seconds. Upload a JPG, PNG or WebP, pick a grid size and a color limit, then clean it up and export a PNG from the editor — no sign-up, and nothing leaves your browser.",
     "cleanedOrphans": "Cleaned 1 orphan pixel | Cleaned {count} orphan pixels",
     "colorsMerged": "Colors merged",
     "autoResult": "Auto → {w}×{h}",
@@ -1296,7 +1297,36 @@
     "lEditor": "Pixel art editor",
     "lSprite": "Sprite maker",
     "lCbn": "Color by number",
-    "lEasy": "Easy pixel art ideas"
+    "lEasy": "Easy pixel art ideas",
+    "h1": "Image to Pixel Art Converter — Turn Any Photo into Pixel Art",
+    "faq7q": "How do I convert a photo to pixel art?",
+    "faq7a": "<p>Drop the photo onto the converter, keep <strong>Auto</strong> or pick a grid size, and choose how many colors to keep. The preview updates as you go. When it looks right, click <strong>Open in Editor</strong> to touch it up and save a PNG.</p>",
+    "faq8q": "Can I make 16×16, 32×32 or 64×64 pixel art from an image?",
+    "faq8a": "<p>Yes. Pick 16, 32 or 64 in the size row and the image is resampled to that many pixels across, keeping its aspect ratio. 8, 12, 20, 24 and 48 are there too.</p>",
+    "faq9q": "What grid size gives an 8-bit or 16-bit look?",
+    "faq9a": "<p>For a chunky 8-bit look use 16×16 to 24×24 with 4–8 colors. For a 16-bit look go to 32×32–64×64 with 16–32 colors. Fewer pixels and fewer colors read as older hardware.</p>",
+    "faq10q": "How many colors should pixel art have?",
+    "faq10a": "<p>Most pixel art uses 4 to 16 colors. Start at 16, then drop to 8 or 4 for a bolder retro result. Photos with skin, sky or gradients usually need 16–32 to stay readable.</p>",
+    "faq11q": "What is dithering and when should I turn it on?",
+    "faq11a": "<p>Dithering mixes two colors in a checker-like Bayer pattern to fake a shade the palette does not have. Turn it on for photos and smooth gradients with a small palette; leave it off for logos, icons and flat art.</p>",
+    "faq12q": "Can I keep a transparent background?",
+    "faq12a": "<p>Yes. Tick <strong>Transparent background</strong> and a plain backdrop around the subject becomes empty pixels, so the sprite lands in the editor with nothing behind it. A PNG that is already transparent stays transparent.</p>",
+    "faq13q": "Is this a pixel art generator, maker or editor?",
+    "faq13a": "<p>It is a converter: it pixelates an image you already have. To draw from scratch use the <a href=\"/editor\">pixel art maker</a>, and to get pixel art from a text prompt use the <a href=\"/generator\">AI pixel art generator</a>.</p>",
+    "faq14q": "Can I make Minecraft pixel art from an image?",
+    "faq14a": "<p>Yes. The <a href=\"/minecraft-pixel-art-generator\">Minecraft pixel art generator</a> maps every pixel to one of the 16 concrete block colors and counts how many blocks of each you need to build it.</p>",
+    "faq15q": "What images convert best?",
+    "faq15a": "<p>A single subject on a plain background, good contrast and a crop close to the subject. Busy scenes and small details get lost at small grids, so crop first or use a larger size.</p>",
+    "faq16q": "Does it work on a phone?",
+    "faq16a": "<p>Yes. It runs in any modern mobile browser: tap the upload area to pick a photo from your camera roll, then open the result in the editor to save it.</p>",
+    "faq17q": "Can I use the pixel art commercially?",
+    "faq17a": "<p>The converter adds no watermark and claims no rights over what you make. If the source photo or artwork belongs to someone else, their rights still apply to the pixel version.</p>",
+    "faq18q": "How do I upscale pixel art without blur?",
+    "faq18a": "<p>Scale it by a whole number with nearest-neighbor sampling, never smooth resizing. The <a href=\"/pixel-art-resizer\">pixel art resizer</a> does this from 1× to 16× and can also shrink an upscaled image back to its real pixels.</p>",
+    "faq19q": "Why does my pixel art look noisy or blurry?",
+    "faq19a": "<p>Noise comes from too many colors or dithering on a flat image: lower the color count, switch dithering off and run <strong>Clean Orphans</strong>. Blur usually means the image was resized smoothly afterwards; export from the editor at a whole-number scale instead.</p>",
+    "lResizer": "Pixel art resizer",
+    "lMcp": "Pixel art MCP server for AI assistants"
   },
   "p_creator": {
     "allTime": "All time",
@@ -2557,9 +2587,9 @@
       "title": "Pixel Art Collections"
     },
     "converter": {
-      "description": "Convert any image or photo to pixel art in seconds. Free online converter with auto pixel size, 4–64 color palettes, dithering, pixel cleaner and live preview.",
+      "description": "Free pixel art converter: turn any image or photo into pixel art with auto grid detection, 8×8 to 64×64 sizes, 4–64 color palettes, dithering and pixel cleanup.",
       "keywords": "image to pixel art converter, convert image to pixel art, photo to pixel art, picture to pixel art, pixelate image",
-      "title": "Image to Pixel Art Converter — Free Online"
+      "title": "Image to Pixel Art Converter: Free Grid & Palette"
     },
     "creators": {
       "description": "The pixel art creators publishing the most on SimplePixelArt.com, ranked by day, week, month and quarter.",
