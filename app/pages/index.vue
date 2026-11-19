@@ -230,10 +230,15 @@ useCustomSeoMeta({
               <span class="icon icon-pen"/><span>{{ $t('p_index.startDrawing') }}</span>
             </NuxtLinkLocale>
           </div>
-          <div class="home-tools"><ToolPaths/></div>
         </div>
         <HeroDinos/>
       </section>
+
+      <!-- Phones/tablets only (the desktop sidebar lists the tools): its own
+           section, a plain grid, so the hero is just the two actions. -->
+      <Widget class="home-tools" :title="$t('c_ToolPaths.pixelArtTools')">
+        <ToolPaths grid/>
+      </Widget>
 
       <Widget v-if="showStudio" :title="auth.logged ? $t('p_index.yourStudio') : $t('p_index.startAProject')">
         <template #ctl>
@@ -468,10 +473,6 @@ useCustomSeoMeta({
 .page-hero > .page-hero-main {
   position: relative;
   z-index: 1;
-}
-
-.page-hero .home-tools {
-  margin-top: var(--space-4);
 }
 
 .home-library {

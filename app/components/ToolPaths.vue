@@ -1,5 +1,5 @@
 <template>
-  <nav class="studio-paths" :style="{'--tp-cols': shown.length}" :aria-label="$t('c_ToolPaths.pixelArtTools')">
+  <nav class="studio-paths" :class="{'is-grid': grid}" :style="{'--tp-cols': shown.length}" :aria-label="$t('c_ToolPaths.pixelArtTools')">
     <NuxtLinkLocale
         v-for="t in shown"
         :key="t.key"
@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import {TOOLS, type ToolKey} from '~/helper/tools'
 
-const props = defineProps<{ exclude?: ToolKey | ToolKey[] }>()
+const props = defineProps<{ exclude?: ToolKey | ToolKey[], grid?: boolean }>()
 
 const shown = computed(() => {
   const ex = new Set(Array.isArray(props.exclude) ? props.exclude : props.exclude ? [props.exclude] : [])
@@ -94,9 +94,10 @@ const shown = computed(() => {
 
 /* Phones: every tool on one row that scrolls sideways, each just its icon
    and name -- no tile around it -- so the row costs one icon's height
-   instead of pushing the gallery out of the first screen. */
+   instead of pushing the gallery out of the first screen. With `grid` the
+   row becomes a 4-column grid in its own section instead. */
 @media (max-width: 767px) {
-  .studio-paths {
+  .studio-paths:not(.is-grid) {
     display: flex;
     gap: var(--space-1);
     overflow-x: auto;
@@ -108,7 +109,7 @@ const shown = computed(() => {
     display: none;
   }
 
-  .studio-path {
+  .studio-paths:not(.is-grid) .studio-path {
     flex: 0 0 calc(var(--space-4) * 4);
     gap: var(--space-1);
     padding: var(--space-1) 0;
