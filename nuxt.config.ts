@@ -25,7 +25,9 @@ function localizedRedirects(from: string, to: string) {
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     compatibilityDate: '2025-07-15',
-    devtools: {enabled: true},
+    // DevTools costs a few hundred MB and a slower dev server; turn it on
+    // here when you need it.
+    devtools: {enabled: false},
     modules: ['@pinia/nuxt', '@nuxtjs/i18n'],
     i18n: {
         // Subdirectories, not a cookie: a language only earns traffic if Google
@@ -100,13 +102,9 @@ export default defineNuxtConfig({
                 },
             },
         },
-        vite: {
-            server: {
-                headers: {
-                    'cache-control': 'no-store, no-cache, must-revalidate, max-age=0',
-                },
-            },
-        },
+        // No cache headers on Vite's modules: it already revalidates source
+        // files and fingerprints deps, and no-store made every reload pull all
+        // ~230 modules (~8 MB) again instead of answering 304s.
     },
     runtimeConfig: {
         api: 'https://touch.ninosaur.com',

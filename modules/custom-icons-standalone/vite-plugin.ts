@@ -14,6 +14,7 @@ export default function iconStylesOptimized(options: {
   const root = process.cwd()
   const output = path.resolve(root, options.output ?? 'app/assets/css/icons.css')
   const iconNames: string[] = options.whiteList ?? []
+  let lastCss: string | null = null
 
   async function initialScan() {
     for (const dir of TARGET_DIRS) {
@@ -71,16 +72,23 @@ export default function iconStylesOptimized(options: {
         rules.push(`.icon-${cls} {mask-image: url("/icons/${cls}.svg?v=${v}");}`)
       } catch {}
     }
+    const css = rules.join('\n')
+    // Unchanged → leave the file alone: every write is an HMR update of a
+    // global stylesheet, and most saves add no new icon.
+    if (css === lastCss) return
+    lastCss = css
     await fs.mkdir(path.dirname(output), {recursive: true})
-    await fs.writeFile(output, rules.join('\n'), 'utf8')
+    await fs.writeFile(output, css, 'utf8')
   }
 
   async function handleFileChanged(file: string) {
     if (!file.endsWith('.vue')) return
     if (!TARGET_DIRS.some(dir => file.startsWith(path.join(root, dir)))) return
 
+    const before = iconNames.length
     await readFileContent(file)
-    await rebuildCSS()
+    // Names are only ever added, so no new name means no new rule.
+    if (iconNames.length !== before) await rebuildCSS()
   }
 
   return {
@@ -96,9 +104,6 @@ export default function iconStylesOptimized(options: {
         if (file.endsWith('.vue')) {
           await handleFileChanged(file)
         }
-      })
-      server.watcher.on('change', async (file) => {
-        await handleFileChanged(file)
       })
     },
 
