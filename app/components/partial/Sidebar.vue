@@ -173,9 +173,9 @@ const SECTIONS = [
     height: 100vh;
     padding: 0;
     overflow-y: auto;
-    /* The theme's second surface, a step off the page, so the rail reads
-       as chrome; hovered rows lift back toward --surface on top of it. */
-    background: var(--surface-2);
+    /* The page's own surface: a grey rail clashed with screens that use
+       --surface-2 themselves. The border alone sets it apart. */
+    background: var(--surface);
     border-right: 1px solid var(--border);
   }
 }
@@ -209,7 +209,7 @@ const SECTIONS = [
 
 @media (hover: hover) and (pointer: fine) {
   .dash-brand:hover {
-    background: var(--surface);
+    background: var(--surface-2);
   }
 }
 
@@ -256,7 +256,7 @@ const SECTIONS = [
   gap: 1px;
 }
 
-/* The rail is one --surface-2 sheet: its widgets add no fill of their own. */
+/* The rail is one sheet: its widgets add no fill of their own. */
 .dash-side .widget-body {
   background: transparent;
   box-shadow: none;
@@ -352,7 +352,7 @@ const SECTIONS = [
      the list runs past a short screen. */
   position: sticky;
   bottom: 0;
-  background: var(--surface-2);
+  background: var(--surface);
 }
 
 .dash-link .dash-label {
