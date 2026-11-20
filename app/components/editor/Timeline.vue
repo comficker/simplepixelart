@@ -823,7 +823,7 @@ onUnmounted(() => { store.isPlaying = false })
   cursor: pointer;
 }
 
-.tl-addcol .icon { width: var(--icon-lg); height: var(--icon-lg); }
+.tl-addcol .icon { width: var(--icon-sm); height: var(--icon-sm); }
 .tl-addcol:hover { color: var(--primary); border-color: var(--primary); }
 
 .tl-rowname {

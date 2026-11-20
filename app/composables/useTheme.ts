@@ -10,7 +10,7 @@ export const THEMES = [
   {
     id: 'dark',
     i18n: 'theme.dark', name: 'Dark',
-    colors: ['#0d0e11', '#232428', '#e6e8eb', '#3b82f6'],
+    colors: ['#0d0e11', '#232428', '#e6e8eb', '#ffc233'],
   },
   {
     id: 'lofi',

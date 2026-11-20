@@ -217,8 +217,7 @@ a {
 
 [data-theme="dark"] {
     /* One neutral ramp, evenly spaced in OKLCH lightness (16.5 / 20.5 /
-       23 / 26 %) with a faint cool cast (hue 265, the primary's family), so
-       the greys and the blue read as one palette. Was pure grey #111 /
+       23 / 26 %) with a faint cool cast (hue 265), so the greys read as one palette. Was pure grey #111 /
        #1a1a1a / #262626 against a blue accent. */
     --background: #0d0e11;
     --surface: #16171a;
@@ -231,10 +230,11 @@ a {
     /* Kept bright on purpose (was white at 80%): secondary text has to stay
        easy to read on these panels. 9.6:1 on --surface. */
     --muted: color-mix(in oklab, #ccced0 75%, transparent);
-    --primary: #3b82f6;
-    /* White on #3b82f6 is 3.7:1; this shade passes AA (5.2:1). */
-    --primary-fill: #2563eb;
-    --primary-foreground: #ffffff;
+    /* Yellow accent, the mobile app's (2026-11-20). White on it fails contrast, so text on
+       a filled button is the page's near-black: 12:1. */
+    --primary: #ffc233;
+    --primary-fill: #ffc233;
+    --primary-foreground: #0d0e11;
     --secondary: rgba(255, 255, 255, 0.8);
     --secondary-foreground: #0d0e11;
 }
@@ -1272,10 +1272,17 @@ footer {
     display: inline-flex;
 }
 
-/* Toolbars, tool rails and the whole editor: the large size, everywhere. */
+/* Toolbars, tool rails and the editor: the large size. */
 :is(.toolbar-btn, .publish-toolbar-btn, .square, .editor) .icon {
     width: var(--icon-lg);
     height: var(--icon-lg);
+}
+
+/* Secondary spots (widget heads, row actions) keep the small size, editor
+   included. */
+.editor :is(.widget-ctl-btn, .layer-del, .tl-addcol) .icon {
+    width: var(--icon-sm);
+    height: var(--icon-sm);
 }
 
 html,
@@ -3371,14 +3378,6 @@ canvas.iso-line { cursor: crosshair; }
     height: var(--icon-sm);
 }
 
-/* In the editor every glyph is the large size; the button grows to hold it. */
-.editor .widget-ctl-btn { height: var(--icon-lg); }
-.editor .widget-ctl-btn .icon,
-.editor .layers .layer-del .icon {
-    width: var(--icon-lg);
-    height: var(--icon-lg);
-}
-
 .widget-ctl-name {
     min-width: 0;
     max-width: 9rem;
@@ -3536,8 +3535,8 @@ canvas.iso-line { cursor: crosshair; }
 }
 
 .layers .layer-del {
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
