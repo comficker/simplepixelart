@@ -2,6 +2,11 @@
 import useStatefulCookie from '~/composables/useStatefulCookie'
 
 const desktop = useIsDesktop()
+const cmdk = useCommandPalette()
+const isMac = ref(true)
+onMounted(() => {
+  isMac.value = /Mac|iPhone|iPad/.test(navigator.platform)
+})
 const auth = useAuthStore()
 const sideState = useStatefulCookie('dash_side')
 const sideCollapsed = computed(() => sideState.value === 'collapsed')
@@ -112,7 +117,21 @@ useHead({
     >
       <span class="icon" :class="sideCollapsed ? 'icon-chevron-double-right' : 'icon-chevron-double-left'"/>
     </button>
-    <nav class="dash-crumbs" :aria-label="$t('c_Topbar.breadcrumb')">
+    <!-- On Home the trail would be just "Home": the slot opens search instead. -->
+    <button
+        v-if="!crumbs.length"
+        type="button"
+        class="cmdk-trigger dash-top-cmdk"
+        :title="$t('common.openCommandPalette')"
+        :aria-label="$t('common.openCommandPalette')"
+        @click="cmdk.show()"
+    >
+      <span class="icon icon-search"/>
+      <span class="cmdk-hint">
+        <kbd class="kbd kbd-on-surface">{{ isMac ? '⌘' : 'Ctrl' }}</kbd><kbd class="kbd kbd-on-surface">K</kbd>
+      </span>
+    </button>
+    <nav v-else class="dash-crumbs" :aria-label="$t('c_Topbar.breadcrumb')">
       <NuxtLinkLocale to="/" class="dash-crumb">{{ $t('common.home') }}</NuxtLinkLocale>
       <template v-for="(c, i) in crumbs" :key="c.to">
         <span class="icon icon-chevron-right dash-crumb-sep" aria-hidden="true"/>
@@ -162,8 +181,8 @@ useHead({
 }
 
 .dash-collapse .icon {
-  width: var(--icon-md);
-  height: var(--icon-md);
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .dash-crumbs {
@@ -192,6 +211,10 @@ useHead({
 
 .dash-crumb.is-current {
   color: var(--foreground);
+}
+
+.dash-top-cmdk {
+  margin-right: 0;
 }
 
 .dash-crumb-sep {
@@ -232,11 +255,11 @@ useHead({
   gap: 0;
 }
 
-/* The bar's own controls carry a 22.5px icon, like the sidebar's; the menus they open keep
-   theirs. */
+/* The bar's own controls carry a 20px icon: the pixel icons are 5x5 cells,
+   so a multiple of 5 keeps each cell whole. The menus they open keep theirs. */
 .dash-top .dash-top-ctl :is(.hdr-link, .wallet-chip) > .icon {
-  width: calc(var(--space-4) * 2.25);
-  height: calc(var(--space-4) * 2.25);
+  width: 20px;
+  height: 20px;
 }
 
 /* Active reads by colour and fill alone here; the outline made the current

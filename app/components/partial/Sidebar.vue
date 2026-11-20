@@ -24,7 +24,6 @@ const SOCIAL = [
 ]
 
 const PRIMARY = [
-  {to: '/', icon: 'icon-home', key: 'nav.home'},
   {to: '/challenges', icon: 'icon-flag', key: 'nav.challenges'},
   {to: '/work', icon: 'icon-workspace', key: 'nav.yourWork'},
 ]
@@ -58,8 +57,8 @@ const SECTIONS = [
       <!-- Just the way home: the collapse toggle sits in the top bar, so a tap
            on the logo can never land on it. -->
       <NuxtLinkLocale to="/" class="dash-brand" :title="$t('common.home')">
-        <span class="dash-brand-tile"><img src="/logo-mark.svg" :alt="$t('common.simplePixelArt')" width="10" height="23" class="dash-brand-logo"></span>
-        <span v-if="!collapsed" class="dash-brand-name" aria-hidden="true">Simple<b>PX</b></span>
+        <span class="dash-brand-tile"><img src="/logo-mark.svg" :alt="$t('common.simplePixelArt')" width="20" height="20" class="dash-brand-logo"></span>
+        <span v-if="!collapsed" class="dash-brand-name">{{ $t('nav.home') }}</span>
       </NuxtLinkLocale>
     </div>
 
@@ -75,6 +74,7 @@ const SECTIONS = [
         >
           <span class="dash-tool-ic"><span class="icon" :class="l.icon"/></span>
           <span class="dash-label">{{ $t(l.key) }}</span>
+          <span class="icon icon-check dash-check" aria-hidden="true"/>
         </NuxtLinkLocale>
       </nav>
     </section>
@@ -92,6 +92,7 @@ const SECTIONS = [
           >
             <span class="dash-tool-ic"><span class="icon" :class="t.icon"/></span>
             <span class="dash-label">{{ $t(t.i18n) }}</span>
+            <span class="icon icon-check dash-check" aria-hidden="true"/>
           </NuxtLinkLocale>
         </nav>
       </section>
@@ -109,6 +110,7 @@ const SECTIONS = [
         >
           <span class="dash-tool-ic"><span class="icon icon-brush"/></span>
           <span class="dash-label">{{ $t('nav.coloring') }}</span>
+          <span class="icon icon-check dash-check" aria-hidden="true"/>
         </NuxtLink>
       </nav>
     </section>
@@ -119,6 +121,7 @@ const SECTIONS = [
         <NuxtLinkLocale to="/creator-program" class="hdr-link dash-link" :title="$t('c_Sidebar.creatorProgram')">
           <span class="dash-tool-ic"><span class="icon icon-trophy"/></span>
           <span class="dash-label">{{ $t('c_Sidebar.creatorProgram') }}</span>
+          <span class="icon icon-check dash-check" aria-hidden="true"/>
         </NuxtLinkLocale>
         <a :href="playUrl('sidebar')" target="_blank" rel="noopener" class="hdr-link dash-link" :title="$t('c_AndroidApp.title')">
           <span class="dash-tool-ic"><span class="icon icon-android"/></span>
@@ -170,7 +173,9 @@ const SECTIONS = [
     height: 100vh;
     padding: 0;
     overflow-y: auto;
-    background: var(--surface);
+    /* The theme's second surface, a step off the page, so the rail reads
+       as chrome; hovered rows lift back toward --surface on top of it. */
+    background: var(--surface-2);
     border-right: 1px solid var(--border);
   }
 }
@@ -204,7 +209,7 @@ const SECTIONS = [
 
 @media (hover: hover) and (pointer: fine) {
   .dash-brand:hover {
-    background: var(--surface-2);
+    background: var(--surface);
   }
 }
 
@@ -227,29 +232,22 @@ const SECTIONS = [
   box-shadow: inset 0 0 0 1px rgba(38, 36, 57, 0.08);
 }
 
-/* As tall as the top bar's action icons (23px). */
+/* The 5x5 pencil at 20px (4px cells), as it sits in logo.svg's 32px tile. */
 .dash-brand-logo {
-  width: auto;
-  height: 23px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   image-rendering: pixelated;
 }
 
-/* Sized to the pencil: at --text-2xl (26px) the capitals stand ~18px, about
-   the pencil's body, so icon and word read as one lockup. */
+/* The logo row is the Home link, so its label is set like the nav rows'. */
 .dash-brand-name {
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: 800;
-  font-variation-settings: "wght" 800;
-  line-height: 1;
-  letter-spacing: -0.03em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.dash-brand-name b {
-  font-weight: inherit;
-  color: var(--primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
 }
 
 .dash-nav {
@@ -258,28 +256,64 @@ const SECTIONS = [
   gap: 1px;
 }
 
+/* The rail is one --surface-2 sheet: its widgets add no fill of their own. */
+.dash-side .widget-body {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* A group title needs no rule under it (the groups part by the rule between
+   them), nor the 29px floor that lines heads up with control-bearing ones
+   elsewhere: it sits close over its rows, the space above it. */
+.dash-side .dash-group > .widget-head {
+  min-height: 0;
+  padding: var(--space-4) var(--space-3) 0;
+  background: transparent;
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+/* Collapsed, the titles have no room: the groups part by their rule alone. */
+.dash-side.is-collapsed .widget-head {
+  display: none;
+}
+
 /* Each section is a widget: a head band over a padded body, the next one
    below a single rule. */
 .dash-group {
   border-bottom: 1px solid var(--border);
 }
 
-
 .dash-link {
   display: flex;
   width: 100%;
 }
 
-/* The current page is a filled row in the text colour, not a recoloured
-   one: blue text beside a green, purple or orange chip was a third colour
-   that matched none of them, and the shared .hdr-link rule even turned the
-   chip's white glyph blue. */
+/* The current page gets no fill or colour of its own (it overrides the
+   shared .hdr-link active look); a check at the row's end marks it. */
 .dash-side .dash-link.router-link-active {
   color: var(--foreground);
-  background: var(--surface-2);
+  background: transparent;
   box-shadow: none;
 }
 
+.dash-check {
+  display: none;
+  margin-left: auto;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+}
+
+.dash-side .dash-link.router-link-active > .dash-check {
+  display: inline-flex;
+  /* Not the shared .hdr-link active blue: the rail is monochrome. */
+  color: var(--foreground);
+}
+
+/* Collapsed, the tile has no room for it. */
+.dash-side.is-collapsed .dash-link > .dash-check {
+  display: none;
+}
 
 .dash-tool-ic {
   display: inline-flex;
@@ -318,7 +352,7 @@ const SECTIONS = [
      the list runs past a short screen. */
   position: sticky;
   bottom: 0;
-  background: var(--surface);
+  background: var(--surface-2);
 }
 
 .dash-link .dash-label {
@@ -374,15 +408,10 @@ const SECTIONS = [
   box-shadow: none;
 }
 
-/* The glyph at the top bar's icon size (23px), now that the tile has room. */
+/* A larger glyph now that the tile has room. */
 .dash-side.is-collapsed .dash-tool-ic .icon {
-  width: 23px;
-  height: 23px;
-}
-
-/* Collapsed, the titles have no room: the groups part by their rule alone. */
-.dash-side.is-collapsed .widget-head {
-  display: none;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
 }
 
 /* Same height as the status bar beside it; the search button just centres. */
