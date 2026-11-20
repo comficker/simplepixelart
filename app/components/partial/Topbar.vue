@@ -255,11 +255,10 @@ useHead({
   gap: 0;
 }
 
-/* The bar's own controls carry a 20px icon: the pixel icons are 5x5 cells,
-   so a multiple of 5 keeps each cell whole. The menus they open keep theirs. */
+/* The bar's own controls carry the large icon. The menus they open keep theirs. */
 .dash-top .dash-top-ctl :is(.hdr-link, .wallet-chip) > .icon {
-  width: 20px;
-  height: 20px;
+  width: var(--icon-lg);
+  height: var(--icon-lg);
 }
 
 /* Active reads by colour and fill alone here; the outline made the current

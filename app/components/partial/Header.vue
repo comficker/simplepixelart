@@ -199,6 +199,8 @@ header .brand-name-main {
 
 .cmdk-trigger:active { transform: scale(0.97); }
 
+.cmdk-trigger > .icon { width: var(--icon-lg); height: var(--icon-lg); }
+
 .cmdk-hint {
   display: inline-flex;
   align-items: center;
@@ -225,7 +227,7 @@ header .brand-name-main {
    a 16px icon off-centre in a 32px box. */
 @media (max-width: 1023px) {
   .hdr-link { justify-content: center; width: 36px; height: 36px; padding: 0; }
-  .hdr-link > .icon { width: 20px; height: 20px; }
+  .hdr-link > .icon { width: var(--icon-lg); height: var(--icon-lg); }
 }
 
 @media (max-width: 400px) {
