@@ -16,7 +16,7 @@ function openCommandPalette() {
   <header>
     <div class="container hdr">
       <NuxtLinkLocale to="/" class="brand" :title="$t('common.home')">
-        <img :src="`/logo.svg`" :alt="$t('common.simplePixelArt')" width="42" height="42" class="brand-logo">
+        <img src="/logo-mark.svg" :alt="$t('common.simplePixelArt')" width="14" height="34" class="brand-logo">
         <span class="brand-name">
           <span class="brand-name-stamp">{{ $t('common.simple') }}</span>
           <span class="brand-name-main">{{ $t('common.pixelart') }}</span>
@@ -98,14 +98,12 @@ header .brand {
   flex-shrink: 0;
 }
 
+/* The bare pencil at 2x: each of its 7x17 pixels is a 2px square. */
 header .brand-logo {
-  width: 42px;
-  height: 42px;
+  width: 14px;
+  height: 34px;
   flex-shrink: 0;
-  border-radius: var(--radius-sm);
-  background: var(--background);
-  padding: 3px;
-  border: 1px solid var(--border);
+  image-rendering: pixelated;
 }
 
 header .brand-name {
@@ -210,7 +208,6 @@ header .brand-name-main {
 @media (max-width: 767px) {
   header .hdr { gap: var(--space-3); min-height: 56px; }
   header .brand { gap: var(--space-3); padding: var(--space-1); }
-  header .brand-logo { width: 36px; height: 36px; padding: 2px; border-radius: var(--radius-sm); }
   header .brand-name { font-size: var(--text-lg); }
   .hdr-nav { gap: 0; }
   .hdr-link { padding: 7px 9px; }
