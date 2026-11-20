@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import {playUrl} from '~/helper/play'
-
 const year = new Date().getFullYear()
 </script>
 
@@ -8,17 +6,10 @@ const year = new Date().getFullYear()
   <div class="footer-left">
     <span class="footer-copy">© {{ year }} SimplePixelArt.com</span>
     <nav class="footer-links" :aria-label="$t('c_FooterBar.footer')">
-      <a :href="playUrl('footer')" target="_blank" rel="noopener">{{ $t('c_AndroidApp.short') }}</a>
-      <NuxtLinkLocale to="/converter">{{ $t('c_FooterBar.converter') }}</NuxtLinkLocale>
-      <NuxtLinkLocale to="/easy-pixel-art">{{ $t('c_FooterBar.easyPixelArt') }}</NuxtLinkLocale>
-      <NuxtLinkLocale to="/arts/sizes">{{ $t('c_FooterBar.sizes') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/contact">{{ $t('c_FooterBar.contact') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/guidelines">{{ $t('common.guidelines') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/privacy">{{ $t('c_FooterBar.privacy') }}</NuxtLinkLocale>
       <NuxtLinkLocale to="/terms">{{ $t('c_FooterBar.terms') }}</NuxtLinkLocale>
-      <NuxtLink to="/pixel-art-for-godot">{{ $t('c_FooterBar.godot') }}</NuxtLink>
-      <NuxtLink to="/compare">{{ $t('c_FooterBar.compare') }}</NuxtLink>
-      <NuxtLink to="/mcp">{{ $t('c_FooterBar.mcp') }}</NuxtLink>
     </nav>
   </div>
 </template>
@@ -26,6 +17,7 @@ const year = new Date().getFullYear()
 <style scoped>
 .footer-left {
   display: flex;
+  flex: 1;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2) var(--space-3);
@@ -33,7 +25,10 @@ const year = new Date().getFullYear()
   font-size: var(--text-xs);
 }
 
+/* Links lead, the copyright line sits at the right end of the bar. */
 .footer-copy {
+  order: 1;
+  margin-left: auto;
   color: var(--muted);
   white-space: nowrap;
 }
@@ -58,6 +53,10 @@ const year = new Date().getFullYear()
   .footer-left,
   .footer-links {
     justify-content: center;
+  }
+
+  .footer-copy {
+    margin-left: 0;
   }
 }
 

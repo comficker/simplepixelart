@@ -226,13 +226,7 @@
     "contact": "お問い合わせ",
     "footer": "フッター",
     "privacy": "プライバシー",
-    "terms": "利用規約",
-    "easyPixelArt": "簡単なドット絵",
-    "sizes": "ドット絵のサイズ",
-    "converter": "ドット絵変換ツール",
-    "godot": "Godot向けドット絵",
-    "compare": "エディタ比較",
-    "mcp": "MCPサーバー"
+    "terms": "利用規約"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "コマンドパレットを開く（テーマ、移動など）"

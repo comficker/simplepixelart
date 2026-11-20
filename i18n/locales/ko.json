@@ -226,13 +226,7 @@
     "contact": "문의",
     "footer": "푸터",
     "privacy": "개인정보",
-    "terms": "약관",
-    "easyPixelArt": "쉬운 픽셀 아트",
-    "sizes": "픽셀 아트 크기",
-    "converter": "픽셀 아트 변환기",
-    "godot": "Godot용 픽셀 아트",
-    "compare": "에디터 비교",
-    "mcp": "MCP 서버"
+    "terms": "약관"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "명령 팔레트 열기(테마, 이동 등)"

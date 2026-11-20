@@ -226,13 +226,7 @@
     "contact": "联系我们",
     "footer": "页脚",
     "privacy": "隐私",
-    "terms": "条款",
-    "easyPixelArt": "简单像素画",
-    "sizes": "像素画尺寸",
-    "converter": "像素画转换器",
-    "godot": "Godot 像素画",
-    "compare": "编辑器对比",
-    "mcp": "MCP 服务器"
+    "terms": "条款"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "打开命令面板（主题、导航等）"

@@ -226,13 +226,7 @@
     "contact": "Contato",
     "footer": "Rodapé",
     "privacy": "Privacidade",
-    "terms": "Termos",
-    "easyPixelArt": "Pixel art fácil",
-    "sizes": "Tamanhos de pixel art",
-    "converter": "Conversor de pixel art",
-    "godot": "Pixel art para Godot",
-    "compare": "Comparar editores",
-    "mcp": "Servidor MCP"
+    "terms": "Termos"
   },
   "c_Header": {
     "openCommandPaletteThemesNavigation": "Abrir a paleta de comandos (temas, navegação e mais)"
