@@ -37,6 +37,7 @@ export function layers2MapNumbers(editorData: EditorData): { [key: string]: numb
     const {width, height, layers} = editorData;
     const mapNumbers: { [key: string]: number } = {};
     for (const layer of [...layers].reverse()) {
+        if (layer.hidden) continue;
         for (const [key, colorIndex] of Object.entries(layer.pixels)) {
             if (colorIndex === undefined || colorIndex === -1) continue;
 
@@ -136,6 +137,7 @@ export function editorDataToSVGMarkup(editorData: EditorData): string {
     if (editorData.layers.length > 1) {
         const usedIds = new Set<string>();
         editorData.layers.forEach((layer, li) => {
+            if (layer.hidden) return;
             const byColor = new Map<number, Set<string>>();
             const lx = layer.x || 0;
             const ly = layer.y || 0;

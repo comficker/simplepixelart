@@ -1056,6 +1056,7 @@ function topColorIndexAt(ed: any, cx: number, cy: number): number {
   const layers = ed.layers;
   for (let i = layers.length - 1; i >= 0; i--) {
     const L = layers[i];
+    if (L.hidden) continue;
     const v = L.pixels[`${cx - L.x}_${cy - L.y}`];
     if (v !== undefined && v !== -1) return v;
   }
@@ -3137,9 +3138,72 @@ const selectedLayers = ref<Set<number>>(new Set())
 // The floating-selection layer lives in editorData.layers while a selection is
 // being moved, but it is not the user's — keep it out of the list while
 // holding on to each row's real index, which every action here works from.
+// Top of the stack first, like the canvas: the last layer is drawn on top.
 const visibleLayers = computed(() => editorData.value.layers
     .map((layer, index) => ({layer, index}))
-    .filter(row => !row.layer._virtual))
+    .filter(row => !row.layer._virtual)
+    .reverse())
+
+// Reorder by dragging a row; pointer events so it works with touch as well
+// as a mouse. The drag starts only once the pointer has moved a few pixels,
+// so a plain click still selects the layer.
+const layerList = ref<HTMLElement | null>(null)
+const layerDrag = ref<{from: number, over: number} | null>(null)
+let layerPress: {index: number, y: number, el: HTMLElement, id: number} | null = null
+
+function onLayerGripDown(index: number, e: PointerEvent) {
+  layerDragMoved = false
+  layerPress = null
+  if (e.button !== 0 || visibleLayers.value.length < 2) return
+  // The row's buttons and its name being edited keep their own pointer.
+  if ((e.target as HTMLElement).closest('button, .editable-text')) return
+  layerPress = {index, y: e.clientY, el: e.currentTarget as HTMLElement, id: e.pointerId}
+}
+
+function onLayerGripMove(e: PointerEvent) {
+  if (layerPress && !layerDrag.value && Math.abs(e.clientY - layerPress.y) > 4) {
+    try { layerPress.el.setPointerCapture(layerPress.id) } catch {}
+    layerDrag.value = {from: layerPress.index, over: layerPress.index}
+  }
+  const drag = layerDrag.value
+  if (!drag || !layerList.value) return
+  const rows = [...layerList.value.children] as HTMLElement[]
+  let pos = rows.findIndex(r => e.clientY < r.getBoundingClientRect().bottom)
+  if (pos === -1) pos = rows.length - 1
+  const row = visibleLayers.value[pos]
+  if (row) drag.over = row.index
+}
+
+// The click that ends a drag lands on whichever row now sits under the
+// pointer; it must not select that row.
+let layerDragMoved = false
+
+function onLayerGripClick(e: MouseEvent) {
+  if (!layerDragMoved) return
+  layerDragMoved = false
+  e.stopImmediatePropagation()
+}
+
+function onLayerGripCancel() {
+  layerPress = null
+  layerDrag.value = null
+}
+
+function onLayerGripUp() {
+  layerPress = null
+  const drag = layerDrag.value
+  layerDrag.value = null
+  layerDragMoved = !!drag && drag.from !== drag.over
+  if (!drag || drag.from === drag.over) return
+  selectedLayers.value = new Set()
+  store.moveLayer(drag.from, drag.over)
+  scheduleDraw()
+}
+
+function toggleLayerHidden(index: number) {
+  store.toggleLayerVisibility(index)
+  scheduleDraw()
+}
 
 function onLayerClick(index: number, e: MouseEvent) {
   if (multiSelectLayers.value || e.shiftKey) {
@@ -4343,12 +4407,14 @@ watch(
       <div class="editor-sidebar">
         <Widget label :title="$t('common.preview')" class="preview-widget">
           <template #ctl>
-            <button type="button" class="widget-ctl-btn" :title="$t('c_PreviewSettings.title')" @click="showPreviewSettings = true">
-              <span class="icon icon-cog"/>
-            </button>
-            <a v-if="editorData.id_string" class="widget-ctl-btn" :title="$t('common.openPublicPage')" target="_blank" :href="localePath(`/art/${editorData.id_string}`)">
-              <span class="icon icon-link"/>
-            </a>
+            <div class="widget-ctl-group">
+              <button type="button" class="widget-ctl-btn" :title="$t('c_PreviewSettings.title')" :aria-label="$t('c_PreviewSettings.title')" @click="showPreviewSettings = true">
+                <span class="icon icon-cog"/>
+              </button>
+              <a v-if="editorData.id_string" class="widget-ctl-btn" :title="$t('common.openPublicPage')" :aria-label="$t('common.openPublicPage')" target="_blank" :href="localePath(`/art/${editorData.id_string}`)">
+                <span class="icon icon-link"/>
+              </a>
+            </div>
           </template>
           <Square class="inside preview-stage" :style="previewBgStyle">
             <canvas v-show="previewMode === 'flat'" ref="miniMap" class="mini-map"/>
@@ -4392,24 +4458,49 @@ watch(
                   </button>
                 </div>
               </template>
-          <ul>
+          <ul ref="layerList" :class="{dragging: layerDrag}">
             <li
                 v-for="(row, i) in visibleLayers"
                 :key="row.index"
                 :class="{
                   active: row.index === store.currentLayerIndex && store.activeScope !== 'board',
                   selected: selectedLayers.has(row.index),
+                  'is-hidden': row.layer.hidden,
+                  'drag-from': layerDrag?.from === row.index,
+                  'drop-above': layerDrag && layerDrag.over === row.index && layerDrag.over > layerDrag.from,
+                  'drop-below': layerDrag && layerDrag.over === row.index && layerDrag.over < layerDrag.from,
                 }"
+                :title="$t('c_PXEditor.dragToReorder')"
+                @pointerdown="onLayerGripDown(row.index, $event)"
+                @pointermove="onLayerGripMove"
+                @pointerup="onLayerGripUp"
+                @pointercancel="onLayerGripCancel"
+                @click.capture="onLayerGripClick"
                 @click="onLayerClick(row.index, $event)"
             >
-              <span v-if="selectedLayers.has(row.index)" class="layer-num layer-check" aria-hidden="true"><span class="icon icon-check"/></span>
-              <span v-else class="layer-num" aria-hidden="true">{{ visibleLayers.length - i }}</span>
+              <span
+                  class="layer-num"
+                  :class="{'layer-check': selectedLayers.has(row.index)}"
+              >
+                <span v-if="selectedLayers.has(row.index)" class="icon icon-check"/>
+                <template v-else>{{ visibleLayers.length - i }}</template>
+              </span>
               <EditableText
                   v-model="editorData.layers[row.index]!.name"
                   :placeholder="$t('c_PXEditor.untitledLayer')"
                   class="layer-name"
                   @changed="store.saveState()"
               />
+              <span class="layer-actions">
+              <button
+                  @click.stop="toggleLayerHidden(row.index)"
+                  class="layer-del layer-eye"
+                  :title="row.layer.hidden ? $t('c_PXEditor.showLayer') : $t('c_PXEditor.hideLayer')"
+                  :aria-label="row.layer.hidden ? $t('c_PXEditor.showLayer') : $t('c_PXEditor.hideLayer')"
+                  :aria-pressed="!!row.layer.hidden"
+              >
+                <span class="icon" :class="row.layer.hidden ? 'icon-eye-cross' : 'icon-eye'"/>
+              </button>
               <button
                   v-if="visibleLayers[i + 1]"
                   @click.stop="mergeLayerDown(row.index, visibleLayers[i + 1]!.index)"
@@ -4428,6 +4519,7 @@ watch(
               >
                 <span class="icon icon-trash"/>
               </button>
+              </span>
             </li>
           </ul>
             </Widget>

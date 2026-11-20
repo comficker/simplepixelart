@@ -1459,6 +1459,11 @@ export const useEditor = defineStore('editor', () => {
                 is_base: !!ed.is_base,
                 meta: ed.meta ?? {},
             }
+            // The server only knows to skip hidden layers if it is handed
+            // the flattened image instead of rebuilding it.
+            if (primaryLayers.some(l => l.hidden)) {
+                payload.map_numbers = layers2MapNumbers({...ed, layers: primaryLayers} as EditorData)
+            }
             async function createCloud() {
                 const oldLocalKey = target.id.toString()
                 const result = await useNativeFetch<SharedPage>(`/coloring/shared-pages/`, {
@@ -1775,6 +1780,31 @@ export const useEditor = defineStore('editor', () => {
         saveState();
     }
 
+    function toggleLayerVisibility(index: number) {
+        const layer = editorData.value.layers[index]
+        if (!layer) return
+        if (layer.hidden) delete layer.hidden
+        else layer.hidden = true
+        markFullRedraw()
+        drawTurn.value++
+        saveState()
+    }
+
+    /** Move a layer to another place in the stack; the active layer follows it. */
+    function moveLayer(from: number, to: number) {
+        const layers = editorData.value.layers
+        if (from === to || from < 0 || to < 0 || from >= layers.length || to >= layers.length) return
+        const cur = currentLayerIndex.value
+        const [layer] = layers.splice(from, 1)
+        layers.splice(to, 0, layer!)
+        if (cur === from) currentLayerIndex.value = to
+        else if (from < cur && to >= cur) currentLayerIndex.value = cur - 1
+        else if (from > cur && to <= cur) currentLayerIndex.value = cur + 1
+        markFullRedraw()
+        drawTurn.value++
+        saveState()
+    }
+
     function deleteLayer(index: number) {
         if (editorData.value.layers.length > 1) {
             editorData.value.layers.splice(index, 1);
@@ -1821,6 +1851,7 @@ export const useEditor = defineStore('editor', () => {
         const layers = editorData.value.layers
         for (let i = layers.length - 1; i >= 0; i--) {
             const l = layers[i]!
+            if (l.hidden) continue
             const ci = l.pixels[`${x - l.x}_${y - l.y}`]
             if (ci !== undefined && ci !== -1) return ci
         }
@@ -2910,6 +2941,8 @@ export const useEditor = defineStore('editor', () => {
         canRedo,
         addLayer,
         deleteLayer,
+        toggleLayerVisibility,
+        moveLayer,
         immigrateVirtualLayer,
         beginVirtualOverlay,
         layerCount,

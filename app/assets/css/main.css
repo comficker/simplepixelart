@@ -470,7 +470,7 @@ input[type=number] {
     }
 
     .main-wrapper.dash.side-collapsed {
-        --dash-side-w: 56px;
+        --dash-side-w: 44px;
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -3383,10 +3383,22 @@ canvas.iso-line { cursor: crosshair; }
 .widget .widget-head .widget-ctl-btn {
     min-width: 0;
     max-width: 100%;
+    /* The head's title is set in the display face; a control beside it in
+       the body face sat on a different baseline. Same face, same tracking. */
+    font-family: var(--font-display);
+    letter-spacing: 0.08em;
 }
 
 .widget .widget-head > .title {
     flex-shrink: 0;
+}
+
+/* A dropdown in the head wraps its inline-flex trigger in a block, whose
+   line box added a descender's worth of height and lifted the trigger
+   above the title's line. */
+.widget .widget-head > .dropdown {
+    display: flex;
+    min-width: 0;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -3416,8 +3428,8 @@ canvas.iso-line { cursor: crosshair; }
     position: relative;
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    padding: 6px var(--space-2) 6px 6px;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-1) var(--space-1) 6px;
     background: var(--background);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -3441,8 +3453,8 @@ canvas.iso-line { cursor: crosshair; }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
     font-size: var(--text-2xs);
     font-weight: 700;
@@ -3458,7 +3470,10 @@ canvas.iso-line { cursor: crosshair; }
 .layer-name {
     flex: 1;
     min-width: 0;
-    font-size: var(--text-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--text-2xs);
     font-weight: 600;
     color: var(--foreground);
 }
@@ -3504,9 +3519,15 @@ canvas.iso-line { cursor: crosshair; }
     height: var(--icon-sm);
 }
 
+/* The row's buttons sit side by side as one group, no gap between them. */
+.layers .layer-actions {
+    display: flex;
+    flex-shrink: 0;
+}
+
 .layers .layer-del {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
@@ -3541,6 +3562,45 @@ canvas.iso-line { cursor: crosshair; }
     .layers .layer-merge:hover {
         color: var(--primary-foreground);
         background: var(--primary-fill, var(--primary));
+    }
+}
+
+/* Rows drag to reorder: no browser scroll gesture stealing a vertical
+   drag on touch. */
+.layers li {
+    touch-action: none;
+}
+
+.layers ul.dragging,
+.layers ul.dragging li {
+    cursor: grabbing;
+}
+
+.layers li.drag-from {
+    opacity: 0.5;
+}
+
+.layers li.drop-above {
+    box-shadow: 0 -2px 0 var(--primary);
+}
+
+.layers li.drop-below {
+    box-shadow: 0 2px 0 var(--primary);
+}
+
+.layers li.is-hidden .layer-name {
+    color: var(--muted);
+}
+
+/* Stays visible on a hidden layer so it can be found again. */
+.layers li.is-hidden .layer-eye {
+    opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .layers .layer-eye:hover {
+        color: var(--foreground);
+        background: var(--surface-2);
     }
 }
 

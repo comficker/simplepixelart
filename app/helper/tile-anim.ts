@@ -18,13 +18,14 @@ export interface TileAnim {
   total: number
 }
 
-interface RawLayer { pixels?: Record<string, number>; x?: number; y?: number }
+interface RawLayer { pixels?: Record<string, number>; x?: number; y?: number; hidden?: boolean }
 
 /** Composite layers into {"x_y": colour index}. Array order, later on top —
  * the same rule as the editor's layers2MapNumbers and the server's GIF. */
 function frameMap(layers: RawLayer[], w: number, h: number): Record<string, number> {
   const out: Record<string, number> = {}
   for (const layer of layers) {
+    if (layer?.hidden) continue
     const lx = Number(layer?.x) || 0, ly = Number(layer?.y) || 0
     for (const [k, ci] of Object.entries(layer?.pixels || {})) {
       if (ci == null || ci === -1) continue

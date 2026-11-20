@@ -196,6 +196,9 @@ export interface Layer {
     // apart — by a flag that survives cloneDeep, not by its name, which a user
     // can type themselves.
     _virtual?: boolean
+    // Hidden layers stay in the data but are left out of the canvas, exports
+    // and the saved image.
+    hidden?: boolean
 }
 
 export interface EditorBg {
