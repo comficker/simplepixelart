@@ -16,7 +16,7 @@ function openCommandPalette() {
   <header>
     <div class="container hdr">
       <NuxtLinkLocale to="/" class="brand" :title="$t('common.home')">
-        <img src="/logo-mark.svg" :alt="$t('common.simplePixelArt')" width="14" height="34" class="brand-logo">
+        <img src="/logo.svg" :alt="$t('common.simplePixelArt')" width="32" height="32" class="brand-logo">
         <span class="brand-name">
           <span class="brand-name-stamp">{{ $t('common.simple') }}</span>
           <span class="brand-name-main">{{ $t('common.pixelart') }}</span>
@@ -98,10 +98,10 @@ header .brand {
   flex-shrink: 0;
 }
 
-/* The bare pencil at 2x: each of its 7x17 pixels is a 2px square. */
+/* The logo tile at 32px: its pencil cells are whole 4px squares. */
 header .brand-logo {
-  width: 14px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
   image-rendering: pixelated;
 }
@@ -230,7 +230,6 @@ header .brand-name-main {
 
 @media (max-width: 400px) {
   .hdr-link { width: 34px; height: 34px; }
-  .hdr-link > .icon { width: 18px; height: 18px; }
 }
 
 </style>
