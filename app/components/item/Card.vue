@@ -204,9 +204,10 @@ const compact = (n: number) => new Intl.NumberFormat(locale.value, {notation: 'c
   border-radius: var(--radius-pill);
 }
 
+/* 10px, not the 11px text size: the pixel icons need a multiple of 5. */
 .card-stat .icon {
-  width: var(--text-2xs);
-  height: var(--text-2xs);
+  width: 10px;
+  height: 10px;
 }
 
 /* The author's avatar, bottom-right: small, and its own link. */

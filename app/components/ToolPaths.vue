@@ -61,8 +61,9 @@ const shown = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  /* Multiples of 5: the pixel icons are 5x5 cells. */
+  width: 45px;
+  height: 45px;
   flex-shrink: 0;
   font-size: 24px;
   color: #fff;
@@ -85,8 +86,8 @@ const shown = computed(() => {
   }
 
   .studio-path-icon {
-    width: 36px;
-    height: 36px;
+    width: 35px;
+    height: 35px;
     font-size: var(--text-lg);
     border-radius: var(--radius);
   }

@@ -446,8 +446,8 @@ defineExpose({removeItem, refresh, siblingId})
 }
 
 .cstrip-thumb-empty .icon {
-  width: 40%;
-  height: 40%;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 .cstrip-thumb.active {

@@ -142,9 +142,11 @@ a {
     /* Three icon sizes: beside a small label, inside a control, in a toolbar.
        Fixed, not derived from the spacing scale, so re-spacing the app does
        not resize every glyph. */
-    --icon-sm: 0.875rem;
-    --icon-md: 1rem;
-    --icon-lg: 1.5rem;
+    /* Multiples of 5px: the icons are pixel art on a 5x5 grid, and only a
+       whole number of screen pixels per cell keeps them sharp. */
+    --icon-sm: 0.9375rem;
+    --icon-md: 0.9375rem;
+    --icon-lg: 1.5625rem;
     --bar-h: 48px;
     /* The bars along the foot of the screen: page footer, status lines, the
        sidebar's foot. Lower than the top bar; all equal, so they line up. */
