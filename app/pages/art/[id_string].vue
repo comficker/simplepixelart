@@ -245,13 +245,15 @@ useCustomSeoMeta({
         description: meta.value.desc,
         image: {
           "@type": "ImageObject",
-          contentUrl: meta.value.imgSrc,
-          url: meta.value.imgSrc,
-          width: 1200,
-          height: 630,
+          // The art itself (the image the page shows), not the share card.
+          contentUrl: imgLarge.value,
+          url: imgLarge.value,
           caption: meta.value.title,
           creditText: "SimplePixelArt.com",
-          ...(license.value.url ? {license: license.value.url} : {}),
+          // The artist's licence, or the site terms when they kept all rights;
+          // the art page states it and how to credit (Google's "Licensable").
+          license: license.value.url || `${config.public.siteUrl}/terms`,
+          acquireLicensePage: meta.value.url,
           creator: {
             "@type": "Person",
             name: meta.value.author || "Anonymous",
