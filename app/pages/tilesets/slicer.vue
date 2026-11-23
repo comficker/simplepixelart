@@ -5,7 +5,7 @@ import {ref, computed, watch, nextTick, onMounted, onBeforeUnmount} from 'vue'
 import {toast} from 'vue-sonner'
 import type {EditorData} from '~/types'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
-import {cloneDeep, downloadBlob, generateUUID, debounce, getStorageItem} from '~/helper/utils'
+import {cloneDeep, downloadBlob, generateUUID, debounce, getStorageItem, setWorkspaces} from '~/helper/utils'
 import {layers2MapNumbers} from '~/helper/canvas'
 import {importFileGrid} from '~/helper/pixel'
 import {saveWorkspaceFull} from '~/helper/workspaceSnapshot'
@@ -1239,7 +1239,7 @@ async function openInEditor() {
   if (!editorData) { toast.error(t('p_tilesets_slicer.selectionEmpty')); return }
   const ws = getStorageItem('workspaces')
   ws[editorData.id] = editorData
-  localStorage.setItem('workspaces', JSON.stringify(ws))
+  if (!setWorkspaces(ws, editorData.id)) { toast.error(t('c_PXEditor.storageFull'), {duration: 15000}); return }
   localStorage.setItem('workspace_current', editorData.id)
   navigateTo(localePath(`/editor?id=${editorData.id}`))
 }
@@ -1257,10 +1257,10 @@ async function openAllInEditor() {
   if (!eds.length) { toast.error(t('p_tilesets_slicer.tilesEmpty')); return }
   const ws = getStorageItem('workspaces')
   ws[eds[0]!.id] = eds[0]
+  if (!setWorkspaces(ws, eds[0]!.id)) { toast.error(t('c_PXEditor.storageFull'), {duration: 15000}); return }
   localStorage.setItem('workspace_current', eds[0]!.id)
 
   if (eds.length === 1) {
-    localStorage.setItem('workspaces', JSON.stringify(ws))
     navigateTo(localePath(`/editor?id=${eds[0]!.id}`))
     return
   }
@@ -1274,7 +1274,6 @@ async function openAllInEditor() {
     y: Math.floor(i / cols) * (cellH + padY),
     data,
   }))
-  localStorage.setItem('workspaces', JSON.stringify(ws))
   await saveWorkspaceFull({boards, activeIndex: 0})
   navigateTo(localePath('/editor'))
 }
@@ -1322,7 +1321,7 @@ async function openAsAnimation() {
   ed.meta = {...(ed.meta || {}), animation: {fps: 10, loop: true, frames, shared: []}}
   const ws = getStorageItem('workspaces')
   ws[ed.id] = ed
-  localStorage.setItem('workspaces', JSON.stringify(ws))
+  if (!setWorkspaces(ws, ed.id)) { toast.error(t('c_PXEditor.storageFull'), {duration: 15000}); return }
   localStorage.setItem('workspace_current', ed.id)
   navigateTo(localePath(`/editor?id=${ed.id}`))
 }
@@ -1399,7 +1398,7 @@ async function syncTile(box: Box, index: number) {
       } else {
         const ws = getStorageItem('workspaces')
         ws[ed.id] = ed
-        localStorage.setItem('workspaces', JSON.stringify(ws))
+        if (!setWorkspaces(ws, ed.id)) { toast.error(t('c_PXEditor.storageFull'), {duration: 15000}); return }
         toast.success(t('p_tilesets_slicer.syncedToWorkspace'))
       }
       syncedTiles.value = {...syncedTiles.value, [key]: {id: 0, id_string: ed.id}}

@@ -2,7 +2,7 @@
 const localePath = useLocalePath()
 const {t} = useI18n()
 import {toast} from 'vue-sonner'
-import {cloneDeep, generateUUID, getStorageItem} from '~/helper/utils'
+import {cloneDeep, generateUUID, getStorageItem, setWorkspaces} from '~/helper/utils'
 import {rgbToHex} from '~/helper/color'
 import {aiImageToGrid} from '~/helper/pixel'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
@@ -421,7 +421,7 @@ async function sendToEditor() {
   data.meta = {...data.meta, ai: true}
   const ws = getStorageItem('workspaces')
   ws[id] = data
-  localStorage.setItem('workspaces', JSON.stringify(ws))
+  if (!setWorkspaces(ws, id)) { toast.error(t('c_PXEditor.storageFull'), {duration: 15000}); return }
   localStorage.setItem('workspace_current', id)
   navigateTo(localePath(`/editor?id=${id}`))
 }

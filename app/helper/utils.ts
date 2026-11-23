@@ -122,6 +122,36 @@ export function getStorageItem(key: string) {
     }
     return {}
 }
+// Nothing to lose: no pixels on any layer of any frame, and no name.
+function isEmptyPiece(ed: any): boolean {
+    if (!ed || ed.name) return false
+    const stacks = [ed.layers, ...(ed.meta?.animation?.frames || []).map((f: any) => f?.layers), ed.meta?.animation?.shared]
+    return !stacks.some(ls => (ls || []).some((l: any) => Object.keys(l?.pixels || {}).length))
+}
+
+/**
+ * Writes the guest's pieces (`workspaces`) to localStorage, which holds about
+ * 5MB per site. When that is full, frees what can go without losing work, the
+ * undo histories and empty untitled pieces, and tries again. `false` means it
+ * still did not fit: the caller tells the user instead of failing silently.
+ */
+export function setWorkspaces(ws: { [key: string]: any }, keep?: string): boolean {
+    try {
+        localStorage.setItem('workspaces', JSON.stringify(ws))
+        return true
+    } catch (e: any) {
+        if (e?.name !== 'QuotaExceededError') throw e
+    }
+    try {
+        localStorage.removeItem('histories')
+        for (const k of Object.keys(ws)) if (k !== keep && isEmptyPiece(ws[k])) delete ws[k]
+        localStorage.setItem('workspaces', JSON.stringify(ws))
+        return true
+    } catch {
+        return false
+    }
+}
+
 export function pruneStorageKeys(prefix: string, max = 30) {
     if (typeof localStorage === 'undefined') return
     try {

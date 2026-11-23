@@ -460,6 +460,7 @@
     "clipboardEmpty": "剪贴板为空 — 请先复制内容",
     "cloudSaveFailed": "云端保存失败 — 已保存到本地",
     "artTooLarge": "此作品太大，无法保存到云端（超过 2MB）。请减少帧数或缩小画布。作品已保存在此设备上。",
+    "storageFull": "浏览器存储空间已满，无法保存此作品。请登录以保存到云端，或在“我的作品”中删除旧作品。",
     "copiedScope": "已复制{scope}",
     "couldNotOpenBoard": "无法打开该画板",
     "couldNotOpenTile": "无法打开该图块",

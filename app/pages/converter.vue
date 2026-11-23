@@ -4,7 +4,7 @@ const {t} = useI18n()
 import {toast} from 'vue-sonner'
 import type {EditorData} from '~/types'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
-import {cloneDeep, debounce, generateUUID, getStorageItem} from '~/helper/utils'
+import {cloneDeep, debounce, generateUUID, getStorageItem, setWorkspaces} from '~/helper/utils'
 import {cleanOrphanCells, convertImageToGrid} from '~/helper/pixel'
 import {hexToRgb, rgbToHex} from '~/helper/color'
 
@@ -239,7 +239,7 @@ function sendToEditor() {
   }
   const ws = getStorageItem('workspaces')
   ws[id] = data
-  localStorage.setItem('workspaces', JSON.stringify(ws))
+  if (!setWorkspaces(ws, id)) { toast.error(t('c_PXEditor.storageFull'), {duration: 15000}); return }
   localStorage.setItem('workspace_current', id)
   navigateTo(localePath(`/editor?id=${id}`))
 }

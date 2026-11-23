@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type {EditorData} from '~/types'
 import {DEFAULT_EDITOR_DATA} from '~/helper/constants'
-import {cloneDeep, generateUUID, getStorageItem} from '~/helper/utils'
+import {toast} from 'vue-sonner'
+import {cloneDeep, generateUUID, getStorageItem, setWorkspaces} from '~/helper/utils'
 import {convertImageToGrid} from '~/helper/pixel'
 
 // English only for now (like /sprite-maker): locale copies point their
@@ -151,7 +152,7 @@ function openInEditor() {
   }
   const ws = getStorageItem('workspaces')
   ws[id] = data
-  localStorage.setItem('workspaces', JSON.stringify(ws))
+  if (!setWorkspaces(ws, id)) { toast.error(useNuxtApp().$i18n.t('c_PXEditor.storageFull'), {duration: 15000}); return }
   localStorage.setItem('workspace_current', id)
   navigateTo(localePath(`/editor?id=${id}`))
 }

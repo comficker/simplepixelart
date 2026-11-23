@@ -3,7 +3,7 @@ import type {AnimationTag, EditorData, Layer, SharedPage} from "~/types";
 import {useNativeFetch} from "~/composables/useCustomFetch";
 import {useHasWork} from "~/composables/useHasWork";
 import {failReason, track} from "~/composables/useTrack";
-import {cloneDeep, generateUUID, getStorageItem, key2Point, sharedPage2EditorData} from "~/helper/utils";
+import {cloneDeep, generateUUID, getStorageItem, key2Point, setWorkspaces, sharedPage2EditorData} from "~/helper/utils";
 import {DEFAULT_EDITOR_DATA} from "~/helper/constants";
 import {markRaw, ref, shallowRef, toRaw, watch} from "vue";
 import {layers2MapNumbers} from "~/helper/canvas";
@@ -1537,17 +1537,18 @@ export const useEditor = defineStore('editor', () => {
             const snapshot = cloneDeep(toRaw(target))
             if (forcePrivate) snapshot.is_public = false
             localWS.value[target.id.toString()] = snapshot
-            try {
-                localStorage.setItem('workspaces', JSON.stringify(localWS.value))
-            } catch (e) {
-                console.warn('workspaces save hit storage limit, dropping histories:', e)
-                try {
-                    localStorage.removeItem('histories')
-                    localStorage.setItem('workspaces', JSON.stringify(localWS.value))
-                } catch (e2) {
-                    console.warn('workspaces save still failing, skipping:', e2)
-                    reportSaveFailure('local', failReason(e2))
+            let saved = false
+            try { saved = setWorkspaces(localWS.value, target.id.toString()) } catch (e) {
+                reportSaveFailure('local', failReason(e))
+                return
+            }
+            if (!saved) {
+                // A guest's only copy is this one: say so once, with the way out.
+                // Signed in, the cloud has it and this is only a spare.
+                if (!auth.isLogged && !reportedSaveFailures.has('local:storage_full')) {
+                    toast.error($i18n.t('c_PXEditor.storageFull'), {duration: 15000})
                 }
+                reportSaveFailure('local', 'storage_full')
             }
         }
 
