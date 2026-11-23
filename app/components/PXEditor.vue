@@ -311,6 +311,9 @@ async function boostArt() {
   }
 }
 
+// The server refuses a blank piece (ART_EMPTY): say so on the form, before the click.
+const publishBlank = computed(() => publishStatus.value === 'public' && store.isBlank())
+
 async function saveArt() {
   if (publishStatus.value === 'public' && store.isBlank()) {
     toast.error(t('c_PXEditor.drawBeforePublishing'))
@@ -4624,8 +4627,9 @@ watch(
               <span class="publish-label">{{ $t('c_PXEditor.publishAsABotCreator') }}</span>
               <UiSwitch v-model="boostOnPublish" size="sm" @change="rememberPublishPrefs"/>
             </div>
+            <p v-if="publishBlank" class="text-2xs text-muted">{{ $t('c_PXEditor.drawBeforePublishing') }}</p>
             <div class="publish-actions">
-              <button class="btn primary block" @click="saveArt">
+              <button class="btn primary block" :disabled="publishBlank" @click="saveArt">
                 <span class="icon" :class="publishStatus === 'public' ? 'icon-earth' : 'icon-earth-off'"/>
                 <span>{{ publishAction }}</span>
               </button>
