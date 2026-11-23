@@ -65,6 +65,8 @@ export const useEditor = defineStore('editor', () => {
     }>({})
 
     const MAX_HISTORY = 50;
+    // The API's ceiling on a save (apps/coloring/api/limits.py), in JSON characters.
+    const MAX_SAVE_CHARS = 2 * 1024 * 1024
     const history = shallowRef<EditorData[]>([]);
     const historyIndex = ref(-1);
 
@@ -1464,6 +1466,11 @@ export const useEditor = defineStore('editor', () => {
             if (primaryLayers.some(l => l.hidden)) {
                 payload.map_numbers = layers2MapNumbers({...ed, layers: primaryLayers} as EditorData)
             }
+            // The API refuses a save over 2MB (ART_TOO_LARGE). Find that out
+            // here instead of uploading it first; the local copy still saves.
+            if (JSON.stringify(payload).length > MAX_SAVE_CHARS) {
+                throw Object.assign(new Error('ART_TOO_LARGE'), {data: ['ART_TOO_LARGE']})
+            }
             async function createCloud() {
                 const oldLocalKey = target.id.toString()
                 const result = await useNativeFetch<SharedPage>(`/coloring/shared-pages/`, {
@@ -1559,7 +1566,10 @@ export const useEditor = defineStore('editor', () => {
                 lastCloudFailure = saveError.value
                 // One toast per run of failures, not one per retry.
                 if (saveError.value === 'ART_TOO_LARGE') {
-                    toast.error($i18n.t('c_PXEditor.artTooLarge'), {duration: 15000})
+                    // Every autosave fails the same way until the piece shrinks: say it once.
+                    if (!reportedSaveFailures.has('cloud:ART_TOO_LARGE')) {
+                        toast.error($i18n.t('c_PXEditor.artTooLarge'), {duration: 15000})
+                    }
                 } else if (!cloudRetries) toast.error($i18n.t('c_PXEditor.cloudSaveFailed'))
                 reportSaveFailure('cloud', saveError.value, e)
                 scheduleCloudRetry(saveError.value)
