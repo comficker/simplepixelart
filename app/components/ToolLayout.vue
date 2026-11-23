@@ -99,7 +99,6 @@ function nudge(step: number) {
       <ToolReadme v-if="$slots.doc" :agent="agent" :panel-label="panelLabel" :panel-icon="panelIcon">
         <template v-if="$slots.panel" #panel><slot name="panel"/></template>
         <slot name="doc"/>
-        <PartialMoreTools/>
       </ToolReadme>
     </div>
     <slot name="extra"/>
