@@ -459,6 +459,7 @@
     "cantHideOnlyBoard": "No se puede ocultar el único tablero",
     "clipboardEmpty": "El portapapeles está vacío; copia algo primero",
     "cloudSaveFailed": "Falló el guardado en la nube; guardado localmente",
+    "artTooLarge": "Esta obra es demasiado grande para guardarla en la nube (más de 2 MB). Usa menos fotogramas o un lienzo más pequeño. Se conserva en este dispositivo.",
     "copiedScope": "Se copió: {scope}",
     "couldNotOpenBoard": "No se pudo abrir ese tablero",
     "couldNotOpenTile": "No se pudo abrir ese tile",

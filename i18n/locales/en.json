@@ -473,6 +473,7 @@
     "cantHideOnlyBoard": "Can't hide the only board",
     "clipboardEmpty": "Clipboard is empty — copy something first",
     "cloudSaveFailed": "Cloud save failed — saved locally",
+    "artTooLarge": "This piece is too big to save to the cloud (over 2MB). Use fewer frames or a smaller canvas. It is kept on this device.",
     "copiedScope": "Copied {scope}",
     "couldNotOpenBoard": "Could not open that board",
     "couldNotOpenTile": "Could not open that tile",

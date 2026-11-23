@@ -459,6 +459,7 @@
     "cantHideOnlyBoard": "唯一のボードは非表示にできません",
     "clipboardEmpty": "クリップボードが空です — 先に何かをコピーしてください",
     "cloudSaveFailed": "クラウド保存に失敗しました — ローカルに保存しました",
+    "artTooLarge": "この作品は大きすぎてクラウドに保存できません（2MB超）。フレーム数を減らすか、キャンバスを小さくしてください。この端末には保存されています。",
     "copiedScope": "{scope}をコピーしました",
     "couldNotOpenBoard": "そのボードを開けませんでした",
     "couldNotOpenTile": "そのタイルを開けませんでした",

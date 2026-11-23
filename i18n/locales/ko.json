@@ -459,6 +459,7 @@
     "cantHideOnlyBoard": "유일한 보드는 숨길 수 없습니다",
     "clipboardEmpty": "클립보드가 비어 있습니다 — 먼저 복사하세요",
     "cloudSaveFailed": "클라우드 저장 실패 — 로컬에 저장했습니다",
+    "artTooLarge": "이 작품은 너무 커서 클라우드에 저장할 수 없습니다(2MB 초과). 프레임 수를 줄이거나 캔버스를 작게 하세요. 이 기기에는 저장되어 있습니다.",
     "copiedScope": "{scope} 복사함",
     "couldNotOpenBoard": "해당 보드를 열 수 없습니다",
     "couldNotOpenTile": "해당 타일을 열 수 없습니다",

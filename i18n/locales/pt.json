@@ -459,6 +459,7 @@
     "cantHideOnlyBoard": "Não é possível ocultar o único quadro",
     "clipboardEmpty": "A área de transferência está vazia — copie algo primeiro",
     "cloudSaveFailed": "Falha ao salvar na nuvem — salvo localmente",
+    "artTooLarge": "Esta arte é grande demais para salvar na nuvem (mais de 2 MB). Use menos quadros ou uma tela menor. Ela fica guardada neste dispositivo.",
     "copiedScope": "Copiado: {scope}",
     "couldNotOpenBoard": "Não foi possível abrir esse quadro",
     "couldNotOpenTile": "Não foi possível abrir esse tile",

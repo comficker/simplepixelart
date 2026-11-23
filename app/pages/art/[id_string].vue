@@ -150,7 +150,11 @@ const imgSquare = computed(() =>
 )
 
 const animation = computed(() => (data.value?.meta as any)?.animation || null)
-const isAnimatedArt = computed(() => (animation.value?.frames?.length || 0) > 1)
+// A big animation comes without its frames (`omitted`, only their count):
+// the page shows its GIF instead of playing it.
+const animFrames = computed(() => animation.value?.frames?.length || animation.value?.frame_count || 0)
+const isAnimatedArt = computed(() => animFrames.value > 1)
+const animPlayable = computed(() => isAnimatedArt.value && !animation.value?.omitted)
 // Drawn by an image model (generator, editor agent): labelled, never hidden.
 const isAi = computed(() => !!(data.value?.meta as any)?.ai)
 const gifUrl = computed(() =>
@@ -523,7 +527,7 @@ const previewStyle = computed(() => {
 /** Playback controls under an animation: the player exposes its state. */
 const player = ref<any>(null)
 const ANIM_SPEEDS = [0.25, 0.5, 1, 2] as const
-const showAnimCtl = computed(() => isAnimatedArt.value && !pixelView.value)
+const showAnimCtl = computed(() => animPlayable.value && !pixelView.value)
 
 /** What sits behind the art. Effects on transparency read very differently on
  *  light and dark game scenes, so let the viewer check both. */
@@ -622,7 +626,7 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
               :coords="coordView"
           />
         </ClientOnly>
-        <ClientOnly v-else-if="isAnimatedArt">
+        <ClientOnly v-else-if="animPlayable">
           <!-- Preview loops even a one-shot: most effects end on an empty
                frame, which left the stage looking broken. The bar's loop
                toggle plays it once. -->
@@ -646,7 +650,7 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
         <img
             v-else
             id="mainImg"
-            :src="imgLarge"
+            :src="isAnimatedArt ? gifUrl : imgLarge"
             :alt="mainAlt"
             class="art-img"
             :style="previewStyle"
@@ -659,7 +663,7 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
           <span v-if="isAi" class="art-anim-badge" :title="$t('common.aiGenerated')">{{ $t('common.aiGenerated') }}</span>
           <span v-if="isAnimatedArt" class="art-anim-badge" :title="$t('common.animatedArtwork')">
             <span class="art-anim-dot" aria-hidden="true"/>
-            <span>{{ $t('p_art_id_string.animatedBadge', {n: animation.frames.length}) }}</span>
+            <span>{{ $t('p_art_id_string.animatedBadge', {n: animFrames}) }}</span>
           </span>
         </div>
         <NuxtLinkLocale
@@ -837,7 +841,7 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
       <p class="editor-foot-hint text-xs text-muted">
         {{ data.width }}×{{ data.height }}px · {{ $t('p_art_id_string.pixelCount', pixelCount, {count: pixelCount}) }}
         <template v-if="data.colors?.length"> · {{ $t('common.nColors', {count: data.colors.length}) }}</template>
-        <template v-if="isAnimatedArt"> · {{ $t('p_art_id_string.frameCount', animation.frames.length, {count: animation.frames.length}) }}</template>
+        <template v-if="isAnimatedArt"> · {{ $t('p_art_id_string.frameCount', animFrames, {count: animFrames}) }}</template>
       </p>
       <p v-if="formattedDate" class="text-xs text-muted">{{ formattedDate }}</p>
     </template>
@@ -890,7 +894,7 @@ const otherSizes = computed(() => OTHER_SIZES.filter(sz => sz !== `${data.value?
           <span>{{ $t('p_art_id_string.pngSquare') }}</span><span class="text-muted">1080×1080 · {{ $t('p_art_id_string.dlSocial') }}</span>
         </button>
         <button v-if="isAnimatedArt" class="drop-item btn-split" @click="download('gif')">
-          <span>{{ $t('p_art_id_string.animatedGif') }}</span><span class="text-muted">{{ $t('p_art_id_string.frameCount', animation.frames.length, {count: animation.frames.length}) }}</span>
+          <span>{{ $t('p_art_id_string.animatedGif') }}</span><span class="text-muted">{{ $t('p_art_id_string.frameCount', animFrames, {count: animFrames}) }}</span>
         </button>
         <button class="drop-item btn-split" @click="download('svg')">
           <span>{{ $t('p_art_id_string.svg') }}</span><span class="text-muted">{{ $t('p_art_id_string.dlVector') }}</span>

@@ -1558,7 +1558,9 @@ export const useEditor = defineStore('editor', () => {
                 saveError.value = failReason(e)
                 lastCloudFailure = saveError.value
                 // One toast per run of failures, not one per retry.
-                if (!cloudRetries) toast.error($i18n.t('c_PXEditor.cloudSaveFailed'))
+                if (saveError.value === 'ART_TOO_LARGE') {
+                    toast.error($i18n.t('c_PXEditor.artTooLarge'), {duration: 15000})
+                } else if (!cloudRetries) toast.error($i18n.t('c_PXEditor.cloudSaveFailed'))
                 reportSaveFailure('cloud', saveError.value, e)
                 scheduleCloudRetry(saveError.value)
             }
