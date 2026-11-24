@@ -255,10 +255,10 @@ useHead({
   gap: 0;
 }
 
-/* The bar's own controls carry the large icon. The menus they open keep theirs. */
+/* The bar's own controls use the sidebar's icon size. The menus they open keep theirs. */
 .dash-top .dash-top-ctl :is(.hdr-link, .wallet-chip) > .icon {
-  width: var(--icon-lg);
-  height: var(--icon-lg);
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 
 /* Active reads by colour and fill alone here; the outline made the current
