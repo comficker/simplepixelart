@@ -2852,8 +2852,10 @@ export const useEditor = defineStore('editor', () => {
     /* Drops the content being moved (the lifted virtual layer) onto another
        board instead of back onto this one: it leaves this board (one undo
        step here) and lands on the target as a new layer, at the spot it was
-       dropped on the desk. The target becomes active. Returns the pixels. */
-    function dropVirtualOnBoard(targetId: string): number {
+       dropped on the desk. The target becomes active. `copy` (Alt held)
+       puts the content back where it was lifted from instead, so only a copy
+       goes over. Returns the pixels. */
+    function dropVirtualOnBoard(targetId: string, copy = false): number {
         const src = boards.value.find(b => b.id === activeBoardId.value)
         const target = boards.value.find(b => b.id === targetId)
         const vi = editorData.value.layers.indexOf(virtualLayer.value)
@@ -2869,14 +2871,21 @@ export const useEditor = defineStore('editor', () => {
             hex[`${x + dx}_${y + dy}`] = c
         }
         const srcName = editorData.value.name || 'Board'
-        editorData.value.layers.splice(vi, 1)
-        virtualLayer.value.pixels = markRaw({})
-        virtualLayer.value.x = 0
-        virtualLayer.value.y = 0
+        if (copy) {
+            // Back to where it was lifted from: merge at no offset.
+            virtualLayer.value.x = 0
+            virtualLayer.value.y = 0
+            mergeVirtualLayer()
+        } else {
+            editorData.value.layers.splice(vi, 1)
+            virtualLayer.value.pixels = markRaw({})
+            virtualLayer.value.x = 0
+            virtualLayer.value.y = 0
+            markFullRedraw()
+            drawTurn.value++
+        }
         selectionState.value.bounds.active = false
-        markFullRedraw()
-        drawTurn.value++
-        saveState()
+        if (!copy) saveState()
         const count = Object.keys(hex).length
         setActiveBoard(targetId)
         if (!count) return 0

@@ -596,6 +596,11 @@ const isPinching = ref(false);
 const moveStart = ref({x: 0, y: 0});
 // Last pointer position of a content move, to tell where it was dropped.
 let moveLastClient: { clientX: number, clientY: number } | null = null;
+// While content is dragged: the other board under the pointer (drawn
+// highlighted, it is where a drop lands) and whether Alt asks for a copy.
+const dropTargetId = ref('');
+const boardBtnTip = ref('');
+let moveCopy = false;
 const needSave = ref(false);
 const canvasReady = ref(false);
 const hoverPos = ref<{ x: number; y: number } | null>(null);
@@ -1190,18 +1195,18 @@ function boardScreen(bx: number, by: number) {
   return {x: Math.round(cam.value.x + bx * zoom.value), y: Math.round(cam.value.y + by * zoom.value)}
 }
 
-// K3 board windows: the title bar's buttons, right to left -- delete, close
-// (hide from the workspace), then the options dots. Screen-space rects.
+// K3 board windows: the title bar's buttons, right to left -- delete, then
+// hide (from the workspace). No options dots: those two were all its menu
+// held (right-click still opens it). Screen-space rects.
 const K3_BTN = 14;
-function k3BoardBtns(b: any): { del: Rect4; close: Rect4; dots: Rect4 } | null {
+function k3BoardBtns(b: any): { del: Rect4; close: Rect4 } | null {
   const bw = b.data.width * zoom.value;
   if (bw < 60) return null;
   const {x: sx, y: sy} = boardScreen(b.x, b.y);
   const by = Math.round(sy) - 22, right = Math.round(sx) - 2 + Math.round(bw) + 4 - 1;
   const del = {x: right - K3_BTN, y: by + 1, w: K3_BTN, h: K3_BTN};
   const close = {x: del.x - 2 - K3_BTN, y: by + 1, w: K3_BTN, h: K3_BTN};
-  const dots = {x: close.x - 2 - DOT_W, y: by, w: DOT_W, h: 16};
-  return {del, close, dots};
+  return {del, close};
 }
 type Rect4 = { x: number; y: number; w: number; h: number };
 
@@ -1223,7 +1228,7 @@ function boardBtnAt(e: MouseEvent | TouchEvent): { b: any; kind: 'del' | 'close'
 }
 
 function boardDotRect(b: any): { x: number; y: number; w: number; h: number } | null {
-  if (props.k3) return k3BoardBtns(b)?.dots ?? null;
+  if (props.k3) return null;
   const bw = b.data.width * zoom.value;
   if (bw < 44) return null;
   const {x: sx, y: sy} = boardScreen(b.x, b.y);
@@ -1910,6 +1915,12 @@ function draw(e: any) {
   // DOM stays on screen for the leave animation, and the canvas's own
   // listeners still fire there.
   if (!canvas.value) return;
+  // K3 board-bar buttons: a tooltip and a pointer while hovering them.
+  if (props.k3 && !isStarted.value && !('touches' in e)) {
+    const btn = boardBtnAt(e);
+    const tip = btn ? (btn.kind === 'close' ? t('c_PXEditor.hideBoard') : t('c_PXEditor.delete')) : '';
+    if (tip !== boardBtnTip.value) boardBtnTip.value = tip;
+  }
   if (isResizingBoard.value) {
     if ('touches' in e) e.preventDefault();
     doResizeBoard(e);
@@ -1958,6 +1969,10 @@ function draw(e: any) {
   } else if (isMoving.value) {
     const {x: clientX, y: clientY} = getClientPos(e);
     moveLastClient = {clientX, clientY};
+    moveCopy = !!(e as MouseEvent).altKey;
+    const over = boardAt(e);
+    const tid = over && over.id !== store.activeBoardId ? over.id : '';
+    if (tid !== dropTargetId.value) { dropTargetId.value = tid; scheduleDraw(); }
     const dx = Math.round((clientX - moveStart.value.x) / zoom.value);
     const dy = Math.round((clientY - moveStart.value.y) / zoom.value);
     if (dx !== 0 || dy !== 0) {
@@ -2078,11 +2093,13 @@ function stopDraw() {
     // Dropped over another board: the content moves there.
     const over = moveLastClient ? boardAt(moveLastClient as any) : null;
     moveLastClient = null;
+    dropTargetId.value = '';
     if (over && over.id !== store.activeBoardId) {
       const scope = store.activeScope;
-      const n = store.dropVirtualOnBoard(over.id);
+      const copy = moveCopy;
+      const n = store.dropVirtualOnBoard(over.id, copy);
       needSave.value = false;
-      if (n) toast.success(t('c_PXEditor.movedScopeTo', {scope: t('common.scope_' + scope), name: store.editorData.name || t('common.untitled')}));
+      if (n) toast.success(t(copy ? 'c_PXEditor.copiedScopeTo' : 'c_PXEditor.movedScopeTo', {scope: t('common.scope_' + scope), name: store.editorData.name || t('common.untitled')}));
     } else {
       store.mergeVirtualLayer()
     }
@@ -2651,7 +2668,7 @@ function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: numbe
     c.font = '700 10px system-ui, -apple-system, sans-serif';
     c.textBaseline = 'middle';
     const size = `${w}×${h}`;
-    const dotsW = k3BoardBtns(b) ? DOT_W + 2 * K3_BTN + 8 : 4;
+    const dotsW = k3BoardBtns(b) ? 2 * K3_BTN + 8 : 4;
     const sizeW = c.measureText(size).width;
     const room = bwid - 14 - sizeW - dotsW - 8;
     const name = k3FitName((b.data.name || 'Untitled').toUpperCase(), room);
@@ -2661,12 +2678,7 @@ function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: numbe
   }
   const btns = k3BoardBtns(b);
   if (btns) {
-    // Options dots.
-    c.fillStyle = K3_INK;
-    const cy = by + K3_BAR_H / 2;
-    const cx = btns.dots.x + btns.dots.w / 2;
-    for (const dx of [-4, 0, 4]) c.fillRect(Math.round(cx + dx) - 1, Math.round(cy) - 1, 2, 2);
-    // Close and delete: cream squares with a 2px ink edge, like the
+    // Hide and delete: cream squares with a 2px ink edge, like the
     // windows' title-bar buttons.
     for (const r of [btns.close, btns.del]) {
       c.fillStyle = K3_INK;
@@ -2675,12 +2687,16 @@ function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: numbe
       c.fillRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
     }
     c.fillStyle = K3_INK;
-    // x: two 2px diagonals.
+    // Hide: a pixel eye, struck through.
     const xr = btns.close;
-    for (let i = 0; i < 4; i++) {
-      c.fillRect(xr.x + 3 + i * 2, xr.y + 3 + i * 2, 2, 2);
-      c.fillRect(xr.x + 3 + i * 2, xr.y + xr.h - 5 - i * 2, 2, 2);
-    }
+    c.fillRect(xr.x + 5, xr.y + 4, 4, 1);
+    c.fillRect(xr.x + 3, xr.y + 5, 2, 1);
+    c.fillRect(xr.x + 9, xr.y + 5, 2, 1);
+    c.fillRect(xr.x + 3, xr.y + 8, 2, 1);
+    c.fillRect(xr.x + 9, xr.y + 8, 2, 1);
+    c.fillRect(xr.x + 5, xr.y + 9, 4, 1);
+    c.fillRect(xr.x + 6, xr.y + 6, 2, 2);
+    for (let i = 0; i < 9; i++) c.fillRect(xr.x + 3 + i, xr.y + 11 - i, 1, 1);
     // Trash: lid, then a can outline.
     const tr = btns.del;
     c.fillRect(tr.x + 3, tr.y + 3, 8, 2);
@@ -2692,8 +2708,24 @@ function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: numbe
   c.restore();
 }
 
+// The board a dragged piece of art would land on: a thick outline around it.
+function drawDropTarget(): void {
+  if (!ctx || !dropTargetId.value) return;
+  const b = store.boards.find(x => x.id === dropTargetId.value);
+  if (!b) return;
+  const {x: sx, y: sy} = boardScreen(b.x, b.y);
+  const bw = b.data.width * zoom.value, bh = b.data.height * zoom.value;
+  ctx.save();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = props.k3 ? K3_ACCENT : BOARD_ACTIVE;
+  ctx.setLineDash(props.k3 ? [] : [6, 4]);
+  ctx.strokeRect(Math.round(sx) + 1.5, Math.round(sy) + 1.5, Math.round(bw) - 3, Math.round(bh) - 3);
+  ctx.restore();
+}
+
 function drawBoardChrome(): void {
   if (!ctx) return;
+  drawDropTarget();
   const z = zoom.value;
   for (const b of store.boards) {
     if (props.k3) {
@@ -4681,6 +4713,8 @@ watch(
             >
               <canvas
                   ref="canvas"
+                  :title="boardBtnTip || undefined"
+                  :style="boardBtnTip ? {cursor: 'pointer'} : undefined"
                   :class="[store.currentTool, { panning: spacePressed, 'sel-drag': hoverInSelection, 'guide-v': hoverGuide?.axis === 'v' || draggingGuide?.axis === 'v', 'guide-h': hoverGuide?.axis === 'h' || draggingGuide?.axis === 'h' }]"
                   @mousedown="startDraw"
                   @dblclick="onDblClick"
