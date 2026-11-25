@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import useStatefulCookie from '~/composables/useStatefulCookie'
+
 /* Four dinosaurs wandering along the bottom of a page hero. They walk,
    sneak and stop on their own, and duck under the hero's buttons when they
-   pass beneath them; a touch (or hover) makes one stand idle for a moment. Sprites: "Dino Characters" by Arks (@ArksDigital), CC BY 4.0,
-   one 24x24 strip per dino in /images/dinos/. Client-only, no requests
-   beyond the four small sheets. */
+   pass beneath them. A touch (or hover) makes one stand idle for a moment,
+   a double click sends it away for a day, and a switch hides them all.
+   Sprites: "Dino Characters" by Arks (@ArksDigital), CC BY 4.0, one 24x24
+   strip per dino in /images/dinos/. Client-only, no requests beyond the
+   four small sheets. */
 
 const FRAME = 24
 const SCALE = 2
@@ -113,11 +117,34 @@ function loop(now: number) {
   raf = requestAnimationFrame(loop)
 }
 
-onMounted(() => {
+// The visitor can send them away; the choice sticks (cookie, so the
+// server renders the right state and they never flash in).
+const off = useStatefulCookie('hero_dinos_off')
+
+// A double click sends one dino away for a day (per browser).
+const GONE_KEY = 'hero_dinos_gone'
+const DAY = 24 * 60 * 60 * 1000
+
+function goneMap(): Record<string, number> {
+  try {
+    const m = JSON.parse(localStorage.getItem(GONE_KEY) || '{}')
+    return m && typeof m === 'object' ? m : {}
+  } catch { return {} }
+}
+
+function dismiss(d: Dino) {
+  const m = goneMap()
+  m[d.name] = Date.now() + DAY
+  try { localStorage.setItem(GONE_KEY, JSON.stringify(m)) } catch { /* private mode: gone until reload */ }
+  dinos.value = dinos.value.filter(x => x !== d)
+}
+
+function start() {
   const w = lane.value?.clientWidth || 600
   const now = performance.now()
   buttons = lane.value?.parentElement?.querySelector('.page-hero-cta') || null
-  dinos.value = NAMES.map((name, i) => {
+  const gone = goneMap()
+  dinos.value = NAMES.filter(name => !(gone[name] > Date.now())).map((name, i) => {
     const d: Dino = {name, x: ((i + 0.5) / NAMES.length) * (w - SIZE), dir: i % 2 ? -1 : 1, state: 'idle', frame: 0, until: 0, held: false, shown: 'idle'}
     pick(d, now)
     return d
@@ -129,24 +156,55 @@ onMounted(() => {
   }
   last = now
   raf = requestAnimationFrame(loop)
+}
+
+function stop() {
+  cancelAnimationFrame(raf)
+  dinos.value = []
+}
+
+function toggle() {
+  off.value = off.value ? null : '1'
+  if (off.value) stop()
+  else nextTick(start)
+}
+
+onMounted(() => {
+  if (!off.value) start()
 })
 onBeforeUnmount(() => cancelAnimationFrame(raf))
 </script>
 
 <template>
-  <div ref="lane" class="hero-dinos" aria-hidden="true">
-    <span
-        v-for="d in dinos"
-        :key="d.name"
-        class="hero-dino"
-        :style="style(d)"
-        @pointerenter="hold(d, true)"
-        @pointerleave="hold(d, false)"
-        @touchstart.passive="tap(d)"
-    />
-    <NuxtLinkLocale to="/collections/arks-dino-characters" class="hero-dinos-credit" tabindex="-1">
-      Dinos by Arks · CC BY 4.0
-    </NuxtLinkLocale>
+  <div ref="lane" class="hero-dinos">
+    <template v-if="!off">
+      <span
+          v-for="d in dinos"
+          :key="d.name"
+          class="hero-dino"
+          aria-hidden="true"
+          :style="style(d)"
+          @pointerenter="hold(d, true)"
+          @pointerleave="hold(d, false)"
+          @touchstart.passive="tap(d)"
+          @dblclick="dismiss(d)"
+      />
+    </template>
+    <div class="hero-dinos-foot">
+      <NuxtLinkLocale v-if="!off" to="/collections/arks-dino-characters" class="hero-dinos-credit" tabindex="-1">
+        Dinos by Arks · CC BY 4.0
+      </NuxtLinkLocale>
+      <button
+          type="button"
+          class="hero-dinos-toggle"
+          :title="off ? $t('c_HeroDinos.show') : $t('c_HeroDinos.hide')"
+          :aria-label="off ? $t('c_HeroDinos.show') : $t('c_HeroDinos.hide')"
+          :aria-pressed="!off"
+          @click="toggle"
+      >
+        <span class="icon" :class="off ? 'icon-eye' : 'icon-eye-cross'" aria-hidden="true"/>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -177,12 +235,43 @@ onBeforeUnmount(() => cancelAnimationFrame(raf))
   will-change: transform;
 }
 
-.hero-dinos-credit {
+/* Credit and the show/hide switch, bottom-right of the lane. */
+.hero-dinos-foot {
   position: absolute;
   right: var(--space-2);
   bottom: var(--space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  pointer-events: auto;
+}
+
+.hero-dinos-credit {
   font-size: var(--text-2xs);
   color: var(--muted);
-  pointer-events: auto;
+}
+
+.hero-dinos-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.hero-dinos-toggle:hover {
+  background: var(--surface-2);
+  color: var(--foreground);
+}
+
+.hero-dinos-toggle .icon {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
 }
 </style>

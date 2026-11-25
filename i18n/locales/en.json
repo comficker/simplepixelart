@@ -3025,5 +3025,9 @@
     "intro": "Every grid size in the gallery with at least a dozen pieces, and how many each holds. Small grids (8×8 to 16×16) are the easiest place to start; 32×32 and up leave room for faces and shading. Each page opens a blank canvas of its size in the <a href=\"/editor\">pixel art maker</a>.",
     "squareH": "Square grids",
     "otherH": "Other sizes"
+  },
+  "c_HeroDinos": {
+    "hide": "Hide the dinos",
+    "show": "Show the dinos"
   }
 }

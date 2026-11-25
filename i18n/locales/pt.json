@@ -2978,5 +2978,9 @@
     "intro": "Cada tamanho de grade da galeria com pelo menos uma dúzia de peças, e quantas cada um tem. Grades pequenas (8×8 a 16×16) são o melhor lugar para começar; a partir de 32×32 sobra espaço para rostos e sombras. Cada página abre uma tela vazia do seu tamanho no <a href=\"/editor\">criador de pixel art</a>.",
     "squareH": "Grades quadradas",
     "otherH": "Outros tamanhos"
+  },
+  "c_HeroDinos": {
+    "hide": "Ocultar os dinos",
+    "show": "Mostrar os dinos"
   }
 }

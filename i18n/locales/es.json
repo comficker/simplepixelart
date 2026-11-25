@@ -2978,5 +2978,9 @@
     "intro": "Cada tamaño de cuadrícula de la galería con al menos una docena de piezas, y cuántas tiene. Las cuadrículas pequeñas (de 8×8 a 16×16) son el mejor punto de partida; desde 32×32 hay sitio para caras y sombras. Cada página abre un lienzo vacío de su tamaño en el <a href=\"/editor\">creador de pixel art</a>.",
     "squareH": "Cuadrículas cuadradas",
     "otherH": "Otros tamaños"
+  },
+  "c_HeroDinos": {
+    "hide": "Ocultar los dinos",
+    "show": "Mostrar los dinos"
   }
 }
