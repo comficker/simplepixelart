@@ -284,7 +284,7 @@ const SECTIONS = [
   box-shadow: none;
 }
 
-/* Group titles in sentence case, a small muted line over the rows. */
+/* Group titles: a small muted uppercase line over the rows. */
 .dash-side .dash-group > .widget-head {
   min-height: 0;
   padding: var(--space-4) var(--space-1) var(--space-1);
@@ -295,9 +295,9 @@ const SECTIONS = [
 
 .dash-side .dash-group > .widget-head > .title {
   font-size: var(--text-xs);
-  font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   color: var(--muted);
 }
 
