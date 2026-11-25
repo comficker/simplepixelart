@@ -86,7 +86,9 @@ useArtListFetch({limit: 24, ordering: '-updated', originalsOnly: true})
 /* Up to this many rows. Placeholders pad the list only while it loads; once
    loaded, a short list shows just its real rows -- a permanent skeleton reads
    as something still loading. */
-const CREATOR_ROWS = 3
+// Eight rows so each stat card stands as tall as the 300x250 ad beside it;
+// phones show the first three (CSS), where the cards stack.
+const CREATOR_ROWS = 8
 
 // Lazy: these three fill the side widgets, so a client-side visit to Home
 // shows the page at once instead of waiting on the slowest of them (one
@@ -100,12 +102,12 @@ const [{data: topCreators, pending: topCreatorsPending}, {data: homeChallenges},
     transform: (s: any) => s?.results || [],
     default: () => [],
   }),
-  // This week's theme, then the two before it. Each row leads with its best
+  // This week's theme, then the ones before it. Each row leads with its best
   // piece so far (top entry while live, winner once ended).
   useAuthFetch<any>('/coloring/challenges/', {
     key: 'home-challenges',
     lazy: true,
-    transform: (s: any) => [s?.current, ...(s?.past || [])].filter(Boolean).slice(0, 3).map((c: any) => ({
+    transform: (s: any) => [s?.current, ...(s?.past || [])].filter(Boolean).slice(0, CREATOR_ROWS).map((c: any) => ({
       id_string: c.id_string,
       name: c.name,
       starts: c.starts,
@@ -296,14 +298,16 @@ useCustomSeoMeta({
            of stat cards above the gallery -- a raised card on a tray whose
            foot carries the way on. -->
       <div class="home-row">
-        <!-- The row's first card: a fixed 320x100 unit (the responsive ad
-             unit sized by hand, as the leaderboard below is). The stat cards
-             beside it are ~116px tall, so a 100px banner fits the row without
-             stretching it, and the grid's breakpoints keep the card at least
-             320px wide. -->
+        <!-- The row's first card: the responsive ad unit sized by hand, as the
+             leaderboard below is. 300x250 where the cards sit side by side
+             (the stat cards list eight rows to match its height), 320x100 on
+             phones, where they stack and list three. -->
         <section class="home-stat home-stat-ad">
           <div class="home-stat-card">
-            <AdSlot slot="7838948172" :width="320" :height="100" bare/>
+            <!-- Two sizes of the one unit; only the visible one goes live
+                 (AdSlot skips a hidden box). -->
+            <div class="home-ad-sm"><AdSlot slot="7838948172" :width="320" :height="100" bare/></div>
+            <div class="home-ad-lg"><AdSlot slot="7838948172" :width="300" :height="250" bare/></div>
           </div>
           <div class="home-stat-foot">
             <span class="icon icon-flag" aria-hidden="true"/>
@@ -443,9 +447,9 @@ useCustomSeoMeta({
 <style scoped>
 /* Stat cards: a tray one step down from the page, the content on a raised
    card inside it, a foot line under the card with the way on. The column
-   breaks are set by the ad card, which holds a 320x100 unit: each card's
-   inner width is (row - 2x10 padding - gaps) / columns - 2x3 tray inset, so
-   two columns need a 690px row to keep it >= 320. */
+   breaks are set by the ad card: each card's inner width is (row - 2x10
+   padding - gaps) / columns - 2x3 tray inset, so two columns need a 690px
+   row to hold the phone's 320px unit before the 300x250 takes over. */
 .home-stack {
   container-type: inline-size;
 }
@@ -457,18 +461,33 @@ useCustomSeoMeta({
   padding: var(--space-4);
 }
 
+/* Stacked (phones): three rows a card and the 320x100 unit. */
+.home-row .rank-list > li:nth-child(n+4),
+.home-ad-lg {
+  display: none;
+}
+
 @container (min-width: 690px) {
   .home-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .home-row .rank-list > li:nth-child(n+4),
+  .home-ad-lg {
+    display: block;
+  }
+
+  .home-ad-sm {
+    display: none;
+  }
 }
 
 /* One row once the three stat cards can keep ~160px each: the ad column is
-   held at exactly the unit's width (320 + the tray's 2x3 inset), the stat
+   held at exactly the unit's width (300 + the tray's 2x3 inset), the stat
    cards share what is left. */
 @container (min-width: 860px) {
   .home-row {
-    grid-template-columns: calc(320px + 2 * var(--space-1)) repeat(3, minmax(0, 1fr));
+    grid-template-columns: calc(300px + 2 * var(--space-1)) repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -544,7 +563,7 @@ useCustomSeoMeta({
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* The ad is the card: the 320x100 unit sits centred on the tray with the
+/* The ad is the card: the unit sits centred on the tray with the
    raised-card edge itself, rather than inside a second white card (which
    framed the creative twice). Its fill shows as a placeholder card until
    the creative loads. */
@@ -556,6 +575,8 @@ useCustomSeoMeta({
   box-shadow: none;
 }
 
+.home-ad-sm,
+.home-ad-lg,
 .home-stat-ad :deep(.ad-frame) {
   width: 100%;
 }
