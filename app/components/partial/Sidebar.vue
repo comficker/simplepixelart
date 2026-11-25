@@ -58,7 +58,10 @@ const SECTIONS = [
            on the logo can never land on it. -->
       <NuxtLinkLocale to="/" class="dash-brand" :title="$t('common.home')">
         <span class="dash-brand-tile"><img src="/logo-mark.svg" :alt="$t('common.simplePixelArt')" width="20" height="20" class="dash-brand-logo"></span>
-        <span v-if="!collapsed" class="dash-brand-name">{{ $t('nav.home') }}</span>
+        <span v-if="!collapsed" class="dash-brand-text">
+          <span class="dash-brand-kicker">{{ $t('common.simplePixelArt') }}</span>
+          <span class="dash-brand-name">{{ $t('nav.home') }}</span>
+        </span>
       </NuxtLinkLocale>
     </div>
 
@@ -74,7 +77,6 @@ const SECTIONS = [
         >
           <span class="dash-tool-ic"><span class="icon" :class="l.icon"/></span>
           <span class="dash-label">{{ $t(l.key) }}</span>
-          <span class="icon icon-check dash-check" aria-hidden="true"/>
         </NuxtLinkLocale>
       </nav>
     </section>
@@ -92,8 +94,7 @@ const SECTIONS = [
           >
             <span class="dash-tool-ic"><span class="icon" :class="t.icon"/></span>
             <span class="dash-label">{{ $t(t.i18n) }}</span>
-            <span class="icon icon-check dash-check" aria-hidden="true"/>
-          </NuxtLinkLocale>
+            </NuxtLinkLocale>
         </nav>
       </section>
     </template>
@@ -110,7 +111,6 @@ const SECTIONS = [
         >
           <span class="dash-tool-ic"><span class="icon icon-brush"/></span>
           <span class="dash-label">{{ $t('nav.coloring') }}</span>
-          <span class="icon icon-check dash-check" aria-hidden="true"/>
         </NuxtLink>
       </nav>
     </section>
@@ -121,7 +121,6 @@ const SECTIONS = [
         <NuxtLinkLocale to="/creator-program" class="hdr-link dash-link" :title="$t('c_Sidebar.creatorProgram')">
           <span class="dash-tool-ic"><span class="icon icon-trophy"/></span>
           <span class="dash-label">{{ $t('c_Sidebar.creatorProgram') }}</span>
-          <span class="icon icon-check dash-check" aria-hidden="true"/>
         </NuxtLinkLocale>
         <a :href="playUrl('sidebar')" target="_blank" rel="noopener" class="hdr-link dash-link" :title="$t('c_AndroidApp.title')">
           <span class="dash-tool-ic"><span class="icon icon-android"/></span>
@@ -151,6 +150,7 @@ const SECTIONS = [
           @click="openCommandPalette"
       >
         <span class="icon icon-search"/>
+        <span class="dash-label dash-search-label">{{ $t('common.search') }}</span>
         <span class="cmdk-hint">
           <kbd class="kbd kbd-on-surface">{{ isMac ? '⌘' : 'Ctrl' }}</kbd><kbd class="kbd kbd-on-surface">K</kbd>
         </span>
@@ -164,6 +164,9 @@ const SECTIONS = [
   display: none;
 }
 
+/* A soft rail: the page's ground tone behind cards that lift off it -- the
+   brand card at the top, the current page's row, the search card at the
+   foot. Groups part by an inset rule, titles sit in sentence case. */
 @media (min-width: 1024px) {
   .dash-side {
     position: sticky;
@@ -173,11 +176,17 @@ const SECTIONS = [
     height: 100vh;
     padding: 0;
     overflow-y: auto;
-    /* The page's own surface: a grey rail clashed with screens that use
-       --surface-2 themselves. The border alone sets it apart. */
-    background: var(--surface);
+    background: var(--background);
     border-right: 1px solid var(--border);
   }
+}
+
+/* A raised card: the same lift for the brand, the active row and search. */
+.dash-brand,
+.dash-side .dash-link.router-link-active,
+.dash-side .dash-foot .cmdk-trigger {
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .dash-brand-row {
@@ -187,21 +196,18 @@ const SECTIONS = [
      squeezed the row below the top bar's height. */
   flex-shrink: 0;
   height: var(--bar-h);
-  padding: 0 5px;
-  border-bottom: 1px solid var(--border);
+  padding: 0 var(--space-3);
 }
 
-/* The whole block is the home link, a row like the nav rows below it: same
-   inset, same hover fill, the logo's left edge on theirs. */
 .dash-brand {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   min-width: 0;
   overflow: hidden;
-  height: calc(var(--bar-h) - 8px);
-  padding: 0 5px;
+  height: calc(var(--bar-h) - 10px);
+  padding: 0 var(--space-2);
   border-radius: var(--radius-sm);
   color: var(--foreground);
   transition: background var(--transition);
@@ -224,8 +230,8 @@ const SECTIONS = [
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
   background: #F0EBE1;
   border-radius: var(--radius-sm);
@@ -240,12 +246,27 @@ const SECTIONS = [
   image-rendering: pixelated;
 }
 
-/* The logo row is the Home link, so its label is set like the nav rows'. */
+.dash-brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.dash-brand-kicker,
 .dash-brand-name {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dash-brand-kicker {
+  font-size: var(--text-2xs);
+  color: var(--muted);
+}
+
+.dash-brand-name {
   font-size: var(--text-sm);
   font-weight: 600;
 }
@@ -253,24 +274,31 @@ const SECTIONS = [
 .dash-nav {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 /* The rail is one sheet: its widgets add no fill of their own. */
 .dash-side .widget-body {
+  padding: var(--space-1) 0 var(--space-3);
   background: transparent;
   box-shadow: none;
 }
 
-/* A group title needs no rule under it (the groups part by the rule between
-   them), nor the 29px floor that lines heads up with control-bearing ones
-   elsewhere: it sits close over its rows, the space above it. */
+/* Group titles in sentence case, a small muted line over the rows. */
 .dash-side .dash-group > .widget-head {
   min-height: 0;
-  padding: var(--space-4) var(--space-3) 0;
+  padding: var(--space-4) var(--space-1) var(--space-1);
   background: transparent;
   border-bottom: 0;
   box-shadow: none;
+}
+
+.dash-side .dash-group > .widget-head > .title {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
 }
 
 /* Collapsed, the titles have no room: the groups part by their rule alone. */
@@ -278,81 +306,91 @@ const SECTIONS = [
   display: none;
 }
 
-/* Each section is a widget: a head band over a padded body, the next one
-   below a single rule. */
+/* The rows sit inset from the rail's edges; the rule between groups runs
+   edge to edge. */
 .dash-group {
+  padding: 0 var(--space-3);
   border-bottom: 1px solid var(--border);
 }
 
-.dash-link {
+.dash-group:last-of-type {
+  border-bottom: 0;
+}
+
+/* Rows: a muted glyph and label; the current page is a raised card. */
+.dash-side .dash-link {
   display: flex;
   width: 100%;
+  min-height: 34px;
+  gap: var(--space-3);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  color: var(--muted);
 }
 
-/* The current page gets no fill or colour of its own (it overrides the
-   shared .hdr-link active look); a check at the row's end marks it. */
+@media (hover: hover) and (pointer: fine) {
+  .dash-side .dash-link:hover {
+    color: var(--foreground);
+    background: color-mix(in oklab, var(--surface-2) 70%, transparent);
+  }
+}
+
 .dash-side .dash-link.router-link-active {
   color: var(--foreground);
-  background: transparent;
-  box-shadow: none;
-}
-
-.dash-check {
-  display: none;
-  margin-left: auto;
-  width: var(--icon-sm);
-  height: var(--icon-sm);
-}
-
-.dash-side .dash-link.router-link-active > .dash-check {
-  display: inline-flex;
-  /* Not the shared .hdr-link active blue: the rail is monochrome. */
-  color: var(--foreground);
-}
-
-/* Collapsed, the tile has no room for it. */
-.dash-side.is-collapsed .dash-link > .dash-check {
-  display: none;
+  font-weight: 600;
 }
 
 .dash-tool-ic {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  /* Two and a quarter base steps: its own size, not a gap, so it does not
-     follow the spacing scale down. */
-  width: calc(var(--space-4) * 2.25);
-  height: calc(var(--space-4) * 2.25);
+  width: var(--icon-md);
+  height: var(--icon-md);
   flex-shrink: 0;
   border-radius: var(--radius);
 }
 
-/* Monochrome: plain glyphs in the text colour, no colour chips. */
-.dash-tool-ic .icon {
-  width: var(--icon-sm);
-  height: var(--icon-sm);
-  color: var(--foreground);
-}
-
-/* The header's .hdr-link turns an active icon blue; here the row's fill is
-   the marker, the glyph stays in the text colour. */
+/* Monochrome glyphs that follow the row's text colour. */
+.dash-tool-ic .icon,
 .dash-side .dash-link.router-link-active .dash-tool-ic .icon {
-  color: var(--foreground);
+  width: var(--icon-md);
+  height: var(--icon-md);
+  color: currentColor;
 }
 
+/* Search as a card at the foot, pinned so ⌘K stays in reach when the list
+   runs past a short screen. */
 .dash-foot {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
-  min-height: var(--foot-h);
+  min-height: calc(var(--foot-h) + var(--space-6));
   margin-top: auto;
-  padding: 0 var(--space-3);
-  border-top: 1px solid var(--border);
-  /* The rail hides its scrollbar; pinning the foot keeps ⌘K in reach when
-     the list runs past a short screen. */
+  padding: var(--space-3);
   position: sticky;
   bottom: 0;
-  background: var(--surface);
+  background: var(--background);
+}
+
+.dash-side .dash-foot .cmdk-trigger {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  gap: var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.dash-side .dash-foot .cmdk-trigger > .icon {
+  width: var(--icon-md);
+  height: var(--icon-md);
+}
+
+.dash-search-label {
+  flex: 1;
+  text-align: left;
 }
 
 .dash-link .dash-label {
@@ -377,10 +415,17 @@ const SECTIONS = [
   height: 100%;
   padding: 0;
   border-radius: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
 /* Collapsed, each entry is a square as wide as the rail, edge to edge and
    stacked with no gap: the rail reads as one column of tiles. */
+.dash-side.is-collapsed .dash-group {
+  padding: 0;
+}
+
+.dash-side.is-collapsed .widget-body,
 .dash-side.is-collapsed .dash-nav {
   padding: 0;
   gap: 0;
@@ -414,9 +459,16 @@ const SECTIONS = [
   height: var(--icon-lg);
 }
 
-/* Same height as the status bar beside it; the search button just centres. */
 .dash-side.is-collapsed .dash-foot {
   justify-content: center;
-  padding: 0 var(--space-1);
+  padding: var(--space-1);
+}
+
+.dash-side.is-collapsed .dash-foot .cmdk-trigger {
+  flex: 0 0 auto;
+  justify-content: center;
+  padding: var(--space-2);
+  box-shadow: none;
+  background: transparent;
 }
 </style>
