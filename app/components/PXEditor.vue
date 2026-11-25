@@ -594,6 +594,8 @@ const isPanning = ref(false);
 const linkResize = ref(false);
 const isPinching = ref(false);
 const moveStart = ref({x: 0, y: 0});
+// Last pointer position of a content move, to tell where it was dropped.
+let moveLastClient: { clientX: number, clientY: number } | null = null;
 const needSave = ref(false);
 const canvasReady = ref(false);
 const hoverPos = ref<{ x: number; y: number } | null>(null);
@@ -1955,6 +1957,7 @@ function draw(e: any) {
     }
   } else if (isMoving.value) {
     const {x: clientX, y: clientY} = getClientPos(e);
+    moveLastClient = {clientX, clientY};
     const dx = Math.round((clientX - moveStart.value.x) / zoom.value);
     const dy = Math.round((clientY - moveStart.value.y) / zoom.value);
     if (dx !== 0 || dy !== 0) {
@@ -2072,7 +2075,17 @@ function stopDraw() {
     };
   } else if (isMoving.value) {
     isMoving.value = false;
-    store.mergeVirtualLayer()
+    // Dropped over another board: the content moves there.
+    const over = moveLastClient ? boardAt(moveLastClient as any) : null;
+    moveLastClient = null;
+    if (over && over.id !== store.activeBoardId) {
+      const scope = store.activeScope;
+      const n = store.dropVirtualOnBoard(over.id);
+      needSave.value = false;
+      if (n) toast.success(t('c_PXEditor.movedScopeTo', {scope: t('common.scope_' + scope), name: store.editorData.name || t('common.untitled')}));
+    } else {
+      store.mergeVirtualLayer()
+    }
   } else if (isIsoLining.value) {
     isIsoLining.value = false;
     isoLineStart.value = null;

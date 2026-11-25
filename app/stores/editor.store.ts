@@ -2849,6 +2849,50 @@ export const useEditor = defineStore('editor', () => {
         drawTurn.value++;
     }
 
+    /* Drops the content being moved (the lifted virtual layer) onto another
+       board instead of back onto this one: it leaves this board (one undo
+       step here) and lands on the target as a new layer, at the spot it was
+       dropped on the desk. The target becomes active. Returns the pixels. */
+    function dropVirtualOnBoard(targetId: string): number {
+        const src = boards.value.find(b => b.id === activeBoardId.value)
+        const target = boards.value.find(b => b.id === targetId)
+        const vi = editorData.value.layers.indexOf(virtualLayer.value)
+        if (!src || !target || targetId === activeBoardId.value || vi < 0) return 0
+        const dx = virtualLayer.value.x + src.x - target.x
+        const dy = virtualLayer.value.y + src.y - target.y
+        const srcColors = editorData.value.colors
+        const hex: { [key: string]: string } = {}
+        for (const key of Object.keys(virtualLayer.value.pixels)) {
+            const c = srcColors[virtualLayer.value.pixels[key]!]
+            if (!c) continue
+            const {x, y} = key2Point(key)
+            hex[`${x + dx}_${y + dy}`] = c
+        }
+        const srcName = editorData.value.name || 'Board'
+        editorData.value.layers.splice(vi, 1)
+        virtualLayer.value.pixels = markRaw({})
+        virtualLayer.value.x = 0
+        virtualLayer.value.y = 0
+        selectionState.value.bounds.active = false
+        markFullRedraw()
+        drawTurn.value++
+        saveState()
+        const count = Object.keys(hex).length
+        setActiveBoard(targetId)
+        if (!count) return 0
+        const colors = editorData.value.colors
+        const out: { [key: string]: number } = {}
+        for (const key of Object.keys(hex)) out[key] = findOrCreateColor(hex[key]!, colors)
+        editorData.value.layers.push({name: srcName, pixels: markRaw(out), x: 0, y: 0})
+        currentLayerIndex.value = editorData.value.layers.length - 1
+        layerActive.value = true
+        editorData.value.colors = colors.map(c => c.toUpperCase())
+        markFullRedraw()
+        drawTurn.value++
+        saveState()
+        return count
+    }
+
     function move(dx: number, dy: number): void {
         virtualLayer.value.x += dx
         virtualLayer.value.y += dy
@@ -3035,6 +3079,7 @@ export const useEditor = defineStore('editor', () => {
         copyActiveScope,
         pasteClipboard,
         transferScope,
+        dropVirtualOnBoard,
         mergeLayers,
         applyPalette,
         save,
