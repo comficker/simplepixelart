@@ -1968,7 +1968,10 @@ function draw(e: any) {
       } else {
         store.move(dx, dy);
       }
-      moveStart.value = {x: clientX, y: clientY};
+      // Advance by what was applied, not to the pointer: resetting to the
+      // pointer threw away each step's rounding, so a slow or diagonal drag
+      // drifted (half-pixel steps all rounded up).
+      moveStart.value = {x: moveStart.value.x + dx * zoom.value, y: moveStart.value.y + dy * zoom.value};
     }
   } else if (isIsoLining.value && isoLineStart.value) {
     const cell = editorData.value.meta?.iso?.cell ?? { width: 2, height: 1 };
