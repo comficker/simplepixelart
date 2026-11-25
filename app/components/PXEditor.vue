@@ -121,7 +121,7 @@ function purgeLocalArt(id: string | number) {
   if (localStorage.getItem('workspace_current') === key) localStorage.setItem('workspace_current', '')
 }
 
-async function destroyCurrent() {
+async function destroyCurrent(silent = false) {
   if (deleting.value) return
   deleting.value = true
   const id = editorData.value.id
@@ -149,7 +149,7 @@ async function destroyCurrent() {
   if (store.boards.length > 1) {
     store.removeBoard(store.activeBoardId)
     scheduleDraw()
-    toast.success(t('c_PXEditor.deleted'))
+    if (!silent) toast.success(t('c_PXEditor.deleted'))
     deleting.value = false
     return
   }
@@ -1266,6 +1266,8 @@ function closeBoardMenu() { boardMenu.value = null; }
 
 function onContextMenu(e: MouseEvent) {
   if (!canvas.value) return;
+  // Ctrl + click on a Mac also fires contextmenu: that click picks a board.
+  if (e.ctrlKey && e.button === 0) { e.preventDefault(); return; }
   const b = boardAt(e) || boardChromeAt(e);
   if (!b) return;
   e.preventDefault();
@@ -1289,6 +1291,65 @@ function askDeleteBoard(id: string) {
   closeBoardMenu();
   if (id !== store.activeBoardId) store.setActiveBoard(id);
   showDeleteConfirm.value = true;
+}
+
+// Several boards picked with Ctrl / Cmd + click, to hide or delete at once.
+// A plain click on a board goes back to the single active board.
+const pickedBoards = ref<string[]>([]);
+const deleteIds = ref<string[]>([]);
+
+function toggleBoardPick(id: string) {
+  const cur = pickedBoards.value.length ? [...pickedBoards.value] : [store.activeBoardId];
+  const i = cur.indexOf(id);
+  if (i >= 0) cur.splice(i, 1);
+  else cur.push(id);
+  pickedBoards.value = cur.length > 1 ? cur : [];
+  if (i < 0 && id !== store.activeBoardId) store.setActiveBoard(id);
+  scheduleDraw();
+}
+
+function clearBoardPick() {
+  if (!pickedBoards.value.length) return;
+  pickedBoards.value = [];
+  scheduleDraw();
+}
+
+// Hide every picked board, but always leave one on the workspace.
+function hidePickedBoards() {
+  const ids = pickedBoards.value.filter(id => store.boards.some(b => b.id === id));
+  let hidden = 0;
+  for (const id of ids) {
+    if (store.boards.length <= 1) break;
+    store.removeBoard(id);
+    hidden++;
+  }
+  pickedBoards.value = [];
+  scheduleDraw();
+  if (hidden) toast.success(t('c_PXEditor.hidNBoards', {count: hidden}, hidden));
+}
+
+function askDeletePickedBoards() {
+  deleteIds.value = [...pickedBoards.value];
+  showDeleteConfirm.value = true;
+}
+
+// One delete confirm for one board or for all the picked ones.
+async function confirmDelete() {
+  const ids = deleteIds.value;
+  if (!ids.length) return destroyCurrent();
+  let done = 0;
+  for (const id of ids) {
+    if (!store.boards.some(b => b.id === id)) continue;
+    if (id !== store.activeBoardId) store.setActiveBoard(id);
+    const before = store.boards.length;
+    await destroyCurrent(true);
+    if (store.boards.length < before || before === 1) done++;
+  }
+  deleteIds.value = [];
+  pickedBoards.value = [];
+  showDeleteConfirm.value = false;
+  scheduleDraw();
+  if (done) toast.success(t('c_PXEditor.deletedNBoards', {count: done}, done));
 }
 
 const isResizingBoard = ref(false);
@@ -1763,6 +1824,15 @@ function startDraw(e: any) {
     if ('preventDefault' in e) e.preventDefault();
     return;
   }
+  if (e.ctrlKey || e.metaKey) {
+    const pb = boardAt(e) || boardChromeAt(e);
+    if (pb) {
+      toggleBoardPick(pb.id);
+      if ('preventDefault' in e) e.preventDefault();
+      return;
+    }
+  }
+  clearBoardPick();
   const dotBoard = boardDotAt(e);
   if (dotBoard) {
     const {x, y} = getClientPos(e);
@@ -2273,7 +2343,10 @@ function handleKeyDown(e: any) {
     return;
   }
 
-  if (mod && key === 'z') {
+  if (e.key === 'Escape' && pickedBoards.value.length) {
+    clearBoardPick();
+    e.preventDefault();
+  } else if (mod && key === 'z') {
     e.shiftKey ? doRedo() : doUndo();
     e.preventDefault();
   } else if (mod && key === 'y') {
@@ -2710,7 +2783,19 @@ function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: numbe
 
 // The board a dragged piece of art would land on: a thick outline around it.
 function drawDropTarget(): void {
-  if (!ctx || !dropTargetId.value) return;
+  if (!ctx) return;
+  // Picked boards (Ctrl / Cmd + click) get the same outline.
+  for (const id of pickedBoards.value) {
+    const pb = store.boards.find(x => x.id === id);
+    if (!pb) continue;
+    const {x: px, y: py} = boardScreen(pb.x, pb.y);
+    ctx.save();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = props.k3 ? K3_ACCENT : BOARD_ACTIVE;
+    ctx.strokeRect(Math.round(px) + 1.5, Math.round(py) + 1.5, Math.round(pb.data.width * zoom.value) - 3, Math.round(pb.data.height * zoom.value) - 3);
+    ctx.restore();
+  }
+  if (!dropTargetId.value) return;
   const b = store.boards.find(x => x.id === dropTargetId.value);
   if (!b) return;
   const {x: sx, y: sy} = boardScreen(b.x, b.y);
@@ -4728,6 +4813,19 @@ watch(
                   @touchend="handleTouchEnd"
               />
             </div>
+            <!-- Several boards picked (Ctrl / Cmd + click): act on them all. -->
+            <div v-if="pickedBoards.length > 1" class="board-multibar" role="toolbar" :aria-label="$t('c_PXEditor.nBoardsSelected', {count: pickedBoards.length})">
+              <span class="board-multibar-count">{{ $t('c_PXEditor.nBoardsSelected', {count: pickedBoards.length}) }}</span>
+              <button type="button" class="board-multibar-btn" @click="hidePickedBoards">
+                <span class="icon icon-eye-cross"/><span>{{ $t('c_PXEditor.hideBoard') }}</span>
+              </button>
+              <button type="button" class="board-multibar-btn danger" @click="askDeletePickedBoards">
+                <span class="icon icon-trash"/><span>{{ $t('c_PXEditor.delete') }}</span>
+              </button>
+              <button type="button" class="board-multibar-btn" @click="clearBoardPick">
+                <span class="icon icon-close"/><span>{{ $t('c_PXEditor.deselect') }}</span>
+              </button>
+            </div>
             <Transition name="canvas-fade">
               <div v-if="!canvasReady" class="canvas-loading" aria-hidden="true">
                 <div class="px-loader">
@@ -5224,11 +5322,11 @@ watch(
       </div>
     </UiModal>
 
-    <UiModal v-if="showDeleteConfirm" class="del-modal" :title="$t('c_PXEditor.deleteThisArt2')" @close="showDeleteConfirm = false">
+    <UiModal v-if="showDeleteConfirm" class="del-modal" :title="deleteIds.length ? $t('c_PXEditor.deleteNBoards', {count: deleteIds.length}, deleteIds.length) : $t('c_PXEditor.deleteThisArt2')" @close="showDeleteConfirm = false; deleteIds = []">
           <template #sub><p class="publish-sub" v-html="$t('c_PXEditor.thisArtworkWillBeRemovedIf')"/></template>
           <div class="publish-actions">
             <button class="btn block" @click="showDeleteConfirm = false">{{ $t('common.cancel') }}</button>
-            <button class="btn block del-confirm-btn" :disabled="deleting" @click="destroyCurrent">
+            <button class="btn block del-confirm-btn" :disabled="deleting" @click="confirmDelete">
               <span class="icon icon-trash"/>
               <span>{{ deleting ? $t('c_PXEditor.deleting') : $t('c_PXEditor.delete') }}</span>
             </button>
@@ -5347,6 +5445,47 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 
 .pick-hint {
   color: var(--muted);
+}
+
+.board-multibar {
+  position: absolute;
+  top: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+
+.board-multibar-count {
+  padding: 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.board-multibar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.board-multibar-btn.danger {
+  color: var(--danger);
 }
 
 .canvas-loading {

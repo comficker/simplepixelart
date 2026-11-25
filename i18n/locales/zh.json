@@ -546,7 +546,12 @@
     "copyScopeToBoard": "将{scope}复制到画板",
     "moveScopeToBoard": "将{scope}移动到画板",
     "copiedScopeTo": "已将{scope}复制到 {name}",
-    "movedScopeTo": "已将{scope}移动到 {name}"
+    "movedScopeTo": "已将{scope}移动到 {name}",
+    "nBoardsSelected": "已选择 {count} 个画板",
+    "deselect": "取消选择",
+    "hidNBoards": "已隐藏 {count} 个画板",
+    "deletedNBoards": "已删除 {count} 个画板",
+    "deleteNBoards": "删除 {count} 个画板？"
   },
   "c_Palette": {
     "colorNHex": "颜色 {n}：{hex}",

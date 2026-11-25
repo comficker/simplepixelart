@@ -546,7 +546,12 @@
     "copyScopeToBoard": "Copiar {scope} a otro tablero",
     "moveScopeToBoard": "Mover {scope} a otro tablero",
     "copiedScopeTo": "{scope} copiado a {name}",
-    "movedScopeTo": "{scope} movido a {name}"
+    "movedScopeTo": "{scope} movido a {name}",
+    "nBoardsSelected": "{count} tableros seleccionados",
+    "deselect": "Deseleccionar",
+    "hidNBoards": "{count} tablero oculto | {count} tableros ocultos",
+    "deletedNBoards": "{count} tablero eliminado | {count} tableros eliminados",
+    "deleteNBoards": "¿Eliminar {count} tablero? | ¿Eliminar {count} tableros?"
   },
   "c_Palette": {
     "colorNHex": "Color {n}: {hex}",

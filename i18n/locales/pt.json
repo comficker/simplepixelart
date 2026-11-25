@@ -546,7 +546,12 @@
     "copyScopeToBoard": "Copiar {scope} para outro quadro",
     "moveScopeToBoard": "Mover {scope} para outro quadro",
     "copiedScopeTo": "{scope} copiado para {name}",
-    "movedScopeTo": "{scope} movido para {name}"
+    "movedScopeTo": "{scope} movido para {name}",
+    "nBoardsSelected": "{count} quadros selecionados",
+    "deselect": "Desmarcar",
+    "hidNBoards": "{count} quadro oculto | {count} quadros ocultos",
+    "deletedNBoards": "{count} quadro excluído | {count} quadros excluídos",
+    "deleteNBoards": "Excluir {count} quadro? | Excluir {count} quadros?"
   },
   "c_Palette": {
     "colorNHex": "Cor {n}: {hex}",

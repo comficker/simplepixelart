@@ -546,7 +546,12 @@
     "copyScopeToBoard": "Копировать {scope} на другую доску",
     "moveScopeToBoard": "Перенести {scope} на другую доску",
     "copiedScopeTo": "{scope}: скопировано в {name}",
-    "movedScopeTo": "{scope}: перенесено в {name}"
+    "movedScopeTo": "{scope}: перенесено в {name}",
+    "nBoardsSelected": "Выбрано досок: {count}",
+    "deselect": "Снять выбор",
+    "hidNBoards": "Скрыто досок: {count}",
+    "deletedNBoards": "Удалено досок: {count}",
+    "deleteNBoards": "Удалить доски ({count})?"
   },
   "c_Palette": {
     "colorNHex": "Цвет {n}: {hex}",

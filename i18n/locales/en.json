@@ -560,7 +560,12 @@
     "copyScopeToBoard": "Copy {scope} to board",
     "moveScopeToBoard": "Move {scope} to board",
     "copiedScopeTo": "Copied {scope} to {name}",
-    "movedScopeTo": "Moved {scope} to {name}"
+    "movedScopeTo": "Moved {scope} to {name}",
+    "nBoardsSelected": "{count} boards selected",
+    "deselect": "Deselect",
+    "hidNBoards": "Hid {count} board | Hid {count} boards",
+    "deletedNBoards": "Deleted {count} board | Deleted {count} boards",
+    "deleteNBoards": "Delete {count} board? | Delete {count} boards?"
   },
   "c_Paginator": {},
   "c_Palette": {

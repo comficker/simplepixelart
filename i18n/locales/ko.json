@@ -546,7 +546,12 @@
     "copyScopeToBoard": "{scope}을(를) 다른 보드로 복사",
     "moveScopeToBoard": "{scope}을(를) 다른 보드로 이동",
     "copiedScopeTo": "{scope}을(를) {name}(으)로 복사함",
-    "movedScopeTo": "{scope}을(를) {name}(으)로 이동함"
+    "movedScopeTo": "{scope}을(를) {name}(으)로 이동함",
+    "nBoardsSelected": "보드 {count}개 선택됨",
+    "deselect": "선택 해제",
+    "hidNBoards": "보드 {count}개를 숨겼습니다",
+    "deletedNBoards": "보드 {count}개를 삭제했습니다",
+    "deleteNBoards": "보드 {count}개를 삭제할까요?"
   },
   "c_Palette": {
     "colorNHex": "색 {n}: {hex}",
