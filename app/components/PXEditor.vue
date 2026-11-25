@@ -1201,7 +1201,7 @@ function boardScreen(bx: number, by: number) {
 const K3_BTN = 14;
 function k3BoardBtns(b: any): { del: Rect4; close: Rect4 } | null {
   const bw = b.data.width * zoom.value;
-  if (bw < 60) return null;
+  if (bw < K3_BAR_MIN_W) return null;
   const {x: sx, y: sy} = boardScreen(b.x, b.y);
   const by = Math.round(sy) - 22, right = Math.round(sx) - 2 + Math.round(bw) + 4 - 1;
   const del = {x: right - K3_BTN, y: by + 1, w: K3_BTN, h: K3_BTN};
@@ -2703,8 +2703,23 @@ function k3Ticks(x: number, y: number): void {
   }
 }
 
+// Below this on-screen width a board is too small for a title bar: it keeps
+// a plain 2px ink edge (tan when active) and no head.
+const K3_BAR_MIN_W = 60;
+
 function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: number, active: boolean): void {
   const c = ctx!;
+  if (bw < K3_BAR_MIN_W) {
+    c.save();
+    c.fillStyle = active ? K3_ACCENT : K3_INK;
+    const x = Math.round(sx), y = Math.round(sy), w = Math.round(bw), h = Math.round(bh);
+    c.fillRect(x - 2, y - 2, w + 4, 2);
+    c.fillRect(x - 2, y + h, w + 4, 2);
+    c.fillRect(x - 2, y, 2, h);
+    c.fillRect(x + w, y, 2, h);
+    c.restore();
+    return;
+  }
   const ox = Math.round(sx) - 6, oy = Math.round(sy) - 6 - K3_BAR_H - 4;
   const ow = Math.round(bw) + 12, oh = Math.round(bh) + 12 + K3_BAR_H + 4;
   c.save();
