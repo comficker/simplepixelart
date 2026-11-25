@@ -908,3 +908,13 @@ html.k3-editor .board-menu .file-menu-item {
         height: auto !important;
     }
 }
+
+/* Dropdown triggers in a title bar (tileset, art brush): touch screens give
+   their wrapper a 32px minimum, which lifted the button out of the 16px bar. */
+.k3-skin .k3-desk .widget-head :is(.dropdown, .dropdown-trigger-wrap) {
+    display: inline-flex;
+    align-items: center;
+    height: 16px;
+    min-height: 0;
+    min-width: 0;
+}

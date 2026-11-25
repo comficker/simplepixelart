@@ -1700,15 +1700,12 @@ const k3desk = props.k3 ? provideK3Desk(deskEl, (desk, sizes) => {
       // timeline bar is centred along the bottom.
       out.colours = {x: G, y: desk.h - sz('colours').h - G, w: COLOURS_W}
       let x = desk.w - G - CHIP
-      for (const id of ['layers', 'tileset', 'stamp', 'preview']) {
+      for (const id of ['animation', 'layers', 'tileset', 'stamp', 'preview']) {
         if (!sizes[id]) continue
         out[id] = {x, y: G, folded: true}
         x -= CHIP + G
       }
       // Folded to its bar, just above the colours.
-      // The folded timeline bar goes under the chip row, against the right
-      // edge: along the bottom it sat on top of the colours window.
-      out.animation = {x: Math.max(G, desk.w - sz('animation').w - G), y: G + CHIP + G, folded: true}
     }
     return out
   }, (id, el) => {
@@ -5056,7 +5053,7 @@ watch(
         </div>
       </div>
 
-      <EditorTimeline v-if="k3" class="editor-timeline" win="animation" win-bar/>
+      <EditorTimeline v-if="k3" class="editor-timeline" win="animation"/>
     </div>
 
     <EditorTimeline v-if="!k3" class="editor-timeline"/>
