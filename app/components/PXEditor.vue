@@ -1706,7 +1706,9 @@ const k3desk = props.k3 ? provideK3Desk(deskEl, (desk, sizes) => {
         x -= CHIP + G
       }
       // Folded to its bar, just above the colours.
-      out.animation = {x: Math.max(G, (desk.w - sz('animation').w) / 2), y: Math.max(G, desk.h - G - 26), folded: true}
+      // The folded timeline bar goes under the chip row, against the right
+      // edge: along the bottom it sat on top of the colours window.
+      out.animation = {x: Math.max(G, desk.w - sz('animation').w - G), y: G + CHIP + G, folded: true}
     }
     return out
   }, (id, el) => {
@@ -1734,6 +1736,19 @@ const k3desk = props.k3 ? provideK3Desk(deskEl, (desk, sizes) => {
       default: return {x: 16, y: 16}
     }
   }) : null
+
+// K3: the preview window opens, folds and resizes on the desk, so its canvas
+// is re-fitted whenever the stage changes size (sizeMiniMap ran only on
+// setup and window resizes, leaving a 0x0 preview after a chip opened).
+let previewStageRo: ResizeObserver | null = null
+onMounted(() => {
+  if (!props.k3 || typeof ResizeObserver === 'undefined') return
+  const stage = miniMap.value?.parentElement
+  if (!stage) return
+  previewStageRo = new ResizeObserver(() => { sizeMiniMap(); scheduleMiniMap() })
+  previewStageRo.observe(stage)
+})
+onBeforeUnmount(() => previewStageRo?.disconnect())
 
 // The folded Preview chip shows a live thumbnail of the art.
 const previewChip = ref<HTMLCanvasElement | null>(null)

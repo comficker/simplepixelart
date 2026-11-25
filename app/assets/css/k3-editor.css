@@ -209,6 +209,7 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
 .k3-skin .k3-desk .widget-head .widget-ctl-btn {
     height: 16px;
     min-width: 16px;
+    min-height: 16px; /* touch screens lift controls to 32px; the bar is 16 */
     padding: 0 3px;
     gap: 3px;
     border: 0;
@@ -375,6 +376,10 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
 
 .k3-skin .k3-desk .k3-win {
     position: absolute;
+    /* Phones pin the palette to the bottom (sticky, bottom: 0); on the desk
+       that bottom stretched the window to the desk's full height. */
+    right: auto;
+    bottom: auto;
     display: flex;
     flex-direction: column;
     max-width: calc(100% - 16px);
@@ -872,5 +877,34 @@ html.k3-editor .board-menu .file-menu-item {
 @media (hover: hover) and (pointer: fine) {
     .k3-skin .k3-desk .board-multibar-btn:hover {
         background: var(--k3-accent);
+    }
+}
+
+/* Phones hide the preview panel (main.css, < 768px). On the desk it is a
+   window like the others -- folded to a chip by default there -- so it
+   gets its head, body and canvas back. */
+@media (max-width: 767px) {
+    .k3-skin .k3-desk .k3-win.preview-widget:not(.k3-chip-mode) {
+        height: auto;
+        overflow: visible;
+        padding: 4px 4px 14px;
+    }
+
+    .k3-skin .k3-desk .k3-win.preview-widget:not(.k3-folded) > .widget-head {
+        height: auto;
+        min-height: 18px;
+        overflow: visible;
+        padding: 0 3px;
+        margin-bottom: 4px;
+    }
+
+    .k3-skin .k3-desk .k3-win.preview-widget:not(.k3-folded) > .widget-body {
+        height: auto;
+        overflow: hidden;
+        padding: var(--space-2);
+    }
+
+    .k3-skin .k3-desk .mini-map {
+        height: auto !important;
     }
 }
