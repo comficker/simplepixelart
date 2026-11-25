@@ -240,7 +240,7 @@ useCustomSeoMeta({
         <ToolPaths grid/>
       </Widget>
 
-      <Widget v-if="showStudio" :title="auth.logged ? $t('p_index.yourStudio') : $t('p_index.startAProject')">
+      <Widget v-if="showStudio" class="home-well" :title="auth.logged ? $t('p_index.yourStudio') : $t('p_index.startAProject')">
         <template #ctl>
           <NuxtLinkLocale to="/work" class="widget-ctl-btn">
             <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
@@ -292,70 +292,97 @@ useCustomSeoMeta({
           </div>
       </Widget>
 
-      <!-- Who is new, who leads, what to draw this week: one row, above the
-           gallery, out of the hero so the hero can carry the scene. -->
-      <div class="screen-row home-row">
-        <Widget v-if="newCreators?.length" :title="$t('p_index.newCreators')">
-          <template #ctl>
-            <NuxtLinkLocale to="/creator" class="widget-ctl-btn">
-              <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
+      <!-- Who is new, who leads, what to draw this week, plus an ad: one row
+           of stat cards above the gallery -- a raised card on a tray whose
+           foot carries the way on. -->
+      <div class="home-row">
+        <!-- The row's first card: a fixed 320x100 unit (the responsive ad
+             unit sized by hand, as the leaderboard below is). The stat cards
+             beside it are ~116px tall, so a 100px banner fits the row without
+             stretching it, and the grid's breakpoints keep the card at least
+             320px wide. -->
+        <section class="home-stat home-stat-ad">
+          <div class="home-stat-card">
+            <AdSlot slot="7838948172" :width="320" :height="100" bare/>
+          </div>
+          <div class="home-stat-foot">
+            <span class="icon icon-flag" aria-hidden="true"/>
+            <span>{{ $t('c_AdSlot.advertisement') }}</span>
+          </div>
+        </section>
+        <section v-if="newCreators?.length" class="home-stat">
+          <div class="home-stat-card">
+            <h2 class="home-stat-title">{{ $t('p_index.newCreators') }}</h2>
+            <ol class="rank-list">
+              <li v-for="c in newCreators" :key="c.username">
+                <NuxtLinkLocale :to="`/creator/${c.username}`" class="rank-row" :title="`@${c.username}`">
+                  <span class="rank-avatar">
+                    <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
+                    <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
+                  </span>
+                  <span class="rank-name">{{ c.username }}</span>
+                  <img class="rank-art" :src="tileImageUrl(apiBase, c.art.id_string)" :alt="c.art.name" loading="lazy">
+                </NuxtLinkLocale>
+              </li>
+            </ol>
+          </div>
+          <div class="home-stat-foot">
+            <span class="icon icon-user" aria-hidden="true"/>
+            <NuxtLinkLocale to="/creator" class="home-stat-more">
+              {{ $t('p_index.viewAll') }}<span class="icon icon-angle-right"/>
             </NuxtLinkLocale>
-          </template>
-          <ol class="rank-list">
-            <li v-for="c in newCreators" :key="c.username">
-              <NuxtLinkLocale :to="`/creator/${c.username}`" class="rank-row" :title="`@${c.username}`">
-                <span class="rank-avatar">
-                  <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
-                  <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
+          </div>
+        </section>
+        <section v-if="topCreatorsPending || topCreators?.length" class="home-stat">
+          <div class="home-stat-card">
+            <h2 class="home-stat-title">{{ $t('p_index.topCreators') }}</h2>
+            <ol class="rank-list">
+              <li v-for="(c, i) in creatorRows" :key="c ? c.username : `slot-${i}`">
+                <NuxtLinkLocale v-if="c" :to="`/creator/${c.username}`" class="rank-row">
+                  <span class="rank-avatar">
+                    <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
+                    <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
+                  </span>
+                  <span class="rank-name">{{ c.username }}</span>
+                  <span v-if="c.is_bot" class="rank-bot">{{ $t('common.bot') }}</span>
+                  <span class="rank-count">{{ c.arts }}</span>
+                </NuxtLinkLocale>
+                <span v-else class="rank-row" aria-hidden="true">
+                  <span class="skeleton rank-skeleton-avatar"/>
+                  <span class="skeleton skeleton-line-sm rank-skeleton-name"/>
                 </span>
-                <span class="rank-name">{{ c.username }}</span>
-                <img class="rank-art" :src="tileImageUrl(apiBase, c.art.id_string)" :alt="c.art.name" loading="lazy">
-              </NuxtLinkLocale>
-            </li>
-          </ol>
-        </Widget>
-        <Widget v-if="topCreatorsPending || topCreators?.length" :title="$t('p_index.topCreators')">
-          <template #ctl>
-            <NuxtLinkLocale to="/creator" class="widget-ctl-btn">
-              <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
+              </li>
+            </ol>
+          </div>
+          <div class="home-stat-foot">
+            <span class="icon icon-crown" aria-hidden="true"/>
+            <NuxtLinkLocale to="/creator" class="home-stat-more">
+              {{ $t('p_index.viewAll') }}<span class="icon icon-angle-right"/>
             </NuxtLinkLocale>
-          </template>
-          <ol class="rank-list">
-            <li v-for="(c, i) in creatorRows" :key="c ? c.username : `slot-${i}`">
-              <NuxtLinkLocale v-if="c" :to="`/creator/${c.username}`" class="rank-row">
-                <span class="rank-avatar">
-                  <img v-if="c.avatar" :src="c.avatar" :alt="c.username" loading="lazy">
-                  <span v-else>{{ c.username.slice(0, 1).toUpperCase() }}</span>
-                </span>
-                <span class="rank-name">{{ c.username }}</span>
-                <span v-if="c.is_bot" class="rank-bot">{{ $t('common.bot') }}</span>
-                <span class="rank-count">{{ c.arts }}</span>
-              </NuxtLinkLocale>
-              <span v-else class="rank-row" aria-hidden="true">
-                <span class="skeleton rank-skeleton-avatar"/>
-                <span class="skeleton skeleton-line-sm rank-skeleton-name"/>
-              </span>
-            </li>
-          </ol>
-        </Widget>
-        <Widget v-if="homeChallenges?.length" :title="$t('p_index.weeklyChallenge')">
-          <template #ctl>
-            <NuxtLinkLocale to="/challenges" class="widget-ctl-btn">
-              <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
+          </div>
+        </section>
+        <section v-if="homeChallenges?.length" class="home-stat">
+          <div class="home-stat-card">
+            <h2 class="home-stat-title">{{ $t('p_index.weeklyChallenge') }}</h2>
+            <ol class="rank-list">
+              <li v-for="c in homeChallenges" :key="c.id_string">
+                <NuxtLinkLocale :to="`/challenges/${c.id_string}`" class="rank-row">
+                  <img v-if="c.art" class="rank-art" :src="tileImageUrl(apiBase, c.art.id_string)" :alt="c.art.name" loading="lazy">
+                  <span v-else class="rank-art home-chal-empty"><span class="icon icon-trophy"/></span>
+                  <span class="rank-name">{{ c.name }}</span>
+                  <span v-if="c.active" class="rank-count home-chal-live">{{ $t('p_index.daysLeft', c.days, {count: c.days}) }}</span>
+                  <span v-else class="rank-count">{{ challengeRange(c) }}</span>
+                </NuxtLinkLocale>
+              </li>
+            </ol>
+          </div>
+          <div class="home-stat-foot">
+            <span class="icon icon-trophy" aria-hidden="true"/>
+            <NuxtLinkLocale to="/challenges" class="home-stat-more">
+              {{ $t('p_index.viewAll') }}<span class="icon icon-angle-right"/>
             </NuxtLinkLocale>
-          </template>
-          <ol class="rank-list">
-            <li v-for="c in homeChallenges" :key="c.id_string">
-              <NuxtLinkLocale :to="`/challenges/${c.id_string}`" class="rank-row">
-                <img v-if="c.art" class="rank-art" :src="tileImageUrl(apiBase, c.art.id_string)" :alt="c.art.name" loading="lazy">
-                <span v-else class="rank-art home-chal-empty"><span class="icon icon-trophy"/></span>
-                <span class="rank-name">{{ c.name }}</span>
-                <span v-if="c.active" class="rank-count home-chal-live">{{ $t('p_index.daysLeft', c.days, {count: c.days}) }}</span>
-                <span v-else class="rank-count">{{ challengeRange(c) }}</span>
-              </NuxtLinkLocale>
-            </li>
-          </ol>
-        </Widget>
+          </div>
+        </section>
       </div>
 
       <!-- Above What's new: seen by more visitors, and on phones it is no
@@ -369,7 +396,7 @@ useCustomSeoMeta({
         <div class="home-ad-fluid"><AdSlot slot="7838948172" size="small" bare/></div>
       </Widget>
 
-      <Widget :title="$t('p_index.whatSNew')" class="home-library">
+      <Widget :title="$t('p_index.whatSNew')" class="home-library home-well">
         <template #ctl>
           <NuxtLinkLocale to="/arts/new" class="widget-ctl-btn">
             <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
@@ -414,6 +441,118 @@ useCustomSeoMeta({
 </template>
 
 <style scoped>
+/* Stat cards: a tray one step down from the page, the content on a raised
+   card inside it, a foot line under the card with the way on. The column
+   breaks are set by the ad card, which holds a 320x100 unit: each card's
+   inner width is (row - 2x10 padding - gaps) / columns - 2x3 tray inset, so
+   two columns need a 690px row to keep it >= 320. */
+.home-stack {
+  container-type: inline-size;
+}
+
+.home-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+@container (min-width: 690px) {
+  .home-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* One row once the three stat cards can keep ~160px each: the ad column is
+   held at exactly the unit's width (320 + the tray's 2x3 inset), the stat
+   cards share what is left. */
+@container (min-width: 860px) {
+  .home-row {
+    grid-template-columns: calc(320px + 2 * var(--space-1)) repeat(3, minmax(0, 1fr));
+  }
+}
+
+.home-stat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--space-1);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.home-stat-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* Set like the widget heads elsewhere: small, muted, uppercase. */
+.home-stat-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.home-stat-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.home-stat-foot > .icon {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+}
+
+.home-stat-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 600;
+  color: var(--success);
+  transition: color var(--transition);
+}
+
+.home-stat-more .icon {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .home-stat-more:hover {
+    color: var(--foreground);
+  }
+}
+
+/* Your studio and What's new: a small inner shadow on the body, so the art
+   cards sit in it rather than on the page. */
+.home-well > :deep(.widget-body) {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* The ad fills its card edge to edge; the card keeps the unit's height. */
+.home-stat-ad .home-stat-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.home-stat-ad .home-stat-foot {
+  justify-content: flex-start;
+}
 .home-ad-fixed {
   display: none;
 }
