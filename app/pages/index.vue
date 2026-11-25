@@ -544,10 +544,27 @@ useCustomSeoMeta({
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-/* The ad fills its card edge to edge; the card keeps the unit's height. */
+/* The ad is the card: the 320x100 unit sits centred on the tray with the
+   raised-card edge itself, rather than inside a second white card (which
+   framed the creative twice). Its fill shows as a placeholder card until
+   the creative loads. */
 .home-stat-ad .home-stat-card {
+  align-items: center;
+  justify-content: center;
   padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.home-stat-ad :deep(.ad-frame) {
+  width: 100%;
+}
+
+.home-stat-ad :deep(.adsbygoogle) {
   overflow: hidden;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .home-stat-ad .home-stat-foot {
