@@ -554,7 +554,13 @@
     "startFromBase": "Start from a base",
     "noBasesYet": "No bases yet",
     "basePreview": "Preview for copies",
-    "colorsReduced": "Too many colors for pixel art — reduced to {count}."
+    "colorsReduced": "Too many colors for pixel art — reduced to {count}.",
+    "tools": "Tools",
+    "resetWindowLayout": "Reset window layout",
+    "copyScopeToBoard": "Copy {scope} to board",
+    "moveScopeToBoard": "Move {scope} to board",
+    "copiedScopeTo": "Copied {scope} to {name}",
+    "movedScopeTo": "Moved {scope} to {name}"
   },
   "c_Paginator": {},
   "c_Palette": {
@@ -820,7 +826,10 @@
     "alreadyClaimedToday": "Already claimed today",
     "plusNCredits": "+1 credit | +{count} credits"
   },
-  "c_Widget": {},
+  "c_Widget": {
+    "collapse": "Collapse",
+    "expand": "Expand"
+  },
   "c_WorkTile": {
     "pendingReview": "Pending review"
   },

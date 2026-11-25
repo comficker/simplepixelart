@@ -388,7 +388,9 @@ function addFrom(kind: 'art' | 'tileset') {
 </script>
 
 <template>
-  <Widget label class="stp" :title="$t('c_StampPicker.artBrush')">
+  <!-- Several roots (the modals), so attrs are passed on by hand: the
+       editor's K3 desk gives this widget its window id (win). -->
+  <Widget label class="stp" v-bind="$attrs" :title="$t('c_StampPicker.artBrush')">
     <template v-if="!set" #ctl>
       <ui-dropdown-menu>
         <button type="button" class="widget-ctl-btn" :title="$t('c_StampPicker.choose')" :aria-label="$t('c_StampPicker.choose')">

@@ -540,7 +540,13 @@
     "startFromBase": "Começar de uma base",
     "noBasesYet": "Ainda não há bases",
     "basePreview": "Prévia das cópias",
-    "colorsReduced": "Cores demais para pixel art — reduzidas para {count}."
+    "colorsReduced": "Cores demais para pixel art — reduzidas para {count}.",
+    "tools": "Ferramentas",
+    "resetWindowLayout": "Redefinir janelas",
+    "copyScopeToBoard": "Copiar {scope} para outro quadro",
+    "moveScopeToBoard": "Mover {scope} para outro quadro",
+    "copiedScopeTo": "{scope} copiado para {name}",
+    "movedScopeTo": "{scope} movido para {name}"
   },
   "c_Palette": {
     "colorNHex": "Cor {n}: {hex}",
@@ -2982,5 +2988,9 @@
   "c_HeroDinos": {
     "hide": "Ocultar os dinos",
     "show": "Mostrar os dinos"
+  },
+  "c_Widget": {
+    "collapse": "Recolher",
+    "expand": "Expandir"
   }
 }

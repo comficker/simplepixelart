@@ -540,7 +540,13 @@
     "startFromBase": "ベースから始める",
     "noBasesYet": "ベースはまだありません",
     "basePreview": "コピーのプレビュー",
-    "colorsReduced": "ピクセルアートには色が多すぎるため、{count}色に減らしました。"
+    "colorsReduced": "ピクセルアートには色が多すぎるため、{count}色に減らしました。",
+    "tools": "ツール",
+    "resetWindowLayout": "ウィンドウ配置をリセット",
+    "copyScopeToBoard": "{scope}を別のボードにコピー",
+    "moveScopeToBoard": "{scope}を別のボードに移動",
+    "copiedScopeTo": "{scope}を{name}にコピーしました",
+    "movedScopeTo": "{scope}を{name}に移動しました"
   },
   "c_Palette": {
     "colorNHex": "色 {n}: {hex}",
@@ -2946,5 +2952,9 @@
   "c_HeroDinos": {
     "hide": "恐竜を隠す",
     "show": "恐竜を表示"
+  },
+  "c_Widget": {
+    "collapse": "折りたたむ",
+    "expand": "展開"
   }
 }

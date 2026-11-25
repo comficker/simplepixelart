@@ -540,7 +540,13 @@
     "startFromBase": "Начать с основы",
     "noBasesYet": "Основ пока нет",
     "basePreview": "Предпросмотр копий",
-    "colorsReduced": "Слишком много цветов для пиксель-арта — сокращено до {count}."
+    "colorsReduced": "Слишком много цветов для пиксель-арта — сокращено до {count}.",
+    "tools": "Инструменты",
+    "resetWindowLayout": "Сбросить расположение окон",
+    "copyScopeToBoard": "Копировать {scope} на другую доску",
+    "moveScopeToBoard": "Перенести {scope} на другую доску",
+    "copiedScopeTo": "{scope}: скопировано в {name}",
+    "movedScopeTo": "{scope}: перенесено в {name}"
   },
   "c_Palette": {
     "colorNHex": "Цвет {n}: {hex}",
@@ -2982,5 +2988,9 @@
   "c_HeroDinos": {
     "hide": "Скрыть динозавров",
     "show": "Показать динозавров"
+  },
+  "c_Widget": {
+    "collapse": "Свернуть",
+    "expand": "Развернуть"
   }
 }

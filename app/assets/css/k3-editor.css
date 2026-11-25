@@ -1,0 +1,842 @@
+/* K3 "pixel windows" skin for the editor (pages/editor.vue puts .k3-skin on
+   the ToolLayout root; PXEditor k3 marks its body .k3-desk). Only the desk is
+   K3: a dark pixel-grid desk where every panel is a cream window with a 2px
+   ink edge and a tan title bar. The head row (which holds the editor's
+   toolbar) and the status foot keep the site's own style. The palette is
+   fixed: it reads the same in the light and dark themes.
+
+   Most of the desk follows by re-pointing the design tokens inside it; the
+   rules after that only add what tokens can't (bars, edges, bevels). */
+
+.k3-skin .k3-desk,
+html.k3-editor .ui-modal,
+html.k3-editor .board-menu {
+    --k3-ink: #2A2B30;
+    --k3-cream: #E8E2D0;
+    --k3-paper: #F2EEE4;
+    --k3-light: #F7F3E7;
+    --k3-bar: #CDB88E;
+    --k3-accent: #D2B477;
+    --k3-muted: #6B6458;
+    --k3-faint: #A39A86;
+    --k3-well: #2C2F34;
+    --k3-well-edge: #1E1F23;
+    --k3-desk: #34302B;
+    --k3-grip: #8C826E;
+
+    --surface: var(--k3-cream);
+    --surface-2: var(--k3-paper);
+    /* Fields and rows inside a window (layer rows, inputs) sit on paper; the
+       desk paints its own dark ground below. */
+    --background: var(--k3-paper);
+    --card: var(--k3-cream);
+    --card-ground: var(--k3-paper);
+    --field: var(--k3-light);
+    --field-border: var(--k3-ink);
+    --border: var(--k3-ink);
+    --foreground: var(--k3-ink);
+    --muted: var(--k3-muted);
+    --primary: var(--k3-ink);
+    --primary-fill: var(--k3-accent);
+    --primary-foreground: var(--k3-ink);
+    --radius: 0;
+    --radius-sm: 0;
+
+    color: var(--k3-ink);
+    background-color: var(--k3-desk);
+    background-image:
+        linear-gradient(#46403A 2px, transparent 2px),
+        linear-gradient(90deg, #46403A 2px, transparent 2px),
+        linear-gradient(#3B3631 2px, transparent 2px),
+        linear-gradient(90deg, #3B3631 2px, transparent 2px);
+    background-size: 128px 128px, 128px 128px, 32px 32px, 32px 32px;
+}
+
+/* ---- Head row: the editor's toolbar, site style, sized to the row ------ */
+
+.k3-skin .k3-head {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* Before mount the toolbar is still in the editor (it teleports up once
+   mounted); keep that copy out of layout so the desk doesn't jump. */
+html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
+    display: none;
+}
+
+/* Back/home only belongs to fullscreen, where .editor hides it otherwise. */
+.k3-skin .k3-head .fs-only {
+    display: none;
+}
+
+.k3-skin .k3-head .editor-toolbar {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+}
+
+.k3-skin .k3-head :is(.toolbar-start, .toolbar-main, .toolbar-end, .toolbar-group) {
+    align-items: center;
+}
+
+.k3-skin > .tool-main > .widget-head {
+    padding: 3px var(--space-3);
+}
+
+.k3-skin .k3-head .editor-toolbar,
+.k3-skin .k3-head :is(.toolbar-start, .toolbar-main, .toolbar-end, .toolbar-group) {
+    gap: 2px;
+}
+
+.k3-skin .k3-head .toolbar-main {
+    gap: var(--space-2);
+}
+
+.k3-skin .k3-head .toolbar-btn {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    font-size: var(--text-xs);
+}
+
+.k3-skin .k3-head .toolbar-btn.zoom-readout {
+    width: auto;
+    padding: 0 var(--space-1);
+    font-size: var(--text-2xs);
+}
+
+/* Small icons in the head row, like the other widget heads (the editor's
+   own toolbar uses the large size). */
+.k3-skin .k3-head :is(.toolbar-btn, .publish-toolbar-btn) .icon {
+    width: var(--icon-sm);
+    height: var(--icon-sm);
+}
+
+.k3-skin .k3-head .publish-toolbar-btn {
+    height: 22px;
+    min-height: 22px;
+    align-self: center;
+    padding: 0 var(--space-2);
+    font-size: var(--text-2xs);
+}
+
+/* ---- Windows on the desk ---------------------------------------------- */
+
+/* Square corners, no clip-path: a clipped window would cut off its own
+   dropdowns. */
+.k3-skin .k3-desk .widget {
+    position: relative;
+    padding: 4px;
+    overflow: visible;
+    background: var(--k3-cream);
+    border: 0;
+    border-radius: 0;
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+}
+
+/* Title bars: tan band, checker tick, small uppercase title, hatch right. */
+.k3-skin .k3-desk .widget > .widget-head {
+    min-height: 18px;
+    gap: 6px;
+    padding: 0 3px;
+    margin-bottom: 4px;
+    background: var(--k3-bar);
+    border: 0;
+}
+
+.k3-skin .k3-desk .widget > .widget-head > .title {
+    display: flex;
+    align-items: center;
+    /* The site's title is space-between; with the hatch hidden (tools,
+       colours) that pushed the text to the right edge. */
+    justify-content: flex-start;
+    gap: 6px;
+    flex: 1 1 auto;
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--k3-ink);
+}
+
+.k3-skin .k3-desk .widget > .widget-head > .title::before,
+.k3-skin .k3-desk .widget > .widget-head > .title::after {
+    content: "";
+    width: 6px;
+    height: 14px;
+    flex-shrink: 0;
+    background: repeating-conic-gradient(var(--k3-ink) 0 25%, transparent 0 50%) 0 0 / 4px 4px;
+}
+
+.k3-skin .k3-desk .widget > .widget-head > .title::after {
+    margin-left: auto;
+}
+
+/* Bodies sit on the window's cream; the preview sits in a dark well. */
+.k3-skin .k3-desk .widget > .widget-body {
+    background: transparent;
+    border: 0;
+}
+
+.k3-skin .k3-desk .preview-widget > .widget-body {
+    background: var(--k3-well);
+    box-shadow: inset 0 0 0 2px var(--k3-well-edge);
+}
+
+/* Buttons: cream, 2px ink edge, hard 2px drop. Active = tan, pressed in. */
+.k3-skin .k3-desk :is(.tools .inside, .widget-ctl-btn) {
+    background: var(--k3-cream);
+    color: var(--k3-ink);
+    border: 2px solid var(--k3-ink);
+    border-radius: 0;
+    box-shadow: 2px 2px 0 0 var(--k3-ink);
+}
+
+.k3-skin .k3-desk .tools.tools-rail {
+    gap: 4px;
+    padding: 0 2px 2px 0;
+}
+
+.k3-skin .k3-desk .tools-sep {
+    background: var(--k3-faint);
+}
+
+/* Title-bar buttons: the same 16px square as the fold / close buttons --
+   2px ink edge drawn inside, no drop, a 10px icon with room around it. */
+.k3-skin .k3-desk .widget-head .widget-ctl-btn {
+    height: 16px;
+    min-width: 16px;
+    padding: 0 3px;
+    gap: 3px;
+    border: 0;
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+    font-size: var(--text-2xs);
+    line-height: 1;
+}
+
+.k3-skin .k3-desk .widget-head .widget-ctl-btn .icon {
+    width: 10px;
+    height: 10px;
+}
+
+.k3-skin .k3-desk .widget-head .widget-ctl-btn.active {
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+}
+
+.k3-skin .k3-desk .widget-head .widget-ctl-group {
+    gap: 2px;
+}
+
+.k3-skin .k3-desk .widget-head {
+    gap: 2px;
+}
+
+.k3-skin .k3-desk .widget-head > .title {
+    margin-right: 4px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .k3-skin .k3-desk :is(.tools .inside:hover, .widget-ctl-btn:hover) {
+        background: var(--k3-light);
+        color: var(--k3-ink);
+    }
+}
+
+.k3-skin .k3-desk :is(.tools .square.active .inside, .widget-ctl-btn.active) {
+    background: var(--k3-accent);
+    color: var(--k3-ink);
+    border-color: var(--k3-ink);
+    box-shadow: inset 2px 2px 0 0 rgba(42, 43, 48, 0.35);
+}
+
+.k3-skin .k3-desk .brush-size {
+    background: var(--k3-cream);
+    border: 2px solid var(--k3-ink);
+    border-radius: 0;
+    box-shadow: 2px 2px 0 0 var(--k3-ink);
+}
+
+.k3-skin .k3-desk .brush-size.active {
+    background: var(--k3-accent);
+    box-shadow: inset 2px 2px 0 0 rgba(42, 43, 48, 0.35);
+}
+
+/* Colours: swatches in a dark well, 2px apart, like the K3 colour window. */
+/* The swatches wrap to the window's width (a narrower colours window shows
+   more rows of fewer swatches) instead of scrolling one strip sideways. */
+.k3-skin .k3-desk .palette-widget .palette-row {
+    height: auto;
+    background: var(--k3-well);
+    box-shadow: inset 0 0 0 2px var(--k3-well-edge);
+}
+
+.k3-skin .k3-desk .palette-widget .wrapper {
+    position: static;
+    overflow: visible;
+}
+
+.k3-skin .k3-desk .palette-widget .items {
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 6px;
+}
+
+.k3-skin .k3-desk .palette-widget .item {
+    width: 28px;
+    height: 28px;
+    font-size: var(--text-base);
+}
+
+.k3-skin .k3-desk .palette-widget .color-item {
+    box-shadow: none;
+}
+
+.k3-skin .k3-desk .palette-widget .item.active {
+    outline: 0;
+    box-shadow: inset 0 0 0 2px var(--k3-well), inset 0 0 0 4px var(--k3-cream);
+}
+
+.k3-skin .k3-desk .palette-widget .item:not(.color-item) {
+    color: var(--k3-cream);
+}
+
+.k3-skin .k3-desk .palette-widget .tool-item {
+    color: var(--k3-faint);
+}
+
+.k3-skin .k3-desk .palette-widget .tool-item.active {
+    color: var(--k3-accent);
+}
+
+.k3-skin .k3-desk .palette-widget .palette-remove {
+    position: static;
+    width: 28px;
+    height: 28px;
+    background: var(--k3-well);
+}
+
+.k3-skin .k3-desk .layers li.active {
+    background: var(--k3-accent);
+}
+
+/* ---- Desk and floating windows (useK3Desk) ---------------------------- */
+
+/* The desk is the editor body: the canvas fills it, the panels float on it.
+   The column wrappers drop out of layout so every window is positioned
+   against the desk itself. */
+.k3-skin .editor-body.k3-desk {
+    position: relative;
+    flex: 1 1 auto;
+    /* Stacked layout (below the 1280px dash grid): the desk has no content
+       height of its own, so give it most of the screen. In the dash grid it
+       fills the tool frame instead. */
+    min-height: max(460px, calc(100dvh - 160px));
+    overflow: hidden;
+    gap: 0;
+    border: 0;
+    background: transparent;
+}
+
+@media (min-width: 1280px) {
+    .main-wrapper.dash .k3-skin .editor-body.k3-desk {
+        min-height: 0;
+    }
+}
+
+.k3-skin .k3-desk :is(.canvas-col, .editor-sidebar, .sidebar-stack, .sidebar-stack-inner) {
+    display: contents;
+}
+
+.k3-skin .k3-desk > .canvas-col > .canvas-widget {
+    position: absolute;
+    inset: 0;
+    z-index: 0; /* its own stacking context: the board dialogs stay under the windows */
+    padding: 0;
+    background: var(--k3-well);
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+}
+
+.k3-skin .k3-desk > .canvas-col > .canvas-widget > .widget-body {
+    height: 100%;
+    background: transparent;
+    box-shadow: none;
+}
+
+.k3-skin .k3-desk .canvas-widget .square {
+    height: 100%;
+    padding-top: 0;
+}
+
+.k3-skin .k3-desk .k3-win {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    max-width: calc(100% - 16px);
+    max-height: calc(100% - 16px);
+    transform-origin: top left;
+}
+
+/* K3's notched corners, painted rather than clipped (a clip-path would cut
+   off the window's own dropdowns): a desk-coloured 2px square on each corner. */
+.k3-skin .k3-desk .k3-win::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(var(--k3-desk), var(--k3-desk)) top left / 2px 2px no-repeat,
+        linear-gradient(var(--k3-desk), var(--k3-desk)) top right / 2px 2px no-repeat,
+        linear-gradient(var(--k3-desk), var(--k3-desk)) bottom left / 2px 2px no-repeat,
+        linear-gradient(var(--k3-desk), var(--k3-desk)) bottom right / 2px 2px no-repeat;
+}
+
+/* Resize grip: K3's corner dots, live here. Every open window has one. */
+.k3-skin .k3-desk .k3-win:not(.k3-folded) {
+    padding-bottom: 14px;
+}
+
+.k3-skin .k3-grip {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    touch-action: none;
+    z-index: 1;
+}
+
+.k3-skin .k3-grip::before {
+    content: "";
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    width: 2px;
+    height: 2px;
+    background: transparent;
+    box-shadow: 8px 0 0 0 var(--k3-grip), 4px 4px 0 0 var(--k3-grip), 8px 4px 0 0 var(--k3-grip),
+        0 8px 0 0 var(--k3-grip), 4px 8px 0 0 var(--k3-grip), 8px 8px 0 0 var(--k3-grip);
+}
+
+/* A resized window: the body takes the room and scrolls. */
+.k3-skin .k3-desk .k3-win > .widget-body {
+    flex: 1 1 auto;
+}
+
+.k3-skin .k3-desk .k3-win.k3-unplaced {
+    visibility: hidden;
+}
+
+.k3-skin .k3-desk .k3-win > .widget-head {
+    flex: 0 0 auto;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.k3-skin .k3-desk .k3-win > .widget-head:active {
+    cursor: grabbing;
+}
+
+.k3-skin .k3-desk .k3-win > .widget-body {
+    min-height: 0;
+    overflow: auto;
+}
+
+/* Window widths: the panels used to take them from their columns. */
+.k3-skin .k3-desk .k3-win:is(.preview-widget, .layers, .cstrip, .stp) {
+    width: 220px;
+}
+
+.k3-skin .k3-desk .k3-win.preview-widget > .widget-body {
+    aspect-ratio: 1;
+}
+
+.k3-skin .k3-desk .k3-win.palette-widget {
+    width: min(560px, calc(100% - 320px));
+    min-width: 260px;
+}
+
+.k3-skin .k3-desk .k3-win.timeline {
+    width: min(560px, calc(100% - 320px));
+    min-width: 260px;
+}
+
+.k3-skin .k3-desk .k3-win.layers > .widget-body {
+    max-height: 260px;
+}
+
+.k3-skin .k3-desk .k3-win.tool-rail {
+    width: auto;
+}
+
+/* Widened by hand: the tools reflow into more columns. */
+.k3-skin .k3-desk .k3-win.tool-rail[style*="width"] .tools.tools-rail {
+    grid-template-columns: repeat(auto-fill, 32px);
+}
+
+.k3-skin .k3-desk .k3-win.tool-rail .tools.tools-rail {
+    grid-template-columns: repeat(2, 32px);
+    justify-content: start;
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    overflow: visible;
+}
+
+.k3-skin .k3-desk .k3-win.tool-rail .tools-sep {
+    grid-column: 1 / -1;
+    width: auto;
+    height: 2px;
+}
+
+/* Fold button: K3's "-" / "[]" square at the end of the bar. */
+.k3-skin .k3-desk .widget-head > .k3-fold {
+    display: inline-flex;
+    min-width: 16px;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    background: var(--k3-cream);
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+    cursor: pointer;
+}
+
+.k3-skin .k3-fold-mn {
+    width: 8px;
+    height: 2px;
+    background: var(--k3-ink);
+}
+
+.k3-skin .k3-fold-mx {
+    width: 6px;
+    height: 6px;
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+}
+
+/* Folded to a chip: a 44px square showing what the window holds. */
+.k3-skin .k3-desk .k3-win.k3-chip-mode {
+    width: 44px;
+    height: 44px;
+    min-width: 0;
+    padding: 0;
+}
+
+.k3-skin .k3-win.k3-chip-mode > :is(.widget-head, .widget-body) {
+    display: none;
+}
+
+.k3-skin .k3-chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 6px;
+    border: 0;
+    background: transparent;
+    color: var(--k3-ink);
+    cursor: grab;
+    touch-action: none;
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.k3-skin .k3-chip .icon {
+    width: var(--icon-md);
+    height: var(--icon-md);
+}
+
+.k3-skin .k3-chip-swatch {
+    width: 100%;
+    height: 100%;
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+}
+
+.k3-skin .k3-chip-layers {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* Folded to its bar (the timeline): only the title band is left. */
+.k3-skin .k3-win.k3-bar-mode > .widget-body {
+    display: none;
+}
+
+.k3-skin .k3-win.k3-bar-mode > .widget-head {
+    margin-bottom: 0;
+}
+
+/* Preview chip: a live thumbnail. */
+.k3-skin .k3-chip-thumb {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+    background: repeating-conic-gradient(#E3DDD0 0 25%, #F2EEE4 0 50%) 0 0 / 8px 8px;
+    box-shadow: 0 0 0 2px var(--k3-ink);
+}
+
+/* Colour window head: the colour in hand, its hex and slot, above the
+   swatch well (the K3 colour window's top row). */
+.k3-skin .k3-colour-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 2px 8px;
+    margin-bottom: 6px;
+    border-bottom: 2px solid var(--k3-ink);
+}
+
+.k3-skin .k3-colour-cur {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 2px var(--k3-ink), 0 0 0 2px var(--k3-cream), 2px 2px 0 2px var(--k3-ink);
+}
+
+.k3-skin .k3-colour-cur.erasing {
+    background: repeating-conic-gradient(#E3DDD0 0 25%, #F2EEE4 0 50%) 0 0 / 8px 8px;
+}
+
+.k3-skin .k3-colour-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.2;
+    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+}
+
+.k3-skin .k3-colour-sub {
+    font-size: var(--text-2xs);
+    color: var(--k3-muted);
+}
+
+/* No divider lines inside a window's body: groups are told apart by space,
+   as in K3 (tool groups, the colour head, the palette's edit bar, layer
+   rows, the timeline's controls). */
+.k3-skin .k3-desk .widget-body .tools-sep {
+    background: transparent;
+}
+
+.k3-skin .k3-colour-head {
+    border-bottom: 0;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+}
+
+.k3-skin .k3-desk .widget-body :is(.palette-merge, .tl-divider) {
+    border-top: 0;
+}
+
+.k3-skin .k3-desk .widget-body .tl-divider {
+    background: transparent;
+}
+
+.k3-skin .k3-desk .layers li {
+    border-color: transparent;
+}
+
+/* A layers window resized taller shows more rows instead of its cap. */
+.k3-skin .k3-desk .k3-win.layers[style*="height"] > .widget-body {
+    max-height: none;
+}
+
+/* Tools: the window is as wide as its grid, never its title. The head adds
+   nothing to the window's width (width 0, then stretched back to 100%), and
+   a title that doesn't fit is cut -- at two columns the bar keeps only the
+   tick and the fold button. */
+.k3-skin .k3-desk .k3-win.tool-rail > .widget-head {
+    width: 0;
+    min-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.k3-skin .k3-desk .k3-win.tool-rail > .widget-head > .title {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.k3-skin .k3-desk .k3-win.tool-rail > .widget-head > .title::after {
+    display: none;
+}
+
+.k3-skin .k3-desk .k3-win.tool-rail > .widget-body {
+    width: max-content;
+    max-width: 100%;
+}
+
+/* Title-bar buttons are icon-only on the desk, at any window size (their
+   title attribute names them). Labels made the bars outgrow small windows. */
+.k3-skin .k3-desk .widget-head .widget-ctl-btn > :not(.icon),
+.k3-skin .k3-desk .widget-head .widget-ctl-btn > .icon-chevron-down {
+    display: none;
+}
+
+.k3-skin .k3-desk .widget-head .widget-ctl-btn {
+    padding: 0 2px;
+    justify-content: center;
+}
+
+/* Resized by hand: the grid fills the window (auto-fill columns). A
+   max-content body would collapse an auto-fill grid to one column. */
+.k3-skin .k3-desk .k3-win.tool-rail[style*="width"] > .widget-body {
+    width: auto;
+}
+
+.k3-skin .k3-desk .k3-win.palette-widget[style*="width"] {
+    min-width: 0;
+}
+
+/* Colours at tool width: like the tools, the head adds nothing to the
+   window's width and its title is cut to fit the buttons. */
+.k3-skin .k3-desk .k3-win.palette-widget > .widget-head {
+    width: 0;
+    min-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.k3-skin .k3-desk .k3-win.palette-widget > .widget-head > .title {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.k3-skin .k3-desk .k3-win.palette-widget > .widget-head > .title::after {
+    display: none;
+}
+
+.k3-skin .k3-desk .k3-win.palette-widget .k3-colour-meta {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* A scrollbar would eat a swatch column from the six-wide colours window. */
+.k3-skin .k3-desk .k3-win.palette-widget > .widget-body {
+    scrollbar-width: none;
+}
+
+.k3-skin .k3-desk .k3-win.palette-widget > .widget-body::-webkit-scrollbar {
+    display: none;
+}
+
+/* Until resized by hand, the colours window shows two rows of swatches and
+   scrolls the rest inside the well: 2 x 28px + the 2px gap + 6px padding. */
+.k3-skin .k3-desk .k3-win.palette-widget:not([style*="height"]) .palette-row {
+    max-height: calc(2 * 28px + 2px + 2 * 6px);
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.k3-skin .k3-desk .k3-win.palette-widget:not([style*="height"]) .palette-row::-webkit-scrollbar {
+    display: none;
+}
+
+/* ---- Dialogs and the board menu (teleported to body) ------------------- */
+
+/* The token block above re-points their colours; these rules make them K3
+   windows: cream, 2px ink edge, hard drop, tan title bar, square buttons. */
+html.k3-editor .ui-modal,
+html.k3-editor .board-menu {
+    background: var(--k3-cream);
+    border: 0;
+    border-radius: 0;
+    box-shadow: inset 0 0 0 2px var(--k3-ink), 4px 4px 0 0 rgba(0, 0, 0, 0.35);
+}
+
+html.k3-editor .ui-modal .publish-heading {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 18px;
+    margin: -6px -6px 0;
+    padding: 0 30px 0 3px;
+    background: var(--k3-bar);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--k3-ink);
+}
+
+html.k3-editor .ui-modal .publish-heading::before {
+    content: "";
+    width: 6px;
+    height: 14px;
+    flex-shrink: 0;
+    background: repeating-conic-gradient(var(--k3-ink) 0 25%, transparent 0 50%) 0 0 / 4px 4px;
+}
+
+html.k3-editor .ui-modal .ui-modal-head .publish-sub {
+    margin-top: 4px;
+}
+
+html.k3-editor .ui-modal .ui-modal-x {
+    top: 7px;
+    right: 7px;
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    border-radius: 0;
+    background: var(--k3-cream);
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+    color: var(--k3-ink);
+}
+
+html.k3-editor .ui-modal .ui-modal-x .icon {
+    width: 10px;
+    height: 10px;
+}
+
+/* Buttons and option chips: 2px ink edge, hard 2px drop; the chosen one
+   (or the primary action) tan and pressed in. */
+html.k3-editor .ui-modal :is(.btn, .onb-chip, .cv-opt, .pill),
+html.k3-editor .ui-modal .onb-chips > button {
+    border: 2px solid var(--k3-ink);
+    border-radius: 0;
+    background: var(--k3-cream);
+    color: var(--k3-ink);
+    box-shadow: 2px 2px 0 0 var(--k3-ink);
+}
+
+html.k3-editor .ui-modal :is(.btn.primary, .onb-chip.active, .cv-opt.active, .pill.active),
+html.k3-editor .ui-modal .onb-chips > button.active {
+    background: var(--k3-accent);
+    color: var(--k3-ink);
+    box-shadow: inset 2px 2px 0 0 rgba(42, 43, 48, 0.35);
+}
+
+html.k3-editor .ui-modal :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), select, textarea) {
+    border: 2px solid var(--k3-ink);
+    border-radius: 0;
+    background: var(--k3-light);
+    color: var(--k3-ink);
+}
+
+/* The board menu (right-click / the bar's dots). */
+html.k3-editor .board-menu {
+    padding: 4px;
+}
+
+html.k3-editor .board-menu .file-menu-item {
+    border-radius: 0;
+    color: var(--k3-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.k3-editor .board-menu .file-menu-item:hover {
+        background: var(--k3-accent);
+    }
+}

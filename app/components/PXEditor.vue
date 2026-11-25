@@ -1,6 +1,11 @@
 <script setup lang="ts">
 const {t} = useI18n()
 
+// `k3`: the K3 "pixel windows" layout (pages/editor.vue). The toolbar moves up
+// into the page's head row, the canvas fills the desk and every panel floats
+// on it as a window that can be dragged and folded (useK3Desk).
+const props = withDefaults(defineProps<{ k3?: boolean }>(), {k3: false})
+
 const localePath = useLocalePath()
 const artImage = useArtImage()
 import {onMounted, ref, toRaw} from "vue";
@@ -139,6 +144,15 @@ async function destroyCurrent() {
   tileStripRef.value?.removeItem(id)
   if (idString) tileStripRef.value?.removeItem(idString)
   showDeleteConfirm.value = false
+
+  // In a workspace of several boards the deleted art's board just goes away.
+  if (store.boards.length > 1) {
+    store.removeBoard(store.activeBoardId)
+    scheduleDraw()
+    toast.success(t('c_PXEditor.deleted'))
+    deleting.value = false
+    return
+  }
 
   if (nextIdStr) {
     canvasReady.value = false
@@ -592,7 +606,7 @@ const hoverInSelection = computed(() =>
 const bgImage = ref<HTMLImageElement | null>(null);
 let bgImageUrlCache = '';
 
-const settingsView = ref<'main' | 'resize' | 'bg' | 'canvas' | 'board' | 'cell'>('main');
+const settingsView = ref<'main' | 'resize' | 'bg' | 'canvas' | 'board' | 'cell' | 'copyTo' | 'moveTo'>('main');
 const bgTab = ref<'none' | 'transparent' | 'solid' | 'art'>('none');
 const bgSolidColor = ref('#FFFFFF');
 const myArts = ref<Array<{id: string; name: string; thumb: string}>>([]);
@@ -1174,7 +1188,40 @@ function boardScreen(bx: number, by: number) {
   return {x: Math.round(cam.value.x + bx * zoom.value), y: Math.round(cam.value.y + by * zoom.value)}
 }
 
+// K3 board windows: the title bar's buttons, right to left -- delete, close
+// (hide from the workspace), then the options dots. Screen-space rects.
+const K3_BTN = 14;
+function k3BoardBtns(b: any): { del: Rect4; close: Rect4; dots: Rect4 } | null {
+  const bw = b.data.width * zoom.value;
+  if (bw < 60) return null;
+  const {x: sx, y: sy} = boardScreen(b.x, b.y);
+  const by = Math.round(sy) - 22, right = Math.round(sx) - 2 + Math.round(bw) + 4 - 1;
+  const del = {x: right - K3_BTN, y: by + 1, w: K3_BTN, h: K3_BTN};
+  const close = {x: del.x - 2 - K3_BTN, y: by + 1, w: K3_BTN, h: K3_BTN};
+  const dots = {x: close.x - 2 - DOT_W, y: by, w: DOT_W, h: 16};
+  return {del, close, dots};
+}
+type Rect4 = { x: number; y: number; w: number; h: number };
+
+function boardBtnAt(e: MouseEvent | TouchEvent): { b: any; kind: 'del' | 'close' } | null {
+  if (!props.k3) return null;
+  const {x: clientX, y: clientY} = getClientPos(e);
+  const rect = canvas.value!.getBoundingClientRect();
+  const px = clientX - rect.left, py = clientY - rect.top;
+  const pad = coarsePointer.value ? 6 : 1;
+  const inside = (r: Rect4) => px >= r.x - pad && px <= r.x + r.w + pad && py >= r.y - pad && py <= r.y + r.h + pad;
+  for (let i = store.boards.length - 1; i >= 0; i--) {
+    const b = store.boards[i]!;
+    const r = k3BoardBtns(b);
+    if (!r) continue;
+    if (inside(r.del)) return {b, kind: 'del'};
+    if (inside(r.close)) return {b, kind: 'close'};
+  }
+  return null;
+}
+
 function boardDotRect(b: any): { x: number; y: number; w: number; h: number } | null {
+  if (props.k3) return k3BoardBtns(b)?.dots ?? null;
   const bw = b.data.width * zoom.value;
   if (bw < 44) return null;
   const {x: sx, y: sy} = boardScreen(b.x, b.y);
@@ -1189,7 +1236,8 @@ function boardDotHitRect(b: any): { x: number; y: number; w: number; h: number }
 }
 
 function boardDotAt(e: MouseEvent | TouchEvent): any {
-  if (!showBoardChrome.value) return null;
+  // K3 boards are windows: their bar (and its buttons) is always there.
+  if (!showBoardChrome.value && !props.k3) return null;
   const {x: clientX, y: clientY} = getClientPos(e);
   const rect = canvas.value!.getBoundingClientRect();
   const px = clientX - rect.left, py = clientY - rect.top;
@@ -1226,6 +1274,14 @@ function hideBoard(id: string) {
   const b = store.boards.find(x => x.id === id);
   store.removeBoard(id);
   toast.success(t('c_PXEditor.hidBoard', {name: b?.data?.name || t('common.untitled')}));
+}
+
+// Delete a board's art for good: make it the active board, then the usual
+// delete confirm (destroyCurrent), which takes the board off the workspace.
+function askDeleteBoard(id: string) {
+  closeBoardMenu();
+  if (id !== store.activeBoardId) store.setActiveBoard(id);
+  showDeleteConfirm.value = true;
 }
 
 const isResizingBoard = ref(false);
@@ -1540,6 +1596,99 @@ const shiftK = computed(() => isMacUA.value ? '⇧' : 'Shift+');
 
 const FS_KEY = 'editor_fullscreen';
 const editorRoot = ref<HTMLElement | null>(null);
+
+const deskEl = ref<HTMLElement | null>(null);
+// The toolbar renders in place on the server and moves into the head row
+// once mounted: Nuxt only serialises teleports aimed at #teleports, so an
+// SSR teleport to #k3-head would hydrate against nothing.
+const k3Mounted = ref(false);
+onMounted(() => { k3Mounted.value = true });
+// Default K3 layout. Wide desks (>= 840px, the app's tablet break) open every
+// window: tools top-left, preview / tileset / layers stacked down the right,
+// colours and the timeline along the bottom. Narrow desks open tools and
+// colours only; the rest start as chips in a row along the bottom.
+const k3desk = props.k3 ? provideK3Desk(deskEl, (desk, sizes) => {
+    const G = 8
+    const CHIP = 44
+    // Six 28px swatches a row: 2px gaps, the well's 6px padding, the window's 4px.
+    const COLOURS_W = 6 * 28 + 5 * 2 + 2 * 6 + 2 * 4
+    const out: Record<string, {x: number, y: number, folded?: boolean}> = {}
+    const sz = (id: string) => sizes[id] || {w: 0, h: 0}
+    out.tools = {x: G, y: G}
+    if (desk.w >= 840) {
+      let y = G
+      for (const id of ['preview', 'stamp', 'tileset', 'layers']) {
+        if (!sizes[id]) continue
+        out[id] = {x: desk.w - sz(id).w - G, y}
+        y += sz(id).h + G
+      }
+      // Animation centred along the bottom; colours flush to the bottom-left,
+      // six swatches wide, its height showing two rows (k3-editor.css).
+      const anim = sz('animation')
+      out.animation = {x: Math.max(G, (desk.w - anim.w) / 2), y: desk.h - anim.h - G}
+      out.colours = {x: G, y: desk.h - sz('colours').h - G, w: COLOURS_W}
+    } else {
+      // Colours six swatches wide, flush to the bottom-left; the folded
+      // timeline bar is centred along the bottom.
+      out.colours = {x: G, y: desk.h - sz('colours').h - G, w: COLOURS_W}
+      let x = desk.w - G - CHIP
+      for (const id of ['layers', 'tileset', 'stamp', 'preview']) {
+        if (!sizes[id]) continue
+        out[id] = {x, y: G, folded: true}
+        x -= CHIP + G
+      }
+      // Folded to its bar, just above the colours.
+      out.animation = {x: Math.max(G, (desk.w - sz('animation').w) / 2), y: Math.max(G, desk.h - G - 26), folded: true}
+    }
+    return out
+  }, (id, el) => {
+    // Resize stops: one cell of whatever the window lays out.
+    const gapOf = (sel: string) => parseFloat(getComputedStyle(el.querySelector(sel) || el).rowGap) || 0
+    const hOf = (sel: string, fb: number) => (el.querySelector(sel) as HTMLElement | null)?.offsetHeight || fb
+    const wOf = (sel: string, fb: number) => (el.querySelector(sel) as HTMLElement | null)?.offsetWidth || fb
+    switch (id) {
+      case 'tools': {
+        // Steps of one tool cell; never narrower than two columns.
+        const gap = gapOf('.tools-rail')
+        const c = 32 + gap
+        const grid = el.querySelector('.tools-rail') as HTMLElement | null
+        const cols = grid ? getComputedStyle(grid).gridTemplateColumns.split(' ').length : 2
+        return {x: c, y: c, minW: el.offsetWidth - (cols - 2) * c}
+      }
+      case 'colours': {
+        // One swatch per step; the swatches wrap, so the height follows.
+        const c = wOf('.palette .item', 28) + 2
+        return {x: c, y: c, autoH: true, minW: 2 * c + 24}
+      }
+      case 'layers': return {x: 24, y: hOf('.layers li', 32) + 2}
+      case 'animation': return {x: wOf('.tl-cel', 24) + 2, y: hOf('.tl-lrow', 34)}
+      case 'preview': return {x: 16, y: 16, square: true}
+      default: return {x: 16, y: 16}
+    }
+  }) : null
+
+// The folded Preview chip shows a live thumbnail of the art.
+const previewChip = ref<HTMLCanvasElement | null>(null)
+function drawPreviewChip() {
+  const c = previewChip.value
+  const art = getArtCanvas()
+  if (!c || !art) return
+  const g = c.getContext('2d')
+  if (!g) return
+  const w = editorData.value.width, h = editorData.value.height
+  const s = Math.min(c.width / w, c.height / h)
+  g.clearRect(0, 0, c.width, c.height)
+  g.imageSmoothingEnabled = false
+  g.drawImage(art, 0, 0, w, h, (c.width - w * s) / 2, (c.height - h * s) / 2, w * s, h * s)
+}
+
+// The chip of a folded Tools window shows the tool in hand.
+const TOOL_ICONS: Record<string, string> = {
+  brush: 'square', 'iso-line': 'rhombus', bucket: 'bucket', stamp: 'stamp',
+  move: 'move', select: 'select', eraser: 'eraser', picker: 'eyedropper',
+}
+const toolChipIcon = computed(() => `icon-${TOOL_ICONS[store.currentTool] || 'square'}`)
+const chipColor = computed(() => editorData.value?.colors?.[store.currentColorIndex] || 'transparent')
 const fsMode = ref<'off' | 'os' | 'window'>('off');
 if (typeof window !== 'undefined') {
   try { const v = localStorage.getItem(FS_KEY); if (v && v !== 'off') fsMode.value = 'window'; } catch {  }
@@ -1600,6 +1749,13 @@ function startDraw(e: any) {
   if (!canvas.value) return;
   if (spacePressed.value) return;
   if ('button' in e && e.button !== 0) return;
+  const btn = boardBtnAt(e);
+  if (btn) {
+    if (btn.kind === 'close') hideBoard(btn.b.id);
+    else askDeleteBoard(btn.b.id);
+    if ('preventDefault' in e) e.preventDefault();
+    return;
+  }
   const dotBoard = boardDotAt(e);
   if (dotBoard) {
     const {x, y} = getClientPos(e);
@@ -2410,10 +2566,140 @@ function drawBoardIsoOverlay(data: any, sx: number, sy: number): void {
   ctx.restore();
 }
 
+// K3: each board is drawn as a window on the desk -- cream frame with a 2px
+// ink edge, a title bar (checker tick, name, size, the options dots) and an
+// ink inset around the art. Painted around the board, never over it.
+const K3_INK = '#2A2B30', K3_CREAM = '#E8E2D0', K3_BAR = '#CDB88E', K3_ACCENT = '#D2B477', K3_MUTED = '#6B6458';
+const K3_BAR_H = 16;
+
+// Board names cut to the bar, cached: the chrome redraws every frame and the
+// cut used to re-measure the name letter by letter each time.
+const k3NameCache = new Map<string, string>();
+function k3FitName(name: string, room: number): string {
+  const key = `${name}|${Math.round(room)}`;
+  const hit = k3NameCache.get(key);
+  if (hit !== undefined) return hit;
+  let out = name;
+  if (ctx!.measureText(out).width > room) {
+    while (out.length > 1 && ctx!.measureText(out + '…').width > room) out = out.slice(0, -1);
+    out += '…';
+  }
+  if (k3NameCache.size > 200) k3NameCache.clear();
+  k3NameCache.set(key, out);
+  return out;
+}
+
+function k3Ticks(x: number, y: number): void {
+  // 6x12 checker tick, 2px cells
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 3; c++) {
+    if ((r + c) % 2) continue;
+    ctx!.fillRect(x + c * 2, y + r * 2, 2, 2);
+  }
+}
+
+function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: number, active: boolean): void {
+  const c = ctx!;
+  const ox = Math.round(sx) - 6, oy = Math.round(sy) - 6 - K3_BAR_H - 4;
+  const ow = Math.round(bw) + 12, oh = Math.round(bh) + 12 + K3_BAR_H + 4;
+  c.save();
+  // Frame: the four bands around the art, so the art itself stays untouched.
+  c.fillStyle = K3_INK;
+  c.fillRect(ox, oy, ow, oh - Math.round(bh) - 6);
+  c.fillRect(ox, oy, 6, oh);
+  c.fillRect(ox + ow - 6, oy, 6, oh);
+  c.fillRect(ox, Math.round(sy + bh), ow, 6);
+  c.fillStyle = K3_CREAM;
+  c.fillRect(ox + 2, oy + 2, ow - 4, K3_BAR_H + 8);
+  c.fillRect(ox + 2, oy + 2, 2, oh - 4);
+  c.fillRect(ox + ow - 4, oy + 2, 2, oh - 4);
+  c.fillRect(ox + 2, oy + oh - 4, ow - 4, 2);
+  // Ink inset around the art: left/right/bottom are the band's inner 2px;
+  // the top one sits under the bar's cream gap.
+  c.fillStyle = K3_INK;
+  c.fillRect(ox + 4, Math.round(sy) - 2, ow - 8, 2);
+  // Notched corners, in the desk's colour.
+  c.fillStyle = deskBg.value || EDITOR_BG;
+  c.fillRect(ox, oy, 2, 2);
+  c.fillRect(ox + ow - 2, oy, 2, 2);
+  c.fillRect(ox, oy + oh - 2, 2, 2);
+  c.fillRect(ox + ow - 2, oy + oh - 2, 2, 2);
+  // Title bar.
+  const bx = ox + 4, by = oy + 4, bwid = ow - 8;
+  c.fillStyle = active ? K3_ACCENT : K3_BAR;
+  c.fillRect(bx, by, bwid, K3_BAR_H);
+  c.fillStyle = K3_INK;
+  k3Ticks(bx + 3, by + 2);
+  // "Hide board labels" keeps the window, drops the name and size.
+  if (bwid > 70 && showBoardChrome.value) {
+    const w = b.data.width, h = b.data.height;
+    c.font = '700 10px system-ui, -apple-system, sans-serif';
+    c.textBaseline = 'middle';
+    const size = `${w}×${h}`;
+    const dotsW = k3BoardBtns(b) ? DOT_W + 2 * K3_BTN + 8 : 4;
+    const sizeW = c.measureText(size).width;
+    const room = bwid - 14 - sizeW - dotsW - 8;
+    const name = k3FitName((b.data.name || 'Untitled').toUpperCase(), room);
+    if (room > 12) c.fillText(name, bx + 12, by + K3_BAR_H / 2 + 1);
+    c.fillStyle = active ? K3_INK : K3_MUTED;
+    c.fillText(size, bx + bwid - dotsW - sizeW, by + K3_BAR_H / 2 + 1);
+  }
+  const btns = k3BoardBtns(b);
+  if (btns) {
+    // Options dots.
+    c.fillStyle = K3_INK;
+    const cy = by + K3_BAR_H / 2;
+    const cx = btns.dots.x + btns.dots.w / 2;
+    for (const dx of [-4, 0, 4]) c.fillRect(Math.round(cx + dx) - 1, Math.round(cy) - 1, 2, 2);
+    // Close and delete: cream squares with a 2px ink edge, like the
+    // windows' title-bar buttons.
+    for (const r of [btns.close, btns.del]) {
+      c.fillStyle = K3_INK;
+      c.fillRect(r.x, r.y, r.w, r.h);
+      c.fillStyle = K3_CREAM;
+      c.fillRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
+    }
+    c.fillStyle = K3_INK;
+    // x: two 2px diagonals.
+    const xr = btns.close;
+    for (let i = 0; i < 4; i++) {
+      c.fillRect(xr.x + 3 + i * 2, xr.y + 3 + i * 2, 2, 2);
+      c.fillRect(xr.x + 3 + i * 2, xr.y + xr.h - 5 - i * 2, 2, 2);
+    }
+    // Trash: lid, then a can outline.
+    const tr = btns.del;
+    c.fillRect(tr.x + 3, tr.y + 3, 8, 2);
+    c.fillRect(tr.x + 6, tr.y + 2, 2, 1);
+    c.fillRect(tr.x + 4, tr.y + 6, 2, 5);
+    c.fillRect(tr.x + 8, tr.y + 6, 2, 5);
+    c.fillRect(tr.x + 4, tr.y + 10, 6, 1);
+  }
+  c.restore();
+}
+
 function drawBoardChrome(): void {
   if (!ctx) return;
   const z = zoom.value;
   for (const b of store.boards) {
+    if (props.k3) {
+      const {x: kx, y: ky} = boardScreen(b.x, b.y);
+      const kactive = b.id === store.activeBoardId && !store.nothingSelected;
+      drawK3BoardChrome(b, kx, ky, b.data.width * z, b.data.height * z, kactive);
+      if (kactive && b.data.width * z >= 36 && b.data.height * z >= 36) {
+        const hs = 7;
+        const kdot = (hx: number, hy: number) => {
+          ctx!.fillStyle = K3_CREAM;
+          ctx!.strokeStyle = K3_INK;
+          ctx!.lineWidth = 2;
+          ctx!.fillRect(hx - hs / 2, hy - hs / 2, hs, hs);
+          ctx!.strokeRect(hx - hs / 2, hy - hs / 2, hs, hs);
+        };
+        const kbw = b.data.width * z, kbh = b.data.height * z;
+        kdot(kx + kbw, ky + kbh);
+        kdot(kx + kbw, ky + kbh / 2);
+        kdot(kx + kbw / 2, ky + kbh);
+      }
+      continue;
+    }
     const w = b.data.width, h = b.data.height;
     const {x: sx, y: sy} = boardScreen(b.x, b.y);
     const bw = w * z, bh = h * z;
@@ -2975,6 +3261,7 @@ const previewModes = computed(() => previewModesFor(editorData.value));
 const preview = computed(() => previewOf(editorData.value));
 const previewMode = computed(() => preview.value.mode);
 const previewRev = ref(0);
+watch([previewRev, previewChip], () => { if (props.k3) nextTick(drawPreviewChip) });
 const showPreviewSettings = ref(false);
 let previewSaveTimer: ReturnType<typeof setTimeout> | null = null;
 function setPreview(patch: Record<string, any> | null) {
@@ -3251,6 +3538,20 @@ function onCopy() {
   const scope = store.copyActiveScope()
   if (scope) toast.success(t('c_PXEditor.copiedScope', {scope: t('common.scope_' + scope)}))
   else toast.info(t('c_PXEditor.nothingToCopy'))
+}
+
+// Copy / move the active scope (selection, layer or board) into another
+// board as a new layer at the same spot; the target becomes active.
+const otherBoards = computed(() => store.boards.filter(b => b.id !== store.activeBoardId))
+function onTransfer(targetId: string | null, move: boolean) {
+  const scope = store.activeScope
+  const n = store.transferScope(targetId, move)
+  settingsView.value = 'main'
+  if (!n) { toast.info(t('c_PXEditor.nothingToCopy')); return }
+  focusActiveBoard()
+  scheduleDraw()
+  const name = store.editorData.name || t('common.untitled')
+  toast.success(t(move ? 'c_PXEditor.movedScopeTo' : 'c_PXEditor.copiedScopeTo', {scope: t('common.scope_' + scope), name}))
 }
 
 function onPaste() {
@@ -3748,6 +4049,7 @@ watch(
 <template>
   <div ref="editorRoot" class="editor" :style="{'--editor-width': EDITOR_SIZE + 'px','--editor-minimap-size': MINIMAP_SIZE + 'px'}">
 
+    <Teleport to="#k3-head" :disabled="!k3 || isFullscreen || !k3Mounted">
     <div class="editor-toolbar">
       <div class="toolbar-start">
         <ui-tooltip class="fs-only" :text="hasPreviousScreen ? $t('common.back') : $t('common.home')">
@@ -3836,6 +4138,9 @@ watch(
                 <span class="icon" :class="showBoardChrome ? 'icon-eye-cross' : 'icon-eye'"/>
                 <span>{{ showBoardChrome ? $t('c_PXEditor.hideBoardLabels') : $t('c_PXEditor.showBoardLabels') }}</span>
               </button>
+              <button v-if="k3" class="file-menu-item" @click="k3desk?.resetLayout()">
+                <span class="icon icon-window-maximize"/><span>{{ $t('c_PXEditor.resetWindowLayout') }}</span>
+              </button>
               <button class="file-menu-item" @click="settingsView = 'cell'">
                 <span class="icon icon-circle-outline"/><span>{{ $t('c_PXEditor.cellStyle') }}</span><span class="icon icon-angle-right settings-chev"/>
               </button>
@@ -3861,6 +4166,18 @@ watch(
                 <span class="icon icon-content-paste"/>
                 <span>{{ store.clipboard.kind === 'board' ? $t('c_PXEditor.pasteAsNewBoard') : $t('c_PXEditor.pasteAsNewLayer') }}</span>
               </button>
+              <template v-if="!store.nothingSelected">
+                <button class="file-menu-item" @click="settingsView = 'copyTo'">
+                  <span class="icon icon-content-copy"/>
+                  <span>{{ $t('c_PXEditor.copyScopeToBoard', {scope: $t('common.scope_' + store.activeScope)}) }}</span>
+                  <span class="icon icon-angle-right settings-chev"/>
+                </button>
+                <button class="file-menu-item" @click="settingsView = 'moveTo'">
+                  <span class="icon icon-move"/>
+                  <span>{{ $t('c_PXEditor.moveScopeToBoard', {scope: $t('common.scope_' + store.activeScope)}) }}</span>
+                  <span class="icon icon-angle-right settings-chev"/>
+                </button>
+              </template>
               <div class="file-menu-sep"/>
               <button class="file-menu-item" @click="store.clearCurrentLayer">
                 <span class="icon icon-broom"/>
@@ -4038,6 +4355,23 @@ watch(
               </div>
             </div>
 
+            <div v-else-if="settingsView === 'copyTo' || settingsView === 'moveTo'" class="file-menu settings-sub" @click.stop>
+              <button class="settings-back" @click="settingsView = 'main'">
+                <span class="icon icon-angle-left"/>
+                <span>{{ $t(settingsView === 'moveTo' ? 'c_PXEditor.moveScopeToBoard' : 'c_PXEditor.copyScopeToBoard', {scope: $t('common.scope_' + store.activeScope)}) }}</span>
+              </button>
+              <button v-for="b in otherBoards" :key="b.id" class="file-menu-item" @click="onTransfer(b.id, settingsView === 'moveTo')">
+                <span class="icon icon-square"/>
+                <span>{{ b.data.name || $t('common.untitled') }}</span>
+                <span class="text-2xs text-muted settings-chev">{{ b.data.width }}×{{ b.data.height }}</span>
+              </button>
+              <div v-if="otherBoards.length" class="file-menu-sep"/>
+              <button class="file-menu-item" @click="onTransfer(null, settingsView === 'moveTo')">
+                <span class="icon icon-plus"/>
+                <span>{{ $t('c_PXEditor.newBoard') }}</span>
+                <span class="text-2xs text-muted settings-chev">{{ editorData.width }}×{{ editorData.height }}</span>
+              </button>
+            </div>
             <div v-else-if="settingsView === 'board'" class="file-menu settings-sub" @click.stop>
               <button class="settings-back" @click="settingsView = 'main'"><span class="icon icon-angle-left"/><span>{{ $t('c_PXEditor.board') }}</span></button>
               <div class="settings-body">
@@ -4200,9 +4534,12 @@ watch(
       </div>
     </div>
 
-    <div class="editor-body">
+    </Teleport>
 
-      <Widget label class="tool-rail">
+    <div ref="deskEl" class="editor-body" :class="{'k3-desk': k3}">
+
+      <Widget label class="tool-rail" win="tools" :win-title="$t('c_PXEditor.tools')">
+        <template v-if="k3" #chip><span class="icon" :class="toolChipIcon"/></template>
         <div class="tools tools-rail no-scrollbar">
           <ui-tooltip :text="$t('c_PXEditor.brushB')">
             <Square :aria-label="$t('c_PXEditor.brush')" @click="store.setTool('brush')" :class="{ active: store.currentTool === 'brush' }">
@@ -4313,7 +4650,7 @@ watch(
       </Widget>
 
       <div class="canvas-col">
-        <Widget>
+        <Widget class="canvas-widget">
           <Square>
             <div
                 class="canvas-container no-scrollbar m-auto"
@@ -4355,7 +4692,15 @@ watch(
           </Square>
         </Widget>
 
-        <Widget label :title="$t('common.palette')" class="palette-widget">
+        <Widget label :title="$t('common.palette')" class="palette-widget" win="colours">
+          <template v-if="k3" #chip><span class="k3-chip-swatch" :style="{background: chipColor}"/></template>
+          <div v-if="k3" class="k3-colour-head">
+            <span class="k3-colour-cur" :class="{erasing: store.currentTool === 'eraser'}" :style="{background: store.currentTool === 'eraser' ? undefined : chipColor}"/>
+            <span class="k3-colour-meta">
+              <span>{{ store.currentTool === 'eraser' ? $t('common.tool_eraser') : chipColor }}</span>
+              <span class="k3-colour-sub">{{ $t('common.nColors', {count: editorData.colors.length}) }} · #{{ store.currentColorIndex + 1 }}</span>
+            </span>
+          </div>
           <template #ctl>
             <div class="widget-ctl-group">
               <span v-if="store.currentTool === 'picker'" class="pick-readout">
@@ -4408,7 +4753,8 @@ watch(
       </div>
 
       <div class="editor-sidebar">
-        <Widget label :title="$t('common.preview')" class="preview-widget">
+        <Widget label :title="$t('common.preview')" class="preview-widget" win="preview">
+          <template v-if="k3" #chip><canvas ref="previewChip" class="k3-chip-thumb" width="32" height="32"/></template>
           <template #ctl>
             <div class="widget-ctl-group">
               <button type="button" class="widget-ctl-btn" :title="$t('c_PreviewSettings.title')" :aria-label="$t('c_PreviewSettings.title')" @click="showPreviewSettings = true">
@@ -4432,7 +4778,7 @@ watch(
 
         <div class="sidebar-stack">
           <div class="sidebar-stack-inner">
-            <EditorStampPicker v-if="store.currentTool === 'stamp'"/>
+            <EditorStampPicker v-if="store.currentTool === 'stamp'" win="stamp"/>
 
             <EditorTilesetStrip
                 ref="tileStripRef"
@@ -4442,9 +4788,11 @@ watch(
                 :active-tileset-id="activeTilesetId"
                 @select="loadTileRef"
                 @tileset-change="store.setArtTileset($event)"
+                win="tileset"
             />
 
-            <Widget label :title="$t('common.layers')" class="layers">
+            <Widget label :title="$t('common.layers')" class="layers" win="layers">
+              <template v-if="k3" #chip><span class="k3-chip-layers"><span class="icon icon-merge"/><b>{{ store.layerCount }}</b></span></template>
               <template #ctl>
                 <div class="widget-ctl-group">
                   <button
@@ -4529,9 +4877,11 @@ watch(
           </div>
         </div>
       </div>
+
+      <EditorTimeline v-if="k3" class="editor-timeline" win="animation" win-bar/>
     </div>
 
-    <EditorTimeline class="editor-timeline"/>
+    <EditorTimeline v-if="!k3" class="editor-timeline"/>
 
     <EditorPalettePicker v-model:open="showPalettePicker"/>
     <EditorStripImport v-model:open="showStripImport"/>
@@ -4880,8 +5230,11 @@ watch(
             :style="{ left: boardMenu.x + 'px', top: boardMenu.y + 'px' }"
             @pointerdown.stop
         >
-          <button class="file-menu-item file-menu-danger" @click="hideBoard(boardMenu.id)">
+          <button class="file-menu-item" @click="hideBoard(boardMenu.id)">
             <span class="icon icon-eye-cross"/><span>{{ $t('c_PXEditor.hideBoard') }}</span>
+          </button>
+          <button class="file-menu-item file-menu-danger" @click="askDeleteBoard(boardMenu.id)">
+            <span class="icon icon-trash"/><span>{{ $t('c_PXEditor.delete') }}</span>
           </button>
         </div>
       </div>

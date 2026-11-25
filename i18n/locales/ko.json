@@ -540,7 +540,13 @@
     "startFromBase": "베이스로 시작하기",
     "noBasesYet": "아직 베이스가 없어요",
     "basePreview": "복사본 미리보기",
-    "colorsReduced": "픽셀 아트에 비해 색이 너무 많아 {count}색으로 줄였어요."
+    "colorsReduced": "픽셀 아트에 비해 색이 너무 많아 {count}색으로 줄였어요.",
+    "tools": "도구",
+    "resetWindowLayout": "창 배치 초기화",
+    "copyScopeToBoard": "{scope}을(를) 다른 보드로 복사",
+    "moveScopeToBoard": "{scope}을(를) 다른 보드로 이동",
+    "copiedScopeTo": "{scope}을(를) {name}(으)로 복사함",
+    "movedScopeTo": "{scope}을(를) {name}(으)로 이동함"
   },
   "c_Palette": {
     "colorNHex": "색 {n}: {hex}",
@@ -2982,5 +2988,9 @@
   "c_HeroDinos": {
     "hide": "공룡 숨기기",
     "show": "공룡 보이기"
+  },
+  "c_Widget": {
+    "collapse": "접기",
+    "expand": "펼치기"
   }
 }

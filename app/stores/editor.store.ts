@@ -2398,7 +2398,9 @@ export const useEditor = defineStore('editor', () => {
         pixels: { [key: string]: string }
     }>(null)
 
-    function copyActiveScope(): 'selection' | 'layer' | 'board' | null {
+    /* The active scope's pixels as board-space hex: the selected area or the
+       current layer, or every layer flattened top-down for the board. */
+    function scopeHexPixels(): { [key: string]: string } {
         const scope = activeScope.value
         const colors = editorData.value.colors
         const out: { [key: string]: string } = {}
@@ -2425,6 +2427,12 @@ export const useEditor = defineStore('editor', () => {
                 }
             }
         }
+        return out
+    }
+
+    function copyActiveScope(): 'selection' | 'layer' | 'board' | null {
+        const scope = activeScope.value
+        const out = scopeHexPixels()
         if (!Object.keys(out).length) return null
         clipboard.value = {
             kind: scope,
@@ -2468,6 +2476,44 @@ export const useEditor = defineStore('editor', () => {
         drawTurn.value++
         saveState()
         return 'layer'
+    }
+
+    /* Copies (or moves) the active scope -- selection, layer or whole board --
+       into another board, as a new layer at the same position. A move clears
+       the source area first, as its own undo step on the source board. The
+       target becomes the active board; a null target is a new board of the
+       source's size, placed after the others. Returns the pixels sent. */
+    function transferScope(targetId: string | null, move: boolean): number {
+        if (targetId !== null && (targetId === activeBoardId.value || !boards.value.some(b => b.id === targetId))) return 0
+        const scope = activeScope.value
+        const pixels = scopeHexPixels()
+        const count = Object.keys(pixels).length
+        if (!count) return 0
+        const srcName = editorData.value.name || 'Board'
+        const srcW = editorData.value.width, srcH = editorData.value.height
+        if (move) {
+            if (scope === 'board') {
+                for (const layer of editorData.value.layers) layer.pixels = markRaw({})
+                markFullRedraw()
+                drawTurn.value++
+                saveState()
+            } else {
+                clearCurrentLayer()
+            }
+        }
+        if (targetId === null) addBoard(srcW, srcH)
+        else setActiveBoard(targetId)
+        const colors = editorData.value.colors
+        const out: { [key: string]: number } = {}
+        for (const key of Object.keys(pixels)) out[key] = findOrCreateColor(pixels[key]!, colors)
+        editorData.value.layers.push({name: srcName, pixels: markRaw(out), x: 0, y: 0})
+        currentLayerIndex.value = editorData.value.layers.length - 1
+        layerActive.value = true
+        editorData.value.colors = colors.map(c => c.toUpperCase())
+        markFullRedraw()
+        drawTurn.value++
+        saveState()
+        return count
     }
 
     function applyPalette(colors: string[], mode: 'replace' | 'append' = 'replace', paletteId: number | null = null) {
@@ -2988,6 +3034,7 @@ export const useEditor = defineStore('editor', () => {
         clipboard,
         copyActiveScope,
         pasteClipboard,
+        transferScope,
         mergeLayers,
         applyPalette,
         save,

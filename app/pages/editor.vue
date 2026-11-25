@@ -4,6 +4,12 @@ const localHtml = useLocalHtml()
 const store = useEditor()
 const route = useRoute()
 
+// The editor's dialogs and the board menu are teleported to <body>, outside
+// the .k3-skin tool frame; this class lets k3-editor.css reach them while
+// the editor is open (and nowhere else).
+onMounted(() => document.documentElement.classList.add('k3-editor'))
+onBeforeUnmount(() => document.documentElement.classList.remove('k3-editor'))
+
 const editId = computed(() => route.query.id?.toString() || '')
 const canonical = computed(() =>
     editId.value
@@ -86,8 +92,10 @@ useCustomSeoMeta({
 </script>
 
 <template>
-  <ToolLayout :title="$t('p_editor.pixelArtEditor')" agent>
-    <PXEditor/>
+  <ToolLayout class="k3-skin" agent>
+    <!-- The editor's toolbar teleports in here (PXEditor k3), in place of a title. -->
+    <template #head><div id="k3-head" class="k3-head"/></template>
+    <PXEditor k3/>
     <template #status>
       <p class="editor-foot-hint text-xs text-muted">
         {{ store.editorData.width }}×{{ store.editorData.height }}px ·
@@ -136,3 +144,5 @@ useCustomSeoMeta({
     </template>
   </ToolLayout>
 </template>
+
+<style src="~/assets/css/k3-editor.css"></style>
