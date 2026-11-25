@@ -266,11 +266,12 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
 
 /* Colours: swatches in a dark well, 2px apart, like the K3 colour window. */
 /* The swatches wrap to the window's width (a narrower colours window shows
-   more rows of fewer swatches) instead of scrolling one strip sideways. */
+   more rows of fewer swatches) instead of scrolling one strip sideways.
+   They sit straight on the window's cream, no well behind them. */
 .k3-skin .k3-desk .palette-widget .palette-row {
     height: auto;
-    background: var(--k3-well);
-    box-shadow: inset 0 0 0 2px var(--k3-well-edge);
+    background: transparent;
+    box-shadow: none;
 }
 
 .k3-skin .k3-desk .palette-widget .wrapper {
@@ -291,31 +292,33 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
 }
 
 .k3-skin .k3-desk .palette-widget .color-item {
-    box-shadow: none;
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
 }
 
 .k3-skin .k3-desk .palette-widget .item.active {
     outline: 0;
-    box-shadow: inset 0 0 0 2px var(--k3-well), inset 0 0 0 4px var(--k3-cream);
+    box-shadow: inset 0 0 0 2px var(--k3-ink), inset 0 0 0 4px var(--k3-cream);
 }
 
 .k3-skin .k3-desk .palette-widget .item:not(.color-item) {
-    color: var(--k3-cream);
+    color: var(--k3-ink);
 }
 
 .k3-skin .k3-desk .palette-widget .tool-item {
-    color: var(--k3-faint);
+    color: var(--k3-muted);
 }
 
 .k3-skin .k3-desk .palette-widget .tool-item.active {
-    color: var(--k3-accent);
+    color: var(--k3-ink);
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+    background: var(--k3-accent);
 }
 
 .k3-skin .k3-desk .palette-widget .palette-remove {
     position: static;
     width: 28px;
     height: 28px;
-    background: var(--k3-well);
+    background: transparent;
 }
 
 .k3-skin .k3-desk .layers li.active {
