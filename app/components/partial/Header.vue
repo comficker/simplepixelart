@@ -16,7 +16,7 @@ function openCommandPalette() {
   <header>
     <div class="container hdr">
       <NuxtLinkLocale to="/" class="brand" :title="$t('common.home')">
-        <img src="/logo.svg?v=crayon1" :alt="$t('common.simplePixelArt')" width="32" height="32" class="brand-logo">
+        <img src="/logo.svg?v=crayon2" :alt="$t('common.simplePixelArt')" width="32" height="32" class="brand-logo">
         <span class="brand-name">
           <span class="brand-name-stamp">{{ $t('common.simple') }}</span>
           <span class="brand-name-main">{{ $t('common.pixelart') }}</span>
