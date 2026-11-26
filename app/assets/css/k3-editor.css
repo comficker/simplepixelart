@@ -968,3 +968,21 @@ html.k3-editor .board-menu .file-menu-item {
 .k3-skin .k3-desk.k3-panels-off .k3-win {
     display: none;
 }
+
+/* Picked layer rows on the desk: tan with an ink edge; with a pick on, the
+   current row is told apart only by being among them. */
+.k3-skin .k3-desk .layers li.selected {
+    background: var(--k3-accent);
+    border-color: transparent;
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+}
+
+.k3-skin .k3-desk .layers li.selected .layer-num.layer-check {
+    background: var(--k3-ink);
+    color: var(--k3-cream);
+    border-color: var(--k3-ink);
+}
+
+.k3-skin .k3-desk .layers ul:has(li.selected) li.active:not(.selected) {
+    background: transparent;
+}

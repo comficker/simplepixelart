@@ -3538,6 +3538,18 @@ canvas.iso-line { cursor: crosshair; }
     color: var(--foreground);
 }
 
+/* Picked rows (Ctrl / Cmd / Shift + click) read as picked across the whole
+   row, not only by the tick in their number badge. */
+.layers li.selected {
+    background: color-mix(in oklab, var(--primary) 16%, var(--surface));
+    border-color: var(--primary);
+}
+
+.layers li.selected .layer-name {
+    color: var(--foreground);
+    font-weight: 600;
+}
+
 .layers li.selected .layer-num.layer-check {
     color: var(--primary-foreground);
     background: var(--primary-fill);
