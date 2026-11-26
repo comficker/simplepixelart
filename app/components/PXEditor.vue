@@ -4057,13 +4057,24 @@ onMounted(async () => {
     router.replace({query: q}).catch(() => {})
   }
   setupCanvas()
-  if (!isNewCanvas && !route.query.id) {
+  // Come back to the view the visitor left: pan and zoom. The URL carries the
+  // active art's ?id once it is saved, which used to skip this on every
+  // reload. The camera is in desk space, so it holds for the whole
+  // workspace; only if the active board ends up wholly off screen (an art
+  // opened from elsewhere) is it brought into view.
+  if (!isNewCanvas) {
     try {
       const sc = JSON.parse(localStorage.getItem('workspace_camera') || 'null');
       if (sc && isFinite(sc.z) && isFinite(sc.x) && isFinite(sc.y)) {
         cam.value = {x: sc.x, y: sc.y};
         zoom.value = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, sc.z));
         stageInited = true;
+        const b = activeBoard.value;
+        if (b) {
+          const {x: bx, y: by} = boardScreen(b.x, b.y);
+          const bw = b.data.width * zoom.value, bh = b.data.height * zoom.value;
+          if (bx + bw < 0 || by + bh < 0 || bx > stageW.value || by > stageH.value) focusActiveBoard();
+        }
         scheduleDraw();
         scheduleMiniMap();
       }
