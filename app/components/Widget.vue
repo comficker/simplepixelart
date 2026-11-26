@@ -8,8 +8,8 @@ import {K3_DESK} from '~/composables/useK3Desk'
 // the real outline under a dozen one-word h2s.
 // `win`: inside a K3 desk (useK3Desk), the widget is a floating window with
 // that id -- dragged by its head, folded by a button in it. `winTitle` names
-// a widget that has no title of its own; `winBar` folds it to its title bar
-// instead of a chip (the timeline). Windows are never closed, only folded.
+// a widget that has no title of its own. Windows are never closed, only
+// folded (to a chip).
 // Outside a desk these do nothing.
 const props = defineProps<{
   title?: string
@@ -17,7 +17,6 @@ const props = defineProps<{
   label?: boolean
   win?: string
   winTitle?: string
-  winBar?: boolean
 }>()
 
 const desk = inject(K3_DESK, null)
@@ -36,8 +35,7 @@ onBeforeUnmount(() => {
 const winClass = computed(() => k3.value && {
   'k3-win': true,
   'k3-folded': place.value?.folded,
-  'k3-chip-mode': place.value?.folded && !props.winBar,
-  'k3-bar-mode': place.value?.folded && props.winBar,
+  'k3-chip-mode': place.value?.folded,
   'k3-unplaced': !place.value?.placed,
 })
 const winStyle = computed(() => {
@@ -65,7 +63,7 @@ function onChipDown(e: PointerEvent) {
 <template>
   <div ref="root" class="widget" :class="winClass" :style="winStyle" @pointerdown.capture="k3 && desk!.lift(win!)">
     <button
-        v-if="k3 && place?.folded && !winBar"
+        v-if="k3 && place?.folded"
         type="button"
         class="k3-chip"
         :title="headTitle"

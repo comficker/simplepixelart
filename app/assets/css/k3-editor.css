@@ -583,14 +583,6 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
     gap: 2px;
 }
 
-/* Folded to its bar (the timeline): only the title band is left. */
-.k3-skin .k3-win.k3-bar-mode > .widget-body {
-    display: none;
-}
-
-.k3-skin .k3-win.k3-bar-mode > .widget-head {
-    margin-bottom: 0;
-}
 
 /* Preview chip: a live thumbnail. */
 .k3-skin .k3-chip-thumb {
