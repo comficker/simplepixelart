@@ -16,7 +16,7 @@ function openCommandPalette() {
   <header>
     <div class="container hdr">
       <NuxtLinkLocale to="/" class="brand" :title="$t('common.home')">
-        <img src="/logo.svg" :alt="$t('common.simplePixelArt')" width="32" height="32" class="brand-logo">
+        <img src="/logo.svg?v=crayon1" :alt="$t('common.simplePixelArt')" width="32" height="32" class="brand-logo">
         <span class="brand-name">
           <span class="brand-name-stamp">{{ $t('common.simple') }}</span>
           <span class="brand-name-main">{{ $t('common.pixelart') }}</span>
@@ -210,7 +210,9 @@ header .brand-name-main {
 @media (max-width: 767px) {
   header .hdr { gap: var(--space-3); min-height: 56px; }
   header .brand { gap: var(--space-3); padding: var(--space-1); }
-  header .brand-name { font-size: var(--text-lg); }
+  /* Phones: the logo alone (its alt names the site); the wordmark crowded
+     the row once the icon buttons and the bell joined it. */
+  header .brand-name { display: none; }
   .hdr-nav { gap: 0; }
   .hdr-link { padding: 7px 9px; }
   .cmdk-trigger { padding: 7px; margin-right: -7px; border-radius: var(--radius-sm); }

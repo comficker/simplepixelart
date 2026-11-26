@@ -57,7 +57,7 @@ const SECTIONS = [
       <!-- Just the way home: the collapse toggle sits in the top bar, so a tap
            on the logo can never land on it. -->
       <NuxtLinkLocale to="/" class="dash-brand" :title="$t('common.home')">
-        <span class="dash-brand-tile"><img src="/logo-mark.svg" :alt="$t('common.simplePixelArt')" width="20" height="20" class="dash-brand-logo"></span>
+        <span class="dash-brand-tile"><img src="/logo-sidebar.svg" :alt="$t('common.simplePixelArt')" width="32" height="32" class="dash-brand-logo"></span>
         <span v-if="!collapsed" class="dash-brand-text">
           <span class="dash-brand-kicker">{{ $t('common.simplePixelArt') }}</span>
           <span class="dash-brand-name">{{ $t('nav.home') }}</span>
@@ -224,24 +224,25 @@ const SECTIONS = [
   outline-offset: -2px;
 }
 
-/* The pencil on the brand's cream square -- cream in every theme, it is the
-   logo's own colour, not a surface. */
+/* The pixel wordmark (logo-sidebar.svg, its own white square) -- the same in
+   every theme, it is the logo's own colour, not a surface. */
 .dash-brand-tile {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
-  background: #F0EBE1;
+  background: #FFFFFF;
+  overflow: hidden;
   border-radius: var(--radius-sm);
   box-shadow: inset 0 0 0 1px rgba(38, 36, 57, 0.08);
 }
 
-/* The 5x5 pencil at 20px (4px cells), as it sits in logo.svg's 32px tile. */
+/* 32x32 art at 1px cells, so it stays crisp. */
 .dash-brand-logo {
-  width: 20px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
   image-rendering: pixelated;
 }
