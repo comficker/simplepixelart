@@ -2832,6 +2832,18 @@ export const useEditor = defineStore('editor', () => {
         layer.pixels = markRaw(moved)
     }
 
+    /* Shifts whole layers by (dx, dy) -- the move tool with several layers
+       picked. Live during a drag; the caller saves the step at the end. */
+    function translateLayers(indices: number[], dx: number, dy: number) {
+        if (!dx && !dy) return
+        for (const i of indices) {
+            const layer = editorData.value.layers[i]
+            if (layer && !layer._virtual) translateLayer(layer, dx, dy)
+        }
+        markFullRedraw()
+        drawTurn.value++
+    }
+
     function mergeVirtualLayer() {
         const vi = editorData.value.layers.indexOf(virtualLayer.value)
         if (vi <= 0) {
@@ -3111,6 +3123,7 @@ export const useEditor = defineStore('editor', () => {
         pasteClipboard,
         transferScope,
         moveLayersTo,
+        translateLayers,
         dropVirtualOnBoard,
         mergeLayers,
         applyPalette,

@@ -554,7 +554,9 @@
     "deleteNBoards": "删除 {count} 个画板？",
     "nLayersSelected": "已选择 {count} 个图层",
     "moveLayersUp": "上移",
-    "moveLayersDown": "下移"
+    "moveLayersDown": "下移",
+    "hideWindows": "隐藏窗口",
+    "showWindows": "显示窗口"
   },
   "c_Palette": {
     "colorNHex": "颜色 {n}：{hex}",

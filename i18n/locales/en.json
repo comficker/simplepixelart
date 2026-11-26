@@ -568,7 +568,9 @@
     "deleteNBoards": "Delete {count} board? | Delete {count} boards?",
     "nLayersSelected": "{count} layers selected",
     "moveLayersUp": "Move up",
-    "moveLayersDown": "Move down"
+    "moveLayersDown": "Move down",
+    "hideWindows": "Hide windows",
+    "showWindows": "Show windows"
   },
   "c_Paginator": {},
   "c_Palette": {

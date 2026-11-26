@@ -554,7 +554,9 @@
     "deleteNBoards": "Excluir {count} quadro? | Excluir {count} quadros?",
     "nLayersSelected": "{count} camadas selecionadas",
     "moveLayersUp": "Subir",
-    "moveLayersDown": "Descer"
+    "moveLayersDown": "Descer",
+    "hideWindows": "Ocultar janelas",
+    "showWindows": "Mostrar janelas"
   },
   "c_Palette": {
     "colorNHex": "Cor {n}: {hex}",

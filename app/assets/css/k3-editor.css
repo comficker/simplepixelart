@@ -963,3 +963,8 @@ html.k3-editor .board-menu .file-menu-item {
     width: 10px;
     height: 10px;
 }
+
+/* Tab: every window out of the way, the canvas alone on the desk. */
+.k3-skin .k3-desk.k3-panels-off .k3-win {
+    display: none;
+}

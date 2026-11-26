@@ -554,7 +554,9 @@
     "deleteNBoards": "¿Eliminar {count} tablero? | ¿Eliminar {count} tableros?",
     "nLayersSelected": "{count} capas seleccionadas",
     "moveLayersUp": "Subir",
-    "moveLayersDown": "Bajar"
+    "moveLayersDown": "Bajar",
+    "hideWindows": "Ocultar ventanas",
+    "showWindows": "Mostrar ventanas"
   },
   "c_Palette": {
     "colorNHex": "Color {n}: {hex}",

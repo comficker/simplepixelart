@@ -554,7 +554,9 @@
     "deleteNBoards": "{count}個のボードを削除しますか？",
     "nLayersSelected": "{count}枚のレイヤーを選択中",
     "moveLayersUp": "上へ",
-    "moveLayersDown": "下へ"
+    "moveLayersDown": "下へ",
+    "hideWindows": "ウィンドウを隠す",
+    "showWindows": "ウィンドウを表示"
   },
   "c_Palette": {
     "colorNHex": "色 {n}: {hex}",

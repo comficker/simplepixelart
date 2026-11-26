@@ -586,6 +586,11 @@ const panStart = ref({x: 0, y: 0});
 const initialDistance = ref(0);
 const initialZoom = ref(0);
 const isMoving = ref(false);
+// Move tool with two or more layers picked: they all shift together.
+const isMovingLayers = ref(false);
+let movingLayerIdx: number[] = [];
+// K3: Tab hides every window for a clear canvas, Tab again brings them back.
+const panelsHidden = ref(false);
 const isDrawing = ref(false);
 const isIsoLining = ref(false);
 const isoLineStart = ref<{ x: number; y: number } | null>(null);
@@ -1940,6 +1945,14 @@ function startDraw(e: any) {
         break;
       }
       if (store.activeScope === 'selection' && !store.checkKeyInSelection(`${x}_${y}`)) break;
+      if (store.activeScope !== 'selection' && selectedLayers.value.size >= 2) {
+        isMovingLayers.value = true;
+        movingLayerIdx = [...selectedLayers.value];
+        const lp = getClientPos(e);
+        moveStart.value = {x: lp.x, y: lp.y};
+        isStarted.value = true;
+        break;
+      }
       isMoving.value = true;
       store.immigrateVirtualLayer();
       const cp = getClientPos(e);
@@ -2047,6 +2060,15 @@ function draw(e: any) {
     const {x, y} = pos;
     if (x >= 0 && x < editorData.value.width && y >= 0 && y < editorData.value.height) {
       store.selectionState.current = {x, y};
+    }
+  } else if (isMovingLayers.value) {
+    const {x: clientX, y: clientY} = getClientPos(e);
+    const dx = Math.round((clientX - moveStart.value.x) / zoom.value);
+    const dy = Math.round((clientY - moveStart.value.y) / zoom.value);
+    if (dx || dy) {
+      needSave.value = true;
+      store.translateLayers(movingLayerIdx, dx, dy);
+      moveStart.value = {x: moveStart.value.x + dx * zoom.value, y: moveStart.value.y + dy * zoom.value};
     }
   } else if (isMoving.value) {
     const {x: clientX, y: clientY} = getClientPos(e);
@@ -2170,6 +2192,9 @@ function stopDraw() {
       active: true,
       minX, minY, maxX, maxY
     };
+  } else if (isMovingLayers.value) {
+    isMovingLayers.value = false;
+    movingLayerIdx = [];
   } else if (isMoving.value) {
     isMoving.value = false;
     // Dropped over another board: the content moves there.
@@ -2333,7 +2358,15 @@ function handleKeyDown(e: any) {
     return;
   }
 
+  if (props.k3 && e.key === 'Tab' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey
+      && (!activeElement || activeElement === document.body || activeElement === canvas.value)) {
+    panelsHidden.value = !panelsHidden.value;
+    e.preventDefault();
+    return;
+  }
+
   if (e.key === 'Escape') {
+    clearBoardPick();
     if (boardMenu.value) closeBoardMenu();
     else store.selectNothing();
     scheduleDraw();
@@ -2355,10 +2388,7 @@ function handleKeyDown(e: any) {
     return;
   }
 
-  if (e.key === 'Escape' && pickedBoards.value.length) {
-    clearBoardPick();
-    e.preventDefault();
-  } else if (mod && key === 'z') {
+  if (mod && key === 'z') {
     e.shiftKey ? doRedo() : doUndo();
     e.preventDefault();
   } else if (mod && key === 'y') {
@@ -4337,6 +4367,11 @@ watch(
                 <span class="icon" :class="showBoardChrome ? 'icon-eye-cross' : 'icon-eye'"/>
                 <span>{{ showBoardChrome ? $t('c_PXEditor.hideBoardLabels') : $t('c_PXEditor.showBoardLabels') }}</span>
               </button>
+              <button v-if="k3" class="file-menu-item" :title="`${$t('c_PXEditor.hideWindows')} (Tab)`" @click="panelsHidden = !panelsHidden">
+                <span class="icon" :class="panelsHidden ? 'icon-eye' : 'icon-eye-cross'"/>
+                <span>{{ panelsHidden ? $t('c_PXEditor.showWindows') : $t('c_PXEditor.hideWindows') }}</span>
+                <span class="text-2xs text-muted settings-chev">Tab</span>
+              </button>
               <button v-if="k3" class="file-menu-item" @click="k3desk?.resetLayout()">
                 <span class="icon icon-window-maximize"/><span>{{ $t('c_PXEditor.resetWindowLayout') }}</span>
               </button>
@@ -4735,7 +4770,7 @@ watch(
 
     </Teleport>
 
-    <div ref="deskEl" class="editor-body" :class="{'k3-desk': k3}">
+    <div ref="deskEl" class="editor-body" :class="{'k3-desk': k3, 'k3-panels-off': k3 && panelsHidden}">
 
       <Widget label class="tool-rail" win="tools" :win-title="$t('c_PXEditor.tools')">
         <template v-if="k3" #chip><span class="icon" :class="toolChipIcon"/></template>

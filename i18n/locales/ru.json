@@ -554,7 +554,9 @@
     "deleteNBoards": "Удалить доски ({count})?",
     "nLayersSelected": "Выбрано слоёв: {count}",
     "moveLayersUp": "Выше",
-    "moveLayersDown": "Ниже"
+    "moveLayersDown": "Ниже",
+    "hideWindows": "Скрыть окна",
+    "showWindows": "Показать окна"
   },
   "c_Palette": {
     "colorNHex": "Цвет {n}: {hex}",
