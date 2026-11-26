@@ -556,7 +556,8 @@
     "moveLayersUp": "Subir",
     "moveLayersDown": "Bajar",
     "hideWindows": "Ocultar ventanas",
-    "showWindows": "Mostrar ventanas"
+    "showWindows": "Mostrar ventanas",
+    "renameBoard": "Renombrar tablero"
   },
   "c_Palette": {
     "colorNHex": "Color {n}: {hex}",

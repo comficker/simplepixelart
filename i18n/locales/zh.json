@@ -556,7 +556,8 @@
     "moveLayersUp": "上移",
     "moveLayersDown": "下移",
     "hideWindows": "隐藏窗口",
-    "showWindows": "显示窗口"
+    "showWindows": "显示窗口",
+    "renameBoard": "重命名画板"
   },
   "c_Palette": {
     "colorNHex": "颜色 {n}：{hex}",

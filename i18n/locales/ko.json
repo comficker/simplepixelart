@@ -556,7 +556,8 @@
     "moveLayersUp": "위로",
     "moveLayersDown": "아래로",
     "hideWindows": "창 숨기기",
-    "showWindows": "창 보이기"
+    "showWindows": "창 보이기",
+    "renameBoard": "보드 이름 바꾸기"
   },
   "c_Palette": {
     "colorNHex": "색 {n}: {hex}",

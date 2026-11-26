@@ -570,7 +570,8 @@
     "moveLayersUp": "Move up",
     "moveLayersDown": "Move down",
     "hideWindows": "Hide windows",
-    "showWindows": "Show windows"
+    "showWindows": "Show windows",
+    "renameBoard": "Rename board"
   },
   "c_Paginator": {},
   "c_Palette": {

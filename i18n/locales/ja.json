@@ -556,7 +556,8 @@
     "moveLayersUp": "上へ",
     "moveLayersDown": "下へ",
     "hideWindows": "ウィンドウを隠す",
-    "showWindows": "ウィンドウを表示"
+    "showWindows": "ウィンドウを表示",
+    "renameBoard": "ボード名を変更"
   },
   "c_Palette": {
     "colorNHex": "色 {n}: {hex}",

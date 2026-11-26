@@ -556,7 +556,8 @@
     "moveLayersUp": "Subir",
     "moveLayersDown": "Descer",
     "hideWindows": "Ocultar janelas",
-    "showWindows": "Mostrar janelas"
+    "showWindows": "Mostrar janelas",
+    "renameBoard": "Renomear quadro"
   },
   "c_Palette": {
     "colorNHex": "Cor {n}: {hex}",

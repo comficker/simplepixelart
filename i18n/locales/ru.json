@@ -556,7 +556,8 @@
     "moveLayersUp": "Выше",
     "moveLayersDown": "Ниже",
     "hideWindows": "Скрыть окна",
-    "showWindows": "Показать окна"
+    "showWindows": "Показать окна",
+    "renameBoard": "Переименовать доску"
   },
   "c_Palette": {
     "colorNHex": "Цвет {n}: {hex}",

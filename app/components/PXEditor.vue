@@ -1834,8 +1834,88 @@ watch(fsMode, (m) => {
   try { localStorage.setItem(FS_KEY, m); } catch {  }
 });
 
+/* Arrow keys nudge what is in hand by 1px (Shift: 8), one undo step each:
+   the selection, the picked layers, the current layer, or -- with the
+   board itself selected -- the board's place on the desk. Returns whether
+   anything moved (so the page doesn't scroll on a key that did nothing). */
+function nudge(dx: number, dy: number): boolean {
+  if (store.nothingSelected || isStarted.value) return false;
+  const scope = store.activeScope;
+  if (scope === 'board') {
+    const b = activeBoard.value;
+    if (!b) return false;
+    store.moveBoard(b.id, b.x + dx, b.y + dy);
+    store.saveWorkspaceLayout();
+  } else if (scope !== 'selection' && selectedLayers.value.size >= 2) {
+    store.translateLayers([...selectedLayers.value], dx, dy);
+    store.saveState();
+  } else {
+    store.immigrateVirtualLayer();
+    store.move(dx, dy);
+    if (store.selectionState.bounds.active) {
+      store.selectionState.bounds.minX += dx;
+      store.selectionState.bounds.maxX += dx;
+      store.selectionState.bounds.minY += dy;
+      store.selectionState.bounds.maxY += dy;
+    }
+    store.mergeVirtualLayer();
+    store.saveState();
+  }
+  scheduleDraw();
+  scheduleMiniMap();
+  return true;
+}
+
+// Double-click a K3 board's title band: rename it in place.
+const renaming = ref<{id: string, x: number, y: number, w: number, name: string} | null>(null);
+const renameInput = ref<HTMLInputElement | null>(null);
+
+function k3BandAt(e: MouseEvent): any {
+  if (!props.k3) return null;
+  const rect = canvas.value!.getBoundingClientRect();
+  const px = e.clientX - rect.left, py = e.clientY - rect.top;
+  for (let i = store.boards.length - 1; i >= 0; i--) {
+    const b = store.boards[i]!;
+    const bw = b.data.width * zoom.value;
+    if (bw < K3_BAR_MIN_W) continue;
+    const {x: sx, y: sy} = boardScreen(b.x, b.y);
+    const by = sy - 4 - K3_BAR_H;
+    if (px >= sx && px <= sx + bw && py >= by && py <= by + K3_BAR_H) return b;
+  }
+  return null;
+}
+
+function startRename(b: any) {
+  if (b.id !== store.activeBoardId) store.setActiveBoard(b.id);
+  const {x: sx, y: sy} = boardScreen(b.x, b.y);
+  const bw = b.data.width * zoom.value;
+  // The input sits in the canvas's container, which the canvas may not fill
+  // from its corner: offset by where the canvas actually is.
+  const cr = canvas.value!.getBoundingClientRect();
+  const host = canvas.value!.closest('.square') as HTMLElement | null;
+  const hr = host?.getBoundingClientRect() ?? cr;
+  const ox = cr.left - hr.left, oy = cr.top - hr.top;
+  // Leave the band's tick and its two keys uncovered.
+  renaming.value = {id: b.id, x: ox + sx + 14, y: oy + sy - 4 - K3_BAR_H + 2, w: Math.max(80, bw - 14 - 2 * K3_BTN - 12), name: editorData.value.name || ''};
+  nextTick(() => { renameInput.value?.focus(); renameInput.value?.select(); });
+}
+
+function commitRename() {
+  const r = renaming.value;
+  if (!r) return;
+  renaming.value = null;
+  const name = r.name.trim();
+  if (r.id === store.activeBoardId && name !== (editorData.value.name || '')) {
+    editorData.value.name = name;
+    store.saveState();
+  }
+  scheduleDraw();
+}
+
 function onDblClick(e: any) {
   if (!canvas.value) return;
+  const band = k3BandAt(e);
+  if (band) { startRename(band); return; }
   const hit = boardAt(e);
   if (!hit) return;
   if (hit.id !== store.activeBoardId) store.setActiveBoard(hit.id);
@@ -2422,6 +2502,11 @@ function handleKeyDown(e: any) {
   } else if (mod && key === 'v' && !e.shiftKey && !e.altKey) {
     onPaste();
     e.preventDefault();
+  } else if (!mod && !e.altKey && !(activeElement instanceof HTMLButtonElement || activeElement instanceof HTMLSelectElement) && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+    const step = e.shiftKey ? 8 : 1;
+    const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+    const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
+    if (nudge(dx, dy)) e.preventDefault();
   } else if (mod && (key === '=' || key === '+')) {
     zoomIn();
     e.preventDefault();
@@ -4989,6 +5074,20 @@ watch(
                   @touchend="handleTouchEnd"
               />
             </div>
+            <!-- Renaming a board from its band (double-click). -->
+            <input
+                v-if="renaming"
+                ref="renameInput"
+                v-model="renaming.name"
+                class="board-rename"
+                :style="{left: `${renaming.x}px`, top: `${renaming.y}px`, width: `${renaming.w}px`}"
+                :placeholder="$t('common.untitled')"
+                :aria-label="$t('c_PXEditor.renameBoard')"
+                maxlength="80"
+                @keydown.enter.prevent="commitRename"
+                @keydown.esc.prevent.stop="renaming = null"
+                @blur="commitRename"
+            >
             <!-- Several boards picked (Ctrl / Cmd + click): act on them all. -->
             <div v-if="pickedBoards.length > 1" class="board-multibar" role="toolbar" :aria-label="$t('c_PXEditor.nBoardsSelected', {count: pickedBoards.length})">
               <span class="board-multibar-count">{{ $t('c_PXEditor.nBoardsSelected', {count: pickedBoards.length}) }}</span>
@@ -5648,6 +5747,20 @@ canvas.guide-h:not(.panning) { cursor: row-resize; }
 
 .pick-hint {
   color: var(--muted);
+}
+
+.board-rename {
+  position: absolute;
+  z-index: 5;
+  height: 20px;
+  padding: 0 4px;
+  font: 700 12px system-ui, -apple-system, sans-serif;
+  text-transform: uppercase;
+  color: #2A2B30;
+  background: #F7F3E7;
+  border: 2px solid #2A2B30;
+  border-radius: 0;
+  outline: none;
 }
 
 .board-multibar {
