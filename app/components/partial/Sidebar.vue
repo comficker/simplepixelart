@@ -181,8 +181,9 @@ const SECTIONS = [
   }
 }
 
-/* A raised card: the same lift for the brand, the active row and search. */
-.dash-brand,
+/* A raised card: the same lift for the active row (and the brand on the
+   home page), and search. Hover gives the rows and the brand the same card. */
+.dash-brand.router-link-exact-active,
 .dash-side .dash-link.router-link-active,
 .dash-side .dash-foot .cmdk-trigger {
   background: var(--surface);
@@ -215,7 +216,8 @@ const SECTIONS = [
 
 @media (hover: hover) and (pointer: fine) {
   .dash-brand:hover {
-    background: var(--surface-2);
+    background: var(--surface);
+    box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0, 0, 0, 0.06);
   }
 }
 
@@ -330,10 +332,13 @@ const SECTIONS = [
   color: var(--muted);
 }
 
+/* Hover looks exactly like the active row: the same raised card. */
 @media (hover: hover) and (pointer: fine) {
   .dash-side .dash-link:hover {
     color: var(--foreground);
-    background: color-mix(in oklab, var(--surface-2) 70%, transparent);
+    font-weight: 600;
+    background: var(--surface);
+    box-shadow: 0 0 0 1px var(--border), 0 1px 2px rgba(0, 0, 0, 0.06);
   }
 }
 
