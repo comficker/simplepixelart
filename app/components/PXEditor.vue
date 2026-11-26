@@ -2053,7 +2053,8 @@ function draw(e: any) {
     const dx = Math.round(w.x - boardMoveStart.value.mx);
     const dy = Math.round(w.y - boardMoveStart.value.my);
     if (dx !== 0 || dy !== 0) boardDidMove = true;
-    store.moveBoard(moveBoardId.value, boardMoveStart.value.bx + dx, boardMoveStart.value.by + dy);
+    const snapped = snapBoard(moveBoardId.value, boardMoveStart.value.bx + dx, boardMoveStart.value.by + dy, !!(e as MouseEvent).altKey);
+    store.moveBoard(moveBoardId.value, snapped.x, snapped.y);
     scheduleDraw();
     return;
   }
@@ -2185,6 +2186,7 @@ function stopDraw() {
   }
   if (isMovingBoard.value) {
     isMovingBoard.value = false;
+    boardSnapLines.value = {x: null, y: null};
     isStarted.value = false;
     needSave.value = false;
     const id = moveBoardId.value;
@@ -2861,9 +2863,59 @@ function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: numbe
   c.restore();
 }
 
+/* Boards snap while dragged (the K3 standard's snap reach, 8 screen px): to
+   the other boards' edges, lined up or touching, so tiles butt together
+   without gaps. Alt drags freely. The lines snapped to are kept in world
+   px for drawing. */
+const boardSnapLines = ref<{x: number | null, y: number | null}>({x: null, y: null});
+function snapBoard(id: string, x: number, y: number, free: boolean): {x: number, y: number} {
+  const b = store.boards.find(bb => bb.id === id);
+  if (!b || free) { boardSnapLines.value = {x: null, y: null}; return {x, y}; }
+  const w = b.data.width, h = b.data.height;
+  const reach = Math.max(0.5, 8 / zoom.value);
+  let bx: {at: number, line: number} | null = null, by: {at: number, line: number} | null = null;
+  const take = (cur: typeof bx, at: number, line: number, v: number) =>
+    Math.abs(at - v) <= reach && (!cur || Math.abs(at - v) < Math.abs(cur.at - v)) ? {at, line} : cur;
+  for (const o of store.boards) {
+    if (o.id === id) continue;
+    const ow = o.data.width, oh = o.data.height;
+    bx = take(bx, o.x, o.x, x);                 // left edges lined up
+    bx = take(bx, o.x + ow - w, o.x + ow, x);   // right edges lined up
+    bx = take(bx, o.x + ow, o.x + ow, x);       // touching, on its right
+    bx = take(bx, o.x - w, o.x, x);             // touching, on its left
+    by = take(by, o.y, o.y, y);
+    by = take(by, o.y + oh - h, o.y + oh, y);
+    by = take(by, o.y + oh, o.y + oh, y);
+    by = take(by, o.y - h, o.y, y);
+  }
+  boardSnapLines.value = {x: bx ? bx.line : null, y: by ? by.line : null};
+  return {x: bx ? bx.at : x, y: by ? by.at : y};
+}
+
+function drawBoardGuides(): void {
+  const g = boardSnapLines.value;
+  if (!ctx || (g.x === null && g.y === null)) return;
+  ctx.save();
+  ctx.strokeStyle = props.k3 ? K3_ACCENT : BOARD_ACTIVE;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  if (g.x !== null) {
+    const sx = Math.round(cam.value.x + g.x * zoom.value);
+    ctx.moveTo(sx, 0); ctx.lineTo(sx, stageH.value);
+  }
+  if (g.y !== null) {
+    const sy = Math.round(cam.value.y + g.y * zoom.value);
+    ctx.moveTo(0, sy); ctx.lineTo(stageW.value, sy);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
 // The board a dragged piece of art would land on: a thick outline around it.
 function drawDropTarget(): void {
   if (!ctx) return;
+  drawBoardGuides();
   // Picked boards (Ctrl / Cmd + click) get the same outline.
   for (const id of pickedBoards.value) {
     const pb = store.boards.find(x => x.id === id);
