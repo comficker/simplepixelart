@@ -1203,14 +1203,15 @@ function boardScreen(bx: number, by: number) {
 // K3 board windows: the title bar's buttons, right to left -- delete, then
 // hide (from the workspace). No options dots: those two were all its menu
 // held (right-click still opens it). Screen-space rects.
-const K3_BTN = 14;
+const K3_BTN = 20; // window keys on a band
 function k3BoardBtns(b: any): { del: Rect4; close: Rect4 } | null {
   const bw = b.data.width * zoom.value;
   if (bw < K3_BAR_MIN_W) return null;
   const {x: sx, y: sy} = boardScreen(b.x, b.y);
-  const by = Math.round(sy) - 22, right = Math.round(sx) - 2 + Math.round(bw) + 4 - 1;
-  const del = {x: right - K3_BTN, y: by + 1, w: K3_BTN, h: K3_BTN};
-  const close = {x: del.x - 2 - K3_BTN, y: by + 1, w: K3_BTN, h: K3_BTN};
+  // The band sits 4 above the pixels (k3 frame: 2 ink + 4 cream, band 24).
+  const by = Math.round(sy) - 4 - K3_BAR_H, right = Math.round(sx) + Math.round(bw) - 2;
+  const del = {x: right - K3_BTN, y: by + 2, w: K3_BTN, h: K3_BTN};
+  const close = {x: del.x - 4 - K3_BTN, y: by + 2, w: K3_BTN, h: K3_BTN};
   return {del, close};
 }
 type Rect4 = { x: number; y: number; w: number; h: number };
@@ -1377,6 +1378,9 @@ function handleAt(e: MouseEvent | TouchEvent): '' | 'e' | 's' | 'se' {
   const rect = canvas.value!.getBoundingClientRect();
   const px = clientX - rect.left, py = clientY - rect.top;
   const near = (hx: number, hy: number) => Math.abs(px - hx) <= HANDLE_HIT && Math.abs(py - hy) <= HANDLE_HIT;
+  // K3: the grip lives in the 12px strip under the pixels.
+  if (props.k3 && r.bw >= K3_BAR_MIN_W && px >= r.sx + r.bw - 16 && px <= r.sx + r.bw + 4
+      && py >= r.sy + r.bh - 2 && py <= r.sy + r.bh + 14) return 'se';
   if (near(r.sx + r.bw, r.sy + r.bh)) return 'se';
   if (near(r.sx + r.bw, r.sy + r.bh / 2)) return 'e';
   if (near(r.sx + r.bw / 2, r.sy + r.bh)) return 's';
@@ -1392,8 +1396,8 @@ function doResizeBoard(e: MouseEvent | TouchEvent) {
   const worldY = (clientY - rect.top - cam.value.y) / zoom.value;
   let w = editorData.value.width;
   let h = editorData.value.height;
-  if (resizeMode.value === 'e' || resizeMode.value === 'se') w = Math.round(worldX - b.x);
-  if (resizeMode.value === 's' || resizeMode.value === 'se') h = Math.round(worldY - b.y);
+  if (resizeMode.value === 'e' || resizeMode.value === 'se') w = Math.round(worldX - resizeGrab.x - b.x);
+  if (resizeMode.value === 's' || resizeMode.value === 'se') h = Math.round(worldY - resizeGrab.y - b.y);
   w = Math.max(1, Math.min(256, w));
   h = Math.max(1, Math.min(256, h));
   if (w !== editorData.value.width || h !== editorData.value.height) {
@@ -1405,6 +1409,10 @@ function doResizeBoard(e: MouseEvent | TouchEvent) {
 }
 
 let resizeStartSize = {w: 0, h: 0};
+// Where the pointer took hold, relative to the board's far corner (world px):
+// the K3 grip sits in a strip under the pixels, and without this the board
+// jumped by that offset on the first move.
+let resizeGrab = {x: 0, y: 0};
 
 function endResizeFromWindow() {
   window.removeEventListener('mousemove', doResizeBoard);
@@ -1441,7 +1449,10 @@ function boardChromeAt(e: MouseEvent | TouchEvent): any {
     const b = store.boards[i]!;
     const {x: sx, y: sy} = boardScreen(b.x, b.y);
     const bw = b.data.width * zoom.value, bh = b.data.height * zoom.value;
-    if (px >= sx - 6 && px <= sx + bw + 6 && py >= sy - 20 && py <= sy + bh + 6) return b;
+    // K3 board windows: band above (34 with the frame), grip strip below.
+    const k3bar = props.k3 && bw >= K3_BAR_MIN_W;
+    const top = k3bar ? 6 + K3_BAR_H + 4 : 20, bottom = k3bar ? 14 : 6;
+    if (px >= sx - 6 && px <= sx + bw + 6 && py >= sy - top && py <= sy + bh + bottom) return b;
   }
   return null;
 }
@@ -1683,8 +1694,9 @@ onMounted(() => { k3Mounted.value = true });
 const k3desk = props.k3 ? provideK3Desk(deskEl, (desk, sizes) => {
     const G = 8
     const CHIP = 44
-    // Six 28px swatches a row: 2px gaps, the well's 6px padding, the window's 4px.
-    const COLOURS_W = 6 * 28 + 5 * 2 + 2 * 6 + 2 * 4
+    // Six 28px swatches a row: 2px gaps, the swatches' 6px padding, the
+    // window's 8px gutter.
+    const COLOURS_W = 6 * 28 + 5 * 2 + 2 * 6 + 2 * 8
     const out: Record<string, {x: number, y: number, folded?: boolean}> = {}
     const sz = (id: string) => sizes[id] || {w: 0, h: 0}
     out.tools = {x: G, y: G}
@@ -1861,6 +1873,14 @@ function startDraw(e: any) {
   if (hmode) {
     isResizingBoard.value = true;
     resizeMode.value = hmode;
+    {
+      const ab = activeBoard.value;
+      const wp = worldPos(e);
+      resizeGrab = ab ? {
+        x: hmode === 's' ? 0 : wp.x - (ab.x + editorData.value.width),
+        y: hmode === 'e' ? 0 : wp.y - (ab.y + editorData.value.height),
+      } : {x: 0, y: 0};
+    }
     resizeStartSize = {w: editorData.value.width, h: editorData.value.height};
     window.addEventListener('mousemove', doResizeBoard);
     window.addEventListener('mouseup', endResizeFromWindow, {once: true});
@@ -2717,8 +2737,8 @@ function drawBoardIsoOverlay(data: any, sx: number, sy: number): void {
 // K3: each board is drawn as a window on the desk -- cream frame with a 2px
 // ink edge, a title bar (checker tick, name, size, the options dots) and an
 // ink inset around the art. Painted around the board, never over it.
-const K3_INK = '#2A2B30', K3_CREAM = '#E8E2D0', K3_BAR = '#CDB88E', K3_ACCENT = '#D2B477', K3_MUTED = '#6B6458';
-const K3_BAR_H = 16;
+const K3_INK = '#2A2B30', K3_CREAM = '#E8E2D0', K3_BAR = '#CDB88E', K3_ACCENT = '#D2B477', K3_MUTED = '#857C6C';
+const K3_BAR_H = 24; // the K3 title band (k3-design-system.md)
 
 // Board names cut to the bar, cached: the chrome redraws every frame and the
 // cut used to re-measure the name letter by letter each time.
@@ -2747,7 +2767,7 @@ function k3Ticks(x: number, y: number): void {
 
 // Below this on-screen width a board is too small for a title bar: it keeps
 // a plain 2px ink edge (tan when active) and no head.
-const K3_BAR_MIN_W = 60;
+const K3_BAR_MIN_W = 96;
 
 function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: number, active: boolean): void {
   const c = ctx!;
@@ -2762,47 +2782,50 @@ function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: numbe
     c.restore();
     return;
   }
-  const ox = Math.round(sx) - 6, oy = Math.round(sy) - 6 - K3_BAR_H - 4;
-  const ow = Math.round(bw) + 12, oh = Math.round(bh) + 12 + K3_BAR_H + 4;
+  // A K3 window: 2px ink edge, 4px cream frame, the band 4 from the top and
+  // 4 above the pixels, and a 12px strip under them holding the resize grip.
+  const x = Math.round(sx), y = Math.round(sy), w = Math.round(bw), h = Math.round(bh);
+  const ox = x - 6, oy = y - 6 - K3_BAR_H - 4;
+  const ow = w + 12, oh = (y + h + 14) - oy;
   c.save();
-  // Frame: the four bands around the art, so the art itself stays untouched.
+  // Ink, then cream inside it -- only around the pixels, never over them.
   c.fillStyle = K3_INK;
-  c.fillRect(ox, oy, ow, oh - Math.round(bh) - 6);
-  c.fillRect(ox, oy, 6, oh);
-  c.fillRect(ox + ow - 6, oy, 6, oh);
-  c.fillRect(ox, Math.round(sy + bh), ow, 6);
+  c.fillRect(ox, oy, ow, y - oy);
+  c.fillRect(ox, y + h, ow, oy + oh - (y + h));
+  c.fillRect(ox, y, 6, h);
+  c.fillRect(x + w, y, 6, h);
   c.fillStyle = K3_CREAM;
-  c.fillRect(ox + 2, oy + 2, ow - 4, K3_BAR_H + 8);
-  c.fillRect(ox + 2, oy + 2, 2, oh - 4);
-  c.fillRect(ox + ow - 4, oy + 2, 2, oh - 4);
-  c.fillRect(ox + 2, oy + oh - 4, ow - 4, 2);
-  // Ink inset around the art: left/right/bottom are the band's inner 2px;
-  // the top one sits under the bar's cream gap.
-  c.fillStyle = K3_INK;
-  c.fillRect(ox + 4, Math.round(sy) - 2, ow - 8, 2);
+  c.fillRect(ox + 2, oy + 2, ow - 4, y - oy - 2);
+  c.fillRect(ox + 2, y + h, ow - 4, 12);
+  c.fillRect(ox + 2, y, 4, h);
+  c.fillRect(x + w, y, 4, h);
   // Notched corners, in the desk's colour.
   c.fillStyle = deskBg.value || EDITOR_BG;
   c.fillRect(ox, oy, 2, 2);
   c.fillRect(ox + ow - 2, oy, 2, 2);
   c.fillRect(ox, oy + oh - 2, 2, 2);
   c.fillRect(ox + ow - 2, oy + oh - 2, 2, 2);
-  // Title bar.
-  const bx = ox + 4, by = oy + 4, bwid = ow - 8;
+  // Grip: three steps of 2px dots in the strip's corner.
+  c.fillStyle = '#8C826E';
+  const gx = x + w - 10, gy = y + h + 1;
+  for (const [dx, dy] of [[8, 0], [4, 4], [8, 4], [0, 8], [4, 8], [8, 8]] as const) c.fillRect(gx + dx, gy + dy, 2, 2);
+  // Title band.
+  const bx = x, by = oy + 6, bwid = w;
   c.fillStyle = active ? K3_ACCENT : K3_BAR;
   c.fillRect(bx, by, bwid, K3_BAR_H);
   c.fillStyle = K3_INK;
-  k3Ticks(bx + 3, by + 2);
+  k3Ticks(bx + 4, by + 6);
   // "Hide board labels" keeps the window, drops the name and size.
   if (bwid > 70 && showBoardChrome.value) {
-    const w = b.data.width, h = b.data.height;
-    c.font = '700 10px system-ui, -apple-system, sans-serif';
+    const bw0 = b.data.width, bh0 = b.data.height;
+    c.font = '700 12px system-ui, -apple-system, sans-serif';
     c.textBaseline = 'middle';
-    const size = `${w}×${h}`;
-    const dotsW = k3BoardBtns(b) ? 2 * K3_BTN + 8 : 4;
+    const size = `${bw0}×${bh0}`;
+    const dotsW = k3BoardBtns(b) ? 2 * K3_BTN + 10 : 6;
     const sizeW = c.measureText(size).width;
-    const room = bwid - 14 - sizeW - dotsW - 8;
+    const room = bwid - 16 - sizeW - dotsW - 8;
     const name = k3FitName((b.data.name || 'Untitled').toUpperCase(), room);
-    if (room > 12) c.fillText(name, bx + 12, by + K3_BAR_H / 2 + 1);
+    if (room > 12) c.fillText(name, bx + 16, by + K3_BAR_H / 2 + 1);
     c.fillStyle = active ? K3_INK : K3_MUTED;
     c.fillText(size, bx + bwid - dotsW - sizeW, by + K3_BAR_H / 2 + 1);
   }
@@ -2817,8 +2840,8 @@ function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: numbe
       c.fillRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4);
     }
     c.fillStyle = K3_INK;
-    // Hide: a pixel eye, struck through.
-    const xr = btns.close;
+    // Hide: a pixel eye, struck through (14px glyph centred in the key).
+    const xr = {x: btns.close.x + 3, y: btns.close.y + 3};
     c.fillRect(xr.x + 5, xr.y + 4, 4, 1);
     c.fillRect(xr.x + 3, xr.y + 5, 2, 1);
     c.fillRect(xr.x + 9, xr.y + 5, 2, 1);
@@ -2828,7 +2851,7 @@ function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: numbe
     c.fillRect(xr.x + 6, xr.y + 6, 2, 2);
     for (let i = 0; i < 9; i++) c.fillRect(xr.x + 3 + i, xr.y + 11 - i, 1, 1);
     // Trash: lid, then a can outline.
-    const tr = btns.del;
+    const tr = {x: btns.del.x + 3, y: btns.del.y + 3};
     c.fillRect(tr.x + 3, tr.y + 3, 8, 2);
     c.fillRect(tr.x + 6, tr.y + 2, 2, 1);
     c.fillRect(tr.x + 4, tr.y + 6, 2, 5);
@@ -2874,7 +2897,7 @@ function drawBoardChrome(): void {
       const {x: kx, y: ky} = boardScreen(b.x, b.y);
       const kactive = b.id === store.activeBoardId && !store.nothingSelected;
       drawK3BoardChrome(b, kx, ky, b.data.width * z, b.data.height * z, kactive);
-      if (kactive && b.data.width * z >= 36 && b.data.height * z >= 36) {
+      if (kactive && b.data.width * z >= 36 && b.data.height * z >= 36 && b.data.width * z < K3_BAR_MIN_W) {
         const hs = 7;
         const kdot = (hx: number, hy: number) => {
           ctx!.fillStyle = K3_CREAM;

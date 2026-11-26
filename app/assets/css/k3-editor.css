@@ -17,7 +17,7 @@ html.k3-editor .board-menu {
     --k3-light: #F7F3E7;
     --k3-bar: #CDB88E;
     --k3-accent: #D2B477;
-    --k3-muted: #6B6458;
+    --k3-muted: #857C6C;
     --k3-faint: #A39A86;
     --k3-well: #2C2F34;
     --k3-well-edge: #1E1F23;
@@ -126,22 +126,25 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
 
 /* Square corners, no clip-path: a clipped window would cut off its own
    dropdowns. */
+/* Sizes follow the shared K3 standard (simplepixelart_mobile/docs/
+   k3-design-system.md): an 8px gutter that the band and the body share,
+   the band 4 from the top, a hard 4,4 shadow at 30%. */
 .k3-skin .k3-desk .widget {
     position: relative;
-    padding: 4px;
+    padding: 4px 8px 8px;
     overflow: visible;
     background: var(--k3-cream);
     border: 0;
     border-radius: 0;
-    box-shadow: inset 0 0 0 2px var(--k3-ink);
+    box-shadow: inset 0 0 0 2px var(--k3-ink), 4px 4px 0 0 rgba(0, 0, 0, 0.3);
 }
 
 /* Title bars: tan band, checker tick, small uppercase title, hatch right. */
 .k3-skin .k3-desk .widget > .widget-head {
-    min-height: 18px;
-    gap: 6px;
-    padding: 0 3px;
-    margin-bottom: 4px;
+    min-height: 24px;
+    gap: 4px;
+    padding: 0 2px 0 4px;
+    margin-bottom: 0; /* no space under the band: the body brings its own 12 */
     background: var(--k3-bar);
     border: 0;
 }
@@ -154,7 +157,10 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
     justify-content: flex-start;
     gap: 6px;
     flex: 1 1 auto;
-    font-size: var(--text-2xs);
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 12px;
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0.08em;
@@ -166,7 +172,7 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
 .k3-skin .k3-desk .widget > .widget-head > .title::after {
     content: "";
     width: 6px;
-    height: 14px;
+    height: 12px;
     flex-shrink: 0;
     background: repeating-conic-gradient(var(--k3-ink) 0 25%, transparent 0 50%) 0 0 / 4px 4px;
 }
@@ -177,11 +183,14 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
 
 /* Bodies sit on the window's cream; the preview sits in a dark well. */
 .k3-skin .k3-desk .widget > .widget-body {
+    padding: 12px 0 0;
     background: transparent;
     border: 0;
 }
 
 .k3-skin .k3-desk .preview-widget > .widget-body {
+    padding: 8px;
+    margin-top: 12px;
     background: var(--k3-well);
     box-shadow: inset 0 0 0 2px var(--k3-well-edge);
 }
@@ -204,12 +213,12 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
     background: var(--k3-faint);
 }
 
-/* Title-bar buttons: the same 16px square as the fold / close buttons --
-   2px ink edge drawn inside, no drop, a 10px icon with room around it. */
+/* Window keys on the band: 20x20 like the fold key -- 2px ink edge drawn
+   inside, no drop, a 12px icon with room around it. */
 .k3-skin .k3-desk .widget-head .widget-ctl-btn {
-    height: 16px;
-    min-width: 16px;
-    min-height: 16px; /* touch screens lift controls to 32px; the bar is 16 */
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px; /* touch screens lift controls to 32px; the band is 24 */
     padding: 0 3px;
     gap: 3px;
     border: 0;
@@ -219,8 +228,8 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
 }
 
 .k3-skin .k3-desk .widget-head .widget-ctl-btn .icon {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
 }
 
 .k3-skin .k3-desk .widget-head .widget-ctl-btn.active {
@@ -403,7 +412,7 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
 
 /* Resize grip: K3's corner dots, live here. Every open window has one. */
 .k3-skin .k3-desk .k3-win:not(.k3-folded) {
-    padding-bottom: 14px;
+    padding-bottom: 12px;
 }
 
 .k3-skin .k3-grip {
@@ -503,12 +512,12 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
 /* Fold button: K3's "-" / "[]" square at the end of the bar. */
 .k3-skin .k3-desk .widget-head > .k3-fold {
     display: inline-flex;
-    min-width: 16px;
+    min-width: 20px;
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     padding: 0;
     border: 0;
     background: var(--k3-cream);
@@ -517,14 +526,14 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
 }
 
 .k3-skin .k3-fold-mn {
-    width: 8px;
+    width: 10px;
     height: 2px;
     background: var(--k3-ink);
 }
 
 .k3-skin .k3-fold-mx {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     box-shadow: inset 0 0 0 2px var(--k3-ink);
 }
 
@@ -951,17 +960,17 @@ html.k3-editor .board-menu .file-menu-item {
 }
 
 .k3-skin .k3-desk .layer-pickbar .widget-ctl-btn {
-    height: 16px;
-    min-width: 16px;
-    min-height: 16px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
     padding: 0 2px;
     border: 0;
     box-shadow: inset 0 0 0 2px var(--k3-ink);
 }
 
 .k3-skin .k3-desk .layer-pickbar .widget-ctl-btn .icon {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
 }
 
 /* Tab: every window out of the way, the canvas alone on the desk. */
@@ -985,4 +994,61 @@ html.k3-editor .board-menu .file-menu-item {
 
 .k3-skin .k3-desk .layers ul:has(li.selected) li.active:not(.selected) {
     background: transparent;
+}
+
+/* ---- K3 standard: rows, menus, keys ------------------------------------ */
+
+/* Dense rows (layers): 32 high, 8 side padding, one line. */
+.k3-skin .k3-desk .layers li {
+    min-height: 32px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.k3-skin .k3-desk .layers .layer-name {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* Menus: items 32 high, 12 side padding, 4 above and below the run. */
+html.k3-editor .board-menu {
+    padding: 4px 0;
+}
+
+html.k3-editor .board-menu .file-menu-item {
+    min-height: 32px;
+    padding: 0 12px;
+}
+
+/* Text keys: 32 high, 12 side padding, hard 2px drop, caps. Ghost keys
+   (cancel / later) are dashed with no drop; disabled ones go grey. */
+html.k3-editor .ui-modal .btn,
+.k3-skin .k3-desk .board-multibar-btn {
+    height: 32px;
+    min-height: 32px;
+    padding: 0 12px;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    box-shadow: 2px 2px 0 0 var(--k3-ink);
+}
+
+html.k3-editor .ui-modal .del-modal .publish-actions .btn:first-child,
+html.k3-editor .ui-modal.del-modal .publish-actions .btn:first-child,
+html.k3-editor .ui-modal .share-dismiss {
+    border-style: dashed;
+    background: transparent;
+    box-shadow: none;
+}
+
+html.k3-editor .ui-modal .btn:disabled,
+.k3-skin .k3-desk .board-multibar-btn:disabled {
+    border-color: #8C8A86;
+    color: #8C8A86;
+    box-shadow: none;
 }
