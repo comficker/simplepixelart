@@ -1818,6 +1818,28 @@ export const useEditor = defineStore('editor', () => {
         saveState()
     }
 
+    /* Moves a group of layers as one block, keeping their order: `to` is the
+       index the block's lowest layer ends up at. The current layer follows
+       its layer. Returns the block's new indices. */
+    function moveLayersTo(indices: number[], to: number): number[] {
+        const layers = editorData.value.layers
+        const pick = [...new Set(indices)].filter(i => i >= 0 && i < layers.length).sort((a, b) => a - b)
+        if (!pick.length) return []
+        const curLayer = layers[currentLayerIndex.value]
+        const block = pick.map(i => layers[i]!)
+        const rest = layers.filter((_, i) => !pick.includes(i))
+        const at = Math.max(0, Math.min(rest.length, to))
+        const next = [...rest.slice(0, at), ...block, ...rest.slice(at)]
+        if (next.every((l, i) => l === layers[i])) return pick
+        layers.splice(0, layers.length, ...next)
+        const ci = curLayer ? layers.indexOf(curLayer) : -1
+        if (ci >= 0) currentLayerIndex.value = ci
+        markFullRedraw()
+        drawTurn.value++
+        saveState()
+        return block.map((_, k) => at + k)
+    }
+
     function deleteLayer(index: number) {
         if (editorData.value.layers.length > 1) {
             editorData.value.layers.splice(index, 1);
@@ -3088,6 +3110,7 @@ export const useEditor = defineStore('editor', () => {
         copyActiveScope,
         pasteClipboard,
         transferScope,
+        moveLayersTo,
         dropVirtualOnBoard,
         mergeLayers,
         applyPalette,

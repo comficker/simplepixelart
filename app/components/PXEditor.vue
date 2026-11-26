@@ -3645,9 +3645,36 @@ function onLayerGripUp() {
   layerDrag.value = null
   layerDragMoved = !!drag && drag.from !== drag.over
   if (!drag || drag.from === drag.over) return
+  // Dragging one of several picked layers moves the whole pick, in order.
+  if (selectedLayers.value.size >= 2 && selectedLayers.value.has(drag.from)) {
+    const pick = [...selectedLayers.value]
+    // Land the block so the dragged row sits where it was dropped.
+    const before = pick.filter(i => i < drag.from).length
+    const n = editorData.value.layers.length
+    const to = Math.max(0, Math.min(n - pick.length, drag.over - before))
+    selectedLayers.value = new Set(store.moveLayersTo(pick, to))
+    scheduleDraw()
+    return
+  }
   selectedLayers.value = new Set()
   store.moveLayer(drag.from, drag.over)
   scheduleDraw()
+}
+
+// Picked layers one step up / down the stack, as a block.
+function shiftPickedLayers(dir: 1 | -1) {
+  const pick = [...selectedLayers.value].sort((a, b) => a - b)
+  if (pick.length < 1) return
+  const n = editorData.value.layers.length
+  const lo = pick[0]!
+  const to = Math.max(0, Math.min(n - pick.length, lo + dir))
+  selectedLayers.value = new Set(store.moveLayersTo(pick, to))
+  scheduleDraw()
+}
+
+function clearLayerPick() {
+  selectedLayers.value = new Set()
+  multiSelectLayers.value = false
 }
 
 function toggleLayerHidden(index: number) {
@@ -3656,7 +3683,8 @@ function toggleLayerHidden(index: number) {
 }
 
 function onLayerClick(index: number, e: MouseEvent) {
-  if (multiSelectLayers.value || e.shiftKey) {
+  // Ctrl / Cmd + click (or Shift, or the checkmark mode) adds to the pick.
+  if (multiSelectLayers.value || e.shiftKey || e.ctrlKey || e.metaKey) {
     const next = new Set(selectedLayers.value)
     if (next.has(index)) next.delete(index)
     else next.add(index)
@@ -4995,6 +5023,22 @@ watch(
                   </button>
                 </div>
               </template>
+          <!-- Two or more layers picked (Ctrl / Cmd / Shift + click). -->
+          <div v-if="selectedLayers.size >= 2" class="layer-pickbar">
+            <span class="layer-pickbar-count">{{ $t('c_PXEditor.nLayersSelected', {count: selectedLayers.size}) }}</span>
+            <button type="button" class="widget-ctl-btn" :title="$t('c_PXEditor.moveLayersUp')" :aria-label="$t('c_PXEditor.moveLayersUp')" @click="shiftPickedLayers(1)">
+              <span class="icon icon-chevron-up"/>
+            </button>
+            <button type="button" class="widget-ctl-btn" :title="$t('c_PXEditor.moveLayersDown')" :aria-label="$t('c_PXEditor.moveLayersDown')" @click="shiftPickedLayers(-1)">
+              <span class="icon icon-chevron-down"/>
+            </button>
+            <button type="button" class="widget-ctl-btn" :title="$t('c_PXEditor.mergeNSelectedLayers', {count: selectedLayers.size})" :aria-label="$t('c_PXEditor.mergeSelectedLayers')" @click="onMergeLayers">
+              <span class="icon icon-merge"/>
+            </button>
+            <button type="button" class="widget-ctl-btn" :title="$t('c_PXEditor.deselect')" :aria-label="$t('c_PXEditor.deselect')" @click="clearLayerPick">
+              <span class="icon icon-close"/>
+            </button>
+          </div>
           <ul ref="layerList" :class="{dragging: layerDrag}">
             <li
                 v-for="(row, i) in visibleLayers"

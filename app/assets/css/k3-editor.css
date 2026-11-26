@@ -941,3 +941,25 @@ html.k3-editor .board-menu .file-menu-item {
     border-top: 2px dashed var(--k3-accent);
     margin-top: -1px;
 }
+
+/* Layer pick bar on the desk: K3 buttons (the title-bar ones' look). */
+.k3-skin .k3-desk .layer-pickbar {
+    border-radius: 0;
+    background: var(--k3-paper);
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+    padding: 4px 6px;
+}
+
+.k3-skin .k3-desk .layer-pickbar .widget-ctl-btn {
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    padding: 0 2px;
+    border: 0;
+    box-shadow: inset 0 0 0 2px var(--k3-ink);
+}
+
+.k3-skin .k3-desk .layer-pickbar .widget-ctl-btn .icon {
+    width: 10px;
+    height: 10px;
+}

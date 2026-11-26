@@ -565,7 +565,10 @@
     "deselect": "Deselect",
     "hidNBoards": "Hid {count} board | Hid {count} boards",
     "deletedNBoards": "Deleted {count} board | Deleted {count} boards",
-    "deleteNBoards": "Delete {count} board? | Delete {count} boards?"
+    "deleteNBoards": "Delete {count} board? | Delete {count} boards?",
+    "nLayersSelected": "{count} layers selected",
+    "moveLayersUp": "Move up",
+    "moveLayersDown": "Move down"
   },
   "c_Paginator": {},
   "c_Palette": {

@@ -551,7 +551,10 @@
     "deselect": "Снять выбор",
     "hidNBoards": "Скрыто досок: {count}",
     "deletedNBoards": "Удалено досок: {count}",
-    "deleteNBoards": "Удалить доски ({count})?"
+    "deleteNBoards": "Удалить доски ({count})?",
+    "nLayersSelected": "Выбрано слоёв: {count}",
+    "moveLayersUp": "Выше",
+    "moveLayersDown": "Ниже"
   },
   "c_Palette": {
     "colorNHex": "Цвет {n}: {hex}",

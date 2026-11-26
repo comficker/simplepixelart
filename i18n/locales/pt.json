@@ -551,7 +551,10 @@
     "deselect": "Desmarcar",
     "hidNBoards": "{count} quadro oculto | {count} quadros ocultos",
     "deletedNBoards": "{count} quadro excluído | {count} quadros excluídos",
-    "deleteNBoards": "Excluir {count} quadro? | Excluir {count} quadros?"
+    "deleteNBoards": "Excluir {count} quadro? | Excluir {count} quadros?",
+    "nLayersSelected": "{count} camadas selecionadas",
+    "moveLayersUp": "Subir",
+    "moveLayersDown": "Descer"
   },
   "c_Palette": {
     "colorNHex": "Cor {n}: {hex}",

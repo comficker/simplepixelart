@@ -551,7 +551,10 @@
     "deselect": "選択解除",
     "hidNBoards": "{count}個のボードを非表示にしました",
     "deletedNBoards": "{count}個のボードを削除しました",
-    "deleteNBoards": "{count}個のボードを削除しますか？"
+    "deleteNBoards": "{count}個のボードを削除しますか？",
+    "nLayersSelected": "{count}枚のレイヤーを選択中",
+    "moveLayersUp": "上へ",
+    "moveLayersDown": "下へ"
   },
   "c_Palette": {
     "colorNHex": "色 {n}: {hex}",

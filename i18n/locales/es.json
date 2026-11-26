@@ -551,7 +551,10 @@
     "deselect": "Deseleccionar",
     "hidNBoards": "{count} tablero oculto | {count} tableros ocultos",
     "deletedNBoards": "{count} tablero eliminado | {count} tableros eliminados",
-    "deleteNBoards": "¿Eliminar {count} tablero? | ¿Eliminar {count} tableros?"
+    "deleteNBoards": "¿Eliminar {count} tablero? | ¿Eliminar {count} tableros?",
+    "nLayersSelected": "{count} capas seleccionadas",
+    "moveLayersUp": "Subir",
+    "moveLayersDown": "Bajar"
   },
   "c_Palette": {
     "colorNHex": "Color {n}: {hex}",

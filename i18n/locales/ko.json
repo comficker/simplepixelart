@@ -551,7 +551,10 @@
     "deselect": "선택 해제",
     "hidNBoards": "보드 {count}개를 숨겼습니다",
     "deletedNBoards": "보드 {count}개를 삭제했습니다",
-    "deleteNBoards": "보드 {count}개를 삭제할까요?"
+    "deleteNBoards": "보드 {count}개를 삭제할까요?",
+    "nLayersSelected": "레이어 {count}개 선택됨",
+    "moveLayersUp": "위로",
+    "moveLayersDown": "아래로"
   },
   "c_Palette": {
     "colorNHex": "색 {n}: {hex}",
