@@ -453,12 +453,6 @@ const SECTIONS = [
   box-shadow: none;
 }
 
-/* A larger glyph now that the tile has room. */
-.dash-side.is-collapsed .dash-tool-ic .icon {
-  width: var(--icon-lg);
-  height: var(--icon-lg);
-}
-
 .dash-side.is-collapsed .dash-foot {
   justify-content: center;
   padding: var(--space-1);
