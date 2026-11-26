@@ -5054,6 +5054,17 @@ watch(
       </div>
 
       <EditorTimeline v-if="k3" class="editor-timeline" win="animation"/>
+      <!-- Lines a dragged window snapped to (useK3Desk). -->
+      <template v-if="k3desk">
+        <div
+            v-for="(g, i) in k3desk.guides.value"
+            :key="i"
+            class="k3-guide"
+            :class="`k3-guide-${g.axis}`"
+            :style="g.axis === 'x' ? {left: `${g.at}px`} : {top: `${g.at}px`}"
+            aria-hidden="true"
+        />
+      </template>
     </div>
 
     <EditorTimeline v-if="!k3" class="editor-timeline"/>
