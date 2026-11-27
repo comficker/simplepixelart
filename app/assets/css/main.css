@@ -142,9 +142,9 @@ a {
     /* Three icon sizes: beside a small label, inside a control, in a toolbar.
        Fixed, not derived from the spacing scale, so re-spacing the app does
        not resize every glyph. */
-    /* 14 / 16 / 20, the same scale as the mobile app. The editor uses the
+    /* 12 / 16 / 20. (The mobile app uses 14 / 16 / 20.) The editor uses the
        large size for every glyph. */
-    --icon-sm: 0.875rem;
+    --icon-sm: 0.75rem;
     --icon-md: 1rem;
     --icon-lg: 1.25rem;
     --bar-h: 48px;
@@ -3393,9 +3393,8 @@ canvas.iso-line { cursor: crosshair; }
     min-width: 0;
     max-width: 100%;
     /* The head's title is set in the display face; a control beside it in
-       the body face sat on a different baseline. Same face, same tracking. */
+       the body face sat on a different baseline. Same face. */
     font-family: var(--font-display);
-    letter-spacing: 0.08em;
 }
 
 .widget .widget-head > .title {
