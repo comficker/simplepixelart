@@ -332,8 +332,8 @@ useCustomSeoMeta({
           </div>
           <div class="home-stat-foot">
             <span class="icon icon-user" aria-hidden="true"/>
-            <NuxtLinkLocale to="/creator" class="home-stat-more">
-              {{ $t('p_index.viewAll') }}<span class="icon icon-angle-right"/>
+            <NuxtLinkLocale to="/creator" class="widget-ctl-btn">
+              <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
             </NuxtLinkLocale>
           </div>
         </section>
@@ -360,8 +360,8 @@ useCustomSeoMeta({
           </div>
           <div class="home-stat-foot">
             <span class="icon icon-crown" aria-hidden="true"/>
-            <NuxtLinkLocale to="/creator" class="home-stat-more">
-              {{ $t('p_index.viewAll') }}<span class="icon icon-angle-right"/>
+            <NuxtLinkLocale to="/creator" class="widget-ctl-btn">
+              <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
             </NuxtLinkLocale>
           </div>
         </section>
@@ -382,8 +382,8 @@ useCustomSeoMeta({
           </div>
           <div class="home-stat-foot">
             <span class="icon icon-trophy" aria-hidden="true"/>
-            <NuxtLinkLocale to="/challenges" class="home-stat-more">
-              {{ $t('p_index.viewAll') }}<span class="icon icon-angle-right"/>
+            <NuxtLinkLocale to="/challenges" class="widget-ctl-btn">
+              <span class="widget-ctl-name">{{ $t('p_index.viewAll') }}</span><span class="icon icon-angle-right"/>
             </NuxtLinkLocale>
           </div>
         </section>
@@ -535,26 +535,6 @@ useCustomSeoMeta({
 .home-stat-foot > .icon {
   width: var(--icon-sm);
   height: var(--icon-sm);
-}
-
-.home-stat-more {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  font-weight: 600;
-  color: var(--success);
-  transition: color var(--transition);
-}
-
-.home-stat-more .icon {
-  width: var(--icon-sm);
-  height: var(--icon-sm);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .home-stat-more:hover {
-    color: var(--foreground);
-  }
 }
 
 /* Your studio and What's new: a small inner shadow on the body, so the art
