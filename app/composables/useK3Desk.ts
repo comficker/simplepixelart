@@ -108,6 +108,13 @@ export function provideK3Desk(desk: Ref<HTMLElement | null>, layout: K3Layout, s
     } catch { return {} }
   }
   const saved = typeof window !== 'undefined' ? loadSaved() : {}
+  // Stacking order is kept for every window, touched or not, so the one the
+  // visitor last brought forward is still on top after a reload.
+  // Renumbered 1..n on load so the numbers don't creep up visit after visit.
+  const rawZ = (saved as any)._z && typeof (saved as any)._z === 'object' ? (saved as any)._z : {}
+  delete (saved as any)._z
+  const savedZ: Record<string, number> = {}
+  for (const [id] of Object.entries(rawZ).filter(([, z]) => Number.isFinite(z)).sort((a: any, b: any) => a[1] - b[1])) savedZ[id] = top++
   let saveTimer: ReturnType<typeof setTimeout> | null = null
   function persist() {
     if (typeof window === 'undefined') return
@@ -120,6 +127,9 @@ export function provideK3Desk(desk: Ref<HTMLElement | null>, layout: K3Layout, s
         for (const f of SAVED_FIELDS) e[f] = p[f]
         out[id] = e as Partial<K3Place>
       }
+      const zs: Record<string, number> = {}
+      for (const [id, p] of Object.entries(places)) zs[id] = p.z
+      ;(out as any)._z = zs
       try { localStorage.setItem(storeKey(), JSON.stringify(out)) } catch { /* private mode */ }
     }, 300)
   }
@@ -198,7 +208,8 @@ export function provideK3Desk(desk: Ref<HTMLElement | null>, layout: K3Layout, s
   function register(id: string, el: HTMLElement) {
     els.set(id, el)
     if (!places[id]) {
-      places[id] = {x: 0, y: 0, z: top++, folded: false, placed: false, moved: false, foldSet: false, w: null, h: null, sized: false}
+      const z0 = Number.isFinite(savedZ[id]) ? savedZ[id] : top++
+      places[id] = {x: 0, y: 0, z: z0, folded: false, placed: false, moved: false, foldSet: false, w: null, h: null, sized: false}
       // A remembered window comes back where the visitor left it (the
       // default layout still decides whatever they never touched).
       const s = saved[id]
@@ -218,7 +229,10 @@ export function provideK3Desk(desk: Ref<HTMLElement | null>, layout: K3Layout, s
 
   function lift(id: string) {
     const p = places[id]
-    if (p && p.z !== top - 1) p.z = top++
+    if (p && p.z !== top - 1) {
+      p.z = top++
+      persist()
+    }
   }
 
   function startDrag(id: string, e: PointerEvent, onTap?: () => void) {
