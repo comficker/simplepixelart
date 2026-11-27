@@ -2826,6 +2826,7 @@ function drawBoardIsoOverlay(data: any, sx: number, sy: number): void {
 // ink inset around the art. Painted around the board, never over it.
 const K3_INK = '#2A2B30', K3_CREAM = '#E8E2D0', K3_BAR = '#CDB88E', K3_ACCENT = '#D2B477', K3_MUTED = '#857C6C';
 const K3_BAR_H = 24; // the K3 title band (k3-design-system.md)
+const K3_BAND_FONT = '16px "Micro 5", system-ui, sans-serif'; // as the windows' title bars
 
 // Board names cut to the bar, cached: the chrome redraws every frame and the
 // cut used to re-measure the name letter by letter each time.
@@ -2905,7 +2906,8 @@ function drawK3BoardChrome(b: any, sx: number, sy: number, bw: number, bh: numbe
   // "Hide board labels" keeps the window, drops the name and size.
   if (bwid > 70 && showBoardChrome.value) {
     const bw0 = b.data.width, bh0 = b.data.height;
-    c.font = '700 12px system-ui, -apple-system, sans-serif';
+    // The band's pixel face, like the windows' title bars (k3-editor.css).
+    c.font = K3_BAND_FONT;
     c.textBaseline = 'middle';
     const size = `${bw0}×${bh0}`;
     const dotsW = k3BoardBtns(b) ? 2 * K3_BTN + 10 : 6;
@@ -4299,6 +4301,8 @@ onMounted(async () => {
     } catch {  }
   }
   setupKeyListeners()
+  // Board bands are drawn with the pixel face: draw again once it is in.
+  if (props.k3) document.fonts?.load(K3_BAND_FONT).then(() => { k3NameCache.clear(); scheduleDraw() }).catch(() => {})
 
   hasPreviousScreen.value = !!(window.history.state && window.history.state.back);
   isMacUA.value = /Mac|iPhone|iPad/.test(navigator.platform);

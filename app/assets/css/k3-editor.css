@@ -1,3 +1,22 @@
+/* Micro 5 (OFL, Google Fonts), self-hosted: the K3 pixel face for the
+   editor's window and board title bars. Characters it lacks (Vietnamese tones, Cyrillic, CJK) fall back. */
+@font-face {
+    font-family: "Micro 5";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/fonts/micro5-latin-ext.woff2") format("woff2");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+    font-family: "Micro 5";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/fonts/micro5-latin.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* K3 "pixel windows" skin for the editor (pages/editor.vue puts .k3-skin on
    the ToolLayout root; PXEditor k3 marks its body .k3-desk). Only the desk is
    K3: a dark pixel-grid desk where every panel is a cream window with a 2px
@@ -119,7 +138,13 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
     min-height: 22px;
     align-self: center;
     padding: 0 var(--space-2);
-    font-size: var(--text-2xs);
+    /* The pixel face, as the window titles. */
+    font-family: "Micro 5", var(--font-body);
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    -webkit-font-smoothing: none;
 }
 
 /* ---- Windows on the desk ---------------------------------------------- */
@@ -147,6 +172,14 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
     margin-bottom: 0; /* no space under the band: the body brings its own 12 */
     background: var(--k3-bar);
     border: 0;
+    /* The whole band speaks Micro 5. */
+    font-family: "Micro 5", var(--font-body);
+    font-size: 16px;
+    font-weight: 400; /* the face's own weight: no synthetic bold */
+    line-height: 1;
+    letter-spacing: 0; /* the face spaces its own letters on the pixel grid */
+    text-transform: uppercase;
+    -webkit-font-smoothing: none;
 }
 
 .k3-skin .k3-desk .widget > .widget-head > .title {
@@ -160,11 +193,9 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
     min-width: 0;
     overflow: hidden;
     white-space: nowrap;
-    font-size: 12px;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font: inherit; /* the band's pixel face */
+    letter-spacing: inherit;
+    text-transform: inherit;
     color: var(--k3-ink);
 }
 
@@ -223,7 +254,7 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
     gap: 3px;
     border: 0;
     box-shadow: inset 0 0 0 2px var(--k3-ink);
-    font-size: var(--text-2xs);
+    font-size: 12px; /* the band's pixel face size */
     line-height: 1;
 }
 
@@ -676,6 +707,8 @@ html:not(.editor-fullscreen) .k3-skin .editor > .editor-toolbar {
     white-space: nowrap;
 }
 
+/* The rail is only as wide as its grid: no ticks, so the title fits. */
+.k3-skin .k3-desk .k3-win.tool-rail > .widget-head > .title::before,
 .k3-skin .k3-desk .k3-win.tool-rail > .widget-head > .title::after {
     display: none;
 }
