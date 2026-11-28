@@ -625,7 +625,8 @@
     "sidebar": "Barra lateral",
     "sourceOnGithub": "Código no GitHub",
     "creatorProgram": "Programa de criadores",
-    "play": "Jogar"
+    "play": "Jogar",
+    "followOnPinterest": "Siga no Pinterest"
   },
   "c_SocialAuth": {
     "followOnX": "Siga no X",
@@ -634,7 +635,8 @@
     "openSourceOnGithub": "Código aberto no GitHub",
     "xTwitter": "X (Twitter)",
     "yourPublicProfile": "Seu perfil público",
-    "getStarted": "Começar"
+    "getStarted": "Começar",
+    "followOnPinterest": "Siga no Pinterest"
   },
   "c_SocialSharing": {
     "share": "Compartilhar",

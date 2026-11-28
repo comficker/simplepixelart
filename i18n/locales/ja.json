@@ -625,7 +625,8 @@
     "sidebar": "サイドバー",
     "sourceOnGithub": "GitHub のソース",
     "creatorProgram": "クリエイタープログラム",
-    "play": "遊ぶ"
+    "play": "遊ぶ",
+    "followOnPinterest": "Pinterest でフォロー"
   },
   "c_SocialAuth": {
     "followOnX": "Xでフォロー",
@@ -634,7 +635,8 @@
     "openSourceOnGithub": "GitHubでオープンソース",
     "xTwitter": "X (Twitter)",
     "yourPublicProfile": "公開プロフィール",
-    "getStarted": "はじめる"
+    "getStarted": "はじめる",
+    "followOnPinterest": "Pinterest でフォロー"
   },
   "c_SocialSharing": {
     "share": "共有",

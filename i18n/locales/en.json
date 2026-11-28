@@ -643,7 +643,8 @@
     "sidebar": "Sidebar",
     "sourceOnGithub": "Source on GitHub",
     "creatorProgram": "Creator Program",
-    "play": "Play"
+    "play": "Play",
+    "followOnPinterest": "Follow on Pinterest"
   },
   "c_SocialAuth": {
     "followOnX": "Follow on X",
@@ -652,7 +653,8 @@
     "openSourceOnGithub": "Open source on GitHub",
     "xTwitter": "X (Twitter)",
     "yourPublicProfile": "Your public profile",
-    "getStarted": "Get started"
+    "getStarted": "Get started",
+    "followOnPinterest": "Follow on Pinterest"
   },
   "c_SocialSharing": {
     "share": "Share",

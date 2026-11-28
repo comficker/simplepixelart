@@ -33,6 +33,17 @@ const loginModal = useLoginModal()
     >
       <span class="icon icon-brand-x"/>
     </a>
+    <a
+        v-if="!compact"
+        href="https://www.pinterest.com/pxartmaker/"
+        target="_blank"
+        rel="noopener"
+        class="social-ic"
+        :title="$t('c_SocialAuth.followOnPinterest')"
+        :aria-label="$t('c_SocialAuth.followOnPinterest')"
+    >
+      <span class="icon icon-pinterest"/>
+    </a>
     <span v-if="!compact" class="social-sep" aria-hidden="true"/>
     <!-- Signed in, the bar ends on the account menu (profile, work,
          settings, log out). Signed out, Settings still opens -- theme,

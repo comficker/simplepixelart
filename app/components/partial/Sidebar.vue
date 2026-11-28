@@ -21,6 +21,7 @@ function openCommandPalette() {
 const SOCIAL = [
   {href: 'https://github.com/comficker/simplepixelart', icon: 'icon-github', key: 'c_Sidebar.sourceOnGithub'},
   {href: 'https://x.com/comficker', icon: 'icon-brand-x', key: 'c_Sidebar.followOnX'},
+  {href: 'https://www.pinterest.com/pxartmaker/', icon: 'icon-pinterest', key: 'c_Sidebar.followOnPinterest'},
 ]
 
 const PRIMARY = [

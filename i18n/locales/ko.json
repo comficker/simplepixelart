@@ -625,7 +625,8 @@
     "sidebar": "사이드바",
     "sourceOnGithub": "GitHub 소스",
     "creatorProgram": "크리에이터 프로그램",
-    "play": "놀이"
+    "play": "놀이",
+    "followOnPinterest": "Pinterest에서 팔로우"
   },
   "c_SocialAuth": {
     "followOnX": "X에서 팔로우",
@@ -634,7 +635,8 @@
     "openSourceOnGithub": "GitHub에서 오픈소스",
     "xTwitter": "X (Twitter)",
     "yourPublicProfile": "내 공개 프로필",
-    "getStarted": "시작하기"
+    "getStarted": "시작하기",
+    "followOnPinterest": "Pinterest에서 팔로우"
   },
   "c_SocialSharing": {
     "share": "공유",
