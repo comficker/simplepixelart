@@ -1655,7 +1655,9 @@
     "whatSNew": "最新作品",
     "yourStudio": "我的工作室",
     "daysLeft": "还剩 {count} 天",
-    "pixelArtAlt": "像素画"
+    "pixelArtAlt": "像素画",
+    "popularTags": "热门标签",
+    "tagArtCount": "{count} 件作品 | {count} 件作品"
   },
   "p_missions": {
     "aiContentAssistant": "AI 内容助手",
@@ -3005,5 +3007,13 @@
   "c_Widget": {
     "collapse": "收起",
     "expand": "展开"
+  },
+  "p_tags": {
+    "h1": "像素画标签",
+    "seoTitle": "像素画标签 — 浏览所有主题",
+    "seoDescription": "浏览 {count} 个像素画标签，从可爱动物和食物到 RPG 道具和 16×16 精灵图。选一个主题，在免费编辑器中打开任意作品。",
+    "allTags": "全部标签 ({count})",
+    "browseArt": "浏览作品",
+    "intro": "图库中至少有几件公开作品的所有主题。最常用的标签带示例作品排在前面；下方是按 A 到 Z 排列的完整列表。每个标签都有自己的图库，其中任何作品都可以在像素画编辑器中重新上色或改编。"
   }
 }

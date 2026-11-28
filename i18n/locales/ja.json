@@ -1655,7 +1655,9 @@
     "whatSNew": "新着",
     "yourStudio": "マイスタジオ",
     "daysLeft": "残り{count}日",
-    "pixelArtAlt": "ピクセルアート"
+    "pixelArtAlt": "ピクセルアート",
+    "popularTags": "人気のタグ",
+    "tagArtCount": "{count} 作品 | {count} 作品"
   },
   "p_missions": {
     "aiContentAssistant": "AIコンテンツアシスタント",
@@ -2969,5 +2971,13 @@
   "c_Widget": {
     "collapse": "折りたたむ",
     "expand": "展開"
+  },
+  "p_tags": {
+    "h1": "ピクセルアートのタグ",
+    "seoTitle": "ピクセルアートのタグ一覧 — すべてのテーマ",
+    "seoDescription": "{count} 件のピクセルアートのタグを一覧。かわいい動物や食べ物から RPG アイテム、16×16 のスプライトまで。テーマを選んで、無料エディターで作品を開けます。",
+    "allTags": "すべてのタグ ({count})",
+    "browseArt": "作品を見る",
+    "intro": "公開作品が数点以上あるギャラリーのテーマをすべて掲載。よく使われるタグはサンプル作品付きで先頭に、下には全タグを A〜Z 順に並べています。各タグは専用ギャラリーを開き、作品はピクセルアートメーカーで色替えやリミックスができます。"
   }
 }

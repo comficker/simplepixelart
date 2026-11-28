@@ -1688,7 +1688,9 @@
     "whatSNew": "What's new",
     "yourStudio": "Your studio",
     "daysLeft": "1 day left | {count} days left",
-    "pixelArtAlt": "Pixel art"
+    "pixelArtAlt": "Pixel art",
+    "popularTags": "Popular tags",
+    "tagArtCount": "1 artwork | {count} artworks"
   },
   "p_missions": {
     "aiContentAssistant": "AI content assistant",
@@ -3051,5 +3053,13 @@
   "c_HeroDinos": {
     "hide": "Hide the dinos",
     "show": "Show the dinos"
+  },
+  "p_tags": {
+    "h1": "Pixel Art Tags",
+    "seoTitle": "Pixel Art Tags — Browse Every Theme",
+    "seoDescription": "Browse {count} pixel art tags, from cute animals and food to RPG items and 16×16 sprites. Pick a theme and open any piece in the free editor.",
+    "allTags": "All tags ({count})",
+    "browseArt": "Browse art",
+    "intro": "Every theme in the gallery with at least a few public pieces. The most-used tags come first with a sample piece; the full list below runs A to Z. Each tag opens its own gallery, and any piece there opens in the pixel art maker to recolor or remix."
   }
 }

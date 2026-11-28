@@ -1655,7 +1655,9 @@
     "whatSNew": "새로운 작품",
     "yourStudio": "내 스튜디오",
     "daysLeft": "{count}일 남음",
-    "pixelArtAlt": "픽셀 아트"
+    "pixelArtAlt": "픽셀 아트",
+    "popularTags": "인기 태그",
+    "tagArtCount": "{count}개 작품 | {count}개 작품"
   },
   "p_missions": {
     "aiContentAssistant": "AI 콘텐츠 어시스턴트",
@@ -3005,5 +3007,13 @@
   "c_Widget": {
     "collapse": "접기",
     "expand": "펼치기"
+  },
+  "p_tags": {
+    "h1": "픽셀 아트 태그",
+    "seoTitle": "픽셀 아트 태그 — 모든 테마 보기",
+    "seoDescription": "귀여운 동물과 음식부터 RPG 아이템, 16×16 스프라이트까지 픽셀 아트 태그 {count}개를 둘러보세요. 테마를 골라 무료 에디터에서 작품을 열 수 있습니다.",
+    "allTags": "모든 태그 ({count})",
+    "browseArt": "작품 보기",
+    "intro": "공개 작품이 몇 점 이상 있는 갤러리의 모든 테마입니다. 많이 쓰인 태그는 샘플 작품과 함께 맨 위에, 아래에는 전체 태그를 A부터 Z까지 정리했습니다. 각 태그는 자체 갤러리로 열리고, 작품은 픽셀 아트 메이커에서 색을 바꾸거나 리믹스할 수 있습니다."
   }
 }

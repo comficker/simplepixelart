@@ -1655,7 +1655,9 @@
     "whatSNew": "Novidades",
     "yourStudio": "Seu estúdio",
     "daysLeft": "Falta 1 dia | Faltam {count} dias",
-    "pixelArtAlt": "Pixel art"
+    "pixelArtAlt": "Pixel art",
+    "popularTags": "Tags populares",
+    "tagArtCount": "1 arte | {count} artes"
   },
   "p_missions": {
     "aiContentAssistant": "Assistente de conteúdo com IA",
@@ -3005,5 +3007,13 @@
   "c_Widget": {
     "collapse": "Recolher",
     "expand": "Expandir"
+  },
+  "p_tags": {
+    "h1": "Tags de pixel art",
+    "seoTitle": "Tags de pixel art — Todos os temas",
+    "seoDescription": "Explore {count} tags de pixel art, de animais fofos e comida a itens de RPG e sprites 16×16. Escolha um tema e abra qualquer peça no editor gratuito.",
+    "allTags": "Todas as tags ({count})",
+    "browseArt": "Ver artes",
+    "intro": "Todos os temas da galeria com pelo menos algumas peças públicas. As tags mais usadas vêm primeiro com uma peça de exemplo; a lista completa abaixo vai de A a Z. Cada tag abre a própria galeria, e qualquer peça abre no editor para recolorir ou remixar."
   }
 }

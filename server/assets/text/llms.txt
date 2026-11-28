@@ -24,6 +24,7 @@ The site is available in English (default), Japanese (/ja), Chinese (/zh), Korea
 - [How to make pixel art](https://simplepixelart.com/learn/how-to-make-pixel-art): step-by-step tutorial.
 - [Pixel art ideas](https://simplepixelart.com/ideas): drawing ideas by theme (animals, food, characters, holidays).
 - [Pixel art sizes](https://simplepixelart.com/arts/sizes): every canvas size with its gallery, e.g. [16×16](https://simplepixelart.com/arts/size-16x16), [32×32](https://simplepixelart.com/arts/size-32x32).
+- [Pixel art tags](https://simplepixelart.com/tags): every theme tag, most-used first, then A to Z; each opens its gallery at /arts/<tag>.
 - [Gallery](https://simplepixelart.com/arts): community pixel art, filterable by size, tag, animation and license.
 - [Tilesets](https://simplepixelart.com/tilesets): community tilesets for the tilemap editor.
 
