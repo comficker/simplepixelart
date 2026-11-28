@@ -406,6 +406,10 @@ useCustomSeoMeta({
         <div class="home-ad-fluid"><AdSlot slot="7838948172" size="small" bare/></div>
       </Widget>
 
+      <!-- Below the fold and loaded only as it nears the viewport (see the
+           component), so it adds nothing to the home page's first render. -->
+      <HomePopularTags/>
+
       <Widget :title="$t('p_index.whatSNew')" class="home-library home-well">
         <template #ctl>
           <NuxtLinkLocale to="/arts/new" class="widget-ctl-btn">
