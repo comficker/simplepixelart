@@ -187,7 +187,13 @@ useCustomSeoMeta({
               "@type": "Organization",
               name: "Simple Pixel Art",
               url: "https://simplepixelart.com/",
-              logo: "https://simplepixelart.com/favicon.png"
+              logo: "https://simplepixelart.com/favicon.png",
+              sameAs: [
+                "https://github.com/comficker/simplepixelart",
+                "https://x.com/comficker",
+                "https://www.pinterest.com/pxartmaker/",
+                "https://www.npmjs.com/package/simplepixelart-mcp"
+              ]
             }
           },
           {
